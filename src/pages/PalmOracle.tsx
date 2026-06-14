@@ -405,10 +405,19 @@ export default function PalmOracle() {
         body: { imageBase64: base64, readingOwner: mode, userId: user.id, membershipTier },
       });
       if (error) throw error;
-      setReadingResult(data?.reading ?? "DEMO");
+      // If Gemini could not detect a hand, show a clear actionable message
+      if (data?.handDetected === false) {
+        toast.error(data?.message ?? "No hand detected — please retake the photo with your palm clearly visible.");
+        setScanning(false);
+        return;
+      }
+      if (!data?.reading) throw new Error("Empty reading returned");
+      setReadingResult(data.reading);
       toast.success("Palm Oracle reading complete ✦");
-    } catch {
-      toast.error("Scan failed — ensure good lighting and a clear palm photo");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("Palm oracle error:", msg);
+      toast.error("Reading failed — please try again. " + (msg.length < 80 ? msg : ""));
     } finally {
       setScanning(false);
     }
@@ -850,3 +859,4 @@ export default function PalmOracle() {
     </>
   );
 }
+
