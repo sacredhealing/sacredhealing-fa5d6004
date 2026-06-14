@@ -2954,97 +2954,101 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       const queuedRaw = pickTenActivationsForVoiceResult(result);
       const queued = queuedRaw.filter(isVegetarianActivation);
 
-      // ── Auto-select 3 Wellness boosts matched to this scan ────────────
-      const wellnessMatched = ALL_ACTIVATIONS
-        .filter((a: any) => a.type === 'Wellness')
-        .map((a: any) => {
-          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
-          let score = 0;
-          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
-          if (dosha && blob.includes(dosha)) score += 40;
-          if (result.priorityAreas?.length) {
-            for (const area of result.priorityAreas) {
-              const w = (area.name || '').toLowerCase();
-              if (w && blob.includes(w)) { score += 30; break; }
-            }
-          }
-          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 25;
-          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 20;
-          const spoken = (result as any).spokenKeywords as string[] | undefined;
-          if (spoken?.length) {
-            for (const w of spoken) {
-              if (w.length > 3 && blob.includes(w)) { score += 35; break; }
-            }
-          }
-          return { act: a, score };
-        })
-        .filter((s: any) => s.score > 0)
-        .sort((a: any, b: any) => b.score - a.score)
-        .slice(0, 3)
-        .map((s: any) => s.act);
-
-      // ── Auto-select 3 Siddha Transmissions matched to this scan ───────
-      // Direct dosha-to-Siddha keyword map so matching always activates
+      // ── Universal scan scorer — ALL types scored per scan ─────────────
+      // Dosha keyword map used across all type groups
       const doshaStr = String(result.dominantDosha || '').toLowerCase();
-      const SIDDHA_DOSHA_KEYWORDS: Record<string, string[]> = {
-        vata: ['vata', 'nerve', 'anxiety', 'sleep', 'grounding', 'calm', 'ida', 'dissolution', 'air'],
-        pitta: ['pitta', 'liver', 'heat', 'inflammation', 'pingala', 'blood', 'fire', 'purification', 'cooling'],
-        kapha: ['kapha', 'lung', 'lymph', 'weight', 'energy', 'metabolism', 'earth', 'immunity', 'detox'],
-        balanced: ['ojas', 'prana', 'longevity', 'divine', 'bliss', 'samadhi', 'light'],
-      };
       const activeDoshaKey = doshaStr.startsWith('pitta') ? 'pitta'
         : doshaStr.startsWith('vata') ? 'vata'
         : doshaStr.startsWith('kapha') ? 'kapha'
         : 'balanced';
-      const doshaKeywords = SIDDHA_DOSHA_KEYWORDS[activeDoshaKey];
 
-      const siddhaMatched = ALL_ACTIVATIONS
-        .filter((a: any) => a.type === 'Siddha Transmission')
-        .map((a: any) => {
-          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
-          let score = 0;
-          // Direct dosha keyword match — ensures Siddhas always activate
-          for (const kw of doshaKeywords) {
-            if (blob.includes(kw)) { score += 40; break; }
+      const DOSHA_KEYWORDS: Record<string, string[]> = {
+        vata: ['vata', 'nerve', 'anxiety', 'sleep', 'grounding', 'calm', 'ida', 'dissolution', 'air', 'warming', 'oily', 'nourish'],
+        pitta: ['pitta', 'liver', 'heat', 'inflammation', 'pingala', 'blood', 'fire', 'purification', 'cooling', 'bitter', 'cooling'],
+        kapha: ['kapha', 'lung', 'lymph', 'weight', 'energy', 'metabolism', 'earth', 'immunity', 'detox', 'light', 'stimulat'],
+        balanced: ['ojas', 'prana', 'longevity', 'divine', 'bliss', 'samadhi', 'light', 'consciousness', 'harmony'],
+      };
+      const doshaKeywords = DOSHA_KEYWORDS[activeDoshaKey];
+      const spoken = (result as any).spokenKeywords as string[] | undefined;
+
+      /** Universal scorer — works for any Activation type */
+      function scoreActivation(a: any): number {
+        const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''} ${a.category || ''}`.toLowerCase();
+        let score = 0;
+        // Dosha match
+        for (const kw of doshaKeywords) {
+          if (blob.includes(kw)) { score += 40; break; }
+        }
+        // Priority area match
+        if (result.priorityAreas?.length) {
+          for (const area of result.priorityAreas) {
+            const w = (area.name || '').toLowerCase().split(/[\s/]/)[0];
+            if (w.length > 3 && blob.includes(w)) { score += 30; break; }
           }
-          if (result.priorityAreas?.length) {
-            for (const area of result.priorityAreas) {
-              const w = (area.name || '').toLowerCase().split(/[\s/]/)[0];
-              if (w.length > 3 && blob.includes(w)) { score += 30; break; }
+        }
+        // Organ field match
+        if (result.organField) {
+          for (const w of result.organField.toLowerCase().split(/[\s/,]+/)) {
+            if (w.length > 3 && blob.includes(w)) { score += 25; break; }
+          }
+        }
+        // Emotional field match
+        if (result.emotionalField) {
+          for (const w of result.emotionalField.toLowerCase().split(/[\s/,]+/)) {
+            if (w.length > 4 && blob.includes(w)) { score += 20; break; }
+          }
+        }
+        // Spoken keyword match — highest signal
+        if (spoken?.length) {
+          for (const w of spoken) {
+            if (w.length > 3 && blob.includes(w)) { score += 45; break; }
+          }
+        }
+        return score;
+      }
+
+      /** Pick top N from a type group, guarantee minimum if none score */
+      function pickFromType(type: string, count: number, guaranteeMin = true): any[] {
+        const pool = ALL_ACTIVATIONS.filter((a: any) => a.type === type);
+        const scored = pool.map((a: any) => ({ act: a, score: scoreActivation(a) }));
+        scored.sort((a: any, b: any) => b.score - a.score);
+        // Guarantee at least `count` items always activate
+        if (guaranteeMin) {
+          const nonZero = scored.filter((s: any) => s.score > 0);
+          if (nonZero.length < count) {
+            // Give remaining items a baseline score
+            for (let i = nonZero.length; i < Math.min(count, scored.length); i++) {
+              scored[i].score = 1;
             }
           }
-          if (result.organField) {
-            const organWords = result.organField.toLowerCase().split(/[\s/,]+/);
-            for (const w of organWords) {
-              if (w.length > 3 && blob.includes(w)) { score += 25; break; }
-            }
-          }
-          if (result.emotionalField) {
-            const emotionWords = result.emotionalField.toLowerCase().split(/[\s/,]+/);
-            for (const w of emotionWords) {
-              if (w.length > 4 && blob.includes(w)) { score += 20; break; }
-            }
-          }
-          const spoken = (result as any).spokenKeywords as string[] | undefined;
-          if (spoken?.length) {
-            for (const w of spoken) {
-              if (w.length > 3 && blob.includes(w)) { score += 35; break; }
-            }
-          }
-          // Guarantee minimum score so at least 3 Siddhas always activate
-          if (score === 0) score = (blob.includes('agastyar') || blob.includes('babaji')) ? 10 : 5;
-          return { act: a, score };
-        })
-        .sort((a: any, b: any) => b.score - a.score)
-        .slice(0, 3)
-        .map((s: any) => s.act);
+        }
+        return scored.filter((s: any) => s.score > 0).slice(0, count).map((s: any) => s.act);
+      }
+
+      // Each type contributes its top matches to the scan
+      const wellnessMatched     = pickFromType('Wellness', 2);
+      const siddhaMatched       = pickFromType('Siddha Transmission', 2);
+      const siddhasomaMatched   = pickFromType('Siddha Soma', 2);
+      const bioenergeticMatched = queued; // already computed by pickTenActivationsForVoiceResult
+      const ayurvedaMatched     = pickFromType('Ayurvedic Herb', 1);
+      const sacredPlantMatched  = pickFromType('Sacred Plant', 1, false); // only if scored
+      const mushroomMatched     = pickFromType('Mushroom', 1, false);
+      const adaptogenMatched    = pickFromType('Adaptogen', 1, false);
+      const essentialOilMatched = pickFromType('Essential Oil', 1, false);
+      const mineralMatched      = pickFromType('Mineral', 1, false);
+      const avataricMatched     = pickFromType('avataric', 1, false);
 
       // ── Apply all matched transmissions to active field ────────────────
       setActiveTransmissions((prev) => {
         // Clear old voice_scan entries — each new scan replaces the previous
         const next = prev.filter((t) => (t as any).source !== 'voice_scan');
-        // Add matched Wellness (3) + Siddha Transmissions (3) + top bioenergetic
-        const allToActivate = [...wellnessMatched, ...siddhaMatched, ...queued];
+        // All types combined
+        const allToActivate = [
+          ...wellnessMatched, ...siddhaMatched, ...siddhasomaMatched,
+          ...bioenergeticMatched, ...ayurvedaMatched, ...sacredPlantMatched,
+          ...mushroomMatched, ...adaptogenMatched, ...essentialOilMatched,
+          ...mineralMatched, ...avataricMatched,
+        ];
         for (const act of allToActivate) {
           const enriched = enrichTransmission(act as any, 'voice_scan');
           if (
