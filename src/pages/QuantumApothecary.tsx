@@ -1895,6 +1895,27 @@ function QuantumApothecaryInner() {
     }
   });
 
+  // Ref holding the most recent quantum anchor (voice FFT fingerprint + scan metadata).
+  // Preserved across all upserts so chat-activated transmissions inherit the user's
+  // voice biometric address — giving them the same quantum anchor as voice-scan transmissions.
+  const quantumAnchorRef = useRef<Record<string, unknown> | null>(null);
+
+  // Load existing quantum anchor from Supabase on mount
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('user_active_transmissions')
+      .select('quantum_anchor')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.quantum_anchor) {
+          quantumAnchorRef.current = data.quantum_anchor as Record<string, unknown>;
+        }
+      })
+      .catch(() => {});
+  }, [user?.id]);
+
   // Auto-release expired transmissions on mount and whenever list changes
   useEffect(() => {
     const now = new Date();
@@ -1964,15 +1985,18 @@ function QuantumApothecaryInner() {
 
   useEffect(() => {
     if (!user?.id) return;
-    // Fix: always upsert even when empty so dissolving all transmissions clears other devices
-    void supabase.from('user_active_transmissions').upsert(
-      {
-        user_id: user.id,
-        activations: activeTransmissions as unknown as Record<string, unknown>[],
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    );
+    // Always upsert so dissolving transmissions clears other devices.
+    // Preserve quantum_anchor — ensures chat-activated transmissions inherit
+    // the user's voice FFT fingerprint as the quantum delivery address.
+    const payload: Record<string, unknown> = {
+      user_id: user.id,
+      activations: activeTransmissions as unknown as Record<string, unknown>[],
+      updated_at: new Date().toISOString(),
+    };
+    if (quantumAnchorRef.current) {
+      payload.quantum_anchor = quantumAnchorRef.current;
+    }
+    void supabase.from('user_active_transmissions').upsert(payload, { onConflict: 'user_id' });
   }, [activeTransmissions, user?.id]);
 
   // ── Realtime: sync activeTransmissions across devices ──
@@ -2897,6 +2921,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               // Build the quantum anchor from this voice scan
               // This is the user's unique biometric address that links them to the ingredient hashes
               const quantumAnchor = buildQuantumAnchor(result);
+              // Store in ref so all subsequent upserts (chat, manual) reuse this anchor
+              quantumAnchorRef.current = quantumAnchor as unknown as Record<string, unknown>;
 
               await supabase
                 .from('user_active_transmissions')
@@ -3241,14 +3267,15 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     setActiveTransmissions(updated);
 
     if (user?.id) {
-      void supabase.from('user_active_transmissions').upsert(
-        {
-          user_id: user.id,
-          activations: updated as unknown as Record<string, unknown>[],
-          updated_at: now,
-        },
-        { onConflict: 'user_id' },
-      );
+      const top33Payload: Record<string, unknown> = {
+        user_id: user.id,
+        activations: updated as unknown as Record<string, unknown>[],
+        updated_at: now,
+      };
+      if (quantumAnchorRef.current) {
+        top33Payload.quantum_anchor = quantumAnchorRef.current;
+      }
+      void supabase.from('user_active_transmissions').upsert(top33Payload, { onConflict: 'user_id' });
     }
     try {
       localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(updated));
