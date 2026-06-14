@@ -2325,7 +2325,7 @@ function QuantumApothecaryInner() {
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
   const [showVoiceScan, setShowVoiceScan] = useState(true);
   const [showAllTop33, setShowAllTop33] = useState(false);
-  const [cardTxOpen, setCardTxOpen] = useState(true);
+  const [cardTxOpen, setCardTxOpen] = useState(false);
   const [cardVoiceOpen, setCardVoiceOpen] = useState(true);  // Open by default — first thing user sees
   const [cardT33Open, setCardT33Open] = useState(false);
   const [cardLibOpen, setCardLibOpen] = useState(true);  // Open by default — frequencies visible immediately
