@@ -183,8 +183,7 @@ serve(async (req) => {
       ``,
       `SIDDHA REMEDIES:`,
       ...(Array.isArray(parsed.siddhaRemedies) ? (parsed.siddhaRemedies as string[]).map((r, i) => `${i + 1}. ${r}`) : []),
-    ].join("
-");
+    ].join("\n");
 
     // Save to palm_readings table if user is logged in
     if (userId) {
