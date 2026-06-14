@@ -7748,21 +7748,30 @@ export type Database = {
           activated_at: string
           activation_data: Json
           activation_id: string
+          activations: Json | null
           id: string
+          quantum_anchor: Json | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           activated_at?: string
           activation_data?: Json
           activation_id: string
+          activations?: Json | null
           id?: string
+          quantum_anchor?: Json | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           activated_at?: string
           activation_data?: Json
           activation_id?: string
+          activations?: Json | null
           id?: string
+          quantum_anchor?: Json | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -8786,6 +8795,36 @@ export type Database = {
       }
     }
     Views: {
+      active_quantum_fields: {
+        Row: {
+          active_transmission_count: number | null
+          anchored_at: string | null
+          coherence: number | null
+          dosha: string | null
+          last_scan_at: string | null
+          nadi: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active_transmission_count?: never
+          anchored_at?: never
+          coherence?: never
+          dosha?: never
+          last_scan_at?: string | null
+          nadi?: never
+          user_id?: string | null
+        }
+        Update: {
+          active_transmission_count?: never
+          anchored_at?: never
+          coherence?: never
+          dosha?: never
+          last_scan_at?: string | null
+          nadi?: never
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_affiliate_overview: {
         Row: {
           affiliate_code: string | null
