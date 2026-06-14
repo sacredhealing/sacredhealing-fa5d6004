@@ -8,14 +8,14 @@ import {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // QUANTUM ANCHOR SYSTEM
-// Replicates the LimbicArc "Virtual Ingredient" digital signature mechanism:
+// Replicates the Siddha Quantum Intelligence "Virtual Ingredient" digital signature mechanism:
 //   Physical Substance → Digitized Frequency Signature → Cloud Storage
 //   → User Voice Anchor → Active Field Transmission
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Generate a deterministic frequency hash for an ingredient.
- * Uses SubtleCrypto SHA-256 (browser native) — same algorithm as LimbicArc's
+ * Uses SubtleCrypto SHA-256 (browser native) — same algorithm as Siddha Quantum Intelligence's
  * proprietary "frequency hash" but openly implemented.
  * The hash encodes: name + type + benefit — making it unique per ingredient
  * and stable across all user sessions.
@@ -61,7 +61,7 @@ export function generateFrequencyHashSync(activation: Activation): string {
 /**
  * Extract the voice FFT fingerprint from a VoiceBiofieldResult.
  * This is the user's unique "quantum anchor" — the same concept as
- * LimbicArc's voice print analysis that links the server to the user's body-field.
+ * Siddha Quantum Intelligence's voice print analysis that links the server to the user's body-field.
  * Encodes: RMS energy profile, spectral centroid, ZCR, coherence score.
  */
 export function computeVoiceFftFingerprint(result: VoiceBiofieldResult): number[] {
