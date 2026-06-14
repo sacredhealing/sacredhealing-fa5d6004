@@ -14,6 +14,8 @@ import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
 import { AccurateHoraWatch } from '@/components/vedic/AccurateHoraWatch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
+import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
 
 // ── Types ────────────────────────────────────────────────────────
 interface BirthData {
@@ -755,6 +757,7 @@ const JyotishChamber: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<Array<{role:'user'|'oracle', text:string}>>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [gitaOracleOpen, setGitaOracleOpen] = useState(false);
   const [oracleOpen, setOracleOpen] = useState(true);
   const [lexSearch, setLexSearch] = useState('');
   const [lexCat, setLexCat] = useState('All');
@@ -1138,6 +1141,14 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   activeAntar={activeAntar}
                   moonNakshatra={ephemeris?.moonNakshatra || null}
                   navigate={navigate}
+                />
+
+                {/* ══ BHAGAVAD GITA ORACLE — Jyotish Synced ══ */}
+                <GitaOraclePanel
+                  open={gitaOracleOpen}
+                  onToggle={() => setGitaOracleOpen(p => !p)}
+                  activeMaha={activeMaha}
+                  activeAntar={activeAntar}
                 />
 
                 {/* Stats row */}
@@ -1716,3 +1727,4 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
