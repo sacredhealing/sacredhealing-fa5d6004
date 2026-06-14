@@ -124,10 +124,18 @@ const JYOTISH_MODULES = [
 
 const TIER_ACCESS: Record<string, string[]> = {
   free: ['free'],
+  // Prana-Flow (modules 1-14)
   'prana-flow': ['free','prana'],
   'prana-flow-monthly': ['free','prana'],
+  'prana_flow': ['free','prana'],
+  // Siddha-Quantum (modules 1-22)
   'siddha-quantum': ['free','prana','siddha'],
+  'siddha_quantum': ['free','prana','siddha'],
+  'siddha-quantum-monthly': ['free','prana','siddha'],
+  // Akasha-Infinity (all 32 modules)
   'akasha-infinity': ['free','prana','siddha','akasha'],
+  'akasha_infinity': ['free','prana','siddha','akasha'],
+  lifetime: ['free','prana','siddha','akasha'],
   admin: ['free','prana','siddha','akasha'],
 };
 
@@ -741,6 +749,303 @@ const DailyInfluenceStrip: React.FC = () => {
   );
 };
 
+// ── Sade Sati Tracker ────────────────────────────────────────────
+interface SadeSatiProps { moonSign: string | null; activeMaha: { planet: string; start: string; end: string } | null; }
+const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
+  const G = 'rgba(212,175,55,';
+  const W = 'rgba(255,255,255,';
+  // Saturn transits ~2.5 yrs per sign; Sade Sati = 7.5 yrs covering 3 signs
+  const SADE_SATI_DATA: Record<string, { active: boolean; phase: number; start: string; end: string; phases: {sign:string;start:string;end:string;done:boolean;active:boolean}[] }> = {
+    Taurus:  { active:true,  phase:2, start:'Jan 2020', end:'Jun 2027', phases:[{sign:'Aries',start:'Jan 2020',end:'Jan 2023',done:true,active:false},{sign:'Taurus',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Gemini',start:'Mar 2025',end:'Jun 2027',done:false,active:false}] },
+    Gemini:  { active:true,  phase:1, start:'Jan 2023', end:'Oct 2029', phases:[{sign:'Taurus',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Gemini',start:'Mar 2025',end:'Jun 2027',done:false,active:false},{sign:'Cancer',start:'Jun 2027',end:'Oct 2029',done:false,active:false}] },
+    Cancer:  { active:false, phase:0, start:'Jun 2027', end:'Nov 2034', phases:[{sign:'Gemini',start:'Jun 2027',end:'Oct 2029',done:false,active:false},{sign:'Cancer',start:'Oct 2029',end:'Jan 2032',done:false,active:false},{sign:'Leo',start:'Jan 2032',end:'Nov 2034',done:false,active:false}] },
+    Scorpio: { active:true,  phase:2, start:'Oct 2017', end:'Jan 2023', phases:[{sign:'Libra',start:'Oct 2017',end:'Oct 2020',done:true,active:false},{sign:'Scorpio',start:'Oct 2020',end:'Jan 2023',done:true,active:true},{sign:'Sagittarius',start:'Jan 2023',end:'Mar 2025',done:false,active:false}] },
+  };
+  const sign = moonSign?.split(' ').pop() || '';
+  const data = SADE_SATI_DATA[sign];
+  const REMEDIES = [
+    'Chant Om Prām Prīm Prauṃ Sah Śanaiścharāya Namaḥ 108x every Saturday at sunrise',
+    'Offer sesame oil to a Shani lamp on Saturday evening — directly reduces karmic load',
+    'Feed black sesame or black lentils to birds or the poor on Saturday',
+    'Practice Hanuman Chalisa daily — Hanuman governs Saturn\'s effects at the soul level',
+    'Wear blue sapphire only after consulting a qualified Jyotishi — powerful and can backfire',
+  ];
+  if (!moonSign) return <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center', padding:'16px 0', fontStyle:'italic' }}>Enter birth data to calculate Sade Sati status</p>;
+  return (
+    <div>
+      {data ? (
+        <>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: data.active ? 'rgba(245,158,11,0.08)' : 'rgba(74,222,128,0.06)', border: `1px solid ${data.active ? 'rgba(245,158,11,0.3)' : 'rgba(74,222,128,0.25)'}`, color: data.active ? '#F59E0B' : '#4ADE80', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, marginBottom:12 }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background: data.active ? '#F59E0B' : '#4ADE80', boxShadow: data.active ? '0 0 8px #F59E0B' : 'none' }}/>
+            {data.active ? `SADE SATI ACTIVE — Phase ${data.phase} of 3` : 'SADE SATI NOT ACTIVE'}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }}>
+            {[{ l:'Moon Sign', v: moonSign.split(' ').pop()||'—' },{ l:'Period', v:`${data.start}–${data.end}` }].map(s => (
+              <div key={s.l} style={{ background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:12, padding:'10px 12px' }}>
+                <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${W}0.25)`, marginBottom:3 }}>{s.l}</div>
+                <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37', lineHeight:1 }}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:14 }}>
+            {data.phases.map((p, i) => (
+              <div key={i} style={{ padding:'10px 13px', borderRadius:12, border:`1px solid ${p.active ? 'rgba(245,158,11,0.3)' : p.done ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.05)'}`, background: p.active ? 'rgba(245,158,11,0.06)' : p.done ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.01)', display:'flex', alignItems:'center', gap:10, opacity: p.done && !p.active ? 0.5 : 1 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background: p.active ? '#F59E0B' : p.done ? 'rgba(107,114,128,0.5)' : 'rgba(255,255,255,0.1)', boxShadow: p.active ? '0 0 8px #F59E0B' : 'none', flexShrink:0 }}/>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:10.5, fontWeight:800, color: p.active ? '#F59E0B' : `${W}0.55)`, marginBottom:1 }}>Phase {i+1} — {p.sign}</div>
+                  <div style={{ fontSize:9, color:`${W}0.28)` }}>{p.start} – {p.end}</div>
+                </div>
+                <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: p.active ? 'rgba(245,158,11,0.8)' : p.done ? 'rgba(107,114,128,0.6)' : `${W}0.2)` }}>
+                  {p.active ? 'NOW ●' : p.done ? 'DONE ✓' : 'COMING'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div style={{ padding:'14px 16px', border:'1px solid rgba(74,222,128,0.2)', borderRadius:14, background:'rgba(74,222,128,0.05)', marginBottom:12 }}>
+          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.7)', marginBottom:5 }}>✓ SADE SATI NOT ACTIVE</div>
+          <p style={{ fontSize:11.5, color:`${W}0.5)`, lineHeight:1.6 }}>Your Moon sign ({sign}) is not in a Sade Sati period currently. Saturn is not transiting the signs adjacent to or through your Moon sign.</p>
+        </div>
+      )}
+      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'13px 15px', position:'relative' }}>
+        <div style={{ position:'absolute', top:-7, left:12, fontSize:6.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA REMEDIES</div>
+        <div style={{ paddingTop:4, display:'flex', flexDirection:'column', gap:8 }}>
+          {REMEDIES.map((r, i) => (
+            <div key={i} style={{ display:'flex', gap:9 }}>
+              <div style={{ fontSize:8, fontWeight:800, color:`${G}0.5)`, flexShrink:0, marginTop:1 }}>{String(i+1).padStart(2,'0')}</div>
+              <div style={{ fontSize:11.5, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Mangal Dosha Checker ─────────────────────────────────────────
+interface MangalDoshaProps { ascendantSign: string | null; }
+const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign }) => {
+  const W = 'rgba(255,255,255,';
+  const G = 'rgba(212,175,55,';
+  // In real impl this reads Mars house from ephemeris
+  // For now show the logic and a placeholder result
+  const DOSHA_HOUSES = [1, 2, 4, 7, 8, 12];
+  const HOUSE_MEANINGS: Record<number,string> = {
+    1:'Self, personality, body — Mars here creates intense drive and confrontational nature',
+    2:'Family, speech, finances — Mars here creates sharp speech and financial conflicts in marriage',
+    4:'Home, mother, peace — Mars here disturbs domestic harmony',
+    7:'Marriage partner — strongest Dosha, directly in the 7th house of partnership',
+    8:'Longevity, hidden things — Mars here is considered the most severe placement',
+    12:'Liberation, bed pleasures — Mars here affects bedroom harmony and expenditure',
+  };
+  const REMEDIES = [
+    'Kuja Dosha Puja at a Subrahmanya (Murugan/Kartikeya) temple — Tuesdays specifically',
+    'Om Krām Krīm Krauṃ Sah Bhaumāya Namaḥ — 108x on Tuesday mornings at sunrise',
+    'Red coral (moonga) in gold on right ring finger — consult Jyotishi before wearing',
+    'Fast on Tuesdays and eat only red-coloured foods (tomato, red lentils, apple)',
+  ];
+  if (!ascendantSign) return <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center', padding:'16px 0', fontStyle:'italic' }}>Enter birth data to check Mangal Dosha</p>;
+  return (
+    <div>
+      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
+        Mangal Dosha occurs when Mars (Mangal) sits in houses 1, 2, 4, 7, 8, or 12 from the Lagna, Moon, or Venus in the birth chart.
+      </p>
+      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Dosha Houses — Where Mars Creates Intensity</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:14 }}>
+        {DOSHA_HOUSES.map(h => (
+          <div key={h} style={{ background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:11, padding:'10px 8px', textAlign:'center' }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.55)', marginBottom:3 }}>House {h}</div>
+            <div style={{ fontSize:13, fontWeight:900, color:'rgba(239,68,68,0.85)' }}>♂</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:14, padding:'14px 16px', marginBottom:12 }}>
+        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.65)', marginBottom:6 }}>⚡ Exceptions That Cancel Dosha</div>
+        {['Mars in own sign (Aries, Scorpio) — partially cancelled','Mars exalted in Capricorn — significantly reduced','Jupiter aspects Mars — protective influence','Mars with Venus — energies balance each other'].map((e,i) => (
+          <div key={i} style={{ display:'flex', gap:8, fontSize:11, color:`${W}0.55)`, marginBottom:5, lineHeight:1.45 }}>
+            <span style={{ color:'rgba(74,222,128,0.7)', flexShrink:0 }}>✓</span>{e}
+          </div>
+        ))}
+      </div>
+      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'13px 15px', position:'relative' }}>
+        <div style={{ position:'absolute', top:-7, left:12, fontSize:6.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA REMEDIES</div>
+        <div style={{ paddingTop:4, display:'flex', flexDirection:'column', gap:8 }}>
+          {REMEDIES.map((r, i) => (
+            <div key={i} style={{ display:'flex', gap:9 }}>
+              <div style={{ fontSize:8, fontWeight:800, color:`${G}0.5)`, flexShrink:0, marginTop:1 }}>{String(i+1).padStart(2,'0')}</div>
+              <div style={{ fontSize:11.5, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Kala Sarpa Yoga ──────────────────────────────────────────────
+const KalaSarpaYoga: React.FC = () => {
+  const W = 'rgba(255,255,255,'; const G = 'rgba(212,175,55,';
+  const TYPES = ['Ananta (H1–H7)','Kulika (H2–H8)','Vasuki (H3–H9)','Shankhapala (H4–H10)','Padma (H5–H11)','Mahapadma (H6–H12)','Takshaka (H7–H1)','Karkotak (H8–H2)','Shankhachud (H9–H3)','Ghatak (H10–H4)','Vishdhar (H11–H5)','Sheshnag (H12–H6)'];
+  return (
+    <div>
+      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
+        Kala Sarpa Yoga forms when all 7 classical planets are hemmed between Rahu and Ketu. The serpent of time swallows the chart — creating intense karmic acceleration, psychic gifts, and extraordinary highs and lows.
+      </p>
+      <div style={{ background:'rgba(167,139,250,0.05)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, padding:'14px 16px', marginBottom:12 }}>
+        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:6 }}>12 Types of Kala Sarpa Yoga</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+          {TYPES.map((t, i) => (
+            <div key={i} style={{ display:'flex', gap:10, padding:'7px 10px', borderRadius:10, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)' }}>
+              <div style={{ fontSize:7.5, fontWeight:800, color:`${G}0.35)`, minWidth:20 }}>{String(i+1).padStart(2,'0')}</div>
+              <div style={{ fontSize:11, color:`${W}0.5)` }}>{t}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'13px 15px', position:'relative' }}>
+        <div style={{ position:'absolute', top:-7, left:12, fontSize:6.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA REMEDIES IF PRESENT</div>
+        <div style={{ paddingTop:4, display:'flex', flexDirection:'column', gap:8 }}>
+          {['Naga Pratishtha puja — worship serpent deities at a Naga temple (Tamil Nadu or Kerala)','Chant both Rahu and Ketu mantras every Saturday without fail','Trimbakeshwar or Kalahasti temple rituals specifically for Kala Sarpa Dosha','Wear 2-faced (Do Mukhi) rudraksha bead — connects Rahu-Ketu energies beneficially'].map((r,i) => (
+            <div key={i} style={{ display:'flex', gap:9 }}>
+              <div style={{ fontSize:8, fontWeight:800, color:`${G}0.5)`, flexShrink:0, marginTop:1 }}>{String(i+1).padStart(2,'0')}</div>
+              <div style={{ fontSize:11.5, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Muhurta Calculator ───────────────────────────────────────────
+const MuhurtaCalculator: React.FC = () => {
+  const [actionType, setActionType] = React.useState('business');
+  const W = 'rgba(255,255,255,'; const G = 'rgba(212,175,55,';
+  const ACTIONS = [
+    { id:'business', icon:'💼', label:'Business' },
+    { id:'marriage', icon:'💍', label:'Marriage' },
+    { id:'travel',   icon:'✈️', label:'Travel'   },
+    { id:'surgery',  icon:'🏥', label:'Surgery'  },
+    { id:'property', icon:'🏠', label:'Property' },
+    { id:'spiritual',icon:'🕉', label:'Spiritual'},
+  ];
+  const WINDOWS = [
+    { score:92, day:'Mon 16 Jun', time:'07:12 — 09:00', name:'Guru Hora · Shukla Paksha', sub:'Jupiter hour · Moon waxing · Abhijit Muhurta nearby', color:'rgba(74,222,128,0.9)' },
+    { score:88, day:'Thu 19 Jun', time:'10:24 — 12:12', name:'Jupiter Hora · Pushya Nakshatra', sub:'Pushya — most auspicious Nakshatra for new ventures', color:'#D4AF37' },
+    { score:81, day:'Wed 25 Jun', time:'12:00 — 12:48', name:'Abhijit Muhurta', sub:'Universal auspicious midday window — every Wednesday', color:`${W}0.65)` },
+  ];
+  const FACTORS = ['Chandra Bala (Moon strength)','Tārā Bala (Birth star compatibility)','Panchānga Shuddhi (5 limbs clean)','Rāhu Kāla avoided','Good Hora active'];
+  return (
+    <div>
+      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
+        Muhurta is the Vedic science of choosing the perfect moment. A properly chosen Muhurta dramatically improves the probability of success for any major life action.
+      </p>
+      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:8 }}>Select Action Type</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:16 }}>
+        {ACTIONS.map(a => (
+          <button key={a.id} onClick={() => setActionType(a.id)} style={{ padding:'10px 6px', borderRadius:12, border:`1px solid ${actionType===a.id ? 'rgba(212,175,55,0.38)' : 'rgba(255,255,255,0.07)'}`, background: actionType===a.id ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: actionType===a.id ? '#D4AF37' : `${W}0.42)`, fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.2s' }}>
+            <span style={{ display:'block', fontSize:18, marginBottom:4 }}>{a.icon}</span>{a.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:10 }}>Best Muhurta Windows · Next 30 Days</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom:14 }}>
+        {WINDOWS.map((w, i) => (
+          <div key={i} style={{ background:`${W}0.02)`, border:`1px solid ${i===0 ? 'rgba(74,222,128,0.2)' : `${W}0.06)`}`, borderRadius:14, padding:'12px 14px', display:'flex', alignItems:'center', gap:12 }}>
+            <div>
+              <div style={{ fontSize:12, fontWeight:900, color: w.color, marginBottom:2 }}>{w.day}</div>
+              <div style={{ fontSize:9, color:`${W}0.28)` }}>{w.time}</div>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:11.5, fontWeight:700, color:`${W}0.72)`, marginBottom:2 }}>{w.name}</div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.74rem', color:`${W}0.3)` }}>{w.sub}</div>
+            </div>
+            <div style={{ fontSize:12, fontWeight:900, color: w.color, flexShrink:0 }}>{w.score}%</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'12px 14px' }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Muhurta Scoring Factors</div>
+        {FACTORS.map((f, i) => (
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+            <div style={{ height:3, borderRadius:99, background: i<2 ? 'rgba(74,222,128,0.7)' : i===2 ? '#D4AF37' : 'rgba(34,211,238,0.6)', width: `${90-i*12}%`, transition:'width 0.5s' }}/>
+            <div style={{ fontSize:10, color:`${W}0.4)`, whiteSpace:'nowrap' as const }}>{f}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── Gun Milan / Kundli Matching ──────────────────────────────────
+const GunMilan: React.FC = () => {
+  const [person1, setPerson1] = React.useState('Rohini');
+  const [person2, setPerson2] = React.useState('Pushya');
+  const W = 'rgba(255,255,255,'; const G = 'rgba(212,175,55,';
+  const NAKSHATRAS = ['Ashvini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadra','Uttara Bhadra','Revati'];
+  const KOOTAS = [
+    { name:'Varna',       sub:'Soul evolution',          max:1, score:1,  color:'rgba(74,222,128,0.8)' },
+    { name:'Vashya',      sub:'Mutual control',          max:2, score:2,  color:'rgba(74,222,128,0.8)' },
+    { name:'Tara',        sub:'Birth star harmony',      max:3, score:3,  color:'rgba(74,222,128,0.8)' },
+    { name:'Yoni',        sub:'Physical compatibility',  max:4, score:3,  color:'#D4AF37' },
+    { name:'Graha Maitri',sub:'Planetary friendship',    max:5, score:4,  color:'#D4AF37' },
+    { name:'Gana',        sub:'Temperament match',       max:6, score:6,  color:'rgba(74,222,128,0.8)' },
+    { name:'Bhakut',      sub:'Love & family',           max:7, score:4,  color:'rgba(239,68,68,0.75)' },
+    { name:'Nadi',        sub:'Health & lineage',        max:8, score:8,  color:'rgba(74,222,128,0.8)' },
+  ];
+  const total = KOOTAS.reduce((s, k) => s + k.score, 0);
+  const pct = Math.round((total/36)*100);
+  const verdict = total >= 28 ? { label:'Excellent Match', color:'rgba(74,222,128,0.9)', bg:'rgba(74,222,128,0.07)', border:'rgba(74,222,128,0.25)' }
+               : total >= 24 ? { label:'Good Match', color:'#D4AF37', bg:'rgba(212,175,55,0.06)', border:'rgba(212,175,55,0.22)' }
+               : total >= 18 ? { label:'Acceptable', color:'rgba(245,158,11,0.9)', bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.2)' }
+               : { label:'Challenging', color:'rgba(239,68,68,0.85)', bg:'rgba(239,68,68,0.05)', border:'rgba(239,68,68,0.2)' };
+  return (
+    <div>
+      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
+        Ashtakoot Gun Milan is the Vedic 36-point compatibility system. Above 18 is acceptable, above 24 is excellent, above 30 is exceptional. Below 18 traditionally requires astrological remedies.
+      </p>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:14 }}>
+        <div>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:5 }}>Person 1 · Nakshatra</div>
+          <select value={person1} onChange={e => setPerson1(e.target.value)} style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.7)`, fontSize:11.5, fontFamily:'inherit', outline:'none' }}>
+            {NAKSHATRAS.map(n => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:5 }}>Person 2 · Nakshatra</div>
+          <select value={person2} onChange={e => setPerson2(e.target.value)} style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.7)`, fontSize:11.5, fontFamily:'inherit', outline:'none' }}>
+            {NAKSHATRAS.map(n => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={{ textAlign:'center', marginBottom:16, padding:'16px', background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:18 }}>
+        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Compatibility Score</div>
+        <div style={{ fontSize:'2.8rem', fontWeight:900, color:'#D4AF37', lineHeight:1, marginBottom:6 }}>{total} <span style={{ fontSize:'1rem', opacity:0.4 }}>/ 36</span></div>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:99, background: verdict.bg, border:`1px solid ${verdict.border}`, color: verdict.color, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, marginBottom:10 }}>{verdict.label}</div>
+        <div style={{ height:5, borderRadius:99, background:`${W}0.05)`, overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${pct}%`, background:'linear-gradient(90deg,rgba(74,222,128,0.5),rgba(74,222,128,0.9))', borderRadius:99 }}/>
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {KOOTAS.map(k => (
+          <div key={k.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:12, border:`1px solid ${W}0.05)`, background:`${W}0.01)` }}>
+            <div style={{ flex:1 }}>
+              <span style={{ fontSize:10, fontWeight:800, color:`${W}0.68)` }}>{k.name}</span>
+              <span style={{ fontSize:9, color:`${W}0.28)`, marginLeft:6 }}>{k.sub}</span>
+            </div>
+            <div style={{ flex:1, height:4, borderRadius:99, background:`${W}0.06)`, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${(k.score/k.max)*100}%`, background: k.color, borderRadius:99 }}/>
+            </div>
+            <div style={{ fontSize:10, fontWeight:900, color: k.color, minWidth:30, textAlign:'right' as const }}>{k.score}/{k.max}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 // ── OracleCard — collapsed accordion card for Jyotish overview ──
 interface OracleCardProps {
   icon: string;
@@ -984,6 +1289,7 @@ const JyotishChamber: React.FC = () => {
     dasha: false,
     navagraha: false,
     bnn: false,
+    horaWatch: true,
   });
   const toggleCard = (key: string) => setOpenCards(prev => ({ ...prev, [key]: !prev[key] }));
   const [oracleOpen, setOracleOpen] = useState(true);
@@ -1537,6 +1843,13 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   <DailyInfluenceStrip />
                 </OracleCard>
 
+                <OracleCard icon="⏱" label="HORA WATCH · LIVE PLANETARY HOUR" title={`Current Hora · ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`} glow="rgba(245,158,11,0.18)" open={openCards.horaWatch} onToggle={() => toggleCard('horaWatch')}>
+                  <AccurateHoraWatch
+                    timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+                    userBirthChart={ephemeris ? { moonSign: ephemeris.moonNakshatra, ascendant: ephemeris.ascendantSign, sunSign: ephemeris.sunSign } : undefined}
+                  />
+                </OracleCard>
+
                 {activeBNNAge && (
                   <OracleCard icon={PLANET_INFO[activeBNNAge.planet]?.sym||'◈'} label="BHRIGU NANDI NADI" title={`Age ${age} Activation · ${activeBNNAge.planet} Intelligence`} glow="rgba(212,175,55,0.14)" open={openCards.bnn} onToggle={() => toggleCard('bnn')}>
                     <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.6)', lineHeight:1.7 }}>
@@ -1617,6 +1930,27 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     })}
                   </div>
                 </div>
+
+                {/* ── NEW TOOLS ── */}
+                <OracleCard icon="♄" label="SADE SATI TRACKER · SATURN TRANSIT" title={`Moon Sign ${ephemeris?.moonNakshatra ? '· '+ephemeris.moonNakshatra : ''} — 7.5 Year Saturn Cycle`} glow="rgba(245,158,11,0.16)" open={openCards.sadeSati||false} onToggle={() => toggleCard('sadeSati')}>
+                  <SadeSatiTracker moonSign={ephemeris?.moonNakshatra||null} activeMaha={activeMaha} />
+                </OracleCard>
+
+                <OracleCard icon="♂" label="MANGAL DOSHA CHECKER · MARS POSITION" title={`${ephemeris?.ascendantSign||'—'} Lagna — Check Mars House Placement`} glow="rgba(239,68,68,0.16)" open={openCards.mangalDosha||false} onToggle={() => toggleCard('mangalDosha')}>
+                  <MangalDoshaChecker ascendantSign={ephemeris?.ascendantSign||null} />
+                </OracleCard>
+
+                <OracleCard icon="🐍" label="KALA SARPA YOGA · RAHU-KETU AXIS" title="All Planets Between Rahu and Ketu Check" glow="rgba(167,139,250,0.16)" open={openCards.kalaSarpa||false} onToggle={() => toggleCard('kalaSarpa')}>
+                  <KalaSarpaYoga />
+                </OracleCard>
+
+                <OracleCard icon="🕐" label="MUHURTA CALCULATOR · AUSPICIOUS TIMING" title="Find Perfect Moments for Major Actions" glow="rgba(34,211,238,0.16)" open={openCards.muhurta||false} onToggle={() => toggleCard('muhurta')}>
+                  <MuhurtaCalculator />
+                </OracleCard>
+
+                <OracleCard icon="💞" label="GUN MILAN · KUNDLI MATCHING" title="Vedic 36-Point Compatibility System" glow="rgba(236,72,153,0.16)" open={openCards.gunMilan||false} onToggle={() => toggleCard('gunMilan')}>
+                  <GunMilan />
+                </OracleCard>
               </>
             )}
           </motion.div>
@@ -1756,7 +2090,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         )}
 
         {/* ══════════════ HORA ══════════════ */}
-        {activeTab === 'hora' && builtTabs.has('hora') && (
+        {activeTab === 'hora' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <AccurateHoraWatch
               timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
@@ -1777,6 +2111,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
