@@ -2018,7 +2018,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         )}
 
         {/* ══════════════ NADI LEAF ══════════════ */}
-        {activeTab === 'nadi' && builtTabs.has('nadi') && (
+        {activeTab === 'nadi' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ background:'rgba(255,255,255,0.025)', borderRadius:40, padding:26, textAlign:'center', marginBottom:16, border:'1px solid rgba(74,222,128,0.15)' }}>
               <div style={{ fontSize:36, marginBottom:12 }}>🌿</div>
@@ -2035,7 +2035,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         )}
 
         {/* ══════════════ JYOTISH VIDYA ══════════════ */}
-        {activeTab === 'vidya' && builtTabs.has('vidya') && (
+        {activeTab === 'vidya' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 18px', marginBottom:14, borderRadius:20, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.01)' }}>
               <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', flexShrink:0 }}>Your Path</div>
@@ -2059,8 +2059,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               const isOpen = openModules.has(m.id);
               const tierCol = { free:'#6B7280', prana:'#22D3EE', siddha:'#D4AF37', akasha:'#ffffff' }[m.tier] || '#D4AF37';
               return (
-                <div key={m.id} style={{ background:'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55 }}>
-                  <div style={{ display:'flex', alignItems:'flex-start', gap:10, cursor: ok ? 'pointer' : 'default' }} onClick={() => ok && toggleModule(m.id)}>
+                <div key={m.id} onClick={() => ok && toggleModule(m.id)} style={{ background: isOpen ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border: isOpen ? '1px solid rgba(212,175,55,0.22)' : '1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55, cursor: ok ? 'pointer' : 'default', transition:'all 0.2s', boxShadow: isOpen ? '0 0 18px rgba(212,175,55,0.08)' : 'none' }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
                     <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
                     <div style={{ flex:1 }}>
                       {m.secret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
@@ -2125,6 +2125,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
