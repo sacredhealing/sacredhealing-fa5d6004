@@ -28,6 +28,8 @@ import {
   enrichTransmission,
   isVegetarianActivation,
   purgeExpiredAndLegacy,
+  buildQuantumAnchor,
+  generateFrequencyHash,
   LS_LIBRARY_UNLOCKED,
   LS_LAST_SCAN,
   LS_SCAN_SNAPSHOT,
@@ -2859,28 +2861,26 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         sqiSync.setScanSnapshot(payload);
         sqiSync.setTop33Matches(top33, scanNow);
         setShowAllTop33(false);
-        // BUG 3 FIX: Persist voice scan frequencies so SQI edge function can read them
+        // Persist voice scan frequencies + quantum anchor to Supabase
         if (user?.id && top33?.length) {
           (async () => {
             try {
               const { data: existing } = await supabase
                 .from('user_active_transmissions')
-                .select('activations')
+                .select('activations, quantum_anchor')
                 .eq('user_id', user.id)
                 .maybeSingle();
               const current = (existing?.activations as any[]) || [];
               const nonScan = current.filter((a: any) => a.source !== 'voice_scan');
-              // Save FULL Activation objects — not just names
-              // This ensures cross-device restore has complete field data
-              const activatedAt = new Date().toISOString();
-              const scanFreqs = top33.slice(0, 10).map((item: any) => {
-                // Find the full Activation from ALL_ACTIVATIONS
+
+              // Build enriched scan frequencies with frequency hashes (quantum signatures)
+              const scanFreqs = await Promise.all(top33.slice(0, 10).map(async (item: any) => {
                 const full = ALL_ACTIVATIONS.find((a: any) =>
                   a.id === item.id ||
                   (a.name && item.name && a.name.toLowerCase() === item.name.toLowerCase())
                 );
                 const base = full || item;
-                return enrichTransmission({
+                const enriched = enrichTransmission({
                   id: base.id || `scan_${(base.name || '').replace(/\s+/g,'_').toLowerCase()}`,
                   name: base.name || item.name,
                   type: base.type || item.type || 'Bioenergetic',
@@ -2889,10 +2889,23 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   color: base.color || '#D4AF37',
                   source: 'voice_scan',
                 } as any, 'voice_scan');
-              });
+                // Generate async SHA-256 frequency hash (the digital ingredient signature)
+                const frequencyHash = await generateFrequencyHash(enriched).catch(() => enriched.frequencyHash || '');
+                return { ...enriched, frequencyHash };
+              }));
+
+              // Build the quantum anchor from this voice scan
+              // This is the user's unique biometric address that links them to the ingredient hashes
+              const quantumAnchor = buildQuantumAnchor(result);
+
               await supabase
                 .from('user_active_transmissions')
-                .upsert({ user_id: user.id, activations: [...nonScan, ...scanFreqs] }, { onConflict: 'user_id' });
+                .upsert({
+                  user_id: user.id,
+                  activations: [...nonScan, ...scanFreqs],
+                  quantum_anchor: quantumAnchor as any,
+                  updated_at: new Date().toISOString(),
+                }, { onConflict: 'user_id' });
             } catch (e) { console.warn('[SQI] Voice scan persist failed:', e); }
           })();
         }
