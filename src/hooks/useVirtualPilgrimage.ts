@@ -49,6 +49,13 @@ function ensureNoDbError(error: { message?: string } | null | undefined, fallbac
 }
 
 const SCHUMANN = [7.83, 14.3, 20.8, 27.3, 33.8];
+
+/** Compute how many full 24-hour periods have elapsed since activatedAt */
+function computeDaysActive(activatedAt: string): number {
+  const start = new Date(activatedAt).getTime();
+  const now = Date.now();
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+}
 const DIRS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
 function greatCircle(la1: number, lo1: number, la2: number, lo2: number): number {
@@ -158,7 +165,7 @@ export function useVirtualPilgrimage() {
               bearingDir: DIRS[Math.round(bear / 45) % 8],
             },
             strength: data.strength ?? 20,
-            daysActive: data.days_active ?? 0,
+            daysActive: computeDaysActive(data.activated_at),
             pulseCount: data.pulse_count ?? 0,
             lastPulseAt: data.last_pulse_at,
             activatedAt: data.activated_at,
@@ -268,7 +275,7 @@ export function useVirtualPilgrimage() {
         home,
         scalar,
         strength: data.strength,
-        daysActive: 0,
+        daysActive: computeDaysActive(data.activated_at),
         pulseCount: 0,
         lastPulseAt: null,
         activatedAt: data.activated_at,
