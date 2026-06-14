@@ -1812,7 +1812,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 }).map(e => <LexEntry key={e.term} entry={e} gs={gs}/>)}
               </div>
             </div>
-          </div>
           </motion.div>
         )}
 
