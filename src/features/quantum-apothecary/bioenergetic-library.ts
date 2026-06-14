@@ -612,6 +612,8 @@ export function matchActivationsToScan(scanData: {
   organField?: string;
   heartRate?: number;
   hrv?: number;
+  /** Spoken words captured during voice scan — highest priority matching signal */
+  spokenKeywords?: string[];
 }, maxResults = 10): BioenergticActivation[] {
   const dosha = scanData.dominantDosha || 'Vata';
   const nadi = scanData.activatedNadi || 'Sushumna';
@@ -680,6 +682,49 @@ export function matchActivationsToScan(scanData: {
       }
       if (of_lower.includes('gut') || of_lower.includes('digest')) {
         if (['Probiotic', 'Enzyme', 'Prebiotic', 'Herb'].includes(item.category)) score += 15;
+      }
+    }
+
+    // ── Spoken keyword matching — highest weight signal ──────────────
+    // Words spoken during the voice scan match directly against
+    // ingredient name and category (the user's own stated symptoms/intentions).
+    if (scanData.spokenKeywords?.length) {
+      const nameLow = item.name.toLowerCase();
+      const catLow = item.category.toLowerCase();
+      const keyLow = item.keywords.join(' ').toLowerCase();
+      for (const word of scanData.spokenKeywords) {
+        if (word.length < 3) continue;
+        const w = word.toLowerCase();
+        if (nameLow.includes(w) || catLow.includes(w) || keyLow.includes(w)) {
+          score += 45; // spoken word match = strongest signal
+          break;
+        }
+        // Partial symptom-to-category semantic mapping
+        const symptomMap: Record<string, string[]> = {
+          pain: ['anti-inflammatory', 'herb', 'enzyme', 'analgesic', 'homeopathic'],
+          sleep: ['sleep', 'sedative', 'gaba', 'adaptogen', 'amino acid'],
+          stress: ['adaptogen', 'amino acid', 'b vitamin', 'nootropic'],
+          anxiety: ['bach flower', 'adaptogen', 'amino acid', 'nootropic'],
+          energy: ['b vitamin', 'amino acid', 'adaptogen', 'longevity', 'mushroom'],
+          focus: ['nootropic', 'amino acid', 'adaptogen', 'b vitamin'],
+          immune: ['immune', 'antioxidant', 'herb', 'mushroom', 'adaptogen'],
+          detox: ['detox', 'herb', 'antioxidant', 'mineral', 'probiotic'],
+          gut: ['probiotic', 'enzyme', 'herb', 'prebiotic', 'fiber'],
+          heart: ['omega-3', 'antioxidant', 'mineral', 'adaptogen', 'longevity'],
+          inflammation: ['anti-inflammatory', 'antioxidant', 'herb', 'omega-3'],
+          liver: ['detox', 'herb', 'antioxidant', 'enzyme'],
+          hormone: ['adaptogen', 'herb', 'mineral', 'fatty acid'],
+          skin: ['antioxidant', 'omega-3', 'mineral', 'superfood'],
+          weight: ['adaptogen', 'enzyme', 'herb', 'amino acid'],
+          memory: ['nootropic', 'adaptogen', 'amino acid', 'b vitamin', 'mushroom'],
+          fatigue: ['adaptogen', 'b vitamin', 'amino acid', 'longevity', 'mineral'],
+          depression: ['amino acid', 'nootropic', 'adaptogen', 'b vitamin'],
+          brain: ['nootropic', 'omega-3', 'amino acid', 'mushroom', 'adaptogen'],
+        };
+        if (symptomMap[w] && symptomMap[w].includes(catLow)) {
+          score += 30;
+          break;
+        }
       }
     }
 
