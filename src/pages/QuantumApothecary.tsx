@@ -2326,9 +2326,9 @@ function QuantumApothecaryInner() {
   const [showVoiceScan, setShowVoiceScan] = useState(true);
   const [showAllTop33, setShowAllTop33] = useState(false);
   const [cardTxOpen, setCardTxOpen] = useState(true);
-  const [cardVoiceOpen, setCardVoiceOpen] = useState(false);
+  const [cardVoiceOpen, setCardVoiceOpen] = useState(true);  // Open by default — first thing user sees
   const [cardT33Open, setCardT33Open] = useState(false);
-  const [cardLibOpen, setCardLibOpen] = useState(false);
+  const [cardLibOpen, setCardLibOpen] = useState(true);  // Open by default — frequencies visible immediately
 
   useEffect(() => {
     try {
@@ -2515,6 +2515,11 @@ function QuantumApothecaryInner() {
       vibrationalSignature: act.vibrationalSignature || sacredName,
       type: act.type ?? 'Bioenergetic',
       color: act.color || '#60a5fa',
+      // Preserve quantum anchor fields through mixer normalization
+      frequencyHash: act.frequencyHash,
+      activatedAt: act.activatedAt,
+      expiresAt: act.expiresAt,
+      source: act.source,
     };
   }, []);
 
@@ -2979,30 +2984,57 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         .map((s: any) => s.act);
 
       // ── Auto-select 3 Siddha Transmissions matched to this scan ───────
+      // Direct dosha-to-Siddha keyword map so matching always activates
+      const doshaStr = String(result.dominantDosha || '').toLowerCase();
+      const SIDDHA_DOSHA_KEYWORDS: Record<string, string[]> = {
+        vata: ['vata', 'nerve', 'anxiety', 'sleep', 'grounding', 'calm', 'ida', 'dissolution', 'air'],
+        pitta: ['pitta', 'liver', 'heat', 'inflammation', 'pingala', 'blood', 'fire', 'purification', 'cooling'],
+        kapha: ['kapha', 'lung', 'lymph', 'weight', 'energy', 'metabolism', 'earth', 'immunity', 'detox'],
+        balanced: ['ojas', 'prana', 'longevity', 'divine', 'bliss', 'samadhi', 'light'],
+      };
+      const activeDoshaKey = doshaStr.startsWith('pitta') ? 'pitta'
+        : doshaStr.startsWith('vata') ? 'vata'
+        : doshaStr.startsWith('kapha') ? 'kapha'
+        : 'balanced';
+      const doshaKeywords = SIDDHA_DOSHA_KEYWORDS[activeDoshaKey];
+
       const siddhaMatched = ALL_ACTIVATIONS
         .filter((a: any) => a.type === 'Siddha Transmission')
         .map((a: any) => {
           const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
           let score = 0;
-          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
-          if (dosha && blob.includes(dosha)) score += 40;
+          // Direct dosha keyword match — ensures Siddhas always activate
+          for (const kw of doshaKeywords) {
+            if (blob.includes(kw)) { score += 40; break; }
+          }
           if (result.priorityAreas?.length) {
             for (const area of result.priorityAreas) {
-              const w = (area.name || '').toLowerCase();
-              if (w && blob.includes(w)) { score += 30; break; }
+              const w = (area.name || '').toLowerCase().split(/[\s/]/)[0];
+              if (w.length > 3 && blob.includes(w)) { score += 30; break; }
             }
           }
-          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 25;
-          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 20;
+          if (result.organField) {
+            const organWords = result.organField.toLowerCase().split(/[\s/,]+/);
+            for (const w of organWords) {
+              if (w.length > 3 && blob.includes(w)) { score += 25; break; }
+            }
+          }
+          if (result.emotionalField) {
+            const emotionWords = result.emotionalField.toLowerCase().split(/[\s/,]+/);
+            for (const w of emotionWords) {
+              if (w.length > 4 && blob.includes(w)) { score += 20; break; }
+            }
+          }
           const spoken = (result as any).spokenKeywords as string[] | undefined;
           if (spoken?.length) {
             for (const w of spoken) {
               if (w.length > 3 && blob.includes(w)) { score += 35; break; }
             }
           }
+          // Guarantee minimum score so at least 3 Siddhas always activate
+          if (score === 0) score = (blob.includes('agastyar') || blob.includes('babaji')) ? 10 : 5;
           return { act: a, score };
         })
-        .filter((s: any) => s.score > 0)
         .sort((a: any, b: any) => b.score - a.score)
         .slice(0, 3)
         .map((s: any) => s.act);
@@ -3065,6 +3097,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions
       // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about
       // the scan whenever they wish; liveScanContext above feeds it into the next reply.
+      // Auto-open library + Top33 so user sees their frequencies immediately
+      setCardLibOpen(true);
+      setCardT33Open(true);
+      setCardVoiceOpen(false); // Collapse scanner to give space
       toast.success(
         `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,
         { duration: 4000 },
