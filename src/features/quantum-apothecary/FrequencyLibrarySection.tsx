@@ -459,7 +459,7 @@ export default function FrequencyLibrarySection({
                       />
                     </button>
                     {/* Name + benefit always visible */}
-                    <div style={{ flex: 1, minWidth: 0 }}
+                    <div
                       onClick={() => setExpandedId(expanded ? null : act.id)}
                       role="button"
                       tabIndex={0}

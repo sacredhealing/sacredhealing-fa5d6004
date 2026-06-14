@@ -1,5 +1,5 @@
 import { Activation } from './types';
-import { SQI_BIOENERGETIC_ACTIVATIONS } from './sqiActivations';
+import { LIMBICARC_BIOENERGETIC_ACTIVATIONS as SQI_BIOENERGETIC_ACTIVATIONS } from './limbicarcActivations';
 import {
   BIOENERGETIC_LIBRARY,
   BIOENERGETIC_CATEGORIES,
