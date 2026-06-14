@@ -11,7 +11,7 @@ import { useMembership } from '@/hooks/useMembership';
 const GOLD = '#D4AF37';
 const BG = '#050505';
 // Uses the existing clawbot-proxy edge function — same proxy, same bot
-const PROXY = 'https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/clawbot-proxy';
+const PROXY = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-proxy';
 
 const WHALE_LIST = [
   { alias: 'BAA2BC — Iran Insider', wr: 83, pnl: 191503, days: 14 },
