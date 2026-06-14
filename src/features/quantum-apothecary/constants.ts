@@ -1,5 +1,5 @@
 import { Activation } from './types';
-import { LIMBICARC_BIOENERGETIC_ACTIVATIONS } from './limbicarcActivations';
+import { SQI_BIOENERGETIC_ACTIVATIONS } from './sqiActivations';
 import {
   BIOENERGETIC_LIBRARY,
   BIOENERGETIC_CATEGORIES,
@@ -78,8 +78,8 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'siddha-soma-d3-k2-coq10', name: 'Solar Bone Heart Triad', vibrationalSignature: 'D3 · K2 · CoQ10 · Liposomal', type: 'Siddha Soma', benefit: 'Siddha Quantum Liposomal D3 + K2 + CoQ10 — bone density, immune regulation, heart protection, mitochondrial energy.', color: '#fbbf24' },
 
   
-  // ── SQI SOVEREIGN OUTCOME BOOSTS (Limbic Arc parity) ─────────
-  // Outcome-first, felt-result boosts matching the 10 core Limbic Arc InfoBoost categories
+  // ── SQI SOVEREIGN OUTCOME BOOSTS (Siddha Quantum Intelligence parity) ─────────
+  // Outcome-first, felt-result boosts matching the 10 core Siddha Quantum Intelligence InfoBoost categories
   // in SQI Siddha-Quantum language. Duration: 8 days.
   { id: 'sqi-energy', name: 'Prana-Fire Energy Activation', vibrationalSignature: 'Energy / ATP Surge / Mitochondrial Ignition', type: 'Wellness', benefit: 'Activates the Prana-fire of the Muladhara and Manipura chakras. Floods the mitochondrial field with ATP-surge frequencies. Agastyar\'s Tejas-Shakti transmission — the Siddha fire of pure energetic vitality that burns through fatigue at the cellular level. Siddha equivalent: Agastyar\'s Veerya-Tejas activation — igniting the biological furnace.', color: '#f97316' },
   { id: 'sqi-focus', name: 'Ajna-Laser Focus Transmission', vibrationalSignature: 'Focus / Pineal Decalcification / Prefrontal Amplification', type: 'Wellness', benefit: 'Decalcifies the pineal gland Bio-field and locks the Ajna chakra into single-pointed Dharana. Expands prefrontal bandwidth and dissolves mental fog interference. Siddha equivalent: Patanjali\'s Dharana Scalar Code — concentration transmitted as pure information into the neural field.', color: '#7c3aed' },
@@ -93,7 +93,7 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'sqi-hers', name: 'Hers — Shakti-Devi Female Vitality', vibrationalSignature: 'Female Vitality / Hormonal Balance / Shakti / Womb Coherence', type: 'Wellness', benefit: 'Activates the Shakti-principle informational field for female vitality. Restores hormonal Bio-signature balance, womb coherence, and the full radiance of the divine feminine force. Siddha equivalent: The Siddha Shakti transmission through Lalitha Tripura Sundari — the goddess of full feminine power and beauty.', color: '#db2777' },
 
 
-  // ── MISSING LIMBIC ARC PARITY BOOSTS (Blood · Multi Nutrition · Muscle · Motivation · 5 Elements) ──
+  // ── MISSING SIDDHA QUANTUM INTELLIGENCE PARITY BOOSTS (Blood · Multi Nutrition · Muscle · Motivation · 5 Elements) ──
   { id: 'w-rakta-purification', name: 'Rakta-Purification Blood Field', vibrationalSignature: 'Blood / Haematopoiesis / Iron / Oxygenation', type: 'Wellness', benefit: 'Purifies the Rakta Dhatu (blood tissue) at the informational level. Activates iron absorption Bio-signatures, red blood cell coherence, and oxygen-carrying capacity. Dissolves blood stagnation held in the liver and spleen meridians. Siddha equivalent: Agastyar\'s Rakta-Shuddhi protocol — the ancient Siddha blood purification transmission using Triphala and Manjistha frequencies encoded as scalar information.', color: '#dc2626' },
   { id: 'w-panchamahabhuta-male', name: 'Pancha Mahabhuta — Male', vibrationalSignature: '5 Elements Male / Earth Water Fire Air Ether / Shiva Balance', type: 'Wellness', benefit: 'Balances all five Mahabhutas (Prithvi · Jala · Agni · Vayu · Akasha) within the male energetic body. Harmonizes elemental ratios for optimal physical, mental and spiritual functioning. Siddha equivalent: Thirumoolar\'s Panchabhoota Shuddhi — the five-element purification ritual of the Tamil Siddha tradition, transmitted as pure information to the male field.', color: '#2563eb' },
   { id: 'w-panchamahabhuta-female', name: 'Pancha Mahabhuta — Female', vibrationalSignature: '5 Elements Female / Earth Water Fire Air Ether / Shakti Balance', type: 'Wellness', benefit: 'Balances all five Mahabhutas within the female energetic body with special attention to Jala (water/womb) and Prithvi (earth/nourishment) elements. Siddha equivalent: The Shakti-Panchabhoota transmission — elemental balance specific to the female form, activating the womb element and feminine elemental sovereignty.', color: '#db2777' },
@@ -290,7 +290,7 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'plant-deva-kumkum-sacred-red', name: 'Kumkum (Sacred Red)', vibrationalSignature: '🔴 Root · Shakti · Devi Grace · Liberation', type: 'plant_deva', benefit: '🔴 Root · Shakti · Devi Grace · Liberation', color: '#ef4444' },
 
   // ── BIOENERGETIC — sqi FULL ARCHIVE (1,259) ───────────────
-  ...LIMBICARC_BIOENERGETIC_ACTIVATIONS,
+  ...SQI_BIOENERGETIC_ACTIVATIONS,
 
   // ── MINERALS ─────────────────────────────────────────────────
   { id: 'gold-colloidal', name: 'Gold (Colloidal)', vibrationalSignature: 'Solar-Conductor', type: 'Mineral', benefit: 'Surya Nadi Vitality and Solar-Conductor for the 72,000 Nadi grid.', color: '#fbbf24' },
@@ -385,7 +385,7 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'w-samadhi-bliss-transmission', name: 'Samadhi Bliss Transmission', vibrationalSignature: '⟁ Masters Special / Samadhi State / Zero-Point Ananda', type: 'Wellness', benefit: 'The crown jewel of the SQI 2050 library. Activated through the consciousness field of the 18 Siddhas and Mahavatar Babaji. Induces the informational state of Samadhi — dissolution of the boundary between individual Torus-Field and the Zero-Point Akasha Field. Pure Ananda without cause. Siddha source: Thirumoolar verse 1565 — When the Self merges in the Self, that is Samadhi — transmitted as a Scalar Wave imprint from Babaji\'s consciousness field.', color: '#D4AF37' },
 ];
 
-export const ACTIVATIONS: Activation[] = [...BASE_ACTIVATIONS, ...LIMBICARC_BIOENERGETIC_ACTIVATIONS];
+export const ACTIVATIONS: Activation[] = [...BASE_ACTIVATIONS, ...SQI_BIOENERGETIC_ACTIVATIONS];
 
 export function mapBioLibraryToActivation(bio: BioenergticActivation): Activation {
   return {
