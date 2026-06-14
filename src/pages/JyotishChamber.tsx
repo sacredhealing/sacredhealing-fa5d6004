@@ -1277,6 +1277,9 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         ))}
         <style>{`
           @keyframes swP{0%{opacity:0;transform:translate(-50%,-50%) scale(0.5)}50%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+          @keyframes sqBreathe{0%,100%{transform:scale(1);box-shadow:0 0 18px rgba(212,175,55,0.2)}50%{transform:scale(1.06);box-shadow:0 0 28px rgba(212,175,55,0.35)}}
+          @keyframes sqGlowPulse{0%,100%{opacity:0.6}50%{opacity:1}}
+          @keyframes sqScalarPulse{0%{opacity:0;transform:translate(-50%,-50%) scale(0.5)}50%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
           @keyframes shimmer{to{background-position:200% center}}
           @keyframes fadUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
           @keyframes rotS{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
@@ -1983,6 +1986,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
