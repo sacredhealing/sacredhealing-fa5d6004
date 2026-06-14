@@ -1327,24 +1327,46 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           )}
         </header>
 
-        {/* ── NAV ── */}
-        <nav style={{ display:'flex', gap:5, padding:5, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:99, marginBottom:22, overflowX:'auto', scrollbarWidth:'none' }}>
-          {(['overview','chart','oracle','nadi','vidya','hora','lexicon'] as const).map((tab, i) => {
-            const labels = ['⬡ Overview','✦ My Chart','🔱 Oracle','🌿 Nadi Leaf','◈ Vidya','⏱ Hora','📖 Lexicon'];
+        {/* ── SECTION GRID — all sections visible as cards ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:22 }}>
+          {([
+            { tab:'overview', icon:'✦', label:'My Overview', sub:'Daily field & guidance' },
+            { tab:'chart',    icon:'☽', label:'My Chart',    sub:'Natal blueprint & dashas' },
+            { tab:'oracle',   icon:'🔱', label:'Bhrigu Oracle', sub:'Ask your question' },
+            { tab:'nadi',     icon:'🌿', label:'Nadi Leaf',   sub:'Ancient palm leaf' },
+            { tab:'vidya',    icon:'◈',  label:'Jyotish Vidya', sub:'32 learning modules' },
+            { tab:'hora',     icon:'⏱', label:'Hora Watch',  sub:'Live planetary clock' },
+            { tab:'lexicon',  icon:'📖', label:'Lexicon',     sub:'Vedic glossary' },
+          ] as const).map(({ tab, icon, label, sub }) => {
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => switchTab(tab)} style={{
-                flexShrink:0, padding:'9px 15px', borderRadius:99,
-                border: active ? '1px solid rgba(212,175,55,0.3)' : 'none',
-                background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
-                color: active ? '#D4AF37' : 'rgba(255,255,255,0.4)',
-                fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em',
-                textTransform:'uppercase' as const, cursor:'pointer', whiteSpace:'nowrap',
-                transition:'all 0.22s'
-              }}>{labels[i]}</button>
+                display:'flex', flexDirection:'column', alignItems:'flex-start',
+                gap:0, padding:'14px 16px',
+                background: active ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)',
+                border: active ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                borderRadius:20, cursor:'pointer', textAlign:'left',
+                boxShadow: active ? '0 0 20px rgba(212,175,55,0.12)' : 'none',
+                transition:'all 0.22s',
+              }}>
+                <span style={{ fontSize:20, marginBottom:8, display:'block',
+                  filter: active ? 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' : 'none',
+                  transition:'filter 0.22s',
+                }}>{icon}</span>
+                <div style={{
+                  fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight:800,
+                  color: active ? '#D4AF37' : 'rgba(255,255,255,0.75)',
+                  letterSpacing:'0.01em', marginBottom:3, transition:'color 0.22s',
+                }}>{label}</div>
+                <div style={{
+                  fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:9,
+                  color: active ? 'rgba(212,175,55,0.55)' : 'rgba(255,255,255,0.28)',
+                  letterSpacing:'0.01em', lineHeight:1.4, transition:'color 0.22s',
+                }}>{sub}</div>
+              </button>
             );
           })}
-        </nav>
+        </div>
 
         {/* ══════════════ OVERVIEW ══════════════ */}
         {activeTab === 'overview' && (
@@ -1936,6 +1958,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
