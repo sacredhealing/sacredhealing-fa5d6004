@@ -11,7 +11,7 @@ const RED   = '#ef4444';
 const AMBER = '#f59e0b';
 
 // External Supabase project that hosts the bot_trades feed.
-const FEED_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+const FEED_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const FEED_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
 
 type Capital = {
