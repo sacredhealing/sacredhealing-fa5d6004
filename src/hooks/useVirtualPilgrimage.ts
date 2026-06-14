@@ -327,6 +327,20 @@ export function useVirtualPilgrimage() {
     setActivation(null);
   }, [activation, user?.id]);
 
+  // Refresh daysActive every hour so the counter advances without reload
+  useEffect(() => {
+    if (!activation?.activatedAt) return;
+    const tick = () => {
+      const fresh = computeDaysActive(activation.activatedAt);
+      if (fresh !== activation.daysActive) {
+        setActivation((prev) => prev ? { ...prev, daysActive: fresh } : null);
+      }
+    };
+    const id = setInterval(tick, 60 * 60 * 1000); // every hour
+    tick(); // run immediately on mount
+    return () => clearInterval(id);
+  }, [activation?.activatedAt, activation?.daysActive]);
+
   return {
     home,
     activation,
