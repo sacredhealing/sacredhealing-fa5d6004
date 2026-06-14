@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // SACRED HEALING — COMPLETE BIOENERGETIC FREQUENCY LIBRARY
-// Based on LimbicArc / NES Health / BioEnergetiX ingredient database
+// Based on Siddha Quantum Intelligence bioenergetic frequency database
 // 1,357+ frequencies — all categories
 // Each activation can be triggered by camera scan, voice scan, or SQI
 // ═══════════════════════════════════════════════════════════════
