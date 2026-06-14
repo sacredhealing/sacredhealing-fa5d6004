@@ -26,8 +26,15 @@ export interface Activation {
   activatedAt?: string;
   /** Provenance for UX / analytics */
   source?: 'manual' | 'nadi_scan' | 'voice_scan' | 'apothecary_chat';
-  /** ISO timestamp — default ~8 days from activation in admin flows */
+  /** ISO timestamp — default ~8 days from activation */
   expiresAt?: string;
+  /**
+   * Deterministic SHA-256 frequency hash — the digital signature of this ingredient.
+   * Derived from name + type + benefit. Acts as the quantum anchor payload:
+   * stored alongside the user's voice FFT fingerprint in user_active_transmissions.
+   * This is the same mechanism as LimbicArc's "Virtual Ingredient" digital signature.
+   */
+  frequencyHash?: string;
 }
 
 export interface ChakraReading {
@@ -64,4 +71,22 @@ export interface Message {
   id?: string;
   needs_codex_sync?: boolean;
   codex_student_id?: string | null;
+}
+
+/**
+ * The quantum anchor stored per user in user_active_transmissions.
+ * Links the user's unique voice FFT fingerprint to the active ingredient
+ * frequency hashes — the same mechanism as LimbicArc's quantum entanglement link.
+ */
+export interface QuantumAnchor {
+  /** FFT frequency array extracted from the user's voice scan (RMS + centroid + ZCR series) */
+  voiceFftFingerprint: number[];
+  /** ISO timestamp of the voice scan that created this anchor */
+  anchoredAt: string;
+  /** Dosha reading from the voice scan */
+  dominantDosha: string;
+  /** Nadi channel from the voice scan */
+  nadiReading: string;
+  /** Overall coherence score 0-100 */
+  coherenceScore: number;
 }
