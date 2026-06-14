@@ -443,50 +443,73 @@ export default function FrequencyLibrarySection({
                     overflow: 'hidden',
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(expanded ? null : act.id)}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 12,
-                      padding: '14px 14px',
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        background: act.color,
-                        marginTop: 4,
-                        flexShrink: 0,
-                        boxShadow: `0 0 8px ${act.color}`,
-                      }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 14px' }}>
+                    {/* Color dot — tap to expand detail */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(expanded ? null : act.id)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', marginTop: 4, flexShrink: 0 }}
+                      aria-label="Show details"
+                    >
+                      <div
                         style={{
-                          fontSize: 13,
-                          fontWeight: 800,
-                          color: '#fff',
-                          lineHeight: 1.35,
-                          margin: 0,
+                          width: 10, height: 10, borderRadius: '50%',
+                          background: act.color, boxShadow: `0 0 8px ${act.color}`,
                         }}
-                      >
+                      />
+                    </button>
+                    {/* Name + benefit always visible */}
+                    <div style={{ flex: 1, minWidth: 0 }}
+                      onClick={() => setExpandedId(expanded ? null : act.id)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                    >
+                      <p style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.35, margin: 0 }}>
                         {act.name}
                       </p>
-                      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', margin: '6px 0 0' }}>
-                        {displayCat}
+                      {/* vibrationalSignature shown as botanical/scientific subtitle */}
+                      {act.vibrationalSignature && act.vibrationalSignature !== act.name && (
+                        <p style={{ fontSize: 11, color: '#D4AF37', margin: '2px 0 0', fontStyle: 'italic', opacity: 0.75 }}>
+                          {act.vibrationalSignature}
+                        </p>
+                      )}
+                      {/* Benefit snippet — first 80 chars always visible */}
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.50)', margin: '4px 0 0', lineHeight: 1.4 }}>
+                        {(act.benefit || displayCat).slice(0, 85)}{(act.benefit || '').length > 85 ? '…' : ''}
                       </p>
                     </div>
-                  </button>
+                    {/* Inline Add / Active button — always visible, no expand needed */}
+                    <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                      {txActive ? (
+                        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#22D3EE', whiteSpace: 'nowrap' }}>
+                          ✓ Active
+                        </span>
+                      ) : inMixer ? (
+                        <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', whiteSpace: 'nowrap' }}>
+                          In Mixer
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={cannotAdd}
+                          onClick={(e) => { e.stopPropagation(); addActivation(act); }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 4,
+                            padding: '7px 12px', borderRadius: 999,
+                            fontSize: 11, fontWeight: 900, letterSpacing: '0.08em',
+                            textTransform: 'uppercase', cursor: cannotAdd ? 'default' : 'pointer',
+                            opacity: cannotAdd ? 0.35 : 1,
+                            background: 'rgba(212,175,55,0.10)',
+                            border: '1px solid rgba(212,175,55,0.35)',
+                            color: '#D4AF37', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <Plus size={12} /> Add
+                        </button>
+                      )}
+                    </div>
+                  </div>
 
                   <AnimatePresence>
                     {expanded && (
