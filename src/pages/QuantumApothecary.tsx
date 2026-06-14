@@ -1429,7 +1429,7 @@ function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
         }
       `}</style>
       <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
-      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.82)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28 }}>
+      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.82)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28, overflowY:'auto', WebkitOverflowScrolling:'touch', maxHeight:'80vh' }}>
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 18px 14px', borderBottom:'1px solid rgba(212,175,55,0.10)', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -3706,7 +3706,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardVoiceOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardVoiceOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardVoiceOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardVoiceOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
                   </div>
                 </div>
-                <div style={{ maxHeight: cardVoiceOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
+                <div style={{ maxHeight: cardVoiceOpen ? 2400 : 0, overflow: cardVoiceOpen ? 'visible' : 'hidden', transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
                 <ScalarVoiceWrapper>
                   <Suspense fallback={ScannerSuspenseFallback}>
                     <VoiceBiofieldScanner
