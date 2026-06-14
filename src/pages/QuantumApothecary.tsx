@@ -27,6 +27,7 @@ import {
   voiceResultToScanPayload,
   enrichTransmission,
   isVegetarianActivation,
+  purgeExpiredAndLegacy,
   LS_LIBRARY_UNLOCKED,
   LS_LAST_SCAN,
   LS_SCAN_SNAPSHOT,
@@ -1885,7 +1886,8 @@ function QuantumApothecaryInner() {
       const key = `sqi-transmissions-${uid}`;
       let saved = localStorage.getItem(key);
       if (!saved) saved = localStorage.getItem('active_resonators');
-      return saved ? JSON.parse(saved) : [];
+      const raw = saved ? JSON.parse(saved) : [];
+      return purgeExpiredAndLegacy(raw);
     } catch {
       return [];
     }
@@ -1939,8 +1941,7 @@ function QuantumApothecaryInner() {
           .eq('user_id', user.id)
           .maybeSingle();
         if (data?.activations && Array.isArray(data.activations) && data.activations.length > 0) {
-          const now = new Date();
-          const live = (data.activations as Activation[]).filter(t => !t.expiresAt || new Date(t.expiresAt) > now);
+          const live = purgeExpiredAndLegacy(data.activations as Activation[]);
           skipNextTxHydrate.current = true;
           setActiveTransmissions(live);
         }
@@ -1988,10 +1989,7 @@ function QuantumApothecaryInner() {
         (payload) => {
           const data = payload.new as Record<string, unknown>;
           if (!data?.activations) return;
-          const now = new Date();
-          const live = (data.activations as Activation[]).filter(
-            (t) => !t.expiresAt || new Date(t.expiresAt) > now,
-          );
+          const live = purgeExpiredAndLegacy(data.activations as Activation[]);
           skipNextTxHydrate.current = true;
           setActiveTransmissions(live);
           try {
