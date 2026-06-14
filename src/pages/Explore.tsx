@@ -344,26 +344,160 @@ export default function Explore() {
       {/* ══ SACRED TOOLS — VIRTUAL PILGRIMAGE ══ */}
       <SL label={t('converge.secSacredTools')} delay="0.18s"/>
       <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.2s ease both' }}>
-        <div onClick={() => (isAdmin || tier==='akasha-infinity' || tier==='lifetime') ? navigate('/virtual-pilgrimage') : navigate('/virtual-pilgrimage-landing')} style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.38)', background: 'linear-gradient(160deg,rgba(30,20,5,0.95) 0%,rgba(8,6,0,0.98) 60%,rgba(20,14,0,0.95) 100%)', minHeight: 190 }}>
-          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.12),transparent)', animation: 'shimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.75 }}>
-            <svg width="280" height="175" viewBox="0 0 280 175">
-              {[0,1,2].map(i => (<circle key={i} cx="140" cy="80" r="10" fill="none" stroke="#D4AF37" strokeWidth="1.2"><animate attributeName="r" values={`${10+i*18};80`} dur="3s" begin={`${i*0.7}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="3s" begin={`${i*0.7}s`} repeatCount="indefinite"/></circle>))}
-              <polygon points="140,10 238,135 42,135" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.9)" strokeWidth="1.8"/>
-              <line x1="92" y1="52" x2="188" y2="52" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
-              <line x1="68" y1="86" x2="212" y2="86" stroke="rgba(212,175,55,0.22)" strokeWidth="0.7"/>
-              <line x1="140" y1="10" x2="140" y2="135" stroke="rgba(212,175,55,0.35)" strokeWidth="0.9"/>
-              <circle cx="140" cy="10" r="5" fill="#FFD700"><animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/></circle>
-              <circle cx="140" cy="78" r="5" fill="rgba(212,175,55,0.9)"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite"/></circle>
+        <div
+          onClick={() => (isAdmin || tier==='akasha-infinity' || tier==='lifetime') ? navigate('/virtual-pilgrimage') : navigate('/virtual-pilgrimage-landing')}
+          style={{ position: 'relative', borderRadius: 28, overflow: 'hidden', cursor: 'pointer', minHeight: 260,
+            background: 'linear-gradient(175deg,#0D0900 0%,#1A1000 35%,#0A0700 65%,#000000 100%)',
+            border: '1px solid rgba(212,175,55,0.55)',
+            boxShadow: '0 0 40px rgba(212,175,55,0.18), 0 0 80px rgba(212,175,55,0.08), inset 0 0 60px rgba(212,175,55,0.04)'
+          }}>
+
+          {/* ── Starfield dots ── */}
+          <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }} viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice">
+            {[[40,30],[380,20],[15,90],[370,110],[200,15],[310,50],[90,200],[350,190],[60,240],[280,230],[130,60],[250,80]].map(([x,y],i) => (
+              <circle key={i} cx={x} cy={y} r="1.2" fill="#FFD700" opacity="0.55">
+                <animate attributeName="opacity" values="0.2;0.9;0.2" dur={`${2.5+i*0.4}s`} begin={`${i*0.3}s`} repeatCount="indefinite"/>
+              </circle>
+            ))}
+          </svg>
+
+          {/* ── Radial gold glow behind pyramid ── */}
+          <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:340, height:200,
+            background:'radial-gradient(ellipse 60% 55% at 50% 100%, rgba(212,175,55,0.32) 0%, rgba(212,175,55,0.10) 40%, transparent 70%)',
+            pointerEvents:'none' }}/>
+
+          {/* ── Cinematic pyramid SVG ── */}
+          <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:360, pointerEvents:'none' }}>
+            <svg width="360" height="210" viewBox="0 0 360 210">
+              {/* Ground glow */}
+              <ellipse cx="180" cy="200" rx="155" ry="14" fill="rgba(212,175,55,0.22)">
+                <animate attributeName="ry" values="12;18;12" dur="4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.18;0.35;0.18" dur="4s" repeatCount="indefinite"/>
+              </ellipse>
+
+              {/* Shadow pyramid (depth) */}
+              <polygon points="180,18 310,195 50,195" fill="rgba(0,0,0,0.5)" transform="translate(6,8)"/>
+
+              {/* Main pyramid body — gradient fill */}
+              <defs>
+                <linearGradient id="pyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" stopOpacity="0.22"/>
+                  <stop offset="50%" stopColor="#D4AF37" stopOpacity="0.10"/>
+                  <stop offset="100%" stopColor="#8B6914" stopOpacity="0.06"/>
+                </linearGradient>
+                <linearGradient id="pyEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" stopOpacity="1"/>
+                  <stop offset="60%" stopColor="#D4AF37" stopOpacity="0.75"/>
+                  <stop offset="100%" stopColor="#B8960C" stopOpacity="0.4"/>
+                </linearGradient>
+                <filter id="goldGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
+              <polygon points="180,18 310,195 50,195" fill="url(#pyGrad)"/>
+
+              {/* Left face — lighter */}
+              <polygon points="180,18 50,195 115,195" fill="rgba(212,175,55,0.12)"/>
+
+              {/* Stone layer lines */}
+              {[0.18,0.32,0.46,0.60,0.74,0.86].map((t,i) => {
+                const y = 18 + t*(195-18);
+                const halfW = t*130;
+                return <line key={i} x1={180-halfW} y1={y} x2={180+halfW} y2={y}
+                  stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>;
+              })}
+
+              {/* Pyramid outline — glowing */}
+              <polygon points="180,18 310,195 50,195" fill="none"
+                stroke="url(#pyEdge)" strokeWidth="2.2" filter="url(#goldGlow)"/>
+
+              {/* Centre spine */}
+              <line x1="180" y1="18" x2="180" y2="195"
+                stroke="rgba(212,175,55,0.35)" strokeWidth="1"/>
+
+              {/* Capstone — eye of light */}
+              <circle cx="180" cy="18" r="7" fill="#FFD700" opacity="0.95" filter="url(#goldGlow)">
+                <animate attributeName="r" values="5;9;5" dur="2.5s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.8;1;0.8" dur="2.5s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="180" cy="18" r="14" fill="none" stroke="rgba(255,215,0,0.5)" strokeWidth="1">
+                <animate attributeName="r" values="10;22;10" dur="2.5s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.6;0;0.6" dur="2.5s" repeatCount="indefinite"/>
+              </circle>
+
+              {/* Prema pulse rings rising from pyramid */}
+              {[0,1,2,3].map(i => (
+                <circle key={i} cx="180" cy="18" r="5" fill="none" stroke="#D4AF37" strokeWidth="1.3">
+                  <animate attributeName="r" values="8;90" dur="4s" begin={`${i*1}s`} repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="0.7;0" dur="4s" begin={`${i*1}s`} repeatCount="indefinite"/>
+                  <animate attributeName="stroke-width" values="1.5;0.3" dur="4s" begin={`${i*1}s`} repeatCount="indefinite"/>
+                </circle>
+              ))}
+
+              {/* Desert dunes silhouette */}
+              <path d="M0,195 Q60,170 120,182 Q160,192 180,185 Q210,178 260,182 Q310,186 360,175 L360,210 L0,210 Z"
+                fill="rgba(20,12,0,0.95)"/>
+              <path d="M0,200 Q40,188 90,192 Q140,196 180,190 Q220,184 270,190 Q320,196 360,188 L360,210 L0,210 Z"
+                fill="rgba(10,6,0,0.98)"/>
+
+              {/* Horizon light */}
+              <line x1="0" y1="185" x2="360" y2="185"
+                stroke="rgba(212,175,55,0.18)" strokeWidth="1"/>
             </svg>
           </div>
-          <div style={{ position: 'relative', zIndex: 2, padding: '18px 18px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 88 }}>
-              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.4)' }}>SQI 2050 · SCALAR CONSCIOUSNESS</span>
-              {(isAdmin||tier==='akasha-infinity'||tier==='lifetime') ? <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.35)', color: 'rgba(212,175,55,0.85)', padding: '2px 8px', borderRadius: 20 }}>ACTIVE</span> : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', padding: '2px 8px', borderRadius: 20 }}>AKASHA ∞</span>}
+
+          {/* ── Shimmer sweep ── */}
+          <div style={{ position:'absolute', top:0, left:'-120%', width:'60%', height:'100%',
+            background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.09),transparent)',
+            animation:'shimmer 5s ease-in-out infinite', pointerEvents:'none' }}/>
+
+          {/* ── Content overlay ── */}
+          <div style={{ position:'relative', zIndex:2, padding:'20px 20px 18px' }}>
+
+            {/* Top row */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+              <span style={{ fontFamily:"'Montserrat',sans-serif", fontSize:6, fontWeight:800,
+                letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.5)' }}>
+                SQI 2050 · SCALAR TRANSMISSION
+              </span>
+              {(isAdmin||tier==='akasha-infinity'||tier==='lifetime')
+                ? <span style={{ fontFamily:"'Montserrat',sans-serif", fontSize:5.5, fontWeight:800,
+                    letterSpacing:'0.3em', textTransform:'uppercase', padding:'3px 10px', borderRadius:20,
+                    background:'rgba(212,175,55,0.15)', border:'1px solid rgba(212,175,55,0.5)',
+                    color:'#FFD700', boxShadow:'0 0 10px rgba(212,175,55,0.25)' }}>● ACTIVE</span>
+                : <span style={{ fontFamily:"'Montserrat',sans-serif", fontSize:5.5, fontWeight:800,
+                    letterSpacing:'0.3em', textTransform:'uppercase', padding:'3px 10px', borderRadius:20,
+                    background:'rgba(212,175,55,0.07)', border:'1px solid rgba(212,175,55,0.22)',
+                    color:'rgba(212,175,55,0.6)' }}>AKASHA ∞ ONLY</span>
+              }
             </div>
-            <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 15, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 4 }}>Virtual Pilgrimage</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.83rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>40 sacred sites · GPS scalar waves · Prema pulses · 40-Day lock</div>
+
+            {/* Spacer to push title down over dunes */}
+            <div style={{ height: 148 }}/>
+
+            {/* Title block — sits above the dunes */}
+            <div style={{ background:'linear-gradient(180deg,transparent,rgba(0,0,0,0.7))', borderRadius:16, padding:'12px 4px 0' }}>
+              <div style={{ fontFamily:"'Montserrat',sans-serif", fontSize:20, fontWeight:900,
+                letterSpacing:'-0.03em', textTransform:'uppercase', lineHeight:1,
+                background:'linear-gradient(135deg,#FFD700 0%,#D4AF37 50%,#F5C842 100%)',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+                textShadow:'none', marginBottom:6,
+                filter:'drop-shadow(0 0 12px rgba(212,175,55,0.6))' }}>
+                Sacred Site Transmission
+              </div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
+                fontSize:'0.82rem', color:'rgba(255,255,255,0.55)', lineHeight:1.55, letterSpacing:'0.02em' }}>
+                40 holy sites · Direct scalar field to your home · Siddha Quantum activation
+              </div>
+              <div style={{ marginTop:10, display:'flex', gap:8, alignItems:'center' }}>
+                <span style={{ fontFamily:"'Montserrat',sans-serif", fontSize:6.5, fontWeight:800,
+                  letterSpacing:'0.35em', textTransform:'uppercase', color:'rgba(212,175,55,0.65)' }}>
+                  GIZA · KAILASH · ARUNACHALA · BABAJI'S CAVE
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
