@@ -1109,6 +1109,154 @@ function ComparisonPanel({ before, after, subjective }: { before: ScanMetrics; a
 }
 
 
+
+// ─── Past Scans Viewer ────────────────────────────────────────────────────────
+interface PastSession {
+  session_id: string;
+  created_at: string;
+  heart_rate_before?: number;
+  hrv_before?: number;
+  prana_before?: number;
+  coherence_before?: number;
+  heart_rate_after?: number;
+  hrv_after?: number;
+  prana_after?: number;
+  coherence_after?: number;
+  nervous_system_after?: string;
+}
+
+function PastScansPanel({ userId }: { userId: string }) {
+  const [sessions, setSessions] = useState<PastSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("soul_scans")
+        .select("session_id, scan_type, heart_rate, hrv_rmssd, prana_level, coherence_score, nervous_system_state, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(40);
+
+      if (!data) { setLoading(false); return; }
+
+      // Group by session_id
+      const map: Record<string, PastSession> = {};
+      for (const row of data) {
+        const sid = row.session_id;
+        if (!map[sid]) map[sid] = { session_id: sid, created_at: row.created_at };
+        if (row.scan_type === "before") {
+          map[sid].heart_rate_before = row.heart_rate;
+          map[sid].hrv_before = row.hrv_rmssd;
+          map[sid].prana_before = row.prana_level;
+          map[sid].coherence_before = row.coherence_score;
+        } else {
+          map[sid].heart_rate_after = row.heart_rate;
+          map[sid].hrv_after = row.hrv_rmssd;
+          map[sid].prana_after = row.prana_level;
+          map[sid].coherence_after = row.coherence_score;
+          map[sid].nervous_system_after = row.nervous_system_state;
+        }
+      }
+      setSessions(Object.values(map).slice(0, 10));
+      setLoading(false);
+    };
+    load();
+  }, [userId]);
+
+  if (loading) return (
+    <div className="flex justify-center py-4">
+      <div className="w-5 h-5 rounded-full animate-pulse" style={{ background: "rgba(212,175,55,0.3)" }} />
+    </div>
+  );
+
+  if (sessions.length === 0) return (
+    <div className="text-center py-4">
+      <p className="text-[10px] text-white/25">No sessions recorded yet. Complete your first scan above.</p>
+    </div>
+  );
+
+  const fmt = (d: string) => {
+    const dt = new Date(d);
+    return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " · " +
+      dt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      {sessions.map((s) => {
+        const hasBoth = s.heart_rate_before !== undefined && s.heart_rate_after !== undefined;
+        const isOpen = expanded === s.session_id;
+        return (
+          <button
+            key={s.session_id}
+            onClick={() => setExpanded(isOpen ? null : s.session_id)}
+            className="w-full text-left rounded-[20px] overflow-hidden transition-all"
+            style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${isOpen ? "rgba(212,175,55,0.3)" : "rgba(255,255,255,0.06)"}` }}
+          >
+            {/* Row header */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-[#D4AF37]/60">
+                  {hasBoth ? "◈ Full Session" : "◇ Partial"}
+                </p>
+                <p className="text-xs text-white/50 mt-0.5">{fmt(s.created_at)}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {s.prana_after !== undefined && (
+                  <span className="text-xs font-black" style={{ color: "#D4AF37" }}>
+                    Prana {s.prana_after}%
+                  </span>
+                )}
+                <span className="text-white/20 text-sm">{isOpen ? "▲" : "▼"}</span>
+              </div>
+            </div>
+            {/* Expanded detail */}
+            {isOpen && (
+              <div className="px-4 pb-4 flex flex-col gap-3 border-t" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+                {hasBoth && (
+                  <div className="grid grid-cols-3 gap-1 mt-3 text-center">
+                    <div className="text-[8px] font-bold tracking-widest uppercase text-white/25 col-span-3 text-left mb-1">Biometric Delta</div>
+                    {[
+                      { label: "Heart Rate", bv: s.heart_rate_before!, av: s.heart_rate_after!, unit: " BPM", invert: true },
+                      { label: "HRV", bv: s.hrv_before!, av: s.hrv_after!, unit: " ms" },
+                      { label: "Prana", bv: s.prana_before!, av: s.prana_after!, unit: "%" },
+                      { label: "Coherence", bv: s.coherence_before!, av: s.coherence_after!, unit: "%" },
+                    ].map((r) => {
+                      const delta = r.av - r.bv;
+                      const positive = r.invert ? delta < 0 : delta > 0;
+                      const zero = Math.abs(delta) < 1;
+                      return (
+                        <div key={r.label} className="rounded-[12px] p-2" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[8px] text-white/25 uppercase tracking-wider mb-1">{r.label}</p>
+                          <p className="text-sm font-black" style={{ color: zero ? "rgba(255,255,255,0.4)" : positive ? "#4ade80" : "#f87171" }}>
+                            {delta > 0 ? "+" : ""}{Math.round(delta)}{r.unit}
+                          </p>
+                          <p className="text-[8px] text-white/20">{r.bv}{r.unit} → {r.av}{r.unit}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {!hasBoth && s.heart_rate_before !== undefined && (
+                  <div className="mt-2">
+                    <p className="text-[9px] text-white/30">Pre-scan only · ♥ {s.heart_rate_before} BPM · HRV {s.hrv_before}ms · Prana {s.prana_before}%</p>
+                  </div>
+                )}
+                {s.nervous_system_after && (
+                  <p className="text-[9px] text-white/30 capitalize">Post-NS state: <span style={{color:"#D4AF37"}}>{s.nervous_system_after}</span></p>
+                )}
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SoulScan() {
   const navigate = useNavigate();
@@ -1269,6 +1417,14 @@ export default function SoulScan() {
             <p className="text-center text-[10px] text-white/20">
               Uses your camera or microphone · No data leaves your device raw
             </p>
+
+            {/* Past scans */}
+            {user && (
+              <div className="flex flex-col gap-3">
+                <p className="text-[9px] font-bold tracking-[0.4em] uppercase text-white/25">◈ Soul Vault Archive</p>
+                <PastScansPanel userId={user.id} />
+              </div>
+            )}
           </div>
         );
 
@@ -1463,8 +1619,8 @@ export default function SoulScan() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "#050505", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      className="min-h-screen flex flex-col overflow-hidden"
+      style={{ background: "#050505", fontFamily: "'Plus Jakarta Sans', sans-serif", height: "100dvh" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-12 pb-6">
@@ -1511,3 +1667,4 @@ export default function SoulScan() {
     </div>
   );
 }
+
