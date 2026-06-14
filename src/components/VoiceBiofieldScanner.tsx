@@ -29,6 +29,17 @@ export interface VoiceBiofieldResult {
   /** Reaction time neurological index from finger tap phase */
   reactionMs?: number;
   neuroIndex?: string;
+  /**
+   * Raw FFT sample arrays from the microphone capture.
+   * Stored as the user's quantum anchor — the unique voice biometric
+   * that links their physical body to the active ingredient frequency hashes.
+   * Same principle as LimbicArc's voice print analysis.
+   */
+  voiceFftSamples?: {
+    rmsSeries: number[];
+    centroidSeries: number[];
+    zcrSeries: number[];
+  };
 }
 
 interface VoiceBiofieldScannerProps {
@@ -387,6 +398,13 @@ export default function VoiceBiofieldScanner({
             const result = analyzeVoiceBuffer(samplesRef.current);
             // Attach spoken keywords for semantic boost matching
             (result as any).spokenKeywords = [...new Set(spokenWordsRef.current)].slice(0, 40);
+            // Attach raw FFT samples as the user's quantum anchor (voice biometric fingerprint)
+            // Stored in Supabase alongside active ingredient frequency hashes
+            (result as any).voiceFftSamples = {
+              rmsSeries: samplesRef.current.rmsSeries.slice(0, 50),
+              centroidSeries: samplesRef.current.centroidSeries.slice(0, 50),
+              zcrSeries: samplesRef.current.zcrSeries.slice(0, 50),
+            };
             setLastResult(result);
             setPhase('tapping'); // Phase 2: neurological calibration
             return;
