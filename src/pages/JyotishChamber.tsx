@@ -1793,8 +1793,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </div>
               </>
             )}
-          </motion.div>
-        )}
 
             {/* ── VEDIC LEXICON ── */}
             <div style={{ marginTop:24, paddingTop:16, borderTop:'1px solid rgba(212,175,55,0.08)' }}>
@@ -1814,7 +1812,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 }).map(e => <LexEntry key={e.term} entry={e} gs={gs}/>)}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* ══════════════ NADI LEAF ══════════════ */}
