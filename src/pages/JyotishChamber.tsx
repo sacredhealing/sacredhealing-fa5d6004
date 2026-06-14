@@ -15,6 +15,7 @@ import { AccurateHoraWatch } from '@/components/vedic/AccurateHoraWatch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
+import { canAccessJyotishModule } from '@/lib/tierAccess';
 import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
 
 // ── Types ────────────────────────────────────────────────────────
@@ -1305,7 +1306,7 @@ const JyotishChamber: React.FC = () => {
   // Tier access
   const userTier = isAdmin ? 'admin' : (membershipTier || 'free');
   const accessibleTiers = TIER_ACCESS[userTier] || TIER_ACCESS[membershipTier] || ['free'];
-  const canAccess = (modTier: string) => accessibleTiers.includes(modTier);
+  const canAccess = (modTier: string) => isAdmin || accessibleTiers.includes(modTier);
 
   // ── Load birth data ──────────────────────────────────────────
   useEffect(() => {
@@ -1871,6 +1872,26 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   </OracleCard>
                 )}
 
+                <OracleCard icon="♄" label="SADE SATI TRACKER · SATURN TRANSIT" title={`${ephemeris?.moonNakshatra||'—'} Moon Sign — 7.5 Year Saturn Cycle`} glow="rgba(245,158,11,0.16)" open={openCards.sadeSati||false} onToggle={() => toggleCard('sadeSati')}>
+                  <SadeSatiTracker moonSign={ephemeris?.moonNakshatra||null} activeMaha={activeMaha} />
+                </OracleCard>
+
+                <OracleCard icon="♂" label="MANGAL DOSHA CHECKER · MARS POSITION" title={`${ephemeris?.ascendantSign||'—'} Lagna — Mars House Placement`} glow="rgba(239,68,68,0.16)" open={openCards.mangalDosha||false} onToggle={() => toggleCard('mangalDosha')}>
+                  <MangalDoshaChecker ascendantSign={ephemeris?.ascendantSign||null} />
+                </OracleCard>
+
+                <OracleCard icon="🐍" label="KALA SARPA YOGA · RAHU-KETU AXIS" title="All Planets Between Rahu and Ketu Check" glow="rgba(167,139,250,0.16)" open={openCards.kalaSarpa||false} onToggle={() => toggleCard('kalaSarpa')}>
+                  <KalaSarpaYoga />
+                </OracleCard>
+
+                <OracleCard icon="🕐" label="MUHURTA CALCULATOR · AUSPICIOUS TIMING" title="Find Perfect Moments for Major Actions" glow="rgba(34,211,238,0.16)" open={openCards.muhurta||false} onToggle={() => toggleCard('muhurta')}>
+                  <MuhurtaCalculator />
+                </OracleCard>
+
+                <OracleCard icon="💞" label="GUN MILAN · KUNDLI MATCHING" title="Vedic 36-Point Compatibility System" glow="rgba(236,72,153,0.16)" open={openCards.gunMilan||false} onToggle={() => toggleCard('gunMilan')}>
+                  <GunMilan />
+                </OracleCard>
+
                 {membershipTier === 'free' && (
                   <div onClick={() => navigate('/membership')} style={{ background:'rgba(34,211,238,0.04)', border:'1px solid rgba(34,211,238,0.14)', borderRadius:20, padding:'16px 18px', cursor:'pointer', textAlign:'center' }}>
                     <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:6 }}>🔱 Unlock Deeper Guidance</div>
@@ -1944,26 +1965,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   </div>
                 </div>
 
-                {/* ── NEW TOOLS ── */}
-                <OracleCard icon="♄" label="SADE SATI TRACKER · SATURN TRANSIT" title={`Moon Sign ${ephemeris?.moonNakshatra ? '· '+ephemeris.moonNakshatra : ''} — 7.5 Year Saturn Cycle`} glow="rgba(245,158,11,0.16)" open={openCards.sadeSati||false} onToggle={() => toggleCard('sadeSati')}>
-                  <SadeSatiTracker moonSign={ephemeris?.moonNakshatra||null} activeMaha={activeMaha} />
-                </OracleCard>
-
-                <OracleCard icon="♂" label="MANGAL DOSHA CHECKER · MARS POSITION" title={`${ephemeris?.ascendantSign||'—'} Lagna — Check Mars House Placement`} glow="rgba(239,68,68,0.16)" open={openCards.mangalDosha||false} onToggle={() => toggleCard('mangalDosha')}>
-                  <MangalDoshaChecker ascendantSign={ephemeris?.ascendantSign||null} />
-                </OracleCard>
-
-                <OracleCard icon="🐍" label="KALA SARPA YOGA · RAHU-KETU AXIS" title="All Planets Between Rahu and Ketu Check" glow="rgba(167,139,250,0.16)" open={openCards.kalaSarpa||false} onToggle={() => toggleCard('kalaSarpa')}>
-                  <KalaSarpaYoga />
-                </OracleCard>
-
-                <OracleCard icon="🕐" label="MUHURTA CALCULATOR · AUSPICIOUS TIMING" title="Find Perfect Moments for Major Actions" glow="rgba(34,211,238,0.16)" open={openCards.muhurta||false} onToggle={() => toggleCard('muhurta')}>
-                  <MuhurtaCalculator />
-                </OracleCard>
-
-                <OracleCard icon="💞" label="GUN MILAN · KUNDLI MATCHING" title="Vedic 36-Point Compatibility System" glow="rgba(236,72,153,0.16)" open={openCards.gunMilan||false} onToggle={() => toggleCard('gunMilan')}>
-                  <GunMilan />
-                </OracleCard>
               </>
             )}
           </motion.div>
@@ -2054,7 +2055,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               ))}
             </div>
             {JYOTISH_MODULES.filter(m => m.tier === activeTierTab).map(m => {
-              const ok = canAccess(m.tier);
+              const ok = isAdmin || canAccessJyotishModule({ isAdmin, userId: user?.id, tier: membershipTier, moduleId: m.id });
               const isOpen = openModules.has(m.id);
               const tierCol = { free:'#6B7280', prana:'#22D3EE', siddha:'#D4AF37', akasha:'#ffffff' }[m.tier] || '#D4AF37';
               return (
@@ -2124,6 +2125,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
