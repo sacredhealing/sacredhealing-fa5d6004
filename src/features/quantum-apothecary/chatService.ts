@@ -1,6 +1,6 @@
 import type { Message } from './types';
 
-const CHAT_URL = "https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/quantum-apothecary-chat";
+const CHAT_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/quantum-apothecary-chat";
 
 /** Phrases that indicate a direct activation request (not a general question). */
 const ACTIVATION_COMMANDS = [
