@@ -1990,8 +1990,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     )}
                   </div>
                   <div style={{ display:'flex', gap:8 }}>
-                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==='Enter' && handleChatSubmit()} placeholder="Ask Maharishi Bhrigu your question…" style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.22)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none' }}/>
-                    <button onClick={handleChatSubmit} disabled={chatLoading} style={{ width:42, height:42, borderRadius:12, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.3)', color:'#D4AF37', fontSize:17, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>→</button>
+                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==='Enter' && sendMessage()} placeholder="Ask Maharishi Bhrigu your question…" style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.22)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none' }}/>
+                    <button onClick={sendMessage} disabled={chatLoading} style={{ width:42, height:42, borderRadius:12, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.3)', color:'#D4AF37', fontSize:17, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>→</button>
                   </div>
                 </div>
                 {/* Vedic Lexicon inside Oracle */}
