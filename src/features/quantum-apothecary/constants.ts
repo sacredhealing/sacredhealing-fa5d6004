@@ -9,9 +9,9 @@ import {
   type BioenergticActivation,
 } from './bioenergetic-library';
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║  FULL CONSTANTS — All Cymbiotika + All LimbicArc               ║
-// ║  Siddha Soma: 30 items (all Cymbiotika products)               ║
-// ║  Bioenergetic: 1,259 LimbicArc archive + spread from module    ║
+// ║  FULL CONSTANTS — All Siddha Soma + All Siddha Quantum Intelligence               ║
+// ║  Siddha Soma: 30 items (all Siddha Soma products)               ║
+// ║  Bioenergetic: 1,259 SQI frequency archive + spread from module    ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
 const BASE_ACTIVATIONS: Activation[] = [
@@ -64,18 +64,18 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'super-greens', name: 'Chlorophyll Light Activation', vibrationalSignature: 'Super Greens Blend', type: 'Siddha Soma', benefit: 'Alkalizing the biofield and chlorophyll photon absorption.', color: '#22c55e' },
 
   // ── NEW CYMBIOTIKA 2026 ADDITIONS ─────────────────────────────
-  { id: 'cymbiotika-creatine', name: 'Advanced Creatine Matrix', vibrationalSignature: 'Muscle · Brain · ATP Surge', type: 'Siddha Soma', benefit: 'Cymbiotika Liposomal Advanced Creatine — muscle recovery, fitness performance, brain energy, 5g creatine with enhanced liposomal absorption.', color: '#60a5fa' },
-  { id: 'cymbiotika-brain-complex', name: 'Golden Mind Transmission', vibrationalSignature: 'Zembrin · Cognition · Stress Shield', type: 'Siddha Soma', benefit: 'Cymbiotika Brain Complex with Zembrin — focus, memory, stress management, healthy aging, plant-based nootropic field.', color: '#d8b4fe' },
-  { id: 'cymbiotika-heart-health', name: 'Heart Soma Transmission', vibrationalSignature: 'CoQ10 · Red Yeast Rice · Circulation', type: 'Siddha Soma', benefit: 'Cymbiotika Heart Health — CoQ10, Red Yeast Rice, Inositol — circulation, cholesterol balance, cardiac vitality.', color: '#f87171' },
-  { id: 'cymbiotika-colostrum', name: 'Liquid Colostrum Light', vibrationalSignature: 'Immunoglobulins · Gut Seal · Growth Factors', type: 'Siddha Soma', benefit: 'Cymbiotika Liquid Colostrum — immunoglobulins, gut lining seal, immune awakening, growth factors, liposomal delivery.', color: '#fde68a' },
-  { id: 'cymbiotika-dha-omega', name: 'Oceanic Mind Omega', vibrationalSignature: 'DHA · EPA · Astaxanthin · Vegan Omega-3', type: 'Siddha Soma', benefit: 'Cymbiotika DHA Vegan Omega-3 with EPA and Astaxanthin — brain, heart, anti-inflammatory, fish-oil-free.', color: '#22d3ee' },
-  { id: 'cymbiotika-h2-hydrogen', name: 'Molecular Hydrogen Wave', vibrationalSignature: 'H2 · Magnesium · Mitochondrial Antioxidant', type: 'Siddha Soma', benefit: 'Cymbiotika H2 Molecular Hydrogen Tablets — potent antioxidant, anti-inflammatory, energy, mitochondrial protection.', color: '#a5f3fc' },
-  { id: 'cymbiotika-probiotic', name: 'Microbiome Genesis Field', vibrationalSignature: '60B CFU · 19 Strains · Gut-Brain', type: 'Siddha Soma', benefit: 'Cymbiotika Probiotic + Prebiotic 60 Billion CFU — 19 strains, gut immunity, digestive balance, microbiome restoration.', color: '#86efac' },
-  { id: 'cymbiotika-activated-charcoal', name: 'Sacred Charcoal Purge', vibrationalSignature: 'Coconut Charcoal · Gut Detox · Bloating', type: 'Siddha Soma', benefit: 'Cymbiotika Activated Charcoal — coconut-derived, bloating relief, gut detox, digestive support, Vitamin E.', color: '#374151' },
-  { id: 'cymbiotika-topical-mag', name: 'Magnesium Earth Touch', vibrationalSignature: 'MgCl · Transdermal · Muscle Relief', type: 'Siddha Soma', benefit: 'Cymbiotika Topical Magnesium Oil Spray — transdermal magnesium chloride, cramps, muscle and joint relief, sleep.', color: '#c4b5fd' },
-  { id: 'cymbiotika-mushroom', name: 'Sacred Mushroom Soma', vibrationalSignature: 'Lion Mane · Turkey Tail · Reishi · Cordyceps', type: 'Siddha Soma', benefit: 'Cymbiotika Liposomal Mushroom Complex — Lion Mane, Turkey Tail, Reishi, Cordyceps, B-Vitamins — immune and energy.', color: '#d97706' },
-  { id: 'cymbiotika-b12-b6', name: 'Neural Energy Soma', vibrationalSignature: 'B12 · B6 · Methylcobalamin · Nerve', type: 'Siddha Soma', benefit: 'Cymbiotika Liposomal B12 + B6 — cellular energy, brain health, heart health, nerve function, methylcobalamin.', color: '#fb923c' },
-  { id: 'cymbiotika-d3-k2-coq10', name: 'Solar Bone Heart Triad', vibrationalSignature: 'D3 · K2 · CoQ10 · Liposomal', type: 'Siddha Soma', benefit: 'Cymbiotika Liposomal D3 + K2 + CoQ10 — bone density, immune regulation, heart protection, mitochondrial energy.', color: '#fbbf24' },
+  { id: 'siddha-soma-creatine', name: 'Advanced Creatine Matrix', vibrationalSignature: 'Muscle · Brain · ATP Surge', type: 'Siddha Soma', benefit: 'Siddha Quantum Liposomal Advanced Creatine — muscle recovery, fitness performance, brain energy, 5g creatine with enhanced liposomal absorption.', color: '#60a5fa' },
+  { id: 'siddha-soma-brain-complex', name: 'Golden Mind Transmission', vibrationalSignature: 'Zembrin · Cognition · Stress Shield', type: 'Siddha Soma', benefit: 'Siddha Soma Brain Complex with Zembrin — focus, memory, stress management, healthy aging, plant-based nootropic field.', color: '#d8b4fe' },
+  { id: 'siddha-soma-heart-health', name: 'Heart Soma Transmission', vibrationalSignature: 'CoQ10 · Red Yeast Rice · Circulation', type: 'Siddha Soma', benefit: 'Siddha Soma Heart Health — CoQ10, Red Yeast Rice, Inositol — circulation, cholesterol balance, cardiac vitality.', color: '#f87171' },
+  { id: 'siddha-soma-colostrum', name: 'Liquid Colostrum Light', vibrationalSignature: 'Immunoglobulins · Gut Seal · Growth Factors', type: 'Siddha Soma', benefit: 'Siddha Soma Liquid Colostrum — immunoglobulins, gut lining seal, immune awakening, growth factors, liposomal delivery.', color: '#fde68a' },
+  { id: 'siddha-soma-dha-omega', name: 'Oceanic Mind Omega', vibrationalSignature: 'DHA · EPA · Astaxanthin · Vegan Omega-3', type: 'Siddha Soma', benefit: 'Siddha Soma DHA Vegan Omega-3 with EPA and Astaxanthin — brain, heart, anti-inflammatory, fish-oil-free.', color: '#22d3ee' },
+  { id: 'siddha-soma-h2-hydrogen', name: 'Molecular Hydrogen Wave', vibrationalSignature: 'H2 · Magnesium · Mitochondrial Antioxidant', type: 'Siddha Soma', benefit: 'Siddha Soma H2 Molecular Hydrogen Tablets — potent antioxidant, anti-inflammatory, energy, mitochondrial protection.', color: '#a5f3fc' },
+  { id: 'siddha-soma-probiotic', name: 'Microbiome Genesis Field', vibrationalSignature: '60B CFU · 19 Strains · Gut-Brain', type: 'Siddha Soma', benefit: 'Siddha Soma Probiotic + Prebiotic 60 Billion CFU — 19 strains, gut immunity, digestive balance, microbiome restoration.', color: '#86efac' },
+  { id: 'siddha-soma-activated-charcoal', name: 'Sacred Charcoal Purge', vibrationalSignature: 'Coconut Charcoal · Gut Detox · Bloating', type: 'Siddha Soma', benefit: 'Siddha Soma Activated Charcoal — coconut-derived, bloating relief, gut detox, digestive support, Vitamin E.', color: '#374151' },
+  { id: 'siddha-soma-topical-mag', name: 'Magnesium Earth Touch', vibrationalSignature: 'MgCl · Transdermal · Muscle Relief', type: 'Siddha Soma', benefit: 'Siddha Soma Topical Magnesium Oil Spray — transdermal magnesium chloride, cramps, muscle and joint relief, sleep.', color: '#c4b5fd' },
+  { id: 'siddha-soma-mushroom', name: 'Sacred Mushroom Soma', vibrationalSignature: 'Lion Mane · Turkey Tail · Reishi · Cordyceps', type: 'Siddha Soma', benefit: 'Siddha Quantum Liposomal Mushroom Complex — Lion Mane, Turkey Tail, Reishi, Cordyceps, B-Vitamins — immune and energy.', color: '#d97706' },
+  { id: 'siddha-soma-b12-b6', name: 'Neural Energy Soma', vibrationalSignature: 'B12 · B6 · Methylcobalamin · Nerve', type: 'Siddha Soma', benefit: 'Siddha Quantum Liposomal B12 + B6 — cellular energy, brain health, heart health, nerve function, methylcobalamin.', color: '#fb923c' },
+  { id: 'siddha-soma-d3-k2-coq10', name: 'Solar Bone Heart Triad', vibrationalSignature: 'D3 · K2 · CoQ10 · Liposomal', type: 'Siddha Soma', benefit: 'Siddha Quantum Liposomal D3 + K2 + CoQ10 — bone density, immune regulation, heart protection, mitochondrial energy.', color: '#fbbf24' },
 
   
   // ── SQI SOVEREIGN OUTCOME BOOSTS (Limbic Arc parity) ─────────
@@ -289,7 +289,7 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'plant-deva-chandanam-paste', name: 'Chandanam Paste', vibrationalSignature: '🌿 Third Eye · Shiva Consciousness · Cooling', type: 'plant_deva', benefit: '🌿 Third Eye · Shiva Consciousness · Cooling', color: '#86efac' },
   { id: 'plant-deva-kumkum-sacred-red', name: 'Kumkum (Sacred Red)', vibrationalSignature: '🔴 Root · Shakti · Devi Grace · Liberation', type: 'plant_deva', benefit: '🔴 Root · Shakti · Devi Grace · Liberation', color: '#ef4444' },
 
-  // ── BIOENERGETIC — LIMBICARC FULL ARCHIVE (1,259) ───────────────
+  // ── BIOENERGETIC — sqi FULL ARCHIVE (1,259) ───────────────
   ...LIMBICARC_BIOENERGETIC_ACTIVATIONS,
 
   // ── MINERALS ─────────────────────────────────────────────────
@@ -403,7 +403,7 @@ export function mapBioLibraryToActivation(bio: BioenergticActivation): Activatio
 const _bioAsActivations = BIOENERGETIC_LIBRARY.map(mapBioLibraryToActivation);
 const _existingActivationIds = new Set(ACTIVATIONS.map((a) => a.id));
 
-/** Full Frequency Library: Cymbiotika + LimbicArc + complete bioenergetic ingredient list (deduped by id). */
+/** Full Frequency Library: Siddha Soma + Siddha Quantum Intelligence + complete bioenergetic ingredient list (deduped by id). */
 export const ALL_ACTIVATIONS: Activation[] = [
   ...ACTIVATIONS,
   ..._bioAsActivations.filter((a) => !_existingActivationIds.has(a.id)),
