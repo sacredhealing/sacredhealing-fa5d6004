@@ -1,0 +1,26 @@
+name: Deploy palm-oracle-reading Edge Function
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase/functions/palm-oracle-reading/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy palm-oracle-reading function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy palm-oracle-reading             --project-ref fjdzhrdpioxdeyyfogep             --no-verify-jwt
+          echo "palm-oracle-reading deployed successfully"
