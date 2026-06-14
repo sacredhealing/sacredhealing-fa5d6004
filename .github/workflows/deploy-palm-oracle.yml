@@ -20,11 +20,20 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy palm-oracle-reading
+      - name: Deploy to NEW Supabase (active)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         working-directory: repo
         run: |
-          echo "=== Deploying palm-oracle-reading ==="
+          echo "=== Deploying palm-oracle-reading → NEW Supabase ==="
           supabase functions deploy palm-oracle-reading --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
-          echo "Done at $(date)"
+          echo "NEW done at $(date)"
+
+      - name: Deploy to OLD Supabase (Lovable - live app)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          echo "=== Deploying palm-oracle-reading → OLD Supabase (Lovable) ==="
+          supabase functions deploy palm-oracle-reading --project-ref ssygukfdbtehvtndandn --no-verify-jwt
+          echo "OLD done at $(date)"
