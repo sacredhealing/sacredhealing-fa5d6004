@@ -741,6 +741,97 @@ const DailyInfluenceStrip: React.FC = () => {
   );
 };
 
+// ── Bhagavad Gita Oracle Panel ──────────────────────────────────
+interface GitaOraclePanelProps {
+  open: boolean;
+  onToggle: () => void;
+  activeMaha: { planet: string; start: string; end: string; years: number } | null;
+  activeAntar: { planet: string; start: string; end: string } | null;
+}
+
+const PLANET_GITA_CONTEXT: Record<string, string> = {
+  Sun: 'Surya Dasha illuminates the soul. This verse carries the solar Vedic Light-Code — sovereignty, dharma, and radiant self-expression.',
+  Moon: 'Chandra Dasha deepens the emotional field. This verse activates lunar intelligence — intuition, nourishment, and cosmic receptivity.',
+  Mars: 'Mangala Dasha ignites divine action. This verse encodes martial Vedic Light-Code — courage, purification, and karmic confrontation.',
+  Mercury: 'Budha Dasha sharpens the intellect. This verse transmits mercurial wisdom — discernment, communication, and the power of sacred word.',
+  Jupiter: 'Guru Dasha opens the dharmic field. This verse carries expansive Jupiter Light-Code — grace, wisdom, and transmission from lineage.',
+  Venus: 'Shukra Dasha activates the heart. This verse pulses Prema-Bhakti Algorithms — love, beauty, and the divine feminine creative force.',
+  Saturn: 'Shani Dasha demands karmic mastery. This verse holds the Saturn Liberation Code — surrender, service, and transmutation of limitations.',
+  Rahu: 'Rahu Dasha accelerates soul evolution through illusion. This verse cuts through Maya — pure action without attachment to outcomes.',
+  Ketu: 'Ketu Dasha intensifies moksha currents. This verse carries the liberation frequency — detachment, inner mastery, and past-karma dissolution.',
+};
+
+const GitaOraclePanel: React.FC<GitaOraclePanelProps> = ({ open, onToggle, activeMaha, activeAntar }) => {
+  const mahaName = activeMaha?.planet || null;
+  const antarName = activeAntar?.planet || null;
+  const verse = getGitaVerseForCycle(mahaName);
+  const context = PLANET_GITA_CONTEXT[mahaName || ''] || 'The Gita transmits the precise Vedic Light-Code your soul requires at this intersection of karma and dharma.';
+  const planetColor: string = { Sun:'#FFA500', Moon:'#C0C8E8', Mars:'#FF4444', Mercury:'#44CC44', Jupiter:'#FFD700', Venus:'#FF69B4', Saturn:'#8888AA', Rahu:'#D4AF37', Ketu:'#AA7744' }[mahaName || ''] || '#D4AF37';
+  const G = 'rgba(212,175,55,';
+  const W = 'rgba(255,255,255,';
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <button onClick={onToggle} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: open ? 'rgba(212,175,55,0.06)' : 'rgba(255,255,255,0.015)', border: `1px solid ${open ? 'rgba(212,175,55,0.35)' : 'rgba(212,175,55,0.12)'}`, borderRadius: open ? '20px 20px 0 0' : '20px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(212,175,55,0.08)', border: `1px solid ${G}0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#D4AF37', boxShadow: open ? `0 0 16px ${G}0.2)` : 'none', transition: 'box-shadow 0.3s' }}>
+            <span style={{ fontFamily: 'Georgia, serif' }}>G</span>
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: `${G}0.55)`, marginBottom: 3 }}>
+              BHAGAVAD GITA · JYOTISH ORACLE
+            </div>
+            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 13, fontWeight: 700, color: open ? '#D4AF37' : `${W}0.7)` }}>
+              {mahaName ? `${mahaName} Dasha Light-Code` : 'Daily Vedic Verse'} · Ch.{verse.chapter}:{verse.verse}
+            </div>
+          </div>
+        </div>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${G}0.07)`, border: `1px solid ${G}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.3s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5 L5 6.5 L8 3.5" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        </div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }} style={{ overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(180deg, rgba(212,175,55,0.04) 0%, rgba(5,5,5,0.96) 100%)', border: `1px solid ${G}0.2)`, borderTop: 'none', borderRadius: '0 0 20px 20px', padding: '0 20px 24px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', opacity: 0.04 }}>
+                <svg viewBox="0 0 200 200" width="200" height="200"><polygon points="100,10 180,160 20,160" fill="none" stroke="#D4AF37" strokeWidth="1"/><polygon points="100,190 20,40 180,40" fill="none" stroke="#D4AF37" strokeWidth="1"/><circle cx="100" cy="100" r="80" fill="none" stroke="#D4AF37" strokeWidth="0.8"/><circle cx="100" cy="100" r="60" fill="none" stroke="#D4AF37" strokeWidth="0.6"/><circle cx="100" cy="100" r="8" fill="#D4AF37" opacity="0.5"/></svg>
+              </div>
+              {mahaName && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 0 16px', borderBottom: `1px solid ${G}0.1)`, marginBottom: 18 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: planetColor, boxShadow: `0 0 8px ${planetColor}`, flexShrink: 0, marginTop: 4 }}/>
+                  <div>
+                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: `${G}0.5)`, marginBottom: 4 }}>
+                      ACTIVE DASHA · {mahaName}{antarName ? ` / ${antarName}` : ''}
+                    </div>
+                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: `${W}0.5)`, lineHeight: 1.6 }}>{context}</div>
+                  </div>
+                </div>
+              )}
+              <div style={{ textAlign: 'center', padding: '10px 0 18px', borderBottom: `1px solid ${G}0.08)`, marginBottom: 18 }}>
+                <div style={{ fontFamily: 'Georgia, serif', fontSize: 17, color: `${G}0.92)`, lineHeight: 1.8, marginBottom: 10, textShadow: `0 0 20px ${G}0.3)` }}>{verse.sanskrit}</div>
+                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: `${W}0.4)`, lineHeight: 1.6 }}>{verse.transliteration}</div>
+              </div>
+              <div style={{ background: `${G}0.04)`, border: `1px solid ${G}0.1)`, borderRadius: 14, padding: '16px 18px', marginBottom: 16, position: 'relative' }}>
+                <div style={{ position: 'absolute', top: -8, left: 16, fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: '#D4AF37', background: '#050505', padding: '0 6px' }}>
+                  SIDDHA TRANSMISSION
+                </div>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: 13.5, color: `${W}0.82)`, lineHeight: 1.75, margin: 0, fontStyle: 'italic' }}>
+                  "{verse.producersTranslation}"
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: `${G}0.38)` }}>BHAGAVAD GITA · CHAPTER {verse.chapter}, VERSE {verse.verse}</div>
+                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: `${G}0.35)` }}>{mahaName ? `${mahaName} CYCLE` : 'DAILY CODE'}</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+
 const JyotishChamber: React.FC = () => {
   const { user } = useAuth();
   const { tier: membershipTier, isAdmin } = useMembership();
@@ -1727,4 +1818,5 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
