@@ -2019,10 +2019,64 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         {/* ══════════════ BHRIGU ORACLE ══════════════ */}
         {activeTab === 'oracle' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
-            {!birthData ? <BirthPrompt /> : (
-              <>
+            <>
                 <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:20, marginBottom:16 }}>
                   <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>🔱 Ask Maharishi Bhrigu</div>
+
+                  {/* ── Inline birth fields — shown when no birth data yet ── */}
+                  {!birthData && (
+                    <div style={{ marginBottom:16, padding:'14px 16px', background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:16 }}>
+                      <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>✦ Enter Your Birth Details</p>
+                      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                        {([
+                          { id:'oracle-name',  label:'Name',          placeholder:'Your full name' },
+                          { id:'oracle-dob',   label:'Date of Birth', placeholder:'YYYY-MM-DD' },
+                          { id:'oracle-tob',   label:'Time of Birth', placeholder:'HH:MM (24h, optional)' },
+                          { id:'oracle-pob',   label:'Place of Birth',placeholder:'City, Country' },
+                        ] as const).map((f: {id:string,label:string,placeholder:string}) => (
+                          <div key={f.id} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                            <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', minWidth:80, flexShrink:0 }}>{f.label}</span>
+                            <input
+                              id={f.id}
+                              type="text"
+                              placeholder={f.placeholder}
+                              style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.18)', borderRadius:10, padding:'9px 12px', color:'rgba(255,255,255,0.82)', fontFamily:'inherit', fontSize:13, outline:'none' }}
+                            />
+                          </div>
+                        ))}
+                        <button
+                          onClick={async () => {
+                            const nm  = (document.getElementById('oracle-name') as HTMLInputElement)?.value?.trim();
+                            const dob = (document.getElementById('oracle-dob')  as HTMLInputElement)?.value?.trim();
+                            const tob = (document.getElementById('oracle-tob')  as HTMLInputElement)?.value?.trim();
+                            const pob = (document.getElementById('oracle-pob')  as HTMLInputElement)?.value?.trim();
+                            if (!nm || !dob) return;
+                            const { data: { user: authU } } = await (supabase as any).auth.getUser();
+                            if (authU) {
+                              await (supabase as any).from('jyotish_profiles').upsert({
+                                user_id: authU.id,
+                                birth_name: nm, birth_date: dob,
+                                birth_time: tob || null, birth_place: pob || null,
+                              }, { onConflict: 'user_id' });
+                              await loadBirthData();
+                            }
+                          }}
+                          style={{ marginTop:4, padding:'10px 20px', borderRadius:12, border:'1px solid rgba(212,175,55,0.35)', background:'rgba(212,175,55,0.1)', color:'#D4AF37', fontFamily:'inherit', fontSize:10, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer', alignSelf:'flex-start' }}
+                        >
+                          ✦ Activate My Cosmic Blueprint
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Birth data active strip ── */}
+                  {birthData && (
+                    <div style={{ marginBottom:12, padding:'9px 14px', background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:12, display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' as const }}>
+                      <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>✦ Blueprint Active</span>
+                      <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.75)' }}>{birthData.birth_name}</span>
+                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{birthData.birth_date}{birthData.birth_time ? ' · ' + birthData.birth_time : ''}{birthData.birth_place ? ' · ' + birthData.birth_place : ''}</span>
+                    </div>
+                  )}
 
                   {/* ── Full Reading Button ── */}
                   {birthData && (
@@ -2131,7 +2185,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   </div>
                 </div>
               </>
-            )}
+            </>
           </motion.div>
         )}
 
