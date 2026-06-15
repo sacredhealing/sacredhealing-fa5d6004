@@ -2392,8 +2392,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="✦" label="NATAL BLUEPRINT" title={`${birthData.birth_name} · ${ephemeris?.ascendantSign || '—'} Rising · ${ephemeris?.moonNakshatra || '—'}`} glow="rgba(212,175,55,0.15)" open={openCards.natalBlueprint} onToggle={() => toggleCard('natalBlueprint')}>
-                  {ephemeris?.ascendantSign && (() => {
-                    const lagnaSign = ephemeris.ascendantSign;
+                  {(() => {
+                    const lagnaSign = ephemeris?.ascendantSign || '';
                     const lagnaRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
                     const LAGNA_DEEP: Record<string,{body:string;dharma:string;shadow:string;gift:string;relationships:string;sadhana:string;transmission:string}> = {
                       Aries:       { body:'Pitta constitution — prone to heat, inflammation, and head tension. Thrive on physical challenge; wilt under stagnation.', dharma:'You came to initiate. Every time you step forward before others dare to, you are fulfilling your Lagna\'s deepest function. The Aries Lagna is the universe\'s instrument of beginning.', shadow:'Aggression masking fear, inability to complete what is begun, burning through relationships with the intensity of the mission.', gift:'Unmatched capacity to begin. When Aries Lagna acts from soul rather than ego, the entire field around them ignites.', relationships:'Partners must match your pace or step aside. Your deepest intimacy comes with those who are not intimidated by your fire — who meet it with their own.', sadhana:'Surya Namaskar at dawn. Hanuman. Physical practice is your primary spiritual discipline — the body is your temple, not a vehicle.', transmission:'You were not born to wait for permission. The door you are looking for opens from the inside.' },
@@ -2409,7 +2409,16 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                       Aquarius:    { body:'Vata dominant — innovative, detached, prone to nervous system fragility and circulation issues when humanitarian purpose is frustrated.', dharma:'You came for the collective. The Aquarius Lagna carries a transmission for the age — their dharma is not personal success but the advancement of what is possible for all.', shadow:'Detachment that becomes coldness, humanitarian idealism used to avoid personal intimacy, revolutionary energy without the discipline of Saturn.', gift:'The capacity to see what is possible before it exists. The Aquarius Lagna is the bridge between the present and the future that humanity needs.', relationships:'Friendship is the foundation of your most profound loves. The partner who is first your genuine intellectual companion is the one who lasts.', sadhana:'Saturn and Rahu mantras. Study of sacred sciences and future sciences simultaneously. Genuine community service.', transmission:'The future you are imagining is not impossible. It is simply early.' },
                       Pisces:      { body:'Kapha-Vata — fluid, permeable, prone to foot issues and the absorption of others\' emotional states.', dharma:'You came to dissolve the boundary between the human and the divine. The Pisces Lagna is the most permeable in the zodiac — their dharma is compassion without losing self.', shadow:'Escapism, boundary dissolution, losing oneself in others\' reality, spiritual bypassing of the material responsibilities of incarnation.', gift:'The deepest empathy available in human form. When Pisces Lagna is grounded, they become a vessel for grace that genuinely heals.', relationships:'You need a partner who is a genuine anchor — not who controls you, but who helps you remember that you have a self.', sadhana:'Jupiter and Ketu mantras. Meditation on the ocean. Seva that dissolves the ego through genuine service.', transmission:'The water knows where it is going. You do not need to steer — only to flow without contracting.' },
                     };
-                    const ld = LAGNA_DEEP[lagnaSign];
+                    const ld = lagnaSign ? LAGNA_DEEP[lagnaSign] : null;
+                    if (!lagnaSign) return (
+                      <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'12px 15px', marginBottom:8, display:'flex', alignItems:'center', gap:10 }}>
+                        <span style={{ fontSize:20, opacity:0.3 }}>♏</span>
+                        <div>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.3)', marginBottom:2 }}>Lagna — Rising Sign</div>
+                          <div style={{ fontSize:12, color:'rgba(255,255,255,0.28)', fontStyle:'italic' }}>Calculating from birth time… refresh if this persists</div>
+                        </div>
+                      </div>
+                    );
                     return (
                       <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
                         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
