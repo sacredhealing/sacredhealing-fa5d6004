@@ -61,6 +61,36 @@ const SIGN_SYMBOLS: Record<string, string> = {
   Libra:'♎',Scorpio:'♏',Sagittarius:'♐',Capricorn:'♑',Aquarius:'♒',Pisces:'♓'
 };
 
+const NAKSHATRA_MEANINGS: Record<string, { ruling: string; devata: string; shakti: string; shadow: string; gift: string }> = {
+  'Ashvini':         { ruling:'Ketu',    devata:'Ashvini Kumaras', shakti:'Power to quickly heal and reach the destination', shadow:'Impatience, inability to complete what is started', gift:'Natural healer, pioneer, swift in action — you arrived to begin.' },
+  'Bharani':         { ruling:'Venus',   devata:'Yama',             shakti:'Power to carry things away — to cleanse and purify', shadow:'Obsession with extremes, carrying too much', gift:'Fierce creative force, transformative lover — you arrived to bear new life.' },
+  'Krittika':        { ruling:'Sun',     devata:'Agni',             shakti:'Power to burn and purify', shadow:'Harsh criticism, cutting others down', gift:'Incisive intellect, capacity to illuminate truth — you arrived to cut through illusion.' },
+  'Rohini':          { ruling:'Moon',    devata:'Brahma',           shakti:'Power to grow and create', shadow:'Fixation, possessiveness, attachment to beauty', gift:'Magnetic manifestor, sensual creator — you arrived to make the world fertile.' },
+  'Mrigashira':      { ruling:'Mars',    devata:'Soma',             shakti:'Power of searching and seeking', shadow:'Perpetual seeking without arriving', gift:'Eternal seeker, gentle warrior — you arrived to follow the golden deer into truth.' },
+  'Ardra':           { ruling:'Rahu',    devata:'Rudra',            shakti:'Power of effort and making gains through storms', shadow:'Destructive intensity, using storms to avoid stillness', gift:'Alchemist of grief, destroyer of illusion — you arrived to transform through dissolution.' },
+  'Punarvasu':       { ruling:'Jupiter', devata:'Aditi',            shakti:'Power of renewal and return of the light', shadow:'Scattered across too many directions, never settling', gift:'Eternal optimist, cosmic wanderer — you arrived to restore what was lost.' },
+  'Pushya':          { ruling:'Saturn',  devata:'Brihaspati',       shakti:'Power of brahmavarchasa — spiritual energy, nourishment', shadow:'Over-giving until depleted, difficulty receiving', gift:'Most auspicious Nakshatra — teacher, nourisher, cosmic priest. You arrived to sustain all who come near you. Saturn disciplines your boundless giving into wisdom.' },
+  'Ashlesha':        { ruling:'Mercury', devata:'Nagas',            shakti:'Power to paralyse and inflict poison — also power to heal', shadow:'Manipulation, using insight as control', gift:'Kundalini intelligence, serpent wisdom — you arrived to transmit what cannot be spoken.' },
+  'Magha':           { ruling:'Ketu',    devata:'Pitrus',           shakti:'Power to leave the body — ancestral connection', shadow:'Arrogance of lineage, pride of throne', gift:'Royal soul, ancestral keeper — you arrived carrying the power of all who came before.' },
+  'Purva Phalguni':  { ruling:'Venus',   devata:'Bhaga',            shakti:'Power of procreation and delight', shadow:'Hedonism, avoiding depth through pleasure', gift:'Creative deity, lover of life — you arrived to spread joy and make beauty sacred.' },
+  'Uttara Phalguni': { ruling:'Sun',     devata:'Aryaman',          shakti:'Power of giving prosperity through union', shadow:'Expecting loyalty without vulnerability', gift:'Sacred partnership builder — you arrived to create the covenant bonds that last lifetimes.' },
+  'Hasta':           { ruling:'Moon',    devata:'Savitar',          shakti:'Power to manifest what we seek and put it in our hands', shadow:'Cleverness used to grasp rather than receive', gift:'Master craftsperson, divine hands — you arrived to bring the invisible into form.' },
+  'Chitra':          { ruling:'Mars',    devata:'Tvashtr',          shakti:'Power to accumulate merit and worship', shadow:'Surface brilliance masking inner emptiness', gift:'Architect of beauty, cosmic jewel-maker — you arrived to craft masterpieces in every dimension.' },
+  'Swati':           { ruling:'Rahu',    devata:'Vayu',             shakti:'Power to scatter like the wind', shadow:'Rootlessness, freedom without commitment', gift:'Independent blade of grass that bends without breaking — you arrived to move without attachment.' },
+  'Vishakha':        { ruling:'Jupiter', devata:'Indra-Agni',       shakti:'Power of achieving many and various fruits', shadow:'Burning ambition, inability to enjoy arrival', gift:'Sacred fire of purpose — you arrived with one arrow, one target, infinite patience.' },
+  'Anuradha':        { ruling:'Saturn',  devata:'Mitra',            shakti:'Power of worship and devotion', shadow:'Suppressed feeling creating explosive ruptures', gift:'Cosmic friend, devotion that moves mountains — you arrived to build bonds that transcend time.' },
+  'Jyeshtha':        { ruling:'Mercury', devata:'Indra',            shakti:'Power of rising and conquering', shadow:'Carrying responsibility so long it becomes identity', gift:'Elder protector, chief among chiefs — you arrived to carry what others cannot hold.' },
+  'Mula':            { ruling:'Ketu',    devata:'Nirriti',          shakti:'Power of ruination and dissolution at the root', shadow:'Destruction of what was built in previous life', gift:'Root-finder, destroyer of the superficial — you arrived to pull up every false root so the real one can grow.' },
+  'Purva Ashadha':   { ruling:'Venus',   devata:'Apas',             shakti:'Power of invigoration', shadow:'Overconfidence before the battle is decided', gift:'Unconquerable spirit — you arrived to purify through water and never surrender your essential nature.' },
+  'Uttara Ashadha':  { ruling:'Sun',     devata:'Vishvedevas',      shakti:'Power of giving unchallengeable victory', shadow:'Righteousness without mercy', gift:'Universal soldier, final victory — you arrived to complete what was begun across many lifetimes.' },
+  'Shravana':        { ruling:'Moon',    devata:'Vishnu',           shakti:'Power of connection', shadow:'Hearing everything, integrating nothing', gift:'Sacred listener, Vishnu's ear — you arrived to preserve the knowledge others let fall.' },
+  'Dhanishtha':      { ruling:'Mars',    devata:'Ashta Vasus',      shakti:'Power of giving abundance and fame', shadow:'Fame without substance, drumbeat without silence', gift:'Cosmic musician, vessel of abundance — you arrived to fill every space with rhythm and light.' },
+  'Shatabhisha':     { ruling:'Rahu',    devata:'Varuna',           shakti:'Power of pervasive healing', shadow:'Isolation as identity, healing others to avoid being seen', gift:'Lone healer, starfield consciousness — you arrived to cure what has no name and restore what was hidden.' },
+  'Purva Bhadra':    { ruling:'Jupiter', devata:'Aja Ekapada',      shakti:'Power of elevation through tapas', shadow:'Extremism, burning the world that failed to understand', gift:'Fierce ascetic fire — you arrived to burn away everything false until only the eternal remains.' },
+  'Uttara Bhadra':   { ruling:'Saturn',  devata:'Ahir Budhnya',     shakti:'Power of bringing rain, the power of the cosmic serpent', shadow:'Depth that becomes withdrawal', gift:'Cosmic serpent of the deep — you arrived to bring the rains that end the longest droughts.' },
+  'Revati':          { ruling:'Mercury', devata:'Pushan',           shakti:'Power of nourishment and protecting journeys', shadow:'Sensitivity so refined it becomes paralysis', gift:'Shepherd of souls — you arrived to guide the last traveller safely home. The final star, the completion of the zodiac.' },
+};
+
 const SIGN_MEANINGS: Record<string, string> = {
   Aries: 'Pioneer, warrior, initiator. Fire energy — you came to start and lead.',
   Taurus: 'Builder, artist, sensualist. Earth energy — you came to create stability and beauty.',
@@ -1851,14 +1881,38 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   )}
                   {ephemeris?.moonNakshatra && (
                     <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                         <span style={{ fontSize:20 }}>☽</span>
-                        <div>
+                        <div style={{ flex:1 }}>
                           <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Birth Star · Janma Nakshatra</div>
                           <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{ephemeris.moonNakshatra}</div>
                         </div>
                       </div>
-                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
+                      {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra] ? (
+                        <div style={{ display:'flex', flexDirection:'column' as const, gap:6 }}>
+                          <div style={{ display:'flex', gap:8, flexWrap:'wrap' as const }}>
+                            <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', background:'rgba(212,175,55,0.06)', border:'1px solid rgba(212,175,55,0.12)', borderRadius:6, padding:'3px 8px' }}>
+                              ✦ {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].ruling} ruled
+                            </span>
+                            <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'3px 8px' }}>
+                              {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].devata}
+                            </span>
+                          </div>
+                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.72)', lineHeight:1.65, fontStyle:'italic', fontFamily:"'Georgia', serif", margin:'2px 0 0' }}>
+                            {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].gift}
+                          </p>
+                          <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:8, marginTop:4 }}>
+                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.35)', marginBottom:4 }}>Shakti</div>
+                            <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', lineHeight:1.55 }}>{NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].shakti}</p>
+                          </div>
+                          <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:8, marginTop:2 }}>
+                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,80,80,0.4)', marginBottom:4 }}>Shadow</div>
+                            <p style={{ fontSize:11, color:'rgba(255,255,255,0.38)', lineHeight:1.55 }}>{NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].shadow}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
+                      )}
                     </div>
                   )}
                   <div style={{ textAlign:'center', marginTop:8 }}>
