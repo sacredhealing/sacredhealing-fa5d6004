@@ -328,37 +328,95 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
   return (
     <div style={{ fontFamily: "\'Plus Jakarta Sans\', sans-serif" }}>
 
-      {/* ── Inline birth fields ── */}
+      {/* ── No birth data — sovereign leaf unlock screen ── */}
       {!birthData && (
-        <div style={{ marginBottom: 16, padding: '14px 16px', background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16 }}>
-          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)', marginBottom: 12 }}>✦ Enter Your Birth Details</p>
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-            {[
-              { label: 'Name',          value: inlineName,  set: setInlineName,  ph: 'Your full name' },
-              { label: 'Date of Birth', value: inlineDob,   set: setInlineDob,   ph: 'YYYY-MM-DD' },
-              { label: 'Time of Birth', value: inlineTob,   set: setInlineTob,   ph: 'HH:MM (optional)' },
-              { label: 'Place of Birth',value: inlinePob,   set: setInlinePob,   ph: 'City, Country' },
-            ].map(f => (
-              <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.38)', minWidth: 84, flexShrink: 0 }}>{f.label}</span>
-                <input
-                  type="text" value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.ph}
-                  onKeyDown={e => e.key === 'Enter' && saveBirthInline()}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.18)', borderRadius: 10, padding: '9px 12px', color: 'rgba(255,255,255,0.82)', fontFamily: 'inherit', fontSize: 13, outline: 'none' }}
-                />
-              </div>
-            ))}
+        <div style={{ display:'flex', flexDirection:'column' as const, alignItems:'center', textAlign:'center', padding:'28px 16px 20px' }}>
+
+          {/* Breathing glyph */}
+          <div style={{ fontSize:48, marginBottom:20, filter:'drop-shadow(0 0 12px rgba(212,175,55,0.35))', animation:'breathe 4s ease-in-out infinite' }}>𝔅</div>
+
+          {/* Bhrigu voice */}
+          <p style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:19, fontStyle:'italic', color:'rgba(225,210,185,0.9)', lineHeight:1.65, marginBottom:8, maxWidth:340 }}>
+            The leaf searches for your name<br/>among ten thousand souls.
+          </p>
+          <p style={{ fontFamily:"'IM Fell English', serif", fontSize:13, fontStyle:'italic', color:'rgba(200,184,154,0.42)', lineHeight:1.7, marginBottom:28, maxWidth:300 }}>
+            To locate your Nadi leaf, Bhrigu requires<br/>the moment and place of your arrival on Earth.
+          </p>
+
+          {/* Form card */}
+          <div style={{ width:'100%', maxWidth:440, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:24, padding:24, textAlign:'left' as const }}>
+            <span style={{ display:'block', fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:18, textAlign:'center' as const }}>✦ Unlock Your Nadi Leaf</span>
+
+            {/* Name */}
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:5 }}>
+                Full Name <span style={{ color:'rgba(212,175,55,0.6)' }}>*</span>
+              </label>
+              <input
+                type="text" value={inlineName} onChange={e => setInlineName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveBirthInline()}
+                placeholder="As given at birth"
+                style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.85)', fontFamily:'inherit', fontSize:14, outline:'none' }}
+              />
+            </div>
+
+            {/* Date */}
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:5 }}>
+                Date of Birth <span style={{ color:'rgba(212,175,55,0.6)' }}>*</span>
+              </label>
+              <input
+                type="text" value={inlineDob} onChange={e => setInlineDob(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveBirthInline()}
+                placeholder="YYYY-MM-DD"
+                style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.85)', fontFamily:'inherit', fontSize:14, outline:'none' }}
+              />
+              <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:3, display:'block' }}>e.g. 1988-03-15</span>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height:1, background:'rgba(255,255,255,0.04)', margin:'4px 0 16px' }} />
+
+            {/* Time */}
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:5 }}>Time of Birth</label>
+              <input
+                type="text" value={inlineTob} onChange={e => setInlineTob(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveBirthInline()}
+                placeholder="HH:MM  (24-hour)"
+                style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.85)', fontFamily:'inherit', fontSize:14, outline:'none' }}
+              />
+              <span style={{ fontSize:10, color:'rgba(255,255,255,0.2)', marginTop:3, display:'block' }}>Optional — increases reading precision significantly</span>
+            </div>
+
+            {/* Place */}
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:'block', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:5 }}>Place of Birth</label>
+              <input
+                type="text" value={inlinePob} onChange={e => setInlinePob(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveBirthInline()}
+                placeholder="City, Country"
+                style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.85)', fontFamily:'inherit', fontSize:14, outline:'none' }}
+              />
+            </div>
+
+            {/* Activate button */}
             <button
-              onClick={saveBirthInline} disabled={saving || !inlineName || !inlineDob}
-              style={{ marginTop: 4, padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(212,175,55,0.35)', background: 'rgba(212,175,55,0.1)', color: '#D4AF37', fontFamily: 'inherit', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, cursor: saving ? 'default' : 'pointer', alignSelf: 'flex-start' as const, opacity: saving ? 0.6 : 1 }}
+              onClick={saveBirthInline}
+              disabled={saving || !inlineName.trim() || !inlineDob.trim()}
+              style={{ width:'100%', padding:'14px', borderRadius:14, border:'1px solid rgba(212,175,55,0.4)', background: saving ? 'rgba(212,175,55,0.04)' : 'rgba(212,175,55,0.1)', color:'#D4AF37', fontFamily:'inherit', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, cursor: (saving || !inlineName.trim() || !inlineDob.trim()) ? 'default' : 'pointer', opacity: (!inlineName.trim() || !inlineDob.trim()) ? 0.5 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'all 0.2s' }}
             >
-              {saving ? '✦ Activating…' : '✦ Activate My Cosmic Blueprint'}
+              {saving ? '✦ Locating your leaf…' : '✦ Open My Nadi Leaf'}
             </button>
+
+            <p style={{ marginTop:14, fontSize:10, color:'rgba(255,255,255,0.18)', textAlign:'center' as const, lineHeight:1.6 }}>
+              Your details are stored securely and used<br/>only to locate your ancestral leaf.
+            </p>
           </div>
         </div>
       )}
 
-      {/* ── Blueprint active strip ── */}
+            {/* ── Blueprint active strip ── */}
       {birthData && (
         <div style={{ marginBottom: 12, padding: '9px 14px', background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.1)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
           <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)' }}>✦ Blueprint Active</span>
