@@ -573,23 +573,115 @@ export default function Explore() {
 
       {/* ══ CONNECT ══ */}
       <SL label={t('converge.secConnect')} delay="0.5s"/>
-      <div style={{ animation: 'fadeUp 0.4s 0.52s ease both' }}>
-        {([
-          { k: 'converge.connectStargate' as const, sk: 'converge.connectStargateSub' as const, h: '/stargate', b: t('converge.badgeSwedish') },
-          { k: 'converge.connectPodcast' as const, sk: 'converge.connectPodcastSub' as const, h: '/podcast', b: undefined },
-        ]).map(({ k, sk, h, b }) => (
-          <div key={k} onClick={() => navigate(h)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(212,175,55,0.4)', flexShrink: 0 }}/>
-            <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 800, color: '#D4AF37', marginBottom: 2 }}>{t(k)}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)' }}>{t(sk)}</div>
+
+      {/* ── STARGATE HERO CARD ── */}
+      <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.52s ease both' }}>
+        <div
+          onClick={() => navigate('/stargate')}
+          style={{
+            position: 'relative', borderRadius: 28, overflow: 'hidden', cursor: 'pointer',
+            background: 'radial-gradient(ellipse at 40% 0%, rgba(48,18,90,0.98) 0%, rgba(16,6,36,0.99) 50%, #050505 100%)',
+            border: '1px solid rgba(160,100,255,0.42)',
+            boxShadow: '0 0 55px rgba(130,70,240,0.12), 0 0 110px rgba(100,50,200,0.06), inset 0 1px 0 rgba(180,130,255,0.10)',
+            marginBottom: 10,
+          }}
+        >
+          {/* Rim pulse overlay */}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 28, border: '1px solid rgba(160,100,255,0.14)', animation: 'rimP 4.5s ease-in-out infinite', pointerEvents: 'none' }} />
+          {/* Sheen sweep */}
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(105deg,transparent 38%,rgba(180,120,255,0.05) 50%,transparent 62%)', animation: 'shimmer 9s 1s ease-in-out infinite', pointerEvents: 'none' }} />
+
+          {/* Starfield */}
+          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 420 220" preserveAspectRatio="xMidYMid slice">
+            {([[28,22,1,'#C8A8FF',2.9,0],[390,16,1.1,'#E0C8FF',3.3,0.4],[70,160,0.9,'#B090F0',2.5,0.8],[200,11,1,'#D4AF37',3.7,1.1],[45,90,0.8,'#C8A8FF',2.3,1.5],[320,85,1.2,'#B8A0F0',2.8,0.2],[260,48,0.9,'#D4AF37',3.5,1.8],[380,200,1,'#C0A0F8',2.6,0.9]] as [number,number,number,string,number,number][]).map(([x,y,r,fill,dur,delay],i) => (
+              <circle key={i} cx={x} cy={y} r={r} fill={fill} opacity="0.55">
+                <animate attributeName="opacity" values="0.15;0.85;0.15" dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite"/>
+              </circle>
+            ))}
+          </svg>
+
+          {/* Portal geometry */}
+          <svg style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, opacity: 0.28, pointerEvents: 'none' }} viewBox="0 0 200 200">
+            <g style={{ transformOrigin: '100px 100px', animation: 'rotateSlow 22s linear infinite' }}>
+              <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(160,100,255,0.7)" strokeWidth="0.8" strokeDasharray="5 14"/>
+            </g>
+            <g style={{ transformOrigin: '100px 100px', animation: 'rotateReverse 14s linear infinite' }}>
+              <circle cx="100" cy="100" r="66" fill="none" stroke="rgba(180,120,255,0.5)" strokeWidth="0.7" strokeDasharray="3 9"/>
+              <polygon points="100,20 168,160 32,160" fill="none" stroke="rgba(160,100,255,0.35)" strokeWidth="0.6"/>
+              <polygon points="100,180 168,40 32,40"  fill="none" stroke="rgba(160,100,255,0.25)" strokeWidth="0.5"/>
+            </g>
+            <circle cx="100" cy="100" r="10" fill="rgba(180,130,255,0.18)" stroke="rgba(200,160,255,0.5)" strokeWidth="0.8"/>
+          </svg>
+
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 2, padding: '24px 22px 22px' }}>
+            {/* Top row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(160,100,255,0.55)' }}>
+                STARGATE MEMBERSHIP · SVERIGE
+              </span>
+              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.28)', color: 'rgba(212,175,55,0.82)' }}>
+                ✦ SWEDISH
+              </span>
             </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7 }}>
-              {b && <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', borderRadius: 20, padding: '2px 8px', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.22)', color: 'rgba(212,175,55,0.82)' }}>{b}</span>}
-              <span style={{ color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+
+            {/* Title */}
+            <div style={{
+              fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 700,
+              letterSpacing: '0.04em', lineHeight: 1.1,
+              background: 'linear-gradient(135deg,#C8A8FF 0%,#EAD8FF 35%,#B890F5 55%,#7848D8 100%)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              animation: 'hShimmer 5s linear infinite',
+              filter: 'drop-shadow(0 0 14px rgba(160,100,255,0.55))',
+              marginBottom: 4,
+            }}>Stargate</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 13.5, color: 'rgba(200,175,255,0.45)', letterSpacing: '0.02em', marginBottom: 20 }}>
+              Levande helande · Visdom · Gemenskapen
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, marginBottom: 18, background: 'linear-gradient(90deg,transparent,rgba(160,100,255,0.2) 40%,rgba(160,100,255,0.08) 70%,transparent)' }} />
+
+            {/* Four pillars */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+              {([
+                { day: 'Måndag',  name: 'Mantra Chanting',      gold: false },
+                { day: 'Tisdag',  name: 'Healing Chamber',       gold: false },
+                { day: 'Veckovis',name: 'Bhagavad Gita & Q&A',  gold: true  },
+                { day: 'Alltid',  name: 'Divine Sangha Nexus',   gold: false },
+              ] as {day:string;name:string;gold:boolean}[]).map(({ day, name, gold }) => (
+                <div key={name} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(160,100,255,0.12)', borderRadius: 16, padding: '12px 12px 10px' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold ? 'rgba(212,175,55,0.55)' : 'rgba(180,130,255,0.55)', boxShadow: gold ? '0 0 6px rgba(212,175,55,0.5)' : '0 0 6px rgba(160,100,255,0.5)', marginBottom: 8 }} />
+                  <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 5.5, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', marginBottom: 4 }}>{day}</div>
+                  <div style={{ fontFamily: "'Cinzel',serif", fontSize: 10, fontWeight: 600, color: 'rgba(220,200,255,0.85)', lineHeight: 1.3, letterSpacing: '0.02em' }}>{name}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '5px 12px', borderRadius: 20, background: 'rgba(160,100,255,0.1)', border: '1px solid rgba(160,100,255,0.28)', color: 'rgba(200,165,255,0.8)' }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(160,100,255,0.7)', boxShadow: '0 0 5px rgba(160,100,255,0.6)' }} />
+                Divine Sangha Nexus · Community
+              </div>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(160,100,255,0.12)', border: '1px solid rgba(160,100,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(200,165,255,0.8)', fontSize: 15 }}>→</div>
             </div>
           </div>
-        ))}
+
+          {/* Bottom gold line */}
+          <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.2) 40%,rgba(212,175,55,0.08) 70%,transparent)' }} />
+        </div>
+
+        {/* Podcast row — preserved */}
+        <div onClick={() => navigate('/podcast')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(212,175,55,0.4)', flexShrink: 0 }}/>
+          <div>
+            <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 800, color: '#D4AF37', marginBottom: 2 }}>{t('converge.connectPodcast')}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)' }}>{t('converge.connectPodcastSub')}</div>
+          </div>
+          <span style={{ marginLeft: 'auto', color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
       </div>
 
       {/* ══ WISDOM QUOTE ══ */}
