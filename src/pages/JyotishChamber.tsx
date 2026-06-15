@@ -2015,6 +2015,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               </>
             )}
           </motion.div>
+        )}
+
         {activeTab === 'oracle' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <BhriguAkashaChat
@@ -2024,11 +2026,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           </motion.div>
         )}
 
-        >
-              </>
-            </>
-          </motion.div>
-        )}
+
 
         {/* ══════════════ NADI LEAF ══════════════ */}
         {activeTab === 'nadi' && (
