@@ -52,7 +52,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const { planType } = await req.json();
+    const { planType, affiliateId } = await req.json();
     console.log("[HEALING-CHECKOUT] Plan type:", planType);
 
     const planConfig = HEALING_PRICES[planType as keyof typeof HEALING_PRICES];
@@ -91,6 +91,7 @@ serve(async (req) => {
           user_id: user.id,
           plan_type: planType,
           days: planConfig.days.toString(),
+          ...(affiliateId ? { affiliateId } : {}),
         },
       });
 
@@ -118,6 +119,7 @@ serve(async (req) => {
           user_id: user.id,
           plan_type: planType,
           days: planConfig.days.toString(),
+          ...(affiliateId ? { affiliateId } : {}),
         },
       });
 
