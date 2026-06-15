@@ -500,51 +500,126 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* ══ CREATIVE SOUL ══ */}
+      {/* ══ CREATIVE SOUL HERO CARD ══ */}
       <SL label={t('converge.secAbundance')} delay="0.32s"/>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, padding: '0 16px', animation: 'fadeUp 0.4s 0.34s ease both' }}>
-        <div onClick={() => navigate('/creative-soul/store')} style={{ background: 'linear-gradient(135deg,rgba(170,55,200,0.08),rgba(0,0,0,0))', border: '1px solid rgba(170,60,210,0.18)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative' }}>
-          <RingIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 C12 2 9 8 4 10 C9 12 12 22 12 22 C12 22 15 12 20 10 C15 8 12 2 12 2Z" stroke="rgba(180,110,255,0.8)" strokeWidth="1.4" fill="rgba(160,60,220,0.1)"/></svg></RingIcon>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 4 }}>{t('converge.creativeSoulTitle')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.creativeSoulSub')}</div>
+      <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.34s ease both' }}>
+        <div
+          onClick={() => navigate('/creative-soul/store')}
+          style={{
+            position: 'relative', borderRadius: 28, overflow: 'hidden', cursor: 'pointer', minHeight: 180,
+            background: 'radial-gradient(ellipse at 25% 30%, rgba(80,20,110,0.96) 0%, rgba(35,8,55,0.98) 50%, #050505 100%)',
+            border: '1px solid rgba(170,80,220,0.42)',
+            boxShadow: '0 0 60px rgba(140,60,200,0.12), 0 0 120px rgba(100,30,160,0.06), inset 0 1px 0 rgba(200,130,255,0.10)',
+          }}
+        >
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 28, border: '1px solid rgba(180,100,255,0.14)', animation: 'rimP 4s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(105deg,transparent 38%,rgba(200,130,255,0.05) 50%,transparent 62%)', animation: 'shimmer 8s 0.8s ease-in-out infinite', pointerEvents: 'none' }} />
+          <svg style={{ position: 'absolute', top: '50%', right: -50, transform: 'translateY(-50%)', width: 220, height: 220, opacity: 0.13, pointerEvents: 'none' }} viewBox="0 0 220 220">
+            <g style={{ transformOrigin: '110px 110px', animation: 'rotateSlow 30s linear infinite' }}>
+              <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(200,130,255,1)" strokeWidth="0.7" strokeDasharray="3 9"/>
+              <circle cx="110" cy="110" r="78" fill="none" stroke="rgba(180,100,255,0.8)" strokeWidth="0.6" strokeDasharray="5 8"/>
+            </g>
+            <g style={{ transformOrigin: '110px 110px', animation: 'rotateReverse 20s linear infinite' }}>
+              <polygon points="110,18 192,164 28,164" fill="rgba(180,80,255,0.06)" stroke="rgba(200,120,255,0.7)" strokeWidth="0.8"/>
+              <polygon points="110,202 28,56 192,56" fill="rgba(160,60,220,0.04)" stroke="rgba(180,100,255,0.5)" strokeWidth="0.7"/>
+            </g>
+            <circle cx="110" cy="110" r="42" fill="rgba(160,60,220,0.07)" stroke="rgba(200,130,255,0.45)" strokeWidth="0.6">
+              <animate attributeName="r" values="40;46;40" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            {([0,60,120,180,240,300] as number[]).map((deg, i) => {
+              const x = 110 + 62 * Math.cos(deg * Math.PI / 180);
+              const y = 110 + 62 * Math.sin(deg * Math.PI / 180);
+              return <circle key={i} cx={x} cy={y} r="3.5" fill="rgba(220,160,255,0.7)">
+                <animate attributeName="opacity" values="0.3;0.9;0.3" dur={`${2+i*0.3}s`} begin={`${i*0.4}s`} repeatCount="indefinite"/>
+              </circle>;
+            })}
+          </svg>
+          <div style={{ position: 'relative', zIndex: 2, padding: '26px 22px 24px' }}>
+            <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(200,140,255,0.55)', marginBottom: 14 }}>
+              Siddha Alchemy · Sacred Creation
+            </div>
+            <div style={{
+              fontFamily: "'Cinzel',serif", fontSize: 28, fontWeight: 700, letterSpacing: '0.04em', lineHeight: 1.1,
+              background: 'linear-gradient(135deg,#D4A8FF 0%,#F0D8FF 35%,#C880FF 55%,#8830CC 100%)',
+              backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              animation: 'hShimmer 5s linear infinite', filter: 'drop-shadow(0 0 14px rgba(180,100,255,0.55))', marginBottom: 8,
+            }}>
+              {t('converge.creativeSoulTitle')}
+            </div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 14, color: 'rgba(210,170,255,0.45)', letterSpacing: '0.02em', marginBottom: 22, lineHeight: 1.5 }}>
+              Sacred art, music & alchemy — born from the Siddha field
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 22 }}>
+              {(['Sacred Music', 'Siddha Art', 'Alchemy Store', 'Frequency Tools'] as string[]).map(pill => (
+                <span key={pill} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' as const, padding: '4px 11px', borderRadius: 20, background: 'rgba(180,100,255,0.1)', border: '1px solid rgba(180,100,255,0.28)', color: 'rgba(210,160,255,0.8)' }}>{pill}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(200,140,255,0.4)' }}>Enter the Soul Field →</span>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(180,100,255,0.12)', border: '1px solid rgba(180,100,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(210,160,255,0.85)', fontSize: 16 }}>→</div>
+            </div>
+          </div>
         </div>
-
       </div>
 
-      {/* ══ VIDEOS ══ */}
+      {/* ══ SACRED CHANNEL ══ */}
       <SL label={t('converge.secVideos')} delay="0.38s"/>
-      <div style={{ margin: '0 16px', animation: 'fadeUp 0.4s 0.4s ease both' }}>
-        {exploreVideos[0] && (
-          <div onClick={() => navigate('/spiritual-education')} style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', marginBottom: 10, border: '1px solid rgba(212,175,55,0.18)' }}>
-            <img src={exploreVideos[0].thumbnail} alt={exploreVideos[0].title} style={{ width: '100%', height: 150, objectFit: 'cover', display: 'block', background: '#111' }} />
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', border: '1.5px solid rgba(212,175,55,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.9)"/></svg>
-              </div>
+      <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.4s ease both' }}>
+        {exploreVideos.length === 0 ? (
+          <div onClick={() => navigate('/spiritual-education')} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', borderRadius: 20, background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(212,175,55,0.12)', cursor: 'pointer' }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.8)"/></svg>
             </div>
-            <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)' }}>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.82)', marginBottom: 3, lineHeight: 1.3 }}>{exploreVideos[0].title}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{t('converge.videoWatchEarn')}</div>
+            <div>
+              <div style={{ fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: 3 }}>Sacred Channel</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{t('converge.videoWatchEarn')}</div>
+            </div>
+            <span style={{ marginLeft: 'auto', color: 'rgba(212,175,55,0.3)', fontSize: 13 }}>→</span>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {exploreVideos[0] && (
+              <div onClick={() => navigate('/spiritual-education')} style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.18)', background: '#0a0a0a' }}>
+                <img src={exploreVideos[0].thumbnail} alt={exploreVideos[0].title} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(5,5,5,0.88) 0%, transparent 55%)' }} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-60%)', width: 52, height: 52, borderRadius: '50%', background: 'rgba(212,175,55,0.18)', border: '1.5px solid rgba(212,175,55,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px rgba(212,175,55,0.3)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.95)"/></svg>
+                </div>
+                <div style={{ position: 'absolute', top: 12, right: 12, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.35)', color: '#D4AF37' }}>+100 SHC</div>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 14px' }}>
+                  <div style={{ fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.92)', lineHeight: 1.3, marginBottom: 3 }}>
+                    {exploreVideos[0].title.length > 55 ? exploreVideos[0].title.slice(0,55)+'…' : exploreVideos[0].title}
+                  </div>
+                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(212,175,55,0.55)' }}>{exploreVideos[0].channelTitle}</div>
+                </div>
+              </div>
+            )}
+            {exploreVideos.slice(1,3).length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {exploreVideos.slice(1,3).map(v => (
+                  <div key={v.id} onClick={() => navigate('/spiritual-education')} style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.1)', background: 'rgba(255,255,255,0.012)' }}>
+                    <div style={{ position: 'relative' }}>
+                      <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: 80, objectFit: 'cover', display: 'block' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(5,5,5,0.72) 0%, transparent 60%)' }} />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 30, height: 30, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.9)"/></svg>
+                      </div>
+                    </div>
+                    <div style={{ padding: '8px 10px' }}>
+                      <div style={{ fontFamily: "'Cinzel',serif", fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.72)', lineHeight: 1.4 }}>
+                        {v.title.length > 36 ? v.title.slice(0,36)+'…' : v.title}
+                      </div>
+                      <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.15em', color: 'rgba(212,175,55,0.45)', marginTop: 4, textTransform: 'uppercase' as const }}>+100 SHC</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div onClick={() => navigate('/spiritual-education')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 0', cursor: 'pointer' }}>
+              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.45)' }}>{t('converge.allVideos', 'All Videos →')}</span>
             </div>
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {exploreVideos.slice(1,3).map(v => (
-            <div key={v.id} onClick={() => navigate('/spiritual-education')} style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ position: 'relative' }}>
-                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: 78, objectFit: 'cover', display: 'block', background: '#111' }} />
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(255,255,255,0.7)"/></svg>
-                  </div>
-                </div>
-              </div>
-              <div style={{ padding: '7px 9px', background: 'rgba(255,255,255,0.02)' }}>
-                <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, color: 'rgba(255,255,255,0.65)', lineHeight: 1.35 }}>{v.title.length>28?v.title.slice(0,28)+'…':v.title}</div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* ══ PERSONAL GUIDANCE CARD ══ */}
