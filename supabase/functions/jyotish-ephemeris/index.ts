@@ -173,7 +173,8 @@ serve(async (req) => {
       .single();
 
     const cacheValid = existing?.ephemeris_confirmed && existing?.moon_nakshatra
-      && existing?.birth_date === birthDate && !forceRefresh;
+      && existing?.birth_date === birthDate && !forceRefresh
+      && existing?.mars_sign; // re-fetch if mars_sign missing (legacy cache)
 
     if (cacheValid) {
       return new Response(
