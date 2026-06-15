@@ -206,23 +206,30 @@ PLACE OF BIRTH: ${birthData.birth_place || 'not provided'}
 LEAF STATUS: OPENING. Birth details are provided. Speak as Bhrigu speaks — brief, penetrating, ancient. Do NOT ask verification questions. Answer what they ask.`;
   }
 
-  async function callAnthropic(messages: { role: string; content: string }[], systemOverride?: string): Promise<string> {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: systemOverride ?? buildSystemPrompt(),
-        messages,
-      }),
+  async function callAnthropic(messages: { role: string; content: string }[], _systemOverride?: string): Promise<string> {
+    // Routed through the bhrigu-oracle edge function (no CORS, server-side keys)
+    const last = messages[messages.length - 1];
+    const isFullReading = !!last && typeof last.content === 'string' && /leaf_found/i.test(last.content);
+    const history = messages.slice(0, -1).map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content,
+    }));
+    const { data, error } = await supabase.functions.invoke('bhrigu-oracle', {
+      body: {
+        mode: isFullReading ? 'full_reading' : 'chat',
+        question: last?.content ?? '',
+        name: birthData?.birth_name || 'Seeker',
+        dob: birthData?.birth_date || '',
+        tob: birthData?.birth_time || '',
+        pob: birthData?.birth_place || '',
+        readingType: 'general',
+        leaf_confirmed: history.length > 0,
+        history,
+      },
     });
-    if (!res.ok) {
-      const err = await res.text().catch(() => '');
-      throw new Error(`${res.status}: ${err.slice(0, 120)}`);
-    }
-    const data = await res.json();
-    return data.content?.[0]?.text ?? '';
+    if (error) throw new Error(error.message || 'Oracle unreachable');
+    if (isFullReading && data?.sections) return JSON.stringify(data.sections);
+    return data?.reply || (data?.sections ? JSON.stringify(data.sections) : '');
   }
 
   const sendMessage = useCallback(async () => {
