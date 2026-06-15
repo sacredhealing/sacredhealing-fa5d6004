@@ -2073,71 +2073,381 @@ const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }
 
 
 // ── Gun Milan / Kundli Matching ──────────────────────────────────
-const GunMilan: React.FC = () => {
-  const [person1, setPerson1] = React.useState('Rohini');
-  const [person2, setPerson2] = React.useState('Pushya');
+const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
   const W = 'rgba(255,255,255,'; const G = 'rgba(212,175,55,';
+  const { tier: membershipTier } = useMembership();
+  const tierRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
+  const [person1, setPerson1] = useState(userNakshatra || 'Rohini');
+  const [person2, setPerson2] = useState('Pushya');
+  const [gmExpanded, setGmExpanded] = useState<string|null>(null);
+
+  // Sync person1 when userNakshatra loads
+  React.useEffect(() => { if (userNakshatra) setPerson1(userNakshatra); }, [userNakshatra]);
+
   const NAKSHATRAS = ['Ashvini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadra','Uttara Bhadra','Revati'];
-  const KOOTAS = [
-    { name:'Varna',       sub:'Soul evolution',          max:1, score:1,  color:'rgba(74,222,128,0.8)' },
-    { name:'Vashya',      sub:'Mutual control',          max:2, score:2,  color:'rgba(74,222,128,0.8)' },
-    { name:'Tara',        sub:'Birth star harmony',      max:3, score:3,  color:'rgba(74,222,128,0.8)' },
-    { name:'Yoni',        sub:'Physical compatibility',  max:4, score:3,  color:'#D4AF37' },
-    { name:'Graha Maitri',sub:'Planetary friendship',    max:5, score:4,  color:'#D4AF37' },
-    { name:'Gana',        sub:'Temperament match',       max:6, score:6,  color:'rgba(74,222,128,0.8)' },
-    { name:'Bhakut',      sub:'Love & family',           max:7, score:4,  color:'rgba(239,68,68,0.75)' },
-    { name:'Nadi',        sub:'Health & lineage',        max:8, score:8,  color:'rgba(74,222,128,0.8)' },
-  ];
-  const total = KOOTAS.reduce((s, k) => s + k.score, 0);
-  const pct = Math.round((total/36)*100);
-  const verdict = total >= 28 ? { label:'Excellent Match', color:'rgba(74,222,128,0.9)', bg:'rgba(74,222,128,0.07)', border:'rgba(74,222,128,0.25)' }
-               : total >= 24 ? { label:'Good Match', color:'#D4AF37', bg:'rgba(212,175,55,0.06)', border:'rgba(212,175,55,0.22)' }
-               : total >= 18 ? { label:'Acceptable', color:'rgba(245,158,11,0.9)', bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.2)' }
-               : { label:'Challenging', color:'rgba(239,68,68,0.85)', bg:'rgba(239,68,68,0.05)', border:'rgba(239,68,68,0.2)' };
+
+  // ── Ashtakoot calculation tables ────────────────────────────────
+  // Varna: 0=Brahmin, 1=Kshatriya, 2=Vaishya, 3=Shudra
+  const VARNA = [0,3,2,0,2,3,0,0,3,3,2,0,2,2,2,0,0,3,3,2,0,0,3,3,0,0,0];
+  // Vashya: 0=Manav, 1=Vanchar, 2=Chatushpad, 3=Jalchar, 4=Keeta
+  const VASHYA = [2,4,2,0,2,0,0,2,4,4,0,0,0,0,0,0,0,4,1,2,2,0,2,2,0,3,3];
+  // Tara: position 1-9 cyclically
+  // Yoni: animal pairs
+  const YONI_ANIMAL = ['Horse','Elephant','Sheep','Serpent','Dog','Cat','Rat','Cow','Buffalo','Tiger','Hare','Buffalo','Mongoose','Dog','Tiger','Hare','Deer','Hare','Dog','Monkey','Mongoose','Monkey','Lion','Horse','Lion','Cow','Elephant'];
+  const YONI_GENDER = [1,0,0,0,0,1,0,0,0,0,0,1,0,1,1,1,0,1,1,0,0,1,0,0,1,1,0]; // 0=F,1=M
+  // Gana: 0=Deva, 1=Manava, 2=Rakshasa
+  const GANA = [0,2,1,0,0,2,0,0,2,2,1,0,1,1,0,1,0,2,2,1,0,0,2,2,0,0,0];
+  // Nadi: 0=Aadi, 1=Madhya, 2=Antya
+  const NADI = [0,2,1,2,1,0,1,0,2,0,2,1,2,1,0,1,0,2,0,2,1,2,1,0,1,0,2];
+  // Lord of each nakshatra
+  const NAK_LORD = ['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury','Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury','Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
+  // Planetary friendship
+  const PLANET_FRIENDS: Record<string,string[]> = {
+    Sun:['Moon','Mars','Jupiter'], Moon:['Sun','Mercury'], Mars:['Sun','Moon','Jupiter'],
+    Mercury:['Sun','Venus'], Jupiter:['Sun','Moon','Mars'], Venus:['Mercury','Saturn'],
+    Saturn:['Mercury','Venus'], Rahu:['Venus','Saturn'], Ketu:['Venus','Saturn'],
+  };
+  const PLANET_ENEMIES: Record<string,string[]> = {
+    Sun:['Venus','Saturn'], Moon:['Rahu','Ketu'], Mars:['Mercury'],
+    Mercury:['Moon'], Jupiter:['Mercury','Venus'], Venus:['Sun','Moon'],
+    Saturn:['Sun','Moon','Mars'], Rahu:['Sun','Moon','Mars'], Ketu:['Sun','Moon','Mars'],
+  };
+
+  const idx1 = NAKSHATRAS.indexOf(person1);
+  const idx2 = NAKSHATRAS.indexOf(person2);
+
+  // ── Koota calculations ──────────────────────────────────────────
+  const calcVarna = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    return VARNA[idx1] >= VARNA[idx2] ? 1 : 0;
+  };
+
+  const calcVashya = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    const v1 = VASHYA[idx1], v2 = VASHYA[idx2];
+    if (v1===v2) return 2;
+    // Manav controls: Chatushpad,Vanchar; Vanchar free; Chatushpad controlled by Manav
+    if (v1===0&&(v2===2||v2===1)) return 2;
+    if (v2===0&&(v1===2||v1===1)) return 1;
+    return 0;
+  };
+
+  const calcTara = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    const tara = ((idx2 - idx1 + 27) % 27) % 9 + 1;
+    // Auspicious taras: 1,3,5,7; inauspicious: 2,4,6; neutral: 8,9
+    if ([1,3,5,7].includes(tara)) return 3;
+    if ([2,4,6].includes(tara)) return 0;
+    return 1;
+  };
+
+  const calcYoni = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    const a1 = YONI_ANIMAL[idx1], a2 = YONI_ANIMAL[idx2];
+    const g1 = YONI_GENDER[idx1], g2 = YONI_GENDER[idx2];
+    if (a1===a2) return g1!==g2 ? 4 : 2; // same animal, opposite gender = perfect
+    // Enemy pairs: Cat/Rat, Cow/Tiger, Elephant/Lion, Dog/Deer, Serpent/Mongoose
+    const ENEMIES = [['Cat','Rat'],['Cow','Tiger'],['Elephant','Lion'],['Dog','Deer'],['Serpent','Mongoose']];
+    const isEnemy = ENEMIES.some(([x,y]) => (a1===x&&a2===y)||(a1===y&&a2===x));
+    if (isEnemy) return 0;
+    return 2;
+  };
+
+  const calcGrahaMaitri = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    const l1 = NAK_LORD[idx1], l2 = NAK_LORD[idx2];
+    if (l1===l2) return 5;
+    const f1 = PLANET_FRIENDS[l1]||[];
+    const f2 = PLANET_FRIENDS[l2]||[];
+    const e1 = PLANET_ENEMIES[l1]||[];
+    const e2 = PLANET_ENEMIES[l2]||[];
+    const isFriend = f1.includes(l2)||f2.includes(l1);
+    const isEnemy  = e1.includes(l2)||e2.includes(l1);
+    if (isFriend&&!isEnemy) return 5;
+    if (!isFriend&&!isEnemy) return 4;
+    if (isFriend&&isEnemy) return 3;
+    return 1;
+  };
+
+  const calcGana = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    const g1 = GANA[idx1], g2 = GANA[idx2];
+    if (g1===g2) return 6;
+    if ((g1===0&&g2===1)||(g1===1&&g2===0)) return 5;
+    if ((g1===0&&g2===2)||(g1===2&&g2===0)) return 1;
+    if ((g1===1&&g2===2)||(g1===2&&g2===1)) return 0;
+    return 0;
+  };
+
+  const calcBhakut = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    const pos1 = idx1+1, pos2 = idx2+1;
+    const rel12 = ((pos2-pos1+27)%27)+1;
+    const rel21 = ((pos1-pos2+27)%27)+1;
+    // Inauspicious: 6-8, 9-5, 12-2 relationship
+    const bad = [[6,8],[9,5],[12,2]];
+    const isBad = bad.some(([a,b]) => (rel12===a&&rel21===b)||(rel12===b&&rel21===a));
+    return isBad ? 0 : 7;
+  };
+
+  const calcNadi = (): number => {
+    if (idx1<0||idx2<0) return 0;
+    return NADI[idx1] !== NADI[idx2] ? 8 : 0;
+  };
+
+  const scores = {
+    Varna:       { score: calcVarna(),       max: 1 },
+    Vashya:      { score: calcVashya(),      max: 2 },
+    Tara:        { score: calcTara(),        max: 3 },
+    Yoni:        { score: calcYoni(),        max: 4 },
+    'Graha Maitri': { score: calcGrahaMaitri(), max: 5 },
+    Gana:        { score: calcGana(),        max: 6 },
+    Bhakut:      { score: calcBhakut(),      max: 7 },
+    Nadi:        { score: calcNadi(),        max: 8 },
+  };
+
+  const total = Object.values(scores).reduce((s,k) => s+k.score, 0);
+  const pct   = Math.round((total/36)*100);
+
+  const verdict = total>=28 ? { label:'Exceptional Match', color:'rgba(74,222,128,0.9)',  bg:'rgba(74,222,128,0.07)',  border:'rgba(74,222,128,0.25)'  }
+               : total>=24 ? { label:'Good Match',         color:'#D4AF37',               bg:'rgba(212,175,55,0.06)', border:'rgba(212,175,55,0.22)'  }
+               : total>=18 ? { label:'Acceptable',         color:'rgba(245,158,11,0.9)',  bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.2)'   }
+               :             { label:'Challenging',        color:'rgba(239,68,68,0.85)', bg:'rgba(239,68,68,0.05)',  border:'rgba(239,68,68,0.2)'    };
+
+  // ── Deep Koota meanings ──────────────────────────────────────────
+  const KOOTA_DEEP: Record<string, {
+    sub: string; color: string; icon: string;
+    what: string; surface: string; deep: string; shadow: string;
+    gift: string; transmission: string;
+  }> = {
+    Varna: {
+      sub: 'Soul Evolution Compatibility', color: 'rgba(167,139,250,0.8)', icon: '◈',
+      what: 'Varna (1 point) measures the spiritual evolution level of both souls. The four Varnas — Brahmin, Kshatriya, Vaishya, Shudra — are not social castes but stages of soul development in this lifetime.',
+      surface: scores.Varna.score === 1 ? 'Compatible spiritual levels — you are both at a similar stage of soul development. There is a natural ease in understanding each other\'s approach to dharma, purpose, and the sacred.' : 'Different spiritual evolution stages. The soul at the higher level must not feel spiritually superior; the soul at the lower level must not feel judged. This difference, handled with consciousness, becomes a teaching relationship.',
+      deep: 'In the Nadi tradition, Varna compatibility determines whether two souls are in the same chapter of their dharmic journey. When Varna is compatible, the couple grows in the same direction — their spiritual practices, values, and understanding of meaning align naturally. When incompatible, one soul is further along and must choose: does this relationship serve their evolution, or require the sacrifice of it?',
+      shadow: 'The shadow of Varna incompatibility is spiritual condescension — one partner feeling more evolved and either suppressing or subtly undermining the other\'s path.',
+      gift: 'Varna compatibility, when present, creates the rarest gift in relationship: the feeling that you are on the same pilgrimage. You don\'t have to explain why the sacred matters.',
+      transmission: '"Two souls on the same dharmic road travel faster and further than either could alone."',
+    },
+    Vashya: {
+      sub: 'Mutual Control & Influence', color: 'rgba(34,211,238,0.8)', icon: '⬡',
+      what: 'Vashya (2 points) measures the natural magnetic influence between the two Nakshatras. Which soul naturally draws the other? Is the influence mutual or one-directional? This determines who leads, who follows, and whether the dynamic is balanced.',
+      surface: scores.Vashya.score >= 2 ? 'Strong mutual influence — there is a natural magnetic pull between both of you. Neither dominates; the energy flows between you with ease.' : scores.Vashya.score === 1 ? 'One-directional influence — one partner naturally holds more magnetic power in this relationship. Conscious balance is needed.' : 'Low natural attraction field — the magnetic pull must be consciously cultivated rather than relying on natural chemistry.',
+      deep: 'Vashya operates at the level of the subtle body — the energetic field between two people. High Vashya means the two biofields harmonise naturally: when one is depleted, the other restores. When Vashya is low, the fields resist each other, and proximity can create a subtle but persistent energetic drain that neither can easily name.',
+      shadow: 'The shadow of high Vashya without Gana compatibility is magnetic attraction without temperament harmony — chemistry without compatibility. The pull is real but the togetherness is difficult.',
+      gift: 'High Vashya creates the mysterious quality of a couple who seem to be in communication even when apart. The energetic bond is palpable to everyone around them.',
+      transmission: '"The magnetic field between two souls is not created by will. It exists or it doesn\'t. Vashya measures whether the universe has already decided."',
+    },
+    Tara: {
+      sub: 'Birth Star Harmony', color: 'rgba(212,175,55,0.8)', icon: '✦',
+      what: 'Tara (3 points) calculates the relationship between the two birth stars and their position in the cycle of 9 Taras (fates). Each Tara position has a specific quality — auspicious, inauspicious, or neutral. This determines whether the birth stars support or challenge the relationship at the soul level.',
+      surface: scores.Tara.score === 3 ? `${person2}'s Nakshatra falls in an auspicious Tara position from ${person1}'s. The birth stars are harmonious — your souls recognise each other across the karmic field.` : scores.Tara.score === 1 ? 'Neutral Tara relationship — neither strongly supportive nor actively challenging. The birth star harmony requires cultivation.' : `Challenging Tara relationship — the birth star positions create friction at the soul level. This does not prevent love, but it requires conscious work at the energetic body level.`,
+      deep: 'Tara Bala in Gun Milan is the Nakshatra equivalent of Gana compatibility — it measures whether the two souls\' original star frequencies are harmonious. When Tara is compatible, being together feels like coming home. The bodies relax in each other\'s presence in a way that cannot be explained. When Tara is incompatible, there is a subtle restlessness in the field — a feeling that something is slightly off even when nothing specific is wrong.',
+      shadow: 'Incompatible Tara can create the experience of "energetic mismatch" — a relationship where both partners care deeply for each other but consistently feel slightly out of phase, like two musical instruments that are almost in tune.',
+      gift: 'Compatible Tara creates the quality of effortless presence together. The nervous system genuinely relaxes in the other\'s company — an increasingly rare gift.',
+      transmission: '"The birth star remembers every soul it has shared the night sky with. When two stars recognise each other, the recognition is older than this lifetime."',
+    },
+    Yoni: {
+      sub: 'Physical & Energetic Compatibility', color: 'rgba(244,114,182,0.8)', icon: '♾',
+      what: 'Yoni (4 points) measures physical, sensual, and sexual compatibility. Each Nakshatra is assigned an animal symbol — the compatibility of the animal energies determines the quality of the physical bond. Same animal with opposite gender = perfect (4). Enemy animals = incompatible (0).',
+      surface: scores.Yoni.score === 4 ? `${person1} and ${person2} share the same Yoni animal with opposite gender polarity — the rarest and most complete physical compatibility. The bodies recognise each other with an ease that is difficult to explain rationally.` : scores.Yoni.score === 2 ? 'Compatible Yoni — the animal energies are harmonious. Physical intimacy flows naturally and the bodies feel at ease together.' : 'Incompatible Yoni — the animal energies create friction. Physical intimacy requires more conscious attention and the default dynamic may carry tension.',
+      deep: 'In the Nadi tradition, Yoni compatibility operates at the level of the pranamaya kosha — the vital energy body. The animal symbol represents the instinctual, pre-rational field of attraction. When Yoni is compatible, physical togetherness is genuinely restorative — the bodies charge each other rather than drain each other. When incompatible, the instinctual field resists union at a level below conscious control, creating a subtle but persistent friction in the physical relationship.',
+      shadow: 'High Yoni compatibility without Nadi or Gana can create a relationship of intense physical chemistry that masks fundamental incompatibility at the soul and temperament level. The body says yes when the soul says wait.',
+      gift: 'High Yoni compatibility creates physical comfort that requires no effort — the ease of two bodies that have recognised each other. This is the foundation of genuine physical intimacy rather than performed closeness.',
+      transmission: '"The body knows before the mind does. Yoni is the body\'s vote in the question of compatibility."',
+    },
+    'Graha Maitri': {
+      sub: 'Planetary Friendship & Mental Harmony', color: 'rgba(74,222,128,0.8)', icon: '☿',
+      what: `Graha Maitri (5 points) measures the friendship between the ruling planets of the two Nakshatras. ${person1} is ruled by ${NAK_LORD[idx1]>0?NAK_LORD[idx1]:'—'}; ${person2} is ruled by ${NAK_LORD[idx2]>0?NAK_LORD[idx2]:'—'}. Planetary friendship determines mental and intellectual compatibility — whether the two minds naturally understand and support each other.`,
+      surface: scores['Graha Maitri'].score >= 4 ? 'Strong planetary friendship — the ruling planets of your birth stars are harmonious. Your minds operate on compatible frequencies. Conversations flow easily; understanding comes naturally; you finish each other\'s thoughts.' : scores['Graha Maitri'].score === 3 ? 'Moderate planetary relationship — the ruling planets are neither strongly friendly nor strongly hostile. Mental compatibility is there but requires effort.' : 'Challenging planetary relationship — the ruling planets create friction at the mental level. You think differently, process differently, and may find each other mentally frustrating until this is understood and respected.',
+      deep: 'Graha Maitri is the compatibility of the two minds\' operating systems. When the planetary lords are friends, the two people\'s ways of thinking, processing information, and understanding the world are fundamentally compatible. They don\'t need to agree on everything — they understand how the other arrives at their conclusions. When incompatible, each person\'s mental processes are genuinely opaque to the other — creating chronic misunderstanding that is nobody\'s fault.',
+      shadow: 'Low Graha Maitri with high Yoni creates the painful dynamic of intense physical attraction between two people who cannot understand each other\'s minds — chemistry without comprehension.',
+      gift: 'High Graha Maitri is the gift of being known at the level of the mind. Your partner understands not just what you think but how you think. This becomes increasingly rare and precious over a lifetime.',
+      transmission: '"Two minds that understand each other\'s way of being in the world can build something that neither mind alone could conceive."',
+    },
+    Gana: {
+      sub: 'Temperament & Nature Match', color: 'rgba(212,175,55,0.8)', icon: '◎',
+      what: `Gana (6 points) measures the fundamental temperament type: Deva (divine, sattvic), Manava (human, rajasic), or Rakshasa (intense, tamasic). ${person1} is ${['Deva','Manava','Rakshasa'][GANA[idx1]]}; ${person2} is ${['Deva','Manava','Rakshasa'][GANA[idx2]]}. Same Gana = full 6 points. Deva-Manava = 5. All other combinations carry varying levels of friction.`,
+      surface: scores.Gana.score === 6 ? `Both ${person1} and ${person2} are ${['Deva','Manava','Rakshasa'][GANA[Math.max(idx1,0)]]} Gana — temperament match is complete. You instinctively understand each other\'s rhythms, emotional processing styles, and approach to life.` : scores.Gana.score === 5 ? 'Deva-Manava Gana — complementary temperaments. The Deva quality elevates the Manava; the Manava quality grounds the Deva. A natural teacher-student dynamic that can become genuine partnership.' : scores.Gana.score <= 1 ? 'Significant Gana difference — one Deva, one Rakshasa. These are the most challenging temperament combinations. The Rakshasa intensity can feel overwhelming to Deva sensitivity; the Deva softness can feel weak to Rakshasa directness. Consciousness and enormous respect are required.' : 'Moderate Gana compatibility — temperament differences exist but are workable with mutual understanding.',
+      deep: 'In the deepest reading of Gun Milan, Gana is the most important single Koota after Nadi. It determines whether two people\'s fundamental rhythms of being — how they process emotion, how they handle conflict, what they need when stressed — are naturally compatible. Rakshasa Gana individuals are not "bad" — they are intensely passionate, direct, and powerful. But placed next to a Deva Gana partner, that intensity can create chronic friction unless both understand the temperamental difference they are navigating.',
+      shadow: 'The shadow of Gana incompatibility is the persistent sense that your partner is simply wired differently — not wrong, but differently. And the pain of finding each other\'s natural responses alternately confusing and hurtful.',
+      gift: 'Gana compatibility is the gift of effortless rhythm. You don\'t have to translate yourself. Your partner knows instinctively when you need space, when you need engagement, and why you respond to difficulty the way you do.',
+      transmission: '"Gana is the rhythm of the soul. Two souls in the same rhythm can make music together. Two souls in different rhythms can still choose to dance — but they must both be willing to learn the other\'s steps."',
+    },
+    Bhakut: {
+      sub: 'Love, Family & Prosperity Field', color: 'rgba(244,114,182,0.8)', icon: '♥',
+      what: 'Bhakut (7 points) calculates the relationship between the two Moon signs and their mutual positions. Certain positional relationships (6th-8th, 9th-5th, 12th-2nd counting from each other) are considered inauspicious for health, longevity, and prosperity. All other relationships receive full marks.',
+      surface: scores.Bhakut.score === 7 ? `Bhakut is auspicious — ${person1} and ${person2} are in a supportive positional relationship. The love and prosperity fields between you are naturally expansive. What you build together tends to grow.` : `Bhakut Dosha is present — the positional relationship between ${person1} and ${person2} falls in an inauspicious category. Traditional Jyotish considers this a significant challenge to the longevity and prosperity of the relationship. Remedies and conscious attention are recommended.`,
+      deep: 'Bhakut Dosha (when present) is among the most discussed and most remedied of all Gun Milan challenges. The traditional view is that it creates financial difficulties, health challenges, or — in the most severe reading — threatens the longevity of one partner. The modern Jyotishic view is more nuanced: Bhakut Dosha creates a pattern of energetic imbalance in the shared field — what one gains, the other seems to lose. This is real and requires conscious management, but is far from the fatal verdict older texts sometimes suggest.',
+      shadow: 'The shadow of Bhakut Dosha is the "zero sum" pattern in relationship — the feeling that one partner\'s success comes at the cost of the other\'s. This is the karmic teaching, not the karmic sentence.',
+      gift: 'When Bhakut is auspicious, the shared prosperity field is genuinely amplified. What you build together exceeds what either could build alone — not as a promise, but as the natural tendency of the energetic field between you.',
+      transmission: '"Bhakut measures whether the cup of abundance between you is filling or leaking. Both can be repaired. Only one is easier."',
+    },
+    Nadi: {
+      sub: 'Health, Longevity & Lineage', color: 'rgba(239,68,68,0.8)', icon: '⚕',
+      what: 'Nadi (8 points — the highest-weighted Koota) measures the compatibility of the two souls\' doshas and lineages. The three Nadis — Aadi (Vata), Madhya (Pitta), Antya (Kapha) — must be different for full compatibility. Same Nadi = Nadi Dosha, which traditionally indicates health challenges, fertility difficulties, and energetic depletion in the relationship.',
+      surface: scores.Nadi.score === 8 ? `Nadi is compatible — ${person1} is ${['Aadi (Vata)','Madhya (Pitta)','Antya (Kapha)'][NADI[idx1]]} and ${person2} is ${['Aadi (Vata)','Madhya (Pitta)','Antya (Kapha)'][NADI[idx2]]}. Different Nadis create complementary constitution — you balance each other\'s energy rather than amplifying the same imbalance. Full 8 points.` : `Nadi Dosha is present — both ${person1} and ${person2} are ${['Aadi (Vata)','Madhya (Pitta)','Antya (Kapha)'][NADI[Math.max(idx1,0)]]} Nadi. Traditional Jyotish considers this the most significant dosha in Gun Milan, affecting health, vitality, and the capacity to sustain children. Nadi Dosha does not prevent love — but it requires the most serious remedial attention of all eight Kootas.`,
+      deep: 'Nadi Dosha is the most feared Dosha in Ashtakoot Milan, and the most frequently misunderstood. The Ayurvedic basis is precise: when two people of the same constitution (Vata-Vata, Pitta-Pitta, or Kapha-Kapha) live in intimate proximity, they amplify each other\'s constitutional imbalances rather than correcting them. The Vata couple creates anxiety and instability. The Pitta couple creates conflict and inflammation. The Kapha couple creates stagnation and inertia. The remedy is not separation but the conscious cultivation of the opposite qualities through diet, practice, and environment.',
+      shadow: 'Nadi Dosha\'s shadow is the gradual depletion of vitality in the relationship — not through dramatic conflict but through the quiet amplification of both partners\' constitutional weaknesses. Both feel perpetually slightly drained without knowing why.',
+      gift: 'When Nadi is compatible — different Nadis — the relationship is literally health-giving. The constitutional difference creates dynamic balance: the Vata partner\'s movement enlivens the Kapha partner\'s stability; the Pitta partner\'s clarity cuts through the Vata partner\'s anxiety. The bodies heal each other by being together.',
+      transmission: '"The Nadi is the pulse of the soul\'s constitution. Two pulses in different rhythms create music. Two pulses in the same rhythm create intensity — beautiful and exhausting in equal measure."',
+    },
+  };
+
+  const kootaEntries = Object.entries(scores);
+
   return (
     <div>
-      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
-        Ashtakoot Gun Milan is the Vedic 36-point compatibility system. Above 18 is acceptable, above 24 is excellent, above 30 is exceptional. Below 18 traditionally requires astrological remedies.
+      {/* Intro */}
+      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:13, color:`${W}0.5)`, lineHeight:1.75, marginBottom:14 }}>
+        Ashtakoot Gun Milan — the Vedic 36-point system — calculates the compatibility of two souls across 8 dimensions: from soul evolution to physical intimacy to health and lineage. Above 18 is acceptable; above 24 is good; above 28 is exceptional.
       </p>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:14 }}>
-        <div>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:5 }}>Person 1 · Nakshatra</div>
-          <select value={person1} onChange={e => setPerson1(e.target.value)} style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.7)`, fontSize:11.5, fontFamily:'inherit', outline:'none' }}>
-            {NAKSHATRAS.map(n => <option key={n}>{n}</option>)}
-          </select>
-        </div>
-        <div>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:5 }}>Person 2 · Nakshatra</div>
-          <select value={person2} onChange={e => setPerson2(e.target.value)} style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.7)`, fontSize:11.5, fontFamily:'inherit', outline:'none' }}>
-            {NAKSHATRAS.map(n => <option key={n}>{n}</option>)}
-          </select>
-        </div>
-      </div>
-      <div style={{ textAlign:'center', marginBottom:16, padding:'16px', background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:18 }}>
-        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Compatibility Score</div>
-        <div style={{ fontSize:'2.8rem', fontWeight:900, color:'#D4AF37', lineHeight:1, marginBottom:6 }}>{total} <span style={{ fontSize:'1rem', opacity:0.4 }}>/ 36</span></div>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:99, background: verdict.bg, border:`1px solid ${verdict.border}`, color: verdict.color, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, marginBottom:10 }}>{verdict.label}</div>
-        <div style={{ height:5, borderRadius:99, background:`${W}0.05)`, overflow:'hidden' }}>
-          <div style={{ height:'100%', width:`${pct}%`, background:'linear-gradient(90deg,rgba(74,222,128,0.5),rgba(74,222,128,0.9))', borderRadius:99 }}/>
-        </div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        {KOOTAS.map(k => (
-          <div key={k.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:12, border:`1px solid ${W}0.05)`, background:`${W}0.01)` }}>
-            <div style={{ flex:1 }}>
-              <span style={{ fontSize:10, fontWeight:800, color:`${W}0.68)` }}>{k.name}</span>
-              <span style={{ fontSize:9, color:`${W}0.28)`, marginLeft:6 }}>{k.sub}</span>
-            </div>
-            <div style={{ flex:1, height:4, borderRadius:99, background:`${W}0.06)`, overflow:'hidden' }}>
-              <div style={{ height:'100%', width:`${(k.score/k.max)*100}%`, background: k.color, borderRadius:99 }}/>
-            </div>
-            <div style={{ fontSize:10, fontWeight:900, color: k.color, minWidth:30, textAlign:'right' as const }}>{k.score}/{k.max}</div>
+
+      {/* Nakshatra selectors */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:16 }}>
+        {[
+          { label:'Your Nakshatra', value:person1, set:setPerson1, hint: userNakshatra ? '✦ From your birth chart' : undefined },
+          { label:'Partner\'s Nakshatra', value:person2, set:setPerson2, hint: undefined },
+        ].map((p,i) => (
+          <div key={i}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:4 }}>{p.label}</div>
+            {p.hint && <div style={{ fontSize:8, color:'rgba(212,175,55,0.5)', marginBottom:3 }}>{p.hint}</div>}
+            <select value={p.value} onChange={e => p.set(e.target.value)}
+              style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.8)`, fontSize:11.5, fontFamily:'inherit', outline:'none' }}>
+              {NAKSHATRAS.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
           </div>
         ))}
       </div>
+
+      {/* Score display */}
+      <div style={{ textAlign:'center', marginBottom:16, padding:'18px 16px', background:`${W}0.02)`, border:`1px solid ${verdict.border}`, borderRadius:18 }}>
+        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Compatibility Score</div>
+        <div style={{ fontSize:48, fontWeight:900, color:'#D4AF37', lineHeight:1, marginBottom:6 }}>{total}<span style={{ fontSize:18, opacity:0.4 }}> / 36</span></div>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 14px', borderRadius:99, background:verdict.bg, border:`1px solid ${verdict.border}`, color:verdict.color, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, marginBottom:12 }}>
+          {verdict.label}
+        </div>
+        <div style={{ height:5, borderRadius:99, background:`${W}0.05)`, overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${verdict.color.replace('0.9','0.5')},${verdict.color})`, borderRadius:99, transition:'width 0.5s' }}/>
+        </div>
+        <div style={{ marginTop:10, display:'flex', justifyContent:'center', gap:16 }}>
+          {[['Challenging','<18'],['Acceptable','18–24'],['Good','24–28'],['Exceptional','28+']].map(([l,r]) => (
+            <div key={l} style={{ textAlign:'center' as const }}>
+              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', color:`${W}0.25)` }}>{l}</div>
+              <div style={{ fontSize:9, color:`${W}0.4)` }}>{r}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 8 Koota cards */}
+      <div style={{ display:'flex', flexDirection:'column' as const, gap:7 }}>
+        {kootaEntries.map(([name, {score, max}]) => {
+          const kd = KOOTA_DEEP[name];
+          const isOpen = gmExpanded === name;
+          const pctK = max > 0 ? Math.round((score/max)*100) : 0;
+          const barColor = score===max ? 'rgba(74,222,128,0.8)' : score>=max*0.6 ? '#D4AF37' : score>0 ? 'rgba(245,158,11,0.8)' : 'rgba(239,68,68,0.6)';
+
+          return (
+            <div key={name} style={{ borderRadius:16, overflow:'hidden', border:`1px solid ${isOpen ? kd.color.replace(/[\d.]+\)$/,'0.25)') : `${W}0.06)`}`, background:`${W}0.01)`, transition:'border-color 0.25s' }}>
+              {/* Header — always visible, always clickable */}
+              <button onClick={() => setGmExpanded(isOpen ? null : name)}
+                style={{ width:'100%', padding:'12px 14px', background: isOpen?`${W}0.03)`:'transparent', border:'none', display:'flex', alignItems:'center', gap:12, cursor:'pointer' }}>
+                <span style={{ fontSize:15, minWidth:20 }}>{kd.icon}</span>
+                <div style={{ flex:1, textAlign:'left' as const }}>
+                  <div style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:3 }}>
+                    <span style={{ fontSize:11, fontWeight:800, color: isOpen ? kd.color : `${W}0.75)` }}>{name}</span>
+                    <span style={{ fontSize:9, color:`${W}0.3)` }}>{kd.sub}</span>
+                  </div>
+                  <div style={{ height:4, borderRadius:99, background:`${W}0.06)`, overflow:'hidden', width:'100%' }}>
+                    <div style={{ height:'100%', width:`${pctK}%`, background:barColor, borderRadius:99, transition:'width 0.5s' }}/>
+                  </div>
+                </div>
+                <div style={{ display:'flex', flexDirection:'column' as const, alignItems:'flex-end', flexShrink:0, gap:2 }}>
+                  <div style={{ fontSize:13, fontWeight:900, color:barColor }}>{score}<span style={{ fontSize:9, opacity:0.5 }}>/{max}</span></div>
+                  <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen?'▲':'▼'}</span>
+                </div>
+              </button>
+
+              {/* Expanded content */}
+              {isOpen && (
+                <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.05)` }}>
+                  {/* What is this Koota */}
+                  <p style={{ fontSize:12, color:`${W}0.55)`, lineHeight:1.65, marginTop:10, marginBottom:10 }}>{kd.what}</p>
+
+                  {/* Score-specific reading — always shown */}
+                  <div style={{ padding:'11px 13px', background: score===max?'rgba(74,222,128,0.05)':score>0?`${G}0.04)`:'rgba(239,68,68,0.04)', border:`1px solid ${barColor.replace(/[\d.]+\)$/,'0.2)')}`, borderRadius:12, marginBottom:10 }}>
+                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:barColor, marginBottom:5 }}>
+                      {score===max?'✦ Compatible':'⚠ Note'} · {score}/{max} points
+                    </div>
+                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.75)`, lineHeight:1.75 }}>{kd.surface}</p>
+                  </div>
+
+                  {/* Prana+ sections */}
+                  {tierRank >= 1 && (
+                    <div style={{ display:'flex', flexDirection:'column' as const, gap:6 }}>
+                      <div style={{ padding:'10px 13px', background:`${W}0.02)`, border:`1px solid ${W}0.05)`, borderRadius:11 }}>
+                        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:5 }}>◎ The Pattern</div>
+                        <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12, color:`${W}0.65)`, lineHeight:1.78 }}>{kd.deep}</p>
+                      </div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                        <div style={{ padding:'9px 11px', background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.1)', borderRadius:11 }}>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.55)', marginBottom:4 }}>🌑 Shadow</div>
+                          <p style={{ fontSize:11, color:`${W}0.55)`, lineHeight:1.6 }}>{kd.shadow}</p>
+                        </div>
+                        <div style={{ padding:'9px 11px', background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.1)', borderRadius:11 }}>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.55)', marginBottom:4 }}>◈ The Gift</div>
+                          <p style={{ fontSize:11, color:`${W}0.55)`, lineHeight:1.6 }}>{kd.gift}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {tierRank < 1 && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, background:`${G}0.03)`, border:`1px solid ${G}0.08)`, borderRadius:10, padding:'9px 12px' }}>
+                      <span>🔒</span><p style={{ fontSize:11, color:`${W}0.35)` }}>Deep pattern reading from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong></p>
+                    </div>
+                  )}
+
+                  {/* Akasha transmission */}
+                  {tierRank >= 3 && (
+                    <div style={{ marginTop:8, padding:'12px 14px', background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:12 }}>
+                      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:6 }}>✦ Ākāsha Transmission</div>
+                      <p style={{ fontFamily:"'IM Fell English',serif", fontStyle:'italic', fontSize:14, color:'rgba(212,175,55,0.88)', lineHeight:1.9, textAlign:'center' as const }}>{kd.transmission}</p>
+                    </div>
+                  )}
+                  {tierRank < 3 && (
+                    <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8, background:`${W}0.02)`, border:`1px solid ${W}0.05)`, borderRadius:10, padding:'8px 12px' }}>
+                      <span>🔒</span><p style={{ fontSize:11, color:`${W}0.3)` }}>Ākāsha Transmission — <strong style={{ color:'#D4AF37' }}>Ākāsha-Infinity</strong></p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Overall guidance */}
+      {tierRank >= 1 && (
+        <div style={{ marginTop:12, padding:'12px 14px', background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:12 }}>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:8 }}>✦ Reading This Score</div>
+          {[
+            'Nadi (8pts) and Gana (6pts) are the most important Kootas — if both are compatible, the relationship has a strong foundation regardless of other scores.',
+            'Bhakut Dosha and Nadi Dosha are the two most serious doshas — both are remediable through specific pujas and conscious practice.',
+            'A score below 18 does not mean the relationship is impossible — it means it requires more conscious attention and remedial work.',
+            'The highest Gun Milan score does not guarantee a happy relationship — it indicates natural compatibility. Both require the willingness to grow together.',
+          ].map((r,i) => (
+            <div key={i} style={{ display:'flex', gap:8, padding:'4px 0', borderBottom: i<3?`1px solid ${W}0.04)`:undefined }}>
+              <span style={{ fontSize:9, color:`${G}0.4)`, fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+              <span style={{ fontSize:11, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
+
 
 
 // ── OracleCard — collapsed accordion card for Jyotish overview ──
@@ -3395,7 +3705,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="💞" label="GUN MILAN · KUNDLI MATCHING" title="Vedic 36-Point Compatibility System" glow="rgba(236,72,153,0.16)" open={openCards.gunMilan||false} onToggle={() => toggleCard('gunMilan')}>
-                  <GunMilan />
+                  <GunMilan userNakshatra={ephemeris?.moonNakshatra} />
                 </OracleCard>
 
                 {membershipTier === 'free' && (
