@@ -167,7 +167,7 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("jyotish_profiles")
       .select(
-        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date"
+        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, sun_sign, mars_sign"
       )
       .eq("user_id", userId)
       .single();
@@ -183,6 +183,9 @@ serve(async (req) => {
           moonLongitude: existing.moon_longitude,
           nakshatraProgress: existing.nakshatra_progress,
           dashaData: existing.dasha_data,
+          ascendantSign: existing.ascendant || '',
+          sunSign: existing.sun_sign || '',
+          marsSign: existing.mars_sign || '',
           ephemerisData: existing.ephemeris_data,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -353,6 +356,7 @@ serve(async (req) => {
         birth_place: birthPlace || null,
         ascendant: ascendantSign || null,
         sun_sign: sunSign || null,
+        mars_sign: marsSign || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }
