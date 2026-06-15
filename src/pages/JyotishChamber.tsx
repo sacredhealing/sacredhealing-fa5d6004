@@ -57,8 +57,8 @@ const PLANET_INFO: Record<string, { sym: string; color: string; meaning: string;
 
 const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
 const SIGN_SYMBOLS: Record<string, string> = {
-  Aries:'♈\',Taurus:\'♉\',Gemini:\'♊\',Cancer:\'♋\',Leo:\'♌\',Virgo:\'♍',
-  Libra:'♎\',Scorpio:\'♏\',Sagittarius:\'♐\',Capricorn:\'♑\',Aquarius:\'♒\',Pisces:\'♓'
+  Aries:'♈',Taurus:'♉',Gemini:'♊',Cancer:'♋',Leo:'♌',Virgo:'♍',
+  Libra:'♎',Scorpio:'♏',Sagittarius:'♐',Capricorn:'♑',Aquarius:'♒',Pisces:'♓'
 };
 
 const NAKSHATRA_MEANINGS: Record<string, { ruling: string; devata: string; shakti: string; shadow: string; gift: string }> = {
@@ -670,7 +670,7 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
   const canAkasha = isAdmin || ['akasha-infinity','admin'].includes(membershipTier);
 
   const gs: React.CSSProperties = {
-    background:'rgba(255,255,255,0.02)\', backdropFilter:\'blur(40px)',
+    background:'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)',
     WebkitBackdropFilter:'blur(40px)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:20,
   };
 
@@ -1420,7 +1420,7 @@ const OracleCard: React.FC<OracleCardProps> = ({ icon, label, title, glow, open,
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 14,
           background: open ? 'rgba(212,175,55,0.05)' : 'rgba(255,255,255,0.015)',
-          border: 'none\', padding: \'15px 18px\', cursor: \'pointer',
+          border: 'none', padding: '15px 18px', cursor: 'pointer',
           transition: 'background 0.25s',
         }}
       >
@@ -1429,7 +1429,7 @@ const OracleCard: React.FC<OracleCardProps> = ({ icon, label, title, glow, open,
           width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
           background: open ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.03)',
           border: `1px solid ${open ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)'}`,
-          display: 'flex\', alignItems: \'center\', justifyContent: \'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16,
           boxShadow: open ? `0 0 12px ${glow}` : 'none',
           transition: 'all 0.25s',
@@ -1446,7 +1446,7 @@ const OracleCard: React.FC<OracleCardProps> = ({ icon, label, title, glow, open,
           <div style={{
             fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 12.5, fontWeight: 700,
             color: open ? '#D4AF37' : 'rgba(255,255,255,0.65)',
-            whiteSpace: 'nowrap\', overflow: \'hidden\', textOverflow: \'ellipsis',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             transition: 'color 0.25s',
           }}>{title}</div>
         </div>
@@ -1454,7 +1454,7 @@ const OracleCard: React.FC<OracleCardProps> = ({ icon, label, title, glow, open,
         <div style={{
           width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
           background: `${G}0.06)`, border: `1px solid ${G}0.12)`,
-          display: 'flex\', alignItems: \'center\', justifyContent: \'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
           transition: 'transform 0.3s ease',
         }}>
@@ -1900,15 +1900,15 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
   // ── Styles ───────────────────────────────────────────────────
   const g: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.025)\', backdropFilter: \'blur(40px)',
+    background: 'rgba(255,255,255,0.025)', backdropFilter: 'blur(40px)',
     border: '1px solid rgba(255,255,255,0.06)', borderRadius: 40
   };
   const gm: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.025)\', backdropFilter: \'blur(30px)',
+    background: 'rgba(255,255,255,0.025)', backdropFilter: 'blur(30px)',
     border: '1px solid rgba(255,255,255,0.06)', borderRadius: 24
   };
   const gs: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.02)\', backdropFilter: \'blur(20px)',
+    background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)',
     border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16
   };
 
@@ -1932,9 +1932,9 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
       <Dialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen}>
         <DialogTrigger asChild>
           <button style={{
-            padding:'13px 28px\', borderRadius:99, border:\'1px solid rgba(212,175,55,0.42)',
+            padding:'13px 28px', borderRadius:99, border:'1px solid rgba(212,175,55,0.42)',
             background:'linear-gradient(135deg,rgba(212,175,55,0.28),rgba(212,175,55,0.10))',
-            color:'#D4AF37\', fontWeight:800, fontSize:11, letterSpacing:\'0.35em',
+            color:'#D4AF37', fontWeight:800, fontSize:11, letterSpacing:'0.35em',
             textTransform:'uppercase' as const, cursor:'pointer'
           }}>
             ✦ Enter Birth Details
@@ -2138,7 +2138,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 border: active ? '1px solid rgba(212,175,55,0.3)' : 'none',
                 background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
                 color: active ? '#D4AF37' : 'rgba(255,255,255,0.4)',
-                fontFamily:'inherit\', fontSize:9, fontWeight:800, letterSpacing:\'0.28em',
+                fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em',
                 textTransform:'uppercase' as const, cursor:'pointer', whiteSpace:'nowrap',
                 transition:'all 0.22s'
               }}>{labels[i]}</button>
