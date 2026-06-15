@@ -3305,9 +3305,12 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             {!birthData && !loading && <BirthPrompt />}
             {loading && (
-              <div style={{ textAlign:'center', padding:60 }}>
-                <div className="sqi-pulse" style={{ width:40, height:40, borderRadius:'50%', border:'2px solid rgba(212,175,55,0.3)', borderTopColor:'#D4AF37', margin:'0 auto 16px', animation:'rotS 0.9s linear infinite' }}/>
-                <p style={{ fontSize:12, color:'rgba(212,175,55,0.5)', letterSpacing:'0.3em' }}>Loading your cosmic blueprint…</p>
+              <div style={{ display:'flex', flexDirection:'column' as const, gap:10, paddingTop:8 }}>
+                {[180,140,160,120].map((h,i) => (
+                  <div key={i} style={{ height:h, borderRadius:20, background:'rgba(255,255,255,0.015)', border:'1px solid rgba(255,255,255,0.04)', position:'relative' as const, overflow:'hidden' }}>
+                    <div style={{ position:'absolute' as const, inset:0, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.05),transparent)', animation:'shimmerSlide 1.4s ease-in-out infinite' }}/>
+                  </div>
+                ))}
               </div>
             )}
             {birthData && !loading && (
