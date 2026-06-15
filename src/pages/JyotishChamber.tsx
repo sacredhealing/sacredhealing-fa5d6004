@@ -3371,7 +3371,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     const lagnaSign = _computeLagna();
                     const lagnaRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
                     const LAGNA_DEEP = LAGNA_DEEP_DATA;
-                                     };
                     const ld = lagnaSign ? LAGNA_DEEP[lagnaSign] : null;
                     if (!lagnaSign) return (
                       <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'12px 15px', marginBottom:8, display:'flex', alignItems:'center', gap:10 }}>
