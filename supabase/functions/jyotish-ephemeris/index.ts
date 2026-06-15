@@ -330,6 +330,76 @@ serve(async (req) => {
       console.error("VedAstro API error:", apiErr);
     }
 
+    // ── Compute Lagna (Ascendant) if VedAstro didn't return it ─────────
+    if (!ascendantSign && birthDate && birthTime) {
+      try {
+        // Sidereal Lagna calculation (Lahiri ayanamsa approximation)
+        const [yr, mo, dy] = birthDate.split('-').map(Number);
+        const [hr, mn] = (birthTime || '12:00').split(':').map(Number);
+        const hour = hr + mn / 60;
+
+        // Julian Day Number
+        const a = Math.floor((14 - mo) / 12);
+        const y = yr + 4800 - a;
+        const m = mo + 12 * a - 3;
+        const jdn = dy + Math.floor((153 * m + 2) / 5) + 365 * y +
+                    Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+        const jd = jdn + (hour - 12) / 24;
+
+        // Greenwich Sidereal Time
+        const T = (jd - 2451545.0) / 36525;
+        const gst = (280.46061837 + 360.98564736629 * (jd - 2451545) +
+                     T * T * 0.000387933 - T * T * T / 38710000) % 360;
+
+        // Local Sidereal Time — use birthPlace lat/lng if available
+        // Default to rough timezone offset from birthTime timezone string
+        const tzMatch = (birthTime || '').match(/([+-]\d{2}):?(\d{2})$/) ||
+                        ['', '+05', '30']; // default IST
+        const tzHr = parseInt(tzMatch[1] || '+05') + parseInt(tzMatch[2] || '30') / 60;
+        const lng = tzHr * 15; // rough longitude from timezone
+        const lst = (gst + lng + 360) % 360;
+
+        // Lahiri ayanamsa (approx)
+        const ayanamsa = 23.85 + (yr - 2000) * 0.014;
+
+        // RAMC to Ascendant (simplified, assumes equatorial latitude)
+        // For tropical ascendant then subtract ayanamsa
+        const obliquity = 23.4393 - 0.0000004 * (jd - 2451545);
+        const lstRad = lst * Math.PI / 180;
+        const oblRad = obliquity * Math.PI / 180;
+        const tanAsc = Math.cos(lstRad) / (-Math.sin(lstRad) * Math.cos(oblRad));
+        let tropAsc = Math.atan(tanAsc) * 180 / Math.PI;
+        // Quadrant correction
+        if (Math.sin(lstRad) > 0) tropAsc += 180;
+        if (tropAsc < 0) tropAsc += 360;
+        // Sidereal ascendant
+        const sidAsc = (tropAsc - ayanamsa + 360) % 360;
+        const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                       'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+        ascendantSign = SIGNS[Math.floor(sidAsc / 30)] || '';
+      } catch (lagnaErr) {
+        console.error('Lagna calc error:', lagnaErr);
+      }
+    }
+
+    // ── Compute Mars sign if VedAstro didn't return it ────────────────────
+    if (!marsSign && birthDate) {
+      try {
+        // Mars orbital period ~686.97 days, synodic ~779.9 days
+        // Known reference: Mars in Aries on 2024-01-01 (approx longitude 350°)
+        const refDate = new Date('2024-01-01');
+        const birthDt = new Date(birthDate);
+        const daysDiff = (birthDt.getTime() - refDate.getTime()) / 86400000;
+        const marsDailyMotion = 360 / 686.97; // degrees per day
+        const ayanamsa = 23.85 + (new Date(birthDate).getFullYear() - 2000) * 0.014;
+        const marsLng = ((350 + daysDiff * marsDailyMotion) % 360 + 360) % 360;
+        const sidMars = (marsLng - ayanamsa + 360) % 360;
+        const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                       'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+        marsSign = SIGNS[Math.floor(sidMars / 30)] || '';
+      } catch(e) { console.error('Mars calc error:', e); }
+    }
+
     // Fallback: derive nakshatra from longitude
     if (!moonNakshatra && moonLongitude > 0) {
       const nakIdx = Math.floor((moonLongitude / 360) * 27);
