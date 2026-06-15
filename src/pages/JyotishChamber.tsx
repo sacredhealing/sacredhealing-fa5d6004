@@ -1935,7 +1935,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
             padding:'13px 28px\', borderRadius:99, border:\'1px solid rgba(212,175,55,0.42)',
             background:'linear-gradient(135deg,rgba(212,175,55,0.28),rgba(212,175,55,0.10))',
             color:'#D4AF37\', fontWeight:800, fontSize:11, letterSpacing:\'0.35em',
-            textTransform:'uppercase\' as const, cursor:\'pointer'
+            textTransform:'uppercase' as const, cursor:'pointer'
           }}>
             ✦ Enter Birth Details
           </button>
@@ -1978,7 +1978,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           { w:200, l:'75%', t:'15%', d:6 }, { w:400, l:'15%', t:'68%', d:12 },
         ].map((r, i) => (
           <div key={i} style={{
-            position:'absolute\', borderRadius:\'50%',
+            position:'absolute', borderRadius:'50%',
             width:r.w, height:r.w, left:r.l, top:r.t,
             border:'1px solid rgba(212,175,55,0.05)',
             animation:`swP ${r.d}s ease-in-out infinite`,
@@ -2139,7 +2139,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
                 color: active ? '#D4AF37' : 'rgba(255,255,255,0.4)',
                 fontFamily:'inherit\', fontSize:9, fontWeight:800, letterSpacing:\'0.28em',
-                textTransform:'uppercase\' as const, cursor:\'pointer\', whiteSpace:\'nowrap',
+                textTransform:'uppercase' as const, cursor:'pointer', whiteSpace:'nowrap',
                 transition:'all 0.22s'
               }}>{labels[i]}</button>
             );
