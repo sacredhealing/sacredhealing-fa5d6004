@@ -2462,7 +2462,34 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
                 <OracleCard icon="✦" label="NATAL BLUEPRINT" title={`${birthData.birth_name} · ${ephemeris?.ascendantSign || '—'} Rising · ${ephemeris?.moonNakshatra || '—'}`} glow="rgba(212,175,55,0.15)" open={openCards.natalBlueprint} onToggle={() => toggleCard('natalBlueprint')}>
                   {(() => {
-                    const lagnaSign = ephemeris?.ascendantSign || '';
+                    // Compute Lagna directly here — never rely on async state
+                    const _computeLagna = (): string => {
+                      // First try ephemeris state
+                      if (ephemeris?.ascendantSign) return ephemeris.ascendantSign;
+                      // Fall back to local calculation from birthData
+                      if (!birthData?.birth_date) return '';
+                      try {
+                        const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                                       'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+                        const [yr,mo,dy] = birthData.birth_date.split('-').map(Number);
+                        const tp = (birthData.birth_time||'12:00').split(':');
+                        const hour = parseInt(tp[0]||'12') + parseInt(tp[1]||'0')/60;
+                        const a=(14-mo)>>4===0?0:1; const y=yr+4800-a; const m2=mo+12*a-3;
+                        const jdn=dy+Math.floor((153*m2+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;
+                        const jd=jdn+(hour-12)/24;
+                        const T=(jd-2451545)/36525;
+                        const gst=((280.46061837+360.98564736629*(jd-2451545)+T*T*0.000387933-T*T*T/38710000)%360+360)%360;
+                        const lst=(gst+82.5+360)%360; // 82.5 = IST lng approx
+                        const obl=(23.4393-0.0000004*(jd-2451545))*Math.PI/180;
+                        const lr=lst*Math.PI/180;
+                        let ta=Math.atan2(Math.cos(lr),-Math.sin(lr)*Math.cos(obl))*180/Math.PI;
+                        if(ta<0)ta+=360; if(Math.sin(lr)<0)ta=(ta+180)%360;
+                        const ay=23.15+(yr-1900)*0.014;
+                        const sid=((ta-ay)%360+360)%360;
+                        return SIGNS[Math.floor(sid/30)]||'';
+                      } catch { return ''; }
+                    };
+                    const lagnaSign = _computeLagna();
                     const lagnaRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
                     const LAGNA_DEEP: Record<string,{body:string;dharma:string;shadow:string;gift:string;relationships:string;sadhana:string;transmission:string}> = {
                       Aries:       { body:'Pitta constitution — prone to heat, inflammation, and head tension. Thrive on physical challenge; wilt under stagnation.', dharma:'You came to initiate. Every time you step forward before others dare to, you are fulfilling your Lagna\'s deepest function. The Aries Lagna is the universe\'s instrument of beginning.', shadow:'Aggression masking fear, inability to complete what is begun, burning through relationships with the intensity of the mission.', gift:'Unmatched capacity to begin. When Aries Lagna acts from soul rather than ego, the entire field around them ignites.', relationships:'Partners must match your pace or step aside. Your deepest intimacy comes with those who are not intimidated by your fire — who meet it with their own.', sadhana:'Surya Namaskar at dawn. Hanuman. Physical practice is your primary spiritual discipline — the body is your temple, not a vehicle.', transmission:'You were not born to wait for permission. The door you are looking for opens from the inside.' },
