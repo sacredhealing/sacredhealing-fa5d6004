@@ -2401,7 +2401,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 {activeBNNAge && (
-                  {(() => {
+                  (() => {
                     const bnn = BNN_DATA[activeBNNAge.planet];
                     const planetInfo = PLANET_INFO[activeBNNAge.planet];
                     const tierRankBnn = membershipTier === 'akasha-infinity' ? 3 : membershipTier === 'siddha-quantum' ? 2 : membershipTier === 'prana-flow' ? 1 : 0;
