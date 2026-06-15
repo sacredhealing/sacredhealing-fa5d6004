@@ -500,19 +500,15 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* ══ CREATIVE SOUL + SHOP ══ */}
+      {/* ══ CREATIVE SOUL ══ */}
       <SL label={t('converge.secAbundance')} delay="0.32s"/>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'fadeUp 0.4s 0.34s ease both' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, padding: '0 16px', animation: 'fadeUp 0.4s 0.34s ease both' }}>
         <div onClick={() => navigate('/creative-soul/store')} style={{ background: 'linear-gradient(135deg,rgba(170,55,200,0.08),rgba(0,0,0,0))', border: '1px solid rgba(170,60,210,0.18)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative' }}>
           <RingIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 C12 2 9 8 4 10 C9 12 12 22 12 22 C12 22 15 12 20 10 C15 8 12 2 12 2Z" stroke="rgba(180,110,255,0.8)" strokeWidth="1.4" fill="rgba(160,60,220,0.1)"/></svg></RingIcon>
           <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 4 }}>{t('converge.creativeSoulTitle')}</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.creativeSoulSub')}</div>
         </div>
-        <div onClick={() => navigate('/shop')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative' }}>
-          <RingIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2 L2 8 L6 8 L6 20 C6 20.6 6.4 21 7 21 L17 21 C17.6 21 18 20.6 18 20 L18 8 L22 8 L18 2 L14 5 C13.3 3.8 12.7 3 12 3 C11.3 3 10.7 3.8 10 5 Z" stroke="rgba(212,175,55,0.75)" strokeWidth="1.3" fill="rgba(212,175,55,0.07)"/></svg></RingIcon>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 4 }}>{t('converge.healingClothesTitle')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.healingClothesSub')}</div>
-        </div>
+
       </div>
 
       {/* ══ VIDEOS ══ */}
@@ -608,10 +604,9 @@ export default function Explore() {
             {([
               { title: t('converge.deepenAvataric'), sub: t('converge.deepenAvataricSub'), icon: '✦', h: '/courses' },
               { title: t('converge.deepenNeural'), sub: t('converge.deepenNeuralSub'), icon: '◈', h: '/private-sessions' },
-              { title: t('converge.connectPodcast'), sub: t('converge.connectPodcastSub'), icon: '◉', h: '/podcast' },
               { title: t('converge.deepenAetheric'), sub: t('converge.deepenAethericSub'), icon: '⬡', h: '/affirmation-soundtrack' },
               { title: t('converge.deepenMentorship'), sub: t('converge.deepenMentorshipSub'), icon: '◆', h: '/transformation' },
-              { title: t('converge.healingClothesTitle'), sub: t('converge.healingClothesSub'), icon: '🌿', h: '/shop' },
+              { title: t('converge.healingClothesTitle'), sub: t('converge.healingClothesSub'), icon: '✿', h: '/shop' },
             ] as { title: string; sub: string; icon: string; h: string }[]).map(({ title, sub, icon, h }, idx) => (
               <div
                 key={h}
@@ -751,14 +746,53 @@ export default function Explore() {
           <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.2) 40%,rgba(212,175,55,0.08) 70%,transparent)' }} />
         </div>
 
-        {/* Podcast row — preserved */}
-        <div onClick={() => navigate('/podcast')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(212,175,55,0.4)', flexShrink: 0 }}/>
-          <div>
-            <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 800, color: '#D4AF37', marginBottom: 2 }}>{t('converge.connectPodcast')}</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)' }}>{t('converge.connectPodcastSub')}</div>
+        {/* ── VEDIC-FREQUENCY CAST CARD ── */}
+        <div
+          onClick={() => navigate('/podcast')}
+          style={{
+            position: 'relative', borderRadius: 24, overflow: 'hidden', cursor: 'pointer', marginTop: 10,
+            background: 'radial-gradient(ellipse at 20% 50%, rgba(20,35,55,0.98) 0%, rgba(8,14,28,0.99) 55%, #050505 100%)',
+            border: '1px solid rgba(80,140,255,0.38)',
+            boxShadow: '0 0 50px rgba(60,110,240,0.10), inset 0 1px 0 rgba(100,160,255,0.08)',
+          }}
+        >
+          {/* Blue rim pulse */}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 24, border: '1px solid rgba(80,140,255,0.12)', animation: 'rimB 4s ease-in-out infinite', pointerEvents: 'none' }} />
+          {/* Sheen */}
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(105deg,transparent 38%,rgba(100,160,255,0.04) 50%,transparent 62%)', animation: 'shimmer 8s 0.5s ease-in-out infinite', pointerEvents: 'none' }} />
+          {/* Sound wave SVG background */}
+          <svg style={{ position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)', width: 140, height: 100, opacity: 0.12, pointerEvents: 'none' }} viewBox="0 0 140 100">
+            {[10,20,30,40,50,60,70,80,90,100,110,120,130].map((x, i) => {
+              const h = [20,45,65,80,90,72,50,38,60,78,55,32,18][i];
+              return <rect key={i} x={x-3} y={(100-h)/2} width="5" height={h} rx="3" fill="rgba(100,160,255,0.9)">
+                <animate attributeName="height" values={`${h};${Math.min(h+20,95)};${h}`} dur={`${1.2+i*0.15}s`} repeatCount="indefinite"/>
+                <animate attributeName="y" values={`${(100-h)/2};${(100-Math.min(h+20,95))/2};${(100-h)/2}`} dur={`${1.2+i*0.15}s`} repeatCount="indefinite"/>
+              </rect>;
+            })}
+          </svg>
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 1, padding: '20px 20px 18px', display: 'flex', alignItems: 'center', gap: 16 }}>
+            {/* Mic ring */}
+            <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0, background: 'rgba(80,140,255,0.10)', border: '1px solid rgba(80,140,255,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 18px rgba(80,140,255,0.2)' }}>🎙</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(80,160,255,0.55)', marginBottom: 6 }}>Vedic Frequency · Spotify</div>
+              <div style={{
+                fontFamily: "'Cinzel',serif", fontSize: 16, fontWeight: 700,
+                letterSpacing: '0.04em', lineHeight: 1.2,
+                background: 'linear-gradient(135deg,#90C8FF 0%,#C8E4FF 40%,#7AB8FF 65%,#4080E0 100%)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                animation: 'hShimmer 5s linear infinite',
+                marginBottom: 4,
+              }}>
+                {t('converge.connectPodcast')}
+              </div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(150,200,255,0.4)', lineHeight: 1.5 }}>
+                {t('converge.connectPodcastSub')}
+              </div>
+            </div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(80,140,255,0.12)', border: '1px solid rgba(80,140,255,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(120,180,255,0.8)', fontSize: 14, flexShrink: 0 }}>→</div>
           </div>
-          <span style={{ marginLeft: 'auto', color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
       </div>
 
