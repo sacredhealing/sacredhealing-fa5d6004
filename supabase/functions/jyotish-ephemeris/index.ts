@@ -285,6 +285,42 @@ serve(async (req) => {
         moonLongitude = parseFloat(payload.MoonLongitude);
       }
 
+      // Flat-structure fallbacks for ascendant
+      if (!ascendantSign && payload?.AscendantSign) ascendantSign = String(payload.AscendantSign).trim();
+      if (!ascendantSign && payload?.Ascendant) ascendantSign = String(payload.Ascendant?.Sign || payload.Ascendant).trim();
+      if (!ascendantSign && payload?.LagnaSign) ascendantSign = String(payload.LagnaSign).trim();
+
+      // Try extracting from AllPlanetData with different casing
+      if (!ascendantSign) {
+        const keys = Object.keys(payload?.AllPlanetData || {});
+        const ascKey = keys.find(k => /asc|lagna|rising/i.test(k));
+        if (ascKey) {
+          const asc = payload.AllPlanetData[ascKey];
+          ascendantSign = String(asc?.Sign || asc?.Rashi || asc?.ZodiacSign || '').trim();
+          if (!ascendantSign && asc?.Longitude != null) {
+            const si = Math.floor(parseFloat(asc.Longitude) / 30) % 12;
+            const SG = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+            ascendantSign = SG[si] || '';
+          }
+        }
+      }
+
+      // Mars flat-structure fallbacks
+      if (!marsSign && payload?.MarsSign) marsSign = String(payload.MarsSign).trim();
+      if (!marsSign) {
+        const keys = Object.keys(payload?.AllPlanetData || {});
+        const marsKey = keys.find(k => /^mars$/i.test(k));
+        if (marsKey) {
+          const m = payload.AllPlanetData[marsKey];
+          marsSign = String(m?.Sign || m?.Rashi || m?.ZodiacSign || '').trim();
+          if (!marsSign && m?.Longitude != null) {
+            const si = Math.floor(parseFloat(m.Longitude) / 30) % 12;
+            const SG = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+            marsSign = SG[si] || '';
+          }
+        }
+      }
+
       // Compute nakshatra progress from longitude
       if (moonLongitude > 0) {
         const nakDeg = moonLongitude % 13.3333333;
