@@ -2024,11 +2024,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           </motion.div>
         )}
 
-        >
-              </>
-            </>
-          </motion.div>
-        )}
+
 
         {/* ══════════════ NADI LEAF ══════════════ */}
         {activeTab === 'nadi' && (
