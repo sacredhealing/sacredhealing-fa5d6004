@@ -32,6 +32,7 @@ interface EphemerisData {
   moonLongitude: number;
   ascendantSign: string;
   sunSign: string;
+  marsSign: string;
   dashaData: {
     activeMaha: { planet: string; start: string; end: string; years: number } | null;
     activeAntar: { planet: string; start: string; end: string } | null;
@@ -1277,64 +1278,157 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
 
 
 // ── Mangal Dosha Checker ─────────────────────────────────────────
-interface MangalDoshaProps { ascendantSign: string | null; }
-const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign }) => {
+interface MangalDoshaProps { ascendantSign: string | null; marsSign?: string; }
+const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSign }) => {
   const W = 'rgba(255,255,255,';
-  const G = 'rgba(212,175,55,';
-  // In real impl this reads Mars house from ephemeris
-  // For now show the logic and a placeholder result
-  const DOSHA_HOUSES = [1, 2, 4, 7, 8, 12];
-  const HOUSE_MEANINGS: Record<number,string> = {
-    1:'Self, personality, body — Mars here creates intense drive and confrontational nature',
-    2:'Family, speech, finances — Mars here creates sharp speech and financial conflicts in marriage',
-    4:'Home, mother, peace — Mars here disturbs domestic harmony',
-    7:'Marriage partner — strongest Dosha, directly in the 7th house of partnership',
-    8:'Longevity, hidden things — Mars here is considered the most severe placement',
-    12:'Liberation, bed pleasures — Mars here affects bedroom harmony and expenditure',
+  const { tier: membershipTier } = useMembership();
+  const tierRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
+  const [mdExpanded, setMdExpanded] = useState<string|null>(null);
+
+  const ZODIAC_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  const DOSHA_HOUSES = [1,2,4,7,8,12];
+
+  // Compute Mars house from Lagna and Mars sign
+  const getMarsHouse = (lagna: string, mars: string): number|null => {
+    const lagnaIdx = ZODIAC_ORDER.indexOf(lagna);
+    const marsIdx  = ZODIAC_ORDER.indexOf(mars);
+    if (lagnaIdx < 0 || marsIdx < 0) return null;
+    return ((marsIdx - lagnaIdx + 12) % 12) + 1;
   };
-  const REMEDIES = [
-    'Kuja Dosha Puja at a Subrahmanya (Murugan/Kartikeya) temple — Tuesdays specifically',
-    'Om Krām Krīm Krauṃ Sah Bhaumāya Namaḥ — 108x on Tuesday mornings at sunrise',
-    'Red coral (moonga) in gold on right ring finger — consult Jyotishi before wearing',
-    'Fast on Tuesdays and eat only red-coloured foods (tomato, red lentils, apple)',
+
+  const marsHouse = (ascendantSign && marsSign) ? getMarsHouse(ascendantSign, marsSign) : null;
+  const hasDosha  = marsHouse !== null ? DOSHA_HOUSES.includes(marsHouse) : null;
+
+  const HOUSE_MEANINGS: Record<number,{title:string;surface:string;deep:string;severity:string}> = {
+    1:  { title:'1st House — Self & Body',        severity:'Moderate', surface:'Mars in the 1st house creates an intense, warrior-like personality. The body itself becomes a battlefield — high vitality, high aggression, high drive.', deep:'Mars in Lagna creates the Ruchaka Mahapurusha Yoga when in own sign or exaltation — one of the five great planetary positions. The Dosha here is not a curse but an intensity that, when channelled through discipline and genuine purpose, produces extraordinary leadership.' },
+    2:  { title:'2nd House — Speech & Family',    severity:'Moderate', surface:'Mars in the 2nd creates sharp, cutting speech and friction within the family of origin. Finances are both aggressively pursued and aggressively spent.', deep:'The 2nd house Mars is the karmic echo of past lives where words were used as weapons. This lifetime is the correction — learning to speak with the precision of Mars but without the wound of it. Tremendous earning capacity when the tongue is disciplined.' },
+    4:  { title:'4th House — Home & Mother',      severity:'Moderate', surface:'Mars in the 4th disturbs domestic peace. The home can feel like a battleground. The relationship with the mother carries tension, urgency, or unresolved conflict.', deep:'The 4th house Mars is the warrior who cannot find rest. The soul carries a past-life wound around home — either a home destroyed by war or a home that was a prison. This lifetime offers the chance to build a genuinely safe home — but only after understanding why peace has felt threatening.' },
+    7:  { title:'7th House — Marriage Partner',   severity:'Strong',   surface:'Mars directly in the house of partnership creates the strongest Mangal Dosha. Relationships are intense, passionate, and prone to conflict. Partners may be domineering or may trigger the native\'s own suppressed aggression.', deep:'The 7th house Mars is the karma of past-life partnership where force was used where love was needed. The soul chose this placement to learn the full spectrum of relationship — from its most combative to its most sacred. The remedy is not a stone or a puja alone: it is the conscious decision to stop fighting the partner and start fighting alongside them.' },
+    8:  { title:'8th House — Longevity & Hidden', severity:'Strong',   surface:'Mars in the 8th is considered the most severe Mangal Dosha placement. The 8th governs longevity, sudden events, and transformation. Mars here creates urgency, intensity, and sudden upheavals in life.', deep:'The 8th house Mars is not a curse — it is an initiation. The soul has chosen the most alchemical placement available. Every crisis this Mars creates is a crucible. What emerges from the 8th house Mars fire is either destroyed or permanently transformed. There is no middle ground, and that is precisely the teaching.' },
+    12: { title:'12th House — Liberation & Bed',  severity:'Mild',     surface:'Mars in the 12th affects bedroom harmony, expenditure, and the energy available for spiritual practice. There is a drive toward both excess spending and spiritual seeking.', deep:'The 12th house Mars is the warrior who has renounced the battlefield. The energy does not disappear — it goes inward. This placement, in a spiritually developed soul, becomes the fire of tapas: intense, interior, transformative. The Dosha here dissolves most naturally through genuine spiritual practice and service.' },
+  };
+
+  const EXCEPTIONS = [
+    'Mars in own sign (Aries or Scorpio) — Dosha significantly reduced',
+    'Mars exalted in Capricorn — natural strength reduces Dosha effects',
+    'Partner also has Mangal Dosha — cancels each other\'s effects (Dosha-Dosha match)',
+    'Mars in conjunction with Jupiter — Jupiter\'s grace softens the intensity',
+    'Kuja Dosha Nashak: Mars in Aries/Scorpio/Capricorn/Cancer Lagna — cancelled',
+    'If born on Tuesday, Mars\'s own day — partially mitigated by time alignment',
   ];
-  if (!ascendantSign) return <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center', padding:'16px 0', fontStyle:'italic' }}>Enter birth data to check Mangal Dosha</p>;
+
+  if (!ascendantSign) return (
+    <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
+      Enter birth data to calculate Mangal Dosha
+    </p>
+  );
+
+  if (!marsSign) return (
+    <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
+      Birth chart loading… Mars position calculating
+    </p>
+  );
+
+  const houseData = marsHouse ? HOUSE_MEANINGS[marsHouse] : null;
+
   return (
     <div>
-      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
-        Mangal Dosha occurs when Mars (Mangal) sits in houses 1, 2, 4, 7, 8, or 12 from the Lagna, Moon, or Venus in the birth chart.
-      </p>
-      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Dosha Houses — Where Mars Creates Intensity</div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:14 }}>
-        {DOSHA_HOUSES.map(h => (
-          <div key={h} style={{ background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:11, padding:'10px 8px', textAlign:'center' }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.55)', marginBottom:3 }}>House {h}</div>
-            <div style={{ fontSize:13, fontWeight:900, color:'rgba(239,68,68,0.85)' }}>♂</div>
-          </div>
-        ))}
+      {/* Status */}
+      <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: hasDosha ? 'rgba(239,68,68,0.08)' : 'rgba(74,222,128,0.06)', border:`1px solid ${hasDosha ? 'rgba(239,68,68,0.3)' : 'rgba(74,222,128,0.25)'}`, color: hasDosha ? '#EF4444' : '#4ADE80', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, marginBottom:12 }}>
+        <div style={{ width:6, height:6, borderRadius:'50%', background: hasDosha ? '#EF4444' : '#4ADE80', boxShadow: hasDosha ? '0 0 8px rgba(239,68,68,0.6)' : 'none' }}/>
+        {hasDosha ? `Mangal Dosha Present — ${houseData?.severity || ''}` : 'No Mangal Dosha'}
       </div>
-      <div style={{ background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:14, padding:'14px 16px', marginBottom:12 }}>
-        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.65)', marginBottom:6 }}>⚡ Exceptions That Cancel Dosha</div>
-        {['Mars in own sign (Aries, Scorpio) — partially cancelled','Mars exalted in Capricorn — significantly reduced','Jupiter aspects Mars — protective influence','Mars with Venus — energies balance each other'].map((e,i) => (
-          <div key={i} style={{ display:'flex', gap:8, fontSize:11, color:`${W}0.55)`, marginBottom:5, lineHeight:1.45 }}>
-            <span style={{ color:'rgba(74,222,128,0.7)', flexShrink:0 }}>✓</span>{e}
-          </div>
-        ))}
+
+      {/* Mars position pills */}
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' as const, marginBottom:14 }}>
+        <div style={{ padding:'6px 12px', borderRadius:10, background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.18)' }}>
+          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)' }}>♂ Mars Sign</span>
+          <div style={{ fontSize:13, fontWeight:900, color:'rgba(239,68,68,0.9)', marginTop:2 }}>{marsSign}</div>
+        </div>
+        <div style={{ padding:'6px 12px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)' }}>
+          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)' }}>House from Lagna</span>
+          <div style={{ fontSize:13, fontWeight:900, color:'rgba(255,255,255,0.8)', marginTop:2 }}>House {marsHouse}</div>
+        </div>
+        <div style={{ padding:'6px 12px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)' }}>
+          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)' }}>Lagna</span>
+          <div style={{ fontSize:13, fontWeight:900, color:'#D4AF37', marginTop:2 }}>{ascendantSign}</div>
+        </div>
       </div>
-      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'13px 15px', position:'relative' }}>
-        <div style={{ position:'absolute', top:-7, left:12, fontSize:6.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA REMEDIES</div>
-        <div style={{ paddingTop:4, display:'flex', flexDirection:'column', gap:8 }}>
-          {REMEDIES.map((r, i) => (
-            <div key={i} style={{ display:'flex', gap:9 }}>
-              <div style={{ fontSize:8, fontWeight:800, color:`${G}0.5)`, flexShrink:0, marginTop:1 }}>{String(i+1).padStart(2,'0')}</div>
-              <div style={{ fontSize:11.5, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</div>
+
+      {/* House reading */}
+      {houseData && (
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasDosha?'rgba(239,68,68,0.6)':'rgba(74,222,128,0.6)', marginBottom:6 }}>{houseData.title}</div>
+          <p style={{ fontSize:13, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom: tierRank>=1?12:0 }}>{houseData.surface}</p>
+
+          {/* Deep reading — Prana+ */}
+          {tierRank>=1 && (
+            <div style={{ marginBottom:8, borderRadius:12, overflow:'hidden', border:`1px solid ${mdExpanded==='deep'?'rgba(239,68,68,0.22)':'rgba(255,255,255,0.05)'}` }}>
+              <button onClick={()=>setMdExpanded(mdExpanded==='deep'?null:'deep')} style={{ width:'100%', padding:'9px 12px', background:mdExpanded==='deep'?'rgba(239,68,68,0.04)':'transparent', border:'none', display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
+                <span style={{ fontSize:13 }}>✦</span>
+                <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', textAlign:'left' as const }}>Soul Depth — The Karmic Reading</span>
+                <span style={{ fontSize:10, color:`${W}0.25)` }}>{mdExpanded==='deep'?'▲':'▼'}</span>
+              </button>
+              {mdExpanded==='deep' && <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}><p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.75)`, lineHeight:1.82, marginTop:10 }}>{houseData.deep}</p></div>}
+            </div>
+          )}
+          {tierRank<1 && <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', borderRadius:10, padding:'9px 12px', marginBottom:8 }}><span>🔒</span><p style={{ fontSize:11, color:`${W}0.35)`, lineHeight:1.5 }}>Soul Depth reading available from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong></p></div>}
+        </div>
+      )}
+
+      {/* Not Dosha reading */}
+      {!hasDosha && marsHouse && (
+        <div style={{ padding:'12px 14px', background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.15)', borderRadius:12, marginBottom:12 }}>
+          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.6)', marginBottom:5 }}>◈ Mars in House {marsHouse} — No Dosha</div>
+          <p style={{ fontSize:12.5, color:`${W}0.6)`, lineHeight:1.65, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>
+            Mars in the {marsHouse}{marsHouse===1?'st':marsHouse===2?'nd':marsHouse===3?'rd':'th'} house from {ascendantSign} Lagna does not create Mangal Dosha. Mars energy here is channelled toward {marsHouse===3?'courage, siblings, and short journeys':marsHouse===5?'creativity, intelligence, and children':marsHouse===6?'discipline, enemies, and service — a very strong placement for overcoming obstacles':marsHouse===9?'dharma, father, and long journeys — a highly auspicious position':marsHouse===10?'career, authority, and public life — Mars excels here':marsHouse===11?'gains, networks, and the fulfilment of desires':'general life force'}.
+          </p>
+        </div>
+      )}
+
+      {/* Exceptions */}
+      {hasDosha && (
+        <div style={{ marginBottom:12, borderRadius:12, overflow:'hidden', border:`1px solid ${mdExpanded==='except'?'rgba(245,158,11,0.22)':'rgba(255,255,255,0.05)'}` }}>
+          <button onClick={()=>setMdExpanded(mdExpanded==='except'?null:'except')} style={{ width:'100%', padding:'9px 12px', background:mdExpanded==='except'?'rgba(245,158,11,0.04)':'transparent', border:'none', display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
+            <span style={{ fontSize:13 }}>⚡</span>
+            <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.6)', textAlign:'left' as const }}>Exceptions That Cancel Dosha</span>
+            <span style={{ fontSize:10, color:`${W}0.25)` }}>{mdExpanded==='except'?'▲':'▼'}</span>
+          </button>
+          {mdExpanded==='except' && (
+            <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
+              {EXCEPTIONS.map((e,i) => (
+                <div key={i} style={{ display:'flex', gap:8, padding:'6px 0', borderBottom: i<EXCEPTIONS.length-1?`1px solid ${W}0.04)`:undefined }}>
+                  <span style={{ fontSize:9, color:'rgba(245,158,11,0.5)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+                  <span style={{ fontSize:11.5, color:`${W}0.55)`, lineHeight:1.55 }}>{e}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sadhana — always show if Dosha present */}
+      {hasDosha && (
+        <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:12 }}>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.55)', marginBottom:6 }}>♂ Kuja Dosha Remedies</div>
+          {[
+            'Kuja Dosha Puja at a Subrahmanya (Murugan) temple — Tuesdays specifically',
+            'Aum Krām Krīm Kraum Sah Bhaumāya Namaḥ — 108x on Tuesday mornings at sunrise',
+            'Hanuman Chalisa daily — Hanuman governs Mars at the soul level and dissolves the aggression into courage',
+            'Fast on Tuesdays; eat red foods — red lentils, tomato, red apple, pomegranate',
+            'Coral (moonga) in gold on right ring finger — only after qualified Jyotishi confirms',
+          ].map((r,i) => (
+            <div key={i} style={{ display:'flex', gap:8, padding:'5px 0', borderBottom: i<4?`1px solid ${W}0.04)`:undefined }}>
+              <span style={{ fontSize:9, color:'rgba(239,68,68,0.4)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+              <span style={{ fontSize:11.5, color:`${W}0.55)`, lineHeight:1.55 }}>{r}</span>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
+
 
 // ── Kala Sarpa Yoga ──────────────────────────────────────────────
 const KalaSarpaYoga: React.FC = () => {
@@ -1857,6 +1951,7 @@ const JyotishChamber: React.FC = () => {
           moonLongitude: data.moonLongitude || 0,
           ascendantSign: data.ascendantSign || '',
           sunSign: data.sunSign || '',
+          marsSign: data.marsSign || '',
           dashaData: data.dashaData || null,
         });
       }
@@ -2290,18 +2385,67 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="✦" label="NATAL BLUEPRINT" title={`${birthData.birth_name} · ${ephemeris?.ascendantSign || '—'} Rising · ${ephemeris?.moonNakshatra || '—'}`} glow="rgba(212,175,55,0.15)" open={openCards.natalBlueprint} onToggle={() => toggleCard('natalBlueprint')}>
-                  {ephemeris?.ascendantSign && (
-                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
-                        <span style={{ fontSize:20 }}>{SIGN_SYMBOLS[ephemeris.ascendantSign]||'♏'}</span>
-                        <div>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Rising Sign</div>
-                          <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{ephemeris.ascendantSign}</div>
+                  {ephemeris?.ascendantSign && (() => {
+                    const lagnaSign = ephemeris.ascendantSign;
+                    const lagnaRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
+                    const LAGNA_DEEP: Record<string,{body:string;dharma:string;shadow:string;gift:string;relationships:string;sadhana:string;transmission:string}> = {
+                      Aries:       { body:'Pitta constitution — prone to heat, inflammation, and head tension. Thrive on physical challenge; wilt under stagnation.', dharma:'You came to initiate. Every time you step forward before others dare to, you are fulfilling your Lagna's deepest function. The Aries Lagna is the universe's instrument of beginning.', shadow:'Aggression masking fear, inability to complete what is begun, burning through relationships with the intensity of the mission.', gift:'Unmatched capacity to begin. When Aries Lagna acts from soul rather than ego, the entire field around them ignites.', relationships:'Partners must match your pace or step aside. Your deepest intimacy comes with those who are not intimidated by your fire — who meet it with their own.', sadhana:'Surya Namaskar at dawn. Hanuman. Physical practice is your primary spiritual discipline — the body is your temple, not a vehicle.', transmission:'You were not born to wait for permission. The door you are looking for opens from the inside.' },
+                      Taurus:      { body:'Kapha constitution — strong, sensual, prone to sluggishness and throat issues. Thrive on beauty, routine, and high-quality nourishment.', dharma:'You came to build what lasts. Taurus Lagna is the earth that holds the seed — your stability is a gift to everyone who needs ground to stand on.', shadow:'Possessiveness, resistance to necessary change, confusing security with stagnation.', gift:'The rarest form of wealth: genuine contentment. The Taurus Lagna who has integrated their shadow knows how to receive pleasure without being captured by it.', relationships:'You love slowly and permanently. Those who earn your loyalty have earned something that almost nothing in this world can match.', sadhana:'Venus mantras on Fridays. Offer flowers to Lakshmi. Make something beautiful every week with your hands.', transmission:'The most valuable thing you own is not in your bank account. It was never in danger.' },
+                      Gemini:      { body:'Vata-Pitta — quick, nervous, prone to anxiety and respiratory issues. Thrive on stimulation, variety, and intellectual engagement.', dharma:'You came to be the bridge. The Gemini Lagna is the messenger between worlds — technical and mystical, ancient and modern, inner and outer.', shadow:'Scattered focus, intellectual pride, using cleverness to avoid depth. The Gemini shadow is knowing everything about everything and going nowhere.', gift:'The capacity to move between worlds with fluency. When Gemini Lagna commits to depth, they become the most effective transmitters of complex truth.', relationships:'You need a partner who is also your intellectual equal and surprise. Boredom is the only thing that genuinely threatens your relationships.', sadhana:'Mercury mantras on Wednesdays. Write daily. Sacred study — one text deeply, not ten superficially.', transmission:'You are not scattered. You are multidimensional. There is a difference — and it lives in your intention.' },
+                      Cancer:      { body:'Kapha-Vata — sensitive, fluid, prone to emotional absorption and digestive sensitivity. Thrive on emotional safety and genuine belonging.', dharma:'You came to nourish. The Cancer Lagna is the cosmic mother — not just of children, but of ideas, communities, and the emotional truth of those around them.', shadow:'Over-identification with the role of nurturer until there is no self left. Using emotional sensitivity as a reason to stay small.', gift:'The capacity to create genuine home — not a place, but a felt sense of belonging — wherever you are.', relationships:'Your home is your temple. The relationships that honour your need for emotional depth and genuine security are the ones that last.', sadhana:'Moon mantras on Monday evenings. Ekadashi fasting. White foods. Offer milk to Shiva on Mondays.', transmission:'The ocean does not apologise for its depth. Neither should you.' },
+                      Leo:         { body:'Pitta dominant — strong vitality, prone to heart and spine issues when the ego is under sustained pressure.', dharma:'You came to lead through the light of genuine self-expression. The Leo Lagna is the sun of the chart — their job is not to dominate but to illuminate.', shadow:'Performance of confidence masking the fear of not being seen. Using generosity as a tool for admiration.', gift:'The capacity to make others feel genuinely seen — which is the rarest form of power.', relationships:'You need to be adored, yes — but the Leo Lagna's deepest need is to be known. Find the one who sees past the performance to the soul underneath.', sadhana:'Sun mantras at dawn. Offer water to the rising sun daily. Ruby for strength if Jupiter confirms.', transmission:'The Sun does not shine to be admired. It shines because it cannot help itself. You are the same.' },
+                      Virgo:       { body:'Vata-Pitta — analytical, efficient, prone to nervous system dysregulation and digestive perfectionism.', dharma:'You came to refine. The Virgo Lagna is the cosmic craftsperson — their dharma is the perfection of the instrument through which the sacred manifests in the world.', shadow:'Criticism that turns inward until nothing is ever good enough — not the work, not the self, not others.', gift:'The capacity to see exactly what is needed, exactly where, and supply it with extraordinary precision.', relationships:'You serve before you love. The partner who recognises this as your deepest expression of devotion, not duty, is your match.', sadhana:'Mercury mantras on Wednesdays. Dietary precision as spiritual practice. Service that uses your specific skill.', transmission:'The flaw you cannot stop seeing is often the door. Go through it.' },
+                      Libra:       { body:'Vata dominant — refined, prone to kidney weakness and decision fatigue from constant weighing.', dharma:'You came to establish justice through beauty. The Libra Lagna carries the scales — their dharma is the creation of genuine harmony, not the performance of it.', shadow:'Chronic indecision, people-pleasing, sacrificing truth for the appearance of peace.', gift:'The rarest social intelligence — the capacity to hold multiple perspectives simultaneously without losing your own.', relationships:'Partnership is your primary spiritual path. The Libra Lagna does not become whole alone — they become whole in genuine encounter with the other.', sadhana:'Venus mantras on Fridays. Offer white flowers to Lakshmi. Create beauty. Wear white.', transmission:'The scales only find balance when both sides are honest. You cannot balance what you refuse to see.' },
+                      Scorpio:     { body:'Pitta-Kapha — intense, secretive, prone to reproductive and eliminative system issues when transformation is blocked.', dharma:'You came to transform. The Scorpio Lagna descends into every darkness — not because they enjoy it, but because they are the only ones equipped to bring back what was buried there.', shadow:'Control masking vulnerability, using penetrating insight as a weapon, transformation avoided through manipulation.', gift:'The capacity to see through every mask and love what is underneath. This is the rarest form of intimacy.', relationships:'You bond at depths others cannot reach. Those who can match your intensity of loyalty and truthfulness are your people — and they are few.', sadhana:'Mars and Ketu mantras on Tuesdays. Scorpio Lagna must have a genuine transformative practice — not as self-improvement but as alchemical work.', transmission:'You were not born to stay on the surface. The depth you are afraid of is the place you were made for.' },
+                      Sagittarius: { body:'Pitta-Vata — expansive, prone to liver and hip issues when the philosophical fire burns without grounding.', dharma:'You came to seek and transmit truth across every border — cultural, intellectual, and spiritual. The Sagittarius Lagna is the archer: one arrow, one target, infinite sky.', shadow:'Dogmatism masquerading as philosophy. The perpetual seeker who arrives everywhere and settles nowhere.', gift:'The infectious quality of genuine enthusiasm for truth. When Sagittarius Lagna believes in something, others believe in it too — because the sincerity is unmistakable.', relationships:'You need a partner who is also a fellow traveller — someone who grows alongside you rather than holding you to who you were.', sadhana:'Jupiter mantras on Thursdays. Sacred study. Physical movement in nature. Teaching what you know.', transmission:'The arrow that reaches its target does not apologise for the distance it crossed.' },
+                      Capricorn:   { body:'Vata-Kapha — structured, disciplined, prone to joint and knee issues when the weight of responsibility becomes chronic.', dharma:'You came to master and build. The Capricorn Lagna is the cosmic architect — their purpose is the creation of structures that outlast the self.', shadow:'Chronic seriousness, confusing suffering with virtue, becoming the structure instead of the being who builds it.', gift:'The most reliable form of integrity — what you commit to, you complete. This is extraordinarily rare.', relationships:'You love through reliability. The partner who understands that your consistency is your most profound form of devotion has found the key to your heart.', sadhana:'Saturn mantras on Saturdays. Service to the elderly. Fasting on Saturdays. Discipline as spiritual practice.', transmission:'What you are building will outlast you. Build it worthy of that.' },
+                      Aquarius:    { body:'Vata dominant — innovative, detached, prone to nervous system fragility and circulation issues when humanitarian purpose is frustrated.', dharma:'You came for the collective. The Aquarius Lagna carries a transmission for the age — their dharma is not personal success but the advancement of what is possible for all.', shadow:'Detachment that becomes coldness, humanitarian idealism used to avoid personal intimacy, revolutionary energy without the discipline of Saturn.', gift:'The capacity to see what is possible before it exists. The Aquarius Lagna is the bridge between the present and the future that humanity needs.', relationships:'Friendship is the foundation of your most profound loves. The partner who is first your genuine intellectual companion is the one who lasts.', sadhana:'Saturn and Rahu mantras. Study of sacred sciences and future sciences simultaneously. Genuine community service.', transmission:'The future you are imagining is not impossible. It is simply early.' },
+                      Pisces:      { body:'Kapha-Vata — fluid, permeable, prone to foot issues and the absorption of others' emotional states.', dharma:'You came to dissolve the boundary between the human and the divine. The Pisces Lagna is the most permeable in the zodiac — their dharma is compassion without losing self.', shadow:'Escapism, boundary dissolution, losing oneself in others' reality, spiritual bypassing of the material responsibilities of incarnation.', gift:'The deepest empathy available in human form. When Pisces Lagna is grounded, they become a vessel for grace that genuinely heals.', relationships:'You need a partner who is a genuine anchor — not who controls you, but who helps you remember that you have a self.', sadhana:'Jupiter and Ketu mantras. Meditation on the ocean. Seva that dissolves the ego through genuine service.', transmission:'The water knows where it is going. You do not need to steer — only to flow without contracting.' },
+                    };
+                    const ld = LAGNA_DEEP[lagnaSign];
+                    return (
+                      <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                          <span style={{ fontSize:20 }}>{SIGN_SYMBOLS[lagnaSign]||'♏'}</span>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Rising Sign</div>
+                            <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{lagnaSign}</div>
+                          </div>
                         </div>
+                        <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.55)', lineHeight:1.65, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom: ld ? 12 : 0 }}>{SIGN_MEANINGS[lagnaSign]||''}</p>
+                        {ld && [
+                          { key:'dharma',        label:'Dharma — Why You Came',      icon:'◈', tier:1, color:'rgba(212,175,55,0.6)',  content:ld.dharma },
+                          { key:'shadow',        label:'Shadow',                      icon:'🌑',tier:1, color:'rgba(255,100,100,0.6)', content:ld.shadow },
+                          { key:'gift',          label:'The Gift',                    icon:'✦', tier:1, color:'rgba(74,222,128,0.6)',  content:ld.gift },
+                          { key:'body',          label:'Body & Constitution',         icon:'⬡', tier:2, color:'rgba(34,211,238,0.6)',  content:ld.body },
+                          { key:'relationships', label:'Relationships',               icon:'♾', tier:2, color:'rgba(244,114,182,0.6)', content:ld.relationships },
+                          { key:'sadhana',       label:'Sadhana',                     icon:'🔱',tier:3, color:'rgba(212,175,55,0.7)',  content:ld.sadhana },
+                          { key:'transmission',  label:"Lagna Transmission",          icon:'◎', tier:3, color:'rgba(212,175,55,0.9)', content:ld.transmission },
+                        ].map(sec => {
+                          const hasAccess = lagnaRank >= sec.tier;
+                          const isOpen = bnnExpanded === ('lagna_'+sec.key);
+                          return (
+                            <div key={sec.key} style={{ marginBottom:5, borderRadius:12, overflow:'hidden', border:`1px solid ${isOpen&&hasAccess ? sec.color.replace(/[\d.]+\)$/,'0.2)') : 'rgba(255,255,255,0.05)'}`, transition:'border-color 0.2s' }}>
+                              <button onClick={() => hasAccess && setBnnExpanded(isOpen?null:'lagna_'+sec.key)} style={{ width:'100%', padding:'9px 12px', background: isOpen&&hasAccess?'rgba(255,255,255,0.03)':'transparent', border:'none', display:'flex', alignItems:'center', gap:8, cursor: hasAccess?'pointer':'default' }}>
+                                <span style={{ fontSize:13, minWidth:16 }}>{sec.icon}</span>
+                                <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color: hasAccess?sec.color:'rgba(255,255,255,0.2)', textAlign:'left' as const }}>{sec.label}</span>
+                                {!hasAccess && <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:5, padding:'2px 6px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
+                                {hasAccess && <span style={{ fontSize:10, color:'rgba(255,255,255,0.25)' }}>{isOpen?'▲':'▼'}</span>}
+                              </button>
+                              {isOpen && hasAccess && (
+                                <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
+                                  {sec.key==='transmission'
+                                    ? <p style={{ fontFamily:"'IM Fell English',serif", fontStyle:'italic', fontSize:14, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:10, padding:'8px' }}>"{sec.content}"</p>
+                                    : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12, color:'rgba(255,255,255,0.7)', lineHeight:1.8, marginTop:8 }}>{sec.content}</p>
+                                  }
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>{SIGN_MEANINGS[ephemeris.ascendantSign]||''}</p>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {ephemeris?.moonNakshatra && (
                     <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
@@ -2580,7 +2724,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="♂" label="MANGAL DOSHA CHECKER · MARS POSITION" title={`${ephemeris?.ascendantSign||'—'} Lagna — Mars House Placement`} glow="rgba(239,68,68,0.16)" open={openCards.mangalDosha||false} onToggle={() => toggleCard('mangalDosha')}>
-                  <MangalDoshaChecker ascendantSign={ephemeris?.ascendantSign||null} />
+                  <MangalDoshaChecker ascendantSign={ephemeris?.ascendantSign||null} marsSign={ephemeris?.marsSign||''} />
                 </OracleCard>
 
                 <OracleCard icon="🐍" label="KALA SARPA YOGA · RAHU-KETU AXIS" title="All Planets Between Rahu and Ketu Check" glow="rgba(167,139,250,0.16)" open={openCards.kalaSarpa||false} onToggle={() => toggleCard('kalaSarpa')}>
