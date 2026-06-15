@@ -1648,6 +1648,7 @@ const JyotishChamber: React.FC = () => {
   const [leafConfirmed, setLeafConfirmed] = useState(false);
   const [oracleSections, setOracleSections] = useState<Record<string,string>|null>(null);
   const [expandedDasha, setExpandedDasha] = useState<'maha'|'antar'|null>(null);
+  const [bnnExpanded, setBnnExpanded]     = useState<string|null>(null);
   const [oracleExpandedSection, setOracleExpandedSection] = useState<string|null>(null);
   const [fullReadingLoading, setFullReadingLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
@@ -2405,7 +2406,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     const bnn = BNN_DATA[activeBNNAge.planet];
                     const planetInfo = PLANET_INFO[activeBNNAge.planet];
                     const tierRankBnn = membershipTier === 'akasha-infinity' ? 3 : membershipTier === 'siddha-quantum' ? 2 : membershipTier === 'prana-flow' ? 1 : 0;
-                    const [bnnExpanded, setBnnExpanded] = React.useState<string|null>(null);
                     if (!bnn) return null;
                     return (
                       <OracleCard icon={planetInfo?.sym||'◈'} label="BHRIGU NANDI NADI" title={`Age ${age} · ${bnn.title}`} glow="rgba(212,175,55,0.14)" open={openCards.bnn} onToggle={() => toggleCard('bnn')}>
