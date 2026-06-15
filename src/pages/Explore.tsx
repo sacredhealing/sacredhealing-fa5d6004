@@ -477,12 +477,14 @@ export default function Explore() {
 
             {/* Title block — sits above the dunes */}
             <div style={{ background:'linear-gradient(180deg,transparent,rgba(0,0,0,0.7))', borderRadius:16, padding:'12px 4px 0' }}>
-              <div style={{ fontFamily:"'Montserrat',sans-serif", fontSize:20, fontWeight:900,
-                letterSpacing:'-0.03em', textTransform:'uppercase', lineHeight:1,
-                background:'linear-gradient(135deg,#FFD700 0%,#D4AF37 50%,#F5C842 100%)',
-                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-                textShadow:'none', marginBottom:6,
-                filter:'drop-shadow(0 0 12px rgba(212,175,55,0.6))' }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:22, fontWeight:700,
+                letterSpacing:'0.04em', lineHeight:1.2,
+                background:'linear-gradient(135deg,#D4AF37 0%,#F5E17A 35%,#FFD700 50%,#D4AF37 65%,#A07C10 100%)',
+                backgroundSize:'200% auto',
+                WebkitBackgroundClip:'text', backgroundClip:'text', WebkitTextFillColor:'transparent',
+                animation:'hShimmer 5s linear infinite',
+                marginBottom:6,
+                filter:'drop-shadow(0 0 10px rgba(212,175,55,0.5))' }}>
                 Sacred Site Transmission
               </div>
               <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
