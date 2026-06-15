@@ -1,7 +1,7 @@
 import { Activation } from './types';
 
 // 1,259 SQI-derived Bioenergetic frequencies (full archive)
-export const LIMBICARC_BIOENERGETIC_ACTIVATIONS: Activation[] = [
+export const SQI_BIOENERGETIC_ACTIVATIONS: Activation[] = [
 
 { id: 'limb-abuta-velvetleaf-xi-sheng-teng-midwife-s', name: 'Abuta', vibrationalSignature: 'Joint pain', type: 'Bioenergetic', benefit: 'Joint pain, menstrual, anti-inflammatory, kidney tonic.', color: '#a3e635' },
 { id: 'limb-acai-berry', name: 'Acai Berry', vibrationalSignature: 'Antioxidant', type: 'Bioenergetic', benefit: 'Antioxidant, anti-aging, cardiovascular, energy, immune.', color: '#a78bfa' },
@@ -591,7 +591,7 @@ export const LIMBICARC_BIOENERGETIC_ACTIVATIONS: Activation[] = [
 { id: 'limb-lucuma', name: 'Lucuma', vibrationalSignature: 'Low glycemic sweetener', type: 'Bioenergetic', benefit: 'Low glycemic sweetener, skin, anti-inflammatory, antioxidant.', color: '#fbbf24' },
 { id: 'limb-lycopene-tomato', name: 'Lycopene Tomato', vibrationalSignature: 'Tomato lycopene', type: 'Bioenergetic', benefit: 'Tomato lycopene — cardiovascular, prostate, antioxidant.', color: '#f87171' },
 { id: 'limb-lysozyme', name: 'Lysozyme', vibrationalSignature: 'Natural antimicrobial enzyme', type: 'Bioenergetic', benefit: 'Natural antimicrobial enzyme, immune, gut, oral.', color: '#fda4af' },
-{ id: 'limb-maca-gelatinized', name: 'Maca Gelatinized', vibrationalSignature: 'Enhanced bioavailable maca', type: 'Bioenergetic', benefit: 'Enhanced bioavailable maca — energy, hormones, libido.', color: '#fb923c' },
+{ id: 'limb-maca-enhanced', name: 'Maca Enhanced', vibrationalSignature: 'Enhanced bioavailable maca', type: 'Bioenergetic', benefit: 'Enhanced bioavailable maca — energy, hormones, libido.', color: '#fb923c' },
 { id: 'limb-magnesium-citrate', name: 'Magnesium Citrate', vibrationalSignature: 'Magnesium absorption', type: 'Bioenergetic', benefit: 'Magnesium absorption, bowel regularity, sleep, muscle relaxation.', color: '#fca5a5' },
 { id: 'limb-magnesium-glycinate', name: 'Magnesium Glycinate', vibrationalSignature: 'Highly absorbable magnesium', type: 'Bioenergetic', benefit: 'Highly absorbable magnesium, sleep, anxiety, muscle cramps.', color: '#c084fc' },
 { id: 'limb-magnesium-malate', name: 'Magnesium Malate', vibrationalSignature: 'Energy', type: 'Bioenergetic', benefit: 'Energy, fibromyalgia pain, sleep, muscle function.', color: '#fda4af' },
