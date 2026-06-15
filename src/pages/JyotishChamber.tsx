@@ -2120,8 +2120,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   {activeMaha && (() => {
                     const md = DASHA_DATA[activeMaha.planet];
                     const ad = activeAntar ? DASHA_DATA[activeMaha.planet]?.antar?.[activeAntar.planet] : null;
-                    const isSiddha = ['siddha-quantum','akasha-infinity'].includes(membershipTier||'');
-                    const isAkasha = membershipTier === 'akasha-infinity';
+                    const tierRank = membershipTier === 'akasha-infinity' ? 3 : membershipTier === 'siddha-quantum' ? 2 : membershipTier === 'prana-flow' ? 1 : 0;
+                    const isSiddha = tierRank >= 2;
+                    const isAkasha = tierRank >= 3;
+                    const isPrana  = tierRank >= 1;
                     return (
                       <>
                         {/* ── Two clickable period pills ── */}
@@ -2197,26 +2199,60 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                         {/* ── Antardasha expanded ── */}
                         {expandedDasha === 'antar' && activeAntar && (
                           <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, padding:'16px 16px', marginBottom:10, display:'flex', flexDirection:'column' as const, gap:12 }}>
-                            <div>
-                              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', marginBottom:6 }}>
-                                {activeMaha.planet} Mahadasha · {activeAntar.planet} Antardasha — The Combination
-                              </div>
-                              <p style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>
-                                {ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}
-                              </p>
+
+                            {/* Header */}
+                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', marginBottom:2 }}>
+                              {activeMaha.planet} Mahadasha · {activeAntar.planet} Antardasha
                             </div>
-                            {isSiddha && ad?.deep && (
-                              <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:12 }}>
-                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:6 }}>Soul Depth — Siddha-Quantum & above</div>
-                                <p style={{ fontSize:13, color:'rgba(225,210,185,0.85)', lineHeight:1.8, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{ad.deep}</p>
+
+                            {/* Surface — everyone */}
+                            <p style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic', margin:0 }}>
+                              {ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}
+                            </p>
+
+                            {/* Deep — Prana-Flow and above */}
+                            {isPrana && ad?.deep && (
+                              <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
+                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:8 }}>✦ Soul Depth</div>
+                                <p style={{ fontSize:13, color:'rgba(225,210,185,0.88)', lineHeight:1.85, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{ad.deep}</p>
                               </div>
                             )}
-                            {!isSiddha && (
-                              <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', borderRadius:10, padding:'10px 12px' }}>
+                            {!isPrana && (
+                              <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', borderRadius:10, padding:'10px 12px' }}>
                                 <span style={{ fontSize:14 }}>🔒</span>
-                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Deep Antardasha reading available on <strong style={{ color:'#D4AF37' }}>Siddha-Quantum</strong> and above</p>
+                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Soul Depth reading available from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong> — <span style={{ color:'rgba(212,175,55,0.6)', cursor:'pointer', textDecoration:'underline' }}>Upgrade →</span></p>
                               </div>
                             )}
+
+                            {/* Shadow + Gift of the antardasha planet */}
+                            {isPrana && (() => {
+                              const antarData = DASHA_DATA[activeAntar.planet];
+                              if (!antarData) return null;
+                              return (
+                                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                                  <div style={{ background:'rgba(255,80,80,0.04)', border:'1px solid rgba(255,80,80,0.1)', borderRadius:12, padding:'10px 12px' }}>
+                                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.5)', marginBottom:4 }}>Shadow</div>
+                                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.6 }}>{antarData.shadow}</p>
+                                  </div>
+                                  <div style={{ background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.1)', borderRadius:12, padding:'10px 12px' }}>
+                                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:4 }}>Gift</div>
+                                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.6 }}>{antarData.gift}</p>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Sadhana — Akasha only */}
+                            {isAkasha && (() => {
+                              const antarData = DASHA_DATA[activeAntar.planet];
+                              if (!antarData?.sadhana) return null;
+                              return (
+                                <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
+                                  <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>✦ Antardasha Sadhana — Ākāsha-Infinity</div>
+                                  <p style={{ fontSize:12.5, color:'rgba(212,175,55,0.8)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{antarData.sadhana}</p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </>
