@@ -1923,6 +1923,7 @@ const JyotishChamber: React.FC = () => {
         moonLongitude: 0,
         ascendantSign: eph.ascendant || '',
         sunSign: eph.sun_sign || '',
+        marsSign: eph.mars_sign || '',
         dashaData: cached.dasha_data as any,
       });
       // Load leaf confirmed status
