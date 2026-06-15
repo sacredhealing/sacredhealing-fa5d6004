@@ -1431,39 +1431,278 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
 
 
 // ── Kala Sarpa Yoga ──────────────────────────────────────────────
-const KalaSarpaYoga: React.FC = () => {
-  const W = 'rgba(255,255,255,'; const G = 'rgba(212,175,55,';
-  const TYPES = ['Ananta (H1–H7)','Kulika (H2–H8)','Vasuki (H3–H9)','Shankhapala (H4–H10)','Padma (H5–H11)','Mahapadma (H6–H12)','Takshaka (H7–H1)','Karkotak (H8–H2)','Shankhachud (H9–H3)','Ghatak (H10–H4)','Vishdhar (H11–H5)','Sheshnag (H12–H6)'];
+const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = ({ moonNakshatra, birthDate }) => {
+  const W = 'rgba(255,255,255,';
+  const { tier: membershipTier } = useMembership();
+  const tierRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
+  const [ksExpanded, setKsExpanded] = useState<string|null>(null);
+  const [activeType, setActiveType] = useState<number|null>(null);
+
+  // ── Deep data for all 12 Kala Sarpa Yoga types ──────────────────
+  const KSY_DATA: Array<{
+    name: string; houses: string; serpent: string;
+    domain: string; surface: string; pattern: string;
+    soulDepth: string; shadow: string; gift: string;
+    karma: string; sadhana: string; transmission: string;
+  }> = [
+    {
+      name:'Ananta', houses:'H1–H7', serpent:'The Infinite Serpent',
+      domain:'Self ↔ Partnership',
+      surface:'All planets between 1st and 7th houses. The axis of self and other is the karmic battleground. Identity and relationship are in perpetual tension — each advancing only at the apparent cost of the other.',
+      pattern:'Ananta Kala Sarpa Yoga creates a soul that must master the paradox of self-and-other simultaneously. The native alternates between intense self-focus and total dissolution into partnership. Neither alone satisfies — the teaching is integration: a self strong enough to be fully present with another without losing itself.',
+      soulDepth:'In the Nadi tradition, Ananta means "without end" — this is the karmic axis that has been in motion across many lifetimes. The soul has alternated between the extremes of isolation and merger, and has chosen this birth to find the middle path. Every significant relationship in this life is a dharmic mirror.',
+      shadow:'The oscillation between self-assertion and self-erasure in relationship. The inability to know where you end and another begins.',
+      gift:'The deepest capacity for genuine partnership of all 12 types. When integrated, Ananta Kala Sarpa creates souls who can hold space for another without disappearing into them.',
+      karma:'Past lives of either extreme isolation (renunciation that became avoidance) or total self-sacrifice in relationship (devotion that became dissolution). This lifetime integrates both.',
+      sadhana:'Chant: Aum Namo Bhagavate Vasudevaya — 108x daily. Serpent worship at Naga shrines. Offer milk to a live Naga idol on Naga Panchami. Practice conscious relationship — every significant other is your teacher.',
+      transmission:'"The serpent Ananta holds all creation on its coils. You were born to learn that the self which holds another does not disappear — it expands."'
+    },
+    {
+      name:'Kulika', houses:'H2–H8', serpent:'The Venomous Serpent',
+      domain:'Resources ↔ Transformation',
+      surface:'Planets between 2nd and 8th houses. The axis of accumulated wealth and sudden loss, of family values and deep transformation. Financial cycles are dramatic. What is built is also dramatically dismantled.',
+      pattern:'Kulika Kala Sarpa Yoga creates the karmic pattern of accumulation and sudden reversal. The 2nd house gathers — family, speech, wealth, food — and the 8th destroys and transforms. The native experiences life as a series of profound upheavals that follow periods of apparent stability.',
+      soulDepth:'Kulika carries the venom of radical truth. What is false cannot survive in this chart — the 8th house Ketu dissolves every structure built on insecure foundations. The soul has chosen this placement to master the difference between genuine security (which cannot be threatened) and accumulated security (which always can be).',
+      shadow:'Chronic financial anxiety, the trauma of repeated loss, using accumulation as a defence against the terror of transformation.',
+      gift:'Extraordinary capacity for deep transformation and regeneration. Kulika natives who embrace rather than resist the 8th house energy become the most powerful healers and transformers of their generation.',
+      karma:'Past lives of hoarding — either material wealth or emotional truth — kept locked away from others who needed it. The karma is generosity: both material and of the inner life.',
+      sadhana:'Naga Pratishtha at a Kulika Naga shrine. Feed serpents with milk and eggs on Saturdays. Chant: Aum Kulikaya Namah. Donate money and food without attachment to return.',
+      transmission:'"What the serpent swallows, it digests. What you lose, you were ready to outgrow. The venom is only poison if you refuse to transform."'
+    },
+    {
+      name:'Vasuki', houses:'H3–H9', serpent:'The Jewelled Serpent',
+      domain:'Communication ↔ Dharma',
+      surface:'Planets between 3rd and 9th houses. The axis of courage, siblings, and short journeys against dharma, father, and long pilgrimages. Communication and philosophy are in creative tension.',
+      pattern:'Vasuki Kala Sarpa Yoga creates a soul that must find its truth through both the immediate (3rd) and the ultimate (9th). The native is pulled between practical courage and philosophical vision — between the next step and the furthest horizon. Writing, speaking, and teaching are karmic obligations, not options.',
+      soulDepth:'Vasuki is the serpent who encircles Mount Meru — the cosmic axis. This yoga places the native at the axis between ordinary intelligence and sacred wisdom. The dharmic path is transmission: taking what is received from the highest sources (9th) and communicating it with the precision and courage of Mars (3rd).',
+      shadow:'The gap between spiritual knowledge and embodied action. Knowing the dharmic truth but lacking the courage to speak or live it.',
+      gift:'Extraordinary capacity to bridge the sacred and the practical through communication. Vasuki natives become the messengers between worlds when the yoga is integrated.',
+      karma:'Past lives of withheld dharmic knowledge — the teacher who stayed silent, the writer who did not publish, the messenger who altered the transmission out of fear.',
+      sadhana:'Vasuki Naga puja — especially in temples with Vasuki murals. Write or speak your dharmic truth daily. Chant: Aum Vasukiye Namah. Pilgrimage to a sacred site connected to your dharmic lineage.',
+      transmission:'"Vasuki encircles the centre of the universe. You were born to speak from that centre — not from the periphery of what others expect."'
+    },
+    {
+      name:'Shankhapala', houses:'H4–H10', serpent:'The Serpent of the Conch',
+      domain:'Home ↔ Career',
+      surface:'Planets between 4th and 10th houses. The axis of home, mother, and inner peace against career, public life, and achievement. The domestic and the professional are in perpetual creative tension.',
+      pattern:'Shankhapala Kala Sarpa Yoga creates the karmic pattern of the soul that must master both worlds — the private sanctuary and the public arena — without sacrificing either to the other. Career success often comes at domestic cost, and vice versa, until the integration is found.',
+      soulDepth:'Shankhapala carries the resonance of the divine conch — the sound that purifies the field before sacred ritual begins. This yoga is the soul sounding its own purification. The 4th-10th axis is the spine of the chart: inner stability creating outer achievement. When the home within is found, the career without becomes effortless.',
+      shadow:'The chronic sense that career success costs emotional peace, or that domestic fulfilment requires abandoning public purpose. The split life.',
+      gift:'When integrated, Shankhapala natives achieve a rare synthesis: professional mastery that emerges from genuine inner rootedness. Their public work is nourished by their private depth.',
+      karma:'Past lives of either complete public renunciation (retreat into domestic life) or complete private sacrifice for public duty. Integration is the karmic mandate of this lifetime.',
+      sadhana:'Blow a conch at sunrise — the Shankhapala remedy par excellence. Worship Shankhapala Naga at home with milk offering. Create genuine sacred space in the home as the foundation of career.',
+      transmission:'"The conch holds the sound of the ocean. Your home is that ocean. When it is genuinely at peace, every sound that emerges from you carries that peace into the world."'
+    },
+    {
+      name:'Padma', houses:'H5–H11', serpent:'The Lotus Serpent',
+      domain:'Creativity ↔ Community',
+      surface:'Planets between 5th and 11th houses. The axis of children, creativity, and past-life merit against friends, networks, and the fulfilment of desires. Creative gifts are given to serve the collective.',
+      pattern:'Padma Kala Sarpa Yoga creates the karmic pattern of the creative soul in service to the community. The 5th house gifts — artistic, intellectual, and procreative — are inseparable from the 11th house purpose: the elevation of the collective field. This native cannot create for personal fame alone; the creation must serve.',
+      soulDepth:'Padma means "lotus" — the flower that rises from mud to light without being contaminated by either. This yoga marks a soul whose past-life creative merit (5th) is now being mobilised for collective transformation (11th). The lotus of their gifts is being offered to the pond of humanity.',
+      shadow:'Using creative gifts for personal accumulation while the collective need goes unmet. Or the reverse: total self-sacrifice to community that leaves the creative flame unlit.',
+      gift:'The capacity to create work that genuinely changes the field it enters. Padma natives, when integrated, become cultural transmitters — their creative output shifts the consciousness of the communities they serve.',
+      karma:'Past lives of creative gifts withheld from the community, or creative potential crushed by collective pressure. Both arrive for resolution in this lifetime.',
+      sadhana:'Offer lotus flowers to Padma Naga or Lakshmi weekly. Create something and offer it to the community without attachment to recognition. Chant: Aum Padmaya Namah.',
+      transmission:'"The lotus does not decide to be beautiful. It simply unfolds toward the light. Your creativity is not for your career — it is your offering to the world that made you."'
+    },
+    {
+      name:'Mahapadma', houses:'H6–H12', serpent:'The Great Lotus Serpent',
+      domain:'Service ↔ Liberation',
+      surface:'Planets between 6th and 12th houses. The axis of health, service, and daily discipline against liberation, foreign lands, and the dissolution of ego. The most spiritually intense of the 12 types.',
+      pattern:'Mahapadma Kala Sarpa Yoga is considered by many Jyotishis as the most spiritually charged placement. The 6th and 12th house axis is the axis of karma and moksha. Every enemy, illness, and debt (6th) is a direct arrow pointing toward liberation (12th). Service and dissolution are inseparable.',
+      soulDepth:'Mahapadma — the Great Lotus — marks a soul in its final stages of karmic completion. The challenges of this yoga (chronic health themes, enemies, financial difficulty, exile) are not punishment but purification. The 12th house Ketu suggests a soul with deep past-life connection to liberation itself — which is precisely why this lifetime involves the most intense karmic compression.',
+      shadow:'Chronic illness and enemy conflicts mistaken for bad luck rather than recognised as purification. The escapism of the 12th house — using spiritual practice to avoid rather than complete the karmic work.',
+      gift:'The deepest access to moksha of all 12 types. Mahapadma natives who embrace their path become genuine liberators — their very presence creates freedom in others.',
+      karma:'Final-stage karma from many lifetimes. The soul is completing what was left unfinished across multiple incarnations. The finish line is genuinely visible in this lifetime.',
+      sadhana:'Intensive Naga puja including 108 milk abhishekams to Shivalinga. Chant: Aum Mahapadmaya Namah. Ashram seva. Pilgrimage to Rameshwaram or Kalahasti specifically for Kala Sarpa liberation.',
+      transmission:'"The Great Lotus grows from the deepest mud. You were born for liberation. Everything difficult in this life is the mud — and you are already the flower."'
+    },
+    {
+      name:'Takshaka', houses:'H7–H1', serpent:'The Cutter Serpent',
+      domain:'Partnership ↔ Self (Reversed)',
+      surface:'Reverse of Ananta — Rahu in 7th, Ketu in 1st. The axis of relationship and self, but with the shadow of Rahu in partnership. Intense magnetic pull toward others, while the self (Ketu in 1st) feels dissolving or elusive.',
+      pattern:'Takshaka Kala Sarpa Yoga — named for the serpent who cut King Parikshit — creates the karmic pattern of radical self-dissolution in relationship. The native has exceptional magnetic pull for others (Rahu in 7th) while feeling that their own identity is somehow transparent or undefined (Ketu in 1st). The teaching is: the self that cannot be found is the self that is being freed.',
+      soulDepth:'Takshaka the Cutter dissolves the false self. Ketu in the 1st house is one of the most powerful placements for spiritual liberation — the identity is being cut away from its ego armour. What feels like a deficit (no fixed sense of self) is actually the advanced spiritual stage of ego dissolution that most souls only reach after decades of practice.',
+      shadow:'Identity confusion, susceptibility to being absorbed by others\' reality, the inability to say no in relationship.',
+      gift:'The most developed capacity for genuine selfless partnership. When integrated, Takshaka natives become extraordinary companions — they can be fully present with another precisely because the ego-self is not in the way.',
+      karma:'Past lives of rigid self-assertion that damaged others. This lifetime, the self is being softened by Ketu to create space for genuine encounter.',
+      sadhana:'Takshaka Naga puja — particularly important to do this in a cobra shrine. Chant: Aum Takshakaaya Namah. Daily mirror meditation: look into your own eyes for 5 minutes and find what does not change.',
+      transmission:'"Takshaka cuts what is false away. Your identity is not what is being lost. It is what remains after everything false has been removed."'
+    },
+    {
+      name:'Karkotak', houses:'H8–H2', serpent:'The Black Serpent',
+      domain:'Transformation ↔ Resources (Reversed)',
+      surface:'Rahu in 8th, Ketu in 2nd. The reverse of Kulika. Obsession with the hidden, the occult, and sudden transformation, while family and accumulated resources feel fated to release.',
+      pattern:'Karkotak Kala Sarpa Yoga creates the karmic pattern of the soul that descended into the deepest waters of transformation in past lives and now returns with extraordinary occult knowledge — but with the teaching that this knowledge must be grounded in material service (2nd house Ketu) rather than accumulated as personal power.',
+      soulDepth:'Karkotak is the black serpent who lives in the deepest waters. This yoga marks a soul with genuine access to hidden dimensions — past-life mastery of the occult, healing arts, or death and transformation traditions. Rahu in the 8th amplifies this obsession with the hidden. The karmic question: will this knowledge be used for liberation or for power?',
+      shadow:'Obsession with the occult as personal power, financial instability as a recurring pattern, difficulty building secure material foundation.',
+      gift:'Extraordinary occult and healing capacities. Karkotak natives who integrate the yoga become the most powerful transformational healers — surgeons, tantrikas, deep psychologists.',
+      karma:'Past lives of occult power misused. The material instability of this lifetime is the balancing: you cannot accumulate power that was taken rather than earned.',
+      sadhana:'Karkotak Naga puja specifically. Offer black sesame to a Naga shrine on Saturday nights. Healing service — use the 8th house gifts for others\' transformation.',
+      transmission:'"The black serpent sees in complete darkness. You were given this sight not to hoard it but to guide others through their darkest passages."'
+    },
+    {
+      name:'Shankhachud', houses:'H9–H3', serpent:'The Conch-Jewel Serpent',
+      domain:'Dharma ↔ Communication (Reversed)',
+      surface:'Rahu in 9th, Ketu in 3rd. The reverse of Vasuki. Obsessive seeking of ultimate truth and foreign dharmic wisdom, while ordinary communication and sibling relationships feel karmically released.',
+      pattern:'Shankhachud Kala Sarpa Yoga creates the perpetual dharmic seeker — the soul driven by Rahu in the 9th house to find the highest philosophical truth, often through foreign traditions, teachers, and pilgrimages. Ketu in the 3rd suggests that ordinary communication and local relationships feel inadequate to hold what the soul knows.',
+      soulDepth:'Shankhachud carried the Brahmastra — the ultimate weapon of dharmic truth. This yoga marks a soul carrying dharmic knowledge from past lives (Ketu in 3rd has already mastered ordinary communication) now being drawn by Rahu\'s obsession toward the ultimate dharmic transmission. The teacher or tradition that appears in this lifetime carries a multi-life contract.',
+      shadow:'Spiritual materialism — collecting teachers and traditions without embodying any. The perpetual seeker who never arrives.',
+      gift:'When the right teacher and dharmic path are found, the Shankhachud native becomes the most devoted and transformative disciple — and eventually, teacher — of their tradition.',
+      karma:'Past lives of dharmic confusion — following the wrong path out of social obligation. This lifetime, the dharmic path is found through genuine obsessive seeking, not inheritance.',
+      sadhana:'Pilgrimage to four sacred Naga shrines in a single year. Shankhachud Naga puja. Find and commit to a genuine living tradition — not just books.',
+      transmission:'"The conch-jewel was placed there by the ocean. Your dharmic path was placed there by creation. The seeking does not find it — the surrender does."'
+    },
+    {
+      name:'Ghatak', houses:'H10–H4', serpent:'The Punishing Serpent',
+      domain:'Career ↔ Home (Reversed)',
+      surface:'Rahu in 10th, Ketu in 4th. The reverse of Shankhapala. Intense ambition and public drive (Rahu in 10th), while domestic peace and inner life feel repeatedly released or unavailable.',
+      pattern:'Ghatak Kala Sarpa Yoga creates the karmic pattern of the soul whose public ambition (10th house Rahu) comes at the price of inner peace. The native is pulled toward extraordinary career achievement while the 4th house Ketu suggests repeated disruption of home, mothering bonds, and inner sanctuary.',
+      soulDepth:'Ghatak means "punishing" — not because the yoga is cruel, but because it removes every substitute for genuine inner peace. The Rahu in 10th creates extraordinary public achievement; the Ketu in 4th ensures that no achievement will create the internal sense of home. The teaching is devastating and precise: the inner home cannot be found in any external achievement, no matter how great.',
+      shadow:'Workaholic patterns driven by the unconscious belief that sufficient achievement will eventually create inner peace — which it never does.',
+      gift:'Extraordinary career achievement driven by the 10th house Rahu\'s ambition. And eventually, when the inner teaching lands, an equally extraordinary inner peace that was always available and never needed the achievement to arrive.',
+      karma:'Past lives of domestic comfort at the cost of dharmic purpose. This lifetime, the comfort is withheld until the dharmic work is done.',
+      sadhana:'Build an altar in the home and use it daily — the domestic sacred space is both the remedy and the teaching. Ghatak Naga puja on Saturdays.',
+      transmission:'"Ghatak clears every false resting place so that you find the one that cannot be taken. That place was never outside you."'
+    },
+    {
+      name:'Vishdhar', houses:'H11–H5', serpent:'The Venom-Bearing Serpent',
+      domain:'Community ↔ Creativity (Reversed)',
+      surface:'Rahu in 11th, Ketu in 5th. The reverse of Padma. Obsessive network-building and desire-fulfilment, while creative gifts and children feel karmically released or transmuted.',
+      pattern:'Vishdhar Kala Sarpa Yoga creates the karmic pattern of the soul whose desire for community, networks, and the fulfilment of ambitions (Rahu in 11th) comes into creative tension with the natural creative gifts (Ketu in 5th) that have already been mastered in previous lives. The native is pulled to achieve through collective means rather than individual creativity.',
+      soulDepth:'Vishdhar — the venom-bearer — holds the poison that can heal. Ketu in the 5th house is one of the most powerful placements for past-life creative mastery: the soul has already been the artist, the parent, the creator. This lifetime, Rahu\'s obsession with the 11th house redirects that creative energy toward collective transformation rather than individual expression.',
+      shadow:'Using social networks for personal gain rather than collective elevation. The loneliness of the networker who has many connections but no genuine community.',
+      gift:'Extraordinary capacity to mobilise communities toward collective purpose. Vishdhar natives who integrate the yoga become transformative social architects — their networks genuinely elevate the collective.',
+      karma:'Past lives of creative gifts hoarded or used for individual fame. This lifetime, the creativity must serve the network.',
+      sadhana:'Community service as primary spiritual practice. Vishdhar Naga puja. Offer creative gifts freely to community without expectation of recognition.',
+      transmission:'"The venom-bearer does not use the poison for destruction. It carries it so that the healer can find it. Your gifts are not for you — they are for the community that needs them."'
+    },
+    {
+      name:'Sheshnag', houses:'H12–H6', serpent:'The Eternal Remainder Serpent',
+      domain:'Liberation ↔ Service (Reversed)',
+      surface:'Rahu in 12th, Ketu in 6th. The reverse of Mahapadma. Obsessive pull toward liberation, foreign lands, ashrams, and dissolution, while the karmic debts, enemies, and health matters (6th) feel like past-life completions.',
+      pattern:'Sheshnag Kala Sarpa Yoga — named for Adishesha who holds the universe — creates the karmic pattern of the soul that is simultaneously completing past-life karma (Ketu in 6th) while being drawn toward the ultimate liberation (Rahu in 12th). Service and dissolution are both accelerated simultaneously.',
+      soulDepth:'Sheshnag is the serpent on whom Vishnu rests between creations — the eternal remainder after all else is dissolved. This yoga marks a soul in its most advanced stage of karmic completion. The 12th house Rahu creates an obsessive pull toward liberation that no ordinary spiritual practice can satisfy. The soul has tasted moksha in a previous life and cannot forget it.',
+      shadow:'The obsession with liberation that becomes a new form of spiritual ego. The retreat from karmic responsibility in the name of spiritual practice.',
+      gift:'The most direct access to genuine liberation of all 12 types, combined with the Ketu in 6th\'s past-life mastery of karma settlement. When integrated, Sheshnag natives become the most powerful spiritual teachers — precisely because they have completed what others are still working through.',
+      karma:'The soul is in its final rounds of incarnation. The karma being settled now is ancient. What is completed in this lifetime does not return.',
+      sadhana:'Intensive Adishesha puja. The Sheshnag remedy is the most important: recitation of Vishnu Sahasranama daily + 1008 names of Adishesha on Naga Panchami. Genuine ashram retreat of minimum 1 week per year.',
+      transmission:'"Sheshnag remains when all else dissolves. You are that remainder — the eternal witness who was never born and will never die. Everything else in your life is teaching you to know this."'
+    },
+  ];
+
+  // Detect likely yoga type from birth date (approximate)
+  const detectYogaType = (): number | null => {
+    if (!birthDate) return null;
+    try {
+      const yr = parseInt(birthDate.split('-')[0]);
+      const days = Math.floor((new Date(birthDate).getTime() - new Date('1900-01-01').getTime()) / 86400000);
+      // Rahu cycle ~18.6 yrs = 6793 days, shifts through 12 signs
+      const rahuPos = ((days % 6793) / 6793 * 12);
+      return Math.floor(rahuPos) % 12;
+    } catch { return null; }
+  };
+
+  const detectedType = detectYogaType();
+  const displayType = activeType !== null ? activeType : detectedType;
+  const currentYoga = displayType !== null ? KSY_DATA[displayType] : null;
+
+  const sections = currentYoga ? [
+    { key:'pattern',      label:'The Pattern',              icon:'◎', tier:1, color:'rgba(167,139,250,0.7)', content: currentYoga.pattern },
+    { key:'soulDepth',    label:'Soul Depth',               icon:'✦', tier:2, color:'rgba(212,175,55,0.7)',  content: currentYoga.soulDepth },
+    { key:'shadow',       label:'Shadow',                   icon:'🌑',tier:1, color:'rgba(255,100,100,0.7)', content: currentYoga.shadow },
+    { key:'gift',         label:'The Gift',                 icon:'◈', tier:1, color:'rgba(74,222,128,0.7)',  content: currentYoga.gift },
+    { key:'karma',        label:'Karmic Contract',          icon:'⚖', tier:2, color:'rgba(167,139,250,0.6)', content: currentYoga.karma },
+    { key:'sadhana',      label:'Sadhana & Remedies',       icon:'🔱',tier:1, color:'rgba(212,175,55,0.7)',  content: currentYoga.sadhana },
+    { key:'transmission', label:"The Serpent's Transmission",icon:'🐍',tier:3, color:'rgba(212,175,55,0.9)', content: currentYoga.transmission },
+  ] : [];
+
   return (
     <div>
-      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
-        Kala Sarpa Yoga forms when all 7 classical planets are hemmed between Rahu and Ketu. The serpent of time swallows the chart — creating intense karmic acceleration, psychic gifts, and extraordinary highs and lows.
+      {/* Header */}
+      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:13, color:`${W}0.5)`, lineHeight:1.75, marginBottom:14 }}>
+        Kala Sarpa Yoga forms when all 7 classical planets are hemmed between Rahu and Ketu on one side of the chart. The serpent of time creates intense karmic acceleration, psychic gifts, and a life of extraordinary highs and lows — the compressed karma of many lifetimes playing out in one.
       </p>
-      <div style={{ background:'rgba(167,139,250,0.05)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, padding:'14px 16px', marginBottom:12 }}>
-        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:6 }}>12 Types of Kala Sarpa Yoga</div>
-        <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-          {TYPES.map((t, i) => (
-            <div key={i} style={{ display:'flex', gap:10, padding:'7px 10px', borderRadius:10, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)' }}>
-              <div style={{ fontSize:7.5, fontWeight:800, color:`${G}0.35)`, minWidth:20 }}>{String(i+1).padStart(2,'0')}</div>
-              <div style={{ fontSize:11, color:`${W}0.5)` }}>{t}</div>
-            </div>
+
+      {/* 12 Type Selector */}
+      <div style={{ marginBottom:14 }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:8 }}>
+          {detectedType !== null ? `✦ Likely Yoga Type Based on Birth Year — Tap to Explore All 12` : '✦ The 12 Kala Sarpa Yoga Types — Tap to Explore'}
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
+          {KSY_DATA.map((k, i) => (
+            <button key={i}
+              onClick={() => setActiveType(activeType === i ? null : i)}
+              style={{ padding:'8px 6px', borderRadius:11, border:`1px solid ${displayType===i ? 'rgba(167,139,250,0.45)' : 'rgba(255,255,255,0.06)'}`, background: displayType===i ? 'rgba(167,139,250,0.1)' : 'rgba(255,255,255,0.01)', cursor:'pointer', textAlign:'left' as const, transition:'all 0.18s' }}>
+              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: displayType===i ? 'rgba(167,139,250,0.9)' : 'rgba(255,255,255,0.25)', marginBottom:2 }}>{k.houses}</div>
+              <div style={{ fontSize:11, fontWeight:700, color: displayType===i ? 'rgba(167,139,250,0.95)' : `${W}0.55)`, lineHeight:1.2 }}>{k.name}</div>
+              <div style={{ fontSize:9, color:`${W}0.3)`, marginTop:2, lineHeight:1.3 }}>{k.domain}</div>
+            </button>
           ))}
         </div>
       </div>
-      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'13px 15px', position:'relative' }}>
-        <div style={{ position:'absolute', top:-7, left:12, fontSize:6.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA REMEDIES IF PRESENT</div>
-        <div style={{ paddingTop:4, display:'flex', flexDirection:'column', gap:8 }}>
-          {['Naga Pratishtha puja — worship serpent deities at a Naga temple (Tamil Nadu or Kerala)','Chant both Rahu and Ketu mantras every Saturday without fail','Trimbakeshwar or Kalahasti temple rituals specifically for Kala Sarpa Dosha','Wear 2-faced (Do Mukhi) rudraksha bead — connects Rahu-Ketu energies beneficially'].map((r,i) => (
-            <div key={i} style={{ display:'flex', gap:9 }}>
-              <div style={{ fontSize:8, fontWeight:800, color:`${G}0.5)`, flexShrink:0, marginTop:1 }}>{String(i+1).padStart(2,'0')}</div>
-              <div style={{ fontSize:11.5, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</div>
+
+      {/* Selected yoga deep content */}
+      {currentYoga && (
+        <div style={{ marginBottom:12 }}>
+          <div style={{ padding:'12px 14px', background:'rgba(167,139,250,0.06)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:14, marginBottom:10 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+              <span style={{ fontSize:18 }}>🐍</span>
+              <div>
+                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)' }}>{currentYoga.serpent} · {currentYoga.houses}</div>
+                <div style={{ fontSize:16, fontWeight:900, color:'rgba(167,139,250,0.95)', letterSpacing:'-0.02em' }}>{currentYoga.name} Kala Sarpa Yoga</div>
+                <div style={{ fontSize:10, color:`${W}0.35)`, marginTop:1 }}>{currentYoga.domain}</div>
+              </div>
             </div>
-          ))}
+            <p style={{ fontSize:13, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{currentYoga.surface}</p>
+          </div>
+
+          {/* Tiered sections */}
+          {sections.map(sec => {
+            const hasAccess = tierRank >= sec.tier;
+            const isOpen = ksExpanded === sec.key;
+            return (
+              <div key={sec.key} style={{ marginBottom:6, borderRadius:13, overflow:'hidden', border:`1px solid ${isOpen&&hasAccess ? sec.color.replace(/[\d.]+\)$/,'0.25)') : `${W}0.05)`}`, transition:'border-color 0.2s' }}>
+                <button onClick={() => hasAccess && setKsExpanded(isOpen ? null : sec.key)} style={{ width:'100%', padding:'10px 14px', background: isOpen&&hasAccess ? `${W}0.03)` : 'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess ? 'pointer' : 'default' }}>
+                  <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
+                  <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : `${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
+                  {!hasAccess && <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
+                  {hasAccess && <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen ? '▲' : '▼'}</span>}
+                </button>
+                {isOpen && hasAccess && (
+                  <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.04)` }}>
+                    {sec.key==='transmission'
+                      ? <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(167,139,250,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12, padding:'8px' }}>{sec.content}</p>
+                      : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
+                    }
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+      )}
+
+      {/* Universal remedies */}
+      <div style={{ padding:'12px 14px', background:'rgba(167,139,250,0.04)', border:'1px solid rgba(167,139,250,0.15)', borderRadius:12 }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.55)', marginBottom:8 }}>🐍 Universal Kala Sarpa Remedies</div>
+        {[
+          'Naga Pratishtha puja — install and worship serpent deities at a Naga shrine',
+          'Chant both Rahu and Ketu mantras every Saturday without fail',
+          'Trimbakeshwar or Kalahasti temple — specific rituals for Kala Sarpa liberation',
+          'Wear 2-faced (Do Mukhi) rudraksha — connects Rahu-Ketu energies beneficially',
+          'Naga Panchami observance annually — most powerful day for all Kala Sarpa remedies',
+        ].map((r,i) => (
+          <div key={i} style={{ display:'flex', gap:8, padding:'5px 0', borderBottom: i<4?`1px solid ${W}0.04)`:undefined }}>
+            <span style={{ fontSize:9, color:'rgba(167,139,250,0.4)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+            <span style={{ fontSize:11.5, color:`${W}0.55)`, lineHeight:1.55 }}>{r}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
+
 
 // ── Muhurta Calculator ───────────────────────────────────────────
 const MuhurtaCalculator: React.FC = () => {
@@ -2840,7 +3079,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="🐍" label="KALA SARPA YOGA · RAHU-KETU AXIS" title="All Planets Between Rahu and Ketu Check" glow="rgba(167,139,250,0.16)" open={openCards.kalaSarpa||false} onToggle={() => toggleCard('kalaSarpa')}>
-                  <KalaSarpaYoga />
+                  <KalaSarpaYoga moonNakshatra={ephemeris?.moonNakshatra} birthDate={birthData?.birth_date} />
                 </OracleCard>
 
                 <OracleCard icon="🕐" label="MUHURTA CALCULATOR · AUSPICIOUS TIMING" title="Find Perfect Moments for Major Actions" glow="rgba(34,211,238,0.16)" open={openCards.muhurta||false} onToggle={() => toggleCard('muhurta')}>
