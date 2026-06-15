@@ -389,6 +389,135 @@ const BNN_AGES = [
   { age:42, planet:'Rahu' }, { age:48, planet:'Saturn' },
 ];
 
+// ── Bhrigu Nandi Nadi deep intelligence per planet ───────────────────────
+const BNN_DATA: Record<string, {
+  ageWindow: string;
+  title: string;
+  surface: string;
+  pattern: string;
+  soulDepth: string;
+  shadow: string;
+  gift: string;
+  bodyField: string;
+  relationships: string;
+  karma: string;
+  sadhana: string;
+  transmission: string;
+}> = {
+  Jupiter: {
+    ageWindow: 'Age 16–21',
+    title: 'The Guru Awakening',
+    surface: 'At age 16, Jupiter activates as your primary intelligence. The world of ideas, philosophy, and sacred knowledge opens. Teachers, mentors, and wisdom traditions arrive to shape your direction. This is the window of the great initiation.',
+    pattern: 'The Jupiter intelligence at 16 is the soul recognising its dharmic direction for the first time. Whatever subjects, teachers, or wisdom traditions fascinate you now are not coincidences — they are the soul's compass revealing the direction of your entire life. The Guru principle is asking: who will you become a student of? And more importantly — what kind of teacher are you being prepared to be?',
+    soulDepth: 'In the Bhrigu Nandi Nadi system, Jupiter at 16 signals a soul that has accumulated Sattvic merit across multiple lifetimes of study and teaching. The intelligence activating now is not new — it is ancient. You have been a student of the sacred before. What is arriving at this age is the memory of what you already know, seeking to be re-activated through this lifetime's form.',
+    shadow: 'Intellectual pride — using knowledge to establish superiority rather than to serve. Over-expansion into too many philosophies without embodying any of them. The guru-seeker who never becomes the guru.',
+    gift: 'The capacity to transmit wisdom in a way that permanently changes those who receive it. Natural authority that comes not from rank but from genuine understanding.',
+    bodyField: 'Jupiter governs the liver, hips, and the right ear. Sluggishness, excess, and difficulty with boundaries in relationships often signal Jupiter imbalance. Turmeric, ghee, and fasting on Thursdays support this intelligence.',
+    relationships: 'Jupiter at 16 brings teachers who function as second parents — their influence on your beliefs and values is formative. Romantic relationships at this age carry deep dharmic contracts, even if they appear brief. Watch who you idealise: they reveal your Jupiter archetype.',
+    karma: 'The karmic debt being activated is from past lives of teaching. You may have withheld knowledge, taught incorrectly, or used wisdom as power over others. This window offers the chance to settle that debt through genuine, humble transmission.',
+    sadhana: 'Chant: Aum Gram Grīm Graum Sah Guruve Namah — 108 times on Thursdays at sunrise. Study one sacred text deeply rather than many superficially. Offer yellow flowers and sweets to a teacher you genuinely revere.',
+    transmission: 'The Guru does not give you wisdom. He removes what is in the way of you remembering what you already know. At 16, you are beginning to remember.',
+  },
+  Sun: {
+    ageWindow: 'Age 22–23',
+    title: 'The Soul Authority',
+    surface: 'At age 22, the Sun intelligence activates. This is the window of individuation — separating from the family identity to discover your own soul's signature. Career, purpose, and the question of genuine authority arise with urgency.',
+    pattern: 'The Sun at 22 is asking the most essential question of this lifetime: who are you when you are not who others expect you to be? Every confrontation with authority — father, institution, employer — is a mirror. The figure standing across from you is showing you the God-seed inside yourself that has not yet been claimed.',
+    soulDepth: 'In the Bhrigu Nandi Nadi tradition, Sun activation at 22 marks the soul's emergence from collective identity into singular purpose. Many souls carry the wound of the father — inherited shame, suppressed ambition, or the unexpressed sovereignty of those who came before. This window is the alchemical moment when that wound becomes the throne. What was taken from the father line is returned — through you.',
+    shadow: 'Ego inflation, inability to receive feedback, burning through relationships with the heat of certainty. The compensated Sun — performing authority because genuine authority feels too exposed.',
+    gift: 'The capacity to illuminate simply by being present. When the Sun intelligence is integrated, your clarity of purpose becomes a resource for everyone around you.',
+    bodyField: 'The Sun governs the heart, spine, and right eye. Chronic back tension, heart arrhythmia, and eye weakness often signal Sun imbalance. Raw copper water at dawn, 12 Surya Namaskars facing East, and abstaining from salt on Sundays strengthen this field.',
+    relationships: 'Relationships entered at age 22–23 carry strong solar contracts — they either confirm or challenge your emerging identity. Fathers and father-figures become central. Watch where you defer when you should stand, and where you dominate when you should collaborate.',
+    karma: 'The karmic script of this window involves past lives of misused authority — kingdoms ruled with ego rather than soul, or genius suppressed by those who feared it. Both sides of this karma arrive at 22 for resolution.',
+    sadhana: 'Chant: Aum Hram Hrīm Hraum Sah Suryaya Namah — 108 times at dawn facing East. Offer water to the rising Sun daily. Begin each day by naming one thing you are genuinely certain of about who you are.',
+    transmission: 'The Sun does not rise to be seen. It rises because it is its nature to give light. At 22, you are learning that your purpose is not a performance — it is simply what you are.',
+  },
+  Moon: {
+    ageWindow: 'Age 24–27',
+    title: 'The Emotional Initiation',
+    surface: 'At age 24, the Moon intelligence activates. The inner world becomes impossible to ignore. Dreams intensify, emotions deepen, and the question of genuine belonging — in relationship, in place, in one's own body — becomes central.',
+    pattern: 'The Moon at 24 governs the tidal field of the psyche. What was suppressed in childhood — the mother's unfulfilled longings, the family's unexpressed grief, the emotional contractions passed down through the blood — rises now to the surface. This is not pathology. This is the soul completing what the family could not.',
+    soulDepth: 'In the Nadi tradition, Moon activation at 24 marks the opening of the ancestral emotional field. You are not simply experiencing your own feelings — you are feeling the undigested emotional material of your entire lineage. The capacity to allow this without being destroyed by it is the initiation. Those who complete it become the healers of their family line.',
+    shadow: 'Emotional flooding, loss of boundaries, over-identification with the mother wound. The Moon's shadow at 24 is the dissolution of self into others' emotional fields — mistaking empathy for identity.',
+    gift: 'Extraordinary emotional intelligence. The capacity to nourish others at a depth that nothing intellectual can reach. Intuitive knowing that bypasses the mind entirely.',
+    bodyField: 'The Moon governs the mind, lungs, lymphatic system, and left eye. Anxiety, insomnia, and fluid retention signal Moon imbalance. Moonrise meditation, white foods on Mondays, and Ekadashi fasting stabilise the lunar field.',
+    relationships: 'The mother relationship reaches its defining moment at 24 — either in physical proximity or through the activation of her psychological imprint within all close relationships. Partners encountered now carry strong lunar contracts. Pay attention to what you need versus what you habitually seek.',
+    karma: 'The karmic material of this window involves past lives of emotional abandonment — either given or received. The patterns that surface at 24 in relationship are the precise unresolved karma seeking completion. How you respond to them determines whether the pattern continues into the next life.',
+    sadhana: 'Chant: Aum Shram Shrīm Shraum Sah Chandramase Namah on Monday evenings under moonlight. Keep a dream journal. Fast on Ekadashi. Wear white or silver. Offer milk to the Moon.',
+    transmission: 'The Moon does not generate light. It receives, holds, and reflects the light of the Sun. At 24, you are learning the sacred art of receiving — which is the rarest form of strength.',
+  },
+  Venus: {
+    ageWindow: 'Age 28–31',
+    title: 'The Beloved Principle',
+    surface: 'At age 28, Venus intelligence activates. Love, beauty, creativity, and the question of what you genuinely value become the primary karmic field. Relationships, artistic gifts, and material abundance are all under examination.',
+    pattern: 'Venus at 28 is the soul confronting its relationship with pleasure. Not pleasure as indulgence — pleasure as the body's signal for what is aligned with the soul's nature. What brings you genuine delight reveals your dharma more accurately than your ambitions. The 28–31 window asks: can you receive beauty without immediately converting it into productivity?',
+    soulDepth: 'In the Nadi tradition, Venus activation at 28 marks the emergence of the Shukra intelligence — the planet of the sacred arts and the most refined Sattvic pleasures. Souls with strong Venus karma are those who have, across lifetimes, been the keepers of beauty: artists, lovers, priests of the aesthetic. The wound carried is often the experience of having beauty destroyed or devalued. This window is the reclamation.',
+    shadow: 'Over-attachment to outer beauty, using relationships for security rather than growth, creative gifts kept private from fear of judgment. The Venus wound at 28 often manifests as choosing familiar comfort over genuine love.',
+    gift: 'The capacity to make the world more beautiful simply by being fully present in it. Creative gifts that emerge from this window carry the potential to genuinely change those who encounter them.',
+    bodyField: 'Venus governs the kidneys, throat, and reproductive system. Kidney imbalance, chronic throat issues, and reproductive difficulties signal Venus disturbance. Rose water, white sugar offered to Lakshmi, and wearing white or pink on Fridays restore the Venus field.',
+    relationships: 'The primary love relationship encountered or deepened at 28–31 carries a multi-life contract. Even if it does not last in outer form, what it teaches about love is the transmission you carry forward. Pay extraordinary attention to what you are unable to ask for — that is where the karmic material lies.',
+    karma: 'Past lives of beauty withheld — either you were denied access to love and art, or you used beauty as power over others. Both create a Venus wound that only genuine vulnerability can heal.',
+    sadhana: 'Chant: Aum Dram Drīm Draum Sah Shukraya Namah on Friday evenings. Create something beautiful every week — not for others, for yourself. Offer white flowers to Lakshmi. Wear silk on Fridays.',
+    transmission: 'Beauty is not decoration. It is the face of the sacred made visible in form. At 28, you are learning that to love fully is the highest form of worship.',
+  },
+  Mars: {
+    ageWindow: 'Age 32–35',
+    title: 'The Warrior Initiation',
+    surface: 'At age 32, Mars intelligence activates. The warrior principle arrives — not as aggression, but as the capacity to fight for what genuinely matters. Ambition sharpens, confrontations arrive, and the question of genuine courage becomes unavoidable.',
+    pattern: 'Mars at 32 is the soul's confrontation with its own will. Every obstacle that appears at this age is precisely calibrated — not to stop you, but to reveal where your will is genuine versus where it is driven by fear or ego. The fights that emerge at 32 are karmic invitations: what are you actually willing to stand for with your life?',
+    soulDepth: 'In the Nadi system, Mars at 32 marks the activation of the Kshatriya intelligence — the warrior-protector archetype. This is the soul remembering the lifetimes when it carried a sword, held a line, protected the dharmic order. The purpose is not aggression. The purpose is the capacity to act decisively in service of what is real.',
+    shadow: 'Uncontained anger, burning through relationships with the intensity of the mission, confusing urgency with wisdom. Mars at 32 can also manifest as suppressed anger — the warrior who has been taught that their force is dangerous, and so has turned it inward.',
+    gift: 'Unbreakable courage in service of what is genuinely sacred. The capacity to begin, to sustain under fire, and to complete what matters most — regardless of the resistance.',
+    bodyField: 'Mars governs blood, muscles, the adrenal system, and the left ear. Chronic inflammation, iron deficiency, and adrenal exhaustion signal Mars imbalance. Cold water immersion at dawn, red lentils on Tuesdays, and Hanuman Chalisa strengthen the Mars field.',
+    relationships: 'Relationships at 32–35 involve power — either its healthy expression or its shadow. Partners may trigger your suppressed anger or model genuine courage. Siblings and male relationships often carry unresolved karmic tension that surfaces now.',
+    karma: 'Past lives of violence — either enacted or received. The Mars karma at 32 is asking whether the force that was used against others in previous lives can be transformed into the force that protects the dharmic order in this one.',
+    sadhana: 'Chant: Aum Kram Krīm Kraum Sah Bhaumaya Namah on Tuesday mornings. Hanuman Chalisa every Tuesday. Cold water before dawn. Physical discipline — the body must be a reliable instrument for the warrior.',
+    transmission: 'Courage is not the absence of fear. It is the recognition that something matters more than the fear. At 32, you are learning what that something is.',
+  },
+  Mercury: {
+    ageWindow: 'Age 36–41',
+    title: 'The Intelligence Mastery',
+    surface: 'At age 36, Mercury intelligence activates. The mind reaches a new level of precision and power. Communication gifts mature, commercial acumen sharpens, and the capacity to perceive the pattern beneath the surface of reality becomes available.',
+    pattern: 'Mercury at 36 is the soul confronting its relationship with its own mind. After the warrior intensity of Mars (32–35), Mercury brings the refinement of strategic intelligence. The question is no longer what to fight for — but how to communicate what you know in a way that actually reaches others. This window is the mastery of the transmission medium.',
+    soulDepth: 'In the Nadi tradition, Mercury at 36 marks the activation of the Budha intelligence — the cosmic discriminator who can perceive truth from illusion at the level of language itself. Souls with strong Mercury karma have been scholars, scribes, translators between worlds. The gift being activated is the capacity to move between the technical and the mystical, the analytical and the intuitive, with equal fluency.',
+    shadow: 'Scattered focus — the brilliance of Mercury without the discipline of Saturn. Intellectual pride, using words to establish superiority rather than to illuminate. The chronic restlessness of the mind that can never arrive in the present.',
+    gift: 'The capacity to explain the unexplainable — to take what is known only in silence and find the precise language that allows it to enter another mind without loss.',
+    bodyField: 'Mercury governs the nervous system, lungs, and hands. Anxiety, respiratory weakness, and nervous system dysregulation signal Mercury imbalance. Green moong dal on Wednesdays, writing by hand, and pranayama stabilise the Mercury field.',
+    relationships: 'Relationships at 36–41 are fundamentally intellectual and communicative. What is said and unsaid becomes the primary karmic material. Writing letters, deep conversations, and intellectual partnerships carry strong Mercury contracts. Watch where you use cleverness to avoid vulnerability.',
+    karma: 'Past lives of knowledge withheld, documents falsified, or words used as weapons. Mercury karma at 36 offers the chance to settle this through the precise and honest transmission of what you genuinely know.',
+    sadhana: 'Chant: Aum Bram Brīm Braum Sah Budhaya Namah on Wednesday mornings. Write daily — not for publication, for clarity. Offer green gram to Mercury. Read sacred texts aloud.',
+    transmission: 'The highest use of the mind is not to solve problems. It is to become so transparent to truth that when you speak, what arrives in the listener is not your thought — but their own recognition.',
+  },
+  Rahu: {
+    ageWindow: 'Age 42–47',
+    title: 'The Shadow Crossing',
+    surface: 'At age 42, Rahu intelligence activates — the most disorienting and potentially transformative window in the Bhrigu Nandi Nadi system. Convention dissolves. Foreign influences arrive. The soul is confronted with its deepest craving and its deepest illusion simultaneously.',
+    pattern: 'Rahu at 42 amplifies whatever has been suppressed across the first four decades. Career upheaval, geographical movement, unconventional relationships, and sudden spiritual openings are all Rahu's domain. What appears as disruption is actually precision — the soul being rerouted toward the dharmic path it has been avoiding.',
+    soulDepth: 'In the Nadi tradition, Rahu at 42 is the great crossing — the soul moving from the first half of life (building the ego structure) to the second half (dissolving it into something larger). This is the midlife initiation in its most concentrated form. The craving that Rahu activates is not random: it is the precise desire that, when followed all the way to its bottom, leads to the complete dissolution of the false self.',
+    shadow: 'Obsession, addiction to intensity, mistaking craving for dharma. Rahu at 42 can manifest as the midlife crisis that destroys the life that was built — not because the life was wrong, but because the self who built it needs to die.',
+    gift: 'Radical reinvention. The capacity to cross every border — cultural, psychological, spiritual — that limited souls cannot cross. After Rahu at 42, those who complete the crossing have an authority that those who avoided it will never possess.',
+    bodyField: 'Rahu governs the nervous system, skin, and the field of mental amplification. Anxiety, skin disorders, and obsessive thinking signal Rahu imbalance. Fasting on Saturdays, offering blue flowers, and meditating at dusk stabilise the Rahu field.',
+    relationships: 'Rahu at 42 often brings the most unconventional relationship of the lifetime — foreign, taboo, or spiritually intense. Even if it does not last, it is the vehicle of the soul's deepest transformation. Existing relationships are tested: what was built on comfort cannot survive Rahu's fire; what was built on genuine love emerges stronger.',
+    karma: 'Rahu carries the karmic material of the soul's deepest unfulfilled desire across lifetimes. Whatever was craved and never received — power, recognition, love, knowledge — arrives at 42 in concentrated form. The teaching is: you get what you craved, and you discover what it actually costs.',
+    sadhana: 'Chant: Aum Bhram Bhrīm Bhraum Sah Rahave Namah at dusk. Meditate in darkness. Feed the hungry on Saturdays. Wear hessonite garnet if Rahu is well-placed in your chart.',
+    transmission: 'The shadow is not your enemy. It is the part of you that has been waiting the longest to be integrated. At 42, you are learning that the life you were afraid to live is the only life that was ever yours.',
+  },
+  Saturn: {
+    ageWindow: 'Age 48+',
+    title: 'The Master Architect',
+    surface: 'At age 48, Saturn intelligence activates as the supreme karmic teacher. What was built on ego begins to crack; what was built on truth begins to crystallise. The great settling has begun. This is the window of genuine mastery — earned, not given.',
+    pattern: 'Saturn at 48 is the soul's final reckoning with the material world. Every structure — career, relationship, identity, belief — is placed under Saturn's lamp. What cannot survive scrutiny dissolves. What is genuine becomes more solid than anything built in the first half of life. The question Saturn asks at 48 is not "what have you achieved?" but "what has survived?"',
+    soulDepth: 'In the Nadi tradition, Saturn at 48 marks the activation of the Shani intelligence — the karmic architect whose precision makes Jupiter's expansion possible. Souls who reach this window with integrity intact have the potential to become the elders their lineage has been waiting for. The karmic settlement that occurs here is not punishment — it is the closing of accounts so that the remainder of the life can be lived in genuine freedom.',
+    shadow: 'Chronic fear, isolation, self-punishment. The Saturn wound at 48 often manifests as the belief that suffering is permanent and deserved. This is the shadow — not the teaching. Saturn's teaching is precision, not punishment.',
+    gift: 'Unbreakable integrity. The wisdom of one who has been tested at every level — desire, identity, relationship, purpose — and has survived with their soul intact. The capacity to be the immovable presence others anchor themselves to.',
+    bodyField: 'Saturn governs the bones, teeth, skin, knees, and the entire process of aging. Chronic pain, dental issues, and depression signal Saturn imbalance. Sesame oil massage on Saturdays, service to the elderly, black sesame offerings, and iron utensils support the Saturn field.',
+    relationships: 'Relationships at 48+ carry the deepest karmic weight of the lifetime. What is resolved in relationship now has generational consequences — the patterns completed here will not be passed to your children. What remains unresolved will be. Choose accordingly.',
+    karma: 'Saturn carries the accumulated karma of the soul's entire journey — not just this lifetime. The weight felt at 48 is not only personal. It is ancestral. Those who do the work of this window become karmic liberators for their entire lineage.',
+    sadhana: 'Chant: Aum Pram Prīm Praum Sah Shanaischaraya Namah on Saturday evenings. Serve the elderly, the sick, and those society has discarded. Offer sesame seeds. Light a mustard oil lamp at dusk. Simplify everything.',
+    transmission: 'The master is not the one who has never failed. The master is the one who has failed completely, understood why, and returned — not the same, but more. At 48, you are becoming the elder your lineage has been waiting for.',
+  },
+};
+
 
 
 // ── Format structured sections into readable text ─────────────────────────
@@ -2272,11 +2401,71 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 {activeBNNAge && (
-                  <OracleCard icon={PLANET_INFO[activeBNNAge.planet]?.sym||'◈'} label="BHRIGU NANDI NADI" title={`Age ${age} Activation · ${activeBNNAge.planet} Intelligence`} glow="rgba(212,175,55,0.14)" open={openCards.bnn} onToggle={() => toggleCard('bnn')}>
-                    <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.6)', lineHeight:1.7 }}>
-                      At age {age}, the <strong style={{ color:'#D4AF37' }}>{activeBNNAge.planet}</strong> intelligence is your primary karmic teacher.{' '}{PLANET_INFO[activeBNNAge.planet]?.meaning}
-                    </p>
-                  </OracleCard>
+                  {(() => {
+                    const bnn = BNN_DATA[activeBNNAge.planet];
+                    const planetInfo = PLANET_INFO[activeBNNAge.planet];
+                    const tierRankBnn = membershipTier === 'akasha-infinity' ? 3 : membershipTier === 'siddha-quantum' ? 2 : membershipTier === 'prana-flow' ? 1 : 0;
+                    const [bnnExpanded, setBnnExpanded] = React.useState<string|null>(null);
+                    if (!bnn) return null;
+                    return (
+                      <OracleCard icon={planetInfo?.sym||'◈'} label="BHRIGU NANDI NADI" title={`Age ${age} · ${bnn.title}`} glow="rgba(212,175,55,0.14)" open={openCards.bnn} onToggle={() => toggleCard('bnn')}>
+                        {/* Age window badge + surface */}
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' as const }}>
+                          <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.6)', background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:8, padding:'3px 10px' }}>{bnn.ageWindow}</span>
+                          <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'3px 10px' }}>{planetInfo?.sym} {activeBNNAge.planet} Intelligence</span>
+                        </div>
+                        <p style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom:16 }}>{bnn.surface}</p>
+
+                        {/* Expandable sections */}
+                        {[
+                          { key:'pattern',       label:'The Pattern',            icon:'◎', tier:1, color:'rgba(212,175,55,0.5)',        content: bnn.pattern },
+                          { key:'soulDepth',     label:'Soul Depth',             icon:'✦', tier:2, color:'rgba(167,139,250,0.7)',       content: bnn.soulDepth },
+                          { key:'shadow',        label:'Shadow',                 icon:'🌑',tier:1, color:'rgba(255,100,100,0.6)',       content: bnn.shadow },
+                          { key:'gift',          label:'The Gift',               icon:'◈', tier:1, color:'rgba(74,222,128,0.6)',        content: bnn.gift },
+                          { key:'bodyField',     label:'Body & Energy Field',    icon:'⬡', tier:2, color:'rgba(34,211,238,0.6)',        content: bnn.bodyField },
+                          { key:'relationships', label:'Relationships',          icon:'♾', tier:1, color:'rgba(244,114,182,0.6)',       content: bnn.relationships },
+                          { key:'karma',         label:'Karmic Contract',        icon:'⚖', tier:2, color:'rgba(212,175,55,0.5)',        content: bnn.karma },
+                          { key:'sadhana',       label:'Sadhana Prescription',   icon:'🔱',tier:3, color:'rgba(212,175,55,0.7)',        content: bnn.sadhana },
+                          { key:'transmission',  label:"Bhrigu's Transmission",  icon:'✦', tier:3, color:'rgba(212,175,55,0.9)',        content: bnn.transmission },
+                        ].map(sec => {
+                          const hasAccess = tierRankBnn >= sec.tier;
+                          const isOpen = bnnExpanded === sec.key;
+                          return (
+                            <div key={sec.key} style={{ marginBottom:6, borderRadius:14, overflow:'hidden', border:`1px solid ${isOpen && hasAccess ? sec.color.replace('0.','0.2').replace('0.9','0.25') : 'rgba(255,255,255,0.05)'}`, transition:'border-color 0.2s' }}>
+                              <button
+                                onClick={() => hasAccess && setBnnExpanded(isOpen ? null : sec.key)}
+                                style={{ width:'100%', padding:'11px 14px', background: isOpen && hasAccess ? 'rgba(255,255,255,0.03)' : 'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess ? 'pointer' : 'default' }}
+                              >
+                                <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
+                                <span style={{ flex:1, fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : 'rgba(255,255,255,0.2)', textAlign:'left' as const }}>{sec.label}</span>
+                                {!hasAccess && (
+                                  <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'2px 7px' }}>
+                                    {sec.tier === 1 ? 'PRANA' : sec.tier === 2 ? 'SIDDHA' : 'ĀKĀSHA'} 🔒
+                                  </span>
+                                )}
+                                {hasAccess && <span style={{ fontSize:10, color:'rgba(255,255,255,0.25)' }}>{isOpen ? '▲' : '▼'}</span>}
+                              </button>
+                              {isOpen && hasAccess && (
+                                <div style={{ padding:'0 14px 14px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
+                                  {sec.key === 'transmission' ? (
+                                    <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12, padding:'10px 8px' }}>"{sec.content}"</p>
+                                  ) : (
+                                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:'rgba(255,255,255,0.7)', lineHeight:1.8, marginTop:10 }}>{sec.content}</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Mantra always visible */}
+                        <div style={{ marginTop:10, padding:'10px 14px', background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:12 }}>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:5 }}>Graha Mantra</div>
+                          <p style={{ fontFamily:"'Georgia',serif", fontSize:12, color:'rgba(212,175,55,0.7)', lineHeight:1.6 }}>{planetInfo?.mantra}</p>
+                        </div>
+                      </OracleCard>
+                    );
+                  })()}
                 )}
 
                 <OracleCard icon="♄" label="SADE SATI TRACKER · SATURN TRANSIT" title={`${ephemeris?.moonNakshatra||'—'} Moon Sign — 7.5 Year Saturn Cycle`} glow="rgba(245,158,11,0.16)" open={openCards.sadeSati||false} onToggle={() => toggleCard('sadeSati')}>
