@@ -2911,8 +2911,12 @@ const JyotishChamber: React.FC = () => {
 
   // ── Tab switch ───────────────────────────────────────────────
   const switchTab = (tab: typeof activeTab) => {
-    setActiveTab(tab);
+    // Mark tab as built immediately so content renders
     setBuiltTabs(prev => new Set([...prev, tab]));
+    // Transition defers the heavy render so nav feels instant
+    React.startTransition(() => {
+      setActiveTab(tab);
+    });
   };
 
   // ── Chat ─────────────────────────────────────────────────────
@@ -3723,7 +3727,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         )}
 
         {/* ══════════════ CHART ══════════════ */}
-        {activeTab === 'chart' && (
+        {(activeTab === 'chart' || builtTabs.has('chart')) && builtTabs.has('chart') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             {!birthData ? <BirthPrompt /> : (
               <>
@@ -3788,7 +3792,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           </motion.div>
         )}
 
-        {activeTab === 'oracle' && (
+        {(activeTab === 'oracle' || builtTabs.has('oracle')) && builtTabs.has('oracle') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <BhriguAkashaChat
               birthData={birthData}
@@ -3800,7 +3804,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
 
         {/* ══════════════ NADI LEAF ══════════════ */}
-        {activeTab === 'nadi' && (
+        {(activeTab === 'nadi' || builtTabs.has('nadi')) && builtTabs.has('nadi') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ background:'rgba(255,255,255,0.025)', borderRadius:40, padding:26, textAlign:'center', marginBottom:16, border:'1px solid rgba(74,222,128,0.15)' }}>
               <div style={{ fontSize:36, marginBottom:12 }}>🌿</div>
@@ -3817,7 +3821,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         )}
 
         {/* ══════════════ JYOTISH VIDYA ══════════════ */}
-        {activeTab === 'vidya' && (
+        {(activeTab === 'vidya' || builtTabs.has('vidya')) && builtTabs.has('vidya') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 18px', marginBottom:14, borderRadius:20, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.01)' }}>
               <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', flexShrink:0 }}>Your Path</div>
