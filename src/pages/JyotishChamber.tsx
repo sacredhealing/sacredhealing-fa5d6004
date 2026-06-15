@@ -1098,45 +1098,121 @@ const DailyInfluenceStrip: React.FC = () => {
 // ── Sade Sati Tracker ────────────────────────────────────────────
 interface SadeSatiProps { moonSign: string | null; activeMaha: { planet: string; start: string; end: string } | null; }
 const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
-  const G = 'rgba(212,175,55,';
   const W = 'rgba(255,255,255,';
-  // Saturn transits ~2.5 yrs per sign; Sade Sati = 7.5 yrs covering 3 signs
-  const SADE_SATI_DATA: Record<string, { active: boolean; phase: number; start: string; end: string; phases: {sign:string;start:string;end:string;done:boolean;active:boolean}[] }> = {
-    Taurus:  { active:true,  phase:2, start:'Jan 2020', end:'Jun 2027', phases:[{sign:'Aries',start:'Jan 2020',end:'Jan 2023',done:true,active:false},{sign:'Taurus',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Gemini',start:'Mar 2025',end:'Jun 2027',done:false,active:false}] },
-    Gemini:  { active:true,  phase:1, start:'Jan 2023', end:'Oct 2029', phases:[{sign:'Taurus',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Gemini',start:'Mar 2025',end:'Jun 2027',done:false,active:false},{sign:'Cancer',start:'Jun 2027',end:'Oct 2029',done:false,active:false}] },
-    Cancer:  { active:false, phase:0, start:'Jun 2027', end:'Nov 2034', phases:[{sign:'Gemini',start:'Jun 2027',end:'Oct 2029',done:false,active:false},{sign:'Cancer',start:'Oct 2029',end:'Jan 2032',done:false,active:false},{sign:'Leo',start:'Jan 2032',end:'Nov 2034',done:false,active:false}] },
-    Scorpio: { active:true,  phase:2, start:'Oct 2017', end:'Jan 2023', phases:[{sign:'Libra',start:'Oct 2017',end:'Oct 2020',done:true,active:false},{sign:'Scorpio',start:'Oct 2020',end:'Jan 2023',done:true,active:true},{sign:'Sagittarius',start:'Jan 2023',end:'Mar 2025',done:false,active:false}] },
+  const { tier: membershipTier } = useMembership();
+  const tierRank = membershipTier === 'akasha-infinity' ? 3 : membershipTier === 'siddha-quantum' ? 2 : membershipTier === 'prana-flow' ? 1 : 0;
+  const [ssExpanded, setSsExpanded] = useState<string|null>(null);
+
+  const SADE_SATI_DATA: Record<string, { active:boolean; phase:number; start:string; end:string; phases:{sign:string;start:string;end:string;done:boolean;active:boolean}[] }> = {
+    Taurus:      { active:true,  phase:2, start:'Jan 2020', end:'Jun 2027', phases:[{sign:'Aries',start:'Jan 2020',end:'Jan 2023',done:true,active:false},{sign:'Taurus',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Gemini',start:'Mar 2025',end:'Jun 2027',done:false,active:false}] },
+    Gemini:      { active:true,  phase:1, start:'Jan 2023', end:'Oct 2029', phases:[{sign:'Taurus',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Gemini',start:'Mar 2025',end:'Jun 2027',done:false,active:false},{sign:'Cancer',start:'Jun 2027',end:'Oct 2029',done:false,active:false}] },
+    Cancer:      { active:false, phase:0, start:'Jun 2027', end:'Nov 2034', phases:[{sign:'Gemini',start:'Jun 2027',end:'Oct 2029',done:false,active:false},{sign:'Cancer',start:'Oct 2029',end:'Jan 2032',done:false,active:false},{sign:'Leo',start:'Jan 2032',end:'Nov 2034',done:false,active:false}] },
+    Scorpio:     { active:true,  phase:2, start:'Oct 2017', end:'Jan 2023', phases:[{sign:'Libra',start:'Oct 2017',end:'Oct 2020',done:true,active:false},{sign:'Scorpio',start:'Oct 2020',end:'Jan 2023',done:true,active:true},{sign:'Sagittarius',start:'Jan 2023',end:'Mar 2025',done:false,active:false}] },
+    Sagittarius: { active:true,  phase:3, start:'Jan 2023', end:'Mar 2025', phases:[{sign:'Scorpio',start:'Oct 2020',end:'Jan 2023',done:true,active:false},{sign:'Sagittarius',start:'Jan 2023',end:'Mar 2025',done:false,active:true},{sign:'Capricorn',start:'Mar 2025',end:'Jun 2027',done:false,active:false}] },
   };
+
+  // Deep content per phase
+  const PHASE_DATA: Record<number, { title:string; surface:string; pattern:string; soulDepth:string; shadow:string; gift:string; bodyField:string; karma:string; sadhana:string; transmission:string }> = {
+    1: {
+      title: 'Phase 1 — The Approaching Storm',
+      surface: 'Saturn moves through the sign before your Moon. The first tremors arrive — a vague dissatisfaction, a restlessness that cannot be named. External circumstances begin to shift in ways that feel beyond your control. This is Saturn\'s opening move: not destruction, but disorientation.',
+      pattern: 'Phase 1 is the soul being stripped of false certainty. Career structures, belief systems, and identity anchors that were assumed to be permanent begin to reveal their provisional nature. Saturn is not punishing you — he is clearing the ground for something that cannot grow in ground already full. The question this phase asks: what are you holding onto that was never truly yours?',
+      soulDepth: 'In the Nadi tradition, Phase 1 of Sade Sati corresponds to the soul\'s first encounter with its primary unresolved karma from the previous life. The exact area of life under pressure — career, relationship, health, finances — reveals the precise karmic domain that was left unresolved. This is not accident. Saturn\'s precision is absolute. What is being dismantled was built on borrowed time.',
+      shadow: 'Resistance to the inevitable, spending enormous energy trying to restore what Saturn has already marked for dissolution. Anxiety that mistakes Saturn\'s pressure for personal failure.',
+      gift: 'The first phase of Sade Sati, completed consciously, grants an immunity to false security. Those who complete it know, at a cellular level, that they can survive loss — and this knowledge is the foundation of genuine courage.',
+      bodyField: 'Phase 1 often manifests as joint stiffness, lower back tension, and disrupted sleep. The nervous system is recalibrating to Saturn\'s slower frequency. Sesame oil massage before Saturday bath, warm foods, and reduced stimulants support the transition.',
+      karma: 'The karma being activated in Phase 1 is structural — the karma of how you have built your life. Were the foundations genuine? Were the relationships chosen from soul or from fear? Saturn\'s first phase reveals the answer with absolute clarity.',
+      sadhana: 'Begin Shani Stotram or Hanuman Chalisa every Saturday without fail. Light a sesame oil lamp at dusk on Saturdays. Offer black sesame to flowing water on Saturday mornings. Begin service to the elderly or disabled — this is not remedy alone, it is karma completion.',
+      transmission: 'What Saturn takes in Phase 1 was always on loan. The grief is real. The loss is also the opening.'
+    },
+    2: {
+      title: 'Phase 2 — The Eye of the Storm',
+      surface: 'Saturn sits directly on your Moon sign. The pressure is now at maximum intensity. This is the central 2.5-year window of Sade Sati — the phase that gives the entire 7.5-year cycle its reputation. Everything that was destabilised in Phase 1 now reaches its crisis point.',
+      pattern: 'Phase 2 is the soul in direct confrontation with its Moon — its emotional body, its unconscious patterns, its deepest need for security. Saturn sits on the Moon like a teacher who refuses to let the student leave the room until the lesson is understood. Whatever you have been avoiding feeling is now inescapable. Whatever structure you have been hiding behind is now transparent. This is not cruelty. This is precision.',
+      soulDepth: 'The direct Saturn-Moon conjunction in transit is, in the Nadi tradition, the moment of the soul\'s greatest potential for karmic liberation in an entire lifetime. The suffering of Phase 2 is not random — it is the exact suffering needed to dissolve the specific illusion the soul chose to be born with. Those who do not resist Phase 2 — who allow Saturn to complete his work without fighting the dismantling — emerge with an emotional freedom that could not have been achieved any other way.',
+      shadow: 'Depression that becomes identification rather than passing weather. Isolation used as avoidance rather than as genuine retreat for integration. The Moon\'s shadow in Phase 2 is the belief that the darkness is permanent.',
+      gift: 'Those who complete Phase 2 consciously possess something that cannot be faked or taught: the knowledge that they have been through the deepest night and survived. This is the basis of genuine compassion — not empathy from imagination, but recognition from experience.',
+      bodyField: 'Phase 2 most directly affects the mind, chest, and lymphatic system. Depression, respiratory weakness, and immune suppression are common. Moon-supporting practices become urgent: moonrise meditation, cooling foods, Ekadashi fasting, and minimising overstimulation of the senses.',
+      karma: 'Phase 2 settles the deepest emotional karma of the soul — relationships where love was withheld, emotional wounds that became identity, the mother\'s unresolved grief inherited by the child. What surfaces in Phase 2 in the emotional body is not personal weakness. It is ancestral material seeking its final resolution through you.',
+      sadhana: 'Chant: Aum Prām Prīm Praum Sah Shanaischaraya Namah — 108 times every Saturday at sunrise and at dusk. Hanuman Chalisa daily — non-negotiable. Full Shani Puja on every Amavasya (new moon) falling on Saturday. Donate blue-black cloth, black sesame, and mustard oil to those in genuine need. Wear iron on the middle finger of the right hand.',
+      transmission: 'Saturn on the Moon is not the end of feeling. It is the purification of feeling — until what remains is not emotion but truth.'
+    },
+    3: {
+      title: 'Phase 3 — The Lifting',
+      surface: 'Saturn moves into the sign after your Moon. The peak pressure has passed. The dismantling is complete. What remains standing is what was genuinely yours. Phase 3 is the soul beginning to rebuild — but from a foundation that is now completely honest.',
+      pattern: 'Phase 3 is not a simple return to what was before. The person who emerges from Sade Sati is not the person who entered it. Phase 3 is the integration of everything that was revealed, broken, and rebuilt across the previous 5 years. There is often a sense of exhaustion combined with an unexpected lightness — the exhaustion of one who has carried a great weight, and the lightness of one who has finally set it down.',
+      soulDepth: 'In the Nadi tradition, Phase 3 of Sade Sati is the soul\'s harvest. The karma that was settled in Phases 1 and 2 does not return. The structures that survived the storm are now permanently strengthened. The relationships that endured are now the truest relationships of the lifetime. What Phase 3 reveals is not what you lost — it is what you are.',
+      shadow: 'Premature celebration before the integration is complete. Or the opposite — residual fear that the storm will return, preventing genuine enjoyment of the emerging freedom. Phase 3\'s shadow is not Saturn\'s anymore: it is the mind\'s reluctance to trust that the worst is genuinely past.',
+      gift: 'Phase 3 carries Saturn\'s greatest gift: the concrete knowledge of your own resilience. Not as a belief, not as an affirmation — as lived experience. You have been tested and you know what you are made of. This is the rarest form of self-knowledge.',
+      bodyField: 'Phase 3 often brings a gradual restoration of energy, improved sleep, and the return of genuine appetite — both for food and for life. The body is completing its integration of what the soul went through. Support it with sesame oil massage, gentle rebuilding of physical practice, and iron-rich foods.',
+      karma: 'Phase 3 is the closing of accounts. The karmic debt that Saturn came to collect has been paid. What is built now — relationships, career, creative work, inner practice — has the quality of permanence that nothing built before Sade Sati possessed.',
+      sadhana: 'Continue the Saturday practice begun in Phase 1 — not from fear now, but from gratitude. Offer sesame to Shani with the genuine thanks of one who has understood what the teacher was doing. Begin or deepen a practice of service: this is the proper use of Phase 3 energy. What you give now returns multiplied.',
+      transmission: 'You did not survive Saturn\'s transit. You were completed by it. There is a difference — and you now know which one is true.'
+    },
+  };
+
+  const NOT_ACTIVE_DATA = {
+    surface: 'Saturn is not currently transiting the signs surrounding your Moon. Your Sade Sati is either complete or has not yet begun. This is a window of relative freedom from Saturn\'s direct lunar pressure.',
+    pattern: 'The absence of Sade Sati is itself a teaching. Saturn\'s influence on the Moon — when it arrives — is calibrated precisely by what is built, and not built, in the windows between cycles. How you use this period of relative ease determines the quality of your next Sade Sati encounter.',
+    soulDepth: 'In the Nadi tradition, the periods between Sade Sati cycles are the soul\'s preparation windows. The karma worked through in the last cycle needs time to integrate. The karma that will be addressed in the next cycle is already in formation — shaped by your choices now.',
+    shadow: 'The complacency of ease. Using the absence of pressure as a reason to avoid the growth that pressure would force. Saturn does not forget — he simply waits.',
+    gift: 'This window carries the gift of unobstructed building. What is constructed now — in relationships, in practice, in genuine service — becomes the foundation that Saturn will later test. Build it honestly.',
+    sadhana: 'Maintain Saturday Shani practice even outside Sade Sati. Regular sesame oil offering and Hanuman Chalisa keep Saturn\'s blessings active and reduce the severity of the next transit when it arrives.',
+    transmission: 'Saturn is always watching. Not to punish — to ensure that when the great test arrives, you are ready.'
+  };
+
   const sign = moonSign?.split(' ').pop() || '';
   const data = SADE_SATI_DATA[sign];
-  const REMEDIES = [
-    'Chant Om Prām Prīm Prauṃ Sah Śanaiścharāya Namaḥ 108x every Saturday at sunrise',
-    'Offer sesame oil to a Shani lamp on Saturday evening — directly reduces karmic load',
-    'Feed black sesame or black lentils to birds or the poor on Saturday',
-    'Practice Hanuman Chalisa daily — Hanuman governs Saturn\'s effects at the soul level',
-    'Wear blue sapphire only after consulting a qualified Jyotishi — powerful and can backfire',
+  const currentPhase = data?.active ? data.phase : 0;
+  const phaseData = currentPhase > 0 ? PHASE_DATA[currentPhase] : null;
+
+  if (!moonSign) return (
+    <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
+      Enter birth data to calculate Sade Sati status
+    </p>
+  );
+
+  const sections = data?.active && phaseData ? [
+    { key:'pattern',      label:'The Pattern',          icon:'◎', tier:1, color:'rgba(245,158,11,0.6)',  content: phaseData.pattern },
+    { key:'soulDepth',    label:'Soul Depth',           icon:'✦', tier:2, color:'rgba(167,139,250,0.7)', content: phaseData.soulDepth },
+    { key:'shadow',       label:'Shadow',               icon:'🌑',tier:1, color:'rgba(255,100,100,0.6)', content: phaseData.shadow },
+    { key:'gift',         label:'The Gift',             icon:'◈', tier:1, color:'rgba(74,222,128,0.6)',  content: phaseData.gift },
+    { key:'bodyField',    label:'Body & Energy Field',  icon:'⬡', tier:2, color:'rgba(34,211,238,0.6)',  content: phaseData.bodyField },
+    { key:'karma',        label:'Karmic Contract',      icon:'⚖', tier:2, color:'rgba(245,158,11,0.5)', content: phaseData.karma },
+    { key:'sadhana',      label:'Sadhana Prescription', icon:'🔱',tier:1, color:'rgba(212,175,55,0.7)',  content: phaseData.sadhana },
+    { key:'transmission', label:"Saturn's Transmission",icon:'♄', tier:3, color:'rgba(212,175,55,0.9)', content: phaseData.transmission },
+  ] : [
+    { key:'pattern',      label:'Next Cycle Preparation', icon:'◎', tier:1, color:'rgba(74,222,128,0.6)',  content: NOT_ACTIVE_DATA.pattern },
+    { key:'soulDepth',    label:'Soul Depth',              icon:'✦', tier:2, color:'rgba(167,139,250,0.7)', content: NOT_ACTIVE_DATA.soulDepth },
+    { key:'shadow',       label:'Shadow',                  icon:'🌑',tier:1, color:'rgba(255,100,100,0.6)', content: NOT_ACTIVE_DATA.shadow },
+    { key:'gift',         label:'This Window\'s Gift',     icon:'◈', tier:1, color:'rgba(74,222,128,0.6)',  content: NOT_ACTIVE_DATA.gift },
+    { key:'sadhana',      label:'Sadhana',                 icon:'🔱',tier:1, color:'rgba(212,175,55,0.7)',  content: NOT_ACTIVE_DATA.sadhana },
+    { key:'transmission', label:"Saturn's Transmission",   icon:'♄', tier:3, color:'rgba(212,175,55,0.9)', content: NOT_ACTIVE_DATA.transmission },
   ];
-  if (!moonSign) return <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center', padding:'16px 0', fontStyle:'italic' }}>Enter birth data to calculate Sade Sati status</p>;
+
   return (
     <div>
-      {data ? (
+      {/* Status badge */}
+      <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: data?.active ? 'rgba(245,158,11,0.08)' : 'rgba(74,222,128,0.06)', border:`1px solid ${data?.active ? 'rgba(245,158,11,0.3)' : 'rgba(74,222,128,0.25)'}`, color: data?.active ? '#F59E0B' : '#4ADE80', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, marginBottom:12 }}>
+        <div style={{ width:6, height:6, borderRadius:'50%', background: data?.active ? '#F59E0B' : '#4ADE80', boxShadow: data?.active ? '0 0 8px #F59E0B' : 'none' }}/>
+        {data?.active ? `Sade Sati Active — ${phaseData?.title || `Phase ${data.phase} of 3`}` : 'Sade Sati Not Active'}
+      </div>
+
+      {/* Phase timeline */}
+      {data && (
         <>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: data.active ? 'rgba(245,158,11,0.08)' : 'rgba(74,222,128,0.06)', border: `1px solid ${data.active ? 'rgba(245,158,11,0.3)' : 'rgba(74,222,128,0.25)'}`, color: data.active ? '#F59E0B' : '#4ADE80', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, marginBottom:12 }}>
-            <div style={{ width:6, height:6, borderRadius:'50%', background: data.active ? '#F59E0B' : '#4ADE80', boxShadow: data.active ? '0 0 8px #F59E0B' : 'none' }}/>
-            {data.active ? `SADE SATI ACTIVE — Phase ${data.phase} of 3` : 'SADE SATI NOT ACTIVE'}
-          </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }}>
-            {[{ l:'Moon Sign', v: moonSign.split(' ').pop()||'—' },{ l:'Period', v:`${data.start}–${data.end}` }].map(s => (
+            {[{ l:'Moon Sign', v: sign||'—' },{ l:'Period', v:`${data.start}–${data.end}` }].map(s => (
               <div key={s.l} style={{ background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:12, padding:'10px 12px' }}>
                 <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${W}0.25)`, marginBottom:3 }}>{s.l}</div>
-                <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37', lineHeight:1 }}>{s.v}</div>
+                <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37' }}>{s.v}</div>
               </div>
             ))}
           </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:14 }}>
+          <div style={{ display:'flex', flexDirection:'column' as const, gap:6, marginBottom:14 }}>
             {data.phases.map((p, i) => (
-              <div key={i} style={{ padding:'10px 13px', borderRadius:12, border:`1px solid ${p.active ? 'rgba(245,158,11,0.3)' : p.done ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.05)'}`, background: p.active ? 'rgba(245,158,11,0.06)' : p.done ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.01)', display:'flex', alignItems:'center', gap:10, opacity: p.done && !p.active ? 0.5 : 1 }}>
-                <div style={{ width:8, height:8, borderRadius:'50%', background: p.active ? '#F59E0B' : p.done ? 'rgba(107,114,128,0.5)' : 'rgba(255,255,255,0.1)', boxShadow: p.active ? '0 0 8px #F59E0B' : 'none', flexShrink:0 }}/>
+              <div key={i} style={{ padding:'10px 13px', borderRadius:12, border:`1px solid ${p.active ? 'rgba(245,158,11,0.3)' : p.done ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.05)'}`, background: p.active ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.01)', display:'flex', alignItems:'center', gap:10, opacity: p.done && !p.active ? 0.5 : 1 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background: p.active ? '#F59E0B' : p.done ? 'rgba(107,114,128,0.5)' : `${W}0.1)`, boxShadow: p.active ? '0 0 8px #F59E0B' : 'none', flexShrink:0 }}/>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:10.5, fontWeight:800, color: p.active ? '#F59E0B' : `${W}0.55)`, marginBottom:1 }}>Phase {i+1} — {p.sign}</div>
                   <div style={{ fontSize:9, color:`${W}0.28)` }}>{p.start} – {p.end}</div>
@@ -1148,26 +1224,57 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
             ))}
           </div>
         </>
-      ) : (
-        <div style={{ padding:'14px 16px', border:'1px solid rgba(74,222,128,0.2)', borderRadius:14, background:'rgba(74,222,128,0.05)', marginBottom:12 }}>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.7)', marginBottom:5 }}>✓ SADE SATI NOT ACTIVE</div>
-          <p style={{ fontSize:11.5, color:`${W}0.5)`, lineHeight:1.6 }}>Your Moon sign ({sign}) is not in a Sade Sati period currently. Saturn is not transiting the signs adjacent to or through your Moon sign.</p>
-        </div>
       )}
-      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'13px 15px', position:'relative' }}>
-        <div style={{ position:'absolute', top:-7, left:12, fontSize:6.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA REMEDIES</div>
-        <div style={{ paddingTop:4, display:'flex', flexDirection:'column', gap:8 }}>
-          {REMEDIES.map((r, i) => (
-            <div key={i} style={{ display:'flex', gap:9 }}>
-              <div style={{ fontSize:8, fontWeight:800, color:`${G}0.5)`, flexShrink:0, marginTop:1 }}>{String(i+1).padStart(2,'0')}</div>
-              <div style={{ fontSize:11.5, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</div>
+
+      {/* Surface reading */}
+      <p style={{ fontSize:13, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom:16 }}>
+        {phaseData?.surface || NOT_ACTIVE_DATA.surface}
+      </p>
+
+      {/* Tiered accordion sections */}
+      <div style={{ display:'flex', flexDirection:'column' as const, gap:6, marginBottom:14 }}>
+        {sections.map(sec => {
+          const hasAccess = tierRank >= sec.tier;
+          const isOpen = ssExpanded === sec.key;
+          return (
+            <div key={sec.key} style={{ borderRadius:14, overflow:'hidden', border:`1px solid ${isOpen && hasAccess ? sec.color.replace(/[\d.]+\)$/, '0.22)') : `${W}0.05)`}`, transition:'border-color 0.2s' }}>
+              <button
+                onClick={() => hasAccess && setSsExpanded(isOpen ? null : sec.key)}
+                style={{ width:'100%', padding:'11px 14px', background: isOpen && hasAccess ? `${W}0.03)` : 'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess ? 'pointer' : 'default' }}
+              >
+                <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
+                <span style={{ flex:1, fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : `${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
+                {!hasAccess && (
+                  <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>
+                    {sec.tier === 1 ? 'PRANA' : sec.tier === 2 ? 'SIDDHA' : 'ĀKĀSHA'} 🔒
+                  </span>
+                )}
+                {hasAccess && <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen ? '▲' : '▼'}</span>}
+              </button>
+              {isOpen && hasAccess && (
+                <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.04)` }}>
+                  {sec.key === 'transmission' ? (
+                    <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12, padding:'10px 8px' }}>"{sec.content}"</p>
+                  ) : (
+                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
+
+      {/* Mantra — always visible */}
+      <div style={{ padding:'12px 14px', background:'rgba(245,158,11,0.04)', border:'1px solid rgba(245,158,11,0.12)', borderRadius:12 }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.5)', marginBottom:6 }}>♄ Shani Mantra — Chant Every Saturday</div>
+        <p style={{ fontFamily:"'Georgia',serif", fontSize:12.5, color:'rgba(245,158,11,0.75)', lineHeight:1.7 }}>Aum Prām Prīm Praum Sah Śanaiścharāya Namaḥ</p>
+        <p style={{ fontSize:10, color:`${W}0.3)`, marginTop:4, lineHeight:1.5 }}>108 repetitions at sunrise or dusk on Saturdays. Offer sesame oil. Light a lamp.</p>
       </div>
     </div>
   );
 };
+
 
 // ── Mangal Dosha Checker ─────────────────────────────────────────
 interface MangalDoshaProps { ascendantSign: string | null; }
