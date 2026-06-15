@@ -608,6 +608,26 @@ serve(async (req) => {
             await supabaseAdmin.from('creative_tool_access').upsert({ user_id: userId, tool_id: tool.id, stripe_payment_id: session.id, stripe_session_id: session.id, access_granted_at: new Date().toISOString() }, { onConflict: 'user_id,tool_id' });
           }
         }
+
+        // ── Healing purchase access grant ─────────────────────────────────────
+        if (purchaseType === 'healing' && session.metadata?.days) {
+          const days = parseInt(session.metadata.days, 10);
+          const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+          const { error: healErr } = await supabaseAdmin.from('healing_purchases').upsert({
+            user_id: userId,
+            plan_type: session.metadata.plan_type || 'unknown',
+            status: 'active',
+            stripe_session_id: session.id,
+            expires_at: expiresAt,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'stripe_session_id' });
+          if (healErr) {
+            logStep('healing_purchases upsert error', { error: healErr.message, userId });
+          } else {
+            logStep('Healing access granted', { userId, days, expiresAt });
+          }
+        }
       }
 
       // Send purchase email
