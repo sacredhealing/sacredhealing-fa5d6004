@@ -2076,14 +2076,30 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     </div>
                   )}
 
-                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+                  <div style={{ display:'flex', flexDirection:'column', gap:0, marginBottom:12 }}>
                     {chatMessages.map((m, i) => (
-                      <div key={i} style={{ padding:'14px 16px', borderRadius:16, fontSize:15, lineHeight:1.85, fontWeight: m.role==='oracle' ? 400 : 400, background: m.role==='oracle' ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.04)', border: m.role==='oracle' ? '1px solid rgba(212,175,55,0.12)' : '1px solid rgba(255,255,255,0.08)', color: m.role==='oracle' ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.8)' }}>
-                        {m.role === 'oracle' && <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', display:'block', marginBottom:6 }}>✦ Maharishi Bhrigu</span>}
-                        {m.text.split('\n\n').map((para, pi) => (
-                          <p key={pi} style={{ margin: pi > 0 ? '12px 0 0' : '0', lineHeight:1.85 }}>{para}</p>
-                        ))}
-                      </div>
+                      m.role === 'oracle' ? (
+                        <div key={i} style={{ position:'relative', padding:'20px 16px 14px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)', overflow:'visible' }}>
+                          <p style={{ fontFamily:"'Cinzel', serif", fontSize:'7px', letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:'10px', margin:'0 0 10px' }}>
+                            Maharishi Bhrigu speaks
+                          </p>
+                          <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:'16px', lineHeight:1.9, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const, overflowWrap:'anywhere' as const }}>
+                            {m.text.split('\n\n').map((para, pi) => (
+                              <p key={pi} style={{ margin: pi > 0 ? '14px 0 0' : '0' }}>{para}</p>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div key={i} style={{ marginLeft:'auto', maxWidth:'88%', marginRight:12, marginTop:8, position:'relative', padding:'14px 20px', background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ position:'absolute', top:5, right:5, width:10, height:10, borderTop:'1px solid rgba(212,175,55,0.2)', borderRight:'1px solid rgba(212,175,55,0.2)', pointerEvents:'none' }} />
+                          <p style={{ fontFamily:"'Cinzel', serif", fontSize:'7px', letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:'8px', margin:'0 0 8px' }}>
+                            The Seeker inquires
+                          </p>
+                          <div style={{ fontFamily:"'IM Fell English', serif", fontStyle:'italic', fontSize:'15px', color:'rgba(200,184,154,0.75)', lineHeight:'1.65', wordBreak:'break-word' as const }}>
+                            {m.text}
+                          </div>
+                        </div>
+                      )
                     ))}
                     {chatLoading && (
                       <div style={{ display:'flex', gap:4, padding:'12px 14px' }}>
