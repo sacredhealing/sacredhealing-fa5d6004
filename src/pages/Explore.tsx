@@ -551,24 +551,102 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* ══ DEEPEN ══ */}
+      {/* ══ PERSONAL GUIDANCE CARD ══ */}
       <SL label={t('converge.secDeepen')} delay="0.44s"/>
-      <div style={{ animation: 'fadeUp 0.4s 0.46s ease both' }}>
-        {([
-          { k: 'converge.deepenAvataric' as const, sk: 'converge.deepenAvataricSub' as const, h: '/courses' },
-          { k: 'converge.deepenMentorship' as const, sk: 'converge.deepenMentorshipSub' as const, h: '/transformation' },
-          { k: 'converge.deepenNeural' as const, sk: 'converge.deepenNeuralSub' as const, h: '/private-sessions' },
-          { k: 'converge.deepenAetheric' as const, sk: 'converge.deepenAethericSub' as const, h: '/affirmation-soundtrack' },
-                  ]).map(({ k, sk, h }) => (
-          <div key={k} onClick={() => navigate(h)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(212,175,55,0.4)', flexShrink: 0 }}/>
-            <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 800, color: '#D4AF37', marginBottom: 2 }}>{t(k)}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)' }}>{t(sk)}</div>
+      <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.46s ease both' }}>
+        <div style={{
+          position: 'relative', borderRadius: 28, overflow: 'hidden',
+          background: 'radial-gradient(ellipse at 30% 0%, rgba(55,30,5,0.98) 0%, rgba(20,10,0,0.99) 55%, #050505 100%)',
+          border: '1px solid rgba(212,175,55,0.48)',
+          boxShadow: '0 0 70px rgba(212,175,55,0.13), 0 0 140px rgba(212,175,55,0.06), inset 0 1px 0 rgba(212,175,55,0.14)',
+        }}>
+          {/* Rim glow */}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 28, border: '1px solid rgba(212,175,55,0.16)', animation: 'rimG 4s ease-in-out infinite', pointerEvents: 'none' }} />
+          {/* Sheen sweep */}
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(105deg,transparent 38%,rgba(212,175,55,0.05) 50%,transparent 62%)', animation: 'shimmer 7s 1s ease-in-out infinite', pointerEvents: 'none' }} />
+
+          {/* Sacred geometry top-right */}
+          <svg style={{ position: 'absolute', top: -28, right: -28, width: 160, height: 160, opacity: 0.14, pointerEvents: 'none' }} viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="72" fill="none" stroke="rgba(212,175,55,1)" strokeWidth="0.7" strokeDasharray="4 11">
+              <animateTransform attributeName="transform" type="rotate" values="0 80 80;360 80 80" dur="44s" repeatCount="indefinite"/>
+            </circle>
+            <polygon points="80,10 142,130 18,130" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.8)" strokeWidth="0.7"/>
+            <polygon points="80,150 18,30 142,30" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.55)" strokeWidth="0.6"/>
+            <circle cx="80" cy="80" r="28" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.4)" strokeWidth="0.5">
+              <animateTransform attributeName="transform" type="rotate" values="360 80 80;0 80 80" dur="18s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+
+          {/* Card content */}
+          <div style={{ position: 'relative', zIndex: 1, padding: '24px 22px 22px' }}>
+
+            {/* Header */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.45)', marginBottom: 10 }}>
+                Personal Guidance · Adam & Laila
+              </div>
+              <div style={{
+                fontFamily: "'Cinzel',serif", fontSize: 20, fontWeight: 700,
+                letterSpacing: '0.04em', lineHeight: 1.15,
+                background: 'linear-gradient(135deg,#D4AF37 0%,#F5E17A 35%,#D4AF37 60%,#A07C10 100%)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                animation: 'hShimmer 5s linear infinite',
+                filter: 'drop-shadow(0 0 10px rgba(212,175,55,0.4))',
+              }}>
+                Sovereign Guidance Field
+              </div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12.5, color: 'rgba(212,175,55,0.38)', marginTop: 5, letterSpacing: '0.02em' }}>
+                Direct transmissions, mentorship & sacred creations
+              </div>
             </div>
-            <span style={{ marginLeft: 'auto', color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.22) 40%,rgba(212,175,55,0.08) 70%,transparent)', marginBottom: 18 }} />
+
+            {/* Service rows */}
+            {([
+              { title: t('converge.deepenAvataric'), sub: t('converge.deepenAvataricSub'), icon: '✦', h: '/courses' },
+              { title: t('converge.deepenNeural'), sub: t('converge.deepenNeuralSub'), icon: '◈', h: '/private-sessions' },
+              { title: t('converge.connectPodcast'), sub: t('converge.connectPodcastSub'), icon: '◉', h: '/podcast' },
+              { title: t('converge.deepenAetheric'), sub: t('converge.deepenAethericSub'), icon: '⬡', h: '/affirmation-soundtrack' },
+              { title: t('converge.deepenMentorship'), sub: t('converge.deepenMentorshipSub'), icon: '◆', h: '/transformation' },
+              { title: t('converge.healingClothesTitle'), sub: t('converge.healingClothesSub'), icon: '🌿', h: '/shop' },
+            ] as { title: string; sub: string; icon: string; h: string }[]).map(({ title, sub, icon, h }, idx) => (
+              <div
+                key={h}
+                onClick={() => navigate(h)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '13px 14px',
+                  borderRadius: 16,
+                  background: 'rgba(255,255,255,0.015)',
+                  border: '1px solid rgba(212,175,55,0.08)',
+                  cursor: 'pointer',
+                  marginBottom: idx < 5 ? 8 : 0,
+                  transition: 'border-color .2s, background .2s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(212,175,55,0.25)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(212,175,55,0.04)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(212,175,55,0.08)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.015)'; }}
+              >
+                {/* Icon ring */}
+                <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#D4AF37' }}>
+                  {icon}
+                </div>
+                {/* Text */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.88)', letterSpacing: '0.02em', marginBottom: 2, lineHeight: 1.3 }}>
+                    {title}
+                  </div>
+                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 11.5, color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>
+                    {sub}
+                  </div>
+                </div>
+                <span style={{ color: 'rgba(212,175,55,0.3)', fontSize: 13, flexShrink: 0 }}>→</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* ══ CONNECT ══ */}
