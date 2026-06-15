@@ -1301,6 +1301,9 @@ const JyotishChamber: React.FC = () => {
   const [openNadi, setOpenNadi] = useState<string|null>(null);
   const [builtTabs, setBuiltTabs] = useState<Set<string>>(new Set(['overview']));
   const [leafConfirmed, setLeafConfirmed] = useState(false);
+  const [oracleSections, setOracleSections] = useState<Record<string,string>|null>(null);
+  const [oracleExpandedSection, setOracleExpandedSection] = useState<string|null>(null);
+  const [fullReadingLoading, setFullReadingLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
 
   // Tier access
@@ -1473,15 +1476,58 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           } as any, { onConflict: 'user_id' });
       }
 
-      // bhrigu-oracle returns { reply } for chat mode or { sections } for full reading
-      const reply = data?.reply || (data?.sections ? formatSections(data.sections) : null) || 'The Akashic transmission was interrupted. Please ask again.';
-      setChatMessages(prev => [...prev, { role:'oracle', text:reply }]);
+      // bhrigu-oracle returns { reply } for chat mode — strip any raw JSON leakage
+      let rawReply: string = data?.reply || (data?.sections ? formatSections(data.sections) : null) || 'The Akashic transmission was interrupted. Please ask again.';
+      // If the reply starts with JSON artifact, parse and extract prose fields
+      const jsonMatch = rawReply.match(/^\s*[\"']?json\s*(\{[\s\S]*\})/i) || rawReply.match(/^\s*(\{[\s\S]*"leaf_found"[\s\S]*\})/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[1].replace(/```json|```/g,'').trim());
+          rawReply = [parsed.leaf_found, parsed.graha, parsed.nakshatra, parsed.dasha, parsed.shadow, parsed.sadhana, parsed.transmission]
+            .filter(Boolean).join('\n\n');
+        } catch { rawReply = rawReply.replace(/^\s*[\"']?json\s*/i,'').replace(/```json|```/g,'').trim(); }
+      }
+      setChatMessages(prev => [...prev, { role:'oracle', text:rawReply }]);
     } catch (err) {
       console.error('Bhrigu oracle error:', err);
       setChatMessages(prev => [...prev, { role:'oracle', text:'The stars require a moment of stillness. Please ask your question again.' }]);
     } finally {
       setChatLoading(false);
       setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior:'smooth' }), 100);
+    }
+  };
+
+  // ── Full structured reading ─────────────────────────────────────
+  const requestFullReading = async () => {
+    if (!birthData || fullReadingLoading) return;
+    setFullReadingLoading(true);
+    setOracleSections(null);
+    setOracleExpandedSection(null);
+    try {
+      const { data: sData, error: sErr } = await supabase.functions.invoke('bhrigu-oracle', {
+        body: {
+          mode: 'full_reading',
+          name: birthData.birth_name || 'Seeker',
+          dob: birthData.birth_date || '',
+          tob: birthData.birth_time || '',
+          pob: birthData.birth_place || '',
+          readingType: 'general',
+          chart_context: {
+            dateOfBirth: birthData.birth_date,
+            timeOfBirth: birthData.birth_time,
+            placeOfBirth: birthData.birth_place,
+          },
+        }
+      });
+      if (sErr) throw new Error(sErr.message);
+      if (sData?.sections) {
+        setOracleSections(sData.sections);
+        setOracleExpandedSection('graha');
+      }
+    } catch (err) {
+      console.error('Full reading error:', err);
+    } finally {
+      setFullReadingLoading(false);
     }
   };
 
@@ -1977,10 +2023,66 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               <>
                 <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:20, marginBottom:16 }}>
                   <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>🔱 Ask Maharishi Bhrigu</div>
+
+                  {/* ── Full Reading Button ── */}
+                  {birthData && (
+                    <div style={{ marginBottom:12 }}>
+                      <button
+                        onClick={requestFullReading}
+                        disabled={fullReadingLoading}
+                        style={{ width:'100%', padding:'11px 16px', borderRadius:14, border:'1px solid rgba(212,175,55,0.35)', background: fullReadingLoading ? 'rgba(212,175,55,0.04)' : 'rgba(212,175,55,0.09)', color:'#D4AF37', fontFamily:'inherit', fontSize:11, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, cursor: fullReadingLoading ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}
+                      >
+                        {fullReadingLoading ? '✦ Channeling Nadi Transmission…' : '✦ Receive Full Nadi Reading'}
+                      </button>
+
+                      {/* Full Reading Sections */}
+                      {oracleSections && (
+                        <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:12 }}>
+                          {[
+                            { key:'graha', title:'Dominant Graha', sub:'The Ruling Planet of This Moment', icon:'☀', col:'#D4AF37' },
+                            { key:'nakshatra', title:'Birth Nakshatra', sub:'Your Star Soul & Hidden Gift', icon:'✦', col:'#D4AF37' },
+                            { key:'dasha', title:'Dasha Timing', sub:'Your Karmic Contract Now', icon:'⏳', col:'#22D3EE' },
+                            { key:'shadow', title:'Shadow & Blind Spot', sub:'What the Soul Must Face', icon:'🌑', col:'rgba(255,100,100,0.9)' },
+                            { key:'sadhana', title:'Sadhana Prescription', sub:'Your Practice Right Now', icon:'🔱', col:'#A78BFA' },
+                            { key:'transmission', title:"Bhrigu's Transmission", sub:'Direct Blessing from the Rishi', icon:'✦', col:'#D4AF37' },
+                          ].filter(sec => oracleSections[sec.key]).map(sec => {
+                            const isExp = oracleExpandedSection === sec.key;
+                            return (
+                              <div key={sec.key} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${isExp ? sec.col+'30' : 'rgba(255,255,255,0.05)'}`, borderRadius:20, overflow:'hidden', transition:'border-color 0.3s' }}>
+                                <button onClick={() => setOracleExpandedSection(isExp ? null : sec.key)} style={{ width:'100%', padding:'14px 16px', background:'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                                  <span style={{ fontSize:18, minWidth:24 }}>{sec.icon}</span>
+                                  <div style={{ flex:1, textAlign:'left' as const }}>
+                                    <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:sec.col, margin:0 }}>{sec.title}</p>
+                                    <p style={{ fontSize:10, color:'rgba(255,255,255,0.35)', margin:'2px 0 0', fontWeight:400 }}>{sec.sub}</p>
+                                  </div>
+                                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>{isExp ? '▲' : '▼'}</span>
+                                </button>
+                                {isExp && (
+                                  <div style={{ padding:'0 16px 16px', borderTop:`1px solid ${sec.col}15` }}>
+                                    {sec.key === 'transmission' ? (
+                                      <div style={{ padding:'14px 16px', background:`${sec.col}08`, border:`1px solid ${sec.col}20`, borderRadius:12, marginTop:10 }}>
+                                        <p style={{ color:'#D4AF37', fontSize:15, fontStyle:'italic', lineHeight:1.9, fontWeight:500, textAlign:'center' as const, margin:0 }}>"{oracleSections[sec.key]}"</p>
+                                      </div>
+                                    ) : (
+                                      <p style={{ color:'rgba(255,255,255,0.82)', fontSize:15, lineHeight:1.85, marginTop:10, fontWeight:400 }}>{oracleSections[sec.key]}</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
                     {chatMessages.map((m, i) => (
-                      <div key={i} style={{ padding:'12px 14px', borderRadius:14, fontSize:12, lineHeight:1.65, background: m.role==='oracle' ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.03)', border: m.role==='oracle' ? '1px solid rgba(212,175,55,0.1)' : '1px solid rgba(255,255,255,0.07)', fontFamily: m.role==='oracle' ? "'Cormorant Garamond',serif" : 'inherit', fontStyle: m.role==='oracle' ? 'italic' : 'normal', color: m.role==='oracle' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.75)' }}>
-                        {m.text}
+                      <div key={i} style={{ padding:'14px 16px', borderRadius:16, fontSize:15, lineHeight:1.85, fontWeight: m.role==='oracle' ? 400 : 400, background: m.role==='oracle' ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.04)', border: m.role==='oracle' ? '1px solid rgba(212,175,55,0.12)' : '1px solid rgba(255,255,255,0.08)', color: m.role==='oracle' ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.8)' }}>
+                        {m.role === 'oracle' && <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', display:'block', marginBottom:6 }}>✦ Maharishi Bhrigu</span>}
+                        {m.text.split('\n\n').map((para, pi) => (
+                          <p key={pi} style={{ margin: pi > 0 ? '12px 0 0' : '0', lineHeight:1.85 }}>{para}</p>
+                        ))}
                       </div>
                     ))}
                     {chatLoading && (
