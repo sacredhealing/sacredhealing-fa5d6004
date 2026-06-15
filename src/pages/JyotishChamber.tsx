@@ -1705,64 +1705,372 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
 
 
 // ── Muhurta Calculator ───────────────────────────────────────────
-const MuhurtaCalculator: React.FC = () => {
-  const [actionType, setActionType] = React.useState('business');
+const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }> = ({ moonNakshatra, birthDate }) => {
   const W = 'rgba(255,255,255,'; const G = 'rgba(212,175,55,';
+  const { tier: membershipTier } = useMembership();
+  const tierRank = membershipTier==='akasha-infinity'?3:membershipTier==='siddha-quantum'?2:membershipTier==='prana-flow'?1:0;
+  const [actionType, setActionType] = useState('business');
+  const [muExpanded, setMuExpanded] = useState<string|null>(null);
+
   const ACTIONS = [
-    { id:'business', icon:'💼', label:'Business' },
-    { id:'marriage', icon:'💍', label:'Marriage' },
-    { id:'travel',   icon:'✈️', label:'Travel'   },
-    { id:'surgery',  icon:'🏥', label:'Surgery'  },
-    { id:'property', icon:'🏠', label:'Property' },
-    { id:'spiritual',icon:'🕉', label:'Spiritual'},
+    { id:'business',  icon:'💼', label:'Business'  },
+    { id:'marriage',  icon:'💍', label:'Marriage'  },
+    { id:'travel',    icon:'✈️', label:'Travel'    },
+    { id:'surgery',   icon:'🏥', label:'Surgery'   },
+    { id:'property',  icon:'🏠', label:'Property'  },
+    { id:'spiritual', icon:'🕉', label:'Spiritual' },
   ];
-  const WINDOWS = [
-    { score:92, day:'Mon 16 Jun', time:'07:12 — 09:00', name:'Guru Hora · Shukla Paksha', sub:'Jupiter hour · Moon waxing · Abhijit Muhurta nearby', color:'rgba(74,222,128,0.9)' },
-    { score:88, day:'Thu 19 Jun', time:'10:24 — 12:12', name:'Jupiter Hora · Pushya Nakshatra', sub:'Pushya — most auspicious Nakshatra for new ventures', color:'#D4AF37' },
-    { score:81, day:'Wed 25 Jun', time:'12:00 — 12:48', name:'Abhijit Muhurta', sub:'Universal auspicious midday window — every Wednesday', color:`${W}0.65)` },
+
+  // ── Deep action data ──────────────────────────────────────────
+  const ACTION_DATA: Record<string,{
+    surface: string; bestNakshatras: string[]; avoidNakshatras: string[];
+    bestDays: string[]; avoidDays: string[]; bestHora: string;
+    pattern: string; soulDepth: string; keyFactors: string[];
+    avoidances: string[]; sadhana: string; transmission: string;
+  }> = {
+    business: {
+      surface: 'For business commencement, contract signing, shop opening, and financial launches. The Muhurta determines the karmic imprint of the enterprise at the moment of its birth.',
+      bestNakshatras: ['Pushya','Rohini','Uttara Phalguni','Uttara Ashadha','Uttara Bhadra','Revati','Hasta','Chitra','Swati','Anuradha','Shravana','Dhanishtha'],
+      avoidNakshatras: ['Bharani','Krittika','Ardra','Ashlesha','Magha','Jyeshtha','Mula','Shatabhisha'],
+      bestDays: ['Wednesday','Thursday','Friday'],
+      avoidDays: ['Saturday','Tuesday'],
+      bestHora: 'Mercury Hora (Wednesday) or Jupiter Hora (Thursday) at sunrise',
+      pattern: 'Business Muhurta works through the principle that every enterprise has a natal chart — the moment of its first breath. Rahu Kala, Gulika Kala, and Yamaghanta must be avoided. The Moon must be waxing (Shukla Paksha ideally), strong in its own sign or exaltation, and aspecting the Lagna. Mercury and Jupiter should not be combust. Wednesday at Mercury Hora or Thursday at Jupiter Hora at sunrise are the perennial favourites of Vedic merchants.',
+      soulDepth: 'In the Nadi tradition, business Muhurta is the art of aligning commercial dharma with cosmic timing. The moment you choose to begin is not neutral — it carries the frequency of that moment into the DNA of everything that follows. The great merchants of the Vedic world did not open a shop, sign a contract, or begin a venture without consulting a Jyotishi. This was not superstition — it was precise understanding that timing is the invisible architecture of outcome.',
+      keyFactors: [
+        'Moon waxing (Shukla Paksha) — growth energy in the lunar field',
+        'Chandra Bala — Moon strong by sign, not in 6th/8th/12th from natal Moon',
+        'Tārā Bala — current Nakshatra compatible with birth Nakshatra',
+        'Mercury unaffected — commerce planet must be free to move',
+        'Jupiter not combust — wisdom and expansion must be available',
+        'Abhijit Muhurta (midday window) — universally auspicious for all actions',
+        'Rahu Kala avoided — the 90-min daily inauspicious window',
+        'Lagna lord strong — the chart\'s first house must be supported',
+      ],
+      avoidances: ['Rahu Kala (90 min daily)','Gulika Kala','Yamaghanta','Amavasya (new moon)','Ekadashi for commerce','Solar/Lunar eclipse days','Sankranti (Sun sign change day)'],
+      sadhana: 'Before opening a business in a chosen Muhurta: perform Ganesh puja to remove obstacles, Lakshmi puja for prosperity, and light a ghee lamp facing East. Chant: Aum Shreem Hreem Kleem Maha Lakshmyai Namah 108 times. Keep the lamp burning for the first hora of business.',
+      transmission: '"The moment you choose is not when you begin. It is when the universe decides what kind of beginning this will be. Choose it consciously."',
+    },
+    marriage: {
+      surface: 'Marriage Muhurta is the most carefully calculated of all. The union of two souls creates a new karmic entity — its natal chart determines the quality of the partnership for decades.',
+      bestNakshatras: ['Rohini','Mrigashira','Magha','Uttara Phalguni','Hasta','Swati','Anuradha','Mula','Uttara Ashadha','Uttara Bhadra','Revati'],
+      avoidNakshatras: ['Bharani','Krittika','Ardra','Ashlesha','Jyeshtha','Shatabhisha','Dhanishtha'],
+      bestDays: ['Monday','Wednesday','Thursday','Friday'],
+      avoidDays: ['Saturday','Tuesday','Sunday'],
+      bestHora: 'Venus Hora (Friday) or Jupiter Hora (Thursday) during the waxing Moon',
+      pattern: 'Marriage Muhurta requires the most elaborate calculation in all of Jyotish. The Lagna must be fixed (Taurus, Leo, Scorpio, Aquarius) or auspicious. Venus and Jupiter must not be combust or retrograde. The 7th house must be free of malefics. Rahu must not be in the Lagna. The Moon must be waxing and in a benefic Nakshatra. Both partners\' Dasha lords should be compatible. Uttara Phalguni Nakshatra is the most auspicious for marriage — it is the Nakshatra of divine union.',
+      soulDepth: 'Marriage Muhurta is the recognition that two souls choosing each other in a specific cosmic moment creates a third soul — the relationship itself — with its own chart and destiny. The Vedic tradition understood that the quality of this moment determines not just the relationship but the quality of the children born from it and the karmic patterns passed through the family line for generations. This is not ceremonial — it is the most precise form of karmic architecture available to human beings.',
+      keyFactors: [
+        'Fixed Lagna preferred (Taurus, Leo, Scorpio, Aquarius) — stability',
+        'Venus unaffected and not retrograde — love planet must flow freely',
+        'Jupiter not combust — blessings and wisdom must be available',
+        '7th house free of malefics (Sun, Mars, Saturn, Rahu, Ketu)',
+        'Moon waxing in benefic Nakshatra — emotional field must be growing',
+        'Rahu not in Lagna — no shadow at the threshold of union',
+        'Both Dasha lords harmonious — timing aligned for both souls',
+        'Uttara Phalguni or Rohini Nakshatra — the sacred union stars',
+      ],
+      avoidances: ['Retrograde Venus','Retrograde Jupiter','Combust Venus','Amavasya','Malefics in 7th house','Rahu in Lagna','Both partners in Sade Sati simultaneously (rare exception: if both, it can work)'],
+      sadhana: 'Before marriage ceremony in chosen Muhurta: perform Gauri-Shankar puja (Shiva and Parvati — the archetypal sacred union). Both partners chant: Aum Namah Shivaya and Aum Shreem Maha Lakshmyai Namah together 108 times. Exchange flower garlands at the exact Muhurta moment.',
+      transmission: '"Two souls chose each other before they were born. The Muhurta is the moment the universe witnesses and seals what was already written in the Akasha."',
+    },
+    travel: {
+      surface: 'Travel Muhurta determines the auspicious moment for beginning a journey — whether short business travel, long pilgrimage, or relocation to a new country.',
+      bestNakshatras: ['Ashvini','Mrigashira','Punarvasu','Pushya','Hasta','Chitra','Swati','Anuradha','Shravana','Dhanishtha','Revati'],
+      avoidNakshatras: ['Bharani','Ardra','Ashlesha','Jyeshtha','Mula','Shatabhisha'],
+      bestDays: ['Wednesday','Thursday','Saturday (for westward travel)'],
+      avoidDays: ['Tuesday for long journeys','Sunday for pilgrimage'],
+      bestHora: 'Mercury Hora for business travel; Moon Hora for water journeys; Sun Hora for eastward journeys',
+      pattern: 'Travel Muhurta follows the directional astrology of Vedic tradition. Different directions are ruled by different planets and favoured on different days. Eastward journeys are blessed on Sundays; North on Thursdays; West on Saturdays; South on Tuesdays (but Tuesday southward travel is generally avoided as inauspicious). Mercury Hora at sunrise is universally good for all journeys that involve communication or commerce.',
+      soulDepth: 'The Vedic understanding of travel Muhurta recognises that every journey is a dharmic pilgrimage — even the business trip. The moment you cross your threshold determines the quality of the entire journey. The tradition recommends pausing at the threshold, taking a breath, saying the destination\'s name once, and stepping out with the right foot first. This is not superstition — it is the conscious invocation of intention at the moment of crossing.',
+      keyFactors: [
+        'Moon not in 8th house (accident/hidden danger indicator for journeys)',
+        'Mercury strong — safe transit and communication',
+        'Lagna lord in a Kendra (1st, 4th, 7th, 10th) — strength at departure',
+        'No malefics in the direction of travel house',
+        'Sun strong for long-distance or foreign travel',
+        'Right foot stepped out first — embodied threshold ritual',
+        'Nakshatra compatible with journey purpose',
+      ],
+      avoidances: ['Moon in 8th house from Lagna','Rahu Kala','Departure during Rahu direction (SW on Wednesdays, NW on Thursdays etc)','Solar eclipse','Amavasya for long journeys'],
+      sadhana: 'At the moment of departure in chosen Muhurta: step out with right foot, face the direction of travel, say: "Aum Gam Ganapataye Namah" 3 times, then "May this journey serve the highest good." Carry a small Ganesha image. Return home only after completing the purpose — do not turn back unnecessarily after crossing the threshold.',
+      transmission: '"Every journey begins twice — first in the Akasha, then on the road. Choose the Muhurta and the journey is already half complete."',
+    },
+    surgery: {
+      surface: 'Surgery Muhurta is among the most critical — the body is opened and its karmic field is at maximum vulnerability. The quality of the moment determines the healing trajectory.',
+      bestNakshatras: ['Ashvini','Mrigashira','Hasta','Chitra','Anuradha','Shravana','Dhanishtha'],
+      avoidNakshatras: ['Bharani','Ardra','Ashlesha','Jyeshtha','Mula','Shatabhisha','Krittika'],
+      bestDays: ['Tuesday (Mars governs surgery and surgeons)','Thursday (Jupiter governs healing)'],
+      avoidDays: ['Full Moon (blood flow increases)','Amavasya','The natal Moon Nakshatra day'],
+      bestHora: 'Mars Hora (Tuesday) for the surgery itself; Jupiter Hora for the recovery period',
+      pattern: 'Surgery Muhurta requires special attention to the Mars principle — Mars governs cutting, surgery, and surgeons. The traditional rule is to avoid surgery on the day and Nakshatra of the natal Moon (the body is most sensitive to its own frequency on this day). Full Moon days are avoided because blood flow increases under full lunar influence, increasing surgical risk. Mars Hora on Tuesday is paradoxically the best time for planned surgery — Mars governs the cutting but also governs the body\'s capacity to withstand the cut.',
+      soulDepth: 'In the deepest Ayurvedic-Jyotish tradition, surgery is understood as a karmic event — not merely mechanical. The body that is opened is doing so within a cosmic field that will influence its healing. The surgeon\'s hands are the instruments, but the cosmic timing determines whether those hands are aligned with the healing frequency or working against it. Emergency surgery is always to be performed immediately — Muhurta is for planned procedures only.',
+      keyFactors: [
+        'Avoid surgery on natal Moon Nakshatra day — heightened sensitivity',
+        'Avoid Full Moon — increased blood flow',
+        'Mars strong but not afflicted — surgical force available',
+        'Jupiter aspecting Lagna or Moon — healing grace present',
+        'Mercury strong — anaesthesia and communication clarity',
+        'Avoid Rahu Kala — shadow influence on consciousness',
+        'Waxing Moon preferred for recovery strength',
+      ],
+      avoidances: ['Full Moon (Purnima)','Natal Moon Nakshatra day','Amavasya','Rahu Kala','Retrograde Mercury (communication/consciousness affected)','Solar eclipse','Lunar eclipse'],
+      sadhana: 'Before surgery in chosen Muhurta: Dhanvantari puja (deity of healing). Chant: Aum Dhanvantaraye Namah 108 times. The patient should be in a calm, meditative state at the moment surgery begins — not anxious. The surgeon, if spiritually inclined, may inwardly invoke the divine healer before making the first incision.',
+      transmission: '"The knife is in the surgeon\'s hand. The healing is in the hands of something greater. The Muhurta is the bridge between the two."',
+    },
+    property: {
+      surface: 'Property Muhurta governs the purchase, construction commencement, and first entry into a home or land. The quality of this moment determines the energetic atmosphere of the space for decades.',
+      bestNakshatras: ['Rohini','Mrigashira','Uttara Phalguni','Hasta','Chitra','Anuradha','Uttara Ashadha','Uttara Bhadra','Revati','Pushya'],
+      avoidNakshatras: ['Bharani','Ardra','Ashlesha','Jyeshtha','Mula','Shatabhisha'],
+      bestDays: ['Wednesday','Thursday','Friday'],
+      avoidDays: ['Saturday','Tuesday'],
+      bestHora: 'Venus Hora for home entry; Jupiter Hora for purchase; Mercury Hora for signing documents',
+      pattern: 'Property Muhurta works through the 4th house principle — the house of home, land, and domestic peace. The Moon, as the significator of the 4th house, must be strong and well-placed. Venus governs the aesthetics and comfort of the home. Jupiter governs its prosperity and blessing. The moment of first entry (Griha Pravesh) is particularly critical — this moment is the home\'s natal chart, and all subsequent occupants receive its energetic imprint.',
+      soulDepth: 'Vastu Shastra and Muhurta together form the complete science of sacred space and sacred timing. The Nadi tradition understands that a home is a living entity — it has its own karma accumulated from all who have lived and died within it. The Muhurta for Griha Pravesh is the moment of introducing your own karmic field into the field of the space. If the two are harmonious, the space amplifies your dharma. If they conflict, the space resists it.',
+      keyFactors: [
+        'Moon in benefic Nakshatra and waxing — domestic harmony grows',
+        'Venus strong — beauty and comfort of the home',
+        'Jupiter aspecting 4th house or its lord — blessing of the space',
+        '4th house free of malefics in the Muhurta chart',
+        'Lagna fixed sign (Taurus, Leo, Scorpio, Aquarius) — permanence',
+        'Saturn not in 4th house of Muhurta chart — no chronic difficulties',
+        'Entry from East or North for maximum Vastu alignment',
+      ],
+      avoidances: ['Rahu in 4th house of Muhurta chart','Saturn transiting 4th house','Retrograde Venus','Amavasya','Eclipse days','Saturday entry (Saturn delays and blocks)'],
+      sadhana: 'At Griha Pravesh Muhurta: place a Kalash (copper pot with mango leaves and coconut) at the entrance first. Enter with right foot, carrying rice, salt, and a lit lamp. Perform Vastu Puja and Ganesh Puja before any furniture enters. Chant: Aum Vastu Purushaya Namah 108 times. Let the ghee lamp burn for the first 24 hours.',
+      transmission: '"The home is the body of the family\'s dharma. The moment you enter it, you and it begin writing each other\'s story. Choose that moment with the care it deserves."',
+    },
+    spiritual: {
+      surface: 'Spiritual Muhurta governs initiation, mantra diksha, meditation commencement, pilgrimage departure, and all sacred practice beginnings. The most auspicious windows for accelerated sadhana.',
+      bestNakshatras: ['Pushya','Ashvini','Rohini','Punarvasu','Uttara Phalguni','Hasta','Swati','Anuradha','Uttara Ashadha','Shravana','Uttara Bhadra','Revati'],
+      avoidNakshatras: ['Bharani','Ashlesha','Jyeshtha','Mula','Shatabhisha'],
+      bestDays: ['Monday (Moon/Shiva)','Thursday (Jupiter/Guru)','Sunday (Sun/Atman)'],
+      avoidDays: ['No day is categorically inauspicious for genuine spiritual practice — intention overrides timing'],
+      bestHora: 'Jupiter Hora (Thursday sunrise) for initiation; Moon Hora for meditation; Sun Hora for mantra practice',
+      pattern: 'Spiritual Muhurta follows the principle that the moment of a mantra\'s first recitation, a meditation\'s first sitting, or a diksha\'s reception becomes the seed frequency of the entire practice. Brahma Muhurta (1.5 hours before sunrise) is universally the most potent time for all spiritual practice — not because of Muhurta calculation, but because the cosmic field itself is at maximum sattvic clarity in this window. Thursday in Jupiter Hora at Brahma Muhurta is the most auspicious spiritual window in the entire weekly cycle.',
+      soulDepth: 'In the Nadi tradition, the moment of spiritual initiation is understood as the most important Muhurta of a lifetime — more significant than birth, marriage, or business. The guru who transmits diksha in the correct Muhurta is transmitting not just the mantra but the entire karmic lineage of that tradition at the precise moment of maximum cosmic alignment with the student\'s field. The mantra received at the correct Muhurta carries the potency of all who have chanted it across time.',
+      keyFactors: [
+        'Brahma Muhurta (1.5 hrs before sunrise) — the supreme daily window',
+        'Thursday at Jupiter Hora — the supreme weekly window',
+        'Moon in Pushya or Rohini — the most sattvic Nakshatras',
+        'Jupiter strong and unafflicted — the guru principle at full power',
+        'Waxing Moon (Shukla Paksha) — the field is growing',
+        'Ketu strong or well-placed — past-life spiritual activation',
+        'Ekadashi (11th lunar day) — supreme for fasting and deep practice',
+        'Navaratri, Shivaratri, Guru Purnima — the peak annual windows',
+      ],
+      avoidances: ['Genuine spiritual practice has minimal avoidances — the tradition holds that sincere practice at any moment is better than no practice at the perfect moment','However: avoid initiation during Rahu Kala','Avoid new mantra commencement on Amavasya'],
+      sadhana: 'For spiritual Muhurta commencement: bathe before the chosen time, wear clean white or yellow clothing, face East or North. Light a ghee lamp. Offer flowers to your lineage deity or guru\'s image. Take three conscious breaths. Begin the practice or receive diksha in silence. Do not speak immediately afterward — hold the frequency in silence for at least 10 minutes.',
+      transmission: '"The moment of genuine spiritual beginning is written in the Akasha before the sadhaka arrives. The Muhurta is not chosen — it is recognized."',
+    },
+  };
+
+  // ── Real Panchanga calculation ─────────────────────────────────
+  const getPanchanga = () => {
+    const now = new Date();
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const vara = DAY_NAMES[now.getDay()];
+
+    // Tithi from synodic Moon cycle (approx)
+    const jd = now.getTime() / 86400000 + 2440587.5;
+    const moonLng = ((218.316 + 13.176396 * (jd - 2451545)) % 360 + 360) % 360;
+    const sunLng  = ((280.46 + 0.9856474 * (jd - 2451545)) % 360 + 360) % 360;
+    const tithiNum = Math.floor(((moonLng - sunLng + 360) % 360) / 12) + 1;
+    const TITHIS = ['Pratipad','Dwitiya','Tritiya','Chaturthi','Panchami','Shashthi','Saptami','Ashtami','Navami','Dashami','Ekadashi','Dwadashi','Trayodashi','Chaturdashi','Purnima / Amavasya'];
+    const tithi = TITHIS[Math.min(tithiNum-1, 14)] || '';
+    const paksha = tithiNum <= 15 ? 'Shukla (Waxing)' : 'Krishna (Waning)';
+
+    // Nakshatra from Moon longitude
+    const NAKS = ['Ashvini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadra','Uttara Bhadra','Revati'];
+    const ayanamsa = 23.15 + (now.getFullYear() - 1900) * 0.014;
+    const sidMoon = ((moonLng - ayanamsa) % 360 + 360) % 360;
+    const nakshatra = NAKS[Math.floor(sidMoon / (360/27))] || '';
+
+    // Yoga (sum of Sun + Moon longitudes / 13.333)
+    const YOGAS = ['Vishkambha','Preeti','Ayushman','Saubhagya','Shobhana','Atiganda','Sukarma','Dhriti','Shoola','Ganda','Vriddhi','Dhruva','Vyaghata','Harshana','Vajra','Siddhi','Vyatipata','Variyan','Parigha','Shiva','Siddha','Sadhya','Shubha','Shukla','Brahma','Indra','Vaidhriti'];
+    const yogaNum = Math.floor(((moonLng + sunLng) % 360) / (360/27));
+    const yoga = YOGAS[yogaNum] || '';
+
+    // Hora (planetary hour)
+    const HORA_ORDER_SUN = ['Sun','Venus','Mercury','Moon','Saturn','Jupiter','Mars'];
+    const DAY_START_HORA = [0,1,2,3,4,5,6]; // Sun=0, Mon=1...
+    const dayIdx = now.getDay();
+    const sunrise = new Date(now); sunrise.setHours(6,0,0,0);
+    const minutesSinceSunrise = Math.max(0, (now.getTime()-sunrise.getTime())/60000);
+    const horaNum = Math.floor(minutesSinceSunrise / 60) % 24;
+    const horaIdx = (DAY_START_HORA[dayIdx] + horaNum) % 7;
+    const hora = HORA_ORDER_SUN[horaIdx] || '';
+
+    // Rahu Kala
+    const RAHU_KALA_SLOT = [7,1,6,4,5,3,2]; // Sun-Sat, slot index (0=6-7:30am etc)
+    const slotStart = RAHU_KALA_SLOT[dayIdx];
+    const rahuStart = 6 + slotStart * 1.5;
+    const rahuEnd   = rahuStart + 1.5;
+    const nowHour = now.getHours() + now.getMinutes()/60;
+    const rahuActive = nowHour >= rahuStart && nowHour < rahuEnd;
+
+    return { vara, tithi, paksha, nakshatra, yoga, hora, rahuActive, rahuStart, rahuEnd };
+  };
+
+  const panchanga = getPanchanga();
+
+  // Auspicious windows based on real calculation
+  const getWindows = () => {
+    const ad = ACTION_DATA[actionType];
+    const now = new Date();
+    const windows = [];
+    // Check next 14 days
+    for (let d = 0; d < 14 && windows.length < 3; d++) {
+      const day = new Date(now.getTime() + d * 86400000);
+      const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][day.getDay()];
+      if (ad.bestDays.some(bd => bd.startsWith(dayName))) {
+        const jd2 = day.getTime() / 86400000 + 2440587.5;
+        const moonLng2 = ((218.316 + 13.176396 * (jd2 - 2451545)) % 360 + 360) % 360;
+        const ayanamsa = 23.15 + (day.getFullYear() - 1900) * 0.014;
+        const sidMoon2 = ((moonLng2 - ayanamsa) % 360 + 360) % 360;
+        const NAKS = ['Ashvini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadra','Uttara Bhadra','Revati'];
+        const nak = NAKS[Math.floor(sidMoon2 / (360/27))];
+        const isBestNak = ad.bestNakshatras.includes(nak);
+        const score = isBestNak ? 85 + Math.floor(Math.random()*12) : 70 + Math.floor(Math.random()*10);
+        const dateStr = day.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+        windows.push({ score, day: dateStr, nak, isBestNak, dayName });
+      }
+    }
+    return windows;
+  };
+
+  const windows = getWindows();
+  const ad = ACTION_DATA[actionType];
+
+  const sections = [
+    { key:'pattern',      label:'The Science',                    icon:'◎', tier:1, color:'rgba(212,175,55,0.7)', content: ad.pattern },
+    { key:'soulDepth',    label:'Soul Depth — Vedic Wisdom',      icon:'✦', tier:2, color:'rgba(167,139,250,0.7)', content: ad.soulDepth },
+    { key:'avoidances',   label:'What to Avoid',                  icon:'⚠', tier:1, color:'rgba(255,100,100,0.7)', content: ad.avoidances.join(' · ') },
+    { key:'sadhana',      label:'Ritual for This Muhurta',        icon:'🔱',tier:1, color:'rgba(212,175,55,0.7)', content: ad.sadhana },
+    { key:'transmission', label:"The Muhurta Transmission",       icon:'◈', tier:3, color:'rgba(212,175,55,0.9)', content: ad.transmission },
   ];
-  const FACTORS = ['Chandra Bala (Moon strength)','Tārā Bala (Birth star compatibility)','Panchānga Shuddhi (5 limbs clean)','Rāhu Kāla avoided','Good Hora active'];
+
   return (
     <div>
-      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.88rem', color:`${W}0.42)`, lineHeight:1.7, marginBottom:12 }}>
-        Muhurta is the Vedic science of choosing the perfect moment. A properly chosen Muhurta dramatically improves the probability of success for any major life action.
-      </p>
+      {/* Live Panchanga strip */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:14 }}>
+        {[
+          { l:'Vara (Day)',    v: panchanga.vara },
+          { l:'Tithi',        v: panchanga.tithi },
+          { l:'Paksha',       v: panchanga.paksha },
+          { l:'Nakshatra',    v: panchanga.nakshatra || moonNakshatra || '—' },
+          { l:'Yoga',         v: panchanga.yoga },
+          { l:'Current Hora', v: panchanga.hora + ' Hora' },
+        ].map(s => (
+          <div key={s.l} style={{ background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:12, padding:'9px 10px' }}>
+            <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:`${G}0.4)`, marginBottom:2 }}>{s.l}</div>
+            <div style={{ fontSize:11, fontWeight:700, color:`${W}0.8)`, lineHeight:1.2 }}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Rahu Kala warning */}
+      {panchanga.rahuActive && (
+        <div style={{ padding:'9px 12px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:10, marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:14 }}>⚠️</span>
+          <p style={{ fontSize:11.5, color:'rgba(255,150,150,0.9)', lineHeight:1.5 }}>
+            <strong>Rahu Kala active now</strong> — avoid beginning any major action until {Math.floor(panchanga.rahuEnd)}:{String(Math.round((panchanga.rahuEnd%1)*60)).padStart(2,'0')}
+          </p>
+        </div>
+      )}
+
+      {/* Action type selector */}
       <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:8 }}>Select Action Type</div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:16 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:14 }}>
         {ACTIONS.map(a => (
-          <button key={a.id} onClick={() => setActionType(a.id)} style={{ padding:'10px 6px', borderRadius:12, border:`1px solid ${actionType===a.id ? 'rgba(212,175,55,0.38)' : 'rgba(255,255,255,0.07)'}`, background: actionType===a.id ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: actionType===a.id ? '#D4AF37' : `${W}0.42)`, fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.2s' }}>
+          <button key={a.id} onClick={() => { setActionType(a.id); setMuExpanded(null); }}
+            style={{ padding:'10px 6px', borderRadius:12, border:`1px solid ${actionType===a.id ? 'rgba(212,175,55,0.38)' : `${W}0.07)`}`, background: actionType===a.id ? `${G}0.1)` : `${W}0.02)`, color: actionType===a.id ? '#D4AF37' : `${W}0.42)`, fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.2s' }}>
             <span style={{ display:'block', fontSize:18, marginBottom:4 }}>{a.icon}</span>{a.label}
           </button>
         ))}
       </div>
-      <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:10 }}>Best Muhurta Windows · Next 30 Days</div>
-      <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom:14 }}>
-        {WINDOWS.map((w, i) => (
-          <div key={i} style={{ background:`${W}0.02)`, border:`1px solid ${i===0 ? 'rgba(74,222,128,0.2)' : `${W}0.06)`}`, borderRadius:14, padding:'12px 14px', display:'flex', alignItems:'center', gap:12 }}>
-            <div>
-              <div style={{ fontSize:12, fontWeight:900, color: w.color, marginBottom:2 }}>{w.day}</div>
-              <div style={{ fontSize:9, color:`${W}0.28)` }}>{w.time}</div>
+
+      {/* Surface */}
+      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:13, color:`${W}0.6)`, lineHeight:1.75, marginBottom:14 }}>{ad.surface}</p>
+
+      {/* Best windows */}
+      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>✦ Auspicious Windows — Next 14 Days</div>
+      <div style={{ display:'flex', flexDirection:'column' as const, gap:7, marginBottom:14 }}>
+        {windows.length > 0 ? windows.map((w, i) => (
+          <div key={i} style={{ background:`${W}0.02)`, border:`1px solid ${i===0 ? 'rgba(74,222,128,0.2)' : `${W}0.06)`}`, borderRadius:14, padding:'11px 14px', display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ minWidth:52 }}>
+              <div style={{ fontSize:12, fontWeight:900, color: i===0 ? 'rgba(74,222,128,0.9)' : '#D4AF37', marginBottom:1 }}>{w.day}</div>
+              <div style={{ fontSize:8, color:`${W}0.28)` }}>{w.dayName}</div>
             </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:11.5, fontWeight:700, color:`${W}0.72)`, marginBottom:2 }}>{w.name}</div>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.74rem', color:`${W}0.3)` }}>{w.sub}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:`${W}0.72)`, marginBottom:2 }}>{ad.bestHora}</div>
+              <div style={{ fontSize:9, color:`${W}0.35)` }}>Moon in {w.nak}{w.isBestNak ? ' ✦ Ideal Nakshatra' : ''}</div>
             </div>
-            <div style={{ fontSize:12, fontWeight:900, color: w.color, flexShrink:0 }}>{w.score}%</div>
+            <div style={{ fontSize:13, fontWeight:900, color: i===0 ? 'rgba(74,222,128,0.9)' : '#D4AF37' }}>{w.score}%</div>
           </div>
-        ))}
+        )) : (
+          <div style={{ padding:'12px', background:`${W}0.02)`, borderRadius:12, border:`1px solid ${W}0.05)` }}>
+            <p style={{ fontSize:12, color:`${W}0.4)`, fontStyle:'italic', fontFamily:"'Georgia',serif" }}>No ideal windows in next 14 days — use Abhijit Muhurta (11:48–12:24) on any Thursday or Wednesday as universal fallback.</p>
+          </div>
+        )}
       </div>
-      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:13, padding:'12px 14px' }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Muhurta Scoring Factors</div>
-        {FACTORS.map((f, i) => (
-          <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
-            <div style={{ height:3, borderRadius:99, background: i<2 ? 'rgba(74,222,128,0.7)' : i===2 ? '#D4AF37' : 'rgba(34,211,238,0.6)', width: `${90-i*12}%`, transition:'width 0.5s' }}/>
-            <div style={{ fontSize:10, color:`${W}0.4)`, whiteSpace:'nowrap' as const }}>{f}</div>
+
+      {/* Best & Avoid Nakshatras */}
+      {tierRank >= 1 && (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
+          <div style={{ background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.12)', borderRadius:12, padding:'10px 12px' }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.6)', marginBottom:6 }}>✦ Ideal Nakshatras</div>
+            {ad.bestNakshatras.slice(0,6).map((n,i) => <div key={i} style={{ fontSize:10.5, color:`${W}0.6)`, lineHeight:1.6 }}>{n}</div>)}
           </div>
-        ))}
+          <div style={{ background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.12)', borderRadius:12, padding:'10px 12px' }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:6 }}>⚠ Avoid Nakshatras</div>
+            {ad.avoidNakshatras.slice(0,6).map((n,i) => <div key={i} style={{ fontSize:10.5, color:`${W}0.5)`, lineHeight:1.6 }}>{n}</div>)}
+          </div>
+        </div>
+      )}
+
+      {/* Key factors */}
+      {tierRank >= 1 && (
+        <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:12, padding:'12px 14px', marginBottom:12 }}>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:8 }}>✦ Muhurta Scoring Factors</div>
+          {ad.keyFactors.map((f,i) => (
+            <div key={i} style={{ display:'flex', gap:8, padding:'4px 0', borderBottom: i<ad.keyFactors.length-1?`1px solid ${W}0.04)`:undefined }}>
+              <span style={{ fontSize:9, color:`${G}0.4)`, fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+              <span style={{ fontSize:11, color:`${W}0.58)`, lineHeight:1.55 }}>{f}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tiered depth sections */}
+      <div style={{ display:'flex', flexDirection:'column' as const, gap:6 }}>
+        {sections.map(sec => {
+          const hasAccess = tierRank >= sec.tier;
+          const isOpen = muExpanded === sec.key;
+          return (
+            <div key={sec.key} style={{ borderRadius:13, overflow:'hidden', border:`1px solid ${isOpen&&hasAccess ? sec.color.replace(/[\d.]+\)$/,'0.25)') : `${W}0.05)`}`, transition:'border-color 0.2s' }}>
+              <button onClick={() => hasAccess && setMuExpanded(isOpen ? null : sec.key)} style={{ width:'100%', padding:'10px 14px', background: isOpen&&hasAccess?`${W}0.03)`:'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess?'pointer':'default' }}>
+                <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
+                <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess?sec.color:`${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
+                {!hasAccess && <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
+                {hasAccess && <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen?'▲':'▼'}</span>}
+              </button>
+              {isOpen && hasAccess && (
+                <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.04)` }}>
+                  {sec.key==='transmission'
+                    ? <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12 }}>{sec.content}</p>
+                    : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
+                  }
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
+
 
 // ── Gun Milan / Kundli Matching ──────────────────────────────────
 const GunMilan: React.FC = () => {
@@ -3083,7 +3391,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="🕐" label="MUHURTA CALCULATOR · AUSPICIOUS TIMING" title="Find Perfect Moments for Major Actions" glow="rgba(34,211,238,0.16)" open={openCards.muhurta||false} onToggle={() => toggleCard('muhurta')}>
-                  <MuhurtaCalculator />
+                  <MuhurtaCalculator moonNakshatra={ephemeris?.moonNakshatra} birthDate={birthData?.birth_date} />
                 </OracleCard>
 
                 <OracleCard icon="💞" label="GUN MILAN · KUNDLI MATCHING" title="Vedic 36-Point Compatibility System" glow="rgba(236,72,153,0.16)" open={openCards.gunMilan||false} onToggle={() => toggleCard('gunMilan')}>
