@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
 import { canAccessJyotishModule } from '@/lib/tierAccess';
 import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
+import { BhriguAkashaChat } from '@/components/vedic/BhriguAkashaChat';
 
 // ── Types ────────────────────────────────────────────────────────
 interface BirthData {
@@ -2014,176 +2015,16 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               </>
             )}
           </motion.div>
-        )}
-
-        {/* ══════════════ BHRIGU ORACLE ══════════════ */}
         {activeTab === 'oracle' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
-            <>
-                <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:20, marginBottom:16 }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>🔱 Ask Maharishi Bhrigu</div>
+            <BhriguAkashaChat
+              birthData={birthData}
+              loadBirthData={loadBirthData}
+            />
+          </motion.div>
+        )}
 
-                  {/* ── Inline birth fields — shown when no birth data yet ── */}
-                  {!birthData && (
-                    <div style={{ marginBottom:16, padding:'14px 16px', background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:16 }}>
-                      <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>✦ Enter Your Birth Details</p>
-                      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                        {([
-                          { id:'oracle-name',  label:'Name',          placeholder:'Your full name' },
-                          { id:'oracle-dob',   label:'Date of Birth', placeholder:'YYYY-MM-DD' },
-                          { id:'oracle-tob',   label:'Time of Birth', placeholder:'HH:MM (24h, optional)' },
-                          { id:'oracle-pob',   label:'Place of Birth',placeholder:'City, Country' },
-                        ] as const).map((f: {id:string,label:string,placeholder:string}) => (
-                          <div key={f.id} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                            <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', minWidth:80, flexShrink:0 }}>{f.label}</span>
-                            <input
-                              id={f.id}
-                              type="text"
-                              placeholder={f.placeholder}
-                              style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.18)', borderRadius:10, padding:'9px 12px', color:'rgba(255,255,255,0.82)', fontFamily:'inherit', fontSize:13, outline:'none' }}
-                            />
-                          </div>
-                        ))}
-                        <button
-                          onClick={async () => {
-                            const nm  = (document.getElementById('oracle-name') as HTMLInputElement)?.value?.trim();
-                            const dob = (document.getElementById('oracle-dob')  as HTMLInputElement)?.value?.trim();
-                            const tob = (document.getElementById('oracle-tob')  as HTMLInputElement)?.value?.trim();
-                            const pob = (document.getElementById('oracle-pob')  as HTMLInputElement)?.value?.trim();
-                            if (!nm || !dob) return;
-                            const { data: { user: authU } } = await (supabase as any).auth.getUser();
-                            if (authU) {
-                              await (supabase as any).from('jyotish_profiles').upsert({
-                                user_id: authU.id,
-                                birth_name: nm, birth_date: dob,
-                                birth_time: tob || null, birth_place: pob || null,
-                              }, { onConflict: 'user_id' });
-                              await loadBirthData();
-                            }
-                          }}
-                          style={{ marginTop:4, padding:'10px 20px', borderRadius:12, border:'1px solid rgba(212,175,55,0.35)', background:'rgba(212,175,55,0.1)', color:'#D4AF37', fontFamily:'inherit', fontSize:10, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer', alignSelf:'flex-start' }}
-                        >
-                          ✦ Activate My Cosmic Blueprint
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── Birth data active strip ── */}
-                  {birthData && (
-                    <div style={{ marginBottom:12, padding:'9px 14px', background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:12, display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' as const }}>
-                      <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>✦ Blueprint Active</span>
-                      <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.75)' }}>{birthData.birth_name}</span>
-                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{birthData.birth_date}{birthData.birth_time ? ' · ' + birthData.birth_time : ''}{birthData.birth_place ? ' · ' + birthData.birth_place : ''}</span>
-                    </div>
-                  )}
-
-                  {/* ── Full Reading Button ── */}
-                  {birthData && (
-                    <div style={{ marginBottom:12 }}>
-                      <button
-                        onClick={requestFullReading}
-                        disabled={fullReadingLoading}
-                        style={{ width:'100%', padding:'11px 16px', borderRadius:14, border:'1px solid rgba(212,175,55,0.35)', background: fullReadingLoading ? 'rgba(212,175,55,0.04)' : 'rgba(212,175,55,0.09)', color:'#D4AF37', fontFamily:'inherit', fontSize:11, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, cursor: fullReadingLoading ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}
-                      >
-                        {fullReadingLoading ? '✦ Channeling Nadi Transmission…' : '✦ Receive Full Nadi Reading'}
-                      </button>
-
-                      {/* Full Reading Sections */}
-                      {oracleSections && (
-                        <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:12 }}>
-                          {[
-                            { key:'graha', title:'Dominant Graha', sub:'The Ruling Planet of This Moment', icon:'☀', col:'#D4AF37' },
-                            { key:'nakshatra', title:'Birth Nakshatra', sub:'Your Star Soul & Hidden Gift', icon:'✦', col:'#D4AF37' },
-                            { key:'dasha', title:'Dasha Timing', sub:'Your Karmic Contract Now', icon:'⏳', col:'#22D3EE' },
-                            { key:'shadow', title:'Shadow & Blind Spot', sub:'What the Soul Must Face', icon:'🌑', col:'rgba(255,100,100,0.9)' },
-                            { key:'sadhana', title:'Sadhana Prescription', sub:'Your Practice Right Now', icon:'🔱', col:'#A78BFA' },
-                            { key:'transmission', title:"Bhrigu's Transmission", sub:'Direct Blessing from the Rishi', icon:'✦', col:'#D4AF37' },
-                          ].filter(sec => oracleSections[sec.key]).map(sec => {
-                            const isExp = oracleExpandedSection === sec.key;
-                            return (
-                              <div key={sec.key} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${isExp ? sec.col+'30' : 'rgba(255,255,255,0.05)'}`, borderRadius:20, overflow:'hidden', transition:'border-color 0.3s' }}>
-                                <button onClick={() => setOracleExpandedSection(isExp ? null : sec.key)} style={{ width:'100%', padding:'14px 16px', background:'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
-                                  <span style={{ fontSize:18, minWidth:24 }}>{sec.icon}</span>
-                                  <div style={{ flex:1, textAlign:'left' as const }}>
-                                    <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:sec.col, margin:0 }}>{sec.title}</p>
-                                    <p style={{ fontSize:10, color:'rgba(255,255,255,0.35)', margin:'2px 0 0', fontWeight:400 }}>{sec.sub}</p>
-                                  </div>
-                                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>{isExp ? '▲' : '▼'}</span>
-                                </button>
-                                {isExp && (
-                                  <div style={{ padding:'0 16px 16px', borderTop:`1px solid ${sec.col}15` }}>
-                                    {sec.key === 'transmission' ? (
-                                      <div style={{ padding:'14px 16px', background:`${sec.col}08`, border:`1px solid ${sec.col}20`, borderRadius:12, marginTop:10 }}>
-                                        <p style={{ color:'#D4AF37', fontSize:15, fontStyle:'italic', lineHeight:1.9, fontWeight:500, textAlign:'center' as const, margin:0 }}>"{oracleSections[sec.key]}"</p>
-                                      </div>
-                                    ) : (
-                                      <p style={{ color:'rgba(255,255,255,0.82)', fontSize:15, lineHeight:1.85, marginTop:10, fontWeight:400 }}>{oracleSections[sec.key]}</p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div style={{ display:'flex', flexDirection:'column', gap:0, marginBottom:12 }}>
-                    {chatMessages.map((m, i) => (
-                      m.role === 'oracle' ? (
-                        <div key={i} style={{ position:'relative', padding:'20px 16px 14px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)', overflow:'visible' }}>
-                          <p style={{ fontFamily:"'Cinzel', serif", fontSize:'7px', letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:'10px', margin:'0 0 10px' }}>
-                            Maharishi Bhrigu speaks
-                          </p>
-                          <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:'16px', lineHeight:1.9, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const, overflowWrap:'anywhere' as const }}>
-                            {m.text.split('\n\n').map((para, pi) => (
-                              <p key={pi} style={{ margin: pi > 0 ? '14px 0 0' : '0' }}>{para}</p>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div key={i} style={{ marginLeft:'auto', maxWidth:'88%', marginRight:12, marginTop:8, position:'relative', padding:'14px 20px', background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                          <div style={{ position:'absolute', top:5, right:5, width:10, height:10, borderTop:'1px solid rgba(212,175,55,0.2)', borderRight:'1px solid rgba(212,175,55,0.2)', pointerEvents:'none' }} />
-                          <p style={{ fontFamily:"'Cinzel', serif", fontSize:'7px', letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:'8px', margin:'0 0 8px' }}>
-                            The Seeker inquires
-                          </p>
-                          <div style={{ fontFamily:"'IM Fell English', serif", fontStyle:'italic', fontSize:'15px', color:'rgba(200,184,154,0.75)', lineHeight:'1.65', wordBreak:'break-word' as const }}>
-                            {m.text}
-                          </div>
-                        </div>
-                      )
-                    ))}
-                    {chatLoading && (
-                      <div style={{ display:'flex', gap:4, padding:'12px 14px' }}>
-                        {[0,1,2].map(i => <div key={i} className="sqi-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', animationDelay:`${i*0.15}s` }}/>)}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display:'flex', gap:8 }}>
-                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==='Enter' && sendMessage()} placeholder="Ask Maharishi Bhrigu your question…" style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.22)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none' }}/>
-                    <button onClick={sendMessage} disabled={chatLoading} style={{ width:42, height:42, borderRadius:12, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.3)', color:'#D4AF37', fontSize:17, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>→</button>
-                  </div>
-                </div>
-                {/* Vedic Lexicon inside Oracle */}
-                <div style={{ marginTop:20, paddingTop:16, borderTop:'1px solid rgba(212,175,55,0.08)' }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:12 }}>📖 Vedic Lexicon</div>
-                  <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' as const }}>
-                    {['All',...[...new Set(LEXICON.map(e=>e.cat))]].map(c => (
-                      <button key={c} onClick={() => setLexCat(c)} style={{ padding:'5px 12px', borderRadius:99, border: lexCat===c ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.07)', background: lexCat===c ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: lexCat===c ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>{c}</button>
-                    ))}
-                  </div>
-                  <input value={lexSearch} onChange={e=>setLexSearch(e.target.value)} placeholder="Search Sanskrit or term…" style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none', marginBottom:12 }}/>
-                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                    {LEXICON.filter(e => {
-                      const q = lexSearch.toLowerCase();
-                      const catOk = lexCat==='All' || e.cat===lexCat;
-                      const searchOk = !q || e.term.toLowerCase().includes(q) || (e.skt||'').includes(q) || e.m.toLowerCase().includes(q);
-                      return catOk && searchOk;
-                    }).map(e => <LexEntry key={e.term} entry={e} gs={gs}/>)}
-                  </div>
-                </div>
+        >
               </>
             </>
           </motion.div>
