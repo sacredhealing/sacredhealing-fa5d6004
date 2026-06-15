@@ -260,6 +260,19 @@ serve(async (req) => {
         }
       }
 
+      // Extract Mars sign
+      let marsSign = '';
+      const marsData = payload?.AllPlanetData?.Mars || null;
+      if (marsData) {
+        marsSign = String(marsData.Sign || marsData.Rashi || marsData.ZodiacSign || '').trim();
+        if (!marsSign && marsData.Longitude != null) {
+          const signIdx = Math.floor(parseFloat(marsData.Longitude) / 30) % 12;
+          const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                         'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+          marsSign = SIGNS[signIdx] || '';
+        }
+      }
+
       // Alternative: try flat structure
       if (!moonNakshatra && payload?.MoonNakshatra) {
         moonNakshatra = normalizeNakshatra(String(payload.MoonNakshatra));
@@ -354,6 +367,7 @@ serve(async (req) => {
         dashaData: dashaResult,
         ascendantSign,
         sunSign,
+        marsSign,
         ephemerisData: ephemerisData,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
