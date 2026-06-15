@@ -24,7 +24,7 @@ jobs:
         run: |
           echo "=== Deploying stripe-webhook ==="
           supabase functions deploy stripe-webhook \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt 2>&1
           echo "Exit: $?"
 
@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "=== Deploying create-tier-checkout ==="
           supabase functions deploy create-tier-checkout \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt 2>&1
           echo "Exit: $?"
 
@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "=== Deploying create-healing-checkout ==="
           supabase functions deploy create-healing-checkout \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt 2>&1
           echo "Exit: $?"
 
@@ -57,9 +57,9 @@ jobs:
         run: |
           echo "=== Deploying request-bank-payout ==="
           supabase functions deploy request-bank-payout \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt 2>&1
           echo "Exit: $?"
 
       - name: Done
-        run: echo "All 4 Stripe functions deployed at $(date)"
+        run: echo "All 4 Stripe functions deployed to ssygukfdbtehvtndandn at $(date)"
