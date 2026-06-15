@@ -2059,8 +2059,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               const isOpen = openModules.has(m.id);
               const tierCol = { free:'#6B7280', prana:'#22D3EE', siddha:'#D4AF37', akasha:'#ffffff' }[m.tier] || '#D4AF37';
               return (
-                <div key={m.id} onClick={() => ok && toggleModule(m.id)} style={{ background: isOpen ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border: isOpen ? '1px solid rgba(212,175,55,0.22)' : '1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55, cursor: ok ? 'pointer' : 'default', transition:'all 0.2s', boxShadow: isOpen ? '0 0 18px rgba(212,175,55,0.08)' : 'none' }}>
-                  <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+                <div key={m.id} style={{ background: isOpen ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border: isOpen ? '1px solid rgba(212,175,55,0.22)' : '1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55, transition:'all 0.2s', boxShadow: isOpen ? '0 0 18px rgba(212,175,55,0.08)' : 'none' }}>
+                  <div onClick={() => ok && toggleModule(m.id)} style={{ display:'flex', alignItems:'flex-start', gap:10, cursor: ok ? 'pointer' : 'default' }}>
                     <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
                     <div style={{ flex:1 }}>
                       {m.secret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
@@ -2076,7 +2076,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     <span style={{ fontSize:9.5, color:'rgba(255,255,255,0.25)' }}>{m.dur}</span>
                   </div>
                   {ok && isOpen && (
-                    <div style={{ paddingTop:15, borderTop:'1px solid rgba(255,255,255,0.04)', marginTop:13 }}>
+                    <div onClick={e => e.stopPropagation()} style={{ paddingTop:15, borderTop:'1px solid rgba(255,255,255,0.04)', marginTop:13 }}>
                       <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Curriculum</div>
                       <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:6 }}>
                         {m.topics.map(tp => (
@@ -2089,7 +2089,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     </div>
                   )}
                   {!ok && (
-                    <div style={{ display:'flex', alignItems:'center', gap:9, padding:'10px 13px', borderRadius:14, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)', marginTop:10 }}>
+                    <div onClick={e => e.stopPropagation()} style={{ display:'flex', alignItems:'center', gap:9, padding:'10px 13px', borderRadius:14, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)', marginTop:10 }}>
                       <span>🔒</span>
                       <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.4)', flex:1 }}>
                         Requires { {prana:'Prāna-Flow (€19/mo)',siddha:'Siddha-Quantum (€45/mo)',akasha:'Ākāsha-Infinity (€1,111 lifetime)'}[m.tier as 'prana'|'siddha'|'akasha'] }
@@ -2125,6 +2125,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
