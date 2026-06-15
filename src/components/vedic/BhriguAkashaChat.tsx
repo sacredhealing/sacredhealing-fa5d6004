@@ -183,6 +183,15 @@ export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loa
   const [sections, setSections]         = useState<OracleSections | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
+  const leafKey = birthData ? `bhrigu_leaf_${birthData.birth_name.toLowerCase().replace(/\s+/g,'_')}` : 'bhrigu_leaf';
+  const [leafConfirmed, setLeafConfirmed] = useState<boolean>(() => {
+    try { return localStorage.getItem('bhrigu_leaf_confirmed') === 'true'; } catch { return false; }
+  });
+
+  useEffect(() => {
+    try { setLeafConfirmed(localStorage.getItem('bhrigu_leaf_confirmed') === 'true'); } catch {}
+  }, [birthData]);
+
   // Inline birth form state
   const [inlineName,  setInlineName]  = useState('');
   const [inlineDob,   setInlineDob]   = useState('');
@@ -197,13 +206,25 @@ export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loa
 
   function buildSystemPrompt() {
     if (!birthData) return BHRIGU_SYSTEM_PROMPT + '\n\nNo birth data provided. Ask the seeker for their date, time and place of birth.';
+
+    if (leafConfirmed) {
+      return BHRIGU_SYSTEM_PROMPT + `
+
+SEEKER: ${birthData.birth_name}
+DATE OF BIRTH: ${birthData.birth_date || 'not provided'}
+TIME OF BIRTH: ${birthData.birth_time || 'not provided'}
+PLACE OF BIRTH: ${birthData.birth_place || 'not provided'}
+LEAF STATUS: CONFIRMED. This seeker has sat before you. The leaf is already open. You know this soul completely.
+ABSOLUTE INSTRUCTION: Do NOT ask any questions. Do NOT ask for birth verification. Do NOT ask what they want. Answer whatever they ask immediately, directly, as Bhrigu speaks to a returning disciple.`;
+    }
+
     return BHRIGU_SYSTEM_PROMPT + `
 
 SEEKER: ${birthData.birth_name}
 DATE OF BIRTH: ${birthData.birth_date || 'not provided'}
 TIME OF BIRTH: ${birthData.birth_time || 'not provided'}
 PLACE OF BIRTH: ${birthData.birth_place || 'not provided'}
-LEAF STATUS: OPENING. Birth details are provided. Speak as Bhrigu speaks — brief, penetrating, ancient. Do NOT ask verification questions. Answer what they ask.`;
+LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may ask ONE single question to feel the quality of the seeker and go deeper. Only one question. Then give the reading. Never more than one question before responding.`;
   }
 
   async function callAnthropic(messages: { role: string; content: string }[], _systemOverride?: string): Promise<string> {
@@ -244,6 +265,10 @@ LEAF STATUS: OPENING. Birth details are provided. Speak as Bhrigu speaks — bri
       const reply = await callAnthropic(chatHistoryRef.current);
       chatHistoryRef.current.push({ role: 'assistant', content: reply });
       setChatMessages(prev => [...prev, { role: 'oracle', text: reply }]);
+      if (!leafConfirmed) {
+        try { localStorage.setItem('bhrigu_leaf_confirmed', 'true'); } catch {}
+        setLeafConfirmed(true);
+      }
     } catch (err: any) {
       setChatMessages(prev => [...prev, { role: 'oracle', text: `The Akashic channel requires a moment of stillness. ${err.message}` }]);
     } finally {
