@@ -4038,6 +4038,7 @@ export type Database = {
       }
       jyotish_profiles: {
         Row: {
+          ascendant: string | null
           birth_date: string | null
           birth_place: string | null
           birth_time: string | null
@@ -4046,13 +4047,16 @@ export type Database = {
           ephemeris_confirmed: boolean | null
           ephemeris_data: Json | null
           id: string
+          mars_sign: string | null
           moon_longitude: number | null
           moon_nakshatra: string | null
           nakshatra_progress: number | null
+          sun_sign: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          ascendant?: string | null
           birth_date?: string | null
           birth_place?: string | null
           birth_time?: string | null
@@ -4061,13 +4065,16 @@ export type Database = {
           ephemeris_confirmed?: boolean | null
           ephemeris_data?: Json | null
           id?: string
+          mars_sign?: string | null
           moon_longitude?: number | null
           moon_nakshatra?: string | null
           nakshatra_progress?: number | null
+          sun_sign?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          ascendant?: string | null
           birth_date?: string | null
           birth_place?: string | null
           birth_time?: string | null
@@ -4076,9 +4083,11 @@ export type Database = {
           ephemeris_confirmed?: boolean | null
           ephemeris_data?: Json | null
           id?: string
+          mars_sign?: string | null
           moon_longitude?: number | null
           moon_nakshatra?: string | null
           nakshatra_progress?: number | null
+          sun_sign?: string | null
           updated_at?: string
           user_id?: string
         }
