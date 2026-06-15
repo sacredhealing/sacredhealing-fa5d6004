@@ -1907,9 +1907,66 @@ const JyotishChamber: React.FC = () => {
     }
   };
 
+  // ── Local sidereal Lagna calculation (works offline, no API needed) ──
+  const computeLagnaLocally = (birthDate: string, birthTime: string): string => {
+    try {
+      const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                     'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+      const [yr, mo, dy] = birthDate.split('-').map(Number);
+      const timeParts = (birthTime || '12:00').replace(/[^0-9:]/g,'').split(':');
+      const hr = parseInt(timeParts[0]||'12');
+      const mn = parseInt(timeParts[1]||'0');
+      const hour = hr + mn / 60;
+      // Julian Day
+      const a = Math.floor((14 - mo) / 12);
+      const y = yr + 4800 - a;
+      const m = mo + 12 * a - 3;
+      const jdn = dy + Math.floor((153*m+2)/5) + 365*y + Math.floor(y/4) - Math.floor(y/100) + Math.floor(y/400) - 32045;
+      const jd = jdn + (hour - 12) / 24;
+      // Greenwich Sidereal Time
+      const T = (jd - 2451545.0) / 36525;
+      const gst = (280.46061837 + 360.98564736629*(jd-2451545) + T*T*0.000387933 - T*T*T/38710000) % 360;
+      // Estimate longitude from birth time offset (IST=+5.5 → lng≈82.5)
+      const tzOffset = birthTime?.match(/[+-]\d/) ? 0 : 5.5; // default IST
+      const lng = tzOffset * 15;
+      const lst = ((gst + lng) % 360 + 360) % 360;
+      // Obliquity + tropical ascendant
+      const oblRad = (23.4393 - 0.0000004*(jd-2451545)) * Math.PI/180;
+      const lstRad = lst * Math.PI/180;
+      let tropAsc = Math.atan2(Math.cos(lstRad), -Math.sin(lstRad)*Math.cos(oblRad)) * 180/Math.PI;
+      if (tropAsc < 0) tropAsc += 360;
+      if (Math.sin(lstRad) < 0) tropAsc = (tropAsc + 180) % 360;
+      // Lahiri ayanamsa
+      const ayanamsa = 23.15 + (yr - 1900) * 0.014;
+      const sidAsc = ((tropAsc - ayanamsa) % 360 + 360) % 360;
+      return SIGNS[Math.floor(sidAsc / 30)] || '';
+    } catch { return ''; }
+  };
+
+  // ── Local Mars sign calculation ──
+  const computeMarsLocally = (birthDate: string): string => {
+    try {
+      const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                     'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+      const yr = parseInt(birthDate.split('-')[0]);
+      const ref = new Date('2024-01-01').getTime();
+      const birth = new Date(birthDate).getTime();
+      const days = (birth - ref) / 86400000;
+      const marsLng = ((350 + days * (360/686.97)) % 360 + 360) % 360;
+      const ayanamsa = 23.15 + (yr - 1900) * 0.014;
+      const sidMars = ((marsLng - ayanamsa) % 360 + 360) % 360;
+      return SIGNS[Math.floor(sidMars / 30)] || '';
+    } catch { return ''; }
+  };
+
   const loadEphemeris = async (bd: BirthData) => {
     if (!user) return;
-    // Try cache first
+
+    // Always compute Lagna + Mars locally first — instant, no API needed
+    const localLagna = computeLagnaLocally(bd.birth_date, bd.birth_time || '12:00');
+    const localMars  = computeMarsLocally(bd.birth_date);
+
+    // Try cache
     const { data: cached } = await supabase
       .from('jyotish_profiles')
       .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data, ascendant, sun_sign, mars_sign')
@@ -1919,24 +1976,34 @@ const JyotishChamber: React.FC = () => {
     if (cached?.moon_nakshatra) {
       const c = cached as any;
       const eph = c.ephemeris_data || {};
+      // Prefer DB value, fall back to local calculation
+      const ascendantSign = c.ascendant || eph.ascendant || localLagna;
+      const marsSign = c.mars_sign || eph.mars_sign || localMars;
       setEphemeris({
         moonNakshatra: cached.moon_nakshatra,
         moonLongitude: 0,
-        ascendantSign: c.ascendant || eph.ascendant || '',
+        ascendantSign,
         sunSign: c.sun_sign || eph.sun_sign || '',
-        marsSign: c.mars_sign || eph.mars_sign || '',
+        marsSign,
         dashaData: cached.dasha_data as any,
       });
-      // Load leaf confirmed status
       if (c.bhrigu_leaf_confirmed) setLeafConfirmed(true);
-      // If ascendant/mars not yet populated (older row), recalculate to backfill
-      if (!c.ascendant || !c.mars_sign) {
-        calculateEphemeris(bd);
-      }
+      // Backfill DB if still missing
+      if (!c.ascendant || !c.mars_sign) calculateEphemeris(bd);
       return;
     }
 
-    // Calculate fresh
+    // No cache — set local values immediately so UI shows something
+    if (localLagna) {
+      setEphemeris(prev => prev ? {
+        ...prev, ascendantSign: localLagna, marsSign: localMars
+      } : {
+        moonNakshatra: '', moonLongitude: 0,
+        ascendantSign: localLagna, sunSign: '', marsSign: localMars, dashaData: null
+      });
+    }
+
+    // Then fetch full ephemeris
     await calculateEphemeris(bd);
   };
 
@@ -1953,12 +2020,14 @@ const JyotishChamber: React.FC = () => {
         },
       });
       if (!error && data) {
+        const localLagnaFb = data.ascendantSign || computeLagnaLocally(bd.birth_date, bd.birth_time || '12:00');
+        const localMarsFb  = data.marsSign || computeMarsLocally(bd.birth_date);
         setEphemeris({
           moonNakshatra: data.moonNakshatra || '',
           moonLongitude: data.moonLongitude || 0,
-          ascendantSign: data.ascendantSign || '',
+          ascendantSign: localLagnaFb,
           sunSign: data.sunSign || '',
-          marsSign: data.marsSign || '',
+          marsSign: localMarsFb,
           dashaData: data.dashaData || null,
         });
       }
