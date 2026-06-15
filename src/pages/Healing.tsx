@@ -520,8 +520,9 @@ const Healing: React.FC = () => {
         return;
       }
       sonnerToast.loading('Opening secure checkout…', { id: loadingId });
+      const affiliateId = sessionStorage.getItem('affiliateId') || null;
       const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
-        body: { planType, origin: window.location.origin },
+        body: { planType, origin: window.location.origin, ...(affiliateId ? { affiliateId } : {}) },
       });
       if (error) throw error;
       if (data && typeof data === 'object' && 'error' in data && (data as { error?: string }).error) {
