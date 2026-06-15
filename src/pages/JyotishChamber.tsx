@@ -106,17 +106,202 @@ const SIGN_MEANINGS: Record<string, string> = {
   Pisces: 'Mystic, healer, dreamer. Water energy — you came to dissolve boundaries and connect to the infinite.',
 };
 
-const DASHA_MEANINGS: Record<string, string> = {
-  Sun:     '6-year period of soul clarity, authority, and self-expression. Father and government themes.',
-  Moon:    '10-year period of emotional deepening, public life, and nurturing connections.',
-  Mars:    '7-year period of intense action, ambition, and karmic confrontation with obstacles.',
-  Rahu:    '18-year period of obsession, illusion, foreign influence, and unconventional dharmic paths.',
-  Jupiter: '16-year period of expansion, wisdom, blessings, dharma, and spiritual growth.',
-  Saturn:  '19-year period of karma settlement, discipline, service, and mastery through limitation.',
-  Mercury: '17-year period of intellect, communication, commerce, and learning across all domains.',
-  Ketu:    '7-year period of spiritual intensification, release, and past-life karma resolution.',
-  Venus:   '20-year period of love, luxury, creativity, relationships, and life enjoyment.',
+const DASHA_DATA: Record<string, {
+  years: number; symbol: string; color: string;
+  surface: string;
+  middle: string;
+  deep: string;
+  shadow: string;
+  gift: string;
+  sadhana: string;
+  antar: Record<string, { surface: string; deep: string }>
+}> = {
+  Sun: {
+    years:6, symbol:'☉', color:'#F59E0B',
+    surface:'6-year period of soul clarity, authority, and self-expression. The Sun burns away whatever does not belong to your essential identity.',
+    middle:'Father themes resurface — wounds, debts, and gifts passed through the paternal line come forward for resolution. Government, institutions, and public recognition are activated. Your relationship with your own sovereign authority is tested.',
+    deep:'The Sun Dasha is a return to the Atman. Every outer authority figure is a mirror of the God-seed inside you. By the end of this period, you either claim your throne or spend years explaining why you could not.',
+    shadow:'Ego inflation, inability to receive, burning through relationships with the heat of certainty.',
+    gift:'Unshakeable clarity of purpose. The capacity to illuminate others simply by knowing who you are.',
+    sadhana:'Surya Namaskar at dawn facing East. Chant: Aum Hram Hrīm Hraum Sah Suryaya Namah. Offer water to the rising Sun.',
+    antar:{
+      Sun:    { surface:'Identity consolidation. A period of concentrated focus on your core life mission.', deep:'Sun-Sun intensifies the Atman signal. Risk of isolation — greatness and loneliness arrive together.' },
+      Moon:   { surface:'Career meets emotion. Public recognition comes through vulnerability and authentic feeling.', deep:'The mother's blessings open. Whatever was unfelt in childhood now surfaces to be integrated.' },
+      Mars:   { surface:'Decisive action period. The Sun's clarity meets Mars' force — move on what you have been planning.', deep:'Karmic confrontations with masculine energy. Your relationship with anger is being alchemized.' },
+      Rahu:   { surface:'Unexpected ambition. Foreign or unconventional paths to authority emerge.', deep:'The shadow of the Sun — pride, illusion of power. What looks like success may be ego's last stand.' },
+      Jupiter:{ surface:'Dharmic expansion. Recognition from wise elders, teachers, and institutions.', deep:'The guru principle activates. True wisdom now distinguishes between knowledge and realization.' },
+      Saturn: { surface:'Hard lessons in authority. Recognition delayed, but what is built now lasts.', deep:'Saturn-in-Sun: the karmic debt of the father line is being settled. This is the great purification.' },
+      Mercury:{ surface:'Intellectual leadership. Communication skills are amplified and recognized.', deep:'The discrimination between soul-truth and mental chatter reaches a critical point.' },
+      Ketu:   { surface:'Spiritual detachment from external recognition. Inner authority deepens.', deep:'Past-life memories of power and its misuse surface. The fire burns without burning you.' },
+      Venus:  { surface:'Creative recognition. Beauty and art become vehicles for your solar purpose.', deep:'The relationship between love and ego is examined. Can you be seen without losing yourself?' },
+    }
+  },
+  Moon: {
+    years:10, symbol:'☽', color:'#E2E8F0',
+    surface:'10-year period of emotional deepening, public recognition, and the cultivation of genuine nourishment — in yourself and those around you.',
+    middle:'The mother's influence — her wounds, her gifts, and her unlived life — comes forward. Public reputation shifts. Your emotional body is the instrument of this decade; how you feel determines what you attract.',
+    deep:'Moon Dasha is the long immersion in the waters of Chandra. The mind becomes permeable to collective feeling. Great creativity, great sensitivity, great psychic opening — and the shadow: emotional flooding, boundary dissolution, the weight of carrying others' unconscious material.',
+    shadow:'Emotional overwhelm, over-identification with the mother wound, losing oneself in the public mirror.',
+    gift:'Extraordinary empathy and intuitive knowing. The capacity to nourish at a level that changes lives.',
+    sadhana:'Moonrise meditation. Chant: Aum Shram Shrīm Shraum Sah Chandramase Namah. Fast on Ekadashi. Wear white on Mondays.',
+    antar:{
+      Moon:   { surface:'Deep emotional immersion. Dreams become oracular. Intuition peaks.', deep:'The soul's original wound surfaces for the final healing. What was your mother's unlived life?' },
+      Mars:   { surface:'Emotional courage activated. Take decisive action on long-suppressed feelings.', deep:'The wound of anger in the maternal line surfaces. You are healing what was never spoken.' },
+      Rahu:   { surface:'Emotional obsession and amplification. Public life accelerates unexpectedly.', deep:'The dark waters — fantasy, illusion, and glamour. Protect your energy field carefully.' },
+      Jupiter:{ surface:'Emotional wisdom. A teacher or mentor arrives through feeling, not intellect.', deep:'The guru's blessing arrives through the mother principle. Dharma and nourishment become one.' },
+      Saturn: { surface:'Emotional discipline required. Grief may surface — let it move through cleanly.', deep:'The karmic debt in the maternal line is being settled with precision. Do not resist the narrowing.' },
+      Mercury:{ surface:'Emotional intelligence articulated. Writing, healing, and counseling are powerful now.', deep:'The mind and heart seek integration. The language of feeling becomes your most precise tool.' },
+      Ketu:   { surface:'Spiritual release of emotional attachments. Detachment brings unexpected peace.', deep:'Past-life emotional bonds dissolve. What you thought you needed, you no longer need.' },
+      Venus:  { surface:'Love and nourishment amplified. Creative and relational gifts flourish.', deep:'The sacred feminine awakens. Beauty becomes a spiritual technology.' },
+      Sun:    { surface:'Soul meets emotion. Your authentic feelings become the source of your authority.', deep:'The father-mother wound integration. The inner marriage of solar will and lunar feeling.' },
+    }
+  },
+  Mars: {
+    years:7, symbol:'♂', color:'#EF4444',
+    surface:'7-year period of intense action, karmic confrontation with obstacles, and the forging of character through fire.',
+    middle:'Lands, siblings, and the courage principle are activated. Conflicts that were avoided now demand resolution. Physical energy peaks — the body becomes your most important instrument. Mars does not allow stagnation.',
+    deep:'The Mars Dasha is the warrior's initiation. Every obstacle is a teacher wearing armor. The 7 years ask: what are you actually willing to fight for? Not career goals — the soul's genuine territory.',
+    shadow:'Aggression, impulsiveness, burning bridges, confusing urgency with purpose.',
+    gift:'Unbreakable courage. The capacity to begin, to fight, and to complete what matters most.',
+    sadhana:'Hanuman Chalisa on Tuesdays. Cold water before dawn. Chant: Aum Kram Krīm Kraum Sah Bhaumaya Namah.',
+    antar:{
+      Mars:   { surface:'Maximum activation. Take the decisive action you have been circling.', deep:'The warrior meets himself. Anger either becomes courage or continues as destruction.' },
+      Rahu:   { surface:'Explosive ambition. Unconventional strategies emerge — evaluate carefully.', deep:'The serpent and the fire. Danger of recklessness masquerading as boldness.' },
+      Jupiter:{ surface:'Dharmic action. Fighting for something genuinely meaningful.', deep:'The warrior finds his cause. This is when Mars graduates from ego-battle to sacred war.' },
+      Saturn: { surface:'Disciplined effort. Slow, hard, and permanent results.', deep:'Karma of past violence is settled. The most difficult sub-period — and the most purifying.' },
+      Mercury:{ surface:'Strategic intelligence. Planning before striking.', deep:'Mind and force seek integration. Mercury teaches Mars the power of the indirect path.' },
+      Ketu:   { surface:'Spiritual warrior activation. Fighting for liberation, not status.', deep:'Past-life warrior karma returns. You are completing what was left unfinished.' },
+      Venus:  { surface:'Beauty and strength in unexpected harmony. Creative projects gain momentum.', deep:'Mars and Venus: the sacred masculine-feminine integration within the self.' },
+      Sun:    { surface:'Soul-driven action. Clarity of purpose gives force direction.', deep:'The hero's journey reaches its crucial threshold. Who are you willing to become?' },
+      Moon:   { surface:'Emotionally charged action. Let feeling inform your courage, not override it.', deep:'The warrior and the healer. Your vulnerability becomes your greatest strength.' },
+    }
+  },
+  Rahu: {
+    years:18, symbol:'☊', color:'#8B5CF6',
+    surface:'18-year period of radical expansion, obsession, foreign influence, and the dharmic path that defies convention.',
+    middle:'Rahu amplifies whatever it touches to excess, then withdraws, leaving you with the lesson. Career leaps, geographical moves, and unconventional relationships are common. The familiar becomes suffocating; the foreign becomes magnetic.',
+    deep:'Rahu Dasha is the soul's chosen illusion for this lifetime, now brought to its maximum intensity. You are living the karma you scripted before birth. The 18 years either trap you in the dream or teach you to see through it — usually both, in sequence.',
+    shadow:'Obsession, deception, addiction to intensity, mistaking craving for dharma.',
+    gift:'Radical reinvention. The capacity to cross every border — cultural, psychological, spiritual — that limited souls cannot cross.',
+    sadhana:'Chant: Aum Bhram Bhrīm Bhraum Sah Rahave Namah. Meditate at dusk. Feed the hungry on Saturdays.',
+    antar:{
+      Rahu:   { surface:'Maximum amplification. Everything accelerates. Discernment is essential.', deep:'The double illusion. The soul is being shown its deepest craving and its deepest fear simultaneously.' },
+      Jupiter:{ surface:'Dharmic expansion through unconventional wisdom. A teacher arrives from an unexpected source.', deep:'The guru dissolves the dream. If you are ready, this sub-period brings the greatest awakening.' },
+      Saturn: { surface:'Rahu's ambition meets Saturn's law. What was built on illusion begins to crack.', deep:'The reckoning. Karmic debts from this life and others come due. Pay them — they cannot be avoided.' },
+      Mercury:{ surface:'Rapid-fire information, deals, and communication breakthroughs.', deep:'The trickster and the obsessive. Brilliance and chaos in equal measure.' },
+      Ketu:   { surface:'Sudden spiritual pivot. The obsession meets its opposite — complete detachment.', deep:'The axis of karma: what Rahu craves, Ketu dissolves. A profound disorientation that precedes liberation.' },
+      Venus:  { surface:'Intoxicating relationships and creative breakthroughs. Handle with discernment.', deep:'The beautiful illusion. Love becomes the vehicle for both the deepest craving and the deepest lesson.' },
+      Sun:    { surface:'Authority challenges. The ego and the shadow meet in direct confrontation.', deep:'The authentic self and the constructed persona face each other. One must yield.' },
+      Moon:   { surface:'Emotional intensity and vivid dreaming. The subconscious speaks loudly.', deep:'The ocean of karma. Old emotional patterns surface for dissolution — if you allow it.' },
+      Mars:   { surface:'Explosive action and ambition. Move decisively but avoid recklessness.', deep:'The warrior in the labyrinth. Immense power available — the question is its direction.' },
+    }
+  },
+  Jupiter: {
+    years:16, symbol:'♃', color:'#F59E0B',
+    surface:'16-year period of expansion, wisdom, dharmic blessings, and the deepening of your relationship with the sacred teacher principle.',
+    middle:'Children, students, and the guru arrive. Institutional recognition, wealth expansion, and spiritual opening all accelerate. Jupiter's 16 years are the most naturally abundant in the Vimshottari cycle — yet they require that you receive gracefully.',
+    deep:'Jupiter Dasha is the Brahaspati transmission — the cosmic priest pouring wisdom through your life circumstances. Every event is a teaching. Every relationship is a scripture. The soul is being educated for something larger than this lifetime.',
+    shadow:'Excess, moral superiority, using generosity as control, expanding beyond what the soul can integrate.',
+    gift:'Unshakeable faith and the capacity to transmit wisdom that transforms those who receive it.',
+    sadhana:'Chant: Aum Gram Grīm Graum Sah Gurave Namah. Study sacred texts on Thursdays. Feed Brahmins, teachers, and the wise.',
+    antar:{
+      Jupiter:{ surface:'Maximum dharmic blessing. Accept what arrives — you have earned it.', deep:'The guru principle at full strength. This is the moment of the greatest spiritual transmission available to you.' },
+      Saturn: { surface:'Expansion meets discipline. What grows now is built to last.', deep:'The two dharmic planets in conjunction: Jupiter's vision + Saturn's precision = permanent wisdom structures.' },
+      Mercury:{ surface:'The philosopher becomes the teacher. Write, speak, and transmit.', deep:'Discriminative wisdom peaks. The capacity to distinguish the essential from the inessential reaches its apex.' },
+      Ketu:   { surface:'Spiritual wisdom deepens through renunciation and past-life insight.', deep:'The moksha signal within expansion. Jupiter's outer abundance points toward inner liberation.' },
+      Venus:  { surface:'Beauty, love, and wisdom amplified simultaneously.', deep:'Dharma and Bhakti merge. The sacred and the beautiful become one experience.' },
+      Sun:    { surface:'Soul authority blessed by dharma. Public recognition for genuine wisdom.', deep:'The king receives the guru's blessing. Your leadership becomes sacred.' },
+      Moon:   { surface:'Emotional wisdom overflows. Nourishment becomes your dharma.', deep:'The mother of wisdom. Your feeling nature becomes the vehicle for dharmic transmission.' },
+      Mars:   { surface:'Dharmic warrior activation. Fight for what is genuinely sacred.', deep:'Jupiter elevates Mars. The warrior becomes the Kshatriya — one who protects the dharmic order.' },
+      Rahu:   { surface:'Unconventional dharmic path. The expansion goes where tradition did not expect.', deep:'The shadow teacher. What you craved is now seen through Jupiter's lens of pure truth.' },
+    }
+  },
+  Saturn: {
+    years:19, symbol:'♄', color:'#94A3B8',
+    surface:'19-year period of karma settlement, mastery through limitation, and the gradual building of structures that outlast the self.',
+    middle:'Service, discipline, and karmic debt repayment are the primary themes. What was built on ego begins to crack; what is built on truth begins to solidify. The 19 years are the great anvil of the Vimshottari cycle.',
+    deep:'Saturn Dasha is the Yama transmission — a direct encounter with the law of consequence. Not punishment: precision. Every delay is protection. Every loss is a correction. The soul is being stripped of everything that prevents it from doing its actual work on Earth.',
+    shadow:'Chronic fear, isolation, self-punishment, confusing difficulty with unworthiness.',
+    gift:'Unbreakable integrity and the wisdom of one who has been tested and survived with their soul intact.',
+    sadhana:'Chant: Aum Pram Prīm Praum Sah Shanaischaraya Namah. Serve the elderly, the poor, and the ill on Saturdays. Oil lamp at dusk.',
+    antar:{
+      Saturn: { surface:'The deepest karmic settling. Maximum discipline required — and maximum reward for it.', deep:'The anvil of the anvil. This is the most intense karmic compression available. Do not resist it.' },
+      Mercury:{ surface:'Disciplined intellectual work. Study, planning, and precision communication.', deep:'The mind learns to work within limits. Constraint becomes the mother of genius.' },
+      Ketu:   { surface:'Spiritual detachment from material structures. Release what cannot be carried further.', deep:'Past-life karmic debts reach final settlement. The most liberating sub-period within Saturn.' },
+      Venus:  { surface:'Slow, deep love. What is built in relationship now is permanent.', deep:'Saturn teaches Venus to love without possession. Beauty becomes earned rather than given.' },
+      Sun:    { surface:'Authority earned through suffering and perseverance. The throne is yours — claim it.', deep:'The great father-karma settles. Your relationship with authority is permanently transformed.' },
+      Moon:   { surface:'Emotional discipline and the wisdom of contained feeling.', deep:'The mother-wound meets its final teacher. Grief becomes the purification that opens the heart.' },
+      Mars:   { surface:'Disciplined action. Slow but permanent results from sustained effort.', deep:'Saturn teaches Mars patience. The warrior who waits is more dangerous than the one who charges.' },
+      Rahu:   { surface:'Karmic confrontation with the greatest illusion. What you craved is examined under Saturn's lamp.', deep:'The great disillusionment — and the great liberation that follows, if you do not run.' },
+      Jupiter:{ surface:'Dharmic wisdom earned through difficulty. Recognition comes — slowly, permanently.', deep:'The two karmic planets together: the law and the grace. This sub-period carries the deepest blessings concealed in difficulty.' },
+    }
+  },
+  Mercury: {
+    years:17, symbol:'☿', color:'#10B981',
+    surface:'17-year period of intellectual expansion, communication mastery, commercial acumen, and learning that crosses every domain.',
+    middle:'Writing, speaking, trading, and teaching become the primary karmic pathways. Mercury's 17 years reward versatility and punish rigid thinking. Siblings, cousins, and close friends become karmic mirrors.',
+    deep:'Mercury Dasha is the Budha transmission — the capacity to perceive the pattern beneath the pattern. The mind becomes the primary organ of karma. Every conversation is an initiation. Every document is a sacred text. The question Mercury asks: what is your mind actually for?',
+    shadow:'Scattered focus, intellectual pride, using cleverness to avoid depth, chronic restlessness.',
+    gift:'The capacity to move between worlds — technical and mystical, analytical and intuitive — with equal fluency.',
+    sadhana:'Chant: Aum Bram Brīm Braum Sah Budhaya Namah. Write daily. Offer green gram on Wednesdays.',
+    antar:{
+      Mercury:{ surface:'Maximum intellectual activation. Write the book. Build the system. Teach.', deep:'The mind meets itself. The deepest discrimination between what is real and what is merely clever.' },
+      Ketu:   { surface:'Spiritual intelligence. Ancient wisdom surfaces through modern forms.', deep:'Mercury drops its cleverness and touches gnana — pure knowing beyond the mind's constructions.' },
+      Venus:  { surface:'Creative intelligence peaks. Art, music, and beauty become vehicles for transmission.', deep:'The sacred marriage of Mercury and Venus: wisdom that is also beautiful, beauty that is also wise.' },
+      Sun:    { surface:'Soul clarity expressed through communication. Authoritative voice emerges.', deep:'The difference between speaking from personality and speaking from the Atman. Mercury learns the distinction.' },
+      Moon:   { surface:'Emotional intelligence. Counseling, healing, and empathic communication.', deep:'The mind learns to feel. Intuition and analysis merge into something neither can achieve alone.' },
+      Mars:   { surface:'Strategic decisiveness. Plan precisely, then act without hesitation.', deep:'The sword and the quill. Mercury learns to cut to the truth without the detour of excessive analysis.' },
+      Rahu:   { surface:'Unconventional communication. Disruptive ideas find their audience.', deep:'The trickster intelligence at maximum power. Genius and manipulation are closer here than anywhere.' },
+      Jupiter:{ surface:'Dharmic teaching. What you know is now in service of what is true and good.', deep:'Mercury receives Jupiter's blessing: the discriminative mind becomes wisdom.' },
+      Saturn: { surface:'Disciplined intellectual work. Slow, precise, and permanent.', deep:'The mind learns the value of limits. What cannot be said in few words, cannot be said.' },
+    }
+  },
+  Ketu: {
+    years:7, symbol:'☋', color:'#EC4899',
+    surface:'7-year period of spiritual intensification, past-life karma resolution, and the liberation of the soul from what it no longer needs.',
+    middle:'Renunciation, disillusionment, and unexpected spiritual openings characterize this period. What was identified with — career, relationship, identity — becomes transparent. Ketu dissolves what Rahu was building.',
+    deep:'Ketu Dasha is the moksha signal in the Vimshottari cycle. The 7 years are a direct encounter with the soul's memory of every previous life. What comes up is not random — it is precisely what must be released for the soul to move forward. The liberation it offers is real, but it requires the willingness to lose what was never actually yours.',
+    shadow:'Chronic dissatisfaction, spiritual bypassing, confusion about identity, isolation used as avoidance.',
+    gift:'Access to the deepest spiritual knowledge without the need for external validation. The mystic's sight.',
+    sadhana:'Chant: Aum Sram Srīm Sraum Sah Ketave Namah. Meditate on the void. Donate blankets to the poor on Tuesdays.',
+    antar:{
+      Ketu:   { surface:'Maximum spiritual intensity. Dissolution of what does not serve the soul.', deep:'The eye of the storm. Complete stillness is available, if you stop running from the emptiness.' },
+      Venus:  { surface:'Sacred beauty. Ketu detaches from pleasure while Venus offers it — a profound teaching.', deep:'The renunciation of the most beautiful attachments. What you let go of here, you never needed.' },
+      Sun:    { surface:'Soul clarity through detachment from external authority.', deep:'The fire of the Atman burns away the constructed self. This is the initiation of the true identity.' },
+      Moon:   { surface:'Emotional release. Let the feelings move without attaching to the story.', deep:'The deep waters of past-life grief surface. You are releasing sorrow that is not even from this life.' },
+      Mars:   { surface:'Spiritual warrior activation. Fight for liberation, not for territory.', deep:'Past-life warrior karma reaches resolution. The sword is finally put down — or finally picked up for the right reason.' },
+      Rahu:   { surface:'The axis of karma: Ketu releases what Rahu was craving.', deep:'The great cosmic irony: what you have been reaching for was always behind you.' },
+      Jupiter:{ surface:'Moksha through dharma. The spiritual path clarifies completely.', deep:'The guru and the void. Ketu makes the teaching transparent — what is left is pure gnana.' },
+      Saturn: { surface:'Karmic liberation through discipline and service.', deep:'The final karma is being settled. What remains after Saturn-Ketu has nothing false left in it.' },
+      Mercury:{ surface:'Intuitive knowing beyond analytical thought.', deep:'The mind finally falls silent. In the silence, the answer was always already present.' },
+    }
+  },
+  Venus: {
+    years:20, symbol:'♀', color:'#F472B6',
+    surface:'20-year period of love, creative abundance, luxury, relational deepening, and the full enjoyment of life as a spiritual practice.',
+    middle:'Marriage, partnerships, and creative ventures reach their fullest expression. Beauty becomes a vehicle for dharma. The 20 years reward those who have learned to give and receive love without contraction.',
+    deep:'Venus Dasha is the Shukra transmission — the understanding that beauty is not superficial but is the face of the divine in the material world. The 20 years ask: can you remain in the field of pleasure without being captured by it? Can you love without possessing?',
+    shadow:'Indulgence, over-attachment, using beauty to avoid depth, luxury that numbs spiritual sensitivity.',
+    gift:'The capacity to make the entire world more beautiful simply by being fully present within it.',
+    sadhana:'Chant: Aum Dram Drīm Draum Sah Shukraya Namah. Create something beautiful every Friday. Offer white flowers.',
+    antar:{
+      Venus:  { surface:'Maximum creative and relational abundance. Receive it all.', deep:'The mirror of the beloved. What you love most clearly reveals what you are.' },
+      Sun:    { surface:'Creative authority. Your beauty and your soul-purpose align.', deep:'The sacred self-love that is not vanity but recognition of the divine in form.' },
+      Moon:   { surface:'Love and nourishment at their most fluid. Creative abundance flows.', deep:'The mother and the beloved merge. What you give and what you receive become the same gesture.' },
+      Mars:   { surface:'Passionate action in love and creativity.', deep:'The sacred masculine-feminine integration. Mars stops fighting; Venus stops yielding. Something new is born.' },
+      Rahu:   { surface:'Intoxicating and unconventional love. Handle with discernment.', deep:'The beautiful illusion at its most seductive. This is where spiritual discrimination is most tested.' },
+      Jupiter:{ surface:'Dharmic love. Relationships that serve a purpose beyond themselves.', deep:'The sacred partnership. When Jupiter blesses Venus, love becomes the highest spiritual path.' },
+      Saturn: { surface:'Love that deepens through commitment, limitation, and time.', deep:'Saturn teaches Venus the difference between infatuation and devotion. What survives this is eternal.' },
+      Mercury:{ surface:'Eloquent love. The pen, the song, and the conversation become vehicles of beauty.', deep:'Saraswati and Lakshmi together. Creative intelligence at the peak of its expression.' },
+      Ketu:   { surface:'Spiritual detachment from pleasure. What is beautiful enough to survive renunciation?', deep:'The most sacred sub-period of Venus Dasha. What remains when all attachment is released is pure love.' },
+    }
+  },
 };
+
+// Backward compat
+const DASHA_MEANINGS: Record<string, string> = Object.fromEntries(
+  Object.entries(DASHA_DATA).map(([k,v]) => [k, v.surface])
+);
 
 // ── Module data (all 32) ──────────────────────────────────────────
 const JYOTISH_MODULES = [
@@ -1333,6 +1518,7 @@ const JyotishChamber: React.FC = () => {
   const [builtTabs, setBuiltTabs] = useState<Set<string>>(new Set(['overview']));
   const [leafConfirmed, setLeafConfirmed] = useState(false);
   const [oracleSections, setOracleSections] = useState<Record<string,string>|null>(null);
+  const [expandedDasha, setExpandedDasha] = useState<'maha'|'antar'|null>(null);
   const [oracleExpandedSection, setOracleExpandedSection] = useState<string|null>(null);
   const [fullReadingLoading, setFullReadingLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
@@ -1931,27 +2117,111 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </OracleCard>
 
                 <OracleCard icon="⬡" label="VIMSHOTTARI DASHA" title={activeMaha ? `${activeMaha.planet} Mahadasha${activeAntar ? ` · ${activeAntar.planet} Antardasha` : ''}` : 'Dasha Timeline'} glow="rgba(212,175,55,0.15)" open={openCards.dasha} onToggle={() => toggleCard('dasha')}>
-                  {activeMaha && (
-                    <>
-                      <div style={{ display:'flex', gap:10, marginBottom:12 }}>
-                        <div style={{ flex:1, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:13, padding:12 }}>
-                          <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Main Period</div>
-                          <div style={{ fontSize:17, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
-                          <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginTop:2 }}>{activeMaha.start} — {activeMaha.end}</div>
+                  {activeMaha && (() => {
+                    const md = DASHA_DATA[activeMaha.planet];
+                    const ad = activeAntar ? DASHA_DATA[activeMaha.planet]?.antar?.[activeAntar.planet] : null;
+                    const isSiddha = ['siddha-quantum','akasha-infinity'].includes(membershipTier||'');
+                    const isAkasha = membershipTier === 'akasha-infinity';
+                    return (
+                      <>
+                        {/* ── Two clickable period pills ── */}
+                        <div style={{ display:'flex', gap:10, marginBottom:14 }}>
+                          {/* Mahadasha pill */}
+                          <div
+                            onClick={() => setExpandedDasha(expandedDasha==='maha' ? null : 'maha')}
+                            style={{ flex:1, background: expandedDasha==='maha' ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)', border:`1px solid ${expandedDasha==='maha' ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.06)'}`, borderRadius:14, padding:'12px 14px', cursor:'pointer', transition:'all 0.2s' }}>
+                            <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:4 }}>Mahadasha · Main Period</div>
+                            <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37', marginBottom:2 }}>{md?.symbol} {activeMaha.planet}</div>
+                            <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginBottom:6 }}>{activeMaha.start} — {activeMaha.end} · {md?.years}yr period</div>
+                            <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>{md?.surface}</p>
+                            <div style={{ fontSize:9, color:'rgba(212,175,55,0.4)', marginTop:6, fontWeight:700 }}>{expandedDasha==='maha' ? '▲ collapse' : '▼ deeper reading'}</div>
+                          </div>
+                          {/* Antardasha pill */}
+                          {activeAntar && (
+                            <div
+                              onClick={() => setExpandedDasha(expandedDasha==='antar' ? null : 'antar')}
+                              style={{ flex:1, background: expandedDasha==='antar' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)', border:`1px solid ${expandedDasha==='antar' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`, borderRadius:14, padding:'12px 14px', cursor:'pointer', transition:'all 0.2s' }}>
+                              <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Antardasha · Sub-Period</div>
+                              <div style={{ fontSize:18, fontWeight:900, color:'rgba(255,255,255,0.8)', marginBottom:2 }}>{DASHA_DATA[activeAntar.planet]?.symbol} {activeAntar.planet}</div>
+                              <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginBottom:6 }}>{activeAntar.start} — {activeAntar.end}</div>
+                              <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', lineHeight:1.6, margin:0 }}>{ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}</p>
+                              <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:6, fontWeight:700 }}>{expandedDasha==='antar' ? '▲ collapse' : '▼ deeper reading'}</div>
+                            </div>
+                          )}
                         </div>
-                        {activeAntar && (
-                          <div style={{ flex:1, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:13, padding:12 }}>
-                            <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Sub-Period</div>
-                            <div style={{ fontSize:17, fontWeight:900, color:'rgba(255,255,255,0.8)' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
-                            <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginTop:2 }}>{activeAntar.start} — {activeAntar.end}</div>
+
+                        {/* ── Mahadasha expanded ── */}
+                        {expandedDasha === 'maha' && md && (
+                          <div style={{ background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.12)', borderRadius:16, padding:'16px 16px', marginBottom:10, display:'flex', flexDirection:'column' as const, gap:12 }}>
+                            <div>
+                              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>The Pattern — Prana-Flow & above</div>
+                              <p style={{ fontSize:13, color:'rgba(255,255,255,0.7)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.middle}</p>
+                            </div>
+                            {isSiddha && (
+                              <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
+                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Soul Depth — Siddha-Quantum & above</div>
+                                <p style={{ fontSize:13, color:'rgba(225,210,185,0.85)', lineHeight:1.8, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.deep}</p>
+                              </div>
+                            )}
+                            {!isSiddha && (
+                              <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:10, display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', borderRadius:10, padding:'10px 12px' }}>
+                                <span style={{ fontSize:14 }}>🔒</span>
+                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Soul Depth reading available on <strong style={{ color:'#D4AF37' }}>Siddha-Quantum</strong> and above</p>
+                              </div>
+                            )}
+                            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                              <div style={{ background:'rgba(255,80,80,0.04)', border:'1px solid rgba(255,80,80,0.12)', borderRadius:12, padding:12 }}>
+                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.5)', marginBottom:5 }}>Shadow</div>
+                                <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{md.shadow}</p>
+                              </div>
+                              <div style={{ background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.12)', borderRadius:12, padding:12 }}>
+                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:5 }}>Gift</div>
+                                <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{md.gift}</p>
+                              </div>
+                            </div>
+                            {isAkasha && (
+                              <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
+                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>✦ Sadhana Prescription — Ākāsha-Infinity</div>
+                                <p style={{ fontSize:12.5, color:'rgba(212,175,55,0.8)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.sadhana}</p>
+                              </div>
+                            )}
+                            {!isAkasha && (
+                              <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:10, display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', borderRadius:10, padding:'10px 12px' }}>
+                                <span style={{ fontSize:14 }}>🔒</span>
+                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Sadhana Prescription available on <strong style={{ color:'#D4AF37' }}>Ākāsha-Infinity</strong></p>
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                      <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65 }}>
-                        <strong style={{ color:'#D4AF37' }}>{activeMaha.planet}:</strong>{' '}{DASHA_MEANINGS[activeMaha.planet]||''}
-                      </p>
-                    </>
-                  )}
+
+                        {/* ── Antardasha expanded ── */}
+                        {expandedDasha === 'antar' && activeAntar && (
+                          <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, padding:'16px 16px', marginBottom:10, display:'flex', flexDirection:'column' as const, gap:12 }}>
+                            <div>
+                              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', marginBottom:6 }}>
+                                {activeMaha.planet} Mahadasha · {activeAntar.planet} Antardasha — The Combination
+                              </div>
+                              <p style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>
+                                {ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}
+                              </p>
+                            </div>
+                            {isSiddha && ad?.deep && (
+                              <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:12 }}>
+                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:6 }}>Soul Depth — Siddha-Quantum & above</div>
+                                <p style={{ fontSize:13, color:'rgba(225,210,185,0.85)', lineHeight:1.8, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{ad.deep}</p>
+                              </div>
+                            )}
+                            {!isSiddha && (
+                              <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', borderRadius:10, padding:'10px 12px' }}>
+                                <span style={{ fontSize:14 }}>🔒</span>
+                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Deep Antardasha reading available on <strong style={{ color:'#D4AF37' }}>Siddha-Quantum</strong> and above</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </OracleCard>
 
                 <OracleCard icon="🌅" label="DAILY COSMIC FIELD" title="Today's Panchanga & Planetary Hour" glow="rgba(212,175,55,0.14)" open={openCards.dailyInfluence} onToggle={() => toggleCard('dailyInfluence')}>
