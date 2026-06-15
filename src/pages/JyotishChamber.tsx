@@ -1912,24 +1912,30 @@ const JyotishChamber: React.FC = () => {
     // Try cache first
     const { data: cached } = await supabase
       .from('jyotish_profiles')
-      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data')
+      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data, ascendant, sun_sign, mars_sign')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (cached?.moon_nakshatra) {
-      const eph = (cached as any).ephemeris_data || {};
+      const c = cached as any;
+      const eph = c.ephemeris_data || {};
       setEphemeris({
         moonNakshatra: cached.moon_nakshatra,
         moonLongitude: 0,
-        ascendantSign: eph.ascendant || '',
-        sunSign: eph.sun_sign || '',
-        marsSign: eph.mars_sign || '',
+        ascendantSign: c.ascendant || eph.ascendant || '',
+        sunSign: c.sun_sign || eph.sun_sign || '',
+        marsSign: c.mars_sign || eph.mars_sign || '',
         dashaData: cached.dasha_data as any,
       });
       // Load leaf confirmed status
-      if ((cached as any).bhrigu_leaf_confirmed) setLeafConfirmed(true);
+      if (c.bhrigu_leaf_confirmed) setLeafConfirmed(true);
+      // If ascendant/mars not yet populated (older row), recalculate to backfill
+      if (!c.ascendant || !c.mars_sign) {
+        calculateEphemeris(bd);
+      }
       return;
     }
+
     // Calculate fresh
     await calculateEphemeris(bd);
   };
