@@ -895,7 +895,7 @@ const Healing: React.FC = () => {
 
       <div className="h-divider" />
 
-      {/* ══ SIDDHA HEALERS SOVEREIGN PATH ══ */}
+      {/* ══ SIDDHA HEALERS SOVEREIGN PATH — SQI 2050 ══ */}
       <section style={{ padding: '0 22px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div className="h-micro" style={{ marginBottom: 6 }}>Siddha Quantum · Living Transmission</div>
@@ -908,7 +908,7 @@ const Healing: React.FC = () => {
         {pathsLoading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[1,2,3].map(i => (
-              <div key={i} style={{ height: 96, borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div key={i} style={{ height: 88, borderRadius: 22, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }} />
             ))}
           </div>
         ) : sovereignPaths.length === 0 ? (
@@ -916,7 +916,7 @@ const Healing: React.FC = () => {
             No paths available yet — the Akasha is preparing your curriculum.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {sovereignPaths.map((path) => {
               const pathKey = normalizeSpiritualPathSlugKey(path.slug);
               const pathTitle = t(`spiritualPath.paths.${pathKey}.title`, path.title);
@@ -927,98 +927,93 @@ const Healing: React.FC = () => {
 
               return (
                 <div key={path.id} style={{
-                  background: 'rgba(255,255,255,0.015)',
-                  border: `1px solid ${isOpen ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.05)'}`,
-                  borderRadius: 24,
+                  background: 'rgba(255,255,255,0.018)',
+                  border: `1px solid ${(isOpen || (prog?.is_active && !prog.completed_at)) ? 'rgba(212,175,55,0.38)' : 'rgba(255,255,255,0.06)'}`,
+                  borderRadius: 22,
                   overflow: 'hidden',
-                  transition: 'border-color .3s',
-                  boxShadow: isOpen ? '0 0 32px rgba(212,175,55,0.08)' : 'none',
+                  transition: 'border-color .3s, box-shadow .3s',
+                  boxShadow: (isOpen || (prog?.is_active && !prog.completed_at)) ? '0 0 40px rgba(212,175,55,0.08)' : 'none',
                 }}>
-                  {/* Path header — always visible */}
+
+                  {/* ── Card Header ── */}
                   <div
                     onClick={() => {
-                      if (isOpen) {
-                        setExpandedPath(null);
-                      } else {
-                        setExpandedPath(path.id);
-                        setSelectedPath(path);
-                      }
+                      if (isOpen) { setExpandedPath(null); } else { setExpandedPath(path.id); setSelectedPath(path); }
                     }}
                     style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', cursor: 'pointer' }}
                   >
-                    {/* Cover thumbnail */}
-                    <div style={{ width: 52, height: 52, borderRadius: 14, overflow: 'hidden', flexShrink: 0, background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* Thumbnail */}
+                    <div style={{ width: 64, height: 64, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {path.cover_image_url ? (
                         <img src={path.cover_image_url} alt={pathTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span style={{ fontSize: 22 }}>🌿</span>
+                        <span style={{ fontSize: 26 }}>🌿</span>
                       )}
                     </div>
 
+                    {/* Meta */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 600, color: isOpen ? '#D4AF37' : 'rgba(255,255,255,0.85)', letterSpacing: '0.02em', marginBottom: 4, lineHeight: 1.3 }}>
+                      <div style={{ fontFamily: "'Cinzel',serif", fontSize: 15, fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1.3, marginBottom: 7, color: (prog?.is_active && !prog.completed_at) ? '#D4AF37' : 'rgba(255,255,255,0.88)' }}>
                         {pathTitle}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>⏱ {path.duration_days} days</span>
-                        <span style={{ fontSize: 10, color: 'rgba(212,175,55,0.6)' }}>★ +{path.shc_reward_total} SHC</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>⏱ {path.duration_days} days</span>
+                        <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontWeight: 700 }}>★ +{path.shc_reward_total} SHC</span>
                         {prog?.is_active && !prog.completed_at && (
-                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 20, padding: '2px 8px' }}>Active</span>
+                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 100, padding: '3px 10px' }}>Active</span>
                         )}
                         {prog?.completed_at && (
-                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.28)', borderRadius: 20, padding: '2px 8px' }}>✓ Complete</span>
+                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 100, padding: '3px 10px' }}>✓ Complete</span>
                         )}
                       </div>
                       {prog && (
-                        <div style={{ marginTop: 6 }}>
-                          <div style={{ height: 3, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                        <div style={{ marginTop: 9 }}>
+                          <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: 5 }}>
                             <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99, transition: 'width .4s ease' }} />
                           </div>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>Day {prog.current_day} of {path.duration_days}</div>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Day {prog.current_day} of {path.duration_days}</div>
                         </div>
                       )}
                     </div>
 
-                    <div style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14, transition: 'transform .3s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>▼</div>
+                    {/* Chevron */}
+                    <div style={{ color: 'rgba(212,175,55,0.42)', fontSize: 11, transition: 'transform .3s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>▼</div>
                   </div>
 
-                  {/* Expanded module content */}
+                  {/* ── Expanded Body ── */}
                   {isOpen && (
-                    <div style={{ borderTop: '1px solid rgba(212,175,55,0.08)', padding: '0 18px 18px' }}>
-                      {/* Description */}
+                    <div style={{ borderTop: '1px solid rgba(212,175,55,0.07)', padding: '0 18px 18px' }}>
                       {pathDesc && (
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, padding: '14px 0 10px', fontStyle: 'italic' }}>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.75, padding: '14px 0', fontStyle: 'italic' }}>
                           {pathDesc}
                         </div>
                       )}
 
-                      {/* Start / Progress CTA */}
+                      {/* Begin / Progress CTA */}
                       {!prog ? (
                         <button
                           type="button"
                           onClick={() => startPath.mutate(path.id)}
                           disabled={startPath.isPending}
-                          style={{ width: '100%', padding: '11px 0', borderRadius: 100, fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#D4AF37,#B8960C)', color: '#050505', border: 'none', cursor: 'pointer', marginBottom: 14, opacity: startPath.isPending ? 0.6 : 1 }}
+                          style={{ width: '100%', padding: '12px', borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#D4AF37,#B8960C)', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14, opacity: startPath.isPending ? 0.6 : 1 }}
                         >
                           {startPath.isPending ? 'Initiating...' : '▶ Begin This Path'}
                         </button>
                       ) : !prog.completed_at && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 14, background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)', marginBottom: 14 }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 3 }}>Your Progress</div>
-                            <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
-                              <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99 }} />
-                            </div>
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} SHC earned</div>
+                        <div style={{ padding: '10px 14px', borderRadius: 14, background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.12)', marginBottom: 14 }}>
+                          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 5 }}>Your Progress</div>
+                          <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 4 }}>
+                            <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99 }} />
                           </div>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} SHC earned</div>
                         </div>
                       )}
 
-                      {/* Daily modules accordion */}
+                      {/* Module list */}
                       {pathDaysLoading ? (
                         <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>Loading modules...</div>
                       ) : pathDays.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                           {pathDays.map((day) => {
                             const currentDay = prog?.current_day || 0;
                             const isCompleted = day.day_number < currentDay;
@@ -1027,44 +1022,48 @@ const Healing: React.FC = () => {
                             const dayTitle = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.title`, day.title) : day.title;
                             const dayDesc = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.description`, day.description || '') : (day.description || '');
                             const affirmation = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.affirmation`, day.affirmation || '') : (day.affirmation || '');
-                            const journalPrompt = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.journalPrompt`, day.journal_prompt || '') : (day.journal_prompt || '');
                             const mantraText = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.mantraText`, day.mantra_text || '') : (day.mantra_text || '');
                             const breathDesc = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.breathingDescription`, day.breathing_description || '') : (day.breathing_description || '');
+                            const journalPrompt = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.journalPrompt`, day.journal_prompt || '') : (day.journal_prompt || '');
 
                             return (
                               <Accordion key={day.id} type="single" collapsible defaultValue={isCurrentDay ? `day-${day.day_number}` : undefined}>
-                                <AccordionItem value={`day-${day.day_number}`} style={{ background: 'rgba(255,255,255,0.015)', border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.2)' : isCurrentDay ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 16, overflow: 'hidden' }}>
-                                  <AccordionTrigger style={{ padding: '12px 16px' }} className="hover:no-underline">
+                                <AccordionItem value={`day-${day.day_number}`} style={{
+                                  background: isCompleted ? 'rgba(16,185,129,0.06)' : isCurrentDay ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.012)',
+                                  border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.18)' : isCurrentDay ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.04)'}`,
+                                  borderRadius: 14, overflow: 'hidden',
+                                }}>
+                                  <AccordionTrigger style={{ padding: '10px 13px' }} className="hover:no-underline">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                      <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isCompleted ? 'rgba(16,185,129,0.15)' : isLocked ? 'rgba(255,255,255,0.04)' : 'rgba(212,175,55,0.12)', border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.4)' : isLocked ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.35)'}` }}>
-                                        {isCompleted ? (
-                                          <span style={{ fontSize: 11, color: '#10B981' }}>✓</span>
-                                        ) : isLocked ? (
-                                          <Lock size={10} style={{ color: 'rgba(255,255,255,0.25)' }} />
-                                        ) : (
-                                          <span style={{ fontSize: 10, fontWeight: 800, color: '#D4AF37' }}>{day.day_number}</span>
-                                        )}
+                                      {/* Day number circle */}
+                                      <div style={{
+                                        width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: isCompleted ? 13 : 9, fontWeight: 800,
+                                        background: isCompleted ? 'rgba(16,185,129,0.12)' : isCurrentDay ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.04)',
+                                        border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.38)' : isCurrentDay ? 'rgba(212,175,55,0.42)' : 'rgba(255,255,255,0.08)'}`,
+                                        color: isCompleted ? '#10B981' : isCurrentDay ? '#D4AF37' : 'rgba(255,255,255,0.22)',
+                                      }}>
+                                        {isCompleted ? '✓' : isLocked ? <Lock size={9} /> : day.day_number}
                                       </div>
                                       <div style={{ textAlign: 'left' }}>
-                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 600, color: isLocked ? 'rgba(255,255,255,0.3)' : isCompleted ? 'rgba(16,185,129,0.8)' : 'rgba(255,255,255,0.85)', letterSpacing: '0.02em' }}>
+                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 600, letterSpacing: '0.02em', color: isLocked ? 'rgba(255,255,255,0.28)' : isCompleted ? 'rgba(16,185,129,0.85)' : 'rgba(255,255,255,0.85)', lineHeight: 1.35 }}>
                                           Day {day.day_number}: {dayTitle}
                                         </div>
-                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2 }}>+{day.shc_reward} SHC</div>
+                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2, opacity: isLocked ? 0.4 : 1 }}>+{day.shc_reward} SHC</div>
                                       </div>
                                     </div>
                                   </AccordionTrigger>
                                   {!isLocked && (
                                     <AccordionContent>
-                                      <div style={{ padding: '0 16px 14px 48px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                      <div style={{ padding: '0 13px 13px 47px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                         {dayDesc && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>{dayDesc}</p>}
-
                                         {affirmation && (
                                           <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)' }}>
                                             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>Affirmation</div>
                                             <p style={{ fontSize: 12, fontStyle: 'italic', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>"{affirmation}"</p>
                                           </div>
                                         )}
-
                                         {mantraText && (
                                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                                             <Music size={13} style={{ color: '#D4AF37', marginTop: 2, flexShrink: 0 }} />
@@ -1074,7 +1073,6 @@ const Healing: React.FC = () => {
                                             </div>
                                           </div>
                                         )}
-
                                         {breathDesc && (
                                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                                             <Wind size={13} style={{ color: 'rgba(34,211,238,0.7)', marginTop: 2, flexShrink: 0 }} />
@@ -1084,7 +1082,6 @@ const Healing: React.FC = () => {
                                             </div>
                                           </div>
                                         )}
-
                                         {journalPrompt && (
                                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                                             <BookOpen size={13} style={{ color: 'rgba(255,255,255,0.4)', marginTop: 2, flexShrink: 0 }} />
@@ -1094,13 +1091,12 @@ const Healing: React.FC = () => {
                                             </div>
                                           </div>
                                         )}
-
                                         {isCurrentDay && prog && !prog.completed_at && (
                                           <button
                                             type="button"
                                             onClick={() => completeDay.mutate({ progressId: prog.id, dayReward: day.shc_reward })}
                                             disabled={completeDay.isPending}
-                                            style={{ width: '100%', padding: '10px 0', borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#10B981,#059669)', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 4, opacity: completeDay.isPending ? 0.6 : 1 }}
+                                            style={{ width: '100%', padding: '11px', borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#10B981,#059669)', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 4, opacity: completeDay.isPending ? 0.6 : 1 }}
                                           >
                                             {completeDay.isPending ? 'Completing...' : `✓ Complete Day ${day.day_number}`}
                                           </button>
