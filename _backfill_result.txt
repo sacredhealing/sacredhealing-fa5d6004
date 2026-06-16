@@ -3,19 +3,14 @@
 
 
 🐋 Cupsey
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+   page 1: 13 txs
    parsed: 0 swaps
    ✅ inserted: 0
 
 🐋 Heyitsyolo
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
-   parsed: 0 swaps
+   page 1: 97 txs
+   parsed: 2 swaps
+  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might
    ✅ inserted: 0
 
 🐋 Remusofmars
@@ -37,9 +32,9 @@
 🐋 Shreem Brzee
   ⏳ 429 — waiting 8s (attempt 1)
   ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
-   parsed: 0 swaps
+   page 1: 46 txs
+   parsed: 46 swaps
+  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might
    ✅ inserted: 0
 
 🐋 Lenion
@@ -176,10 +171,10 @@
 
 Per whale:
   Cupsey: 0 swaps → 0 inserted
-  Heyitsyolo: 0 swaps → 0 inserted
+  Heyitsyolo: 2 swaps → 0 inserted
   Remusofmars: 0 swaps → 0 inserted
   Orange: 0 swaps → 0 inserted
-  Shreem Brzee: 0 swaps → 0 inserted
+  Shreem Brzee: 46 swaps → 0 inserted
   Lenion: 0 swaps → 0 inserted
   Boredboar: 0 swaps → 0 inserted
   Hades: 0 swaps → 0 inserted
