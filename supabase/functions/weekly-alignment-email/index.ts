@@ -659,15 +659,18 @@ function buildEmail(
     subject = generated.subject.trim();
   }
 
-  // Prepend the personal opening + body (Kritagya/Laila voice) before the segment body
-  const personalBlock = (generated.opening || generated.body)
-    ? `<p style="color:#D4AF37;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;font-weight:700;">From ${generated.sender}, Uddevalla</p>
+  const senderLabel = generated.sender === "Laila" ? "Laila Amrouche" : "Adam Kritagya Das";
+  const hasGenerated = !!(generated.opening || generated.body);
+
+  // When Gemini produced real text, the personal block fully replaces the segment copy.
+  // Segment copy only renders as a fallback if Gemini failed completely.
+  const personalBlock = hasGenerated
+    ? `<p style="color:#D4AF37;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;font-weight:700;">From ${senderLabel}</p>
        ${generated.opening ? `<p>${generated.opening}</p>` : ""}
-       ${generated.body ? `<p>${generated.body}</p>` : ""}
-       <hr style="border:none;border-top:1px solid rgba(212,175,55,0.15);margin:20px 0;" />`
+       ${generated.body ? `<p>${generated.body}</p>` : ""}`
     : "";
 
-  const fullBodyHtml = `${personalBlock}${bodyHtml}`;
+  const fullBodyHtml = hasGenerated ? personalBlock : bodyHtml;
 
   const digestBlock = buildContentDigest(newContent, L, appUrl);
 
