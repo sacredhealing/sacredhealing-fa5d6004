@@ -401,7 +401,7 @@ serve(async (req) => {
     const res = await callAI({
       messages: allMessages,
       max_tokens: 4000,
-      temperature: 1.0,
+      temperature: 2.0,
     });
 
     if (!res.ok) {
