@@ -42,6 +42,101 @@ function resolveLang(pref: string | null): Lang {
   return "en";
 }
 
+// ═══════════════════════════════════════════════════
+// GEMINI — Personal opening (Kritagya / Laila voice)
+// ═══════════════════════════════════════════════════
+
+async function generatePersonalOpening(
+  segment: string,
+  geminiKey: string,
+  weekDate: string,
+  contentItems: Array<{ title: string; type: string }>
+): Promise<{ subject: string; opening: string; body: string; sender: "Kritagya" | "Laila" }> {
+
+  const KRITAGYA_VOICE = `
+You are writing as Kritagya Das (born Adam in Sweden, Spanish father, given name by Satguru Paramahamsa Vishwananda). Father of 3 children. Lives in Uddevalla on the west coast of Sweden. On the Bhakti path 20+ years. Makes Sacred Healing Music with his wife Laila. Greets with Jai Gurudev naturally.
+
+His real writing voice — from actual posts and bio:
+- "pleasure to walk with this incredible talented soul — we are coming with a new song soon"
+- "I have been on the spiritual path for over 20 years and I am sharing my experiences to inspire and uplift spiritual seekers across the world"
+- "I was born in Sweden as Adam with a Spanish father. When I became a devotee of my beloved Satguru I was given the name Kritagya Das"
+- "Life led me to become a healer and a guide for people who feel the call in their hearts"
+- "Together with my wife we have created The Sacred Healing Music. Healing music with mantras, beats, and deeper inspirations that we share with the world"
+- "I am also a father of 3 children that we bring up in a joyful spiritual environment in the west coast of Sweden"
+
+Rules:
+- Short sentences. Warm. Never marketing language. Never performative.
+- Start from a real moment in Uddevalla — morning, practice, children, music — before mentioning the app
+- Reference app features naturally, never as a list
+- 150-200 words total across all sections
+`;
+
+  const LAILA_VOICE = `
+Laila Amrouche. Kritagya's wife. Lives in Uddevalla. Singing healer. Runs DanceYoga and online morning yoga.
+
+Her real writing voice:
+- "Sahaja: Total surrender to uninhibited, fluid movement, allowing the body to organically ride the rhythm and dissolve any tension. Come to my DanceYoga Thursdays 16.30 and try it out!"
+- "Welcome to online morning yoga! Mondays 07.00 – 07.30. Comment yoga for the invite"
+- Bio: "Singing Healer for Transformation — listen with your Heart and Remember YOU"
+
+Rules:
+- Embodied, direct, practical-spiritual in the same breath
+- Writes like she is talking to someone in the room
+- No spiritual jargon. Real language about real experiences.
+`;
+
+  const isFriday = new Date().getDay() === 5;
+  const voice = isFriday ? LAILA_VOICE : KRITAGYA_VOICE;
+  const sender: "Kritagya" | "Laila" = isFriday ? "Laila" : "Kritagya";
+
+  const contentList = contentItems.length > 0
+    ? contentItems.map(c => `- ${c.title} (${c.type})`).join("\n")
+    : "General improvements to the Nexus this week";
+
+  const prompt = `${voice}
+
+Week: ${weekDate}
+User segment this week: ${segment}
+New in the Nexus this week:
+${contentList}
+
+Write THREE sections as JSON. Total 150-200 words:
+
+1. SUBJECT: (6-9 words, personal, from ${sender}, no hype)
+2. OPENING: (2-3 sentences — a real moment from life in Uddevalla this week)
+3. BODY: (3-4 sentences — bridges personal life to the Nexus, weaves in what's new naturally)
+
+Return only valid JSON:
+{"subject":"...","opening":"...","body":"..."}`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 1.1, maxOutputTokens: 400 },
+        }),
+      }
+    );
+    const data = await res.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "{}";
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+    return { ...parsed, sender };
+  } catch (err) {
+    console.error("[WEEKLY-ALIGNMENT] Gemini opening failed:", err);
+    return {
+      subject: "Monday from Uddevalla",
+      opening: "Jai Gurudev. Writing to you from home this Monday.",
+      body: "We have been working in the Nexus this week. Some things have deepened.",
+      sender,
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -202,14 +297,33 @@ serve(async (req) => {
 
     log(`Segmented ${userStates.length} users (skipped ${alreadySentIds.size} already emailed)`);
 
+    // ── Generate this week's personal opening (Kritagya/Laila voice via Gemini) ──
+    const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
+    const weekDate = new Date().toLocaleDateString("en-GB", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
+    });
+    const topContentItems = weeklyNewContent.slice(0, 4).map((c) => ({
+      title: c.content_title,
+      type: c.content_type,
+    }));
+    const generatedCopy = geminiKey
+      ? await generatePersonalOpening("mixed", geminiKey, weekDate, topContentItems)
+      : { subject: "", opening: "", body: "", sender: "Kritagya" as const };
+    log("Generated personal opening", { sender: generatedCopy.sender, hasSubject: !!generatedCopy.subject });
+
+    // Override sender identity in From header to match the chosen voice
+    const personalFromEmail = generatedCopy.sender === "Laila"
+      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Laila Amrouche <noreply@siddhaquantumnexus.com>")
+      : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
+
     // ── Send ──
     let sentEmails = 0;
     let errors = 0;
 
     for (const user of userStates) {
       try {
-        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent);
-        await resend.emails.send({ from: fromEmail, to: [user.email], subject, html, text });
+        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy);
+        await resend.emails.send({ from: personalFromEmail, to: [user.email], subject, html, text });
         await supabase.from("user_weekly_email_log").insert({
           user_id: user.userId, week_start: weekStartStr,
           segment: user.segment, email_type: "weekly_alignment",
@@ -455,7 +569,12 @@ function buildContentDigest(items: ContentItem[], lang: Lang, appUrl: string): s
 // EMAIL BUILDER
 // ═══════════════════════════════════════════════════
 
-function buildEmail(user: UserState, appUrl: string, newContent: ContentItem[]): { subject: string; html: string; text: string } {
+function buildEmail(
+  user: UserState,
+  appUrl: string,
+  newContent: ContentItem[],
+  generated: { subject: string; opening: string; body: string; sender: "Kritagya" | "Laila" }
+): { subject: string; html: string; text: string } {
   const name = user.fullName || t.seeker[user.language];
   const L = user.language;
   const nadi = user.nadiBaseline;
@@ -511,6 +630,21 @@ function buildEmail(user: UserState, appUrl: string, newContent: ContentItem[]):
     }
   }
 
+  // Override with Gemini-generated personal subject when available
+  if (generated.subject && generated.subject.trim().length > 0) {
+    subject = generated.subject.trim();
+  }
+
+  // Prepend the personal opening + body (Kritagya/Laila voice) before the segment body
+  const personalBlock = (generated.opening || generated.body)
+    ? `<p style="color:#D4AF37;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;font-weight:700;">From ${generated.sender}, Uddevalla</p>
+       ${generated.opening ? `<p>${generated.opening}</p>` : ""}
+       ${generated.body ? `<p>${generated.body}</p>` : ""}
+       <hr style="border:none;border-top:1px solid rgba(212,175,55,0.15);margin:20px 0;" />`
+    : "";
+
+  const fullBodyHtml = `${personalBlock}${bodyHtml}`;
+
   const digestBlock = buildContentDigest(newContent, L, appUrl);
 
   const html = `<!DOCTYPE html>
@@ -523,10 +657,11 @@ function buildEmail(user: UserState, appUrl: string, newContent: ContentItem[]):
       <p style="${styles.headerSubStyle}">${t.headerSub[L]}</p>
     </div>
     <div style="${styles.content}">
-      ${bodyHtml}
+      ${fullBodyHtml}
     </div>
     ${digestBlock}
     <div style="${styles.footer}">
+      <p style="${styles.footerTextStyle}">— With love, Kritagya &amp; Laila · Uddevalla</p>
       <p style="${styles.footerTextStyle}">${t.footerText[L]}</p>
       <p style="${styles.footerTextStyle}"><a href="${appUrl}/dashboard?unsubscribe=true" style="color:#D4AF37;">${t.unsubscribe[L]}</a></p>
     </div>
@@ -534,7 +669,7 @@ function buildEmail(user: UserState, appUrl: string, newContent: ContentItem[]):
 </body>
 </html>`;
 
-  const text = bodyHtml.replace(/<[^>]*>/g, "").replace(/\n\s*\n/g, "\n\n").trim();
+  const text = fullBodyHtml.replace(/<[^>]*>/g, "").replace(/\n\s*\n/g, "\n\n").trim();
   return { subject, html, text };
 }
 
