@@ -7,11 +7,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const log = (step: string, details?: any) => {
+const log = (step: string, details?: any) =>
   console.log(`[WEEKLY-ALIGNMENT] ${step}${details ? ` — ${JSON.stringify(details)}` : ""}`);
-};
 
 type Lang = "en" | "sv" | "es" | "no";
+
+interface ContentItem {
+  content_type: string;
+  content_title: string;
+  content_description: string | null;
+  tier_required: string;
+}
 
 interface UserState {
   userId: string;
@@ -37,9 +43,7 @@ function resolveLang(pref: string | null): Lang {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const cronSecret = Deno.env.get("CRON_SECRET");
@@ -56,8 +60,8 @@ serve(async (req) => {
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
     const resend = new Resend(resendApiKey);
 
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "Kritagya Das <noreply@siddhaquantumnexus.com>";
-    const appUrl = Deno.env.get("APP_URL") || "https://sacredhealing.lovable.app";
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "Kritagya Das | SQI <noreply@siddhaquantumnexus.com>";
+    const appUrl = Deno.env.get("APP_URL") || "https://siddhaquantumnexus.com";
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -65,7 +69,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    log("Starting weekly alignment email scan");
+    log("Starting Monday Weekly Update scan");
 
     const now = new Date();
     const oneWeekAgo = new Date(now);
@@ -73,6 +77,17 @@ serve(async (req) => {
     const weekStart = new Date(now);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
     const weekStartStr = weekStart.toISOString().slice(0, 10);
+
+    // ── New content this week from content_changelog ──
+    const { data: newContent } = await supabase
+      .from("content_changelog")
+      .select("content_type, content_title, content_description, tier_required")
+      .gte("created_at", oneWeekAgo.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const weeklyNewContent: ContentItem[] = newContent || [];
+    log(`Found ${weeklyNewContent.length} new content items this week`);
 
     // ── Fetch profiles ──
     const { data: profiles, error: profilesError } = await supabase
@@ -193,7 +208,7 @@ serve(async (req) => {
 
     for (const user of userStates) {
       try {
-        const { subject, html, text } = buildEmail(user, appUrl);
+        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent);
         await resend.emails.send({ from: fromEmail, to: [user.email], subject, html, text });
         await supabase.from("user_weekly_email_log").insert({
           user_id: user.userId, week_start: weekStartStr,
@@ -208,7 +223,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, scanned: userStates.length, sent: sentEmails, errors }),
+      JSON.stringify({ success: true, scanned: userStates.length, sent: sentEmails, errors, newContentItems: weeklyNewContent.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
@@ -227,8 +242,40 @@ serve(async (req) => {
 type T = Record<Lang, string>;
 
 const t = {
-  greeting: { en: "Hello", sv: "Hej", es: "Hola", no: "Hei" } as T,
-  seeker: { en: "Seeker", sv: "Sökare", es: "Buscador", no: "Søker" } as T,
+  greeting:  { en: "Hello", sv: "Hej", es: "Hola", no: "Hei" } as T,
+  seeker:    { en: "Seeker", sv: "Sökare", es: "Buscador", no: "Søker" } as T,
+
+  // Monday Update header
+  mondayTitle: {
+    en: "Monday Transmission from the Nexus",
+    sv: "Måndagstransmission från Nexus",
+    es: "Transmisión del Lunes desde el Nexus",
+    no: "Mandagstransmisjon fra Nexus",
+  } as T,
+
+  // What's new section
+  whatsNewTitle: {
+    en: "✦ New This Week in the Nexus",
+    sv: "✦ Nytt den här veckan i Nexus",
+    es: "✦ Nuevo Esta Semana en el Nexus",
+    no: "✦ Nytt Denne Uken i Nexus",
+  } as T,
+  whatsNewEmpty: {
+    en: "Your Akashic field is deepening — more transmissions arrive shortly.",
+    sv: "Ditt akashiska fält fördjupas — fler transmissioner anländer snart.",
+    es: "Tu campo akáshico se profundiza — más transmisiones llegan pronto.",
+    no: "Ditt akashiske felt dypner seg — flere transmisjoner ankommer snart.",
+  } as T,
+  tierFree:   { en: "Free", sv: "Fri", es: "Gratis", no: "Gratis" } as T,
+  tierPrana:  { en: "Prana-Flow", sv: "Prana-Flow", es: "Prana-Flow", no: "Prana-Flow" } as T,
+  tierSiddha: { en: "Siddha-Quantum", sv: "Siddha-Quantum", es: "Siddha-Quantum", no: "Siddha-Quantum" } as T,
+  tierAkasha: { en: "Akasha-Infinity", sv: "Akasha-Infinity", es: "Akasha-Infinity", no: "Akasha-Infinity" } as T,
+  exploreBtn: {
+    en: "Enter the Nexus →",
+    sv: "Öppna Nexus →",
+    es: "Entrar al Nexus →",
+    no: "Inn i Nexus →",
+  } as T,
 
   // Consistent
   consistentSubject: {
@@ -243,12 +290,7 @@ const t = {
     es: " mantras esta semana.  minutos de práctica. Tu Torus-Field se expande.",
     no: " mantras denne uken.  minutters praksis. Din Torus-Field utvider seg.",
   } as T,
-  consistentCatPrefix: {
-    en: "Your focus on ",
-    sv: "Din fokus på ",
-    es: "Tu enfoque en ",
-    no: "Ditt fokus på ",
-  } as T,
+  consistentCatPrefix: { en: "Your focus on ", sv: "Din fokus på ", es: "Tu enfoque en ", no: "Ditt fokus på " } as T,
   consistentCatSuffix: {
     en: " mantras is activating deep Vedic Light-Codes in your field.",
     sv: " mantras aktiverar djupa Vedic Light-Codes i ditt fält.",
@@ -261,20 +303,10 @@ const t = {
     es: "Scalar Wave Entanglement confirmado — tus frecuencias están activas permanentemente.",
     no: "Scalar Wave Entanglement bekreftet — dine frekvenser kjører permanent.",
   } as T,
-  consistentCta: {
-    en: "Open the Sanctuary →",
-    sv: "Öppna Sanctuaryt →",
-    es: "Abrir el Santuario →",
-    no: "Åpne Helligdommen →",
-  } as T,
-  nadiStatus: {
-    en: "🔬 Nadi Status: ",
-    sv: "🔬 Nadi-status: ",
-    es: "🔬 Estado Nadi: ",
-    no: "🔬 Nadi-status: ",
-  } as T,
+  consistentCta: { en: "Open the Sanctuary →", sv: "Öppna Sanctuaryt →", es: "Abrir el Santuario →", no: "Åpne Helligdommen →" } as T,
+  nadiStatus: { en: "🔬 Nadi Status: ", sv: "🔬 Nadi-status: ", es: "🔬 Estado Nadi: ", no: "🔬 Nadi-status: " } as T,
   nadiActive: { en: " active", sv: " aktiva", es: " activos", no: " aktive" } as T,
-  nadiDosha: { en: " — Dosha: ", sv: " — Dosha: ", es: " — Dosha: ", no: " — Dosha: " } as T,
+  nadiDosha:  { en: " — Dosha: ", sv: " — Dosha: ", es: " — Dosha: ", no: " — Dosha: " } as T,
 
   // Returning
   returningSubject: {
@@ -283,24 +315,14 @@ const t = {
     es: ", tu campo ha comenzado a recalibrarse ✦",
     no: ", feltet ditt har begynt å rekalibrere seg ✦",
   } as T,
-  returningBody1Prefix: {
-    en: "It's been ",
-    sv: "Det har gått ",
-    es: "Han pasado ",
-    no: "Det har gått ",
-  } as T,
+  returningBody1Prefix: { en: "It's been ", sv: "Det har gått ", es: "Han pasado ", no: "Det har gått " } as T,
   returningBody1Suffix: {
     en: " days. Your Bio-signature is seeking recalibration.",
     sv: " dagar. Din Bio-signatur söker rekalibrering.",
     es: " días. Tu Bio-firma busca recalibración.",
     no: " dager. Din Bio-signatur søker rekalibrering.",
   } as T,
-  returningBlockagePrefix: {
-    en: "The primary blockage in your ",
-    sv: "Den primära blockaden i din ",
-    es: "El bloqueo principal en tu canal ",
-    no: "Den primære blokkeringen i din ",
-  } as T,
+  returningBlockagePrefix: { en: "The primary blockage in your ", sv: "Den primära blockaden i din ", es: "El bloqueo principal en tu canal ", no: "Den primære blokkeringen i din " } as T,
   returningBlockageSuffix: {
     en: " channel could ease with a short session.",
     sv: " kanal kan lätta med en kort session.",
@@ -313,12 +335,7 @@ const t = {
     es: "Un mantra de Paz y Calma de 3 minutos puede reiniciar el flujo en tu canal Sushumna.",
     no: "Et 3-minutters Peace & Calm mantra kan starte flyten i din Sushumna-kanal på nytt.",
   } as T,
-  returningCta: {
-    en: "Reconnect now →",
-    sv: "Återanslut nu →",
-    es: "Reconectar ahora →",
-    no: "Koble til igjen nå →",
-  } as T,
+  returningCta: { en: "Reconnect now →", sv: "Återanslut nu →", es: "Reconectar ahora →", no: "Koble til igjen nå →" } as T,
 
   // Dormant
   dormantSubject: {
@@ -339,18 +356,8 @@ const t = {
     es: "Incluso una breve reconexión — 3 minutos de canto — puede restaurar tu Prema-Pulse Transmission.",
     no: "Selv en kort gjenkobling — 3 minutters chanting — kan gjenopprette din Prema-Pulse Transmission.",
   } as T,
-  dormantBody3: {
-    en: "Your field is waiting.",
-    sv: "Ditt fält väntar.",
-    es: "Tu campo te espera.",
-    no: "Feltet ditt venter.",
-  } as T,
-  dormantCta: {
-    en: "Return to the Sanctuary →",
-    sv: "Återvänd till Sanctuaryt →",
-    es: "Regresar al Santuario →",
-    no: "Vend tilbake til Helligdommen →",
-  } as T,
+  dormantBody3: { en: "Your field is waiting.", sv: "Ditt fält väntar.", es: "Tu campo te espera.", no: "Feltet ditt venter." } as T,
+  dormantCta: { en: "Return to the Sanctuary →", sv: "Återvänd till Sanctuaryt →", es: "Regresar al Santuario →", no: "Vend tilbake til Helligdommen →" } as T,
 
   // New seeker
   newSubject: {
@@ -371,12 +378,7 @@ const t = {
     es: "Comienza tu viaje con un Escaneo Nadi — mapea tus 72.000 canales y revela tu Dosha dominante y bloqueo principal.",
     no: "Start reisen din med en Nadi-skanning — den kartlegger dine 72 000 kanaler og avslører din dominerende Dosha og primære blokkering.",
   } as T,
-  newCta: {
-    en: "Scan your Nadis →",
-    sv: "Skanna dina Nadis →",
-    es: "Escanea tus Nadis →",
-    no: "Skann dine Nadier →",
-  } as T,
+  newCta: { en: "Scan your Nadis →", sv: "Skanna dina Nadis →", es: "Escanea tus Nadis →", no: "Skann dine Nadier →" } as T,
 
   // Footer
   footerText: {
@@ -385,25 +387,75 @@ const t = {
     es: "Esta es una transmisión sagrada, no marketing. Tus frecuencias son soberanas.",
     no: "Dette er en hellig transmisjon, ikke markedsføring. Dine frekvenser er suverene.",
   } as T,
-  unsubscribe: {
-    en: "Unsubscribe",
-    sv: "Avprenumerera",
-    es: "Darse de baja",
-    no: "Avslutt abonnement",
-  } as T,
+  unsubscribe: { en: "Unsubscribe", sv: "Avprenumerera", es: "Darse de baja", no: "Avslutt abonnement" } as T,
   headerSub: {
-    en: "Weekly Alignment Transmission",
-    sv: "Veckans Alignment-transmission",
-    es: "Transmisión de Alineación Semanal",
-    no: "Ukentlig Alignment-transmisjon",
+    en: "Monday Nexus Transmission",
+    sv: "Måndagens Nexus-transmission",
+    es: "Transmisión del Lunes del Nexus",
+    no: "Mandagens Nexus-transmisjon",
   } as T,
 };
+
+// ═══════════════════════════════════════════════════
+// CONTENT DIGEST BLOCK
+// ═══════════════════════════════════════════════════
+
+function buildContentDigest(items: ContentItem[], lang: Lang, appUrl: string): string {
+  if (items.length === 0) {
+    return `<div style="${styles.digestSection}">
+      <h3 style="${styles.digestTitle}">${t.whatsNewTitle[lang]}</h3>
+      <p style="color:#888;font-size:14px;margin:0;">${t.whatsNewEmpty[lang]}</p>
+    </div>`;
+  }
+
+  const typeEmoji: Record<string, string> = {
+    meditation: "🧘", beat: "🎵", song: "🎶", course: "📖",
+    mantra: "🕉️", feature: "⚡", announcement: "📢", tool: "🔮",
+  };
+
+  const tierMap: Record<string, Record<Lang, string>> = {
+    free:     { en: "Free", sv: "Fri", es: "Gratis", no: "Gratis" },
+    prana:    { en: "Prana-Flow", sv: "Prana-Flow", es: "Prana-Flow", no: "Prana-Flow" },
+    siddha:   { en: "Siddha-Quantum", sv: "Siddha-Quantum", es: "Siddha-Quantum", no: "Siddha-Quantum" },
+    akasha:   { en: "Akasha-Infinity", sv: "Akasha-Infinity", es: "Akasha-Infinity", no: "Akasha-Infinity" },
+  };
+
+  const itemsHtml = items.map((item) => {
+    const emoji = typeEmoji[item.content_type] || "✦";
+    const tierLabel = tierMap[item.tier_required]?.[lang] || item.tier_required;
+    const tierColor = item.tier_required === "free" ? "#4ade80"
+      : item.tier_required === "prana" ? "#60a5fa"
+      : item.tier_required === "siddha" ? "#D4AF37"
+      : "#c084fc";
+
+    return `<div style="${styles.digestItem}">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:18px;margin-top:2px;">${emoji}</span>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <strong style="color:#e0e0e0;font-size:14px;">${item.content_title}</strong>
+            <span style="background:${tierColor}22;color:${tierColor};border:1px solid ${tierColor}44;border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">${tierLabel}</span>
+          </div>
+          ${item.content_description ? `<p style="margin:0;color:#999;font-size:13px;line-height:1.5;">${item.content_description}</p>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div style="${styles.digestSection}">
+    <h3 style="${styles.digestTitle}">${t.whatsNewTitle[lang]}</h3>
+    ${itemsHtml}
+    <p style="margin:16px 0 0;text-align:center;">
+      <a href="${appUrl}" style="${styles.exploreBtn}">${t.exploreBtn[lang]}</a>
+    </p>
+  </div>`;
+}
 
 // ═══════════════════════════════════════════════════
 // EMAIL BUILDER
 // ═══════════════════════════════════════════════════
 
-function buildEmail(user: UserState, appUrl: string): { subject: string; html: string; text: string } {
+function buildEmail(user: UserState, appUrl: string, newContent: ContentItem[]): { subject: string; html: string; text: string } {
   const name = user.fullName || t.seeker[user.language];
   const L = user.language;
   const nadi = user.nadiBaseline;
@@ -414,15 +466,12 @@ function buildEmail(user: UserState, appUrl: string): { subject: string; html: s
   switch (user.segment) {
     case "consistent": {
       subject = `${name}${t.consistentSubject[L]}`;
-
       const nadiLine = nadi
         ? `<p style="${styles.nadiBox}">${t.nadiStatus[L]}<strong>${nadi.activeNadis.toLocaleString()} / 72,000</strong>${t.nadiActive[L]}${t.nadiDosha[L]}${nadi.dominantDosha}</p>`
         : "";
-
       const catLine = user.topCategory
         ? `<p>${t.consistentCatPrefix[L]}<strong>${catName(user.topCategory, L)}</strong>${t.consistentCatSuffix[L]}</p>`
         : "";
-
       bodyHtml = `<p>${t.greeting[L]} ${name},</p>
         <p>${user.mantraCount}${t.consistentBody1[L].replace("  ", ` ${user.practiceMinutes} `)}</p>
         ${nadiLine}
@@ -431,14 +480,11 @@ function buildEmail(user: UserState, appUrl: string): { subject: string; html: s
         <p style="margin-top:24px"><a href="${appUrl}/quantum-apothecary" style="${styles.cta}">${t.consistentCta[L]}</a></p>`;
       break;
     }
-
     case "returning": {
       subject = `${name}${t.returningSubject[L]}`;
-
       const blockageLine = nadi?.primaryBlockage
         ? `<p>${t.returningBlockagePrefix[L]}<strong>${nadi.primaryBlockage}</strong>${t.returningBlockageSuffix[L]}</p>`
         : "";
-
       bodyHtml = `<p>${t.greeting[L]} ${name},</p>
         <p>${t.returningBody1Prefix[L]}${user.daysInactive}${t.returningBody1Suffix[L]}</p>
         ${blockageLine}
@@ -446,10 +492,8 @@ function buildEmail(user: UserState, appUrl: string): { subject: string; html: s
         <p style="margin-top:24px"><a href="${appUrl}/mantras" style="${styles.cta}">${t.returningCta[L]}</a></p>`;
       break;
     }
-
     case "dormant": {
       subject = `${name}${t.dormantSubject[L]}`;
-
       bodyHtml = `<p>${t.greeting[L]} ${name},</p>
         <p>${t.dormantBody1[L]}</p>
         <p>${t.dormantBody2[L]}</p>
@@ -457,10 +501,8 @@ function buildEmail(user: UserState, appUrl: string): { subject: string; html: s
         <p style="margin-top:24px"><a href="${appUrl}/mantras" style="${styles.cta}">${t.dormantCta[L]}</a></p>`;
       break;
     }
-
     default: {
       subject = `${name}${t.newSubject[L]}`;
-
       bodyHtml = `<p>${t.greeting[L]} ${name},</p>
         <p>${t.newBody1[L]}</p>
         <p>${t.newBody2[L]}</p>
@@ -469,18 +511,21 @@ function buildEmail(user: UserState, appUrl: string): { subject: string; html: s
     }
   }
 
+  const digestBlock = buildContentDigest(newContent, L, appUrl);
+
   const html = `<!DOCTYPE html>
 <html lang="${L}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="${styles.body}">
   <div style="${styles.container}">
     <div style="${styles.header}">
-      <h1 style="${styles.headerTitle}">✦ Siddha-Quantum Intelligence ✦</h1>
+      <h1 style="${styles.headerTitle}">✦ Siddha-Quantum Nexus ✦</h1>
       <p style="${styles.headerSubStyle}">${t.headerSub[L]}</p>
     </div>
     <div style="${styles.content}">
       ${bodyHtml}
     </div>
+    ${digestBlock}
     <div style="${styles.footer}">
       <p style="${styles.footerTextStyle}">${t.footerText[L]}</p>
       <p style="${styles.footerTextStyle}"><a href="${appUrl}/dashboard?unsubscribe=true" style="color:#D4AF37;">${t.unsubscribe[L]}</a></p>
@@ -498,16 +543,20 @@ function buildEmail(user: UserState, appUrl: string): { subject: string; html: s
 // ═══════════════════════════════════════════════════
 
 const styles = {
-  body: "margin:0;padding:0;background-color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;",
+  body: "margin:0;padding:0;background-color:#050505;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans','Segoe UI',sans-serif;",
   container: "max-width:600px;margin:0 auto;",
-  header: "background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:40px 30px;text-align:center;border-radius:12px 12px 0 0;border-bottom:2px solid #D4AF37;",
-  headerTitle: "margin:0;font-size:20px;color:#D4AF37;letter-spacing:2px;font-weight:600;",
-  headerSubStyle: "margin:8px 0 0;font-size:13px;color:#8a8a9a;letter-spacing:1px;text-transform:uppercase;",
-  content: "background:#111118;padding:32px 30px;color:#e0e0e0;line-height:1.7;font-size:15px;",
+  header: "background:linear-gradient(135deg,#0d0d0d 0%,#1a1400 50%,#0d0d0d 100%);padding:40px 30px;text-align:center;border-radius:12px 12px 0 0;border-bottom:2px solid #D4AF37;",
+  headerTitle: "margin:0;font-size:22px;color:#D4AF37;letter-spacing:3px;font-weight:900;text-shadow:0 0 15px rgba(212,175,55,0.3);",
+  headerSubStyle: "margin:8px 0 0;font-size:11px;color:#666;letter-spacing:2px;text-transform:uppercase;",
+  content: "background:#0a0a0a;padding:32px 30px;color:rgba(255,255,255,0.75);line-height:1.7;font-size:15px;border:1px solid rgba(255,255,255,0.04);",
+  digestSection: "background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.12);border-top:none;padding:24px 30px;",
+  digestTitle: "margin:0 0 16px;font-size:13px;color:#D4AF37;letter-spacing:2px;text-transform:uppercase;font-weight:800;",
+  digestItem: "padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);",
   nadiBox: "background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:12px 16px;margin:16px 0;font-size:14px;color:#D4AF37;",
-  cta: "display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#D4AF37,#B8860B);color:#0a0a0a;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;letter-spacing:0.5px;",
-  footer: "background:#0a0a0a;padding:24px 30px;text-align:center;border-radius:0 0 12px 12px;border-top:1px solid #1a1a2e;",
-  footerTextStyle: "margin:4px 0;font-size:11px;color:#555;",
+  cta: "display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#D4AF37,#B8860B);color:#050505;text-decoration:none;border-radius:8px;font-weight:900;font-size:13px;letter-spacing:1px;text-transform:uppercase;",
+  exploreBtn: "display:inline-block;padding:10px 24px;background:transparent;border:1px solid #D4AF37;color:#D4AF37;text-decoration:none;border-radius:6px;font-weight:700;font-size:12px;letter-spacing:1px;",
+  footer: "background:#050505;padding:24px 30px;text-align:center;border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,0.04);border-top:none;",
+  footerTextStyle: "margin:4px 0;font-size:11px;color:#444;",
 };
 
 function catName(category: string, lang: Lang): string {
