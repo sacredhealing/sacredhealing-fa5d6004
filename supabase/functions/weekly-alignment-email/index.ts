@@ -630,6 +630,21 @@ function buildEmail(
     }
   }
 
+  // Override with Gemini-generated personal subject when available
+  if (generated.subject && generated.subject.trim().length > 0) {
+    subject = generated.subject.trim();
+  }
+
+  // Prepend the personal opening + body (Kritagya/Laila voice) before the segment body
+  const personalBlock = (generated.opening || generated.body)
+    ? `<p style="color:#D4AF37;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;font-weight:700;">From ${generated.sender}, Uddevalla</p>
+       ${generated.opening ? `<p>${generated.opening}</p>` : ""}
+       ${generated.body ? `<p>${generated.body}</p>` : ""}
+       <hr style="border:none;border-top:1px solid rgba(212,175,55,0.15);margin:20px 0;" />`
+    : "";
+
+  const fullBodyHtml = `${personalBlock}${bodyHtml}`;
+
   const digestBlock = buildContentDigest(newContent, L, appUrl);
 
   const html = `<!DOCTYPE html>
@@ -642,10 +657,11 @@ function buildEmail(
       <p style="${styles.headerSubStyle}">${t.headerSub[L]}</p>
     </div>
     <div style="${styles.content}">
-      ${bodyHtml}
+      ${fullBodyHtml}
     </div>
     ${digestBlock}
     <div style="${styles.footer}">
+      <p style="${styles.footerTextStyle}">— With love, Kritagya &amp; Laila · Uddevalla</p>
       <p style="${styles.footerTextStyle}">${t.footerText[L]}</p>
       <p style="${styles.footerTextStyle}"><a href="${appUrl}/dashboard?unsubscribe=true" style="color:#D4AF37;">${t.unsubscribe[L]}</a></p>
     </div>
@@ -653,7 +669,7 @@ function buildEmail(
 </body>
 </html>`;
 
-  const text = bodyHtml.replace(/<[^>]*>/g, "").replace(/\n\s*\n/g, "\n\n").trim();
+  const text = fullBodyHtml.replace(/<[^>]*>/g, "").replace(/\n\s*\n/g, "\n\n").trim();
   return { subject, html, text };
 }
 
