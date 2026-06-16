@@ -6669,6 +6669,105 @@ export type Database = {
         }
         Relationships: []
       }
+      shreem_brzee_paper_trades: {
+        Row: {
+          action: string
+          created_at: string | null
+          fail_reason: string | null
+          failed: boolean | null
+          fee_sol: number | null
+          gross_sol: number | null
+          id: number
+          label: string | null
+          mint: string
+          mult: number | null
+          mult_source: string | null
+          net_sol: number | null
+          pnl_sol: number | null
+          portfolio_after: number | null
+          session_id: string | null
+          sig: string | null
+          slip_sol: number | null
+          symbol: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          fail_reason?: string | null
+          failed?: boolean | null
+          fee_sol?: number | null
+          gross_sol?: number | null
+          id?: number
+          label?: string | null
+          mint: string
+          mult?: number | null
+          mult_source?: string | null
+          net_sol?: number | null
+          pnl_sol?: number | null
+          portfolio_after?: number | null
+          session_id?: string | null
+          sig?: string | null
+          slip_sol?: number | null
+          symbol?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          fail_reason?: string | null
+          failed?: boolean | null
+          fee_sol?: number | null
+          gross_sol?: number | null
+          id?: number
+          label?: string | null
+          mint?: string
+          mult?: number | null
+          mult_source?: string | null
+          net_sol?: number | null
+          pnl_sol?: number | null
+          portfolio_after?: number | null
+          session_id?: string | null
+          sig?: string | null
+          slip_sol?: number | null
+          symbol?: string | null
+        }
+        Relationships: []
+      }
+      shreem_brzee_session: {
+        Row: {
+          id: string
+          losses: number | null
+          portfolio: number
+          positions: Json | null
+          start_balance: number
+          started_at: string | null
+          total_pnl: number | null
+          updated_at: string | null
+          wins: number | null
+        }
+        Insert: {
+          id?: string
+          losses?: number | null
+          portfolio?: number
+          positions?: Json | null
+          start_balance?: number
+          started_at?: string | null
+          total_pnl?: number | null
+          updated_at?: string | null
+          wins?: number | null
+        }
+        Update: {
+          id?: string
+          losses?: number | null
+          portfolio?: number
+          positions?: Json | null
+          start_balance?: number
+          started_at?: string | null
+          total_pnl?: number | null
+          updated_at?: string | null
+          wins?: number | null
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           content: string
