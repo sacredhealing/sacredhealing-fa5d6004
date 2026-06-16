@@ -1,23 +1,24 @@
 /**
- * SHREEM BRZEE — Helius Enhanced Webhook Receiver
- * Edge function deployed to Supabase.
- * Helius calls this URL every time a tracked whale wallet transacts.
- * We parse the swap, write to shreem_brzee_signals.
+ * SHREEM BRZEE — Helius Webhook + Paper Trade Relay
+ * Deployed to ssygukfdbtehvtndandn (Lovable Supabase).
+ * Two modes:
+ *   POST /shreem-helius-webhook          → called by Helius when a whale swaps
+ *   POST /shreem-helius-webhook/paper    → called by Hetzner paper server to save trades/session
+ *   GET  /shreem-helius-webhook/session  → paper server reads current session
  */
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
-const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const WEBHOOK_AUTH  = Deno.env.get('HELIUS_WEBHOOK_AUTH') ?? ''; // optional secret
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
-// 21 Elite whale wallets — Solana addresses
 const WHALE_WALLETS: Record<string, string> = {
   'FnCPt5VWxHyRE6oFGLuJEf4tzmLEJPdPKXdnCumHzMQT': 'Remusofmars',
   'AzEn6PEKCiHRkKHPELwVoK2pHcUjQrAMYyNxaVkgKnwH': 'Cupsey',
-  'HeyitsYoloXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX': 'Heyitsyolo',
+  'HeyitsYoloWALLET111111111111111111111111111111': 'Heyitsyolo',
   'EVvpKxsMzn7F65fMr6qbJuBaAvuZhZr5KSbJ5gH3UW8m': 'Ansem',
   'GDfnEsia2WLAW5t8yx2X5j2mkfA74i5kwGdDuZHt7XmG': 'MustStopMurad',
   'J8dBCKrQZa3AMBJqxnpWmPJFo6KjpgFmBuJ5BW5JLCW': 'Layah',
@@ -38,159 +39,118 @@ const WHALE_WALLETS: Record<string, string> = {
   'GZcV8e8JXbnfS7J3cXbMpgqGAf3vFZJcmLFJSxMvqiY': 'Nansen_0x',
 };
 
-// SOL mint address
-const SOL_MINT = 'So11111111111111111111111111111111111111112';
+function cors(body: string | null, status = 200) {
+  return new Response(body, {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+    },
+  });
+}
 
-function findTokenSwap(tx: any): { action: 'BUY' | 'SELL'; mint: string; symbol?: string; amountSol?: number; tokenAmount?: number; isPumpFun: boolean } | null {
+function parseSwap(tx: any) {
   try {
-    // Look for token transfers in the enhanced transaction
+    const accountData = tx.accountData || [];
+    const walletAddr = Object.keys(WHALE_WALLETS).find(w =>
+      tx.feePayer === w || accountData.some((a: any) => a.account === w)
+    );
+    if (!walletAddr) return null;
+
     const tokenTransfers = tx.tokenTransfers || [];
     const nativeTransfers = tx.nativeTransfers || [];
-    
-    // Find the wallet that triggered this webhook
-    const accountData = tx.accountData || [];
-    const walletAddr = Object.keys(WHALE_WALLETS).find(w => 
-      tx.feePayer === w || 
-      accountData.some((a: any) => a.account === w)
-    );
-    
-    if (!walletAddr) return null;
-    
-    // Detect buy: whale sends SOL, receives token
-    // Detect sell: whale sends token, receives SOL
-    let mint = '';
-    let action: 'BUY' | 'SELL' = 'BUY';
-    let amountSol = 0;
-    let tokenAmount = 0;
-    let symbol = '';
-    
-    // Parse native SOL movement for the whale
-    const solMoved = nativeTransfers.find((t: any) => 
-      t.fromUserAccount === walletAddr || t.toUserAccount === walletAddr
-    );
-    
-    // Find the token involved (not SOL)
+
     const tokenTransfer = tokenTransfers.find((t: any) =>
       t.fromUserAccount === walletAddr || t.toUserAccount === walletAddr
     );
-    
-    if (tokenTransfer) {
-      mint = tokenTransfer.mint;
-      symbol = tokenTransfer.tokenName || tokenTransfer.symbol || '';
-      tokenAmount = tokenTransfer.tokenAmount || 0;
-      
-      if (tokenTransfer.toUserAccount === walletAddr) {
-        action = 'BUY'; // whale received token
-      } else {
-        action = 'SELL'; // whale sent token
-      }
-    }
-    
-    if (solMoved) {
-      amountSol = (solMoved.amount || 0) / 1e9;
-    }
-    
-    // Fallback: parse from instructions if swap detected
-    if (!mint) {
-      const type = tx.type?.toUpperCase() || '';
-      if (!type.includes('SWAP') && !type.includes('TRANSFER')) return null;
-      
-      // Try to get mint from the description
-      const desc = tx.description || '';
-      const mintMatch = desc.match(/[A-Za-z0-9]{32,44}/g);
-      if (mintMatch) {
-        mint = mintMatch.find((m: string) => m !== walletAddr) || '';
-      }
-    }
-    
+    const solMoved = nativeTransfers.find((t: any) =>
+      t.fromUserAccount === walletAddr || t.toUserAccount === walletAddr
+    );
+
+    if (!tokenTransfer) return null;
+
+    const mint = tokenTransfer.mint;
     if (!mint || mint === SOL_MINT) return null;
-    
-    // Detect pump.fun
+
+    const action: 'BUY' | 'SELL' = tokenTransfer.toUserAccount === walletAddr ? 'BUY' : 'SELL';
+    const amountSol = solMoved ? (solMoved.amount || 0) / 1e9 : null;
+    const tokenAmount = tokenTransfer.tokenAmount || null;
+    const symbol = tokenTransfer.tokenName || tokenTransfer.symbol || null;
     const isPumpFun = (tx.source || '').toLowerCase().includes('pump') ||
       (tx.instructions || []).some((ix: any) => ix.programId === '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P');
-    
-    return { action, mint, symbol, amountSol, tokenAmount, isPumpFun };
-  } catch {
-    return null;
-  }
+
+    return { wallet: walletAddr, label: WHALE_WALLETS[walletAddr], action, mint, symbol, amountSol, tokenAmount, isPumpFun };
+  } catch { return null; }
 }
 
 serve(async (req) => {
-  // CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' }
-    });
+  if (req.method === 'OPTIONS') return cors(null);
+
+  const url = new URL(req.url);
+  const isSession = url.pathname.endsWith('/session');
+  const isPaper   = url.pathname.endsWith('/paper');
+
+  // ── GET /session — paper server reads current session state ──────
+  if (req.method === 'GET' && isSession) {
+    const { data } = await sb.from('shreem_brzee_session').select('*').eq('id', 'default').single();
+    return cors(JSON.stringify(data || null));
   }
-  
-  // Validate Helius auth header if configured
-  if (WEBHOOK_AUTH) {
-    const authHeader = req.headers.get('authorization') || req.headers.get('x-webhook-secret') || '';
-    if (!authHeader.includes(WEBHOOK_AUTH)) {
-      console.warn('[webhook] Unauthorized request');
-      return new Response('Unauthorized', { status: 401 });
+
+  // ── POST /paper — paper server writes trade + session ────────────
+  if (req.method === 'POST' && isPaper) {
+    const body = await req.json();
+    const { type, trade, session } = body;
+
+    if (type === 'trade' && trade) {
+      await sb.from('shreem_brzee_paper_trades').insert(trade);
     }
+    if (type === 'session' && session) {
+      await sb.from('shreem_brzee_session').upsert({ id: 'default', ...session, updated_at: new Date().toISOString() });
+    }
+    if (type === 'both' && trade && session) {
+      await Promise.all([
+        sb.from('shreem_brzee_paper_trades').insert(trade),
+        sb.from('shreem_brzee_session').upsert({ id: 'default', ...session, updated_at: new Date().toISOString() }),
+      ]);
+    }
+    return cors(JSON.stringify({ ok: true }));
   }
-  
+
+  // ── POST / — Helius enhanced webhook ─────────────────────────────
+  if (req.method !== 'POST') return cors('{"error":"method"}', 405);
+
   let body: any;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response('Bad JSON', { status: 400 });
-  }
-  
-  // Helius sends an array of enhanced transactions
+  try { body = await req.json(); } catch { return cors('{"error":"bad json"}', 400); }
+
   const transactions = Array.isArray(body) ? body : [body];
-  
-  let inserted = 0;
-  let skipped  = 0;
-  
+  let inserted = 0, skipped = 0;
+
   for (const tx of transactions) {
     try {
-      // Find which whale wallet triggered this
-      const accountData = tx.accountData || [];
-      const walletAddr = Object.keys(WHALE_WALLETS).find(w => 
-        tx.feePayer === w ||
-        accountData.some((a: any) => a.account === w)
-      );
-      
-      if (!walletAddr) { skipped++; continue; }
-      
-      const swap = findTokenSwap(tx);
+      const swap = parseSwap(tx);
       if (!swap) { skipped++; continue; }
-      
-      const sig = tx.signature;
-      
-      // Upsert — deduplicate by signature
-      const { error } = await supabase
-        .from('shreem_brzee_signals')
-        .upsert({
-          sig,
-          wallet:       walletAddr,
-          label:        WHALE_WALLETS[walletAddr],
-          action:       swap.action,
-          mint:         swap.mint,
-          symbol:       swap.symbol || null,
-          amount_sol:   swap.amountSol || null,
-          token_amount: swap.tokenAmount || null,
-          is_pump_fun:  swap.isPumpFun,
-          block_time:   tx.timestamp || null,
-        }, { onConflict: 'sig' });
-      
-      if (error) {
-        console.error('[webhook] insert error:', error.message, '| sig:', sig);
-        skipped++;
-      } else {
+
+      const { error } = await sb.from('shreem_brzee_signals').upsert({
+        sig:          tx.signature,
+        wallet:       swap.wallet,
+        label:        swap.label,
+        action:       swap.action,
+        mint:         swap.mint,
+        symbol:       swap.symbol,
+        amount_sol:   swap.amountSol,
+        token_amount: swap.tokenAmount,
+        is_pump_fun:  swap.isPumpFun,
+        block_time:   tx.timestamp || null,
+      }, { onConflict: 'sig' });
+
+      if (error) { console.error('[signal] insert error:', error.message); skipped++; }
+      else {
         inserted++;
-        console.log(`[webhook] ✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[walletAddr]} — ${(swap.amountSol || 0).toFixed(4)} SOL`);
+        console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${swap.label}`);
       }
-    } catch (e: any) {
-      console.error('[webhook] tx parse error:', e.message);
-      skipped++;
-    }
+    } catch (e: any) { console.error('[signal] parse error:', e.message); skipped++; }
   }
-  
-  return new Response(JSON.stringify({ ok: true, inserted, skipped }), {
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-  });
+
+  return cors(JSON.stringify({ ok: true, inserted, skipped }));
 });
