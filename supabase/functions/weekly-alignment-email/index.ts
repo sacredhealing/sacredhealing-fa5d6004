@@ -85,9 +85,10 @@ Rules:
 - No spiritual jargon. Real language about real experiences.
 `;
 
+  const forced = (globalThis as any).__FORCE_VOICE__ as "Kritagya" | "Laila" | undefined;
   const isFriday = new Date().getDay() === 5;
-  const voice = isFriday ? LAILA_VOICE : KRITAGYA_VOICE;
-  const sender: "Kritagya" | "Laila" = isFriday ? "Laila" : "Kritagya";
+  const sender: "Kritagya" | "Laila" = forced || (isFriday ? "Laila" : "Kritagya");
+  const voice = sender === "Laila" ? LAILA_VOICE : KRITAGYA_VOICE;
 
   const contentList = contentItems.length > 0
     ? contentItems.map(c => `- ${c.title} (${c.type})`).join("\n")
