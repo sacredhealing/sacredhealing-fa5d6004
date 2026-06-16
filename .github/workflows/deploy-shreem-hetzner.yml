@@ -1,0 +1,50 @@
+name: Deploy Shreem Brzee to Hetzner
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'deploy | restart | status | logs'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - restart
+          - status
+          - logs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Setup SSH
+        run: |
+          sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -p 22 -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "SSH ready"
+
+      - name: Write bootstrap
+        run: |
+          echo "IyEvYmluL2Jhc2gKc2V0IC1lCkdIX1RPS0VOPSIkezF9IgoKZWNobyAi4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQIgplY2hvICIgIFNIUkVFTSBCUlpFRSDigJQgSGV0em5lciBEZXBsb3kiCmVjaG8gIuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkCIKCm5vZGUgLXYgJiYgZWNobyAibnBtICQobnBtIC12KSIKClJFUE89Ii9yb290L3NocmVlbS1icnplZSIKCmlmIFsgISAtZCAiJFJFUE8vLmdpdCIgXTsgdGhlbgogIGVjaG8gIkNsb25pbmcuLi4iCiAgZ2l0IGNsb25lICJodHRwczovL3gtYWNjZXNzLXRva2VuOiR7R0hfVE9LRU59QGdpdGh1Yi5jb20vc2FjcmVkaGVhbGluZy9zYWNyZWRoZWFsaW5nLWZhNWQ2MDA0LmdpdCIgIiRSRVBPIiAtLWRlcHRoPTEgLS1xdWlldAogIGVjaG8gIkNsb25lZCBPSyIKZWxzZQogIGVjaG8gIlB1bGxpbmcgbGF0ZXN0Li4uIgogIGNkICIkUkVQTyIKICBnaXQgcmVtb3RlIHNldC11cmwgb3JpZ2luICJodHRwczovL3gtYWNjZXNzLXRva2VuOiR7R0hfVE9LRU59QGdpdGh1Yi5jb20vc2FjcmVkaGVhbGluZy9zYWNyZWRoZWFsaW5nLWZhNWQ2MDA0LmdpdCIKICBnaXQgZmV0Y2ggb3JpZ2luIG1haW4gLS1xdWlldCAmJiBnaXQgcmVzZXQgLS1oYXJkIG9yaWdpbi9tYWluIC0tcXVpZXQKICBlY2hvICJQdWxsIE9LIgpmaQoKY2QgIiRSRVBPL3JhaWx3YXkvc2hyZWVtLWJyemVlLWJvdCIKZWNobyAiV29ya2luZyBkaXI6ICQocHdkKSIKCmVjaG8gIkluc3RhbGxpbmcgZGVwZW5kZW5jaWVzLi4uIgpucG0gaW5zdGFsbCAtLW9taXQ9ZGV2IC0tc2lsZW50IDI+JjEgfCB0YWlsIC0zCgplY2hvICJDb21waWxpbmcgVHlwZVNjcmlwdC4uLiIKbnB4IHRzYyAtLXNraXBMaWJDaGVjayAyPiYxIHwgdGFpbCAtNSB8fCB0cnVlCgppZiBbIC1mICJkaXN0L2luZGV4LmpzIiBdOyB0aGVuCiAgZWNobyAiZGlzdC9pbmRleC5qcyByZWFkeSIKZWxzZQogIGVjaG8gIkVSUk9SOiBkaXN0L2luZGV4LmpzIG5vdCBmb3VuZCBhZnRlciB0c2MiCiAgZWNobyAiQ2hlY2tpbmcgdHNjb25maWcuLi4iCiAgY2F0IHRzY29uZmlnLmpzb24KICBleGl0IDEKZmkKCmVjaG8gIlN0YXJ0aW5nIFBNMiBwcm9jZXNzLi4uIgppZiBwbTIgZGVzY3JpYmUgc2hyZWVtLWJyemVlID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICBwbTIgcmVzdGFydCBzaHJlZW0tYnJ6ZWUgLS11cGRhdGUtZW52CiAgZWNobyAi4pyFIHNocmVlbS1icnplZSBSRVNUQVJURUQiCmVsc2UKICBwbTIgc3RhcnQgZGlzdC9pbmRleC5qcyAtLW5hbWUgc2hyZWVtLWJyemVlCiAgZWNobyAi4pyFIHNocmVlbS1icnplZSBTVEFSVEVEIGZyZXNoIgpmaQpwbTIgc2F2ZSAtLWZvcmNlID4gL2Rldi9udWxsCgpzbGVlcCA0CmVjaG8gIiIKZWNobyAi4pWQ4pWQIFBNMiBTVEFUVVMg4pWQ4pWQIgpwbTIgbGlzdAplY2hvICIiCmVjaG8gIuKVkOKVkCBTSFJFRU0gTE9HUyAobGFzdCAyMCkg4pWQ4pWQIgpwbTIgbG9ncyBzaHJlZW0tYnJ6ZWUgLS1saW5lcyAyMCAtLW5vc3RyZWFtIDI+L2Rldi9udWxsIHx8IHRydWUKZWNobyAiIgplY2hvICLilZDilZAgQ0xBV0JPVCAodW50b3VjaGVkKSDilZDilZAiCnBtMiBkZXNjcmliZSBjbGF3Ym90IDI+L2Rldi9udWxsIHwgZ3JlcCAtRSAic3RhdHVzfG5hbWUiIHwgaGVhZCAtMiB8fCB0cnVlCmVjaG8gIuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkCIKZWNobyAiREVQTE9ZIENPTVBMRVRFIgo=" | base64 -d > /tmp/shreem-bootstrap.sh
+          chmod +x /tmp/shreem-bootstrap.sh
+          echo "Bootstrap: $(wc -c < /tmp/shreem-bootstrap.sh) bytes"
+
+      - name: Execute on Hetzner
+        env:
+          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          if [ "$ACTION" = "status" ]; then
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 list && pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true"
+          elif [ "$ACTION" = "restart" ]; then
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 restart shreem-brzee --update-env && pm2 logs shreem-brzee --lines 15 --nostream 2>/dev/null"
+          elif [ "$ACTION" = "logs" ]; then
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 logs shreem-brzee --lines 50 --nostream 2>/dev/null"
+          else
+            sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no /tmp/shreem-bootstrap.sh root@178.105.183.74:/root/shreem-bootstrap.sh
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "chmod +x /root/shreem-bootstrap.sh && bash /root/shreem-bootstrap.sh '${{ env.GH_TOKEN }}' 2>&1"
+          fi
