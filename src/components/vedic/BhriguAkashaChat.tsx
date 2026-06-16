@@ -4,6 +4,7 @@
 // Akasha-Neural Archive v7
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -343,6 +344,13 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
   };
 
   const g: React.CSSProperties = { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 20, padding: 20, marginBottom: 16 };
+  const navigate = useNavigate();
+  const [copiedMsgKey, setCopiedMsgKey] = useState<string | null>(null);
+  const handleCopyMsg = (text: string, key: string) => {
+    navigator.clipboard?.writeText(text).catch(() => {});
+    setCopiedMsgKey(key);
+    setTimeout(() => setCopiedMsgKey((c) => (c === key ? null : c)), 2000);
+  };
 
   return (
     <div style={{ fontFamily: "\'Plus Jakarta Sans\', sans-serif" }}>
@@ -494,6 +502,27 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
         </>
       )}
 
+      {/* ── Lexicon Toolbar ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginBottom: 8, padding: '0 4px' }}>
+        <button
+          type="button"
+          onClick={() => navigate('/lexicon')}
+          style={{
+            background: 'rgba(212,175,55,0.06)',
+            border: '1px solid rgba(212,175,55,0.18)',
+            borderRadius: 20,
+            padding: '5px 14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <span style={{ fontSize: 10 }}>📖</span>
+          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: '#D4AF37' }}>Lexicon</span>
+        </button>
+      </div>
+
       {/* ── Chat messages ── */}
       <div style={g}>
         <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)', marginBottom: 12 }}>🔱 Ask Maharishi Bhrigu</div>
@@ -507,11 +536,31 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
 
           {chatMessages.map((m, i) => (
             m.role === 'oracle' ? (
-              <div key={i} style={{ position: 'relative', padding: '20px 0 14px', background: 'rgba(255,255,255,0.016)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
+              <div key={i} style={{ position: 'relative', padding: '20px 0 10px', background: 'rgba(255,255,255,0.016)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
                 <div style={labelStyle}>Maharishi Bhrigu speaks</div>
                 <div style={{ fontFamily: "\'IM Fell English\', Georgia, serif", fontSize: 16, lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em', wordBreak: 'break-word' as const }}>
                   {m.text.split(/\n\n+/).map((para, pi) => <p key={pi} style={{ margin: pi > 0 ? '14px 0 0' : 0 }}>{para}</p>)}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyMsg(m.text, `oracle-${i}`)}
+                  aria-label="Copy message"
+                  style={{
+                    marginTop: 10,
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase' as const,
+                    color: copiedMsgKey === `oracle-${i}` ? '#22c55e' : '#D4AF37',
+                    padding: 0,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  {copiedMsgKey === `oracle-${i}` ? '✓ Copied' : 'Copy'}
+                </button>
               </div>
             ) : (
               <div key={i} style={{ marginLeft: 'auto', maxWidth: '88%', marginTop: 8, position: 'relative', padding: '13px 20px', background: 'rgba(212,175,55,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -551,3 +600,4 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
 };
 
 export default BhriguAkashaChat;
+
