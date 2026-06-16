@@ -268,7 +268,7 @@ serve(async (req) => {
       };
 
       try {
-        const { subject, html } = buildMondayEmail(user, weeklyContent, appUrl);
+        const { subject, html } = buildMondayEmail(user, dedupedContent, appUrl);
         await resend.emails.send({ from: fromEmail, to: [user.email], subject, html });
         await supabase.from("user_weekly_email_log").insert({
           user_id: uid, week_start: weekStartStr,
@@ -283,7 +283,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, scanned: validProfiles.length, sent, errors, newContent: weeklyContent.length }),
+      JSON.stringify({ success: true, scanned: validProfiles.length, sent, errors, newContent: dedupedContent.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
