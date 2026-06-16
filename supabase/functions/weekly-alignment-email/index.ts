@@ -129,10 +129,10 @@ Output ONLY the three sections with the --- delimiters. No JSON, no code fences,
     );
     const data = await res.json();
     const raw = (data?.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
-    const parts = raw.split('---');
-    const subject = parts[0]?.replace(/SUBJECT:/i, '').trim() || '';
-    const opening = parts[1]?.replace(/OPENING:/i, '').trim() || '';
-    const body = parts[2]?.replace(/BODY:/i, '').trim() || '';
+    const parts = raw.split(/\n---\n/);
+    const subject = parts[0]?.split(/^SUBJECT:\s*/m)[1]?.trim() || '';
+    const opening = parts[1]?.split(/^OPENING:\s*/m)[1]?.trim() || '';
+    const body    = parts[2]?.split(/^BODY:\s*/m)[1]?.trim() || '';
     return { subject, opening, body, sender };
   } catch (err) {
     console.error("[WEEKLY-ALIGNMENT] Gemini opening failed:", err);
