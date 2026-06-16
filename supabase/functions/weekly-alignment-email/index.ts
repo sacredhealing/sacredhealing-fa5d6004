@@ -42,6 +42,101 @@ function resolveLang(pref: string | null): Lang {
   return "en";
 }
 
+// ═══════════════════════════════════════════════════
+// GEMINI — Personal opening (Kritagya / Laila voice)
+// ═══════════════════════════════════════════════════
+
+async function generatePersonalOpening(
+  segment: string,
+  geminiKey: string,
+  weekDate: string,
+  contentItems: Array<{ title: string; type: string }>
+): Promise<{ subject: string; opening: string; body: string; sender: "Kritagya" | "Laila" }> {
+
+  const KRITAGYA_VOICE = `
+You are writing as Kritagya Das (born Adam in Sweden, Spanish father, given name by Satguru Paramahamsa Vishwananda). Father of 3 children. Lives in Uddevalla on the west coast of Sweden. On the Bhakti path 20+ years. Makes Sacred Healing Music with his wife Laila. Greets with Jai Gurudev naturally.
+
+His real writing voice — from actual posts and bio:
+- "pleasure to walk with this incredible talented soul — we are coming with a new song soon"
+- "I have been on the spiritual path for over 20 years and I am sharing my experiences to inspire and uplift spiritual seekers across the world"
+- "I was born in Sweden as Adam with a Spanish father. When I became a devotee of my beloved Satguru I was given the name Kritagya Das"
+- "Life led me to become a healer and a guide for people who feel the call in their hearts"
+- "Together with my wife we have created The Sacred Healing Music. Healing music with mantras, beats, and deeper inspirations that we share with the world"
+- "I am also a father of 3 children that we bring up in a joyful spiritual environment in the west coast of Sweden"
+
+Rules:
+- Short sentences. Warm. Never marketing language. Never performative.
+- Start from a real moment in Uddevalla — morning, practice, children, music — before mentioning the app
+- Reference app features naturally, never as a list
+- 150-200 words total across all sections
+`;
+
+  const LAILA_VOICE = `
+Laila Amrouche. Kritagya's wife. Lives in Uddevalla. Singing healer. Runs DanceYoga and online morning yoga.
+
+Her real writing voice:
+- "Sahaja: Total surrender to uninhibited, fluid movement, allowing the body to organically ride the rhythm and dissolve any tension. Come to my DanceYoga Thursdays 16.30 and try it out!"
+- "Welcome to online morning yoga! Mondays 07.00 – 07.30. Comment yoga for the invite"
+- Bio: "Singing Healer for Transformation — listen with your Heart and Remember YOU"
+
+Rules:
+- Embodied, direct, practical-spiritual in the same breath
+- Writes like she is talking to someone in the room
+- No spiritual jargon. Real language about real experiences.
+`;
+
+  const isFriday = new Date().getDay() === 5;
+  const voice = isFriday ? LAILA_VOICE : KRITAGYA_VOICE;
+  const sender: "Kritagya" | "Laila" = isFriday ? "Laila" : "Kritagya";
+
+  const contentList = contentItems.length > 0
+    ? contentItems.map(c => `- ${c.title} (${c.type})`).join("\n")
+    : "General improvements to the Nexus this week";
+
+  const prompt = `${voice}
+
+Week: ${weekDate}
+User segment this week: ${segment}
+New in the Nexus this week:
+${contentList}
+
+Write THREE sections as JSON. Total 150-200 words:
+
+1. SUBJECT: (6-9 words, personal, from ${sender}, no hype)
+2. OPENING: (2-3 sentences — a real moment from life in Uddevalla this week)
+3. BODY: (3-4 sentences — bridges personal life to the Nexus, weaves in what's new naturally)
+
+Return only valid JSON:
+{"subject":"...","opening":"...","body":"..."}`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 1.1, maxOutputTokens: 400 },
+        }),
+      }
+    );
+    const data = await res.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "{}";
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+    return { ...parsed, sender };
+  } catch (err) {
+    console.error("[WEEKLY-ALIGNMENT] Gemini opening failed:", err);
+    return {
+      subject: "Monday from Uddevalla",
+      opening: "Jai Gurudev. Writing to you from home this Monday.",
+      body: "We have been working in the Nexus this week. Some things have deepened.",
+      sender,
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
