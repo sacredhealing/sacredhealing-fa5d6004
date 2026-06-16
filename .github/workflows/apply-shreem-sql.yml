@@ -7,29 +7,73 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
+      - name: Create shreem tables via Supabase Management API
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          REF="ssygukfdbtehvtndandn"
+          LOG="_shreem_sql_result.txt"
+          echo "=== Shreem Brzee SQL Migration $(date -u) ===" | tee $LOG
+
+          run_sql() {
+            local label="$1"
+            local sql="$2"
+            echo "" | tee -a $LOG
+            echo "--- $label ---" | tee -a $LOG
+            STATUS=$(curl -s -o /tmp/sql_resp.json -w "%{http_code}" \
+              -X POST "https://api.supabase.com/v1/projects/${REF}/database/query" \
+              -H "Authorization: Bearer $PAT" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\": \"$sql\"}")
+            echo "HTTP $STATUS" | tee -a $LOG
+            cat /tmp/sql_resp.json | tee -a $LOG
+            echo "" | tee -a $LOG
+          }
+
+          # ── shreem_brzee_signals ────────────────────────────────────────
+          run_sql "create shreem_brzee_signals" \
+            "CREATE TABLE IF NOT EXISTS public.shreem_brzee_signals (id BIGSERIAL PRIMARY KEY, sig TEXT UNIQUE NOT NULL, wallet TEXT NOT NULL, label TEXT, action TEXT NOT NULL CHECK (action IN ('BUY','SELL')), mint TEXT NOT NULL, symbol TEXT, amount_sol DECIMAL, token_amount DECIMAL, is_pump_fun BOOLEAN DEFAULT false, block_time BIGINT, created_at TIMESTAMPTZ DEFAULT NOW());"
+
+          run_sql "rls shreem_brzee_signals" \
+            "ALTER TABLE public.shreem_brzee_signals ENABLE ROW LEVEL SECURITY; DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_policies WHERE tablename='shreem_brzee_signals' AND policyname='public_read') THEN CREATE POLICY \"public_read\" ON public.shreem_brzee_signals FOR SELECT USING (true); END IF; IF NOT EXISTS (SELECT FROM pg_policies WHERE tablename='shreem_brzee_signals' AND policyname='service_insert') THEN CREATE POLICY \"service_insert\" ON public.shreem_brzee_signals FOR INSERT WITH CHECK (true); END IF; END \$\$;"
+
+          run_sql "realtime shreem_brzee_signals" \
+            "ALTER PUBLICATION supabase_realtime ADD TABLE public.shreem_brzee_signals;"
+
+          # ── shreem_brzee_session ────────────────────────────────────────
+          run_sql "create shreem_brzee_session" \
+            "CREATE TABLE IF NOT EXISTS public.shreem_brzee_session (id TEXT PRIMARY KEY DEFAULT 'default', portfolio DECIMAL NOT NULL DEFAULT 2.0, start_balance DECIMAL NOT NULL DEFAULT 2.0, positions JSONB DEFAULT '{}', total_pnl DECIMAL DEFAULT 0, wins INTEGER DEFAULT 0, losses INTEGER DEFAULT 0, started_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW());"
+
+          run_sql "rls shreem_brzee_session" \
+            "ALTER TABLE public.shreem_brzee_session ENABLE ROW LEVEL SECURITY; DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_policies WHERE tablename='shreem_brzee_session' AND policyname='public_read_session') THEN CREATE POLICY \"public_read_session\" ON public.shreem_brzee_session FOR SELECT USING (true); END IF; IF NOT EXISTS (SELECT FROM pg_policies WHERE tablename='shreem_brzee_session' AND policyname='service_write_session') THEN CREATE POLICY \"service_write_session\" ON public.shreem_brzee_session FOR ALL WITH CHECK (true); END IF; END \$\$;"
+
+          # ── shreem_brzee_paper_trades ───────────────────────────────────
+          run_sql "create shreem_brzee_paper_trades" \
+            "CREATE TABLE IF NOT EXISTS public.shreem_brzee_paper_trades (id BIGSERIAL PRIMARY KEY, session_id TEXT DEFAULT 'default', sig TEXT, mint TEXT NOT NULL, symbol TEXT, label TEXT, action TEXT NOT NULL, gross_sol DECIMAL, net_sol DECIMAL, slip_sol DECIMAL, fee_sol DECIMAL, pnl_sol DECIMAL DEFAULT 0, mult DECIMAL, mult_source TEXT, failed BOOLEAN DEFAULT false, fail_reason TEXT, portfolio_after DECIMAL, created_at TIMESTAMPTZ DEFAULT NOW());"
+
+          run_sql "rls shreem_brzee_paper_trades" \
+            "ALTER TABLE public.shreem_brzee_paper_trades ENABLE ROW LEVEL SECURITY; DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_policies WHERE tablename='shreem_brzee_paper_trades' AND policyname='public_read_trades') THEN CREATE POLICY \"public_read_trades\" ON public.shreem_brzee_paper_trades FOR SELECT USING (true); END IF; IF NOT EXISTS (SELECT FROM pg_policies WHERE tablename='shreem_brzee_paper_trades' AND policyname='service_write_trades') THEN CREATE POLICY \"service_write_trades\" ON public.shreem_brzee_paper_trades FOR ALL WITH CHECK (true); END IF; END \$\$;"
+
+          run_sql "realtime paper_trades + session" \
+            "DO \$\$ BEGIN BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.shreem_brzee_paper_trades; EXCEPTION WHEN others THEN NULL; END; BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.shreem_brzee_session; EXCEPTION WHEN others THEN NULL; END; END \$\$;"
+
+          run_sql "verify tables" \
+            "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'shreem%' ORDER BY table_name;"
+
+          echo "" | tee -a $LOG
+          echo "=== DONE ===" | tee -a $LOG
+          cat $LOG
+
       - uses: actions/checkout@v4
-
-      - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Create shreem_brzee_signals
+      - name: Save result
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          supabase db execute \
-            --project-ref ssygukfdbtehvtndandn \
-            --file supabase/migrations/20260609_shreem_brzee_signals.sql 2>&1
-          echo "shreem_brzee_signals done"
-
-      - name: Create shreem_brzee_session + paper_trades
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          supabase db execute \
-            --project-ref ssygukfdbtehvtndandn \
-            --file supabase/migrations/20260611_shreem_brzee_server.sql 2>&1
-          echo "session + paper_trades done"
-
-      - name: Confirm
-        run: echo "✅ All Shreem Brzee tables created on ssygukfdbtehvtndandn"
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add _shreem_sql_result.txt 2>/dev/null || true
+          git commit -m "ci: shreem sql migration result" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
