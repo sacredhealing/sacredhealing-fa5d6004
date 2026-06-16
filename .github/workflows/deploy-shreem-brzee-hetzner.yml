@@ -8,11 +8,7 @@ on:
         required: true
         default: 'deploy'
         type: choice
-        options:
-          - deploy
-          - restart
-          - status
-          - logs
+        options: [deploy, restart, status, logs]
 
 jobs:
   deploy:
@@ -21,94 +17,89 @@ jobs:
     steps:
       - name: Setup SSH
         run: |
-          sudo apt-get install -y sshpass
+          sudo apt-get install -y sshpass -qq
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          ssh-keyscan -p 22 -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Build & upload bootstrap
+      - name: Run on Hetzner
         env:
-          SUPA_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-        run: |
-          cat > /tmp/shreem-bootstrap.sh << BOOTSTRAP
-          #!/bin/bash
-          set -e
-          GH_TOKEN="\${1}"
-          SUPA_KEY="\${2}"
-
-          echo "══════════════════════════════════════════"
-          echo "  SHREEM BRZEE — Hetzner Deploy"
-          echo "  Supabase: ssygukfdbtehvtndandn (LIVE)"
-          echo "══════════════════════════════════════════"
-
-          if ! command -v node &>/dev/null; then
-            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-            apt-get install -y nodejs
-          fi
-
-          REPO_DIR="/root/shreem-brzee"
-          if [ ! -d "\$REPO_DIR/.git" ]; then
-            git clone "https://x-access-token:\${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "\$REPO_DIR"
-          else
-            cd "\$REPO_DIR"
-            git remote set-url origin "https://x-access-token:\${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
-            git fetch origin && git reset --hard origin/main
-          fi
-
-          cd "\$REPO_DIR/railway/shreem-brzee-bot"
-
-          # .env pointing to the LIVE old Supabase project
-          cat > .env << ENVEOF
-          SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY=\${SUPA_KEY}
-          ENVEOF
-
-          npm install --omit=dev
-          npx tsc 2>&1 | tail -5 || echo "[warn] tsc issues"
-
-          if pm2 describe shreem-brzee > /dev/null 2>&1; then
-            pm2 restart shreem-brzee --update-env
-            echo "[SQI] ✅ shreem-brzee RESTARTED"
-          else
-            pm2 start dist/index.js --name shreem-brzee
-            echo "[SQI] ✅ shreem-brzee STARTED"
-          fi
-          pm2 save
-
-          sleep 3
-          echo ""
-          pm2 list
-          echo ""
-          pm2 logs shreem-brzee --lines 20 --nostream 2>/dev/null || true
-          echo "[SQI-2050] DEPLOY COMPLETE"
-          BOOTSTRAP
-          chmod +x /tmp/shreem-bootstrap.sh
-
-          # Upload with secrets baked in via env substitution
-          FILLED=$(sed \
-            -e "s|\${2}|${SUPA_SERVICE_KEY}|g" \
-            /tmp/shreem-bootstrap.sh)
-          echo "$FILLED" > /tmp/shreem-bootstrap-filled.sh
-          chmod +x /tmp/shreem-bootstrap-filled.sh
-
-      - name: Execute on Hetzner
-        env:
-          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
         run: |
           ACTION="${{ github.event.inputs.action }}"
-          if [ "$ACTION" = "status" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
-              "pm2 list && pm2 logs shreem-brzee --lines 20 --nostream 2>/dev/null || true"
-          elif [ "$ACTION" = "restart" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
-              "pm2 restart shreem-brzee --update-env && pm2 logs shreem-brzee --lines 10 --nostream 2>/dev/null"
-          elif [ "$ACTION" = "logs" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
-              "pm2 logs shreem-brzee --lines 50 --nostream 2>/dev/null"
-          else
-            sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no \
-              /tmp/shreem-bootstrap-filled.sh root@178.105.183.74:/root/shreem-bootstrap.sh
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
-              "chmod +x /root/shreem-bootstrap.sh && bash /root/shreem-bootstrap.sh '${GH_TOKEN}' 2>&1"
-          fi
+
+          case "$ACTION" in
+            status)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                'echo "=== PM2 ===" && pm2 list && echo "" && echo "=== SHREEM LOGS ===" && pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true'
+              ;;
+            restart)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                'pm2 restart shreem-brzee --update-env && sleep 2 && pm2 logs shreem-brzee --lines 15 --nostream 2>/dev/null'
+              ;;
+            logs)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                'pm2 logs shreem-brzee --lines 80 --nostream 2>/dev/null'
+              ;;
+            *)
+              # Full deploy
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 << SSHEOF
+                set -e
+                echo "══════════════════════════════════════════"
+                echo "  SHREEM BRZEE — Hetzner Deploy"
+                echo "══════════════════════════════════════════"
+
+                # Node 20
+                if ! command -v node &>/dev/null || [[ "\$(node -v)" != v20* ]]; then
+                  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1
+                  apt-get install -y nodejs > /dev/null 2>&1
+                fi
+                echo "Node \$(node -v) | npm \$(npm -v)"
+
+                # PM2
+                if ! command -v pm2 &>/dev/null; then
+                  npm install -g pm2 > /dev/null 2>&1
+                fi
+
+                # Clone / pull
+                REPO="/root/shreem-brzee"
+                if [ ! -d "\$REPO/.git" ]; then
+                  git clone "https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "\$REPO" --depth=1 --quiet
+                else
+                  cd "\$REPO"
+                  git remote set-url origin "https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+                  git fetch origin main --quiet && git reset --hard origin/main --quiet
+                fi
+
+                cd "\$REPO/railway/shreem-brzee-bot"
+
+                # Install & build
+                npm install --omit=dev --silent
+                npx tsc --skipLibCheck 2>&1 | grep -v "^$" | tail -10 || true
+
+                # Start / restart
+                if pm2 describe shreem-brzee > /dev/null 2>&1; then
+                  pm2 restart shreem-brzee --update-env
+                  echo "✅ shreem-brzee RESTARTED"
+                else
+                  pm2 start dist/index.js --name shreem-brzee
+                  echo "✅ shreem-brzee STARTED"
+                fi
+                pm2 save --force > /dev/null
+
+                sleep 4
+                echo ""
+                echo "══ PM2 LIST ══"
+                pm2 list
+                echo ""
+                echo "══ SHREEM LOGS ══"
+                pm2 logs shreem-brzee --lines 25 --nostream 2>/dev/null || true
+                echo ""
+                echo "══ CLAWBOT (untouched) ══"
+                pm2 describe clawbot 2>/dev/null | grep -E "status|restarts" | head -3 || true
+                echo "══════════════════════════════════════════"
+                echo "  DEPLOY COMPLETE"
+                echo "══════════════════════════════════════════"
+SSHEOF
+              ;;
+          esac
