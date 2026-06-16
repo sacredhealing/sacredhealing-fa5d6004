@@ -1,4 +1,4 @@
-name: SQI — Weekly Content Scanner
+name: SQI — Weekly Content Scanner + Voice Composer
 
 on:
   schedule:
@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  scan:
+  scan-and-compose:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout with PAT
         run: |
@@ -18,7 +18,7 @@ jobs:
         with:
           version: latest
 
-      - name: Set scanner secrets
+      - name: Set function secrets
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
@@ -28,34 +28,46 @@ jobs:
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
             --project-ref fjdzhrdpioxdeyyfogep 2>/dev/null || true
 
-      - name: Run weekly content scanner
+      - name: 1. Run content scanner
+        id: scanner
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          echo "\u2736 SQI Weekly Scanner firing at $(date -u)"
-          
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST \
+          echo "\u2736 Step 1: Content scanner"
+          SCAN=$(curl -s -X POST \
             "$SUPABASE_URL/functions/v1/sqi-weekly-scanner" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
             -H "Content-Type: application/json" \
-            -d "{}" \
-            --max-time 300)
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
-          echo "HTTP: $HTTP_CODE"
-          echo "Body: $BODY"
-          
-          echo "$BODY" | python3 -c "
+            -d "{}" --max-time 240)
+          echo "Scanner: $SCAN"
+          # Extract content items as JSON for next step
+          echo "SCAN_RESULT=$SCAN" >> $GITHUB_ENV
+
+      - name: 2. Run voice composer
+        env:
+          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "\u2736 Step 2: Voice composer — generating this week's emails"
+          COMPOSE=$(curl -s -X POST \
+            "$SUPABASE_URL/functions/v1/sqi-voice-composer" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"emailType":"both"}' --max-time 240)
+          echo "Compose result: $COMPOSE"
+          echo "$COMPOSE" | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
-    print(f'Commits scanned: {d.get(\"scanned\", 0)}')
-    print(f'Features discovered: {d.get(\"discovered\", 0)}')
-    print(f'Written to digest: {d.get(\"written\", 0)}')
-    for r in d.get(\"results\", []):
-        print(f'  \u2736 {r[:100]}')
-except: print('parse error')
+    m = d.get('monday', {})
+    f = d.get('friday', {})
+    print('Monday subject:', m.get('subject',''))
+    print('Friday subject:', f.get('subject',''))
+    print('Week:', d.get('weekDate',''))
+    print('\u2736 Both emails generated and stored in Supabase')
+except: print('Parse error:', sys.stdin.read()[:200])
 " || true
+
+      - name: Done
+        run: echo "\u2736 Saturday scan complete. Monday 07:00 UTC will send with this week's voice."
