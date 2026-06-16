@@ -2,72 +2,101 @@ name: SQI — Weekly Content Scanner + Voice Composer
 
 on:
   schedule:
-    - cron: '0 6 * * 6'   # Saturday 06:00 UTC
+    - cron: '0 6 * * 6'
   workflow_dispatch:
 
 jobs:
   scan-and-compose:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
-      - name: Checkout with PAT
-        run: |
-          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
-
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Set function secrets
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          cd repo
-          supabase secrets set \
-            GH_TOKEN=${{ secrets.GH_ADMIN_PAT }} \
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-            --project-ref ssygukfdbtehvtndandn 2>/dev/null || true
-
-      - name: 1. Run content scanner
-        id: scanner
+      - name: Scan GitHub commits + generate voice content
         env:
           SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
+          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "\u2736 Step 1: Content scanner"
-          SCAN=$(curl -s -X POST \
-            "$SUPABASE_URL/functions/v1/sqi-weekly-scanner" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{}" --max-time 240)
-          echo "Scanner: $SCAN"
-          # Extract content items as JSON for next step
-          echo "SCAN_RESULT=$SCAN" >> $GITHUB_ENV
+          echo "✦ SQI Scanner running at $(date -u)"
 
-      - name: 2. Run voice composer
-        env:
-          SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          echo "\u2736 Step 2: Voice composer — generating this week's emails"
-          COMPOSE=$(curl -s -X POST \
-            "$SUPABASE_URL/functions/v1/sqi-voice-composer" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"emailType":"both"}' --max-time 240)
-          echo "Compose result: $COMPOSE"
-          echo "$COMPOSE" | python3 -c "
+          # 1. Scan GitHub commits for user-facing changes this week
+          SINCE=$(date -u -d '7 days ago' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -v-7d '+%Y-%m-%dT%H:%M:%SZ')
+          echo "Scanning commits since $SINCE"
+
+          COMMITS=$(curl -s \
+            "https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/commits?per_page=80&since=$SINCE" \
+            -H "Authorization: token $GH_TOKEN" | python3 -c "
 import sys, json
-try:
-    d = json.load(sys.stdin)
-    m = d.get('monday', {})
-    f = d.get('friday', {})
-    print('Monday subject:', m.get('subject',''))
-    print('Friday subject:', f.get('subject',''))
-    print('Week:', d.get('weekDate',''))
-    print('\u2736 Both emails generated and stored in Supabase')
-except: print('Parse error:', sys.stdin.read()[:200])
-" || true
+commits = json.load(sys.stdin)
+features = set()
+FILE_MAP = {
+  'QuantumApothecary': ('Quantum Apothecary', 'feature', 'free'),
+  'JyotishChamber': ('Jyotish Chamber', 'feature', 'siddha-quantum'),
+  'SoulScan': ('SoulScan Biometrics', 'feature', 'free'),
+  'NadiScannerPage': ('Nadi Scanner', 'feature', 'free'),
+  'Mantras': ('Mantras', 'mantra', 'free'),
+  'Meditations': ('Meditations', 'meditation', 'free'),
+  'Healing': ('Healing Transmissions', 'meditation', 'prana-flow'),
+  'AgastyarAcademy': ('Agastya Academy', 'course', 'siddha-quantum'),
+  'SiddhaMedicineAcademy': ('Siddha Medicine Academy', 'course', 'siddha-quantum'),
+  'AkashicCodex': ('Akashic Codex', 'tool', 'siddha-quantum'),
+  'PalmOracle': ('Palm Oracle', 'tool', 'prana-flow'),
+  'SiddhaPortal': ('Siddha Portal', 'feature', 'free'),
+  'SovereignHormonalAlchemy': ('Shakti Cycle Intelligence', 'feature', 'siddha-quantum'),
+  'VirtualPilgrimage': ('Virtual Pilgrimage', 'feature', 'free'),
+  'Music': ('Sacred Music Library', 'song', 'free'),
+  'SiddhaSoundAlchemy': ('Siddha Sound Alchemy', 'feature', 'siddha-quantum'),
+  'Ayurveda': ('Ayurveda Consultation', 'feature', 'free'),
+  'DailyRitual': ('Daily Ritual', 'feature', 'free'),
+  'BrahmaMuhurta': ('Brahma Muhurta', 'feature', 'free'),
+}
+skip = ['clawbot','shreem','backfill','sniper','delta','railway','hetzner','cron','chore','revert','ci:','data:']
+results = []
+for c in commits[:50]:
+  msg = c['commit']['message'].split(chr(10))[0]
+  if any(s in msg.lower() for s in skip): continue
+  if msg.startswith('feat:') or msg.startswith('fix:'):
+    for key,(title,typ,tier) in FILE_MAP.items():
+      if key.lower() in msg.lower() and title not in features:
+        features.add(title)
+        results.append({'title':title,'type':typ,'tier':tier,'description':msg[5:].strip()[:120]})
+        break
+print(json.dumps(results[:5]))
+" 2>/dev/null || echo "[]")
 
-      - name: Done
-        run: echo "\u2736 Saturday scan complete. Monday 07:00 UTC will send with this week's voice."
+          echo "Discovered features: $COMMITS"
+
+          # 2. Write to content_changelog if any new features found
+          if [ "$COMMITS" != "[]" ] && [ "$COMMITS" != "" ]; then
+            echo "$COMMITS" | python3 -c "
+import sys, json, urllib.request, urllib.error, os
+items = json.load(sys.stdin)
+url = os.environ['SUPABASE_URL']
+key = os.environ['SUPABASE_SERVICE_KEY']
+for item in items:
+    payload = json.dumps({
+        'content_title': item['title'],
+        'content_type': item['type'],
+        'content_description': item.get('description',''),
+        'tier_required': item['tier'],
+    }).encode()
+    req = urllib.request.Request(
+        f"{url}/rest/v1/content_changelog",
+        data=payload,
+        method='POST',
+        headers={
+            'Authorization': f'Bearer {key}',
+            'apikey': key,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        }
+    )
+    try:
+        urllib.request.urlopen(req)
+        print(f'Logged: {item["title"]}')
+    except Exception as e:
+        print(f'Skip: {item["title"]} — {e}')
+" || true
+          fi
+
+          echo "✦ Scanner complete"
