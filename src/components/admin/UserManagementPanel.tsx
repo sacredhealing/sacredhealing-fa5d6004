@@ -86,7 +86,7 @@ export default function UserManagementPanel() {
     try {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id,full_name,avatar_url,created_at,last_login_date,onboarding_completed,birth_date,birth_place")
+        .select("id,user_id,full_name,avatar_url,created_at,last_login_date,onboarding_completed,birth_date,birth_place")
         .order("created_at", { ascending: false });
       if (error) throw error;
 
