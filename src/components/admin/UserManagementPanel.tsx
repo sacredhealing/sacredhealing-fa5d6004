@@ -121,6 +121,17 @@ export default function UserManagementPanel() {
 
       const rankOf = (s:string) => s.includes("akasha")||s.includes("life")?3:s.includes("siddha")?2:s.includes("prana")||s.includes("premium")?1:0;
 
+      // Fetch auth emails via admin edge function
+      const emailMap: Record<string,string> = {};
+      try {
+        const { data: authData } = await supabase.functions.invoke("admin-user-management", {
+          body: { action: "list_users" },
+        });
+        (authData?.users || []).forEach((u:any) => { if (u.id && u.email) emailMap[u.id] = u.email; });
+      } catch (e) {
+        console.warn("Failed to load auth emails", e);
+      }
+
       setUsers((profiles||[]).map((p:any) => {
         const grant = membershipGrants[p.id];
         const stripe = memberMap[p.id]?.tierSlug;
@@ -130,6 +141,7 @@ export default function UserManagementPanel() {
         else if (stripe) tier = stripe;
         return {
           ...p,
+          email: emailMap[p.id] || null,
           tier: canonicalize(tier),
           stripe_sub: memberMap[p.id]?.stripe_subscription_id||null,
           expires_at: memberMap[p.id]?.expires_at||null,
@@ -282,7 +294,8 @@ export default function UserManagementPanel() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title:"🔑 Reset Email Sent", description:`Password reset link transmitted to ${userName||"seeker"}.` });
+      const sentTo = data?.email || users.find(u=>u.id===userId)?.email || userName || "seeker";
+      toast({ title:"🔑 Reset Email Sent", description:`Password reset link sent to ${sentTo}` });
     } catch (e: any) {
       toast({ title:"Reset Failed", description:e.message, variant:"destructive" });
     } finally { setResetingId(null); }
@@ -578,6 +591,7 @@ export default function UserManagementPanel() {
           <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 20px" }}>{selectedUser.full_name||"No name set"}</h3>
           <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
             {[
+              ["Email", selectedUser.email || "— not found —"],
               ["ID", selectedUser.id],
               ["Current Tier", TIER_LABELS[selectedUser.tier]||"Free"],
               ["Joined", new Date(selectedUser.created_at).toLocaleString()],
