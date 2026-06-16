@@ -101,12 +101,16 @@ User segment this week: ${segment}
 New in the Nexus this week:
 ${contentList}
 
-Write THREE sections as PLAIN TEXT (not JSON) in this EXACT format with literal --- delimiter lines. Total 150-200 words:
+Write THREE sections as PLAIN TEXT (not JSON) in this EXACT format with literal --- delimiter lines on their own lines with a blank line before and after. Total 150-200 words:
 
 SUBJECT: [6-9 words, personal, from ${sender}, no hype]
+
 ---
+
 OPENING: [2-3 sentences — a real moment from life this week]
+
 ---
+
 BODY: [3-4 sentences — bridges personal life to the Nexus, weaves in what's new naturally]
 
 Output ONLY the three sections with the --- delimiters. No JSON, no code fences, no extra commentary.`;
@@ -125,10 +129,10 @@ Output ONLY the three sections with the --- delimiters. No JSON, no code fences,
     );
     const data = await res.json();
     const raw = (data?.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
-    const parts = raw.split('---');
-    const subject = parts[0]?.replace(/SUBJECT:/i, '').trim() || '';
-    const opening = parts[1]?.replace(/OPENING:/i, '').trim() || '';
-    const body = parts[2]?.replace(/BODY:/i, '').trim() || '';
+    const parts = raw.split(/\n---\n/);
+    const subject = parts[0]?.split(/^SUBJECT:\s*/m)[1]?.trim() || '';
+    const opening = parts[1]?.split(/^OPENING:\s*/m)[1]?.trim() || '';
+    const body    = parts[2]?.split(/^BODY:\s*/m)[1]?.trim() || '';
     return { subject, opening, body, sender };
   } catch (err) {
     console.error("[WEEKLY-ALIGNMENT] Gemini opening failed:", err);
@@ -662,15 +666,14 @@ function buildEmail(
   const senderLabel = generated.sender === "Laila" ? "Laila Amrouche" : "Adam Kritagya Das";
   const hasGenerated = !!(generated.opening || generated.body);
 
-  // When Gemini produced real text, the personal block fully replaces the segment copy.
-  // Segment copy only renders as a fallback if Gemini failed completely.
+  // Gemini text prepends above the stats — it does not replace the segment body.
   const personalBlock = hasGenerated
     ? `<p style="color:#D4AF37;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;font-weight:700;">From ${senderLabel}</p>
        ${generated.opening ? `<p>${generated.opening}</p>` : ""}
        ${generated.body ? `<p>${generated.body}</p>` : ""}`
     : "";
 
-  const fullBodyHtml = hasGenerated ? personalBlock : bodyHtml;
+  const fullBodyHtml = hasGenerated ? `${personalBlock}\n${bodyHtml}` : bodyHtml;
 
   const digestBlock = buildContentDigest(newContent, L, appUrl);
 
