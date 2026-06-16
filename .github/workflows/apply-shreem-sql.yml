@@ -13,23 +13,23 @@ jobs:
         with:
           version: latest
 
-      - name: Run shreem_brzee_signals on Lovable Supabase
+      - name: Create shreem_brzee_signals
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          echo "Creating shreem_brzee_signals on ssygukfdbtehvtndandn..."
           supabase db execute \
             --project-ref ssygukfdbtehvtndandn \
             --file supabase/migrations/20260609_shreem_brzee_signals.sql 2>&1
-          echo ""
+          echo "shreem_brzee_signals done"
 
-      - name: Run shreem_brzee_server tables on Lovable Supabase
+      - name: Create shreem_brzee_session + paper_trades
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          echo "Creating shreem_brzee_session + shreem_brzee_paper_trades..."
           supabase db execute \
             --project-ref ssygukfdbtehvtndandn \
             --file supabase/migrations/20260611_shreem_brzee_server.sql 2>&1
-          echo ""
-          echo "=== SHREEM TABLES READY ON LIVE PROJECT ==="
+          echo "session + paper_trades done"
+
+      - name: Confirm
+        run: echo "✅ All Shreem Brzee tables created on ssygukfdbtehvtndandn"
