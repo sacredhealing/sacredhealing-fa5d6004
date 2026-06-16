@@ -39,12 +39,17 @@ jobs:
         run: |
           ACTION="${{ github.event.inputs.action }}"
           if [ "$ACTION" = "status" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 list && pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true"
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+              "pm2 list && pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true"
           elif [ "$ACTION" = "restart" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 restart shreem-brzee --update-env && pm2 logs shreem-brzee --lines 15 --nostream 2>/dev/null"
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+              "pm2 restart shreem-brzee --update-env && pm2 logs shreem-brzee --lines 15 --nostream 2>/dev/null"
           elif [ "$ACTION" = "logs" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 logs shreem-brzee --lines 50 --nostream 2>/dev/null"
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+              "pm2 logs shreem-brzee --lines 50 --nostream 2>/dev/null"
           else
-            sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no /tmp/shreem-bootstrap.sh root@178.105.183.74:/root/shreem-bootstrap.sh
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "chmod +x /root/shreem-bootstrap.sh && bash /root/shreem-bootstrap.sh '${{ env.GH_TOKEN }}' 2>&1"
+            sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no \
+              /tmp/shreem-bootstrap.sh root@178.105.183.74:/root/shreem-bootstrap.sh
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+              "chmod +x /root/shreem-bootstrap.sh && bash /root/shreem-bootstrap.sh \"$GH_TOKEN\" 2>&1"
           fi
