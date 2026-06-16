@@ -227,13 +227,31 @@ serve(async (req) => {
 
       case "reset_password": {
         if (!userId) throw new Error("userId required");
-        const { data: userRecord } = await adminClient.auth.admin.getUserById(userId);
-        if (!userRecord?.user?.email) throw new Error("User email not found");
+
+        // Resolve auth user id — caller may pass either profiles.id or auth user_id.
+        let authUserId = userId;
+        let email: string | undefined;
+        const { data: byAuth } = await adminClient.auth.admin.getUserById(userId);
+        if (byAuth?.user?.email) {
+          email = byAuth.user.email;
+        } else {
+          const { data: prof } = await adminClient
+            .from("profiles")
+            .select("user_id")
+            .eq("id", userId)
+            .maybeSingle();
+          if (prof?.user_id) {
+            authUserId = prof.user_id;
+            const { data: byProf } = await adminClient.auth.admin.getUserById(authUserId);
+            email = byProf?.user?.email ?? undefined;
+          }
+        }
+        if (!email) throw new Error("User email not found");
 
         // Use the branded send-reset-email function (Resend, gold styling, localized)
         // instead of Supabase's default plain auth email.
         const { data: invokeData, error } = await adminClient.functions.invoke('send-reset-email', {
-          body: { email: userRecord.user.email },
+          body: { email },
         });
         if (error) throw error;
         if (invokeData?.error) throw new Error(invokeData.error);
