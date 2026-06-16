@@ -1,180 +1,214 @@
-🔱 Shreem Brzee Backfill v2 — Real Solana SWAP history
-   21 whales × up to 300 swaps = up to 6300 rows
+🔱 Shreem Brzee Backfill v3
+   SUPA_URL: https://ssygukfdbtehvtndandn.supabase.co
+   SUPA_KEY: eyJhbGciOiJIUzI1NiIs...
 
 
-🐋 Cupsey
-   page 1: 13 txs
+🐋 Cupsey (GJRs4FwH…)
+   p1: 9 txs fetched
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Heyitsyolo
-   page 1: 97 txs
+🐋 Heyitsyolo (Av3xWHJ5…)
+   p1: 97 txs fetched
    parsed: 2 swaps
-  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might
+  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
    ✅ inserted: 0
 
-🐋 Remusofmars
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Remusofmars (BCrTEXmW…)
+  ⏳ 429 — waiting 10s
+   p1: 71 txs fetched
+   parsed: 71 swaps
+  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
+  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
+   ✅ inserted: 0
+
+🐋 Orange (96gYZGLn…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Orange
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Shreem Brzee (HL3FZ8XW…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Shreem Brzee
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-   page 1: 46 txs
-   parsed: 46 swaps
-  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might
-   ✅ inserted: 0
-
-🐋 Lenion
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Lenion (DNfuF1L6…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Boredboar
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Boredboar (gasAx5Y9…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Hades
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Hades (HdxkiXqe…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Kubera 72
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Kubera 72 (AAvdewt7…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Brzee God
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Brzee God (JD38n7yn…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 GBack
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 GBack (9VPozuXe…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Tuna
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Tuna (GjK3S2Zg…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Fireball
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Fireball (AgmLJBMD…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Hachjdn
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Hachjdn (EqgZsS7G…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Crypto Circle
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Crypto Circle (5DzUSNro…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Crocodile
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Crocodile (2cBedD94…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Snow Spirit
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Snow Spirit (4ev7HVsE…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 Cented
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 Cented (CyaE1Vxv…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 The Grande
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 The Grande (Gygj9QQb…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 A Milly
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 A Milly (Fv9w9TQn…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
-🐋 J2ANNaq
-  ⏳ 429 — waiting 8s (attempt 1)
-  ⏳ 429 — waiting 16s (attempt 2)
-  ⏳ 429 — waiting 24s (attempt 3)
-   page 1: done
+🐋 J2ANNaq (J2ANNaq4…)
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+  ⏳ 429 — waiting 40s
+  ⚠ max retries hit
+   p1: done
    parsed: 0 swaps
    ✅ inserted: 0
 
 ═══════════════════════════════════
-🏆 BACKFILL COMPLETE
-   Total inserted: 0 rows
-
-Per whale:
+🏆 DONE — 0 rows inserted
   Cupsey: 0 swaps → 0 inserted
   Heyitsyolo: 2 swaps → 0 inserted
-  Remusofmars: 0 swaps → 0 inserted
+  Remusofmars: 71 swaps → 0 inserted
   Orange: 0 swaps → 0 inserted
-  Shreem Brzee: 46 swaps → 0 inserted
+  Shreem Brzee: 0 swaps → 0 inserted
   Lenion: 0 swaps → 0 inserted
   Boredboar: 0 swaps → 0 inserted
   Hades: 0 swaps → 0 inserted
