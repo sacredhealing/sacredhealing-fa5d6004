@@ -297,14 +297,33 @@ serve(async (req) => {
 
     log(`Segmented ${userStates.length} users (skipped ${alreadySentIds.size} already emailed)`);
 
+    // ── Generate this week's personal opening (Kritagya/Laila voice via Gemini) ──
+    const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
+    const weekDate = new Date().toLocaleDateString("en-GB", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
+    });
+    const topContentItems = weeklyNewContent.slice(0, 4).map((c) => ({
+      title: c.content_title,
+      type: c.content_type,
+    }));
+    const generatedCopy = geminiKey
+      ? await generatePersonalOpening("mixed", geminiKey, weekDate, topContentItems)
+      : { subject: "", opening: "", body: "", sender: "Kritagya" as const };
+    log("Generated personal opening", { sender: generatedCopy.sender, hasSubject: !!generatedCopy.subject });
+
+    // Override sender identity in From header to match the chosen voice
+    const personalFromEmail = generatedCopy.sender === "Laila"
+      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Laila Amrouche <noreply@siddhaquantumnexus.com>")
+      : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
+
     // ── Send ──
     let sentEmails = 0;
     let errors = 0;
 
     for (const user of userStates) {
       try {
-        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent);
-        await resend.emails.send({ from: fromEmail, to: [user.email], subject, html, text });
+        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy);
+        await resend.emails.send({ from: personalFromEmail, to: [user.email], subject, html, text });
         await supabase.from("user_weekly_email_log").insert({
           user_id: user.userId, week_start: weekStartStr,
           segment: user.segment, email_type: "weekly_alignment",
