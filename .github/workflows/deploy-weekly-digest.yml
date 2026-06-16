@@ -10,16 +10,23 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout with PAT
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+          echo "Checkout OK"
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
       - name: Deploy weekly-digest
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
         run: |
           supabase functions deploy weekly-digest \
             --project-ref fjdzhrdpioxdeyyfogep \
             --no-verify-jwt
-          echo "✦ weekly-digest deployed"
+          echo "\u2736 weekly-digest deployed successfully at $(date)"
