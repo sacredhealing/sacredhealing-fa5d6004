@@ -276,19 +276,26 @@ function buildEmailHTML(
       </a>
     </td></tr>
 
+    <tr><td style="text-align:center;padding:0 0 18px;">
+      <div style="color:rgba(212,175,55,0.85);font-size:14px;font-style:italic;letter-spacing:0.05em;">
+        — With love,<br><strong style="color:#D4AF37;font-style:normal;letter-spacing:0.1em;">Adam &amp; Laila</strong>
+      </div>
+    </td></tr>
+
     <tr><td style="text-align:center;padding:0 0 24px;border-top:1px solid rgba(255,255,255,0.04);">
       <div style="padding-top:32px;color:rgba(212,175,55,0.4);font-size:9px;letter-spacing:0.5em;text-transform:uppercase;margin-bottom:10px;">
         SACRED HEALING · SIDDHA QUANTUM NEXUS
       </div>
       <div style="color:rgba(255,255,255,0.2);font-size:11px;line-height:1.7;">
         You are receiving this as a member of the SQI Sangha.<br>
-        This transmission arrives every Monday at 12:00 UTC.
+        This transmission arrives every Monday from Adam &amp; Laila.
       </div>
       <div style="margin-top:12px;color:rgba(255,255,255,0.15);font-size:11px;">
         © 2026 Sacred Healing ·
         <a href="https://sacredhealing.lovable.app" style="color:rgba(212,175,55,0.3);text-decoration:none;">sacredhealing.lovable.app</a>
       </div>
     </td></tr>
+
 
   </table>
   </td></tr>
