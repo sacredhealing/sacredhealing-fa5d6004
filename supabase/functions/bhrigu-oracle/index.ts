@@ -400,8 +400,8 @@ serve(async (req) => {
 
     const res = await callAI({
       messages: allMessages,
-      max_tokens: 4000,
-      temperature: 2.0,
+      max_tokens: 8192,
+      temperature: 0.95,
     });
 
     if (!res.ok) {
@@ -412,10 +412,15 @@ serve(async (req) => {
 
     const aiData = await res.json();
     const choice = aiData.choices?.[0];
-    const reply = choice?.message?.content ?? "";
+    let reply = choice?.message?.content ?? "";
     const finishReason = choice?.finish_reason ?? "unknown";
     if (finishReason === "length") {
-      console.warn("[bhrigu-oracle] Reply truncated by token limit — consider raising max_tokens");
+      console.warn("[bhrigu-oracle] Reply truncated by token limit at 8192");
+    }
+    if (!reply || !reply.trim()) {
+      console.error("[bhrigu-oracle] Empty reply from model", { finishReason, raw: JSON.stringify(aiData).slice(0, 500) });
+      return new Response(JSON.stringify({ error: "oracle_silent", detail: "The oracle returned no words. Please ask again." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Detect if Bhrigu is ready to deliver the full reading
