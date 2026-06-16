@@ -1,4 +1,4 @@
-name: Deploy Apothecary + Bhrigu to Lovable Supabase
+name: Deploy Apothecary + Bhrigu + Shreem to Lovable Supabase
 
 on:
   workflow_dispatch:
@@ -28,5 +28,22 @@ jobs:
           supabase functions deploy quantum-apothecary-chat --project-ref ssygukfdbtehvtndandn --no-verify-jwt 2>&1 || echo "apothecary deploy failed"
         continue-on-error: true
 
+      - name: Deploy shreem-helius-webhook to Lovable project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy shreem-helius-webhook --project-ref ssygukfdbtehvtndandn --no-verify-jwt 2>&1
+          echo "Exit: $?"
+
+      - name: Try with SUPA_ADMIN_PAT if above failed
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPA_ADMIN_PAT }}
+        run: |
+          supabase functions deploy shreem-helius-webhook --project-ref ssygukfdbtehvtndandn --no-verify-jwt 2>&1 || echo "supa_admin_pat also failed"
+        continue-on-error: true
+
       - name: Done
-        run: echo "Deployment complete — check Supabase logs to confirm."
+        run: |
+          echo "Deployment complete"
+          echo "shreem-helius-webhook URL:"
+          echo "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
