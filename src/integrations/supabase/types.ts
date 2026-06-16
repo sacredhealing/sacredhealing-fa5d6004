@@ -9142,6 +9142,7 @@ export type Database = {
     Functions: {
       clawbot_fee_for_tier: { Args: { tier_name: string }; Returns: number }
       cleanup_rate_limit_events: { Args: never; Returns: undefined }
+      current_user_tier_level: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
