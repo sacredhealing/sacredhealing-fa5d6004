@@ -1,4 +1,4 @@
-name: SQI — Monday Weekly Update Email
+name: SQI - Monday Weekly Update Email
 
 on:
   schedule:
@@ -15,8 +15,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
         run: |
-          echo "✶ SQI Monday Transmission at $(date -u)"
-
+          echo "SQI Monday Transmission at $(date -u)"
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST \
             "${SUPABASE_URL}/functions/v1/weekly-alignment-email" \
@@ -24,18 +23,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{}" \
             --max-time 600)
-
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -1)
-
           echo "HTTP: $HTTP_CODE"
           echo "Body: $BODY"
-
-          echo "$BODY" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(f'Sent: {d.get(\"sent\", 0)} emails')
-    print(f'Errors: {d.get(\"errors\", 0)}')
-except: pass
-" || true
