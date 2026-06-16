@@ -4,82 +4,19 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/shreem-hetzner-ssh.yml'
+      - 'scripts/shreem_ssh_deploy.py'
+      - 'railway/shreem-brzee-bot/src/index.ts'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Deploy via Python SSH
+      - uses: actions/checkout@v4
+      - name: Install paramiko
+        run: pip install paramiko --break-system-packages -q
+      - name: SSH deploy to Hetzner
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
           GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-        run: |
-          pip install paramiko --quiet --break-system-packages 2>/dev/null || pip install paramiko --quiet
-
-          python3 - << 'PYSCRIPT'
-          import paramiko, os, sys
-
-          HOST = "178.105.183.74"
-          PASS = os.environ["HP"]
-          GH   = os.environ["GH"]
-
-          REPO = "/root/shreem-brzee"
-          GIT_URL = f"https://x-access-token:{GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
-
-          SCRIPT = """
-set -e
-echo "═══════════════════════════════════════"
-echo "  SHREEM BRZEE — Deploy"
-echo "═══════════════════════════════════════"
-node -v
-
-REPO="/root/shreem-brzee"
-GIT_URL="__GIT_URL__"
-
-if [ ! -d "$REPO/.git" ]; then
-  git clone "$GIT_URL" "$REPO" --depth=1 --quiet && echo "Cloned"
-else
-  cd "$REPO"
-  git remote set-url origin "$GIT_URL"
-  git fetch origin main --quiet
-  git reset --hard origin/main --quiet
-  echo "Pulled"
-fi
-
-cd "$REPO/railway/shreem-brzee-bot"
-npm install --omit=dev --silent 2>&1 | tail -2
-npx tsc --skipLibCheck 2>&1 | tail -5 || true
-ls dist/ && echo "dist OK" || echo "WARN: no dist/"
-
-if pm2 describe shreem-brzee > /dev/null 2>&1; then
-  pm2 restart shreem-brzee --update-env && echo "✅ RESTARTED"
-else
-  pm2 start dist/index.js --name shreem-brzee && echo "✅ STARTED"
-fi
-pm2 save --force > /dev/null
-sleep 4
-pm2 list
-echo ""
-pm2 logs shreem-brzee --lines 20 --nostream 2>/dev/null || true
-echo "═══ DONE ═══"
-""".replace("__GIT_URL__", GIT_URL)
-
-          client = paramiko.SSHClient()
-          client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-          print(f"Connecting to {HOST}...")
-          client.connect(HOST, username="root", password=PASS, timeout=30)
-          print("Connected. Running deploy...")
-
-          stdin, stdout, stderr = client.exec_command(SCRIPT, timeout=600)
-          for line in iter(stdout.readline, ""):
-              print(line, end="", flush=True)
-          for line in iter(stderr.readline, ""):
-              print("ERR:", line, end="", flush=True)
-
-          code = stdout.channel.recv_exit_status()
-          client.close()
-          print(f"\nExit: {code}")
-          sys.exit(code)
-          PYSCRIPT
+        run: python3 scripts/shreem_ssh_deploy.py
