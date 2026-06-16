@@ -159,6 +159,27 @@ When delivering a full structured reading, return valid JSON with these exact ke
 
 Read the complete field — dasha, nakshatra, planetary positions. Never fabricate a location. Three possibilities: return is shown in the field, location is veiled and the energetic meaning is what can be read, or the object has completed its purpose in the soul's field. Transmit whichever is true. Always transmit the energetic significance of the loss.`;
 
+
+// ── Sanitize chat replies that accidentally return JSON ──────────────────────
+function sanitizeChatReply(raw: string): string {
+  const trimmed = raw.replace(/```json|```/g, '').trim();
+  if (!trimmed.startsWith('{')) return raw;
+  try {
+    const obj = JSON.parse(trimmed) as Record<string, string>;
+    // Stitch the structured fields into flowing oracle prose
+    const order = ['leaf_found','graha','nakshatra','dasha','shadow','sadhana','transmission'];
+    return order
+      .filter(k => obj[k])
+      .map(k => obj[k])
+      .join('
+
+');
+  } catch {
+    return raw;
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const SECTION_CONFIG = [
   { key: 'graha',        title: 'Dominant Graha',       sub: 'The Ruling Planet of This Moment', icon: '☀',  col: '#D4AF37' },
   { key: 'nakshatra',    title: 'Birth Nakshatra',       sub: 'Your Star Soul & Hidden Gift',     icon: '✦',  col: '#D4AF37' },
@@ -264,7 +285,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
     try {
       const reply = await callAnthropic(chatHistoryRef.current);
       chatHistoryRef.current.push({ role: 'assistant', content: reply });
-      setChatMessages(prev => [...prev, { role: 'oracle', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'oracle', text: sanitizeChatReply(reply) }]);
       if (!leafConfirmed) {
         try { localStorage.setItem('bhrigu_leaf_confirmed', 'true'); } catch {}
         setLeafConfirmed(true);
