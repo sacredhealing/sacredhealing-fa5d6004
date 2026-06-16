@@ -329,6 +329,17 @@ serve(async (req) => {
       ? (Deno.env.get("FROM_EMAIL_LAILA") || "Laila Amrouche <noreply@siddhaquantumnexus.com>")
       : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
 
+    // ── TEST MODE: override recipient list ──
+    if (testEmail) {
+      userStates.length = 0;
+      userStates.push({
+        userId: "test-user", email: testEmail, fullName: "Test Seeker",
+        language: "en", segment: "consistent", mantraCount: 7, practiceMinutes: 42,
+        daysInactive: 0, topCategory: "shiva", nadiBaseline: null, isStargateMember: false,
+      });
+      log(`TEST MODE: sending only to ${testEmail} as ${generatedCopy.sender}`);
+    }
+
     // ── Send ──
     let sentEmails = 0;
     let errors = 0;
@@ -337,10 +348,12 @@ serve(async (req) => {
       try {
         const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy);
         await resend.emails.send({ from: personalFromEmail, to: [user.email], subject, html, text });
-        await supabase.from("user_weekly_email_log").insert({
-          user_id: user.userId, week_start: weekStartStr,
-          segment: user.segment, email_type: "weekly_alignment",
-        });
+        if (!testEmail) {
+          await supabase.from("user_weekly_email_log").insert({
+            user_id: user.userId, week_start: weekStartStr,
+            segment: user.segment, email_type: "weekly_alignment",
+          });
+        }
         sentEmails++;
         log(`Sent → ${user.email}`, { segment: user.segment, lang: user.language });
       } catch (err) {
