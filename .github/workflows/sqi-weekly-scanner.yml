@@ -1,4 +1,4 @@
-name: SQI — Weekly Content Scanner + Voice Composer
+name: SQI - Weekly Content Scanner
 
 on:
   schedule:
@@ -6,97 +6,87 @@ on:
   workflow_dispatch:
 
 jobs:
-  scan-and-compose:
+  scan:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Scan GitHub commits + generate voice content
+      - name: Scan commits and write to content_changelog
         env:
-          SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
           GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
-          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "✦ SQI Scanner running at $(date -u)"
+          python3 << 'EOF'
+import os, json, urllib.request, urllib.error, sys
+from datetime import datetime, timedelta
 
-          # 1. Scan GitHub commits for user-facing changes this week
-          SINCE=$(date -u -d '7 days ago' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -v-7d '+%Y-%m-%dT%H:%M:%SZ')
-          echo "Scanning commits since $SINCE"
+GH_TOKEN = os.environ['GH_TOKEN']
+SUPA_URL = os.environ['SUPABASE_URL']
+SUPA_KEY = os.environ['SUPABASE_KEY']
+SINCE    = (datetime.utcnow()-timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-          COMMITS=$(curl -s \
-            "https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/commits?per_page=80&since=$SINCE" \
-            -H "Authorization: token $GH_TOKEN" | python3 -c "
-import sys, json
-commits = json.load(sys.stdin)
-features = set()
 FILE_MAP = {
-  'QuantumApothecary': ('Quantum Apothecary', 'feature', 'free'),
-  'JyotishChamber': ('Jyotish Chamber', 'feature', 'siddha-quantum'),
-  'SoulScan': ('SoulScan Biometrics', 'feature', 'free'),
-  'NadiScannerPage': ('Nadi Scanner', 'feature', 'free'),
-  'Mantras': ('Mantras', 'mantra', 'free'),
-  'Meditations': ('Meditations', 'meditation', 'free'),
-  'Healing': ('Healing Transmissions', 'meditation', 'prana-flow'),
-  'AgastyarAcademy': ('Agastya Academy', 'course', 'siddha-quantum'),
-  'SiddhaMedicineAcademy': ('Siddha Medicine Academy', 'course', 'siddha-quantum'),
-  'AkashicCodex': ('Akashic Codex', 'tool', 'siddha-quantum'),
-  'PalmOracle': ('Palm Oracle', 'tool', 'prana-flow'),
-  'SiddhaPortal': ('Siddha Portal', 'feature', 'free'),
-  'SovereignHormonalAlchemy': ('Shakti Cycle Intelligence', 'feature', 'siddha-quantum'),
-  'VirtualPilgrimage': ('Virtual Pilgrimage', 'feature', 'free'),
-  'Music': ('Sacred Music Library', 'song', 'free'),
-  'SiddhaSoundAlchemy': ('Siddha Sound Alchemy', 'feature', 'siddha-quantum'),
-  'Ayurveda': ('Ayurveda Consultation', 'feature', 'free'),
-  'DailyRitual': ('Daily Ritual', 'feature', 'free'),
-  'BrahmaMuhurta': ('Brahma Muhurta', 'feature', 'free'),
+    'QuantumApothecary':        ('Quantum Apothecary',        'feature',   'free'),
+    'JyotishChamber':           ('Jyotish Chamber',           'feature',   'siddha-quantum'),
+    'SoulScan':                 ('SoulScan Biometrics',       'feature',   'free'),
+    'NadiScannerPage':          ('Nadi Scanner',              'feature',   'free'),
+    'Mantras':                  ('Mantras',                   'mantra',    'free'),
+    'Meditations':              ('Meditations',               'meditation','free'),
+    'Healing':                  ('Healing Transmissions',     'meditation','prana-flow'),
+    'AgastyarAcademy':          ('Agastya Academy',           'course',    'siddha-quantum'),
+    'SiddhaMedicineAcademy':    ('Siddha Medicine Academy',   'course',    'siddha-quantum'),
+    'AkashicCodex':             ('Akashic Codex',             'tool',      'siddha-quantum'),
+    'PalmOracle':               ('Palm Oracle',               'tool',      'prana-flow'),
+    'SiddhaPortal':             ('Siddha Portal',             'feature',   'free'),
+    'SovereignHormonalAlchemy': ('Shakti Cycle Intelligence', 'feature',   'siddha-quantum'),
+    'VirtualPilgrimage':        ('Virtual Pilgrimage',        'feature',   'free'),
+    'Music':                    ('Sacred Music',              'song',      'free'),
+    'SiddhaSoundAlchemy':       ('Siddha Sound Alchemy',      'feature',   'siddha-quantum'),
+    'Ayurveda':                 ('Ayurveda Consultation',     'feature',   'free'),
+    'DailyRitual':              ('Daily Ritual',              'feature',   'free'),
+    'KriyaYogaMastery':         ('Kriya Yoga Mastery',        'course',    'prana-flow'),
+    'YoganandaCodex':           ('Yogananda Codex',           'course',    'prana-flow'),
+    'HanumanCodex':             ('Hanuman Codex',             'course',    'prana-flow'),
+    'MudraAcademy':             ('Mudra Academy',             'course',    'prana-flow'),
+    'SacredGeometry':           ('Sacred Geometry',           'course',    'prana-flow'),
 }
-skip = ['clawbot','shreem','backfill','sniper','delta','railway','hetzner','cron','chore','revert','ci:','data:']
-results = []
-for c in commits[:50]:
-  msg = c['commit']['message'].split(chr(10))[0]
-  if any(s in msg.lower() for s in skip): continue
-  if msg.startswith('feat:') or msg.startswith('fix:'):
-    for key,(title,typ,tier) in FILE_MAP.items():
-      if key.lower() in msg.lower() and title not in features:
-        features.add(title)
-        results.append({'title':title,'type':typ,'tier':tier,'description':msg[5:].strip()[:120]})
-        break
-print(json.dumps(results[:5]))
-" 2>/dev/null || echo "[]")
+SKIP = ['clawbot','shreem','backfill','sniper','delta-arb','railway','hetzner',
+        'chore:','revert:','ci:','data:','fix: backfill','fix: helius',
+        'fix: edge fn','fix: use real whale','bot-stats','deploy-clawbot',
+        'deploy-sniper','deploy-shreem','deploy-delta','CLAWBOT','Shreem']
 
-          echo "Discovered features: $COMMITS"
+req = urllib.request.Request(
+    f'https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/commits?per_page=80&since={SINCE}',
+    headers={'Authorization': f'token {GH_TOKEN}', 'User-Agent': 'SQI-Scanner'}
+)
+commits = json.loads(urllib.request.urlopen(req, timeout=30).read())
 
-          # 2. Write to content_changelog if any new features found
-          if [ "$COMMITS" != "[]" ] && [ "$COMMITS" != "" ]; then
-            echo "$COMMITS" | python3 -c "
-import sys, json, urllib.request, urllib.error, os
-items = json.load(sys.stdin)
-url = os.environ['SUPABASE_URL']
-key = os.environ['SUPABASE_SERVICE_KEY']
-for item in items:
-    payload = json.dumps({
-        'content_title': item['title'],
-        'content_type': item['type'],
-        'content_description': item.get('description',''),
-        'tier_required': item['tier'],
-    }).encode()
-    req = urllib.request.Request(
-        f"{url}/rest/v1/content_changelog",
-        data=payload,
-        method='POST',
-        headers={
-            'Authorization': f'Bearer {key}',
-            'apikey': key,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-        }
+features_seen = set()
+discoveries = []
+for c in commits[:60]:
+    msg = c['commit']['message'].split('\n')[0]
+    if any(s in msg for s in SKIP): continue
+    if any(s in msg.lower() for s in [s.lower() for s in SKIP]): continue
+    for key, (title, typ, tier) in FILE_MAP.items():
+        if key.lower() in msg.lower() and title not in features_seen:
+            features_seen.add(title)
+            desc = msg.replace('feat:','').replace('fix:','').strip()[:120]
+            discoveries.append({'content_title':title,'content_type':typ,
+                                 'content_description':desc,'tier_required':tier})
+            break
+
+print(f'Found {len(discoveries)} user-facing changes this week')
+for item in discoveries[:6]:
+    payload = json.dumps(item).encode()
+    req2 = urllib.request.Request(
+        f'{SUPA_URL}/rest/v1/content_changelog', data=payload, method='POST',
+        headers={'Authorization':f'Bearer {SUPA_KEY}','apikey':SUPA_KEY,
+                 'Content-Type':'application/json','Prefer':'return=minimal'}
     )
     try:
-        urllib.request.urlopen(req)
-        print(f'Logged: {item["title"]}')
-    except Exception as e:
-        print(f'Skip: {item["title"]} — {e}')
-" || true
-          fi
-
-          echo "✦ Scanner complete"
+        urllib.request.urlopen(req2, timeout=10)
+        print(f'  Logged: {item["content_title"]}')
+    except urllib.error.HTTPError as e:
+        print(f'  Skip {item["content_title"]}: {e.code} {e.read().decode()[:80]}')
+print('Done')
+EOF
