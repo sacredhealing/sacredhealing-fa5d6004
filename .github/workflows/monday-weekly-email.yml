@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Trigger weekly-alignment-email edge function
+      - name: Trigger weekly-digest edge function
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -19,7 +19,7 @@ jobs:
           
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST \
-            "$SUPABASE_URL/functions/v1/weekly-alignment-email" \
+            "$SUPABASE_URL/functions/v1/weekly-digest" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
             -H "Content-Type: application/json" \
             -d "{}" \
@@ -36,14 +36,14 @@ jobs:
             exit 1
           fi
           
-          echo "✦ Monday Transmission complete"
+          echo "✶ Monday Transmission complete"
           echo "$BODY" | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
-    print(f\"Scanned: {d.get(\\"scanned\\", 0)} users\")
-    print(f\"Sent: {d.get(\\"sent\\", 0)} emails\")
-    print(f\"Errors: {d.get(\\"errors\\", 0)}\")
-    print(f\"New content items: {d.get(\\"newContentItems\\", 0)}\")
-except: print(\"Could not parse response\")
+    print(f'Scanned: {d.get(\"scanned\", 0)} users')
+    print(f'Sent: {d.get(\"sent\", 0)} emails')
+    print(f'Errors: {d.get(\"errors\", 0)}')
+    print(f'New content: {d.get(\"newContent\", 0)} items')
+except: print('Could not parse response')
 " || true
