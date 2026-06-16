@@ -133,19 +133,24 @@ export default function UserManagementPanel() {
       }
 
       setUsers((profiles||[]).map((p:any) => {
-        const grant = membershipGrants[p.id];
-        const stripe = memberMap[p.id]?.tierSlug;
+        // Use auth.users.id (profiles.user_id) as the canonical row id so
+        // emailMap, memberships, grants, reset & delete all resolve correctly.
+        const authId = p.user_id || p.id;
+        const grant = membershipGrants[authId];
+        const stripe = memberMap[authId]?.tierSlug;
         let tier = "free";
         if (grant && stripe) tier = rankOf(grant) >= rankOf(stripe) ? grant : stripe;
         else if (grant) tier = grant;
         else if (stripe) tier = stripe;
         return {
           ...p,
-          email: emailMap[p.id] || null,
+          id: authId,
+          profile_id: p.id,
+          email: emailMap[authId] || null,
           tier: canonicalize(tier),
-          stripe_sub: memberMap[p.id]?.stripe_subscription_id||null,
-          expires_at: memberMap[p.id]?.expires_at||null,
-          grantedProducts: productGrants[p.id] || [],
+          stripe_sub: memberMap[authId]?.stripe_subscription_id||null,
+          expires_at: memberMap[authId]?.expires_at||null,
+          grantedProducts: productGrants[authId] || [],
         };
       }));
     } catch (e: any) {
