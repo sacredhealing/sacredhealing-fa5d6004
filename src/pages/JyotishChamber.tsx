@@ -18,6 +18,7 @@ import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
 import { canAccessJyotishModule } from '@/lib/tierAccess';
 import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
 import { BhriguAkashaChat } from '@/components/vedic/BhriguAkashaChat';
+import { BhumiOraclePanel } from '@/components/vedic/BhumiOraclePanel';
 
 // ── Types ────────────────────────────────────────────────────────
 interface BirthData {
@@ -2690,7 +2691,7 @@ const JyotishChamber: React.FC = () => {
   const navigate = useNavigate();
 
   // State
-  const [activeTab, setActiveTab] = useState<'overview'|'chart'|'oracle'|'nadi'|'vidya'|'hora'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'chart'|'oracle'|'nadi'|'vidya'|'hora'|'bhumi'>('overview');
   const [birthData, setBirthData] = useState<BirthData | null>(null);
   const [ephemeris, setEphemeris] = useState<EphemerisData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -3284,8 +3285,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
         {/* ── NAV TABS (hidden but functional) ── */}
         <nav id="jc-nav" style={{ display:'flex', gap:5, padding:5, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:99, marginBottom:22, overflowX:'auto', scrollbarWidth:'none' }}>
-          {(['overview','chart','oracle','nadi','vidya','hora'] as const).map((tab, i) => {
-            const labels = ['✦ Overview','☽ My Chart','🔱 Oracle','🌿 Nadi Leaf','◈ Vidya','⏱ Hora'];
+          {(['overview','chart','oracle','nadi','vidya','hora','bhumi'] as const).map((tab, i) => {
+            const labels = ['✦ Overview','☽ My Chart','🔱 Oracle','🌿 Nadi Leaf','◈ Vidya','⏱ Hora','🌍 Bhumi'];
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => switchTab(tab)} style={{
@@ -3889,6 +3890,13 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </div>
               );
             })}
+          </motion.div>
+        )}
+
+        {/* ══════════════ BHUMI ORACLE ══════════════ */}
+        {activeTab === 'bhumi' && (
+          <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
+            <BhumiOraclePanel birthData={birthData} ephemeris={ephemeris} />
           </motion.div>
         )}
 
