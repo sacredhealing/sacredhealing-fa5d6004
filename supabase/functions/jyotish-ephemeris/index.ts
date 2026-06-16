@@ -266,7 +266,7 @@ serve(async (req) => {
       }
 
       // Extract Mars sign
-      let marsSign = '';
+      // marsSign already declared in outer scope
       const marsData = payload?.AllPlanetData?.Mars || null;
       if (marsData) {
         marsSign = String(marsData.Sign || marsData.Rashi || marsData.ZodiacSign || '').trim();
