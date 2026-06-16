@@ -1,0 +1,67 @@
+name: Fix Supabase Keys in Vercel
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-supabase-vercel.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Supabase keys in all Vercel projects
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          node - << 'EOF'
+          const https = require('https');
+          const TOKEN = process.env.VERCEL_TOKEN;
+          const SUPA_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+
+          function api(method, path, body) {
+            return new Promise(resolve => {
+              const payload = body ? JSON.stringify(body) : '';
+              const req = https.request({
+                hostname: 'api.vercel.com', path, method,
+                headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload || '') }
+              }, res => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              req.on('error', () => resolve({ s: 0, b: {} }));
+              if (payload) req.write(payload);
+              req.end();
+            });
+          }
+
+          async function setEnv(projectId, key, value) {
+            const { b: envData } = await api('GET', `/v9/projects/${projectId}/env`, null);
+            const existing = (envData?.envs || []).find(e => e.key === key);
+            if (existing) {
+              const r = await api('PATCH', `/v9/projects/${projectId}/env/${existing.id}`, {
+                value, target: ['production', 'preview', 'development']
+              });
+              return `PATCH ${key}: ${r.s}`;
+            } else {
+              const r = await api('POST', `/v9/projects/${projectId}/env`, [{
+                key, value, type: 'encrypted', target: ['production', 'preview', 'development']
+              }]);
+              return `POST ${key}: ${r.s}`;
+            }
+          }
+
+          async function main() {
+            const { b } = await api('GET', '/v9/projects?limit=20', null);
+            const projects = b?.projects || [];
+            console.log(`Found ${projects.length} projects`);
+            for (const p of projects) {
+              console.log(`\nProject: ${p.name} (${p.id})`);
+              console.log(await setEnv(p.id, 'VITE_SUPABASE_URL', SUPA_URL));
+              console.log(await setEnv(p.id, 'VITE_SUPABASE_ANON_KEY', ANON_KEY));
+              console.log(await setEnv(p.id, 'VITE_SUPABASE_PUBLISHABLE_KEY', ANON_KEY));
+            }
+            console.log('\nAll projects updated. Triggering redeploy...');
+          }
+          main().catch(console.error);
+          EOF
