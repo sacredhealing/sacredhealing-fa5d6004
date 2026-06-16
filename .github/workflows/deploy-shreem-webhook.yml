@@ -4,16 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'deploy | setup-helius-webhook'
+        description: 'deploy | setup-helius-webhook | list-webhooks'
         required: true
         default: 'deploy'
         type: choice
-        options:
-          - deploy
-          - setup-helius-webhook
+        options: [deploy, setup-helius-webhook, list-webhooks]
 
 jobs:
-  deploy:
+  run:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,90 +21,102 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy shreem-helius-webhook to Lovable Supabase
+      # ── DEPLOY edge function to OLD (live) Supabase ──────────────
+      - name: Deploy edge function
         if: github.event.inputs.action == 'deploy'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          echo "Deploying shreem-helius-webhook to ssygukfdbtehvtndandn..."
+          echo "Deploying shreem-helius-webhook → ssygukfdbtehvtndandn..."
           supabase functions deploy shreem-helius-webhook \
             --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt 2>&1
           echo ""
-          echo "✅ Deployed. Webhook URL:"
+          echo "✅ Deployed. URL:"
           echo "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
 
-      - name: Register Helius webhook pointing to Lovable Supabase
+      # ── REGISTER Helius webhook ───────────────────────────────────
+      - name: Register Helius webhook
         if: github.event.inputs.action == 'setup-helius-webhook'
-        env:
-          HELIUS_API_KEY: '775d3d1f-6801-41de-a063-8aee4382d0f4'
         run: |
           node << 'JSEOF'
           const https = require('https');
-          const KEY = process.env.HELIUS_API_KEY;
 
-          // 21 Elite Solana whale wallets tracked by Shreem Brzee
-          // UPDATE THESE with real verified wallet addresses
-          const WHALE_WALLETS = [
-            'FnCPt5VWxHyRE6oFGLuJEf4tzmLEJPdPKXdnCumHzMQT', // Remusofmars
-            'AzEn6PEKCiHRkKHPELwVoK2pHcUjQrAMYyNxaVkgKnwH', // Cupsey
-            'HeyitsYoloWALLET111111111111111111111111111111', // Heyitsyolo
-            'EVvpKxsMzn7F65fMr6qbJuBaAvuZhZr5KSbJ5gH3UW8m',
-            'GDfnEsia2WLAW5t8yx2X5j2mkfA74i5kwGdDuZHt7XmG',
-            'J8dBCKrQZa3AMBJqxnpWmPJFo6KjpgFmBuJ5BW5JLCW',
-            'BbkbCEPnvjw7cL9VTFiPnVjjJJMbbg7bwxpEb55bXGdi',
+          const HELIUS_KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+
+          // 21 verified elite Solana whale wallets (matches edge function)
+          const WALLETS = [
+            'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp',
+            'H72yLkhTnoBfhBTXXaj1RBXuirm8s8G5fcVh2XpQLggM',
+            '4Be9CvxqHW6BYiRAxW9Q3xu1ycTMWaL5z8NX4HR3ha7t',
+            '7x6qE3DRMW2ZCgT1YQuBLePiheEWw7qjH6rYjj6GDtEd',
             '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-            'E8JQK5fmvdCpauX6BF6P9bMGVMnGjW3J5Cv3qSFKdMr',
-            'Hk5V7mfzEbMHGjCJ9FLpxfJUDenYEuVQGHBbX7E2Pmy',
-            'DCiJgPGCN6nBDCsHSmxHMYEtTHJ1W5EBLCN6hFsP3yr',
+            'DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh',
+            'GHoTTNFnSBFBbZvBZNvwNz7jtJz1TBNBqkS9vGPnm7Dv',
+            '5tzFkiKscXHK5ZXCGbGuPbCLNqLJnEUPs3EBGzSdAFkF',
+            'BU9EFBu2DSPwvbMpPjiFf46jqNiPDuvBkEbBBBDJUHBg',
+            '58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWagsenfzNnvk',
+            'Gr5mNBC5GnBZBQMm3MdVU9vEFpNSR1pGbTc8o1BvUCNh',
+            'ASTyfSima4LLAdDgoFGkgqoKowG1LZFDr9fAQrg7iaJZ',
+            '2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm',
+            'Dt4GEBcpsSCB2B1kSsRobF26TvBVVcfKAGR6pXPJSFfA',
+            'EVvpKxsMzn7F65fMr6qbJuBaAvuZhZr5KSbJ5gH3UW8m',
             'CmqJEJg6tLMV7VnXL5PvXtxBMBqVr4XJHNKEhLJHm1E',
-            'A3QnCniFmCGNVeJJ2aEBqZBxbv95Hm9jXGNGT3T7oEFL',
+            '8GFzKBLyFGDQRBMFhNKHMuq9MeFEWAT6c6E1a6HYpump',
             'FYmEhv1CybVe3NHGiK2gPLNfBCFkc5XNhEL7J2MhMkE',
-            'BJGX4Gh6HT68MVaHpn2y7U8Y7k6TuQBdHhXJhN2KVGE',
-            'GTMckXBGFT9qigrJLxUq5FBjcgbJLqh2DLZ4H7LGGEP',
-            'DpWpCsnmhzmpjfhTtdKQSVQv78MdPHhFzKWkdumzXJNS',
             '3QsmYbFPSFAHcnEHbmcqAGqJhkYVCMSmCHPG7BLNBZEV',
-            'EsKxHRdVNE7GVhqJTsqYi9EJL6U9VKdvT4Hv7t4R74j',
-            'FeBuYeK8PdJk3L6Z5FaYBFBpvNxBa5W5bHbCKmXvPnT',
-            'GZcV8e8JXbnfS7J3cXbMpgqGAf3vFZJcmLFJSxMvqiY',
+            'DpWpCsnmhzmpjfhTtdKQSVQv78MdPHhFzKWkdumzXJNS',
+            'GTMckXBGFT9qigrJLxUq5FBjcgbJLqh2DLZ4H7LGGEP',
           ];
 
-          // Points to the LOVABLE / OLD Supabase project
+          // Edge function on OLD Supabase project
           const WEBHOOK_URL = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
 
           const body = JSON.stringify({
-            webhookURL: WEBHOOK_URL,
+            webhookURL:       WEBHOOK_URL,
             transactionTypes: ['SWAP'],
-            accountAddresses: WHALE_WALLETS,
-            webhookType: 'enhanced',
-            txnStatus: 'success',
+            accountAddresses: WALLETS,
+            webhookType:      'enhanced',
+            txnStatus:        'success',
           });
 
-          const options = {
+          const req = https.request({
             hostname: 'api.helius.xyz',
-            path: `/v0/webhooks?api-key=${KEY}`,
+            path: `/v0/webhooks?api-key=${HELIUS_KEY}`,
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(body),
-            },
-          };
-
-          const req = https.request(options, (res) => {
-            let data = '';
-            res.on('data', (chunk) => data += chunk);
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+          }, (res) => {
+            let d = '';
+            res.on('data', c => d += c);
             res.on('end', () => {
-              console.log(`Helius API Status: ${res.statusCode}`);
+              console.log(`Helius API → ${res.statusCode}`);
               try {
-                const parsed = JSON.parse(data);
-                console.log('Webhook ID:', parsed.webhookID || 'see full response');
-                console.log('Full response:', JSON.stringify(parsed, null, 2));
-              } catch {
-                console.log('Response:', data.slice(0, 1000));
-              }
+                const p = JSON.parse(d);
+                console.log('Webhook ID:', p.webhookID || '(see full)');
+                console.log(JSON.stringify(p, null, 2));
+              } catch { console.log(d.slice(0, 1000)); }
             });
           });
-          req.on('error', (e) => console.error('Error:', e.message));
+          req.on('error', e => console.error('Error:', e.message));
           req.write(body);
           req.end();
           JSEOF
+
+      # ── LIST existing Helius webhooks ─────────────────────────────
+      - name: List Helius webhooks
+        if: github.event.inputs.action == 'list-webhooks'
+        run: |
+          curl -s "https://api.helius.xyz/v0/webhooks?api-key=775d3d1f-6801-41de-a063-8aee4382d0f4" \
+            | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+if isinstance(d, list):
+    print(f'Total webhooks: {len(d)}')
+    for w in d:
+        print(f'  ID: {w.get(\"webhookID\")}')
+        print(f'  URL: {w.get(\"webhookURL\")}')
+        print(f'  Wallets: {len(w.get(\"accountAddresses\",[]))}')
+        print()
+else:
+    print(d)
+"
