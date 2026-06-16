@@ -1,0 +1,49 @@
+name: SQI — Monday Weekly Update Email
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'   # Every Monday 07:00 UTC (09:00 Stockholm)
+  workflow_dispatch:        # Manual trigger for testing
+
+jobs:
+  send-monday-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Trigger weekly-alignment-email edge function
+        env:
+          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "🕉️ SQI Monday Transmission firing at $(date -u)"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            "$SUPABASE_URL/functions/v1/weekly-alignment-email" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{}" \
+            --max-time 600)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Edge function returned $HTTP_CODE"
+            exit 1
+          fi
+          
+          echo "✦ Monday Transmission complete"
+          echo "$BODY" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(f\"Scanned: {d.get(\\"scanned\\", 0)} users\")
+    print(f\"Sent: {d.get(\\"sent\\", 0)} emails\")
+    print(f\"Errors: {d.get(\\"errors\\", 0)}\")
+    print(f\"New content items: {d.get(\\"newContentItems\\", 0)}\")
+except: print(\"Could not parse response\")
+" || true
