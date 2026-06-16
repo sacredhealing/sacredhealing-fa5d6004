@@ -1,134 +1,198 @@
-🔱 Shreem Brzee Backfill — Solana on-chain SWAP history
-   Supabase: ssygukfdbtehvtndandn
-   Wallets: 21
-   Pages per wallet: 5 (up to 500 swaps each)
+🔱 Shreem Brzee Backfill v2 — Real Solana SWAP history
+   21 whales × up to 300 swaps = up to 6300 rows
 
 
-🐋 Cupsey (GJRs4FwH…)
-   Already in DB: 0 rows
-   Page 1: 11 txs fetched
-   Page 1: 0 swaps parsed
-   ✅ 0 rows upserted for Cupsey
+🐋 Cupsey
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Heyitsyolo (Av3xWHJ5…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Heyitsyolo
+🐋 Heyitsyolo
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Remusofmars (BCrTEXmW…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Remusofmars
+🐋 Remusofmars
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Orange (96gYZGLn…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Orange
+🐋 Orange
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Shreem Brzee (HL3FZ8XW…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Shreem Brzee
+🐋 Shreem Brzee
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Lenion (DNfuF1L6…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Lenion
+🐋 Lenion
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Boredboar (gasAx5Y9…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Boredboar
+🐋 Boredboar
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Hades (HdxkiXqe…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Hades
+🐋 Hades
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Kubera 72 (AAvdewt7…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Kubera 72
+🐋 Kubera 72
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Brzee God (JD38n7yn…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Brzee God
+🐋 Brzee God
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 GBack (9VPozuXe…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for GBack
+🐋 GBack
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Tuna (GjK3S2Zg…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Tuna
+🐋 Tuna
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Fireball (AgmLJBMD…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Fireball
+🐋 Fireball
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Hachjdn (EqgZsS7G…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Hachjdn
+🐋 Hachjdn
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Crypto Circle (5DzUSNro…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Crypto Circle
+🐋 Crypto Circle
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Crocodile (2cBedD94…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Crocodile
+🐋 Crocodile
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Snow Spirit (4ev7HVsE…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Snow Spirit
+🐋 Snow Spirit
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 Cented (CyaE1Vxv…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for Cented
+🐋 Cented
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 The Grande (Gygj9QQb…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for The Grande
+🐋 The Grande
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 A Milly (Fv9w9TQn…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for A Milly
+🐋 A Milly
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🐋 J2ANNaq (J2ANNaq4…)
-   Already in DB: 0 rows
-  ⏳ rate limit — sleeping 5s
-   Page 1: no more data
-   ✅ 0 rows upserted for J2ANNaq
+🐋 J2ANNaq
+  ⏳ 429 — waiting 8s (attempt 1)
+  ⏳ 429 — waiting 16s (attempt 2)
+  ⏳ 429 — waiting 24s (attempt 3)
+   page 1: done
+   parsed: 0 swaps
+   ✅ inserted: 0
 
-🏆 DONE — 0 total rows inserted into shreem_brzee_signals
-   Data now available for Daily / Weekly / Monthly / Yearly views
+═══════════════════════════════════
+🏆 BACKFILL COMPLETE
+   Total inserted: 0 rows
+
+Per whale:
+  Cupsey: 0 swaps → 0 inserted
+  Heyitsyolo: 0 swaps → 0 inserted
+  Remusofmars: 0 swaps → 0 inserted
+  Orange: 0 swaps → 0 inserted
+  Shreem Brzee: 0 swaps → 0 inserted
+  Lenion: 0 swaps → 0 inserted
+  Boredboar: 0 swaps → 0 inserted
+  Hades: 0 swaps → 0 inserted
+  Kubera 72: 0 swaps → 0 inserted
+  Brzee God: 0 swaps → 0 inserted
+  GBack: 0 swaps → 0 inserted
+  Tuna: 0 swaps → 0 inserted
+  Fireball: 0 swaps → 0 inserted
+  Hachjdn: 0 swaps → 0 inserted
+  Crypto Circle: 0 swaps → 0 inserted
+  Crocodile: 0 swaps → 0 inserted
+  Snow Spirit: 0 swaps → 0 inserted
+  Cented: 0 swaps → 0 inserted
+  The Grande: 0 swaps → 0 inserted
+  A Milly: 0 swaps → 0 inserted
+  J2ANNaq: 0 swaps → 0 inserted
