@@ -101,14 +101,15 @@ User segment this week: ${segment}
 New in the Nexus this week:
 ${contentList}
 
-Write THREE sections as JSON. Total 150-200 words:
+Write THREE sections as PLAIN TEXT (not JSON) in this EXACT format with literal --- delimiter lines. Total 150-200 words:
 
-1. SUBJECT: (6-9 words, personal, from ${sender}, no hype)
-2. OPENING: (2-3 sentences — a real moment from life in Uddevalla this week)
-3. BODY: (3-4 sentences — bridges personal life to the Nexus, weaves in what's new naturally)
+SUBJECT: [6-9 words, personal, from ${sender}, no hype]
+---
+OPENING: [2-3 sentences — a real moment from life this week]
+---
+BODY: [3-4 sentences — bridges personal life to the Nexus, weaves in what's new naturally]
 
-Return only valid JSON:
-{"subject":"...","opening":"...","body":"..."}`;
+Output ONLY the three sections with the --- delimiters. No JSON, no code fences, no extra commentary.`;
 
   try {
     const res = await fetch(
@@ -118,23 +119,20 @@ Return only valid JSON:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 2.0, maxOutputTokens: 400 },
+          generationConfig: { temperature: 2.0, maxOutputTokens: 600 },
         }),
       }
     );
     const data = await res.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "{}";
-    const clean = raw.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
-    return { ...parsed, sender };
+    const raw = (data?.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+    const parts = raw.split('---');
+    const subject = parts[0]?.replace(/SUBJECT:/i, '').trim() || '';
+    const opening = parts[1]?.replace(/OPENING:/i, '').trim() || '';
+    const body = parts[2]?.replace(/BODY:/i, '').trim() || '';
+    return { subject, opening, body, sender };
   } catch (err) {
     console.error("[WEEKLY-ALIGNMENT] Gemini opening failed:", err);
-    return {
-      subject: "Monday from Uddevalla",
-      opening: "Jai Gurudev. Writing to you from home this Monday.",
-      body: "We have been working in the Nexus this week. Some things have deepened.",
-      sender,
-    };
+    return { subject: "", opening: "", body: "", sender };
   }
 }
 
