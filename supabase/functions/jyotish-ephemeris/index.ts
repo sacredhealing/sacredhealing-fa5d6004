@@ -207,6 +207,7 @@ serve(async (req) => {
     let ascendantSign = "";
     let sunSign = "";
     let nakProgress = 0.5;
+    let marsSign = "";
 
     try {
       // VedAstro v2 API for all planets
