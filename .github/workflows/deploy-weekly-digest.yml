@@ -27,6 +27,6 @@ jobs:
         working-directory: repo
         run: |
           supabase functions deploy weekly-digest \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt
           echo "\u2736 weekly-digest deployed successfully at $(date)"
