@@ -390,18 +390,8 @@ serve(async (req) => {
     }
 
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    let query = supabase
-      .from("content_changelog")
-      .select("*")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false });
+    const content = await collectRecentContent(supabase, since);
 
-    if (!isSingle) {
-      query = query.eq("included_in_digest", false);
-    }
-
-    const { data: newContent } = await query;
-    const content = newContent ?? [];
 
     const recipients = await loadRecipients(supabase, {
       single_email: singleEmail,
