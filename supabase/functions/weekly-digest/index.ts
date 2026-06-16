@@ -163,11 +163,29 @@ serve(async (req) => {
         return { ...p, email, lang: resolveLang(p.preferred_language) };
       })
     );
-    const validProfiles = profilesWithEmail.filter((p) => p.email);
+    let validProfiles = profilesWithEmail.filter((p) => p.email);
     log(`Users with emails: ${validProfiles.length}`);
 
-    // ── Dedup ──────────────────────────────────────────────────
-    const { data: alreadySent } = await supabase
+    // ── Test override: send only to testEmail ──────────────────
+    if (testEmail) {
+      const match = validProfiles.find((p) => p.email?.toLowerCase() === testEmail!.toLowerCase());
+      if (match) {
+        validProfiles = [match];
+      } else {
+        validProfiles = [{
+          user_id: "00000000-0000-0000-0000-000000000000",
+          full_name: null,
+          preferred_language: "en",
+          subscription_tier: "free",
+          email: testEmail,
+          lang: "en" as Lang,
+        } as any];
+      }
+      log(`TEST MODE → ${testEmail}`);
+    }
+
+    // ── Dedup (skipped in test mode) ───────────────────────────
+    const { data: alreadySent } = testEmail ? { data: [] as any[] } : await supabase
       .from("user_weekly_email_log")
       .select("user_id")
       .eq("week_start", weekStartStr)
