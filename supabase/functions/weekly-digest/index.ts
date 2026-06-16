@@ -369,20 +369,27 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // ── Auth gate: cron secret OR admin JWT ──
+    // ── Auth gate: cron secret, service role bearer, OR admin JWT ──
     const cronSecret = Deno.env.get("CRON_SECRET");
+    const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const providedCron = req.headers.get("X-Cron-Secret");
-    let authorized = !!(cronSecret && providedCron && providedCron === cronSecret);
+    let authorized =
+      !!(cronSecret && providedCron && providedCron === cronSecret) ||
+      !!(serviceRole && providedCron && providedCron === serviceRole);
     if (!authorized) {
       const authHeader = req.headers.get("Authorization");
-      if (authHeader?.startsWith("Bearer ")) {
-        const { data: { user } } = await supabase.auth.getUser(authHeader.split(" ")[1]);
+      const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : "";
+      if (token && serviceRole && token === serviceRole) {
+        authorized = true;
+      } else if (token) {
+        const { data: { user } } = await supabase.auth.getUser(token);
         if (user) {
           const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
           authorized = !!isAdmin;
         }
       }
     }
+
     if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
