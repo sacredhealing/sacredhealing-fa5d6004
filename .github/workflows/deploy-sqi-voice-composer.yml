@@ -1,0 +1,29 @@
+name: Deploy sqi-voice-composer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/sqi-voice-composer/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout with PAT
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy sqi-voice-composer
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy sqi-voice-composer \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+          echo "\u2736 sqi-voice-composer deployed"
