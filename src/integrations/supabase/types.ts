@@ -2611,6 +2611,42 @@ export type Database = {
         }
         Relationships: []
       }
+      content_changelog: {
+        Row: {
+          auto_announced: boolean
+          content_description: string | null
+          content_title: string
+          content_type: string
+          created_at: string
+          id: string
+          included_in_digest: boolean
+          tier_required: string
+          updated_at: string
+        }
+        Insert: {
+          auto_announced?: boolean
+          content_description?: string | null
+          content_title: string
+          content_type: string
+          created_at?: string
+          id?: string
+          included_in_digest?: boolean
+          tier_required?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_announced?: boolean
+          content_description?: string | null
+          content_title?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          included_in_digest?: boolean
+          tier_required?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       course_enrollments: {
         Row: {
           amount_paid: number | null
@@ -3383,6 +3419,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_logs: {
+        Row: {
+          email_type: string
+          error: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string | null
+          sent_at: string
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          email_type: string
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          email_type?: string
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string | null
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {

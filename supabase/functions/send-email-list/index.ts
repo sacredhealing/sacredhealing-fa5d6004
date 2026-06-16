@@ -41,9 +41,9 @@ serve(async (req) => {
   }
 
   const { data: emails, error } = await supabase
-    .from("email_list")
+    .from("email_subscribers")
     .select("email")
-    .eq("subscribed", true);
+    .eq("is_active", true);
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: cors });
 

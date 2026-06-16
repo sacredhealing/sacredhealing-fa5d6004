@@ -1,57 +1,69 @@
-## Diagnosis
+## Audit: what works, what doesn't
 
-The page at `/income-streams/delta-arb-bot` shows nothing because:
+### ✅ `/admin/email-list` — works
+- Reads/writes `email_subscribers` (88 active subs).
+- CSV export, add/edit/delete subscriber — all wired to a table that exists.
+- "Send Email" button on this page links to `/admin/send-email` (the bulk sender).
 
-1. It reads from table `delta_arb_trades` in external project `fjdzhrdpioxdeyyfogep`. That table currently returns `[]` — no worker is writing rows.
-2. There is no "real balance" anywhere on the page — only a simulated `$10 + sum(pnl)`.
-3. The header says "Polymarket · Binance WebSocket", which contradicts the requirement that the UI reflects **only Binance capital**.
+### ✅ Bulk send to the whole list — works
+- `/admin/send-email` (`AdminSendEmail.tsx`) calls edge function `send-bulk-email`.
+- `send-bulk-email` is deployed, queries `email_subscribers WHERE is_active = true`, sends via Resend with the branded template, batches of 10, admin-only auth gate.
+- Sender: `Sacred Healing <noreply@mail.siddhaquantumnexus.com>` (verify this subdomain is verified in Resend, otherwise sends will fail).
+- This is the page to actually email the 88 subscribers.
 
-You confirmed:
-- Keep using the external project / `delta_arb_trades` table for the trade feed.
-- Show **real Binance account balance at the top**, the bot's P&L log below.
+### ❌ `/admin/email-automation` — broken
+This page (`EmailManager.tsx`) depends on two tables that **do not exist** in the database:
+- `content_changelog` — used by the "New Content" tab (log + list) → every action fails.
+- `email_logs` — used by the "Logs" tab → tab is empty/errors.
 
-## Plan
+Other issues on this page:
+- "Send Monday Digest Now" → calls `weekly-digest` function, which likely also reads `content_changelog`/`email_logs` → will fail.
+- "Send Lakshmi Friday Now" → calls `lakshmi-friday` function → same risk.
+- "Send Email to user" tab calls `send-to-user` (single user only — not a bulk-to-list sender).
 
-### 1. New edge function: `binance-balance` (in this Lovable Cloud project)
-- Lovable-managed Deno edge function.
-- Reads `BINANCE_API_KEY` + `BINANCE_API_SECRET` from secrets (read-only key is enough — `Enable Reading` permission).
-- Signs a `GET /api/v3/account` request, returns:
-  ```json
-  { "usdt": 12.34, "btc": 0.00021, "btcPrice": 67890.1, "totalUsd": 26.59, "ts": "..." }
-  ```
-- CORS open, `verify_jwt = false` (page is admin-gated client-side; no PII in response).
-- Graceful error: returns `{ error: "..." }` with 200 so UI can show a banner instead of breaking.
+### ❌ `send-email-list` edge function — broken
+Queries a non-existent `email_list` table. Unused by the UI but should either be removed or pointed at `email_subscribers`.
 
-Required secrets I'll request after you approve:
-- `BINANCE_API_KEY`
-- `BINANCE_API_SECRET`
+---
 
-(Use a key restricted to **Enable Reading** only, no withdraw, no trade. IP allowlist optional.)
+## Proposed plan
 
-### 2. Rewrite `src/pages/income-streams/DeltaArbBot.tsx`
-- **Top card → "BINANCE CAPITAL" (live):**
-  - Real USDT balance, BTC balance × spot price, total USD value.
-  - LIVE / dimmed dot based on whether `binance-balance` succeeded.
-  - Auto-refresh every 15s.
-- **Below → "BOT TRADE LOG" (paper P&L):**
-  - Still reads `delta_arb_trades` from `fjdzhrdpioxdeyyfogep` (unchanged URL + anon key already in file).
-  - Stats row (Trades / Win Rate / Wins / Losses / Total P&L) computed from that feed, clearly labeled "Paper P&L — not part of Binance balance".
-- Drop the "Polymarket · …" subtitle. New subtitle: "Binance spot · auto-refresh 15s".
-- Keep the existing visual language (Midnight Black / Gold / Cyan, glassmorphism, no entrance animations) per project memory.
-- Show a clear empty-state in the trade log: "Worker has not written any trades to `delta_arb_trades` yet — start the Railway worker pointed at `fjdzhrdpioxdeyyfogep`."
+**1. Create the two missing tables** (with RLS, grants, admin-only policies):
 
-### 3. Connection health strip
-Small row under the header with two pills:
-- `Binance API` — green if `binance-balance` returns ok, red with the error message otherwise.
-- `Trade feed DB` — green when fetch succeeds, shows row count; amber "0 rows" if reachable but empty (current state).
+```sql
+-- content_changelog: log of new content for digests/announcements
+create table public.content_changelog (
+  id uuid primary key default gen_random_uuid(),
+  content_type text not null,
+  content_title text not null,
+  content_description text,
+  tier_required text not null default 'free',
+  auto_announced boolean not null default false,
+  included_in_digest boolean not null default false,
+  created_at timestamptz not null default now()
+);
 
-This makes it obvious at a glance which side is broken.
+-- email_logs: per-email send history surfaced in the Logs tab
+create table public.email_logs (
+  id uuid primary key default gen_random_uuid(),
+  email_type text not null,
+  recipient_email text,
+  subject text,
+  status text not null default 'sent',
+  error text,
+  sent_at timestamptz not null default now()
+);
+```
++ `GRANT` to `authenticated` / `service_role` + RLS policies restricted to `has_role(auth.uid(),'admin')`.
 
-### Out of scope (call out, don't fix in this turn)
-- Deploying / restarting the actual delta-arb worker on Railway that should be inserting into `delta_arb_trades`. The UI will be ready; once the worker writes a row, the feed will populate immediately. If you want me to also fix the worker, that's a separate task — tell me which Railway service and project ref it should target.
+**2. Verify the three digest/blast edge functions** (`weekly-digest`, `lakshmi-friday`, `send-to-user`) read/write these tables correctly; patch any column mismatches and redeploy.
 
-## Files touched
-- `supabase/functions/binance-balance/index.ts` (new)
-- `src/pages/income-streams/DeltaArbBot.tsx` (rewrite)
+**3. Fix `send-email-list`** — repoint to `email_subscribers` (or delete it, since `send-bulk-email` already covers this).
 
-No DB migrations. No changes to other routes.
+**4. Add a clear link from `/admin/email-list` → `/admin/send-email`** so the "send to whole list" path is obvious (it already exists, just labeling).
+
+### Out of scope (ask if you want them)
+- Building a real digest content pipeline (requires deciding what auto-populates `content_changelog`).
+- Replacing `email_logs` with the platform `email_send_log` table that's already in your DB (would unify with auth/transactional logs).
+
+Shall I proceed with steps 1–4?
