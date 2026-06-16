@@ -141,6 +141,18 @@ Return only valid JSON:
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  let testEmail: string | null = null;
+  let forceVoice: "Kritagya" | "Laila" | null = null;
+  try {
+    if (req.method === "POST") {
+      const body = await req.clone().json().catch(() => ({}));
+      if (body?.testEmail) testEmail = String(body.testEmail);
+      if (body?.forceVoice === "Kritagya" || body?.forceVoice === "Laila") forceVoice = body.forceVoice;
+    }
+  } catch {}
+  if (forceVoice) (globalThis as any).__FORCE_VOICE__ = forceVoice;
+  else delete (globalThis as any).__FORCE_VOICE__;
+
   try {
     const cronSecret = Deno.env.get("CRON_SECRET");
     if (cronSecret) {
