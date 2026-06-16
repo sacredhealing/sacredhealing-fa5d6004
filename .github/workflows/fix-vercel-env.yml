@@ -2,6 +2,9 @@ name: Fix Vercel Env — Point to Live Supabase
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-vercel-env.yml'
 
 jobs:
   fix:
