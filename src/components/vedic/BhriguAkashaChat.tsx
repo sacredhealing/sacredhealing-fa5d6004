@@ -224,6 +224,43 @@ export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loa
 
   const scrollBottom = () => setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
 
+  // ── Load persistent chat history on mount ────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const loadHistory = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token || cancelled) return;
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bhrigu-oracle`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ mode: 'get_history' }),
+          }
+        );
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (data.messages && data.messages.length > 0 && !cancelled) {
+          setChatMessages(
+            data.messages.map((m: { role: string; text: string }) => ({
+              role: m.role as 'user' | 'oracle',
+              text: m.text,
+            }))
+          );
+        }
+      } catch {
+        // non-fatal — start fresh if history unavailable
+      }
+    };
+    loadHistory();
+    return () => { cancelled = true; };
+  }, []);
+  // ─────────────────────────────────────────────────────────────────────
+
   function buildSystemPrompt() {
     if (!birthData) return BHRIGU_SYSTEM_PROMPT + '\n\nNo birth data provided. Ask the seeker for their date, time and place of birth.';
 
