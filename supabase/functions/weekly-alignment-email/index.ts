@@ -569,7 +569,12 @@ function buildContentDigest(items: ContentItem[], lang: Lang, appUrl: string): s
 // EMAIL BUILDER
 // ═══════════════════════════════════════════════════
 
-function buildEmail(user: UserState, appUrl: string, newContent: ContentItem[]): { subject: string; html: string; text: string } {
+function buildEmail(
+  user: UserState,
+  appUrl: string,
+  newContent: ContentItem[],
+  generated: { subject: string; opening: string; body: string; sender: "Kritagya" | "Laila" }
+): { subject: string; html: string; text: string } {
   const name = user.fullName || t.seeker[user.language];
   const L = user.language;
   const nadi = user.nadiBaseline;
