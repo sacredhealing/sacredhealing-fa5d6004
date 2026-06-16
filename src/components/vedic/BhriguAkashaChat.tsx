@@ -221,8 +221,15 @@ export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loa
 
   const chatHistoryRef = useRef<{ role: string; content: string }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const latestOracleRef = useRef<HTMLDivElement>(null);
 
-  const scrollBottom = () => setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
+  const scrollBottom = () => setTimeout(() => {
+    if (latestOracleRef.current) {
+      latestOracleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 80);
 
   // ── Load persistent chat history on mount ────────────────────────────
   useEffect(() => {
@@ -573,7 +580,7 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
 
           {chatMessages.map((m, i) => (
             m.role === 'oracle' ? (
-              <div key={i} style={{ position: 'relative', padding: '20px 0 10px', background: 'rgba(255,255,255,0.016)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
+              <div key={i} ref={i === chatMessages.length - 1 ? latestOracleRef : null} style={{ position: 'relative', padding: '20px 0 10px', background: 'rgba(255,255,255,0.016)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20 }}>
                 <div style={labelStyle}>Maharishi Bhrigu speaks</div>
                 <div style={{ fontFamily: "\'IM Fell English\', Georgia, serif", fontSize: 16, lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em', wordBreak: 'break-word' as const }}>
                   {m.text.split(/\n\n+/).map((para, pi) => <p key={pi} style={{ margin: pi > 0 ? '14px 0 0' : 0 }}>{para}</p>)}
