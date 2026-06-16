@@ -1,0 +1,134 @@
+🔱 Shreem Brzee Backfill — Solana on-chain SWAP history
+   Supabase: ssygukfdbtehvtndandn
+   Wallets: 21
+   Pages per wallet: 5 (up to 500 swaps each)
+
+
+🐋 Cupsey (GJRs4FwH…)
+   Already in DB: 0 rows
+   Page 1: 11 txs fetched
+   Page 1: 0 swaps parsed
+   ✅ 0 rows upserted for Cupsey
+
+🐋 Heyitsyolo (Av3xWHJ5…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Heyitsyolo
+
+🐋 Remusofmars (BCrTEXmW…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Remusofmars
+
+🐋 Orange (96gYZGLn…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Orange
+
+🐋 Shreem Brzee (HL3FZ8XW…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Shreem Brzee
+
+🐋 Lenion (DNfuF1L6…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Lenion
+
+🐋 Boredboar (gasAx5Y9…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Boredboar
+
+🐋 Hades (HdxkiXqe…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Hades
+
+🐋 Kubera 72 (AAvdewt7…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Kubera 72
+
+🐋 Brzee God (JD38n7yn…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Brzee God
+
+🐋 GBack (9VPozuXe…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for GBack
+
+🐋 Tuna (GjK3S2Zg…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Tuna
+
+🐋 Fireball (AgmLJBMD…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Fireball
+
+🐋 Hachjdn (EqgZsS7G…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Hachjdn
+
+🐋 Crypto Circle (5DzUSNro…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Crypto Circle
+
+🐋 Crocodile (2cBedD94…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Crocodile
+
+🐋 Snow Spirit (4ev7HVsE…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Snow Spirit
+
+🐋 Cented (CyaE1Vxv…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for Cented
+
+🐋 The Grande (Gygj9QQb…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for The Grande
+
+🐋 A Milly (Fv9w9TQn…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for A Milly
+
+🐋 J2ANNaq (J2ANNaq4…)
+   Already in DB: 0 rows
+  ⏳ rate limit — sleeping 5s
+   Page 1: no more data
+   ✅ 0 rows upserted for J2ANNaq
+
+🏆 DONE — 0 total rows inserted into shreem_brzee_signals
+   Data now available for Daily / Weekly / Monthly / Yearly views
