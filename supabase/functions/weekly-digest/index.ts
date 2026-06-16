@@ -72,7 +72,14 @@ serve(async (req) => {
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
     const resend = new Resend(resendApiKey);
 
-    const fromEmail = "Kritagya • Siddha-Quantum Nexus <noreply@siddhaquantumnexus.com>";
+    const fromEmail = "Adam & Laila <noreply@siddhaquantumnexus.com>";
+    let testEmail: string | null = null;
+    try {
+      if (req.method === "POST") {
+        const body = await req.json().catch(() => ({}));
+        if (body && typeof body.testEmail === "string") testEmail = body.testEmail.trim();
+      }
+    } catch (_) {}
     const appUrl = Deno.env.get("APP_URL") || "https://siddhaquantumnexus.com";
 
     const supabase = createClient(
