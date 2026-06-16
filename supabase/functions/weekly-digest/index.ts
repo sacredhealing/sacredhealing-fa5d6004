@@ -288,10 +288,12 @@ serve(async (req) => {
       try {
         const { subject, html } = buildMondayEmail(user, dedupedContent, appUrl);
         await resend.emails.send({ from: fromEmail, to: [user.email], subject, html });
-        await supabase.from("user_weekly_email_log").insert({
-          user_id: uid, week_start: weekStartStr,
-          segment: user.segment, email_type: "weekly_digest",
-        });
+        if (!testEmail) {
+          await supabase.from("user_weekly_email_log").insert({
+            user_id: uid, week_start: weekStartStr,
+            segment: user.segment, email_type: "weekly_digest",
+          });
+        }
         sent++;
         log(`✦ Sent → ${user.email}`, { segment: user.segment });
       } catch (err) {
