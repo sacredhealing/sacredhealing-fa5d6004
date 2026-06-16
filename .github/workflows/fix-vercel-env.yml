@@ -1,0 +1,71 @@
+name: Fix Vercel Env — Point to Live Supabase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Vercel env vars to live ssygukfdbtehvtndandn
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          # Get project
+          PROJECT=$(curl -s "https://api.vercel.com/v9/projects" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+projects=d.get('projects',[])
+print(f'Found {len(projects)} projects')
+for p in projects:
+    print(f'  {p[\"id\"]} — {p[\"name\"]}')
+if projects:
+    print('FIRST:', projects[0]['id'])
+")
+          echo "$PROJECT"
+          
+          # Get first project ID
+          PID=$(curl -s "https://api.vercel.com/v9/projects" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+projects=d.get('projects',[])
+print(projects[0]['id'] if projects else '')
+")
+          echo "Project ID: $PID"
+          
+          # List current env vars
+          echo "Current env vars:"
+          curl -s "https://api.vercel.com/v9/projects/$PID/env" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+envs=d.get('envs',[])
+for e in envs:
+    if 'SUPABASE' in e.get('key',''):
+        print(f'  {e[\"key\"]} = {e.get(\"value\",\"(encrypted)\")[:60]}')
+"
+
+          # Set correct VITE_SUPABASE_URL
+          curl -s -X POST "https://api.vercel.com/v9/projects/$PID/env" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '[{"key":"VITE_SUPABASE_URL","value":"https://ssygukfdbtehvtndandn.supabase.co","type":"plain","target":["production","preview","development"]}]' \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print('VITE_SUPABASE_URL:', d)"
+
+          # Set correct VITE_SUPABASE_ANON_KEY
+          ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          curl -s -X POST "https://api.vercel.com/v9/projects/$PID/env" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "[{\"key\":\"VITE_SUPABASE_ANON_KEY\",\"value\":\"$ANON_KEY\",\"type\":\"plain\",\"target\":[\"production\",\"preview\",\"development\"]}]" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print('VITE_SUPABASE_ANON_KEY:', d)"
+
+          curl -s -X POST "https://api.vercel.com/v9/projects/$PID/env" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "[{\"key\":\"VITE_SUPABASE_PUBLISHABLE_KEY\",\"value\":\"$ANON_KEY\",\"type\":\"plain\",\"target\":[\"production\",\"preview\",\"development\"]}]" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print('VITE_SUPABASE_PUBLISHABLE_KEY:', d)"
+
+          echo "Done — trigger redeploy by touching a file"
