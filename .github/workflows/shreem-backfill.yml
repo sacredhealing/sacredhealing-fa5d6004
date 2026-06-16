@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - '.github/workflows/shreem-backfill.yml'
+      - 'scripts/shreem_backfill.mjs'
 
 jobs:
   backfill:
