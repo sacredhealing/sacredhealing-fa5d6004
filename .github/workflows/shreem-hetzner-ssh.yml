@@ -2,6 +2,9 @@ name: Shreem Hetzner SSH Deploy
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/shreem-hetzner-ssh.yml'
 
 jobs:
   deploy:
