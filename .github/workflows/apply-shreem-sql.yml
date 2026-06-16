@@ -1,0 +1,28 @@
+name: Apply Shreem Brzee SQL Tables
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run shreem_brzee SQL migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          npm install -g supabase@latest 2>&1 | tail -2
+
+          echo "Running shreem_brzee_signals migration..."
+          supabase db execute --project-ref fjdzhrdpioxdeyyfogep \
+            --file supabase/migrations/20260609_shreem_brzee_signals.sql 2>&1
+
+          echo ""
+          echo "Running shreem_brzee_server migration..."
+          supabase db execute --project-ref fjdzhrdpioxdeyyfogep \
+            --file supabase/migrations/20260611_shreem_brzee_server.sql 2>&1
+
+          echo ""
+          echo "=== SHREEM TABLES READY ==="
