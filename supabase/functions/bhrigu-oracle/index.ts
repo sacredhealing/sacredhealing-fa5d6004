@@ -400,8 +400,8 @@ serve(async (req) => {
 
     const res = await callAI({
       messages: allMessages,
-      max_tokens: 3000,
-      temperature: 2.0,
+      max_tokens: 4000,
+      temperature: 1.0,
     });
 
     if (!res.ok) {
@@ -411,7 +411,12 @@ serve(async (req) => {
     }
 
     const aiData = await res.json();
-    const reply = aiData.choices?.[0]?.message?.content ?? "";
+    const choice = aiData.choices?.[0];
+    const reply = choice?.message?.content ?? "";
+    const finishReason = choice?.finish_reason ?? "unknown";
+    if (finishReason === "length") {
+      console.warn("[bhrigu-oracle] Reply truncated by token limit — consider raising max_tokens");
+    }
 
     // Detect if Bhrigu is ready to deliver the full reading
     // (after enough dialogue, he transitions to the full structured reading)
@@ -493,4 +498,5 @@ Bhrigu replied: "${reply.slice(0, 400)}"` }
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
+
 
