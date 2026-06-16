@@ -453,15 +453,8 @@ serve(async (req) => {
       }
     }
 
-    if (!isSingle && content.length > 0) {
-      await supabase
-        .from("content_changelog")
-        .update({ included_in_digest: true })
-        .in(
-          "id",
-          content.map((c: Record<string, unknown>) => c.id as string),
-        );
-    }
+
+
 
     return new Response(
       JSON.stringify({ success: true, sent: sentCount, total: recipients.length, errors }),
