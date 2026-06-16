@@ -428,7 +428,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Shiva · SQI <noreply@siddhaquantumnexus.com>",
+            from: "Adam & Laila <noreply@siddhaquantumnexus.com>",
             to: user.email,
             subject,
             html,
