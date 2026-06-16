@@ -121,6 +121,17 @@ export default function UserManagementPanel() {
 
       const rankOf = (s:string) => s.includes("akasha")||s.includes("life")?3:s.includes("siddha")?2:s.includes("prana")||s.includes("premium")?1:0;
 
+      // Fetch auth emails via admin edge function
+      const emailMap: Record<string,string> = {};
+      try {
+        const { data: authData } = await supabase.functions.invoke("admin-user-management", {
+          body: { action: "list_users" },
+        });
+        (authData?.users || []).forEach((u:any) => { if (u.id && u.email) emailMap[u.id] = u.email; });
+      } catch (e) {
+        console.warn("Failed to load auth emails", e);
+      }
+
       setUsers((profiles||[]).map((p:any) => {
         const grant = membershipGrants[p.id];
         const stripe = memberMap[p.id]?.tierSlug;
@@ -130,6 +141,7 @@ export default function UserManagementPanel() {
         else if (stripe) tier = stripe;
         return {
           ...p,
+          email: emailMap[p.id] || null,
           tier: canonicalize(tier),
           stripe_sub: memberMap[p.id]?.stripe_subscription_id||null,
           expires_at: memberMap[p.id]?.expires_at||null,
