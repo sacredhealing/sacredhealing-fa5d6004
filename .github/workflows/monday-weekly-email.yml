@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Trigger weekly-digest edge function
         env:
-          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           echo "🕉️ SQI Monday Transmission firing at $(date -u)"
