@@ -26,12 +26,12 @@ jobs:
           supabase secrets set \
             GH_TOKEN=${{ secrets.GH_ADMIN_PAT }} \
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-            --project-ref fjdzhrdpioxdeyyfogep 2>/dev/null || true
+            --project-ref ssygukfdbtehvtndandn 2>/dev/null || true
 
       - name: 1. Run content scanner
         id: scanner
         env:
-          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           echo "\u2736 Step 1: Content scanner"
@@ -46,7 +46,7 @@ jobs:
 
       - name: 2. Run voice composer
         env:
-          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           echo "\u2736 Step 2: Voice composer — generating this week's emails"
