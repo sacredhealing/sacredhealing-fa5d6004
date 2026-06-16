@@ -1,0 +1,51 @@
+name: Register Helius Shreem Webhook
+
+on:
+  push:
+    paths:
+      - '.github/workflows/register-helius-shreem.yml'
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Register 21 whale wallets with Helius
+        run: |
+          node << 'JSEOF'
+          const https = require('https');
+          const KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+          const WALLETS = [
+            'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp',
+            'H72yLkhTnoBfhBTXXaj1RBXuirm8s8G5fcVh2XpQLggM',
+            '4Be9CvxqHW6BYiRAxW9Q3xu1ycTMWaL5z8NX4HR3ha7t',
+            '7x6qE3DRMW2ZCgT1YQuBLePiheEWw7qjH6rYjj6GDtEd',
+            '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+            'DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh',
+            'GHoTTNFnSBFBbZvBZNvwNz7jtJz1TBNBqkS9vGPnm7Dv',
+            '5tzFkiKscXHK5ZXCGbGuPbCLNqLJnEUPs3EBGzSdAFkF',
+            'BU9EFBu2DSPwvbMpPjiFf46jqNiPDuvBkEbBBBDJUHBg',
+            '58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWagsenfzNnvk',
+            'Gr5mNBC5GnBZBQMm3MdVU9vEFpNSR1pGbTc8o1BvUCNh',
+            'ASTyfSima4LLAdDgoFGkgqoKowG1LZFDr9fAQrg7iaJZ',
+            '2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm',
+            'Dt4GEBcpsSCB2B1kSsRobF26TvBVVcfKAGR6pXPJSFfA',
+            'EVvpKxsMzn7F65fMr6qbJuBaAvuZhZr5KSbJ5gH3UW8m',
+            'CmqJEJg6tLMV7VnXL5PvXtxBMBqVr4XJHNKEhLJHm1E',
+            '8GFzKBLyFGDQRBMFhNKHMuq9MeFEWAT6c6E1a6HYpump',
+            'FYmEhv1CybVe3NHGiK2gPLNfBCFkc5XNhEL7J2MhMkE',
+            '3QsmYbFPSFAHcnEHbmcqAGqJhkYVCMSmCHPG7BLNBZEV',
+            'DpWpCsnmhzmpjfhTtdKQSVQv78MdPHhFzKWkdumzXJNS',
+            'GTMckXBGFT9qigrJLxUq5FBjcgbJLqh2DLZ4H7LGGEP',
+          ];
+          const URL = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
+          const body = JSON.stringify({webhookURL:URL,transactionTypes:['SWAP'],accountAddresses:WALLETS,webhookType:'enhanced',txnStatus:'success'});
+          const req = https.request({hostname:'api.helius.xyz',path:`/v0/webhooks?api-key=${KEY}`,method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}},res=>{
+            let d=''; res.on('data',c=>d+=c);
+            res.on('end',()=>{
+              console.log('HTTP',res.statusCode);
+              try{const p=JSON.parse(d);console.log('Webhook ID:',p.webhookID);console.log(JSON.stringify(p,null,2));}catch{console.log(d);}
+            });
+          });
+          req.on('error',e=>console.error(e.message));
+          req.write(body); req.end();
+          JSEOF
