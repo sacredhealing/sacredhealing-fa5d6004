@@ -6768,6 +6768,51 @@ export type Database = {
         }
         Relationships: []
       }
+      shreem_brzee_signals: {
+        Row: {
+          action: string
+          amount_sol: number | null
+          block_time: number | null
+          created_at: string
+          id: number
+          is_pump_fun: boolean | null
+          label: string | null
+          mint: string | null
+          sig: string
+          symbol: string | null
+          token_amount: number | null
+          wallet: string
+        }
+        Insert: {
+          action: string
+          amount_sol?: number | null
+          block_time?: number | null
+          created_at?: string
+          id?: number
+          is_pump_fun?: boolean | null
+          label?: string | null
+          mint?: string | null
+          sig: string
+          symbol?: string | null
+          token_amount?: number | null
+          wallet: string
+        }
+        Update: {
+          action?: string
+          amount_sol?: number | null
+          block_time?: number | null
+          created_at?: string
+          id?: number
+          is_pump_fun?: boolean | null
+          label?: string | null
+          mint?: string | null
+          sig?: string
+          symbol?: string | null
+          token_amount?: number | null
+          wallet?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           content: string
