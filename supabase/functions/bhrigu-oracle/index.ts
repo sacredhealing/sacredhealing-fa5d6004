@@ -380,6 +380,18 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ── GET HISTORY MODE — returns last N messages from chat log ─────────
+    if (mode === 'get_history') {
+      if (!user?.id) return new Response(JSON.stringify({ messages: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const { data: logs } = await supabase
+        .from('bhrigu_chat_log')
+        .select('role, text, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(40);
+      return new Response(JSON.stringify({ messages: logs || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // ── LOAD BHRIGU MEMORY ────────────────────────────────────────────────
     let bhriguMemory = null;
     if (user?.id) {
@@ -495,6 +507,28 @@ Bhrigu replied: "${reply.slice(0, 400)}"` }
         }
       } catch (memErr) {
         console.error('Memory save error (non-fatal):', memErr);
+      }
+    }
+
+    // ── SAVE CHAT LOG (persistent cross-session history) ─────────────────
+    if (user?.id && reply) {
+      try {
+        await supabase.from('bhrigu_chat_log').insert([
+          { user_id: user.id, role: 'user', text: question },
+          { user_id: user.id, role: 'oracle', text: reply },
+        ]);
+        // Keep only last 60 messages per user
+        const { data: allLogs } = await supabase
+          .from('bhrigu_chat_log')
+          .select('id, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (allLogs && allLogs.length > 60) {
+          const toDelete = allLogs.slice(60).map((r: any) => r.id);
+          await supabase.from('bhrigu_chat_log').delete().in('id', toDelete);
+        }
+      } catch (logErr) {
+        console.error('Chat log save error (non-fatal):', logErr);
       }
     }
 
