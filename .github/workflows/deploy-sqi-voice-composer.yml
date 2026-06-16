@@ -24,6 +24,6 @@ jobs:
         working-directory: repo
         run: |
           supabase functions deploy sqi-voice-composer \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt
           echo "\u2736 sqi-voice-composer deployed"
