@@ -1,0 +1,44 @@
+name: SQI — Weekly Content Scanner
+
+on:
+  schedule:
+    - cron: '0 6 * * 6'   # Saturday 06:00 UTC — scans the week just ended
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Run weekly content scanner
+        env:
+          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "\u2736 SQI Weekly Scanner firing at $(date -u)"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            "$SUPABASE_URL/functions/v1/sqi-weekly-scanner" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{}" \
+            --max-time 300)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          echo "$BODY" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(f'Commits scanned: {d.get(\"scanned\", 0)}')
+    print(f'Features discovered: {d.get(\"discovered\", 0)}')
+    print(f'Written to digest: {d.get(\"written\", 0)}')
+    for r in d.get(\"results\", []):
+        print(f'  ✦ {r}')
+except: print('Could not parse')
+" || true
