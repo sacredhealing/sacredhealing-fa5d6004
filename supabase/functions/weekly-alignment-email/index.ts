@@ -101,12 +101,16 @@ User segment this week: ${segment}
 New in the Nexus this week:
 ${contentList}
 
-Write THREE sections as PLAIN TEXT (not JSON) in this EXACT format with literal --- delimiter lines. Total 150-200 words:
+Write THREE sections as PLAIN TEXT (not JSON) in this EXACT format with literal --- delimiter lines on their own lines with a blank line before and after. Total 150-200 words:
 
 SUBJECT: [6-9 words, personal, from ${sender}, no hype]
+
 ---
+
 OPENING: [2-3 sentences — a real moment from life this week]
+
 ---
+
 BODY: [3-4 sentences — bridges personal life to the Nexus, weaves in what's new naturally]
 
 Output ONLY the three sections with the --- delimiters. No JSON, no code fences, no extra commentary.`;
