@@ -11,11 +11,124 @@ const TYPE_ICONS: Record<string, string> = {
   beat: "🎵",
   song: "🎶",
   course: "📿",
+  lesson: "📖",
   mantra: "🕉️",
   feature: "⚡",
   tool: "🔮",
   announcement: "✨",
+  audio: "🎧",
+  album: "💿",
+  ambient: "🌬️",
+  transmission: "✦",
+  program: "🌀",
+  event: "📅",
 };
+
+type ChangelogItem = {
+  content_type: string;
+  content_title: string;
+  content_description?: string | null;
+  tier_required?: string | null;
+  created_at?: string;
+};
+
+async function collectRecentContent(
+  supabase: SupabaseClient,
+  sinceIso: string,
+): Promise<ChangelogItem[]> {
+  const items: ChangelogItem[] = [];
+  const push = (
+    type: string,
+    title: unknown,
+    description: unknown,
+    created_at: unknown,
+    tier: unknown = null,
+  ) => {
+    const t = (title ?? "").toString().trim();
+    if (!t) return;
+    items.push({
+      content_type: type,
+      content_title: t,
+      content_description: description ? String(description).slice(0, 220) : null,
+      tier_required: tier ? String(tier) : null,
+      created_at: created_at ? String(created_at) : undefined,
+    });
+  };
+
+  // Each source query is best-effort; missing tables/columns are skipped silently.
+  const sources: Array<{
+    table: string;
+    type: string;
+    title: string;
+    desc?: string;
+    tier?: string;
+    activeCol?: string;
+  }> = [
+    { table: "mantras", type: "mantra", title: "title", desc: "description", tier: "required_tier", activeCol: "is_active" },
+    { table: "meditations", type: "meditation", title: "title", desc: "description" },
+    { table: "healing_audio", type: "audio", title: "title", desc: "description" },
+    { table: "music_tracks", type: "song", title: "title", desc: "description" },
+    { table: "music_albums", type: "album", title: "title", desc: "description" },
+    { table: "courses", type: "course", title: "title", desc: "description" },
+    { table: "lessons", type: "lesson", title: "title", desc: "description" },
+    { table: "ambient_sounds", type: "ambient", title: "name", desc: "description" },
+    { table: "sound_library", type: "audio", title: "title", desc: "description" },
+    { table: "creative_tools", type: "tool", title: "name", desc: "description" },
+    { table: "transformation_programs", type: "program", title: "title", desc: "description" },
+    { table: "transformation_variations", type: "program", title: "title", desc: "description" },
+    { table: "divine_transmissions", type: "transmission", title: "title", desc: "description" },
+    { table: "announcements", type: "announcement", title: "title", desc: "body" },
+    { table: "live_events", type: "event", title: "title", desc: "description" },
+  ];
+
+  for (const s of sources) {
+    try {
+      const cols = ["created_at", s.title, s.desc, s.tier].filter(Boolean).join(",");
+      let q = supabase.from(s.table).select(cols).gte("created_at", sinceIso).limit(15);
+      if (s.activeCol) q = q.eq(s.activeCol, true);
+      const { data, error } = await q;
+      if (error || !data) continue;
+      for (const row of data as Record<string, unknown>[]) {
+        push(s.type, row[s.title], s.desc ? row[s.desc] : null, row.created_at, s.tier ? row[s.tier] : null);
+      }
+    } catch {
+      // ignore missing table or column errors
+    }
+  }
+
+  // Manual changelog entries take priority
+  try {
+    const { data } = await supabase
+      .from("content_changelog")
+      .select("*")
+      .gte("created_at", sinceIso);
+    for (const row of (data ?? []) as Record<string, unknown>[]) {
+      push(
+        String(row.content_type ?? "feature"),
+        row.content_title,
+        row.content_description,
+        row.created_at,
+        row.tier_required,
+      );
+    }
+  } catch {
+    // ignore
+  }
+
+  // Dedupe by type+title, newest first, cap at 25
+  const seen = new Set<string>();
+  const sorted = items
+    .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+    .filter((i) => {
+      const key = `${i.content_type}::${i.content_title.toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 25);
+
+  return sorted;
+}
 
 type Recipient = { user_id: string; email: string; first_name: string };
 
