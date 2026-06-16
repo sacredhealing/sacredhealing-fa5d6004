@@ -2,14 +2,32 @@ name: SQI — Weekly Content Scanner
 
 on:
   schedule:
-    - cron: '0 6 * * 6'   # Saturday 06:00 UTC — scans the week just ended
+    - cron: '0 6 * * 6'   # Saturday 06:00 UTC
   workflow_dispatch:
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
+      - name: Checkout with PAT
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Set scanner secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          cd repo
+          supabase secrets set \
+            GH_TOKEN=${{ secrets.GH_ADMIN_PAT }} \
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+            --project-ref fjdzhrdpioxdeyyfogep 2>/dev/null || true
+
       - name: Run weekly content scanner
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
@@ -27,9 +45,8 @@ jobs:
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -1)
-          
-          echo "HTTP Status: $HTTP_CODE"
-          echo "Response: $BODY"
+          echo "HTTP: $HTTP_CODE"
+          echo "Body: $BODY"
           
           echo "$BODY" | python3 -c "
 import sys, json
@@ -39,6 +56,6 @@ try:
     print(f'Features discovered: {d.get(\"discovered\", 0)}')
     print(f'Written to digest: {d.get(\"written\", 0)}')
     for r in d.get(\"results\", []):
-        print(f'  ✦ {r}')
-except: print('Could not parse')
+        print(f'  \u2736 {r[:100]}')
+except: print('parse error')
 " || true
