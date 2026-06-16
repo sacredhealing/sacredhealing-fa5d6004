@@ -1,0 +1,28 @@
+name: Shreem Deploy Now
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase/functions/shreem-helius-webhook/**'
+
+jobs:
+  deploy-edge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy to ssygukfdbtehvtndandn (live Supabase)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy shreem-helius-webhook \
+            --project-ref ssygukfdbtehvtndandn \
+            --no-verify-jwt 2>&1
+          echo "✅ shreem-helius-webhook live at:"
+          echo "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
