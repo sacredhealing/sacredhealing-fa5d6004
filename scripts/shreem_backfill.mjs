@@ -1,15 +1,13 @@
 #!/usr/bin/env node
-// shreem_backfill.mjs
-// Fetches real on-chain SWAP history for all 21 shreem whale wallets
-// via Helius Enhanced Transactions API, then upserts into shreem_brzee_signals
-// on the live Supabase: ssygukfdbtehvtndandn
+// shreem_backfill.mjs v2
+// Uses Helius Enhanced Transactions API with correct parsing of swap events
+// Slower but reliable — 1.5s delay between calls to avoid rate limits
 
-const HELIUS_KEY  = process.env.HELIUS_KEY  || '775d3d1f-6801-41de-a063-8aee4382d0f4';
-const SUPA_URL    = process.env.SUPABASE_URL || 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPA_KEY    = process.env.SUPABASE_SERVICE_KEY;
-const SOL_MINT    = 'So11111111111111111111111111111111111111112';
-const DELAY_MS    = 220;   // gentle rate limit between calls
-const PAGES       = 5;     // 5 × 100 = 500 txs per wallet → ~90 days of activity
+const HELIUS_KEY = process.env.HELIUS_KEY || '775d3d1f-6801-41de-a063-8aee4382d0f4';
+const SUPA_URL   = process.env.SUPABASE_URL || 'https://ssygukfdbtehvtndandn.supabase.co';
+const SUPA_KEY   = process.env.SUPABASE_SERVICE_KEY;
+const PAGES      = 3; // 3×100 = 300 txs per whale = ~60-90 days
+const DELAY      = 1500; // 1.5s between Helius calls
 
 if (!SUPA_KEY) { console.error('❌ SUPABASE_SERVICE_KEY missing'); process.exit(1); }
 
@@ -37,40 +35,96 @@ const WHALES = [
   { label: 'J2ANNaq',       addr: 'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG' },
 ];
 
+const PUMP = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ── Helius Enhanced Transactions for one wallet page ────────
-async function fetchPage(addr, before) {
+// ── Fetch one page of enhanced txs from Helius ──────────────
+async function fetchPage(addr, before, retries = 3) {
   let url = `https://api.helius.xyz/v0/addresses/${addr}/transactions?api-key=${HELIUS_KEY}&limit=100&type=SWAP`;
   if (before) url += `&before=${before}`;
-  try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(20000) });
-    if (r.status === 429) { console.log('  ⏳ rate limit — sleeping 5s'); await sleep(5000); return []; }
-    if (!r.ok) { console.log(`  ⚠ HTTP ${r.status} for ${addr.slice(0,8)}`); return []; }
-    return await r.json();
-  } catch(e) { console.log(`  ⚠ fetch error: ${e.message}`); return []; }
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(25000) });
+      if (r.status === 429) {
+        const wait = 8000 * (attempt + 1);
+        console.log(`  ⏳ 429 — waiting ${wait/1000}s (attempt ${attempt+1})`);
+        await sleep(wait);
+        continue;
+      }
+      if (r.status === 401) { console.log('  ❌ 401 — bad API key'); return []; }
+      if (!r.ok) { console.log(`  ⚠ HTTP ${r.status}`); return []; }
+      const data = await r.json();
+      return Array.isArray(data) ? data : [];
+    } catch(e) {
+      console.log(`  ⚠ attempt ${attempt+1} error: ${e.message}`);
+      await sleep(3000);
+    }
+  }
+  return [];
 }
 
-// ── Parse a Helius enhanced tx into a signal row ────────────
+// ── Parse one Helius enhanced tx ────────────────────────────
+// Helius enhanced txs have tx.events.swap with tokenInputs/tokenOutputs
 function parseTx(tx, addr, label) {
   if (!tx || tx.transactionError) return null;
+  const sig = tx.signature;
+  if (!sig) return null;
 
-  // tokenTransfers gives us clean in/out per address
+  const ts = tx.timestamp || Math.floor(Date.now() / 1000);
+
+  // ── Method 1: use swap event (most reliable) ──────────────
+  const swap = tx.events?.swap;
+  if (swap) {
+    // tokenInputs = what wallet sent (SELL of token = paid tokens, got SOL)
+    // tokenOutputs = what wallet received (BUY of token = paid SOL, got tokens)
+    const inputs  = swap.tokenInputs  || [];
+    const outputs = swap.tokenOutputs || [];
+
+    // Find non-SOL token
+    const outToken = outputs.find(t => t.mint && t.mint !== SOL_MINT && t.userAccount === addr);
+    const inToken  = inputs.find(t => t.mint && t.mint !== SOL_MINT && t.userAccount === addr);
+
+    if (outToken) {
+      // BUY — received a token, paid SOL
+      const solIn = inputs.find(t => (t.mint === SOL_MINT || !t.mint) && t.userAccount === addr);
+      const amountSOL = solIn ? Math.abs(parseFloat(solIn.rawTokenAmount?.tokenAmount || 0)) / 1e9 : 0;
+      return {
+        sig, wallet: addr, label, action: 'BUY',
+        mint: outToken.mint,
+        symbol: outToken.symbol || outToken.mint.slice(0, 6),
+        amount_sol: amountSOL,
+        token_amount: Math.abs(parseFloat(outToken.rawTokenAmount?.tokenAmount || outToken.tokenAmount || 0)),
+        is_pump_fun: (tx.instructions || []).some(i => i.programId === PUMP),
+        block_time: ts,
+        created_at: new Date(ts * 1000).toISOString(),
+      };
+    }
+    if (inToken) {
+      // SELL — sent a token, received SOL
+      const solOut = outputs.find(t => (t.mint === SOL_MINT || !t.mint) && t.userAccount === addr);
+      const amountSOL = solOut ? Math.abs(parseFloat(solOut.rawTokenAmount?.tokenAmount || 0)) / 1e9 : 0;
+      return {
+        sig, wallet: addr, label, action: 'SELL',
+        mint: inToken.mint,
+        symbol: inToken.symbol || inToken.mint.slice(0, 6),
+        amount_sol: amountSOL,
+        token_amount: Math.abs(parseFloat(inToken.rawTokenAmount?.tokenAmount || inToken.tokenAmount || 0)),
+        is_pump_fun: (tx.instructions || []).some(i => i.programId === PUMP),
+        block_time: ts,
+        created_at: new Date(ts * 1000).toISOString(),
+      };
+    }
+  }
+
+  // ── Method 2: fall back to tokenTransfers ─────────────────
   const transfers = tx.tokenTransfers || [];
-  const nativeDelta = (() => {
-    // accountData has pre/post native balances per account
-    const acct = (tx.accountData || []).find(a => a.account === addr);
-    if (!acct) return 0;
-    return (acct.nativeBalanceChange || 0) / 1e9; // lamports → SOL
-  })();
-
-  // Find the biggest non-SOL token movement for this wallet
   let bestMint = null, bestDelta = 0, bestSymbol = null;
+
   for (const t of transfers) {
-    const isSOL = t.mint === SOL_MINT;
-    if (isSOL) continue;
-    // Net token change for our wallet
-    const toUs   = t.toUserAccount === addr ? parseFloat(t.tokenAmount || 0) : 0;
+    if (!t.mint || t.mint === SOL_MINT) continue;
+    const toUs   = t.toUserAccount   === addr ? parseFloat(t.tokenAmount || 0) : 0;
     const fromUs = t.fromUserAccount === addr ? parseFloat(t.tokenAmount || 0) : 0;
     const delta  = toUs - fromUs;
     if (Math.abs(delta) > Math.abs(bestDelta)) {
@@ -80,121 +134,83 @@ function parseTx(tx, addr, label) {
     }
   }
 
-  if (!bestMint || bestDelta === 0) return null;
+  if (!bestMint) return null;
 
-  const action    = bestDelta > 0 ? 'BUY' : 'SELL';
-  const amountSOL = Math.abs(nativeDelta);
-  const isPumpFun = (tx.instructions || []).some(i =>
-    i.programId === '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
-  );
+  // Get SOL change from accountData
+  const acct = (tx.accountData || []).find(a => a.account === addr);
+  const solDelta = acct ? Math.abs((acct.nativeBalanceChange || 0) / 1e9) : 0;
 
   return {
-    sig:          tx.signature,
-    wallet:       addr,
-    label,
-    action,
-    mint:         bestMint,
-    symbol:       bestSymbol || bestMint.slice(0, 6),
-    amount_sol:   amountSOL,
+    sig, wallet: addr, label,
+    action: bestDelta > 0 ? 'BUY' : 'SELL',
+    mint: bestMint,
+    symbol: bestSymbol || bestMint.slice(0, 6),
+    amount_sol: solDelta,
     token_amount: Math.abs(bestDelta),
-    is_pump_fun:  isPumpFun,
-    block_time:   tx.timestamp || Math.floor(Date.now() / 1000),
-    // created_at will be derived from block_time so history is accurate
-    created_at:   new Date((tx.timestamp || Math.floor(Date.now()/1000)) * 1000).toISOString(),
+    is_pump_fun: (tx.instructions || []).some(i => i.programId === PUMP),
+    block_time: ts,
+    created_at: new Date(ts * 1000).toISOString(),
   };
 }
 
-// ── Upsert batch into Supabase ───────────────────────────────
+// ── Upsert rows into Supabase ────────────────────────────────
 async function upsert(rows) {
-  if (rows.length === 0) return 0;
-  const r = await fetch(
-    `${SUPA_URL}/rest/v1/shreem_brzee_signals`,
-    {
-      method: 'POST',
-      headers: {
-        apikey: SUPA_KEY,
-        Authorization: `Bearer ${SUPA_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=ignore-duplicates,return=minimal', // ignore on conflict sig UNIQUE
-      },
-      body: JSON.stringify(rows),
-      signal: AbortSignal.timeout(30000),
-    }
-  );
-  if (!r.ok) {
-    const t = await r.text();
-    console.log(`  ⚠ upsert error ${r.status}: ${t.slice(0, 120)}`);
-    return 0;
-  }
+  if (!rows.length) return 0;
+  const r = await fetch(`${SUPA_URL}/rest/v1/shreem_brzee_signals`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates,return=minimal',
+    },
+    body: JSON.stringify(rows),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!r.ok) { console.log(`  ⚠ upsert ${r.status}: ${(await r.text()).slice(0,100)}`); return 0; }
   return rows.length;
 }
 
-// ── Count existing rows per wallet ──────────────────────────
-async function existingCount(addr) {
-  const r = await fetch(
-    `${SUPA_URL}/rest/v1/shreem_brzee_signals?wallet=eq.${addr}&select=id`,
-    { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, Prefer: 'count=exact', Range: '0-0' } }
-  );
-  const count = r.headers.get('content-range');
-  if (!count) return 0;
-  const m = count.match(/\/(\d+)/);
-  return m ? parseInt(m[1]) : 0;
-}
-
 // ── Main ─────────────────────────────────────────────────────
-console.log('🔱 Shreem Brzee Backfill — Solana on-chain SWAP history');
-console.log(`   Supabase: ssygukfdbtehvtndandn`);
-console.log(`   Wallets: ${WHALES.length}`);
-console.log(`   Pages per wallet: ${PAGES} (up to ${PAGES * 100} swaps each)\n`);
+console.log('🔱 Shreem Brzee Backfill v2 — Real Solana SWAP history');
+console.log(`   21 whales × up to ${PAGES*100} swaps = up to ${21*PAGES*100} rows\n`);
 
 let totalInserted = 0;
+const summary = [];
 
 for (const whale of WHALES) {
-  console.log(`\n🐋 ${whale.label} (${whale.addr.slice(0,8)}…)`);
-
-  const existing = await existingCount(whale.addr);
-  console.log(`   Already in DB: ${existing} rows`);
-
-  let before = undefined;
-  let whaleTotal = 0;
-  let allRows = [];
+  console.log(`\n🐋 ${whale.label}`);
+  let allRows = [], before;
 
   for (let page = 0; page < PAGES; page++) {
+    await sleep(DELAY);
     const txs = await fetchPage(whale.addr, before);
-    if (!txs || txs.length === 0) { console.log(`   Page ${page+1}: no more data`); break; }
+    if (!txs.length) { console.log(`   page ${page+1}: done`); break; }
+    console.log(`   page ${page+1}: ${txs.length} txs`);
 
-    console.log(`   Page ${page+1}: ${txs.length} txs fetched`);
-
-    const rows = [];
     for (const tx of txs) {
       const row = parseTx(tx, whale.addr, whale.label);
-      if (row) rows.push(row);
+      if (row) allRows.push(row);
     }
 
-    console.log(`   Page ${page+1}: ${rows.length} swaps parsed`);
-    allRows = allRows.concat(rows);
-
-    // Cursor for next page
     before = txs[txs.length - 1]?.signature;
-    if (txs.length < 100) break; // last page
-
-    await sleep(DELAY_MS);
+    if (txs.length < 100) break;
   }
+
+  console.log(`   parsed: ${allRows.length} swaps`);
 
   // Upsert in batches of 50
-  const BATCH = 50;
-  for (let i = 0; i < allRows.length; i += BATCH) {
-    const batch = allRows.slice(i, i + BATCH);
-    const inserted = await upsert(batch);
-    whaleTotal += inserted;
-    await sleep(100);
+  let inserted = 0;
+  for (let i = 0; i < allRows.length; i += 50) {
+    inserted += await upsert(allRows.slice(i, i+50));
+    await sleep(200);
   }
-
-  console.log(`   ✅ ${whaleTotal} rows upserted for ${whale.label}`);
-  totalInserted += whaleTotal;
-
-  await sleep(DELAY_MS * 2); // extra pause between wallets
+  console.log(`   ✅ inserted: ${inserted}`);
+  totalInserted += inserted;
+  summary.push({ label: whale.label, swaps: allRows.length, inserted });
 }
 
-console.log(`\n🏆 DONE — ${totalInserted} total rows inserted into shreem_brzee_signals`);
-console.log('   Data now available for Daily / Weekly / Monthly / Yearly views');
+console.log('\n═══════════════════════════════════');
+console.log('🏆 BACKFILL COMPLETE');
+console.log(`   Total inserted: ${totalInserted} rows`);
+console.log('\nPer whale:');
+summary.forEach(s => console.log(`  ${s.label}: ${s.swaps} swaps → ${s.inserted} inserted`));
