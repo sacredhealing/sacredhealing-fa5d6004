@@ -294,7 +294,8 @@ export default function UserManagementPanel() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title:"🔑 Reset Email Sent", description:`Password reset link transmitted to ${userName||"seeker"}.` });
+      const sentTo = data?.email || users.find(u=>u.id===userId)?.email || userName || "seeker";
+      toast({ title:"🔑 Reset Email Sent", description:`Password reset link sent to ${sentTo}` });
     } catch (e: any) {
       toast({ title:"Reset Failed", description:e.message, variant:"destructive" });
     } finally { setResetingId(null); }
