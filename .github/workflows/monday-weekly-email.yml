@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Run weekly-alignment-email on live Supabase
+      - name: Trigger weekly-alignment-email
         env:
-          SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
         run: |
-          echo "🕉️ SQI Monday Transmission at $(date -u)"
+          echo "✶ SQI Monday Transmission at $(date -u)"
 
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST \
-            "$SUPABASE_URL/functions/v1/weekly-alignment-email" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            "${SUPABASE_URL}/functions/v1/weekly-alignment-email" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
             -H "Content-Type: application/json" \
             -d "{}" \
             --max-time 600)
@@ -35,7 +35,6 @@ jobs:
 import sys, json
 try:
     d = json.load(sys.stdin)
-    print(f'Scanned: {d.get(\"scanned\", 0)} users')
     print(f'Sent: {d.get(\"sent\", 0)} emails')
     print(f'Errors: {d.get(\"errors\", 0)}')
 except: pass
