@@ -230,8 +230,13 @@ serve(async (req) => {
         const { data: userRecord } = await adminClient.auth.admin.getUserById(userId);
         if (!userRecord?.user?.email) throw new Error("User email not found");
 
-        const { error } = await userClient.auth.resetPasswordForEmail(userRecord.user.email);
+        // Use the branded send-reset-email function (Resend, gold styling, localized)
+        // instead of Supabase's default plain auth email.
+        const { data: invokeData, error } = await adminClient.functions.invoke('send-reset-email', {
+          body: { email: userRecord.user.email },
+        });
         if (error) throw error;
+        if (invokeData?.error) throw new Error(invokeData.error);
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       }
 
