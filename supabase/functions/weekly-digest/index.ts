@@ -72,7 +72,14 @@ serve(async (req) => {
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
     const resend = new Resend(resendApiKey);
 
-    const fromEmail = "Kritagya • Siddha-Quantum Nexus <noreply@siddhaquantumnexus.com>";
+    const fromEmail = "Adam & Laila <noreply@siddhaquantumnexus.com>";
+    let testEmail: string | null = null;
+    try {
+      if (req.method === "POST") {
+        const body = await req.json().catch(() => ({}));
+        if (body && typeof body.testEmail === "string") testEmail = body.testEmail.trim();
+      }
+    } catch (_) {}
     const appUrl = Deno.env.get("APP_URL") || "https://siddhaquantumnexus.com";
 
     const supabase = createClient(
@@ -88,15 +95,61 @@ serve(async (req) => {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
     const weekStartStr = weekStart.toISOString().slice(0, 10);
 
-    // ── New content this week ──────────────────────────────────
-    const { data: newContent } = await supabase
+    // ── New content this week (aggregated across all user-relevant tables) ──
+    const sinceISO = oneWeekAgo.toISOString();
+    const collectors: Array<{ type: string; table: string; title: string; desc?: string; tier?: string }> = [
+      { type: "mantra", table: "mantras", title: "name", desc: "description", tier: "tier_required" },
+      { type: "meditation", table: "meditations", title: "title", desc: "description", tier: "tier_required" },
+      { type: "audio", table: "healing_audio", title: "title", desc: "description", tier: "tier_required" },
+      { type: "music", table: "music_tracks", title: "title", desc: "description" },
+      { type: "album", table: "music_albums", title: "title", desc: "description" },
+      { type: "course", table: "courses", title: "title", desc: "description", tier: "tier_required" },
+      { type: "lesson", table: "lessons", title: "title", desc: "description" },
+      { type: "ambient", table: "ambient_sounds", title: "title", desc: "description" },
+      { type: "tool", table: "creative_tools", title: "name", desc: "description" },
+      { type: "program", table: "transformation_programs", title: "title", desc: "description" },
+      { type: "transmission", table: "divine_transmissions", title: "title", desc: "description" },
+      { type: "announcement", table: "announcements", title: "title", desc: "message" },
+      { type: "event", table: "live_events", title: "title", desc: "description" },
+    ];
+    const weeklyContent: ContentItem[] = [];
+    for (const c of collectors) {
+      const cols = ["created_at", c.title, c.desc, c.tier].filter(Boolean).join(", ");
+      const { data, error } = await supabase
+        .from(c.table)
+        .select(cols)
+        .gte("created_at", sinceISO)
+        .order("created_at", { ascending: false })
+        .limit(8);
+      if (error || !data) continue;
+      for (const row of data as any[]) {
+        const title = row[c.title];
+        if (!title) continue;
+        weeklyContent.push({
+          content_type: c.type,
+          content_title: String(title),
+          content_description: c.desc ? (row[c.desc] ?? null) : null,
+          tier_required: c.tier ? (row[c.tier] ?? "free") : "free",
+        });
+      }
+    }
+    // Also include manual changelog entries as a catch-all
+    const { data: changelog } = await supabase
       .from("content_changelog")
-      .select("content_type, content_title, content_description, tier_required")
-      .gte("created_at", oneWeekAgo.toISOString())
+      .select("content_type, content_title, content_description, tier_required, created_at")
+      .gte("created_at", sinceISO)
       .order("created_at", { ascending: false })
-      .limit(6);
-    const weeklyContent: ContentItem[] = newContent || [];
-    log(`New content items this week: ${weeklyContent.length}`);
+      .limit(10);
+    if (changelog) weeklyContent.push(...changelog);
+    // Dedup + cap
+    const seen = new Set<string>();
+    const dedupedContent = weeklyContent.filter((c) => {
+      const k = `${c.content_type}::${c.content_title}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    }).slice(0, 25);
+    log(`New content items this week: ${dedupedContent.length}`);
 
     // ── Fetch profiles ─────────────────────────────────────────
     const { data: profiles } = await supabase
@@ -110,11 +163,29 @@ serve(async (req) => {
         return { ...p, email, lang: resolveLang(p.preferred_language) };
       })
     );
-    const validProfiles = profilesWithEmail.filter((p) => p.email);
+    let validProfiles = profilesWithEmail.filter((p) => p.email);
     log(`Users with emails: ${validProfiles.length}`);
 
-    // ── Dedup ──────────────────────────────────────────────────
-    const { data: alreadySent } = await supabase
+    // ── Test override: send only to testEmail ──────────────────
+    if (testEmail) {
+      const match = validProfiles.find((p) => p.email?.toLowerCase() === testEmail!.toLowerCase());
+      if (match) {
+        validProfiles = [match];
+      } else {
+        validProfiles = [{
+          user_id: "00000000-0000-0000-0000-000000000000",
+          full_name: null,
+          preferred_language: "en",
+          subscription_tier: "free",
+          email: testEmail,
+          lang: "en" as Lang,
+        } as any];
+      }
+      log(`TEST MODE → ${testEmail}`);
+    }
+
+    // ── Dedup (skipped in test mode) ───────────────────────────
+    const { data: alreadySent } = testEmail ? { data: [] as any[] } : await supabase
       .from("user_weekly_email_log")
       .select("user_id")
       .eq("week_start", weekStartStr)
@@ -215,12 +286,14 @@ serve(async (req) => {
       };
 
       try {
-        const { subject, html } = buildMondayEmail(user, weeklyContent, appUrl);
+        const { subject, html } = buildMondayEmail(user, dedupedContent, appUrl);
         await resend.emails.send({ from: fromEmail, to: [user.email], subject, html });
-        await supabase.from("user_weekly_email_log").insert({
-          user_id: uid, week_start: weekStartStr,
-          segment: user.segment, email_type: "weekly_digest",
-        });
+        if (!testEmail) {
+          await supabase.from("user_weekly_email_log").insert({
+            user_id: uid, week_start: weekStartStr,
+            segment: user.segment, email_type: "weekly_digest",
+          });
+        }
         sent++;
         log(`✦ Sent → ${user.email}`, { segment: user.segment });
       } catch (err) {
@@ -230,7 +303,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, scanned: validProfiles.length, sent, errors, newContent: weeklyContent.length }),
+      JSON.stringify({ success: true, scanned: validProfiles.length, sent, errors, newContent: dedupedContent.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
