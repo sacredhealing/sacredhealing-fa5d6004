@@ -590,6 +590,7 @@ export default function UserManagementPanel() {
           <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 20px" }}>{selectedUser.full_name||"No name set"}</h3>
           <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
             {[
+              ["Email", selectedUser.email || "— not found —"],
               ["ID", selectedUser.id],
               ["Current Tier", TIER_LABELS[selectedUser.tier]||"Free"],
               ["Joined", new Date(selectedUser.created_at).toLocaleString()],
