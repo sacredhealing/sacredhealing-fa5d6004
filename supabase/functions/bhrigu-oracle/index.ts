@@ -225,7 +225,10 @@ ${leafConfirmed ?
   : "Birth data not yet provided. Ask the seeker for their date, time and place of birth."}
 `;
 
-  const systemWithContext = BHRIGU_SYSTEM_PROMPT + "\n\n" + contextBlock;
+  const now = new Date();
+  const currentDate = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const currentYear = now.getFullYear();
+  const systemWithContext = BHRIGU_SYSTEM_PROMPT + `\n\n━━━ TEMPORAL ANCHOR ━━━\nThe current Gregorian date is ${currentDate}. The year is ${currentYear}. All calculations, dasha periods, planetary transits, and predictions must be anchored to this date. Never reference 2024 or any past year as the present.` + "\n\n" + contextBlock;
 
   return {
     system: systemWithContext,
