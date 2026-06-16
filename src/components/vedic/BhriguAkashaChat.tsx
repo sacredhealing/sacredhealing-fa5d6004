@@ -171,9 +171,7 @@ function sanitizeChatReply(raw: string): string {
     return order
       .filter(k => obj[k])
       .map(k => obj[k])
-      .join('
-
-');
+      .join('\n\n');
   } catch {
     return raw;
   }
