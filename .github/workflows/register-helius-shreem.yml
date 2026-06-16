@@ -14,28 +14,29 @@ jobs:
           node << 'JSEOF'
           const https = require('https');
           const KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+          // Real whale wallets from FomoCopyBot (Cupsey, Heyitsyolo, Remusofmars + 18 others)
           const WALLETS = [
-            'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp',
-            'H72yLkhTnoBfhBTXXaj1RBXuirm8s8G5fcVh2XpQLggM',
-            '4Be9CvxqHW6BYiRAxW9Q3xu1ycTMWaL5z8NX4HR3ha7t',
-            '7x6qE3DRMW2ZCgT1YQuBLePiheEWw7qjH6rYjj6GDtEd',
-            '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-            'DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh',
-            'GHoTTNFnSBFBbZvBZNvwNz7jtJz1TBNBqkS9vGPnm7Dv',
-            '5tzFkiKscXHK5ZXCGbGuPbCLNqLJnEUPs3EBGzSdAFkF',
-            'BU9EFBu2DSPwvbMpPjiFf46jqNiPDuvBkEbBBBDJUHBg',
-            '58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWagsenfzNnvk',
-            'Gr5mNBC5GnBZBQMm3MdVU9vEFpNSR1pGbTc8o1BvUCNh',
-            'ASTyfSima4LLAdDgoFGkgqoKowG1LZFDr9fAQrg7iaJZ',
-            '2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm',
-            'Dt4GEBcpsSCB2B1kSsRobF26TvBVVcfKAGR6pXPJSFfA',
-            'EVvpKxsMzn7F65fMr6qbJuBaAvuZhZr5KSbJ5gH3UW8m',
-            'CmqJEJg6tLMV7VnXL5PvXtxBMBqVr4XJHNKEhLJHm1E',
-            '8GFzKBLyFGDQRBMFhNKHMuq9MeFEWAT6c6E1a6HYpump',
-            'FYmEhv1CybVe3NHGiK2gPLNfBCFkc5XNhEL7J2MhMkE',
-            '3QsmYbFPSFAHcnEHbmcqAGqJhkYVCMSmCHPG7BLNBZEV',
-            'DpWpCsnmhzmpjfhTtdKQSVQv78MdPHhFzKWkdumzXJNS',
-            'GTMckXBGFT9qigrJLxUq5FBjcgbJLqh2DLZ4H7LGGEP',
+            'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', // Cupsey
+            'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', // Heyitsyolo
+            'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', // Remusofmars
+            '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5', // Orange
+            'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt', // Shreem Brzee
+            'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm', // Lenion
+            'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',  // Boredboar
+            'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp', // Hades
+            'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm',  // Kubera 72
+            'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k', // Brzee God
+            '9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm', // GBack
+            'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f',  // Tuna
+            'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51', // Fireball
+            'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS', // Hachjdn
+            '5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc', // Crypto Circle
+            '2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv', // Crocodile
+            '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3', // Snow Spirit
+            'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o', // Cented
+            'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA', // The Grande
+            'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW', // A Milly
+            'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG', // J2ANNaq
           ];
           const URL = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
           const body = JSON.stringify({webhookURL:URL,transactionTypes:['SWAP'],accountAddresses:WALLETS,webhookType:'enhanced',txnStatus:'success'});
