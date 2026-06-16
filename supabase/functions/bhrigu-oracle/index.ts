@@ -348,7 +348,7 @@ serve(async (req) => {
 
       const res = await callAI({
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 8192,
+        max_tokens: 4000,
         temperature: 0.9,
       });
 
@@ -415,8 +415,8 @@ serve(async (req) => {
 
     const res = await callAI({
       messages: allMessages,
-      max_tokens: 8192,
-      temperature: 0.95,
+      max_tokens: 4000,
+      temperature: 2.0,
     });
 
     if (!res.ok) {
