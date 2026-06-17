@@ -1,0 +1,80 @@
+name: Verify Test Signal End to End
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Step 1 - Inject test signal via edge function
+        run: |
+          echo "=== Injecting test signal ==="
+          HTTP=$(curl -s -o /tmp/inject.json -w "%{http_code}" -X POST \
+            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/test" \
+            -H "Content-Type: application/json" -d "{}")
+          echo "HTTP: $HTTP"
+          cat /tmp/inject.json
+          echo ""
+          if [ "$HTTP" != "200" ]; then
+            echo "❌ FAILED to inject — edge function issue"
+            exit 1
+          fi
+          SIG=$(cat /tmp/inject.json | python3 -c "import sys,json; print(json.load(sys.stdin).get('sig','?'))")
+          echo "Injected sig: $SIG"
+          echo "SIG=$SIG" >> $GITHUB_ENV
+
+      - name: Step 2 - Wait 3s then read signals with ANON key (same as UI)
+        run: |
+          sleep 3
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          
+          echo "=== Reading shreem_brzee_signals with ANON key (same as UI) ==="
+          HTTP=$(curl -s -o /tmp/sigs.json -w "%{http_code}" \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_signals?order=created_at.desc&limit=5" \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $ANON")
+          echo "HTTP: $HTTP"
+          RESULT=$(cat /tmp/sigs.json)
+          echo "Result: $RESULT"
+          
+          if [ "$HTTP" = "200" ]; then
+            COUNT=$(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null || echo "parse error")
+            echo "Signals found: $COUNT"
+            if [ "$COUNT" = "0" ] || [ "$COUNT" = "parse error" ]; then
+              echo "❌ NO SIGNALS IN DB — /test inserts to wrong table or RLS blocks SELECT"
+            else
+              echo "✅ Signals readable by anon key — UI should show them"
+              echo "First signal: $(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['sig'] if d else 'empty')" 2>/dev/null)"
+            fi
+          else
+            echo "❌ Query failed: $HTTP — possible RLS SELECT block"
+          fi
+
+      - name: Step 3 - Check paper trades table
+        run: |
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          
+          echo "=== Reading shreem_brzee_paper_trades ==="
+          HTTP=$(curl -s -o /tmp/trades.json -w "%{http_code}" \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_paper_trades?order=created_at.desc&limit=3" \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $ANON")
+          echo "HTTP: $HTTP"
+          cat /tmp/trades.json | head -c 500
+          
+      - name: Step 4 - Check session
+        run: |
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          
+          echo "=== Reading shreem_brzee_session ==="
+          HTTP=$(curl -s -o /tmp/sess.json -w "%{http_code}" \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_session?id=eq.default" \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $ANON")
+          echo "HTTP: $HTTP"
+          cat /tmp/sess.json
+          echo ""
+          STARTED=$(cat /tmp/sess.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0].get('started_at','NOT SET') if d else 'NO SESSION')" 2>/dev/null)
+          echo "Bot started_at: $STARTED"
