@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const EDGE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
 const HELIUS = `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY||'775d3d1f-6801-41de-a063-8aee4382d0f4'}`;
-const G='#D4AF37',BLK='#0a0e1a',CARD='#1a1f2e',BDR='#2d3748',GRN='#10b981',RED='#ef4444',CYN='#00d4ff';
+const G='#D4AF37',BLK='#050505',CARD='rgba(255,255,255,0.02)',BDR='rgba(212,175,55,0.25)',GRN='#10b981',RED='#ef4444',CYN='#00d4ff',GOLD_GLOW='rgba(212,175,55,0.15)';
 
 const WHALES=[
   {label:'Cupsey',addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',vip:true},
@@ -38,8 +38,8 @@ async function getWalletBal(addr:string){try{const r=await fetch(HELIUS,{method:
 function Card({title,badge,right,children,defaultOpen=true,accent}:{title:string,badge?:React.ReactNode,right?:React.ReactNode,children:React.ReactNode,defaultOpen?:boolean,accent?:string}){
   const[open,setOpen]=useState(defaultOpen);
   return(
-    <div style={{background:CARD,border:`1px solid ${accent||BDR}`,borderRadius:16,overflow:'hidden'}}>
-      <div onClick={()=>setOpen(o=>!o)} style={{padding:'12px 16px',borderBottom:open?`1px solid ${BDR}`:'none',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none' as const}}>
+    <div style={{background:'rgba(255,255,255,0.02)',border:`1px solid ${accent||'rgba(212,175,55,0.2)'}`,borderRadius:16,overflow:'hidden',backdropFilter:'blur(40px)',boxShadow:'0 0 20px rgba(212,175,55,0.04)'}}>
+      <div onClick={()=>setOpen(o=>!o)} style={{padding:'12px 16px',borderBottom:open?`1px solid rgba(212,175,55,0.15)`:'none',background:'rgba(212,175,55,0.03)',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none' as const}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)'}}>{title}</span>
           {badge}
@@ -69,7 +69,7 @@ function DiagnosticPanel({running,signalCount,edgeOk}:{running:boolean,signalCou
   ];
   const stC={ok:GRN,warn:'#f59e0b',fail:RED,checking:'#64748b'};
   return(
-    <div style={{background:'rgba(0,0,0,.35)',border:`1px solid rgba(255,255,255,.06)`,borderRadius:14,padding:14}}>
+    <div style={{background:'rgba(212,175,55,0.04)',border:`1px solid rgba(212,175,55,0.2)`,borderRadius:14,padding:14}}>
       <div style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)',marginBottom:12}}>⚡ System Diagnostics</div>
       {checks.map(c=>(
         <div key={c.label} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:10}}>
@@ -255,14 +255,14 @@ export default function ShreemBrzeePerformance(){
   const openPos=Object.values(session?.positions||{}) as any[];
 
   const st=(bg:string,bc:string,c:string):React.CSSProperties=>({display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase' as const,background:bg,border:`1px solid ${bc}`,color:c});
-  const inp=(bc:string):React.CSSProperties=>({width:'100%',padding:'11px 14px',borderRadius:12,border:`1px solid ${bc}`,background:'#111827',color:'#fff',fontSize:14,fontWeight:600,outline:'none',boxSizing:'border-box' as const});
-  const rowStyle:React.CSSProperties={display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:`1px solid rgba(45,55,72,.4)`};
+  const inp=(bc:string):React.CSSProperties=>({width:'100%',padding:'11px 14px',borderRadius:12,border:`1px solid ${bc}`,background:'rgba(212,175,55,0.05)',color:'#fff',backdropFilter:'blur(10px)',fontSize:14,fontWeight:600,outline:'none',boxSizing:'border-box' as const});
+  const rowStyle:React.CSSProperties={display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:`1px solid rgba(212,175,55,0.1)`};
 
   return(
-    <div style={{minHeight:'100vh',background:BLK,color:'#fff',fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
+    <div style={{minHeight:'100vh',background:'#050505',color:'#fff',fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
 
       {/* HEADER */}
-      <div style={{background:'#111827',borderBottom:`1px solid ${BDR}`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:60}}>
+      <div style={{background:'rgba(5,5,5,0.95)',borderBottom:`1px solid rgba(212,175,55,0.3)`,backdropFilter:'blur(20px)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:60}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <button onClick={()=>nav(-1)} style={{background:'none',border:'none',color:'#64748b',fontSize:22,cursor:'pointer',lineHeight:1}}>←</button>
           <div style={{width:34,height:34,borderRadius:10,background:'linear-gradient(135deg,#b8860b,#D4AF37)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17}}>🔱</div>
@@ -304,7 +304,7 @@ export default function ShreemBrzeePerformance(){
         border:`1px solid ${msgType==='ok'?'rgba(16,185,129,.3)':msgType==='err'?'rgba(239,68,68,.3)':'rgba(0,212,255,.25)'}`,
         color:msgType==='ok'?GRN:msgType==='err'?RED:CYN}}>{msg}</div>}
 
-      <div style={{padding:'12px 14px',maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{padding:'12px 14px 40px',maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
 
         {/* STATS 2x2 */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
@@ -314,7 +314,7 @@ export default function ShreemBrzeePerformance(){
             {i:'🎯',v:`${session?.wins||0}/${session?.losses||0}`,l:'Win/Loss',s:`${session?.wins&&(session.wins+session.losses)>0?Math.round(session.wins/(session.wins+session.losses)*100):0}% win rate`,c:'#fff'},
             {i:'📂',v:String(openPos.length),l:'Positions',s:running?'live now':'start bot',c:openPos.length>0?GRN:CYN},
           ].map(s=>(
-            <div key={s.l} style={{background:CARD,border:`1px solid ${BDR}`,borderRadius:16,padding:'14px 12px',textAlign:'center'}}>
+            <div key={s.l} style={{background:'rgba(255,255,255,0.02)',border:`1px solid rgba(212,175,55,0.2)`,borderRadius:16,backdropFilter:'blur(40px)',boxShadow:'0 0 20px rgba(212,175,55,0.05)',padding:'14px 12px',textAlign:'center'}}>
               <div style={{fontSize:20,marginBottom:5}}>{s.i}</div>
               <div style={{fontSize:18,fontWeight:900,color:s.c,letterSpacing:'-.02em',lineHeight:1}}>{s.v}</div>
               <div style={{fontSize:9,fontWeight:800,letterSpacing:'.3em',textTransform:'uppercase',color:'#64748b',margin:'4px 0 2px'}}>{s.l}</div>
@@ -429,7 +429,7 @@ export default function ShreemBrzeePerformance(){
               </div>
 
               {/* Market Context Box */}
-              <div style={{background:'rgba(0,0,0,.25)',border:`1px solid rgba(255,255,255,.06)`,borderRadius:12,padding:14}}>
+              <div style={{background:'rgba(212,175,55,0.03)',border:`1px solid rgba(212,175,55,0.15)`,borderRadius:12,padding:14}}>
                 <div style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)',marginBottom:10}}>📊 Market Context</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
                   {[
@@ -438,7 +438,7 @@ export default function ShreemBrzeePerformance(){
                     {l:'Signals Received',v:String(signals.length),sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:'None yet'},
                     {l:'Whale Wallets',v:'21',sub:'On Solana mainnet'},
                   ].map(item=>(
-                    <div key={item.l} style={{background:'rgba(255,255,255,.03)',borderRadius:10,padding:'10px 12px'}}>
+                    <div key={item.l} style={{background:'rgba(212,175,55,0.05)',borderRadius:10,padding:'10px 12px',border:'1px solid rgba(212,175,55,0.1)'}}>
                       <div style={{fontSize:9,color:'#64748b',letterSpacing:'.2em',textTransform:'uppercase' as const,marginBottom:4}}>{item.l}</div>
                       <div style={{fontSize:13,fontWeight:700,color:'#fff'}}>{item.v}</div>
                       <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{item.sub}</div>
@@ -585,7 +585,7 @@ export default function ShreemBrzeePerformance(){
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',minWidth:320,tableLayout:'fixed' as const}}>
               <thead>
-                <tr>{['#','Whale','Buys','Sells','Vol SOL','Vol €'].map(h=><th key={h} style={{padding:'8px 10px',textAlign:'left' as const,fontSize:9,fontWeight:800,letterSpacing:'.3em',textTransform:'uppercase' as const,color:'#64748b',borderBottom:`1px solid ${BDR}`,whiteSpace:'nowrap' as const}}>{h}</th>)}</tr>
+                <tr>{['#','Whale','Buys','Sells','Vol SOL','Vol €'].map(h=><th key={h} style={{padding:'8px 10px',textAlign:'left' as const,fontSize:9,fontWeight:800,letterSpacing:'.3em',textTransform:'uppercase' as const,color:'rgba(212,175,55,0.5)',borderBottom:`1px solid rgba(212,175,55,0.15)`,whiteSpace:'nowrap' as const}}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {whaleRows.map((w,i)=>{
