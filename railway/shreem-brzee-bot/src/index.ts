@@ -1,4 +1,4 @@
-// v2.3.0 deployed 2026-06-17T13:12:14Z
+// v2.5.0 polling 18:07:53 deployed 2026-06-17T13:12:14Z
 /**
  * 🔱 SHREEM BRZEE BOT v2 — World-Class Solana Copy Trading
  * Hetzner Server | Solana Mainnet
@@ -1043,14 +1043,9 @@ async function main() {
   // Fetches latest signals from edge function, processes any not yet seen.
   // Works regardless of RLS, Realtime config, or WebSocket issues.
   const seenSigs = new Set<string>();
-  // Pre-seed with existing signals so we don't reprocess old ones on startup
-  try {
-    const existing = await edgeGet('/signals');
-    if (Array.isArray(existing)) {
-      existing.forEach((s: any) => seenSigs.add(s.sig));
-      console.log(`[poller] seeded ${seenSigs.size} existing signals`);
-    }
-  } catch {}
+  // Do NOT pre-seed — process all recent signals on startup
+  // Bot checks hotPositions to avoid duplicate positions
+  console.log('[poller] starting fresh — will process all new signals');
 
   const pollTimer = setInterval(async () => {
     try {
