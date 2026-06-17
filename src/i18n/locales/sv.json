@@ -1736,7 +1736,19 @@
     "enterBio": "Berätta lite om dig själv...",
     "enterName": "Ange ditt namn",
     "fullName": "Fullständigt namn",
-    "tapToChange": "Tryck för att byta profilbild"
+    "tapToChange": "Tryck för att byta profilbild",
+    "sectionMembership": "Medlemskap",
+    "sectionRecordings": "Mina Inspelningar",
+    "recordingsLabel": "◈ 1-mot-1 Sessioner",
+    "recordingsTitle": "Dina Inspelningar",
+    "recordingsSub": "Privata helande sessioner arkiverade här",
+    "recordingsEmpty": "Inga 1-mot-1-sessionsinspelningar ännu. De visas här automatiskt efter dina sessioner.",
+    "sectionAccount": "Konto",
+    "editProfileSub": "Namn · foto · bio · horoskop",
+    "changePassword": "Ändra lösenord",
+    "changePasswordSub": "Uppdatera eller återställ din heliga åtkomstnyckel",
+    "sectionNotificationsPrivacy": "Aviseringar & Integritet",
+    "sectionHowToUse": "Hur man använder"
   },
   "settings": {
     "legal": {
