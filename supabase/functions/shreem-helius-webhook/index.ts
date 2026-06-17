@@ -115,6 +115,27 @@ serve(async (req) => {
     return jsonResp(data || null);
   }
 
+  // POST /test — inject a test signal using service key (bypasses RLS)
+  if (req.method === "POST" && path.endsWith("/test")) {
+    const sig = "TEST_" + Date.now();
+    const testRow = {
+      sig,
+      wallet: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",
+      label: "Remusofmars",
+      action: "BUY",
+      mint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
+      symbol: "POPCAT",
+      amount_sol: 1.5,
+      token_amount: 50000,
+      is_pump_fun: true,
+      block_time: Math.floor(Date.now() / 1000),
+      created_at: new Date().toISOString(),
+    };
+    const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
+    if (error) return jsonResp({ error: error.message }, 500);
+    return jsonResp({ ok: true, sig });
+  }
+
   // POST /paper
   if (req.method === "POST" && path.endsWith("/paper")) {
     let body: any;
