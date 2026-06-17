@@ -1,0 +1,60 @@
+name: Check Bot Version and Fix
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check version + restart with env
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: |
+          sudo apt-get install -y sshpass -qq
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 << 'SSHEOF'
+            echo "=== PM2 STATUS ==="
+            pm2 list
+            
+            echo ""
+            echo "=== BOT VERSION CHECK ==="
+            grep -m1 "v2\." /root/shreem-brzee/railway/shreem-brzee-bot/src/index.ts || echo "no version found"
+            grep "poller\|polling\|pollTimer\|edgeGet.*signals" /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js | head -5 || echo "poller not in dist"
+            
+            echo ""
+            echo "=== LAST 30 BOT LOGS ==="
+            pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true
+            
+            echo ""
+            echo "=== REBUILDING WITH LATEST CODE ==="
+            cd /root/shreem-brzee
+            git fetch origin main --quiet && git reset --hard origin/main --quiet
+            echo "Git: $(git log --oneline -1)"
+            
+            cd /root/shreem-brzee/railway/shreem-brzee-bot
+            npm install --omit=dev --silent 2>&1 | tail -3
+            npx tsc --skipLibCheck 2>&1 | tail -5
+            
+            echo ""
+            echo "=== VERSION IN COMPILED CODE ==="
+            grep -o "v2\.[0-9]\.[0-9][^'\"]*" dist/index.js | head -3 || echo "no version"
+            grep "poller\|pollTimer" dist/index.js | head -3 || echo "poller NOT in compiled code"
+            
+            echo ""
+            echo "=== RESTARTING ==="
+            pm2 restart shreem-brzee --update-env
+            sleep 5
+            pm2 logs shreem-brzee --lines 20 --nostream 2>/dev/null || true
+SSHEOF
+
+      - name: Save output
+        run: |
+          echo "checked at $(date -u)" > _bot_version_check.txt
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _bot_version_check.txt || true
+          git commit -m "data: bot version check" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
