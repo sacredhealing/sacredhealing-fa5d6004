@@ -1894,7 +1894,19 @@
       "overview": "Overview",
       "activity": "Activity",
       "achievements": "Achievements"
-    }
+    },
+    "sectionMembership": "Membresía",
+    "sectionRecordings": "Mis Grabaciones",
+    "recordingsLabel": "◈ Sesiones 1-a-1",
+    "recordingsTitle": "Tus Grabaciones",
+    "recordingsSub": "Sesiones de sanación privadas archivadas aquí",
+    "recordingsEmpty": "Aún no hay grabaciones de sesiones 1-a-1. Aparecerán aquí automáticamente después de tus sesiones.",
+    "sectionAccount": "Cuenta",
+    "editProfileSub": "Nombre · foto · bio · carta natal",
+    "changePassword": "Cambiar contraseña",
+    "changePasswordSub": "Actualiza o restablece tu clave de acceso sagrado",
+    "sectionNotificationsPrivacy": "Notificaciones y Privacidad",
+    "sectionHowToUse": "Cómo usar"
   },
   "appearance": {
     "title": "Apariencia",
