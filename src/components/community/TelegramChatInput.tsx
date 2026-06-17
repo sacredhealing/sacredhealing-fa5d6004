@@ -233,7 +233,7 @@ export const TelegramChatInput = ({
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendText()}
             placeholder={placeholder}
             disabled={disabled || isSending || isRecording}
-            className="flex-1 bg-background/20 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 min-h-[48px] max-h-32 resize-none text-base"
+            className="flex-1 bg-background/20 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-0 min-h-[48px] max-h-32 resize-none text-base"
           />
 
           {/* Voice Record / Send Button - Telegram Style */}
@@ -246,19 +246,19 @@ export const TelegramChatInput = ({
               onTouchStart={handleVoiceRecord}
               onTouchEnd={isRecording ? handleVoiceRecord : undefined}
               disabled={disabled || isSending}
-              className="h-12 w-12 rounded-full shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 backdrop-blur-sm border border-cyan-400/30 transition-all shadow-lg"
+              className="h-12 w-12 rounded-full shrink-0 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 backdrop-blur-sm border border-[#D4AF37]/30 transition-all shadow-lg"
             >
               {isRecording ? (
                 <Radio className="h-5 w-5 animate-pulse text-destructive" />
               ) : (
-                <Mic className="h-5 w-5 text-cyan-400" />
+                <Mic className="h-5 w-5 text-[#D4AF37]" />
               )}
             </Button>
           ) : (
             <Button
               onClick={handleSendText}
               disabled={!text.trim() || isSending || disabled}
-              className="h-12 w-12 rounded-full shrink-0 bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg transition-all"
+              className="h-12 w-12 rounded-full shrink-0 bg-[#D4AF37] hover:bg-[#C4943A] text-[#050505] shadow-lg transition-all"
             >
               {isSending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

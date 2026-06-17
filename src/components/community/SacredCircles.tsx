@@ -726,7 +726,7 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
                 variant="default"
                 size="sm"
                 onClick={jumpToUnread}
-                className="rounded-full bg-cyan-500 hover:bg-cyan-600 shadow-lg h-10 px-4 gap-2"
+                className="rounded-full bg-[#D4AF37] hover:bg-[#C4943A] text-[#050505] shadow-lg h-10 px-4 gap-2"
               >
                 <Circle className="h-3 w-3 fill-white" />
                 {unreadCount} new

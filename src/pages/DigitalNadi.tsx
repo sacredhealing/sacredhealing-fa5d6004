@@ -139,12 +139,12 @@ const SQI_STYLES = `
     color: rgba(255,255,255,0.7);
   }
 
-  .btn-cyan {
+  .btn-gold-outline {
     padding: 12px 28px;
-    background: rgba(34,211,238,0.08);
-    border: 1px solid rgba(34,211,238,0.25);
+    background: rgba(212,175,55,0.08);
+    border: 1px solid rgba(212,175,55,0.25);
     border-radius: 9999px;
-    color: #22D3EE;
+    color: #D4AF37;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 800;
     font-size: 9px;
@@ -153,9 +153,9 @@ const SQI_STYLES = `
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  .btn-cyan:hover {
-    background: rgba(34,211,238,0.14);
-    box-shadow: 0 0 20px rgba(34,211,238,0.1);
+  .btn-gold-outline:hover {
+    background: rgba(212,175,55,0.14);
+    box-shadow: 0 0 20px rgba(212,175,55,0.1);
   }
 
   /* Pulse ring animation for scan state */
@@ -931,7 +931,7 @@ function DigitalNadiInner() {
                   Cancel
                 </button>
                 {bpm && (
-                  <button type="button" onClick={finishScan} className="btn-cyan">
+                  <button type="button" onClick={finishScan} className="btn-gold-outline">
                     View Reading →
                   </button>
                 )}

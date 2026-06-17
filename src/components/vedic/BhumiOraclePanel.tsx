@@ -483,7 +483,7 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipT
   const [selected,setSelected] = useState<string|null>(null);
   const [activeGraha,setActiveGraha] = useState<string|null>(null);
   const [activeAngle,setActiveAngle] = useState<string|null>(null);
-  const [subTab,setSubTab] = useState<'map'|'lines'|'parans'|'blueprint'>('map');
+  const [subTab,setSubTab] = useState<'map'|'lines'|'parans'|'blueprint'|'search'>('map');
   const [beneficOnly,setBeneficOnly] = useState(false);
   const [hoveredLine,setHoveredLine] = useState<string|null>(null);
   const [cityQuery,setCityQuery]   = useState('');

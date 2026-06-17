@@ -647,7 +647,7 @@ export default function CreativeSoulTool() {
                 onClick={generateIdeas}
                 disabled={isGeneratingIdeas || !transcribedText.trim()}
                 size="lg"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                className="w-full bg-[#D4AF37] hover:bg-[#C4943A] text-[#050505]"
               >
                 {isGeneratingIdeas ? (
                   <>

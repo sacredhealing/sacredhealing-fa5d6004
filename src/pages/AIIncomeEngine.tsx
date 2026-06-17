@@ -313,7 +313,7 @@ export default function AIIncomeEngine() {
           transition={{ delay: 0.15 }}
         >
           <Link to="/wallet">
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-base py-6 shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+            <Button className="w-full bg-[#D4AF37] hover:bg-[#C4943A] text-[#050505] font-extrabold text-base py-6 shadow-[0_0_30px_rgba(212,175,55,0.4)]">
               <Wallet className="w-5 h-5 mr-2" />
               {t('nav.wallet', 'Wallet')}
             </Button>

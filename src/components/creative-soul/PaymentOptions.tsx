@@ -77,8 +77,8 @@ export function PaymentOptions({ affiliateId, onPurchaseStart, onPurchaseComplet
       coins: '+200 Coins/month',
       description: 'Cancel anytime, recurring billing',
       icon: Radio,
-      color: 'bg-blue-600 hover:bg-blue-700',
-      textColor: 'text-white',
+      color: 'bg-[#D4AF37] hover:bg-[#C4943A]',
+      textColor: 'text-[#050505]',
     },
     {
       id: 'per_track' as const,
