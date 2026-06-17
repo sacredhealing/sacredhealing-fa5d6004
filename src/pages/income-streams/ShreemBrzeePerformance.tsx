@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const EDGE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
 const HELIUS = `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY||'775d3d1f-6801-41de-a063-8aee4382d0f4'}`;
-const G='#D4AF37',BLK='#050505',CARD='rgba(255,255,255,0.02)',BDR='rgba(212,175,55,0.25)',GRN='#10b981',RED='#ef4444',CYN='#00d4ff',GOLD_GLOW='rgba(212,175,55,0.15)';
+const G='#D4AF37',BLK='#050505',CARD='rgba(212,175,55,0.04)',BDR='rgba(212,175,55,0.2)',GRN='#10b981',RED='#ef4444',CYN='#00d4ff',GOLD_GLOW='rgba(212,175,55,0.15)';
 
 const WHALES=[
   {label:'Cupsey',addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',vip:true},
@@ -128,12 +128,15 @@ export default function ShreemBrzeePerformance(){
     try{const r=await fetch(`${EDGE}/session`);if(r.ok){const d=await r.json();setSession(d||null);}}catch{}
   },[]);
   const loadTrades=useCallback(async()=>{
-    const{data}=await(supabase as any).from('shreem_brzee_paper_trades').select('*').order('created_at',{ascending:false}).limit(50);
-    setTrades(data||[]);
+    const{data}=await(supabase as any).from('shreem_brzee_paper_trades').select('*').order('created_at',{ascending:false}).limit(100);
+    // Filter out test/diagnostic trades
+    setTrades((data||[]).filter((t:any)=>!t.sig?.startsWith('TEST_')&&!t.sig?.startsWith('DIAG_')&&t.symbol!=='TEST'));
   },[]);
   const loadSignals=useCallback(async()=>{
-    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(25);
-    setSignals(data||[]);
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(100);
+    // Filter out test signals - only show real whale signals
+    const real=(data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_'));
+    setSignals(real);
   },[]);
   const loadWhaleSigs=useCallback(async()=>{
     const now=new Date(),since=new Date(now);
@@ -141,8 +144,9 @@ export default function ShreemBrzeePerformance(){
     if(period==='weekly')since.setDate(now.getDate()-7);
     if(period==='monthly')since.setMonth(now.getMonth()-1);
     if(period==='yearly')since.setFullYear(now.getFullYear()-1);
-    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,action,amount_sol,created_at').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
-    setWhaleSigs(data||[]);
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,action,amount_sol,created_at,sig').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
+    // Filter out test/diagnostic signals from whale performance
+    setWhaleSigs((data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')));
   },[period]);
   const loadAll=useCallback(()=>{loadSession();loadTrades();loadSignals();loadWhaleSigs();},[loadSession,loadTrades,loadSignals,loadWhaleSigs]);
 
@@ -276,10 +280,10 @@ export default function ShreemBrzeePerformance(){
   const rowStyle:React.CSSProperties={display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:`1px solid rgba(212,175,55,0.1)`};
 
   return(
-    <div style={{minHeight:'100vh',background:'#050505',color:'#fff',fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
+    <div style={{minHeight:'100vh',background:'#050505',color:'#fff',fontFamily:"'Inter','Plus Jakarta Sans',system-ui,sans-serif",fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
 
       {/* HEADER */}
-      <div style={{background:'rgba(5,5,5,0.95)',borderBottom:`1px solid rgba(212,175,55,0.3)`,backdropFilter:'blur(20px)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:60}}>
+      <div style={{background:'#050505',borderBottom:`1px solid rgba(212,175,55,0.3)`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:60}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <button onClick={()=>nav(-1)} style={{background:'none',border:'none',color:'#64748b',fontSize:22,cursor:'pointer',lineHeight:1}}>←</button>
           <div style={{width:34,height:34,borderRadius:10,background:'linear-gradient(135deg,#b8860b,#D4AF37)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17}}>🔱</div>
