@@ -126,7 +126,10 @@
       "featured": "UTVALD",
       "live": "LIVE",
       "coming_soon": "KOMMER SNART"
-    }
+    },
+    "search": "Sök...",
+    "hide": "Dölj",
+    "show": "Visa"
   },
   "membership": {
     "meditationMembership": "Meditationsmedlemskap",
@@ -206,7 +209,12 @@
     },
     "faq": {
       "title": "Vanliga Frågor"
-    }
+    },
+    "unlockPremium": "Lås upp Premium-åtkomst",
+    "accessPremium": "Öppna Premium-åtkomst",
+    "bannerDesc": "Alla meditationer, musik & helande ljud – obegränsat",
+    "viewPlans": "Se planer",
+    "managePlan": "Hantera"
   },
   "wealth": {
     "badge": "Rikedomsaktivering",
@@ -683,7 +691,10 @@
     "empty": {
       "noActivity": "Din resa har precis börjat.",
       "startFirst": "Starta din första session"
-    }
+    },
+    "sacredSound": "Heligt Ljud",
+    "innerLight": "Inre Ljus",
+    "stillness": "Stillhet"
   },
   "journeys": {
     "breathingTitle": "Andningsresor",
@@ -1122,7 +1133,8 @@
       "buttonHeavy": "Starta trygghet",
       "buttonEngaged": "Starta nu",
       "buttonCalm": "Starta nu",
-      "selecting": "Väljer en meditation…"
+      "selecting": "Väljer en meditation…",
+      "lineage": "Linjen väntar på din närvaro."
     },
     "sections": {
       "short": "Korta återställningar",
@@ -1249,7 +1261,9 @@
       "message": "Denna transmission kräver en högre åtkomstnivå."
     },
     "completed": "Meditation Avslutad",
-    "completedMessage": "Ditt fält har rekalibirerats."
+    "completedMessage": "Ditt fält har rekalibirerats.",
+    "templeGreeting": "Stillhetens Hall",
+    "sacredCommissions": "Heliga Uppdrag"
   },
   "music": {
     "title": "Heligt Ljudbibliotek",
