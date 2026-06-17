@@ -22,13 +22,23 @@
     "save": "Lagre",
     "cancel": "Avbryt",
     "loading": "Laster...",
-    "error": "Feil",
-    "success": "Suksess",
+    "error": {
+      "generic": "Noe gikk galt. Vennligst prøv igjen.",
+      "notFound": "Innhold ikke funnet.",
+      "unauthorized": "Du har ikke tilgang til dette innholdet.",
+      "network": "Tilkoblingsfeil. Vennligst sjekk internett."
+    },
+    "success": {
+      "saved": "Lagret.",
+      "updated": "Oppdatert.",
+      "deleted": "Slettet.",
+      "sent": "Sendt."
+    },
     "signIn": "Logg inn",
-    "learnMore": "Les mer",
+    "learnMore": "Lær mer",
     "viewAll": "Se alle",
     "upgradeNow": "Oppgrader nå",
-    "featured": "Utvalgt",
+    "featured": "Fremhevet",
     "free": "GRATIS",
     "month": "måned",
     "year": "år",
@@ -36,17 +46,17 @@
     "perMonth": "per måned",
     "oneTime": "engangsbetaling",
     "startFree": "Start gratis i dag",
-    "bookSession": "Book økt",
+    "bookSession": "Bestill økt",
     "getStarted": "Kom i gang",
     "readMore": "Les mer",
     "contactUs": "Kontakt oss",
     "subscribe": "Abonner",
     "download": "Last ned",
-    "play": "Spill",
+    "play": "Spill av",
     "pause": "Pause",
     "next": "Neste",
     "previous": "Forrige",
-    "submit": "Send inn",
+    "submit": "Send",
     "close": "Lukk",
     "open": "Åpne",
     "yes": "Ja",
@@ -59,7 +69,67 @@
     "complete": "fullført",
     "notNow": "Ikke nå",
     "soulAwaits": "Sjelen venter.",
-    "disclaimer": "Denne appen er kun for åndelige og underholdningsformål og er ikke beregnet på å gi medisinsk rådgivning, diagnose eller behandling."
+    "disclaimer": "Denne appen er kun for åndelige og underholdningsformål og er ikke ment å gi medisinsk råd, diagnose eller behandling.",
+    "search": "Søk...",
+    "hide": "Skjul",
+    "show": "Vis",
+    "buttons": {
+      "save": "Lagre",
+      "cancel": "Avbryt",
+      "confirm": "Bekreft",
+      "delete": "Slett",
+      "edit": "Rediger",
+      "back": "Tilbake",
+      "next": "Neste",
+      "done": "Ferdig",
+      "close": "Lukk",
+      "submit": "Send",
+      "startNow": "Start nå",
+      "learnMore": "Lær mer",
+      "upgrade": "Oppgrader",
+      "subscribe": "Abonner",
+      "tryFree": "Prøv gratis",
+      "getAccess": "Få tilgang",
+      "continue": "Fortsett",
+      "share": "Del",
+      "download": "Last ned",
+      "play": "Spill av",
+      "pause": "Pause",
+      "stop": "Stopp",
+      "retry": "Prøv igjen",
+      "viewAll": "Se alle",
+      "seeMore": "Se mer",
+      "copyLink": "Kopier lenke",
+      "openMenu": "Åpne meny",
+      "closeMenu": "Lukk meny"
+    },
+    "empty": {
+      "noResults": "Ingen resultater funnet.",
+      "noContent": "Ingen innhold tilgjengelig ennå.",
+      "comingSoon": "Kommer snart.",
+      "noData": "Ingen data å vise."
+    },
+    "nav": {
+      "home": "Hjem",
+      "explore": "Utforsk",
+      "healing": "Helbredelse",
+      "meditations": "Meditasjoner",
+      "music": "Musikk",
+      "community": "Fellesskap",
+      "profile": "Profil",
+      "dashboard": "Oversikt",
+      "settings": "Innstillinger",
+      "logout": "Logg ut"
+    },
+    "labels": {
+      "new": "NY",
+      "premium": "PREMIUM",
+      "free": "GRATIS",
+      "locked": "LÅST",
+      "featured": "FREMHEVET",
+      "live": "DIREKTE",
+      "coming_soon": "KOMMER SNART"
+    }
   },
   "membership": {
     "meditationMembership": "Meditasjonsmedlemskap",
@@ -86,7 +156,65 @@
     "perSession": "per økt",
     "perTrack": "per spor",
     "renews": "Fornyes",
-    "soon": "snart"
+    "soon": "snart",
+    "unlockPremium": "Lås opp Premium-tilgang",
+    "accessPremium": "Åpne Premium-tilgang",
+    "bannerDesc": "Alle meditasjoner, musikk og helende lyd – ubegrenset",
+    "viewPlans": "Se planer",
+    "managePlan": "Administrer",
+    "title": "Velg Din Suverene Vei",
+    "subtitle": "Velg nivået som matcher din evolusjonære fase",
+    "current": "Gjeldende plan",
+    "popular": "MEST VALGT",
+    "tiers": {
+      "seeker": {
+        "name": "Søker",
+        "tagline": "Begynn oppvåkningen",
+        "price": "Gratis",
+        "description": "Få tilgang til grunnleggende helbredelsesverktøy og begynn din kvanterreise."
+      },
+      "prana": {
+        "name": "Prana-Flyt",
+        "tagline": "Aktiver din livskraft",
+        "description": "Lås opp utvidede meditasjoner, helbredelsesøkter og vediske verktøy.",
+        "perMonth": "/ måned",
+        "perYear": "/ år"
+      },
+      "siddha": {
+        "name": "Siddha-Quantum",
+        "tagline": "Mestre feltet",
+        "description": "Full tilgang til alle SQI-verktøy, Oracle-økter og avanserte transmisjoner.",
+        "perMonth": "/ måned",
+        "perYear": "/ år"
+      },
+      "akasha": {
+        "name": "Akasha-Infinity",
+        "tagline": "Bli Akashaen",
+        "description": "Livstidstilgang til alle funksjoner, private økter og fremtidige utgivelser.",
+        "lifetime": "Livstid",
+        "oneTime": "engangsbetaling"
+      }
+    },
+    "features": {
+      "title": "Hva som er inkludert",
+      "compare": "Sammenlign planer"
+    },
+    "cta": {
+      "getStarted": "Kom i gang",
+      "upgrade": "Oppgrader nå",
+      "current": "Gjeldende plan",
+      "downgrade": "Bytt plan"
+    },
+    "billing": {
+      "monthly": "Månedlig",
+      "yearly": "Årlig",
+      "save": "Spar {{percent}}%",
+      "cancelAnytime": "Avbryt når som helst",
+      "secureCheckout": "Sikker betaling via Stripe"
+    },
+    "faq": {
+      "title": "Vanlige spørsmål"
+    }
   },
   "wealth": {
     "badge": "Rikdomsaktivering",
@@ -307,13 +435,24 @@
     "soul": "Sjel",
     "meditate": "Mediter",
     "sacredSoul": "Hellige sjel",
-    "streak": "dagers rekke",
+    "streak": {
+      "label": "REKKE",
+      "days": "{{count}} dager",
+      "keep": "Hold flammen din levende"
+    },
     "balance": "Din SHC-saldo",
     "claimRewards": "Hent belønninger",
     "todaysWisdom": "Dagens visdom",
     "todaysMeditation": "Dagens meditasjon",
     "startSession": "Start økt",
-    "quickActions": "Hurtighandlinger",
+    "quickActions": {
+      "meditate": "Meditere",
+      "heal": "Helbrede",
+      "breathe": "Puste",
+      "scan": "Sjel-skanning",
+      "mantras": "Mantras",
+      "journal": "Dagbok"
+    },
     "inviteFriends": "Inviter venner",
     "inviteDescription": "Del Siddha Quantum Nexus med vennene dine og hjelp dem på deres spirituelle reise.",
     "loadingWisdom": "Laster visdom...",
@@ -477,7 +616,47 @@
     "sadhanaPhaseEvening": "Lunær integrasjon",
     "sadhanaCompleteProgress": "{{count}} / {{total}} FULLFØRT",
     "gateComplete": "Fullført",
-    "somaHarmonicCredits": "+ {{amount}} SOMA-HARMONISKE KREDITTER"
+    "somaHarmonicCredits": "+ {{amount}} SOMA-HARMONISKE KREDITTER",
+    "heroOpeningLoading": "Åpner ditt Akasha-Neural Arkiv...",
+    "heroOpeningWithDasha": "Mens du beveger deg gjennom din {{dasha}}-syklus{{hasAntardasha, select, 1{, {{antardasha}} underperiode} other{}}}...",
+    "heroOpeningDefault": "Mens du trer inn i dette Prema-Pulse transmisjonsfelt...",
+    "sacredSound": "Hellig Lyd",
+    "innerLight": "Indre Lys",
+    "stillness": "Stillhet",
+    "listenNow": "Lytt nå",
+    "listenNowSubtitle": "Velg hvordan du vil begynne",
+    "ritualMantra": "Mantra",
+    "ritualMantraDesc": "Mykt hjertefokus",
+    "ritualMeditate": "Meditasjon",
+    "ritualMeditateDesc": "Veiledet indre ro",
+    "ritualMusic": "Musikk",
+    "ritualMusicDesc": "Bakgrunnsro",
+    "ritualBreath": "Pust",
+    "dailyRoutineSection": "Daglig Praksis",
+    "activeTransmissions": "Aktive Transmisjoner",
+    "kineticIdle": "Felt inaktivt",
+    "kineticNadiLine": "Nadi-flyt: {{nadis}} / 72 000 · Blokkering: {{block}}%",
+    "kineticNadiHint": "Kjør en Nadi-skanning for å kalibrere ditt Sjel-felt.",
+    "hero": {
+      "greeting": "Namaste, {{name}}",
+      "tagline": "Ditt akashiske felt er aktivt",
+      "wisdom": "Daglig Vedisk Lys-Kode"
+    },
+    "soma": {
+      "title": "Soma-balanse",
+      "label": "BALANSE"
+    },
+    "sections": {
+      "continueJourney": "Fortsett Din Reise",
+      "recommended": "Anbefalt for Deg",
+      "recentActivity": "Nylig Aktivitet",
+      "dailyPractice": "Daglig Praksis",
+      "quickAccess": "Hurtigtilgang"
+    },
+    "empty": {
+      "noActivity": "Reisen din er akkurat i gang.",
+      "startFirst": "Start din første økt"
+    }
   },
   "journeys": {
     "breathingTitle": "Pustereiser",
@@ -901,7 +1080,8 @@
       "buttonHeavy": "Start trøst",
       "buttonEngaged": "Start nå",
       "buttonCalm": "Start nå",
-      "selecting": "Velger en meditasjon…"
+      "selecting": "Velger en meditasjon…",
+      "lineage": "Linjen venter på din tilstedeværelse."
     },
     "sections": {
       "short": "Korte resetter",
@@ -1004,7 +1184,33 @@
     "langSv": "Svenska",
     "langEn": "English",
     "langSvAria": "Svensk",
-    "langEnAria": "Engelsk"
+    "langEnAria": "Engelsk",
+    "templeGreeting": "Stillhetens Hall",
+    "sacredCommissions": "Hellige Oppdrag",
+    "filters": {
+      "all": "Alle",
+      "guided": "Veiledet",
+      "silent": "Stille",
+      "mantra": "Mantra",
+      "sleep": "Søvn",
+      "morning": "Morgen",
+      "language": "Språk"
+    },
+    "empty": {
+      "title": "Ingen meditasjoner tilgjengelig",
+      "message": "Flere transmisjoner forberedes."
+    },
+    "session": {
+      "start": "Start Meditasjon",
+      "duration": "{{minutes}} min",
+      "level": "{{level}}"
+    },
+    "locked": {
+      "title": "Meditasjon låst",
+      "message": "Denne transmisjonen krever et høyere tilgangsnivå."
+    },
+    "completed": "Meditasjon fullført",
+    "completedMessage": "Ditt felt er rekalibrert."
   },
   "music": {
     "title": "Hellig Musikk",
@@ -1300,8 +1506,23 @@
       "label": "SALDO"
     },
     "badges": "Merker",
-    "settings": "Innstillinger",
-    "language": "Språk",
+    "settings": {
+      "title": "Innstillinger",
+      "notifications": "Varsler",
+      "privacy": "Personvern",
+      "account": "Kontoinnstillinger",
+      "logout": "Logg ut",
+      "deleteAccount": "Slett konto",
+      "deleteWarning": "Denne handlingen kan ikke angres. Alle dataene dine vil bli slettet permanent."
+    },
+    "language": {
+      "label": "SPRÅK",
+      "title": "Velg språk",
+      "en": "Engelsk",
+      "sv": "Svensk",
+      "no": "Norsk",
+      "es": "Spansk"
+    },
     "howAppWorks": "Slik fungerer appen",
     "howAppWorksVideoLink": "Se gjennomgang på YouTube",
     "notifications": "Varsler",
@@ -1426,7 +1647,11 @@
     "beginJourney": "Start din helingsreise",
     "yourName": "Ditt navn",
     "emailAddress": "E-postadresse",
-    "password": "Passord",
+    "password": {
+      "label": "Passord",
+      "placeholder": "Skriv inn passordet ditt",
+      "forgot": "Glemt passordet?"
+    },
     "signIn": "Logg inn",
     "createAccount": "Opprett konto",
     "orContinueWith": "eller fortsett med",
@@ -1450,7 +1675,45 @@
     "error": "Feil",
     "somethingWrong": "Noe gikk galt. Prøv igjen.",
     "resetEmailTitle": "Sjekk e-posten din",
-    "resetEmailDescription": "En lenke for å tilbakestille passordet er sendt til e-posten din."
+    "resetEmailDescription": "En lenke for å tilbakestille passordet er sendt til e-posten din.",
+    "title": "Velkommen til Siddha Quantum Nexus",
+    "subtitle": "Din hellige helbredelsesreise begynner her",
+    "email": {
+      "label": "E-postadresse",
+      "placeholder": "Skriv inn e-posten din"
+    },
+    "name": {
+      "label": "Fullt navn",
+      "placeholder": "Skriv inn ditt fulle navn"
+    },
+    "login": {
+      "title": "Logg inn",
+      "button": "Logg inn",
+      "noAccount": "Har du ikke konto?",
+      "signUp": "Registrer deg"
+    },
+    "signup": {
+      "title": "Opprett konto",
+      "button": "Opprett konto",
+      "hasAccount": "Har du allerede konto?",
+      "signIn": "Logg inn",
+      "terms": "Ved å registrere deg godtar du våre Tjenestevilkår og Personvernregler."
+    },
+    "resetPassword": {
+      "title": "Tilbakestill passord",
+      "subtitle": "Skriv inn e-posten din, så sender vi deg en tilbakestillingslenke.",
+      "button": "Send lenke",
+      "backToLogin": "Tilbake til innlogging",
+      "success": "Lenke sendt. Sjekk e-posten din."
+    },
+    "errors": {
+      "invalidEmail": "Vennligst skriv inn en gyldig e-postadresse.",
+      "invalidCredentials": "Ugyldig e-post eller passord.",
+      "emailInUse": "Denne e-posten er allerede registrert.",
+      "weakPassword": "Passordet må ha minst 8 tegn.",
+      "generic": "Autentisering mislyktes. Vennligst prøv igjen."
+    },
+    "verifyEmail": "Vennligst bekreft e-posten din for å fortsette."
   },
   "admin": {
     "title": "Adminpanel",
@@ -1537,7 +1800,82 @@
     "freeAudio": "Gratis helende lyd",
     "free": "GRATIS",
     "premiumAudio": "Premium helende lyd",
-    "owned": "EID"
+    "owned": "EID",
+    "meditationLanguage": "Meditasjonsspråk",
+    "pageTitle": "30 dager med hellig støtte",
+    "pageSubtitle": "Rolige, veiledede økter og transmisjoner. Bare lytt og hvil.",
+    "ctaStartSession": "Start en økt",
+    "recommendedForYou": "Anbefalt for deg",
+    "viewAllSessions": "Se alle økter",
+    "yourJourney": "Din reise",
+    "nextSession": "Neste økt",
+    "whatHappensTitle": "Hva skjer i en økt",
+    "whatHappensBullet1": "Du sitter eller legger deg ned",
+    "whatHappensBullet2": "Du lytter",
+    "whatHappensBullet3": "Kroppen roer seg naturlig",
+    "whatHappensBullet4": "Ingen anstrengelse nødvendig",
+    "reassurance1": "Du trenger ikke å tro på noe.",
+    "reassurance2": "Bare prøv én økt og legg merke til hvordan du har det etterpå.",
+    "testimonialsTitle": "Hva folk la merke til",
+    "testimonialsSubtitle": "Alle opplever det forskjellig.",
+    "seeMore": "Se mer",
+    "choosePlanTitle": "Velg hvor lenge du vil praktisere",
+    "choosePlanSubtitle": "Du kan starte med en kort periode og utvide når det føles riktig.",
+    "distanceDisclosure": "Støtteøkter på avstand. Denne appen er kun for åndelige og underholdningsformål. Den er ikke ment å gi medisinsk råd, diagnose eller behandling.",
+    "faqTitle": "Vanlige spørsmål",
+    "testimonialVideo": "Vitnesbyrd",
+    "choosePaymentMethod": "Velg betalingsmetode",
+    "payWithCard": "Betal med kort",
+    "payWithCrypto": "Betal med Crypto (SOL)",
+    "journeyTitle": "Din reise",
+    "level": "Nivå",
+    "streakDays": "dagers rekke",
+    "sessionsCount": "økter",
+    "toNextLevel": "til neste nivå",
+    "moreSessionsToLevel": "flere økter for å nå Nivå",
+    "meditationsLabel": "Meditasjoner",
+    "mantrasLabel": "Mantras",
+    "daysActiveLabel": "Aktive dager",
+    "shcEarnedLabel": "SHC tjent",
+    "recommendedNextLabel": "Neste anbefalt",
+    "minutesShort": "{{count}} min",
+    "shcRewardShort": "+{{count}} SHC",
+    "startSessionButton": "Start økt",
+    "shortSessions": "Korte økter",
+    "deepSessions": "Dype økter",
+    "noSessionsInEnglish": "Ingen engelske økter ennå. Flere kommer snart.",
+    "noSessionsInSwedish": "Ingen svenske økter ennå. Flere kommer snart.",
+    "ongoing": "Pågående",
+    "seeLess": "Se mindre",
+    "filters": {
+      "all": "Alle",
+      "featured": "Fremhevede",
+      "new": "Nye",
+      "byLanguage": "Språk"
+    },
+    "session": {
+      "start": "Start økt",
+      "resume": "Fortsett",
+      "completed": "Fullført",
+      "duration": "{{minutes}} min",
+      "level": "Nivå {{level}}"
+    },
+    "locked": {
+      "title": "Hellig transmisjon låst",
+      "message": "Oppgrader for å få tilgang til denne helende frekvensen.",
+      "cta": "Lås opp tilgang"
+    },
+    "empty": {
+      "title": "Ingen økter tilgjengelig",
+      "subtitle": "Nye helende transmisjoner kanaliseres."
+    },
+    "categories": {
+      "sound": "Lydhelbredelse",
+      "frequency": "Frekvensmedisin",
+      "breathwork": "Pusteøvelser",
+      "movement": "Hellig bevegelse",
+      "chakra": "Chakra-aktivering"
+    }
   },
   "shop": {
     "title": "Hellig butikk",
@@ -4751,5 +5089,11 @@
     "tierAkashaFeature4": "1:1 Siddha-felt",
     "priceFree": "Gratis",
     "priceAkasha": "€1 111 Livstid"
+  },
+  "settings": {
+    "legal": {
+      "title": "Juridisk og ansvarsfraskrivelser",
+      "subtitle": "Medisinsk ansvarsfraskrivelse og vilkår"
+    }
   }
 }
