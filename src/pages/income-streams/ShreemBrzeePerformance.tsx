@@ -221,13 +221,17 @@ export default function ShreemBrzeePerformance(){
   };
 
   const testSignal=async()=>{
-    if(!running){flash('Start the bot first ↑','err');return;}
     setBusy(true);
     try{
       const r=await fetch(`${EDGE}/test`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
-      if(!r.ok){const t=await r.text();throw new Error(t);}
-      flash('⚡ Test signal sent — watch Signal Feed below','info');
-      setTimeout(loadAll,3000);
+      if(!r.ok){const t=await r.text();throw new Error(`HTTP ${r.status}: ${t.slice(0,60)}`);}
+      const d=await r.json();
+      if(d.ok){
+        flash('⚡ Test signal injected — check Signal Feed in 3s','ok');
+        setTimeout(loadAll,3000);
+      } else {
+        flash(`Test signal error: ${JSON.stringify(d).slice(0,80)}`,'err');
+      }
     }catch(e:any){flash(`Test failed: ${e.message?.slice(0,80)}`,'err');}
     setBusy(false);
   };
@@ -408,7 +412,7 @@ export default function ShreemBrzeePerformance(){
         <Card
           title="📂 Open Positions"
           badge={openPos.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openPos.length} live</span>:undefined}
-          right={running&&openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
+          right={openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
           {openPos.length===0?(
             <div>
               {/* Empty state with market context */}
@@ -523,7 +527,7 @@ export default function ShreemBrzeePerformance(){
               <div style={{fontSize:28,marginBottom:8}}>🐋</div>
               <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>Watching 21 wallets on Solana</div>
               <div style={{fontSize:11,color:'#64748b',marginBottom:14}}>Signals appear here the moment any whale swaps</div>
-              {running&&<button onClick={testSignal} disabled={busy} style={{padding:'9px 20px',borderRadius:11,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:11,fontWeight:800,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Inject Test Signal</button>}
+              <button onClick={testSignal} disabled={busy} style={{padding:'9px 20px',borderRadius:11,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:11,fontWeight:800,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Inject Test Signal</button>
             </div>
           ):signals.map((sig:any)=>(
             <div key={sig.id} style={{...rowStyle}}>
