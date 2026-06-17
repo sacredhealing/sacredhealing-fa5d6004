@@ -1,0 +1,54 @@
+name: Check Dist and Fix Bot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check dist and fix
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          sudo apt-get install -y sshpass -qq
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          sshpass -p "$HP" ssh -o StrictHostKeyChecking=no root@178.105.183.74 << SSHEOF
+set -e
+echo "=== WHAT IS ACTUALLY RUNNING ==="
+pm2 list
+echo ""
+echo "=== DIST FILE SIZE ==="
+ls -la /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js 2>/dev/null || echo "NO DIST"
+echo ""
+echo "=== POLLER IN DIST ==="
+grep -c "pollTimer" /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js 2>/dev/null && echo "poller FOUND" || echo "poller MISSING"
+echo ""
+echo "=== LAST 30 LOGS ==="
+pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true
+echo ""
+echo "=== FULL REBUILD ==="
+cd /root/shreem-brzee
+git remote set-url origin "https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+git fetch origin main --quiet
+git reset --hard origin/main --quiet
+echo "Source: \$(grep -m1 'v2\|poller\|pollTimer' railway/shreem-brzee-bot/src/index.ts | head -1)"
+cd railway/shreem-brzee-bot
+npm install 2>&1 | tail -3
+echo "Compile:"
+rm -rf dist/
+npx tsc --skipLibCheck 2>&1 | tail -3 || true
+echo "Dist exists: \$(ls dist/ 2>/dev/null | wc -l) files"
+echo "Poller in NEW dist: \$(grep -c 'pollTimer' dist/index.js 2>/dev/null || echo 0)"
+pm2 delete shreem-brzee 2>/dev/null || true
+pm2 start dist/index.js --name shreem-brzee
+sleep 8
+echo ""
+echo "=== LOGS AFTER RESTART ==="
+pm2 logs shreem-brzee --lines 25 --nostream 2>/dev/null || true
+SSHEOF
