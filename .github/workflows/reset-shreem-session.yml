@@ -1,0 +1,54 @@
+name: Reset Shreem Session
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reset session via edge function
+        run: |
+          EDGE="https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000+00:00")
+          
+          echo "=== Resetting session ==="
+          HTTP=$(curl -s -o /tmp/reset.json -w "%{http_code}" -X POST "${EDGE}/paper" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ANON" \
+            -H "apikey: $ANON" \
+            -d "{\"type\":\"session\",\"session\":{\"portfolio\":2.0,\"start_balance\":2.0,\"positions\":{},\"total_pnl\":0,\"wins\":0,\"losses\":0,\"started_at\":\"${NOW}\",\"stopped_at\":null,\"mode\":\"paper\"}}")
+          echo "HTTP: $HTTP"
+          cat /tmp/reset.json
+          
+          sleep 3
+          
+          echo ""
+          echo "=== Injecting fresh BUY signal ==="
+          curl -s -X POST "${EDGE}/test" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ANON" \
+            -H "apikey: $ANON" \
+            -d "{}"
+          
+          echo ""
+          echo "Waiting 10s for bot poller to pick up signal..."
+          sleep 10
+          
+          echo ""
+          echo "=== Injecting SELL signal ==="
+          curl -s -X POST "${EDGE}/test-sell" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ANON" \
+            -H "apikey: $ANON" \
+            -d "{}"
+          
+          echo ""
+          echo "Waiting 10s for bot to process SELL..."
+          sleep 10
+          
+          echo ""
+          echo "=== Final DB state ==="
+          ANON2=$ANON
+          curl -s "${EDGE}/session" -H "Authorization: Bearer $ANON2" -H "apikey: $ANON2"
