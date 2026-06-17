@@ -116,6 +116,11 @@ serve(async (req) => {
     return jsonResp(data || null);
   }
 
+  // GET /ping — version check
+  if (req.method === "GET" && path.endsWith("/ping")) {
+    return jsonResp({ ok: true, version: "v3", timestamp: new Date().toISOString() });
+  }
+
   // POST /test — inject a test signal using service key (bypasses RLS)
   if (req.method === "POST" && path.endsWith("/test")) {
     const sig = "TEST_" + Date.now();
@@ -133,8 +138,8 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
     };
     const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message }, 500);
-    return jsonResp({ ok: true, sig });
+    if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
+    return jsonResp({ ok: true, sig, version: "v3" });
   }
 
   // POST /paper
