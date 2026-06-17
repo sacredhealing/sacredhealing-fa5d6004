@@ -1,0 +1,76 @@
+name: Test Shreem Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Test edge function session endpoint
+        run: |
+          echo "=== Testing /session ==="
+          HTTP=$(curl -s -o /tmp/session.json -w "%{http_code}" \
+            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/session")
+          echo "HTTP: $HTTP"
+          cat /tmp/session.json
+          echo ""
+
+      - name: Test edge function /test endpoint
+        run: |
+          echo "=== Testing /test (inject test signal) ==="
+          HTTP=$(curl -s -o /tmp/test.json -w "%{http_code}" -X POST \
+            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/test" \
+            -H "Content-Type: application/json" -d "{}")
+          echo "HTTP: $HTTP"
+          cat /tmp/test.json
+          echo ""
+          if [ "$HTTP" = "200" ]; then
+            echo "✅ TEST SIGNAL WORKS"
+          else
+            echo "❌ TEST SIGNAL FAILED: $HTTP"
+          fi
+
+      - name: Check shreem_brzee_signals table via REST
+        run: |
+          echo "=== Checking shreem_brzee_signals ==="
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          
+          HTTP=$(curl -s -o /tmp/sigs.json -w "%{http_code}" \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_signals?limit=3&order=created_at.desc" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON")
+          echo "HTTP: $HTTP"
+          cat /tmp/sigs.json | head -c 500
+          echo ""
+
+      - name: Check shreem_brzee_session table
+        run: |
+          echo "=== Checking shreem_brzee_session ==="
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          
+          HTTP=$(curl -s -o /tmp/sess.json -w "%{http_code}" \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_session?id=eq.default" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON")
+          echo "HTTP: $HTTP"
+          cat /tmp/sess.json
+          echo ""
+
+      - name: Try direct insert to shreem_brzee_signals (RLS test)
+        run: |
+          echo "=== Testing direct insert (RLS check) ==="
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          
+          HTTP=$(curl -s -o /tmp/insert.json -w "%{http_code}" -X POST \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_signals" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=ignore-duplicates,return=minimal" \
+            -d '{"sig":"RLS_TEST_999","wallet":"test","label":"test","action":"BUY","mint":"test123","symbol":"TEST"}')
+          echo "HTTP: $HTTP"
+          cat /tmp/insert.json
+          if [ "$HTTP" = "201" ] || [ "$HTTP" = "200" ]; then
+            echo "✅ Direct insert WORKS — RLS is open"
+          else
+            echo "❌ Direct insert BLOCKED — RLS issue"
+          fi
