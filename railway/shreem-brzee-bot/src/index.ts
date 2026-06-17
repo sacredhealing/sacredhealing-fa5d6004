@@ -1000,7 +1000,7 @@ async function main() {
   console.log(`   Mode:    ${BOT_MODE.toUpperCase()}`);
   console.log(`   Risk:    ${(RISK_PCT * 100).toFixed(0)}% per trade`);
   console.log(`   Slippage: ${MAX_SLIP_BPS}bps max`);
-  console.log(`   TP:      ${TP_MULT}× | SL: ${SL_MULT}× | Check: ${TP_CHECK_MS/1000}s | Hold max: ${MAX_HOLD_MIN}min`);
+  console.log(`   Exits:   whale SELL only | Emergency SL: ${SL_MULT}× (rug protection)`);
   console.log(`   Filters: max ${MAX_POSITIONS} pos | min whale ${MIN_WHALE_SOL} SOL | VIP ${VIP_MULT}× risk`);
   if (botKeypair) console.log(`   Wallet:  ${botKeypair.publicKey.toBase58()}`);
   console.log(`   Jito:    ${JITO_TIP_LAM / 1e9} SOL tip per bundle`);
