@@ -4,22 +4,25 @@
 
 
 🐋 Cupsey (GJRs4FwH…)
-   p1: 9 txs fetched
+   p1: 17 txs fetched
    parsed: 0 swaps
    ✅ inserted: 0
 
 🐋 Heyitsyolo (Av3xWHJ5…)
-   p1: 97 txs fetched
-   parsed: 2 swaps
-  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
+  ⏳ 429 — waiting 10s
+  ⏳ 429 — waiting 20s
+  ⏳ 429 — waiting 30s
+   p1: 95 txs fetched
+   parsed: 3 swaps
+  ⚠ upsert 401: {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"shreem_brzee_signals\""}
    ✅ inserted: 0
 
 🐋 Remusofmars (BCrTEXmW…)
   ⏳ 429 — waiting 10s
-   p1: 71 txs fetched
-   parsed: 71 swaps
-  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
-  ⚠ upsert 401: {"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
+   p1: 78 txs fetched
+   parsed: 78 swaps
+  ⚠ upsert 401: {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"shreem_brzee_signals\""}
+  ⚠ upsert 401: {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"shreem_brzee_signals\""}
    ✅ inserted: 0
 
 🐋 Orange (96gYZGLn…)
@@ -126,102 +129,3 @@
   ⏳ 429 — waiting 10s
   ⏳ 429 — waiting 20s
   ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 Crypto Circle (5DzUSNro…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 Crocodile (2cBedD94…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 Snow Spirit (4ev7HVsE…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 Cented (CyaE1Vxv…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 The Grande (Gygj9QQb…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 A Milly (Fv9w9TQn…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-🐋 J2ANNaq (J2ANNaq4…)
-  ⏳ 429 — waiting 10s
-  ⏳ 429 — waiting 20s
-  ⏳ 429 — waiting 30s
-  ⏳ 429 — waiting 40s
-  ⚠ max retries hit
-   p1: done
-   parsed: 0 swaps
-   ✅ inserted: 0
-
-═══════════════════════════════════
-🏆 DONE — 0 rows inserted
-  Cupsey: 0 swaps → 0 inserted
-  Heyitsyolo: 2 swaps → 0 inserted
-  Remusofmars: 71 swaps → 0 inserted
-  Orange: 0 swaps → 0 inserted
-  Shreem Brzee: 0 swaps → 0 inserted
-  Lenion: 0 swaps → 0 inserted
-  Boredboar: 0 swaps → 0 inserted
-  Hades: 0 swaps → 0 inserted
-  Kubera 72: 0 swaps → 0 inserted
-  Brzee God: 0 swaps → 0 inserted
-  GBack: 0 swaps → 0 inserted
-  Tuna: 0 swaps → 0 inserted
-  Fireball: 0 swaps → 0 inserted
-  Hachjdn: 0 swaps → 0 inserted
-  Crypto Circle: 0 swaps → 0 inserted
-  Crocodile: 0 swaps → 0 inserted
-  Snow Spirit: 0 swaps → 0 inserted
-  Cented: 0 swaps → 0 inserted
-  The Grande: 0 swaps → 0 inserted
-  A Milly: 0 swaps → 0 inserted
-  J2ANNaq: 0 swaps → 0 inserted
