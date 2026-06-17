@@ -1,0 +1,155 @@
+name: Deploy Shreem Brzee v2 — Hetzner
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'deploy | restart | status | logs | set-live | set-paper'
+        required: true
+        default: 'deploy'
+        type: choice
+        options: [deploy, restart, status, logs, set-live, set-paper]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: SSH to Hetzner
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          BOT_KEY: ${{ secrets.SHREEM_BOT_WALLET_KEY }}
+        run: |
+          sudo apt-get install -y sshpass -qq
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+          ACTION="${{ github.event.inputs.action }}"
+
+          case "$ACTION" in
+            status)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                'pm2 list && echo "" && pm2 logs shreem-brzee --lines 40 --nostream 2>/dev/null || true'
+              ;;
+            logs)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                'pm2 logs shreem-brzee --lines 100 --nostream 2>/dev/null || true'
+              ;;
+            restart)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                'pm2 restart shreem-brzee --update-env && sleep 3 && pm2 logs shreem-brzee --lines 20 --nostream'
+              ;;
+            set-live)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                "pm2 restart shreem-brzee --update-env --env BOT_MODE=live && echo '✅ Mode set to LIVE'"
+              ;;
+            set-paper)
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+                "pm2 restart shreem-brzee --update-env --env BOT_MODE=paper && echo '✅ Mode set to PAPER'"
+              ;;
+            *)
+              # Full deploy v2
+              sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 << SSHEOF
+                set -e
+                echo "══════════════════════════════════════════════"
+                echo "  SHREEM BRZEE v2 — Hetzner Deploy"
+                echo "══════════════════════════════════════════════"
+
+                # Node 20
+                if ! command -v node &>/dev/null || [[ "\$(node -v)" != v20* ]]; then
+                  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1
+                  apt-get install -y nodejs > /dev/null 2>&1
+                fi
+                echo "Node \$(node -v) | npm \$(npm -v)"
+
+                # PM2
+                if ! command -v pm2 &>/dev/null; then
+                  npm install -g pm2 > /dev/null 2>&1
+                fi
+
+                # Clone / pull
+                REPO="/root/shreem-brzee"
+                if [ ! -d "\$REPO/.git" ]; then
+                  git clone "https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "\$REPO" --depth=1 --quiet
+                else
+                  cd "\$REPO"
+                  git remote set-url origin "https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+                  git fetch origin main --quiet && git reset --hard origin/main --quiet
+                fi
+
+                cd "\$REPO/railway/shreem-brzee-bot"
+                echo "Installing deps (includes @solana/web3.js, bs58)..."
+                npm install --omit=dev --silent
+
+                echo "Compiling TypeScript..."
+                npx tsc --skipLibCheck 2>&1 | tail -5
+                echo "tsc exit: \$?"
+
+                if [ ! -f "dist/index.js" ]; then
+                  echo "❌ dist/index.js missing — build failed"
+                  exit 1
+                fi
+                echo "✅ dist/index.js built"
+
+                # Write PM2 ecosystem with env vars
+                cat > /root/shreem-ecosystem.config.js << 'ECOSYSTEM'
+module.exports = {
+  apps: [{
+    name: 'shreem-brzee',
+    script: '/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js',
+    restart_delay: 5000,
+    max_restarts: 20,
+    watch: false,
+    env: {
+      NODE_ENV: 'production',
+      BOT_MODE: 'paper',
+      HELIUS_API_KEY: '775d3d1f-6801-41de-a063-8aee4382d0f4',
+      RISK_PCT: '0.05',
+      MAX_SLIPPAGE_BPS: '300',
+      JITO_TIP_LAMPORTS: '1000000',
+      TP_MULTIPLIER: '2.0',
+      SL_MULTIPLIER: '0.5',
+    }
+  }]
+};
+ECOSYSTEM
+
+                # Inject bot wallet key if provided
+                if [ -n "${BOT_KEY}" ]; then
+                  node -e "
+const fs = require('fs');
+const eco = require('/root/shreem-ecosystem.config.js');
+eco.apps[0].env.BOT_WALLET_PRIVATE_KEY = '${BOT_KEY}';
+fs.writeFileSync('/root/shreem-ecosystem.config.js', 'module.exports = ' + JSON.stringify(eco, null, 2));
+console.log('✅ BOT_WALLET_PRIVATE_KEY injected');
+"
+                else
+                  echo "⚠️  No SHREEM_BOT_WALLET_KEY secret — running paper mode only"
+                fi
+
+                # Start / restart
+                if pm2 describe shreem-brzee > /dev/null 2>&1; then
+                  pm2 delete shreem-brzee
+                fi
+                pm2 start /root/shreem-ecosystem.config.js
+                pm2 save --force > /dev/null
+                sleep 5
+
+                echo ""
+                echo "══ PM2 STATUS ══"
+                pm2 list
+
+                echo ""
+                echo "══ SHREEM LOGS (last 30) ══"
+                pm2 logs shreem-brzee --lines 30 --nostream 2>/dev/null || true
+
+                echo ""
+                echo "══════════════════════════════════════════════"
+                echo "  DEPLOY COMPLETE"
+                echo "  Bot starts in PAPER mode"
+                echo "  To go LIVE: add SHREEM_BOT_WALLET_KEY secret"
+                echo "  then run workflow with action=set-live"
+                echo "══════════════════════════════════════════════"
+SSHEOF
+              ;;
+          esac
