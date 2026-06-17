@@ -1,0 +1,46 @@
+name: Check Shreem DB State
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Inject + check all tables
+        run: |
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          BASE="https://ssygukfdbtehvtndandn.supabase.co"
+          EDGE="${BASE}/functions/v1/shreem-helius-webhook"
+          
+          echo "=== INJECT TEST SIGNAL ===" | tee _db_check.txt
+          curl -s -X POST "${EDGE}/test" -H "Content-Type: application/json" -d "{}" | tee -a _db_check.txt
+          echo "" | tee -a _db_check.txt
+          
+          sleep 3
+          
+          echo "=== SIGNALS (last 5) ===" | tee -a _db_check.txt
+          curl -s "${BASE}/rest/v1/shreem_brzee_signals?order=created_at.desc&limit=5" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"sig={r.get('sig','?')[:20]} action={r.get('action')} label={r.get('label')} time={r.get('created_at','?')[11:19]}\") for r in d]; print(f'TOTAL: {len(d)} signals')" | tee -a _db_check.txt
+          echo "" | tee -a _db_check.txt
+          
+          echo "=== SESSION ===" | tee -a _db_check.txt
+          curl -s "${BASE}/rest/v1/shreem_brzee_session?id=eq.default" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); s=d[0] if d else {}; print(f\"started_at={s.get('started_at','NOT SET')} portfolio={s.get('portfolio','?')} mode={s.get('mode','?')}\")" | tee -a _db_check.txt
+          echo "" | tee -a _db_check.txt
+          
+          echo "=== PAPER TRADES (last 3) ===" | tee -a _db_check.txt
+          curl -s "${BASE}/rest/v1/shreem_brzee_paper_trades?order=created_at.desc&limit=3" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"action={r.get('action')} sym={r.get('symbol')} pnl={r.get('pnl_sol')} time={r.get('created_at','?')[11:19]}\") for r in d]; print(f'TOTAL: {len(d)} trades')" | tee -a _db_check.txt
+
+      - name: Commit results
+        run: |
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _db_check.txt
+          git commit -m "data: shreem db state check $(date -u +%H%M)" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
