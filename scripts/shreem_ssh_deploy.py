@@ -24,7 +24,7 @@ lines = [
     '  echo "Pulled: $(git log --oneline -1)"',
     'fi',
     'cd "$REPO/railway/shreem-brzee-bot"',
-    'npm install --omit=dev --silent 2>&1 | tail -2',
+    'npm install --silent 2>&1 | tail -3',
     'echo "Compiling TypeScript..."',
     'rm -rf dist/',
     'npx tsc --skipLibCheck 2>&1',
