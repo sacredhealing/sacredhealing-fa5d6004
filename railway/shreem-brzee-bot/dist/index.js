@@ -1,5 +1,5 @@
 "use strict";
-// v2.5.0 polling 18:07:53 deployed 2026-06-17T13:12:14Z
+// v2.6.0 clean 18:07:53 deployed 2026-06-17T13:12:14Z
 /**
  * 🔱 SHREEM BRZEE BOT v2 — World-Class Solana Copy Trading
  * Hetzner Server | Solana Mainnet
@@ -935,9 +935,18 @@ async function main() {
     // Fetches latest signals from edge function, processes any not yet seen.
     // Works regardless of RLS, Realtime config, or WebSocket issues.
     const seenSigs = new Set();
-    // Do NOT pre-seed — process all recent signals on startup
-    // Bot checks hotPositions to avoid duplicate positions
-    console.log('[poller] starting fresh — will process all new signals');
+    // Seed seenSigs with ALL signals currently in DB so we don't reprocess history
+    // Only process signals that arrive AFTER the bot starts
+    try {
+        const existing = await edgeGet('/signals');
+        if (Array.isArray(existing)) {
+            existing.forEach((s) => seenSigs.add(s.sig));
+            console.log(`[poller] seeded ${seenSigs.size} existing signals — only NEW signals will trigger trades`);
+        }
+    }
+    catch (e) {
+        console.log('[poller] could not seed, starting fresh:', e.message);
+    }
     const pollTimer = setInterval(async () => {
         try {
             const signals = await edgeGet('/signals');
@@ -947,7 +956,7 @@ async function main() {
                 if (!signal.sig || seenSigs.has(signal.sig))
                     continue;
                 seenSigs.add(signal.sig);
-                console.log(`[poller] new signal: ${signal.sig.slice(0, 20)} ${signal.action} ${signal.symbol || signal.mint?.slice(0, 8)}`);
+                console.log(`[poller] 🆕 signal: ${signal.sig.slice(0, 20)} ${signal.action} ${signal.symbol || signal.mint?.slice(0, 8)} from ${signal.label}`);
                 try {
                     await processSignal(signal);
                 }
