@@ -1,5 +1,6 @@
 // supabase/functions/shreem-helius-webhook/index.ts
 // SHREEM BRZEE — Helius Webhook + Paper Trade Relay
+// Redeployed: 2026-06-17T15:12:37.009163
 // Deployed to: ssygukfdbtehvtndandn (live Supabase)
 // Routes:
 //   POST /                        → Helius enhanced webhook (whale swap)
