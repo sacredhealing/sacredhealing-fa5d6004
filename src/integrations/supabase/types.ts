@@ -6679,12 +6679,14 @@ export type Database = {
           gross_sol: number | null
           id: number
           label: string | null
+          live: boolean | null
           mint: string
           mult: number | null
           mult_source: string | null
           net_sol: number | null
           pnl_sol: number | null
           portfolio_after: number | null
+          sell_reason: string | null
           session_id: string | null
           sig: string | null
           slip_sol: number | null
@@ -6699,12 +6701,14 @@ export type Database = {
           gross_sol?: number | null
           id?: number
           label?: string | null
+          live?: boolean | null
           mint: string
           mult?: number | null
           mult_source?: string | null
           net_sol?: number | null
           pnl_sol?: number | null
           portfolio_after?: number | null
+          sell_reason?: string | null
           session_id?: string | null
           sig?: string | null
           slip_sol?: number | null
@@ -6719,12 +6723,14 @@ export type Database = {
           gross_sol?: number | null
           id?: number
           label?: string | null
+          live?: boolean | null
           mint?: string
           mult?: number | null
           mult_source?: string | null
           net_sol?: number | null
           pnl_sol?: number | null
           portfolio_after?: number | null
+          sell_reason?: string | null
           session_id?: string | null
           sig?: string | null
           slip_sol?: number | null
@@ -6736,10 +6742,12 @@ export type Database = {
         Row: {
           id: string
           losses: number | null
+          mode: string | null
           portfolio: number
           positions: Json | null
           start_balance: number
           started_at: string | null
+          stopped_at: string | null
           total_pnl: number | null
           updated_at: string | null
           wins: number | null
@@ -6747,10 +6755,12 @@ export type Database = {
         Insert: {
           id?: string
           losses?: number | null
+          mode?: string | null
           portfolio?: number
           positions?: Json | null
           start_balance?: number
           started_at?: string | null
+          stopped_at?: string | null
           total_pnl?: number | null
           updated_at?: string | null
           wins?: number | null
@@ -6758,10 +6768,12 @@ export type Database = {
         Update: {
           id?: string
           losses?: number | null
+          mode?: string | null
           portfolio?: number
           positions?: Json | null
           start_balance?: number
           started_at?: string | null
+          stopped_at?: string | null
           total_pnl?: number | null
           updated_at?: string | null
           wins?: number | null
