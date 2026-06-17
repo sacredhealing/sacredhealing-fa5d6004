@@ -238,6 +238,23 @@ export default function ShreemBrzeePerformance(){
     setBusy(false);
   };
 
+  const testSell=async()=>{
+    setBusy(true);
+    try{
+      const r=await fetch(`${EDGE}/test-sell`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      if(!r.ok){const t=await r.text();throw new Error(`HTTP ${r.status}: ${t.slice(0,60)}`);}
+      const d=await r.json();
+      if(d.sig){
+        flash('⚡ POPCAT SELL injected — position closing…','info');
+        setTimeout(loadAll,2000);
+        setTimeout(loadAll,5000);
+      } else {
+        flash(`Sell test error: ${JSON.stringify(d).slice(0,80)}`,'err');
+      }
+    }catch(e:any){flash(`Sell test failed: ${e.message?.slice(0,80)}`,'err');}
+    setBusy(false);
+  };
+
   // Whale stats
   const whaleMap:Record<string,{buys:number,sells:number,totalSol:number}>={};
   whaleSigs.forEach((s:any)=>{
@@ -529,7 +546,10 @@ export default function ShreemBrzeePerformance(){
               <div style={{fontSize:28,marginBottom:8}}>🐋</div>
               <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>Watching 21 wallets on Solana</div>
               <div style={{fontSize:11,color:'#64748b',marginBottom:14}}>Signals appear here the moment any whale swaps</div>
-              <button onClick={testSignal} disabled={busy} style={{padding:'9px 20px',borderRadius:11,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:11,fontWeight:800,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Inject Test Signal</button>
+              <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+              <button onClick={testSignal} disabled={busy} style={{padding:'9px 20px',borderRadius:11,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:11,fontWeight:800,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ BUY Signal</button>
+              <button onClick={testSell} disabled={busy} style={{padding:'9px 20px',borderRadius:11,border:`1px solid rgba(239,68,68,.3)`,background:'rgba(239,68,68,.08)',color:RED,fontSize:11,fontWeight:800,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ SELL Signal</button>
+            </div>
             </div>
           ):signals.map((sig:any)=>(
             <div key={sig.id} style={{...rowStyle}}>
