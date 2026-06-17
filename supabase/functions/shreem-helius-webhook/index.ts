@@ -121,7 +121,7 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v3", timestamp: new Date().toISOString() });
   }
 
-  // POST /test — inject a test signal using service key (bypasses RLS)
+  // POST /test — inject a BUY test signal
   if (req.method === "POST" && path.endsWith("/test")) {
     const sig = "TEST_" + Date.now();
     const testRow = {
@@ -139,7 +139,28 @@ serve(async (req) => {
     };
     const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
     if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
-    return jsonResp({ ok: true, sig, version: "v3" });
+    return jsonResp({ ok: true, sig, action: "BUY", version: "v3" });
+  }
+
+  // POST /test-sell — inject a SELL test signal (closes POPCAT position)
+  if (req.method === "POST" && path.endsWith("/test-sell")) {
+    const sig = "TEST_SELL_" + Date.now();
+    const testRow = {
+      sig,
+      wallet: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",
+      label: "Remusofmars",
+      action: "SELL",
+      mint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
+      symbol: "POPCAT",
+      amount_sol: 3.2,
+      token_amount: 50000,
+      is_pump_fun: true,
+      block_time: Math.floor(Date.now() / 1000),
+      created_at: new Date().toISOString(),
+    };
+    const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
+    if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
+    return jsonResp({ ok: true, sig, action: "SELL", version: "v3" });
   }
 
   // POST /paper
