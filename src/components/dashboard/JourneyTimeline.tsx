@@ -51,7 +51,7 @@ export const JourneyTimeline: React.FC = () => {
       {/* Primary CTA */}
       <Button
         onClick={() => navigate(nextStepRoute)}
-        className="w-full gap-2 mb-5 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] font-extrabold"
+        className="w-full gap-2 mb-5 bg-[#D4AF37] hover:bg-[#C4943A] text-[#050505] font-extrabold shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:shadow-[0_0_45px_rgba(212,175,55,0.5)]"
       >
         {t('dashboard.continueNextStep')}
         <ArrowRight className="w-4 h-4" />
@@ -83,9 +83,9 @@ export const JourneyTimeline: React.FC = () => {
                   ? {
                       scale: [1, 1.1, 1],
                       boxShadow: [
-                        '0 0 15px hsl(186 100% 50% / 0.4)',
-                        '0 0 25px hsl(186 100% 50% / 0.6)',
-                        '0 0 15px hsl(186 100% 50% / 0.4)',
+                        '0 0 15px rgba(212, 175, 55, 0.4)',
+                        '0 0 25px rgba(212, 175, 55, 0.6)',
+                        '0 0 15px rgba(212, 175, 55, 0.4)',
                       ],
                     }
                   : {}
