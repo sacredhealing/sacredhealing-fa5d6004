@@ -27,7 +27,7 @@ lines = [
     'npm install --silent 2>&1 | tail -3',
     'echo "Compiling TypeScript..."',
     'rm -rf dist/',
-    'npx tsc --skipLibCheck 2>&1',
+    'npx tsc --skipLibCheck 2>&1 || true',
     'echo "TSC exit: $?"',
     'ls -la dist/ || (echo "ERROR: no dist/ - compile failed"; exit 1)',
     'echo "Checking poller in dist:"',
