@@ -1,0 +1,71 @@
+name: Deploy Edge Via Management API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy via Management API (no CLI needed)
+        run: |
+          PAT="sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744"
+          REF="ssygukfdbtehvtndandn"
+          
+          echo "=== Reading edge function source ==="
+          FUNC_BODY=$(cat supabase/functions/shreem-helius-webhook/index.ts)
+          echo "Size: ${#FUNC_BODY} chars"
+          
+          echo "=== Trying PATCH (update existing function) ==="
+          RESULT=$(curl -s -w "\nHTTP:%{http_code}" -X PATCH \
+            "https://api.supabase.com/v1/projects/${REF}/functions/shreem-helius-webhook" \
+            -H "Authorization: Bearer ${PAT}" \
+            -H "Content-Type: application/json" \
+            -d "{\"verify_jwt\": false, \"body\": $(python3 -c "import sys,json; print(json.dumps(open('supabase/functions/shreem-helius-webhook/index.ts').read()))")}")
+          
+          HTTP=$(echo "$RESULT" | grep "HTTP:" | cut -d: -f2)
+          BODY=$(echo "$RESULT" | grep -v "HTTP:")
+          echo "HTTP: $HTTP"
+          echo "Body: $BODY"
+          
+          if [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ]; then
+            echo "✅ Edge function deployed via PATCH!"
+          else
+            echo "Trying POST..."
+            RESULT2=$(curl -s -w "\nHTTP:%{http_code}" -X POST \
+              "https://api.supabase.com/v1/projects/${REF}/functions" \
+              -H "Authorization: Bearer ${PAT}" \
+              -H "Content-Type: application/json" \
+              -d "{\"slug\": \"shreem-helius-webhook\", \"name\": \"shreem-helius-webhook\", \"verify_jwt\": false, \"body\": $(python3 -c "import sys,json; print(json.dumps(open('supabase/functions/shreem-helius-webhook/index.ts').read()))")}")
+            HTTP2=$(echo "$RESULT2" | grep "HTTP:" | cut -d: -f2)
+            BODY2=$(echo "$RESULT2" | grep -v "HTTP:")
+            echo "POST HTTP: $HTTP2"
+            echo "POST Body: $BODY2"
+          fi
+
+      - name: Verify - call /test endpoint
+        run: |
+          sleep 10
+          echo "=== Testing /test ==="
+          RESULT=$(curl -s -w "\nHTTP:%{http_code}" -X POST \
+            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/test" \
+            -H "Content-Type: application/json" -d "{}")
+          HTTP=$(echo "$RESULT" | grep "HTTP:" | cut -d: -f2)
+          BODY=$(echo "$RESULT" | grep -v "HTTP:")
+          echo "HTTP: $HTTP | Body: $BODY"
+          
+          if echo "$BODY" | grep -q '"ok":true,"sig"'; then
+            echo "✅ /test WORKS — returns sig, not webhook handler"
+          else
+            echo "❌ /test still hitting wrong handler: $BODY"
+          fi
+
+      - name: Save results
+        run: |
+          echo "Deploy attempt at $(date -u)" > _edge_deploy_result.txt
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _edge_deploy_result.txt || true
+          git commit -m "data: edge deploy result" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
