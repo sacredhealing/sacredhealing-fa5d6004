@@ -473,7 +473,13 @@ function placeToCoords(place: string): {x:number;y:number} {
 
 // ── Component ───────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birthData,ephemeris}) => {
+const PRANA_TIERS  = ['prana-flow','prana-flow-monthly','siddha-quantum','akasha-infinity','admin'];
+const SIDDHA_TIERS = ['siddha-quantum','akasha-infinity','admin'];
+const AKASHA_TIERS = ['akasha-infinity','admin'];
+export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipTier?:string;isAdmin?:boolean}> = ({birthData,ephemeris,membershipTier='free',isAdmin=false}) => {
+  const canPrana  = isAdmin || PRANA_TIERS.includes(membershipTier??'free');
+  const canSiddha = isAdmin || SIDDHA_TIERS.includes(membershipTier??'free');
+  const canAkasha = isAdmin || AKASHA_TIERS.includes(membershipTier??'free');
   const [selected,setSelected] = useState<string|null>(null);
   const [activeGraha,setActiveGraha] = useState<string|null>(null);
   const [activeAngle,setActiveAngle] = useState<string|null>(null);
@@ -604,10 +610,8 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
 
       {/* Sub-tabs */}
       <div style={{display:'flex',marginBottom:16,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.05)',borderRadius:50,padding:3,width:'fit-content',overflowX:'auto' as const}}>
-        {(['map','lines','parans','blueprint'] as const).map(t=>(
-          <button key={t} onClick={()=>setSubTab(t)} style={{background:subTab===t?'rgba(212,175,55,0.12)':'transparent',border:'none',borderRadius:50,color:subTab===t?'#D4AF37':'rgba(255,255,255,0.35)',padding:'6px 14px',cursor:'pointer',fontSize:10,fontWeight:subTab===t?700:400,whiteSpace:'nowrap' as const}}>
-            {t==='map'?'🌍 Map':t==='lines'?`☉ Lines (${acgLines.length})`:t==='parans'?`✦ Parans (${parans.length})`:'Blueprint'}
-          </button>
+        {([{key:'map',label:'🌍 Map',ok:true},{key:'lines',label:`☉ Lines (${acgLines.length})`,ok:canPrana},{key:'parans',label:`✦ Parans (${parans.length})`,ok:canSiddha},{key:'blueprint',label:'Blueprint',ok:canAkasha}] as const).filter(t=>t.ok).map(t=>(
+          <button key={t.key} onClick={()=>setSubTab(t.key as typeof subTab)} style={{background:subTab===t.key?'rgba(212,175,55,0.12)':'transparent',border:'none',borderRadius:50,color:subTab===t.key?'#D4AF37':'rgba(255,255,255,0.35)',padding:'6px 14px',cursor:'pointer',fontSize:10,fontWeight:subTab===t.key?700:400,whiteSpace:'nowrap' as const}}>{t.label}</button>
         ))}
       </div>
 
@@ -715,10 +719,9 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                   {selLine.angle==='ASC'?'Rising — Identity & Self':selLine.angle==='MC'?'Culminating — Career & Fame':selLine.angle==='DSC'?'Setting — Partnerships & Love':'Nadir — Home & Roots'}
                 </div>
                 <div style={{background:`${selLine.color}0c`,border:`1px solid ${selLine.color}20`,borderRadius:11,padding:13,marginBottom:10}}>
-                  <div style={{fontSize:12,lineHeight:1.65,color:'rgba(255,255,255,0.75)'}}>{selLine.meaning}</div>
+                  {canPrana?<div style={{fontSize:12,lineHeight:1.65,color:'rgba(255,255,255,0.75)'}}>{selLine.meaning}</div>:<div style={{textAlign:'center' as const,padding:'6px 0'}}><div style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginBottom:5}}>Full reading from Prana-Flow</div><div style={{fontSize:10,color:'rgba(212,175,55,0.5)',fontWeight:600}}>€19/mo · Unlock all 36 line meanings</div></div>}
                 </div>
-                {/* Places this line passes through */}
-                {(() => {
+                {canPrana && (() => {
                   const places = getLinePlaces(selLine);
                   if (!places.length) return null;
                   return (
@@ -742,10 +745,10 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                     <div style={{fontSize:11,color:'rgba(255,255,255,0.55)',lineHeight:1.6}}>{mahaRaw}{antarRaw?` › ${antarRaw}`:''} is magnetizing every {selLine.name} line globally right now.</div>
                   </div>
                 )}
-                <div style={{background:'rgba(255,255,255,0.02)',borderRadius:9,padding:'8px 11px',marginBottom:11}}>
-                  <div style={{fontSize:8,color:'rgba(255,255,255,0.25)',fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.2em',marginBottom:3}}>300km Orb</div>
-                  <div style={{fontSize:10,color:'rgba(255,255,255,0.4)',lineHeight:1.55}}>Cities within 300km of this line still activate {selLine.name}'s energy. You don't need to be exactly on it.</div>
-                </div>
+{canSiddha && <div style={{background:'rgba(255,255,255,0.02)',borderRadius:9,padding:'8px 11px',marginBottom:11}}><div style={{fontSize:8,color:'rgba(255,255,255,0.25)',fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.2em',marginBottom:3}}>300km Orb · Siddha-Quantum</div><div style={{fontSize:10,color:'rgba(255,255,255,0.4)',lineHeight:1.55}}>Cities within 300km of this line still activate {selLine.name}'s energy. You don't need to be exactly on it.</div></div>}
+                {!canPrana&&<div style={{background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:9,padding:'10px 12px',marginBottom:10,textAlign:'center' as const}}><div style={{fontSize:9,color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,letterSpacing:'0.15em',marginBottom:4}}>Prana-Flow · €19/mo</div><div style={{fontSize:10,color:'rgba(255,255,255,0.45)'}}>Line meanings, place names, Lines tab</div></div>}
+                {canPrana&&!canSiddha&&<div style={{background:'rgba(212,175,55,0.04)',border:'1px solid rgba(212,175,55,0.1)',borderRadius:9,padding:'8px 12px',marginBottom:10,textAlign:'center' as const}}><div style={{fontSize:9,color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,letterSpacing:'0.15em',marginBottom:3}}>Siddha-Quantum · €45/mo</div><div style={{fontSize:10,color:'rgba(255,255,255,0.35)'}}>Parans, 300km orb, full angle analysis</div></div>}
+                {canSiddha&&!canAkasha&&<div style={{background:'rgba(212,175,55,0.03)',border:'1px solid rgba(212,175,55,0.08)',borderRadius:9,padding:'8px 12px',marginBottom:10,textAlign:'center' as const}}><div style={{fontSize:9,color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,letterSpacing:'0.15em',marginBottom:3}}>Akasha-Infinity · €1,111 lifetime</div><div style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>Soul Blueprint + Siddha transmission</div></div>}
                 <button onClick={()=>setSelected(null)} style={{width:'100%',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:9,padding:8,color:'rgba(255,255,255,0.3)',cursor:'pointer',fontSize:10,fontWeight:600}}>← Clear</button>
               </div>
             ) : (
@@ -756,11 +759,11 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                     <div style={{width:20,height:20,borderRadius:6,background:`${l.color}18`,border:`1px solid ${l.color}33`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:l.color,flexShrink:0}}>{i+1}</div>
                     <div>
                       <div style={{fontSize:11,fontWeight:700,color:l.color}}>{l.name} MC Line</div>
-                      <div style={{fontSize:9,color:'rgba(255,255,255,0.4)',marginTop:2,lineHeight:1.5}}>{l.meaning.split('.')[0]}.</div>
+{canPrana?<div style={{fontSize:9,color:'rgba(255,255,255,0.4)',marginTop:2,lineHeight:1.5}}>{l.meaning.split('.')[0]}.</div>:<div style={{fontSize:9,color:'rgba(212,175,55,0.4)',marginTop:2}}>Prana-Flow to unlock</div>}
                     </div>
                   </div>
                 ))}
-                <div style={{fontSize:10,color:'rgba(255,255,255,0.25)',lineHeight:1.6,marginTop:6}}>Tap any line on the map for a full Graha-Geographic reading.</div>
+<div style={{fontSize:10,color:'rgba(255,255,255,0.25)',lineHeight:1.6,marginTop:6}}>{canPrana?'Tap any line for a full Graha-Geographic reading.':'Upgrade to Prana-Flow · €19/mo to unlock full readings.'}</div>
               </div>
             )}
           </div>
@@ -781,11 +784,7 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                     style={{background:'rgba(255,255,255,0.02)',border:`1px solid ${l.color}${isDasha(l.planet)?'44':'18'}`,borderRadius:13,padding:'12px 13px',cursor:'pointer',position:'relative' as const,boxShadow:isDasha(l.planet)?`0 0 14px ${l.color}12`:'none'}}>
                     {isDasha(l.planet)&&<div style={{position:'absolute' as const,top:7,right:7,background:'rgba(212,175,55,0.12)',border:'1px solid rgba(212,175,55,0.25)',borderRadius:6,padding:'1px 5px',fontSize:7,fontWeight:800,color:'#D4AF37',textTransform:'uppercase' as const,letterSpacing:'0.2em'}}>DASHA</div>}
                     <div style={{fontSize:12,fontWeight:800,color:l.color,marginBottom:4}}>{l.name}</div>
-                    <div style={{fontSize:10,color:'rgba(255,255,255,0.45)',lineHeight:1.55,marginBottom:5}}>{l.meaning.split('.')[0]}.</div>
-                  {(() => {
-                    const pp = getLinePlaces(l).slice(0,3);
-                    return pp.length ? <div style={{fontSize:9,color:`${l.color}`,opacity:0.7}}>{pp.join(' · ')}</div> : null;
-                  })()}
+{canPrana?<><div style={{fontSize:10,color:'rgba(255,255,255,0.45)',lineHeight:1.55,marginBottom:4}}>{l.meaning.split('.')[0]}.</div>{(()=>{const pp=getLinePlaces(l).slice(0,3);return pp.length?<div style={{fontSize:9,color:l.color,opacity:0.7}}>{pp.join(' · ')}</div>:null;})()}</>:<div style={{fontSize:9,color:'rgba(212,175,55,0.4)',marginTop:3}}>Upgrade to Prana-Flow to unlock</div>}
                   </div>
                 ))}
               </div>
@@ -823,8 +822,9 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
             <div style={{fontSize:8,letterSpacing:'0.4em',color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,marginBottom:7}}>
               Soul Geographic Blueprint{moonNak?` · ${moonNak} Nakshatra`:''}
             </div>
-            {(ascendant||sunSign)&&<div style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginBottom:14}}>{ascendant&&`Lagna: ${ascendant}`}{ascendant&&sunSign?' · ':''}{sunSign&&`Sun: ${sunSign}`}</div>}
-            {[
+            {canAkasha&&(ascendant||sunSign)&&<div style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginBottom:14}}>{ascendant&&`Lagna: ${ascendant}`}{ascendant&&sunSign?' · ':''}{sunSign&&`Sun: ${sunSign}`}</div>}
+            {!canAkasha&&<div style={{background:'rgba(212,175,55,0.07)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:12,padding:'14px 16px',marginBottom:14,textAlign:'center' as const}}><div style={{fontSize:10,color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,letterSpacing:'0.15em',marginBottom:6}}>Akasha-Infinity — €1,111 lifetime</div><div style={{fontSize:11,color:'rgba(255,255,255,0.45)',lineHeight:1.65}}>The complete Soul Geographic Blueprint — personal Siddha transmission, zone-by-zone analysis, and full ACG interpretation — is exclusively available to Akasha-Infinity members.</div></div>}
+            {canAkasha&&[
               {title:`Origin Zone — ${birthPlace||'Your Birth Place'}`,color:'#C0C8E8',text:`${cityLabel||'Your birth zone'} is your Janma Kshetra. The precise vibrational entry point chosen by your Atma. Your nervous system resets here fastest and deepest healing transmissions originate from here.`},
               ...(mahaRaw?[{title:`${mahaRaw} Mahadasha — Your Activated Graha Lines`,color:'#D4AF37',text:`Every ${mahaRaw} line on your map is magnetically activated right now. The geographic zones where ${mahaRaw}'s ACG lines run are your highest-frequency relocation, travel, and business zones during this period.`}]:[]),
               ...(antarRaw&&antarRaw!==mahaRaw?[{title:`${antarRaw} Antardasha Activation`,color:'#EC4899',text:`${antarRaw} Antardasha creates a secondary activation field on all ${antarRaw} lines globally. Short visits or collaborations with people from these regions carry elevated karmic opportunity.`}]:[]),
@@ -838,12 +838,7 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
               </div>
             ))}
           </div>
-          <div style={{background:'rgba(212,175,55,0.04)',border:'1px solid rgba(212,175,55,0.1)',borderRadius:14,padding:16}}>
-            <div style={{fontSize:8,letterSpacing:'0.35em',color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,marginBottom:8}}>Siddha Transmission</div>
-            <div style={{fontSize:12,color:'rgba(255,255,255,0.5)',lineHeight:1.75}}>
-              The 18 Siddhas teach that every soul is born into a geographic frequency that mirrors its karmic blueprint. The birth place is not random — it is the precise vibrational entry point chosen by the Atma. The Dasha system reveals when cosmic timing aligns to move, expand, or deepen roots. The ACG lines are the Graha-Geographic Intelligence made visible — your unique map of sacred geography on this Earth.
-            </div>
-          </div>
+          {canAkasha&&<div style={{background:'rgba(212,175,55,0.04)',border:'1px solid rgba(212,175,55,0.1)',borderRadius:14,padding:16}}><div style={{fontSize:8,letterSpacing:'0.35em',color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,marginBottom:8}}>Siddha Transmission</div><div style={{fontSize:12,color:'rgba(255,255,255,0.5)',lineHeight:1.75}}>The 18 Siddhas teach that every soul is born into a geographic frequency that mirrors its karmic blueprint. The birth place is not random — it is the precise vibrational entry point chosen by the Atma. The Dasha system reveals when cosmic timing aligns to move, expand, or deepen roots. The ACG lines are the Graha-Geographic Intelligence made visible — your unique map of sacred geography on this Earth.</div></div>}
         </div>
       )}
     </div>
