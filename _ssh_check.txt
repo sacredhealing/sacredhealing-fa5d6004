@@ -1,63 +1,114 @@
 ┌────┬─────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name                │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼─────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot             │ default     │ N/A     │ fork    │ 3007     │ 5D     │ 0    │ online    │ 0%       │ 64.5mb   │ root     │ disabled │
+│ 0  │ clawbot             │ default     │ N/A     │ fork    │ 3007     │ 5D     │ 0    │ online    │ 0%       │ 64.6mb   │ root     │ disabled │
 │ 2  │ delta-arb           │ default     │ 2.0.0   │ fork    │ 0        │ 0      │ 105  │ errored   │ 0%       │ 0b       │ root     │ disabled │
-│ 6  │ shreem-brzee        │ default     │ 2.2.0   │ fork    │ 0        │ 0      │ 15   │ errored   │ 0%       │ 0b       │ root     │ disabled │
-│ 1  │ sovereign-sniper    │ default     │ 2.0.0   │ fork    │ 3766     │ 5D     │ 1    │ online    │ 0%       │ 69.1mb   │ root     │ disabled │
+│ 8  │ shreem-brzee        │ default     │ 2.2.0   │ fork    │ 108817   │ 2m     │ 0    │ online    │ 0%       │ 83.6mb   │ root     │ disabled │
+│ 1  │ sovereign-sniper    │ default     │ 2.0.0   │ fork    │ 3766     │ 5D     │ 1    │ online    │ 0%       │ 68.8mb   │ root     │ disabled │
 └────┴─────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 ---LOGS---
 [TAILING] Tailing last 50 lines for [shreem-brzee] process (change the value with --lines option)
-/root/.pm2/logs/shreem-brzee-out.log last 50 lines:
 /root/.pm2/logs/shreem-brzee-error.log last 50 lines:
-6|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-6|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
-6|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-6|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-6|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-6|shreem-b | Error: Node.js 20 detected without native WebSocket support.
-6|shreem-b | 
-6|shreem-b | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-6|shreem-b | import ws from "ws"
-6|shreem-b | new RealtimeClient(url, { transport: ws })
-6|shreem-b |     at Function.getWebSocketConstructor (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-6|shreem-b |     at RealtimeClient._initializeOptions (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-6|shreem-b |     at new RealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-6|shreem-b |     at SupabaseClient._initRealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-6|shreem-b |     at new SupabaseClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-6|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-6|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
-6|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-6|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-6|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-6|shreem-b | Error: Node.js 20 detected without native WebSocket support.
-6|shreem-b | 
-6|shreem-b | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-6|shreem-b | import ws from "ws"
-6|shreem-b | new RealtimeClient(url, { transport: ws })
-6|shreem-b |     at Function.getWebSocketConstructor (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-6|shreem-b |     at RealtimeClient._initializeOptions (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-6|shreem-b |     at new RealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-6|shreem-b |     at SupabaseClient._initRealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-6|shreem-b |     at new SupabaseClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-6|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-6|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
-6|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-6|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-6|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-6|shreem-b | Error: Node.js 20 detected without native WebSocket support.
-6|shreem-b | 
-6|shreem-b | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-6|shreem-b | import ws from "ws"
-6|shreem-b | new RealtimeClient(url, { transport: ws })
-6|shreem-b |     at Function.getWebSocketConstructor (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-6|shreem-b |     at RealtimeClient._initializeOptions (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-6|shreem-b |     at new RealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-6|shreem-b |     at SupabaseClient._initRealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-6|shreem-b |     at new SupabaseClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-6|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-6|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
-6|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-6|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-6|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+8|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
+8|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|shreem-b | Error: Node.js 20 detected without native WebSocket support.
+8|shreem-b | 
+8|shreem-b | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+8|shreem-b | import ws from "ws"
+8|shreem-b | new RealtimeClient(url, { transport: ws })
+8|shreem-b |     at Function.getWebSocketConstructor (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+8|shreem-b |     at RealtimeClient._initializeOptions (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+8|shreem-b |     at new RealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+8|shreem-b |     at SupabaseClient._initRealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+8|shreem-b |     at new SupabaseClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+8|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+8|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
+8|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|shreem-b | Error: Node.js 20 detected without native WebSocket support.
+8|shreem-b | 
+8|shreem-b | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+8|shreem-b | import ws from "ws"
+8|shreem-b | new RealtimeClient(url, { transport: ws })
+8|shreem-b |     at Function.getWebSocketConstructor (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+8|shreem-b |     at RealtimeClient._initializeOptions (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+8|shreem-b |     at new RealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+8|shreem-b |     at SupabaseClient._initRealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+8|shreem-b |     at new SupabaseClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+8|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+8|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
+8|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|shreem-b | Error: Node.js 20 detected without native WebSocket support.
+8|shreem-b | 
+8|shreem-b | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+8|shreem-b | import ws from "ws"
+8|shreem-b | new RealtimeClient(url, { transport: ws })
+8|shreem-b |     at Function.getWebSocketConstructor (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+8|shreem-b |     at RealtimeClient._initializeOptions (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+8|shreem-b |     at new RealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+8|shreem-b |     at SupabaseClient._initRealtimeClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+8|shreem-b |     at new SupabaseClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+8|shreem-b |     at createClient (/root/shreem-brzee/railway/shreem-brzee-bot/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+8|shreem-b |     at Object.<anonymous> (/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js:59:49)
+8|shreem-b |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|shreem-b |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|shreem-b |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+
+/root/.pm2/logs/shreem-brzee-out.log last 50 lines:
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [poller] new signal: TEST_1781712311208 BUY POPCAT
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [poller] new signal: TEST_1781712148480 BUY POPCAT
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [poller] new signal: TEST_1781712048102 BUY POPCAT
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [poller] new signal: TEST_1781711783450 BUY POPCAT
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [poller] new signal: TEST_1781711774522 BUY POPCAT
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [poller] new signal: TEST_1781711448062 BUY POPCAT
+8|shreem-b | [signal] BUY POPCAT from Remusofmars | 1.5 SOL | PAPER
+8|shreem-b | [skip] already holding POPCAT
+8|shreem-b | [ws] Signal parsed in 0ms — SELL EPjFWdd5 by Cupsey
+8|shreem-b | [signal] SELL EPjFWdd5 from Cupsey | 0.0001065 SOL | PAPER
+8|shreem-b | [skip] no position in EPjFWdd5
+8|shreem-b | [edge] POST /signal → 200 ✓
+8|shreem-b | [ws] Signal parsed in 0ms — SELL EPjFWdd5 by Cupsey
+8|shreem-b | [signal] SELL EPjFWdd5 from Cupsey | 0.0001065 SOL | PAPER
+8|shreem-b | [skip] no position in EPjFWdd5
+8|shreem-b | [ws] Signal parsed in 0ms — SELL EPjFWdd5 by Cupsey
+8|shreem-b | [signal] SELL EPjFWdd5 from Cupsey | 0.0001065 SOL | PAPER
+8|shreem-b | [skip] no position in EPjFWdd5
+8|shreem-b | [edge] POST /signal → 200 ✓
+8|shreem-b | [edge] POST /signal → 200 ✓
+8|shreem-b | [ws] Signal parsed in 1ms — BUY FTmneFJS by Cented
+8|shreem-b | [signal] BUY FTmneFJS from Cented | 0.280005001 SOL | PAPER
+8|shreem-b | [skip] already holding FTmneFJS
+8|shreem-b | [edge] POST /signal → 200 ✓
+8|shreem-b | [ws] Signal parsed in 0ms — BUY FTmneFJS by Cented
+8|shreem-b | [signal] BUY FTmneFJS from Cented | 0.280005001 SOL | PAPER
+8|shreem-b | [skip] already holding FTmneFJS
+8|shreem-b | [edge] POST /signal → 200 ✓
+8|shreem-b | [warmer] pre-fetching quotes for 3 active mint(s)
+8|shreem-b | [status] mode:paper | portfolio: 2.2640 SOL | P&L: +0.3751 SOL | W/L: 2/0 | open: 1
+8|shreem-b | [warmer] ✅ 0/3 quotes warmed | cache size: 0
+8|shreem-b | [ws] Signal parsed in 0ms — BUY FTmneFJS by Cented
+8|shreem-b | [signal] BUY FTmneFJS from Cented | 0.280005001 SOL | PAPER
+8|shreem-b | [skip] already holding FTmneFJS
+8|shreem-b | [edge] POST /signal → 200 ✓
+8|shreem-b | [warmer] pre-fetching quotes for 3 active mint(s)
+8|shreem-b | [status] mode:paper | portfolio: 2.2640 SOL | P&L: +0.3751 SOL | W/L: 2/0 | open: 1
+8|shreem-b | [warmer] ✅ 0/3 quotes warmed | cache size: 0
 
