@@ -1,0 +1,43 @@
+name: Deploy Shreem Edge Function NOW
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase/functions/shreem-helius-webhook/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_linux_amd64.tar.gz \
+            | tar xz -C /usr/local/bin supabase
+          supabase --version
+
+      - name: Deploy edge function
+        env:
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+        run: |
+          supabase functions deploy shreem-helius-webhook \
+            --project-ref ssygukfdbtehvtndandn \
+            --no-verify-jwt
+          echo "✅ Deployed!"
+
+      - name: Test /test endpoint
+        run: |
+          sleep 5
+          HTTP=$(curl -s -o /tmp/r.json -w "%{http_code}" -X POST \
+            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/test" \
+            -H "Content-Type: application/json" -d "{}")
+          echo "HTTP: $HTTP"
+          cat /tmp/r.json
+          if [ "$HTTP" = "200" ]; then
+            echo "✅ Test signal WORKS — pipeline is LIVE"
+          else
+            echo "❌ Test failed: $HTTP"
+          fi
