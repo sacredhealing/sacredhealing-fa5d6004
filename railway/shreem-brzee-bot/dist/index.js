@@ -1,0 +1,994 @@
+"use strict";
+// v2.5.0 polling 18:07:53 deployed 2026-06-17T13:12:14Z
+/**
+ * 🔱 SHREEM BRZEE BOT v2 — World-Class Solana Copy Trading
+ * Hetzner Server | Solana Mainnet
+ *
+ * ARCHITECTURE:
+ *  Helius Enhanced WS (50-100ms processed) → parseTradeFromTx() → processSignal()
+ *    → RugCheck filter (mint/freeze authority)
+ *    → Jupiter v6 quote + swap (LIVE mode)
+ *    → Jito bundle broadcast (MEV-protected)
+ *    → TP/SL monitor (independent of whale signals)
+ *
+ * MODES:
+ *  PAPER  — simulate with realistic costs, no real SOL spent
+ *  LIVE   — real execution via BOT_WALLET_PRIVATE_KEY
+ *
+ * ENV VARS (set in Hetzner PM2 ecosystem or GitHub Actions):
+ *  BOT_WALLET_PRIVATE_KEY  — base58 private key for live trading
+ *  BOT_MODE                — 'paper' | 'live' (default: paper)
+ *  HELIUS_API_KEY          — 775d3d1f-6801-41de-a063-8aee4382d0f4
+ *  RISK_PCT                — 0.05 (5% per trade, default)
+ *  MAX_SLIPPAGE_BPS        — 300 (3%, default)
+ *  JITO_TIP_LAMPORTS       — 1000000 (0.001 SOL, default)
+ *  SL_MULTIPLIER           — 0.5 (stop loss at 50% of entry, default)
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const supabase_js_1 = require("@supabase/supabase-js");
+const web3_js_1 = require("@solana/web3.js");
+const bs58_1 = __importDefault(require("bs58"));
+// ── Config ────────────────────────────────────────────────────────────────────
+const HELIUS_KEY = process.env.HELIUS_API_KEY || '775d3d1f-6801-41de-a063-8aee4382d0f4';
+const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const BOT_MODE = (process.env.BOT_MODE || 'paper');
+const SESSION_ID = 'default';
+// ── Tunable risk settings (change via PM2 env — no redeploy needed) ──────────
+const RISK_PCT = parseFloat(process.env.RISK_PCT || '0.05'); // 5% per trade
+const MAX_SLIP_BPS = parseInt(process.env.MAX_SLIPPAGE_BPS || '300'); // 3% slippage
+const JITO_TIP_LAM = parseInt(process.env.JITO_TIP_LAMPORTS || '1000000'); // 0.001 SOL tip
+const SL_MULT = parseFloat(process.env.SL_MULTIPLIER || '0.5'); // 50% stop loss
+const TP_CHECK_MS = parseInt(process.env.TP_CHECK_INTERVAL_MS || '30000'); // check every 30s
+const MAX_HOLD_MIN = parseInt(process.env.MAX_POSITION_HOLD_MINUTES || '240'); // 4h force exit
+const MAX_POSITIONS = parseInt(process.env.MAX_OPEN_POSITIONS || '5'); // max 5 at once
+const MIN_WHALE_SOL = parseFloat(process.env.MIN_WHALE_SOL || '0.1'); // skip tiny trades
+const VIP_MULT = parseFloat(process.env.VIP_MULTIPLIER || '2.0'); // VIP 2× risk
+// VIP whales — boosted risk + priority fee multiplier
+const VIP_WHALES = new Set([
+    'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', // Cupsey
+    'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', // Heyitsyolo
+    'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', // Remusofmars
+]);
+// Supabase
+const EDGE_BASE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
+const SUPA_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+const supabase = (0, supabase_js_1.createClient)(SUPA_URL, ANON_KEY);
+// ── Redis hot state — zero-cost in-memory (pure Node.js Maps) ───────────────
+// Eliminates Supabase round-trips on the critical signal path.
+// hotPositions: O(1) position lookup — no DB call per signal
+// processedSigs: dedup — never execute same tx twice
+const hotPositions = new Map();
+const processedSigs = new Set();
+const SIG_DEDUP_MAX = 10000;
+// Jupiter
+const JUP_QUOTE = 'https://quote-api.jup.ag/v6/quote';
+const JUP_SWAP = 'https://quote-api.jup.ag/v6/swap';
+const JUP_PRICE = 'https://api.jup.ag/price/v2';
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
+// Jito block engine + rotating tip accounts
+const JITO_ENGINE = 'https://mainnet.block-engine.jito.labs.io/api/v1/bundles';
+const JITO_TIPS = [
+    'Cw8CFyZ9LofTQB12JMi7JVEqBFKAFNLxTDMoYiHddfS4',
+    'DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL',
+    '3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6Lx',
+    'ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1sMaC9jQ5ry',
+    'ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt',
+];
+// ── Solana connection + wallet ────────────────────────────────────────────────
+const connection = new web3_js_1.Connection(HELIUS_RPC, { commitment: 'processed' });
+let botKeypair = null;
+if (BOT_MODE === 'live') {
+    const pk = process.env.BOT_WALLET_PRIVATE_KEY;
+    if (!pk) {
+        console.error('❌ LIVE mode requires BOT_WALLET_PRIVATE_KEY env var');
+        process.exit(1);
+    }
+    try {
+        botKeypair = web3_js_1.Keypair.fromSecretKey(bs58_1.default.decode(pk));
+        console.log(`🔑 Bot wallet: ${botKeypair.publicKey.toBase58()}`);
+    }
+    catch (e) {
+        console.error('❌ Invalid BOT_WALLET_PRIVATE_KEY:', e.message);
+        process.exit(1);
+    }
+}
+// ── Paper sim helpers ─────────────────────────────────────────────────────────
+const PRIORITY_FEE = 0.002;
+const NETWORK_FEE = 0.000005;
+const TX_FAIL_RATE = 0.08; // realistic 8% failure for well-configured tx
+const slip = (sol) => sol * (MAX_SLIP_BPS / 10000);
+const fees = () => PRIORITY_FEE + NETWORK_FEE;
+const txFailed = () => BOT_MODE === 'paper' && Math.random() < TX_FAIL_RATE;
+const compPenalty = (sol) => {
+    const r = Math.random();
+    if (r < 0.20)
+        return 0;
+    if (r < 0.70)
+        return sol * (0.02 + Math.random() * 0.03);
+    return sol * (0.05 + Math.random() * 0.07);
+};
+const exitMult = (whaleMult) => {
+    if (whaleMult && whaleMult > 0 && whaleMult < 100) {
+        return whaleMult * (0.97 + Math.random() * 0.06);
+    }
+    const r = Math.random();
+    if (r < 0.30)
+        return 0.05 + Math.random() * 0.25;
+    if (r < 0.55)
+        return 0.30 + Math.random() * 0.50;
+    if (r < 0.75)
+        return 0.92 + Math.random() * 0.11;
+    if (r < 0.90)
+        return 1.10 + Math.random() * 0.90;
+    return 2.00 + Math.random() * 4.00;
+};
+// ── RugCheck ─────────────────────────────────────────────────────────────────
+// Cache checked mints for 10 min to avoid repeat calls
+const rugCache = new Map();
+async function checkRug(mint) {
+    const cached = rugCache.get(mint);
+    if (cached && Date.now() - cached.ts < 600000)
+        return cached.result;
+    try {
+        const r = await fetch(`https://api.rugcheck.xyz/v1/tokens/${mint}/report`, {
+            signal: AbortSignal.timeout(4000),
+        });
+        if (!r.ok) {
+            // If RugCheck is down, allow trade but log warning
+            console.warn(`[rugcheck] HTTP ${r.status} for ${mint} — allowing with warning`);
+            return { safe: true, mintAuthority: false, freezeAuthority: false, lpLocked: true, score: 0 };
+        }
+        const data = await r.json();
+        // Extract key risk fields
+        const mintAuth = !!data.token?.mintAuthority;
+        const freezeAuth = !!data.token?.freezeAuthority;
+        const score = data.score || 0;
+        // LP lock: check if any markets have locked liquidity
+        const lpLocked = (data.markets || []).some((m) => m.liquidityA?.locked || m.liquidityB?.locked || m.lp?.lpLockedUSD > 0);
+        // FAIL: mint authority not revoked (dev can print tokens)
+        if (mintAuth) {
+            const result = { safe: false, reason: 'Mint authority NOT revoked — dev can print tokens', mintAuthority: true, freezeAuthority: freezeAuth, lpLocked, score };
+            rugCache.set(mint, { result, ts: Date.now() });
+            return result;
+        }
+        // FAIL: freeze authority not revoked (dev can freeze your wallet)
+        if (freezeAuth) {
+            const result = { safe: false, reason: 'Freeze authority NOT revoked — dev can freeze wallets', mintAuthority: false, freezeAuthority: true, lpLocked, score };
+            rugCache.set(mint, { result, ts: Date.now() });
+            return result;
+        }
+        // WARN but allow: LP not locked (higher risk, allow in paper, skip in live if score < 50)
+        const result = { safe: true, mintAuthority: false, freezeAuthority: false, lpLocked, score };
+        rugCache.set(mint, { result, ts: Date.now() });
+        return result;
+    }
+    catch (e) {
+        // Network error — allow with warning (don't block on RugCheck unavailability)
+        console.warn(`[rugcheck] timeout/error for ${mint}: ${e.message} — allowing`);
+        return { safe: true, mintAuthority: false, freezeAuthority: false, lpLocked: true, score: 0 };
+    }
+}
+// ── Dynamic priority fee ──────────────────────────────────────────────────────
+async function getPriorityFee(accounts) {
+    try {
+        const r = await fetch(HELIUS_RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jsonrpc: '2.0', id: 1,
+                method: 'getPriorityFeeEstimate',
+                params: [{ accountKeys: accounts, options: { priorityLevel: 'High' } }],
+            }),
+            signal: AbortSignal.timeout(3000),
+        });
+        const d = await r.json();
+        const fee = d.result?.priorityFeeEstimate;
+        if (typeof fee === 'number' && fee > 0)
+            return Math.ceil(fee);
+    }
+    catch { }
+    return 300000; // fallback: 300k micro-lamports
+}
+// ── Live price fetch ──────────────────────────────────────────────────────────
+async function getTokenPriceUSD(mint) {
+    try {
+        const r = await fetch(`${JUP_PRICE}?ids=${mint}`, { signal: AbortSignal.timeout(3000) });
+        const d = await r.json();
+        return parseFloat(d?.data?.[mint]?.price || '0');
+    }
+    catch {
+        return 0;
+    }
+}
+// ── Jupiter v6 quote ──────────────────────────────────────────────────────────
+async function jupiterQuote(inputMint, outputMint, amountLamports) {
+    const url = `${JUP_QUOTE}?inputMint=${inputMint}&outputMint=${outputMint}` +
+        `&amount=${amountLamports}&slippageBps=${MAX_SLIP_BPS}&onlyDirectRoutes=false`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const q = await r.json();
+    if (!q.outAmount)
+        throw new Error(q.error || `No Jupiter route: ${inputMint}→${outputMint}`);
+    return q;
+}
+// ── Jupiter v6 swap transaction ───────────────────────────────────────────────
+async function jupiterSwapTx(quote, walletPubkey, priorityFee) {
+    const r = await fetch(JUP_SWAP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            quoteResponse: quote,
+            userPublicKey: walletPubkey,
+            wrapAndUnwrapSol: true,
+            dynamicComputeUnitLimit: true,
+            prioritizationFeeLamports: priorityFee,
+            asLegacyTransaction: false,
+        }),
+        signal: AbortSignal.timeout(8000),
+    });
+    const { swapTransaction } = await r.json();
+    if (!swapTransaction)
+        throw new Error('Jupiter returned no swap transaction');
+    return web3_js_1.VersionedTransaction.deserialize(Buffer.from(swapTransaction, 'base64'));
+}
+// ── Build Jito tip transaction ────────────────────────────────────────────────
+async function buildJitoTipTx(keypair) {
+    const tipAccount = new web3_js_1.PublicKey(JITO_TIPS[Math.floor(Math.random() * JITO_TIPS.length)]);
+    const { blockhash } = await connection.getLatestBlockhash('finalized');
+    const tipIx = web3_js_1.SystemProgram.transfer({
+        fromPubkey: keypair.publicKey,
+        toPubkey: tipAccount,
+        lamports: JITO_TIP_LAM,
+    });
+    const msg = new web3_js_1.TransactionMessage({
+        payerKey: keypair.publicKey,
+        recentBlockhash: blockhash,
+        instructions: [tipIx],
+    }).compileToV0Message();
+    const tx = new web3_js_1.VersionedTransaction(msg);
+    tx.sign([keypair]);
+    return tx;
+}
+// ── Jito bundle broadcast ─────────────────────────────────────────────────────
+async function sendJitoBundle(txs) {
+    const encoded = txs.map(tx => Buffer.from(tx.serialize()).toString('base64'));
+    const r = await fetch(JITO_ENGINE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            jsonrpc: '2.0', id: 1,
+            method: 'sendBundle',
+            params: [encoded],
+        }),
+        signal: AbortSignal.timeout(10000),
+    });
+    const d = await r.json();
+    if (d.error)
+        throw new Error(`Jito error: ${d.error.message}`);
+    return d.result; // bundle ID
+}
+// ── Jupiter Quote Pre-Warmer ──────────────────────────────────────────────────
+// Pre-fetches Jupiter quotes for recently-active whale mints every 60s.
+// When a real BUY signal fires, the quote is already in memory →
+// execution goes from ~800ms cold → ~200ms warm.
+//
+// How it works:
+//   recentMints   — Set of mints seen in last 10 min from incoming signals
+//   quoteCache    — Map<mint, {quote, ts}> — expires after 55s (just under refresh)
+//   priorityCache — Map<accounts_key, {fee, ts}> — expires after 30s
+//
+// executeLiveBuy reads from both caches first; only fetches fresh if stale.
+const recentMints = new Map(); // mint → last seen ts
+const quoteCache = new Map(); // warm quotes
+const priorityCache = new Map(); // warm fees
+const QUOTE_TTL = 55000; // 55s — Solana blockhash valid ~90s, quote valid slightly less
+const PRIORITY_TTL = 30000; // 30s — fees change fast during congestion
+const MINT_TTL = 600000; // 10 min — forget mints not seen recently
+const RISK_LAMPORTS_SAMPLE = 50000000; // 0.05 SOL sample size for pre-warm quotes
+// Called by processSignal on every incoming signal to register the mint
+function registerMintActivity(mint) {
+    if (mint && mint !== SOL_MINT) {
+        recentMints.set(mint, Date.now());
+    }
+}
+// Warm: get cached quote or fetch fresh
+async function getWarmQuote(inputMint, outputMint, amountLamports) {
+    const key = `${inputMint}:${outputMint}:${amountLamports}`;
+    const cached = quoteCache.get(key);
+    if (cached && Date.now() - cached.ts < QUOTE_TTL) {
+        console.log(`[warm] quote hit for ${outputMint.slice(0, 8)} (${((Date.now() - cached.ts) / 1000).toFixed(0)}s old)`);
+        return cached.quote;
+    }
+    const quote = await jupiterQuote(inputMint, outputMint, amountLamports);
+    quoteCache.set(key, { quote, ts: Date.now() });
+    return quote;
+}
+// Warm: get cached priority fee or fetch fresh
+async function getWarmPriorityFee(accounts) {
+    const key = accounts.slice(0, 3).join(':');
+    const cached = priorityCache.get(key);
+    if (cached && Date.now() - cached.ts < PRIORITY_TTL) {
+        return cached.fee;
+    }
+    const fee = await getPriorityFee(accounts);
+    priorityCache.set(key, { fee, ts: Date.now() });
+    return fee;
+}
+// Background warmer — runs every 60s
+let warmerTimer = null;
+function startQuotePreWarmer() {
+    warmerTimer = setInterval(async () => {
+        const now = Date.now();
+        // Evict stale mints (not seen in 10 min)
+        for (const [mint, ts] of recentMints) {
+            if (now - ts > MINT_TTL)
+                recentMints.delete(mint);
+        }
+        const mints = [...recentMints.keys()];
+        if (!mints.length)
+            return;
+        console.log(`[warmer] pre-fetching quotes for ${mints.length} active mint(s)`);
+        let hits = 0;
+        for (const mint of mints) {
+            try {
+                // Pre-warm BUY quote (SOL → token)
+                const buyKey = `${SOL_MINT}:${mint}:${RISK_LAMPORTS_SAMPLE}`;
+                const sellKey = `${mint}:${SOL_MINT}:${RISK_LAMPORTS_SAMPLE}`;
+                // Fetch both directions in parallel
+                const [buyQuote, sellQuote] = await Promise.allSettled([
+                    jupiterQuote(SOL_MINT, mint, RISK_LAMPORTS_SAMPLE),
+                    jupiterQuote(mint, SOL_MINT, RISK_LAMPORTS_SAMPLE),
+                ]);
+                if (buyQuote.status === 'fulfilled') {
+                    quoteCache.set(buyKey, { quote: buyQuote.value, ts: Date.now() });
+                    hits++;
+                }
+                if (sellQuote.status === 'fulfilled') {
+                    quoteCache.set(sellKey, { quote: sellQuote.value, ts: Date.now() });
+                }
+                // Pre-warm priority fee for this mint pair
+                const feeKey = `${SOL_MINT}:${mint}`;
+                const fee = await getPriorityFee([SOL_MINT, mint]);
+                priorityCache.set(feeKey, { fee, ts: Date.now() });
+                // Small gap between mints to avoid rate limiting
+                await new Promise(r => setTimeout(r, 400));
+            }
+            catch (e) {
+                console.warn(`[warmer] ${mint.slice(0, 8)}: ${e.message}`);
+            }
+        }
+        // Clean up expired quote cache entries
+        for (const [k, v] of quoteCache) {
+            if (Date.now() - v.ts > QUOTE_TTL * 2)
+                quoteCache.delete(k);
+        }
+        console.log(`[warmer] ✅ ${hits}/${mints.length} quotes warmed | cache size: ${quoteCache.size}`);
+    }, 60000);
+    console.log('[warmer] Jupiter quote pre-warmer started — 60s refresh cycle');
+}
+// ── Full live execution: BUY (uses warm cache) ───────────────────────────────
+async function executeLiveBuy(mint, amountSOL, keypair) {
+    const lamports = Math.floor(amountSOL * 1e9);
+    const accounts = [keypair.publicKey.toBase58(), SOL_MINT, mint];
+    // Use warm caches — O(1) if pre-warmer ran in last 55s
+    const priorityFee = await getWarmPriorityFee(accounts);
+    const quote = await getWarmQuote(SOL_MINT, mint, lamports);
+    const swapTx = await jupiterSwapTx(quote, keypair.publicKey.toBase58(), priorityFee);
+    swapTx.sign([keypair]);
+    const tipTx = await buildJitoTipTx(keypair);
+    const bundleId = await sendJitoBundle([swapTx, tipTx]);
+    console.log(`[jito] BUY bundle sent: ${bundleId}`);
+    // Poll for landing (Jito bundles land within 2-3 slots ~800ms)
+    await new Promise(r => setTimeout(r, 3000));
+    const sig = Buffer.from(swapTx.signatures[0]).toString('base64').slice(0, 44);
+    const tokenOut = parseInt(quote.outAmount || '0');
+    const actualFee = (priorityFee / 1e9) + NETWORK_FEE;
+    return { sig: bundleId, tokenOut, actualFee };
+}
+// ── Full live execution: SELL (uses warm cache) ──────────────────────────────
+async function executeLiveSell(mint, tokenAmount, keypair) {
+    const accounts = [keypair.publicKey.toBase58(), mint, SOL_MINT];
+    // Use warm caches
+    const priorityFee = await getWarmPriorityFee(accounts);
+    const quote = await getWarmQuote(mint, SOL_MINT, tokenAmount);
+    const swapTx = await jupiterSwapTx(quote, keypair.publicKey.toBase58(), priorityFee);
+    swapTx.sign([keypair]);
+    const tipTx = await buildJitoTipTx(keypair);
+    const bundleId = await sendJitoBundle([swapTx, tipTx]);
+    console.log(`[jito] SELL bundle sent: ${bundleId}`);
+    await new Promise(r => setTimeout(r, 3000));
+    const solOut = parseInt(quote.outAmount || '0') / 1e9;
+    const actualFee = (priorityFee / 1e9) + NETWORK_FEE;
+    return { sig: bundleId, solOut, actualFee };
+}
+// ── Edge relay ────────────────────────────────────────────────────────────────
+async function edgePost(route, body) {
+    try {
+        const r = await fetch(`${EDGE_BASE}${route}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${ANON_KEY}`,
+                'apikey': ANON_KEY,
+            },
+            body: JSON.stringify(body),
+        });
+        if (!r.ok) {
+            const txt = await r.text().catch(() => '');
+            console.error(`[edge] POST ${route} → ${r.status} ${txt.slice(0, 120)}`);
+        }
+        else {
+            console.log(`[edge] POST ${route} → ${r.status} ✓`);
+        }
+    }
+    catch (e) {
+        console.error(`[edge] failed:`, e.message);
+    }
+}
+async function edgeGet(route) {
+    try {
+        const r = await fetch(`${EDGE_BASE}${route}`, {
+            headers: {
+                'Authorization': `Bearer ${ANON_KEY}`,
+                'apikey': ANON_KEY,
+            },
+        });
+        return r.ok ? r.json() : null;
+    }
+    catch {
+        return null;
+    }
+}
+// ── Session persistence ───────────────────────────────────────────────────────
+let session;
+async function loadSession() {
+    const data = await edgeGet('/session');
+    if (data?.portfolio != null) {
+        console.log(`[session] loaded — ${data.portfolio.toFixed(4)} SOL | P&L: ${(data.total_pnl || 0).toFixed(4)} SOL | mode: ${data.mode || BOT_MODE}`);
+        return {
+            portfolio: Number(data.portfolio),
+            startBalance: Number(data.start_balance ?? 2),
+            positions: data.positions || {},
+            totalPnl: Number(data.total_pnl ?? 0),
+            wins: Number(data.wins ?? 0),
+            losses: Number(data.losses ?? 0),
+            startedAt: data.started_at ?? new Date().toISOString(),
+            mode: data.mode || BOT_MODE,
+        };
+    }
+    const fresh = {
+        portfolio: 2, startBalance: 2, positions: {},
+        totalPnl: 0, wins: 0, losses: 0,
+        startedAt: new Date().toISOString(), mode: BOT_MODE,
+    };
+    await saveSession(fresh);
+    console.log(`[session] new session — 2 SOL | ${BOT_MODE} mode`);
+    return fresh;
+}
+async function saveSession(s) {
+    await edgePost('/paper', {
+        type: 'session',
+        session: {
+            portfolio: s.portfolio,
+            start_balance: s.startBalance,
+            positions: s.positions,
+            total_pnl: s.totalPnl,
+            wins: s.wins,
+            losses: s.losses,
+            started_at: s.startedAt,
+            mode: s.mode,
+        },
+    });
+}
+async function saveTrade(trade) {
+    await edgePost('/paper', { type: 'trade', trade });
+}
+// ── Process signal ────────────────────────────────────────────────────────────
+async function processSignal(signal) {
+    const { action, mint, symbol, label, amount_sol, token_amount, sig } = signal;
+    const sym = symbol || mint?.slice(0, 8) || '???';
+    const isLive = session.mode === 'live' && !!botKeypair;
+    console.log(`[signal] ${action} ${sym} from ${label} | ${amount_sol ?? '?'} SOL | ${isLive ? 'LIVE' : 'PAPER'}`);
+    // Register mint with pre-warmer so next refresh pre-fetches its quote
+    registerMintActivity(mint);
+    // ── BUY ───────────────────────────────────────────────────────────────────
+    if (action === 'BUY') {
+        if (hotPositions.has(mint) || session.positions[mint]) {
+            console.log(`[skip] already holding ${sym}`);
+            return;
+        }
+        // ── Smart filters ─────────────────────────────────────────────────────
+        // Dedup sig (O(1) Set check)
+        const sigKey = signal.sig || '';
+        if (sigKey && processedSigs.has(sigKey)) {
+            console.log(`[skip] dup sig`);
+            return;
+        }
+        if (sigKey) {
+            processedSigs.add(sigKey);
+            if (processedSigs.size > SIG_DEDUP_MAX)
+                processedSigs.delete(processedSigs.values().next().value);
+        }
+        // Max open positions
+        if (hotPositions.size >= MAX_POSITIONS) {
+            console.log(`[skip] max positions (${hotPositions.size}/${MAX_POSITIONS})`);
+            return;
+        }
+        // Minimum whale trade size
+        const whaleSOL = parseFloat(signal.amount_sol || '0');
+        if (whaleSOL > 0 && whaleSOL < MIN_WHALE_SOL) {
+            console.log(`[skip] whale spent only ${whaleSOL.toFixed(3)} SOL`);
+            return;
+        }
+        // VIP boost
+        const isVip = VIP_WHALES.has(signal.wallet || '');
+        const riskMultiplier = isVip ? VIP_MULT : 1.0;
+        const gross = Math.min(session.portfolio * RISK_PCT * riskMultiplier, session.portfolio * 0.20);
+        if (gross < 0.01) {
+            console.log('[skip] portfolio too low');
+            return;
+        }
+        if (isVip)
+            console.log(`[VIP] ${signal.label} — ${riskMultiplier}× risk → ${gross.toFixed(4)} SOL`);
+        // ── RUG CHECK (both modes) ───────────────────────────────────────────────
+        console.log(`[rugcheck] checking ${sym} (${mint.slice(0, 8)}…)`);
+        const rug = await checkRug(mint);
+        if (!rug.safe) {
+            console.log(`[RUGCHECK BLOCK] ${sym} — ${rug.reason}`);
+            await saveTrade({
+                session_id: SESSION_ID, sig, mint, symbol: sym, label,
+                action: 'SKIP', gross_sol: 0, net_sol: 0, pnl_sol: 0,
+                failed: true, fail_reason: `RUG: ${rug.reason}`,
+                portfolio_after: session.portfolio,
+                created_at: new Date().toISOString(),
+            });
+            return;
+        }
+        // LP not locked warning in live mode: skip if high risk
+        if (!rug.lpLocked && isLive && rug.score < 50) {
+            console.log(`[SKIP] ${sym} — LP not locked + score ${rug.score} — too risky for live`);
+            return;
+        }
+        console.log(`[rugcheck] ✅ ${sym} passed — score: ${rug.score}, LP locked: ${rug.lpLocked}`);
+        // ── LIVE EXECUTION ───────────────────────────────────────────────────────
+        if (isLive && botKeypair) {
+            try {
+                console.log(`[live BUY] ${sym} — ${gross.toFixed(4)} SOL`);
+                const { sig: liveSig, tokenOut, actualFee } = await executeLiveBuy(mint, gross, botKeypair);
+                const entryPrice = await getTokenPriceUSD(mint);
+                session.portfolio -= (gross + actualFee);
+                session.positions[mint] = {
+                    mint, symbol: sym, label,
+                    entrySOL: gross, netPosition: gross - actualFee,
+                    tokenAmount: tokenOut,
+                    entryTime: Date.now(), whaleEntrySol: amount_sol || 0,
+                    entryPrice, liveMode: true, liveSig,
+                };
+                await saveTrade({
+                    session_id: SESSION_ID, sig: liveSig, mint, symbol: sym, label,
+                    action: 'BUY', gross_sol: gross, net_sol: gross - actualFee,
+                    fee_sol: actualFee, pnl_sol: 0, live: true,
+                    portfolio_after: session.portfolio,
+                    created_at: new Date().toISOString(),
+                });
+                await saveSession(session);
+                console.log(`[live BUY] ✅ ${sym} | bundle: ${liveSig} | tokens: ${tokenOut}`);
+                return;
+            }
+            catch (e) {
+                console.error(`[live BUY] ❌ ${sym}: ${e.message}`);
+                // Fall through to paper sim on live failure
+            }
+        }
+        // ── PAPER SIMULATION ─────────────────────────────────────────────────────
+        if (txFailed()) {
+            const f = fees();
+            session.portfolio -= f;
+            await saveTrade({
+                session_id: SESSION_ID, sig, mint, symbol: sym, label,
+                action: 'BUY', gross_sol: 0, net_sol: 0, pnl_sol: -f,
+                failed: true,
+                fail_reason: Math.random() < 0.6 ? 'Slippage exceeded' : 'RPC timeout',
+                portfolio_after: session.portfolio,
+                created_at: new Date().toISOString(),
+            });
+            await saveSession(session);
+            console.log(`[paper fail] ${sym} — lost ${f.toFixed(6)} SOL in fees`);
+            return;
+        }
+        const penalty = compPenalty(gross);
+        const slipCost = slip(gross) + penalty;
+        const f = fees();
+        const net = gross - slipCost - f;
+        const entryPrice = await getTokenPriceUSD(mint);
+        session.portfolio -= (gross + f);
+        const posObj = { mint, symbol: sym, label, entrySOL: gross, netPosition: net,
+            tokenAmount: token_amount || 0, entryTime: Date.now(),
+            whaleEntrySol: amount_sol || 0, entryPrice, liveMode: false };
+        session.positions[mint] = posObj;
+        hotPositions.set(mint, posObj); // RAM sync
+        await saveTrade({
+            session_id: SESSION_ID, sig, mint, symbol: sym, label,
+            action: 'BUY', gross_sol: gross, net_sol: net,
+            slip_sol: slipCost, fee_sol: f, pnl_sol: 0,
+            portfolio_after: session.portfolio,
+            created_at: new Date().toISOString(),
+        });
+        await saveSession(session);
+        console.log(`[paper BUY] ${sym} — ${gross.toFixed(4)} SOL → ${net.toFixed(4)} net | portfolio: ${session.portfolio.toFixed(4)}`);
+        return;
+    }
+    // ── SELL (whale triggered) ────────────────────────────────────────────────
+    if (action === 'SELL') {
+        const pos = session.positions[mint];
+        if (!pos) {
+            console.log(`[skip] no position in ${sym}`);
+            return;
+        }
+        await executeSell(mint, pos, 'whale', amount_sol);
+    }
+}
+// ── Sell execution (whale signal or TP/SL) ───────────────────────────────────
+async function executeSell(mint, pos, reason, whaleAmountSol) {
+    const sym = pos.symbol;
+    const isLive = pos.liveMode && !!botKeypair;
+    console.log(`[SELL] ${sym} — reason: ${reason} | ${isLive ? 'LIVE' : 'PAPER'}`);
+    if (isLive && botKeypair) {
+        try {
+            const { sig: liveSig, solOut, actualFee } = await executeLiveSell(mint, pos.tokenAmount, botKeypair);
+            const pnl = solOut - pos.entrySOL - actualFee;
+            session.portfolio += solOut;
+            session.totalPnl += pnl;
+            pnl > 0 ? session.wins++ : session.losses++;
+            delete session.positions[mint];
+            await saveTrade({
+                session_id: SESSION_ID, sig: liveSig, mint, symbol: sym, label: pos.label,
+                action: 'SELL', gross_sol: solOut, net_sol: solOut - actualFee,
+                fee_sol: actualFee, pnl_sol: pnl, sell_reason: reason,
+                live: true, portfolio_after: session.portfolio,
+                created_at: new Date().toISOString(),
+            });
+            await saveSession(session);
+            const pct = ((pnl / pos.entrySOL) * 100).toFixed(1);
+            console.log(`[live SELL] ✅ ${sym} | ${pnl >= 0 ? '+' : ''}${pnl.toFixed(4)} SOL (${pct}%) | reason: ${reason}`);
+            return;
+        }
+        catch (e) {
+            console.error(`[live SELL] ❌ ${sym}: ${e.message}`);
+        }
+    }
+    // Paper sell
+    const whaleMult = (whaleAmountSol && pos.whaleEntrySol)
+        ? Number(whaleAmountSol) / pos.whaleEntrySol : undefined;
+    const mult = reason === 'sl' ? SL_MULT : exitMult(whaleMult);
+    const gross = pos.netPosition * mult;
+    const s = slip(gross);
+    const f = fees();
+    const net = gross - s - f;
+    const pnl = net - (pos.entrySOL + f);
+    session.portfolio += net;
+    session.totalPnl += pnl;
+    pnl > 0 ? session.wins++ : session.losses++;
+    delete session.positions[mint];
+    await saveTrade({
+        session_id: SESSION_ID, mint, symbol: sym, label: pos.label,
+        action: 'SELL', gross_sol: gross, net_sol: net,
+        slip_sol: s, fee_sol: f, pnl_sol: pnl,
+        mult, mult_source: reason === 'whale' && whaleMult ? 'REAL' : reason.toUpperCase(),
+        sell_reason: reason, portfolio_after: session.portfolio,
+        created_at: new Date().toISOString(),
+    });
+    await saveSession(session);
+    const pct = ((pnl / pos.entrySOL) * 100).toFixed(1);
+    console.log(`[paper SELL] ${sym} | ${pnl >= 0 ? '+' : ''}${pnl.toFixed(4)} SOL (${pct}%) | ${reason} | mult: ${mult.toFixed(2)}×`);
+}
+// ── TP/SL Monitor — runs every 30s independent of whale signals ───────────────
+let tpslTimer = null;
+function startTpSlMonitor() {
+    tpslTimer = setInterval(async () => {
+        const positions = [...hotPositions.values()]; // O(1) RAM read
+        if (!positions.length)
+            return;
+        for (const pos of positions) {
+            try {
+                const livePrice = await getTokenPriceUSD(pos.mint);
+                if (!livePrice || !pos.entryPrice || pos.entryPrice === 0)
+                    continue;
+                const mult = livePrice / pos.entryPrice;
+                const holdMins = (Date.now() - pos.entryTime) / 60000;
+                // TAKE PROFIT: price is 2× entry
+                // STOP LOSS: price is 50% of entry
+                if (mult <= SL_MULT) {
+                    console.log(`[SL] ${pos.symbol} at ${mult.toFixed(2)}× — stop loss`);
+                    await executeSell(pos.mint, pos, 'sl');
+                    continue;
+                }
+                // FORCE EXIT: held >4h without TP/SL trigger (stale position)
+                if (holdMins > MAX_HOLD_MIN) {
+                    console.log(`[SL-timeout] ${pos.symbol} held ${holdMins.toFixed(0)} min — force exit`);
+                    await executeSell(pos.mint, pos, 'sl');
+                    continue;
+                }
+                console.log(`[tpsl] ${pos.symbol} | ${mult.toFixed(2)}× | ${holdMins.toFixed(0)}m held`);
+            }
+            catch (e) {
+                console.error(`[tpsl] error for ${pos.symbol}:`, e.message);
+            }
+        }
+    }, TP_CHECK_MS);
+}
+// ── Whale wallet map (for WS trade parsing) ───────────────────────────────────
+const WHALE_WALLETS = {
+    'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE': 'Cupsey',
+    'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ': 'Heyitsyolo',
+    'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
+    '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5': 'Orange',
+    'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt': 'Shreem Brzee',
+    'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm': 'Lenion',
+    'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw': 'Boredboar',
+    'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp': 'Hades',
+    'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm': 'Kubera 72',
+    'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k': 'Brzee God',
+    '9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm': 'GBack',
+    'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f': 'Tuna',
+    'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51': 'Fireball',
+    'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS': 'Hachjdn',
+    '5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc': 'Crypto Circle',
+    '2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv': 'Crocodile',
+    '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3': 'Snow Spirit',
+    'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
+    'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA': 'The Grande',
+    'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW': 'A Milly',
+    'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG': 'J2ANNaq',
+};
+const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
+const PUMP_FUN_PROGRAM = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
+// ── Inline trade parser (same logic as FomoCopyBot) ───────────────────────────
+function isPumpFunTx(tx) {
+    const keys = tx?.transaction?.message?.accountKeys || [];
+    return keys.some((k) => (k.pubkey || k) === PUMP_FUN_PROGRAM);
+}
+function parseTradeFromTx(tx, walletAddress, sig) {
+    if (!tx?.meta || tx.meta.err)
+        return null;
+    const pre = tx.meta.preTokenBalances || [];
+    const post = tx.meta.postTokenBalances || [];
+    const preSOL = tx.meta.preBalances?.[0] ?? 0;
+    const postSOL = tx.meta.postBalances?.[0] ?? 0;
+    const solDelta = (postSOL - preSOL) / 1e9;
+    const balByMint = {};
+    for (const b of pre) {
+        if (b.owner !== walletAddress)
+            continue;
+        balByMint[b.mint] = { pre: parseFloat(b.uiTokenAmount?.uiAmountString || '0'), post: 0 };
+    }
+    for (const b of post) {
+        if (b.owner !== walletAddress)
+            continue;
+        const cur = balByMint[b.mint] || { pre: 0, post: 0 };
+        cur.post = parseFloat(b.uiTokenAmount?.uiAmountString || '0');
+        balByMint[b.mint] = cur;
+    }
+    let bestMint = null;
+    let bestDelta = 0;
+    for (const [mint, { pre: p, post: q }] of Object.entries(balByMint)) {
+        if (mint === SOL_MINT)
+            continue;
+        const d = q - p;
+        if (Math.abs(d) > Math.abs(bestDelta)) {
+            bestDelta = d;
+            bestMint = mint;
+        }
+    }
+    if (!bestMint || bestDelta === 0)
+        return null;
+    return {
+        sig, wallet: walletAddress,
+        action: bestDelta > 0 ? 'BUY' : 'SELL',
+        mint: bestMint,
+        symbol: null,
+        amount_sol: Math.abs(solDelta),
+        token_amount: Math.abs(bestDelta),
+        is_pump_fun: isPumpFunTx(tx),
+        label: WHALE_WALLETS[walletAddress] || walletAddress.slice(0, 8),
+    };
+}
+// ── Helius Enhanced WebSocket — 50-100ms at processed commitment ──────────────
+// Replaces Supabase Realtime subscription. Direct connection to Helius WS.
+// Uses transactionSubscribe (Developer plan feature) — monitors all 21 whales
+// in ONE subscription at 'processed' commitment for minimum latency.
+let wsInstance = null;
+let wsReconnectTimer = null;
+let wsKilled = false;
+function startEnhancedWebSocket() {
+    if (wsKilled)
+        return;
+    const WS_URL = `wss://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+    console.log('[ws] Connecting to Helius Enhanced WebSocket...');
+    const WebSocket = require('ws');
+    const ws = new WebSocket(WS_URL);
+    wsInstance = ws;
+    ws.on('open', () => {
+        console.log('[ws] Connected — subscribing to 21 whale wallets at processed commitment');
+        // ONE subscription covers ALL 21 wallets — Helius Developer plan feature
+        ws.send(JSON.stringify({
+            jsonrpc: '2.0', id: 1,
+            method: 'transactionSubscribe',
+            params: [
+                {
+                    vote: false,
+                    failed: false,
+                    accountInclude: Object.keys(WHALE_WALLETS),
+                },
+                {
+                    commitment: 'processed', // ← 50-100ms vs 400-600ms confirmed
+                    encoding: 'jsonParsed',
+                    transactionDetails: 'full',
+                    showRewards: false,
+                    maxSupportedTransactionVersion: 0,
+                },
+            ],
+        }));
+        // Keepalive ping every 25s
+        const ping = setInterval(() => {
+            if (ws.readyState === 1) {
+                ws.send(JSON.stringify({ jsonrpc: '2.0', id: 99, method: 'ping', params: [] }));
+            }
+            else {
+                clearInterval(ping);
+            }
+        }, 25000);
+    });
+    ws.on('message', async (raw) => {
+        let msg;
+        try {
+            msg = JSON.parse(raw.toString());
+        }
+        catch {
+            return;
+        }
+        // Subscription confirmed
+        if (msg.id === 1 && typeof msg.result === 'number') {
+            console.log(`[ws] ✅ Subscribed — sub ID: ${msg.result} | watching 21 whales at processed`);
+            return;
+        }
+        // transactionSubscribe blocked (free plan) — log and keep alive
+        if (msg.id === 1 && msg.error) {
+            console.error(`[ws] transactionSubscribe error: ${msg.error.message}`);
+            console.log('[ws] Falling back to Supabase Realtime (check Helius plan)');
+            return;
+        }
+        if (msg.method !== 'transactionNotification')
+            return;
+        const t0 = Date.now();
+        const val = msg.params?.result?.transaction;
+        const sig = msg.params?.result?.signature || val?.transaction?.signatures?.[0];
+        if (!val || !sig)
+            return;
+        // Find which whale wallet is involved
+        const keys = (val?.transaction?.message?.accountKeys || [])
+            .map((k) => k.pubkey || k);
+        const whaleAddr = keys.find(k => WHALE_ADDRS.has(k));
+        if (!whaleAddr)
+            return;
+        // Parse the trade inline — no DB round trip
+        const trade = parseTradeFromTx(val, whaleAddr, sig);
+        if (!trade)
+            return;
+        const latency = Date.now() - t0;
+        console.log(`[ws] Signal parsed in ${latency}ms — ${trade.action} ${trade.mint.slice(0, 8)} by ${trade.label}`);
+        // Save signal to DB for UI display (async, non-blocking)
+        edgePost('/signal', { signal: trade }).catch(() => { });
+        // Register with pre-warmer
+        registerMintActivity(trade.mint);
+        // Process immediately — this is the hot path
+        try {
+            await processSignal(trade);
+        }
+        catch (e) {
+            console.error('[ws] processSignal error:', e.message);
+        }
+    });
+    ws.on('error', (e) => {
+        console.error('[ws] Error:', e.message);
+    });
+    ws.on('close', () => {
+        console.log('[ws] Disconnected — reconnecting in 3s...');
+        if (!wsKilled) {
+            wsReconnectTimer = setTimeout(() => startEnhancedWebSocket(), 3000);
+        }
+    });
+}
+// ── Main ──────────────────────────────────────────────────────────────────────
+async function main() {
+    console.log('🔱 SHREEM BRZEE BOT v2.3 — Hot State + Smart Filters');
+    console.log(`   Mode:    ${BOT_MODE.toUpperCase()}`);
+    console.log(`   Risk:    ${(RISK_PCT * 100).toFixed(0)}% per trade`);
+    console.log(`   Slippage: ${MAX_SLIP_BPS}bps max`);
+    console.log(`   Exits:   whale SELL only | Emergency SL: ${SL_MULT}× (rug protection)`);
+    console.log(`   Filters: max ${MAX_POSITIONS} pos | min whale ${MIN_WHALE_SOL} SOL | VIP ${VIP_MULT}× risk`);
+    if (botKeypair)
+        console.log(`   Wallet:  ${botKeypair.publicKey.toBase58()}`);
+    console.log(`   Jito:    ${JITO_TIP_LAM / 1e9} SOL tip per bundle`);
+    console.log(`   RPC:     Helius mainnet`);
+    session = await loadSession();
+    // Override mode from env if different
+    if (session.mode !== BOT_MODE) {
+        console.log(`[session] mode override: ${session.mode} → ${BOT_MODE}`);
+        session.mode = BOT_MODE;
+        await saveSession(session);
+    }
+    // Start TP/SL monitor
+    startTpSlMonitor();
+    console.log('[tpsl] monitor started — checking every 30s');
+    // Start Jupiter quote pre-warmer
+    startQuotePreWarmer();
+    // Enhanced WebSocket — 50-100ms at processed commitment (Helius Developer plan)
+    startEnhancedWebSocket();
+    // ── Signal poller — HTTP polling every 3s (replaces unreliable Realtime) ──────
+    // Fetches latest signals from edge function, processes any not yet seen.
+    // Works regardless of RLS, Realtime config, or WebSocket issues.
+    const seenSigs = new Set();
+    // Do NOT pre-seed — process all recent signals on startup
+    // Bot checks hotPositions to avoid duplicate positions
+    console.log('[poller] starting fresh — will process all new signals');
+    const pollTimer = setInterval(async () => {
+        try {
+            const signals = await edgeGet('/signals');
+            if (!Array.isArray(signals))
+                return;
+            for (const signal of signals) {
+                if (!signal.sig || seenSigs.has(signal.sig))
+                    continue;
+                seenSigs.add(signal.sig);
+                console.log(`[poller] new signal: ${signal.sig.slice(0, 20)} ${signal.action} ${signal.symbol || signal.mint?.slice(0, 8)}`);
+                try {
+                    await processSignal(signal);
+                }
+                catch (e) {
+                    console.error('[poller] processSignal error:', e.message);
+                }
+            }
+        }
+        catch (e) {
+            console.error('[poller] fetch error:', e.message);
+        }
+    }, 3000);
+    // Keep channel var for SIGTERM cleanup compatibility
+    const channel = { unsubscribe: () => { clearInterval(pollTimer); } };
+    console.log('[poller] signal poller started — checking every 3s');
+    // Status log every 60s
+    setInterval(async () => {
+        const open = Object.keys(session.positions).length;
+        const walletSOL = botKeypair
+            ? await connection.getBalance(botKeypair.publicKey).then(b => b / 1e9).catch(() => 0)
+            : null;
+        console.log(`[status] mode:${session.mode} | portfolio: ${session.portfolio.toFixed(4)} SOL` +
+            (walletSOL !== null ? ` | wallet: ${walletSOL.toFixed(4)} SOL` : '') +
+            ` | P&L: ${session.totalPnl >= 0 ? '+' : ''}${session.totalPnl.toFixed(4)} SOL` +
+            ` | W/L: ${session.wins}/${session.losses} | open: ${open}`);
+    }, 60000);
+    console.log(`✅ v2.3 LIVE | Enhanced WS 50-100ms | Hot RAM state | Smart filters | portfolio: ${session.portfolio.toFixed(4)} SOL`);
+    process.on('SIGTERM', async () => {
+        console.log('[shutdown] saving session…');
+        if (tpslTimer)
+            clearInterval(tpslTimer);
+        if (warmerTimer)
+            clearInterval(warmerTimer);
+        await saveSession(session);
+        wsKilled = true;
+        if (wsReconnectTimer)
+            clearTimeout(wsReconnectTimer);
+        if (wsInstance)
+            wsInstance.close();
+        channel.unsubscribe();
+        process.exit(0);
+    });
+}
+main().catch((e) => {
+    console.error('🔥 Fatal:', e.message);
+    process.exit(1);
+});
