@@ -486,6 +486,9 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipT
   const [subTab,setSubTab] = useState<'map'|'lines'|'parans'|'blueprint'>('map');
   const [beneficOnly,setBeneficOnly] = useState(false);
   const [hoveredLine,setHoveredLine] = useState<string|null>(null);
+  const [cityQuery,setCityQuery]   = useState('');
+  const [cityResult,setCityResult] = useState<null|{city:string;reading:string;grahas:{id:string;name:string;color:string;angle:string;distance:number;influence:'strong'|'moderate'|'mild';meaning:string}[]}>(null);
+  const [cityLoading,setCityLoading] = useState(false);
   const [pulse,setPulse] = useState(0);
 
   useEffect(()=>{
@@ -570,6 +573,140 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipT
 
   const ANGLE_DASH: Record<string,string> = {ASC:'none',MC:'2,1',DSC:'4,2',IC:'6,3'};
 
+  // ── City Search: find which Grahas are active near a searched place ──
+  const searchCity = async (query: string) => {
+    if (!query.trim() || !acgLines.length) return;
+    setCityLoading(true);
+    setCityResult(null);
+
+    // 1. Find the city in GEO_PLACES or approximate from name
+    const q = query.toLowerCase().trim();
+    let cityLon = 0, cityLat = 0, foundCity = query;
+    const match = GEO_PLACES.find(p =>
+      p.name.toLowerCase().includes(q) ||
+      q.includes(p.name.toLowerCase()) ||
+      p.region.toLowerCase().includes(q)
+    );
+    if (match) { cityLon = match.lon; cityLat = match.lat; foundCity = match.name; }
+    else {
+      // Rough fallback from common names not in list
+      const fallbacks: Record<string,[number,number]> = {
+        'madurai':[9.9,78.1],'varanasi':[25.3,83.0],'rishikesh':[30.1,78.3],
+        'dharamsala':[32.2,76.3],'auroville':[12.0,79.8],'tiruvannamalai':[12.2,79.1],
+        'vrindavan':[27.6,77.7],'puri':[19.8,85.8],'rameswaram':[9.3,79.3],
+        'kanchipuram':[12.8,79.7],'chidambaram':[11.4,79.7],'kashi':[25.3,83.0],
+        'pushkar':[26.5,74.6],'mathura':[27.5,77.7],'nasik':[20.0,73.8],
+        'shirdi':[19.8,74.5],'hampi':[15.3,76.5],'mysore':[12.3,76.6],
+        'kochi':[9.9,76.3],'trivandrum':[8.5,77.0],'pondicherry':[11.9,79.8],
+        'coimbatore':[11.0,77.0],'salem':[11.7,78.1],'vellore':[12.9,79.1],
+        'sedona':[34.9,-111.8],'glastonbury':[51.1,-2.7],'machu picchu':[-13.2,-72.5],
+        'cusco':[-13.5,-71.9],'titicaca':[-16.0,-69.2],'luxor':[25.7,32.6],
+        'giza':[29.9,31.1],'petra':[30.3,35.4],'angkor':[13.4,103.9],
+        'bagan':[21.2,94.9],'kyoto':[35.0,135.8],'nara':[34.7,135.8],
+        'agra':[27.2,78.0],'jaipur':[26.9,75.8],'udaipur':[24.6,73.7],
+        'goa':[15.3,74.1],'mumbai':[19.1,72.9],'pune':[18.5,73.9],
+      };
+      const fb = Object.entries(fallbacks).find(([k])=>q.includes(k)||k.includes(q));
+      if (fb) { cityLat=fb[1][0]; cityLon=fb[1][1]; foundCity=query.trim(); }
+    }
+
+    // 2. For each Graha, find the closest ACG line and its angular distance
+    const grahaReadings: typeof cityResult extends null ? never : NonNullable<typeof cityResult>['grahas'] = [];
+
+    for (const g of GRAHAS) {
+      const gLines = acgLines.filter(l=>l.planet===g.id);
+      if (!gLines.length) continue;
+
+      // Find distance from city to nearest point on each line
+      let minDist = 9999;
+      let bestAngle = '';
+
+      for (const line of gLines) {
+        // For MC/IC: distance is purely longitudinal
+        if (line.angle==='MC' || line.angle==='IC') {
+          if (line.mcLon==null) continue;
+          let lonDiff = Math.abs(cityLon - line.mcLon);
+          if (lonDiff > 180) lonDiff = 360 - lonDiff;
+          const kmDist = lonDiff * 111.32 * Math.cos(cityLat * Math.PI/180);
+          if (kmDist < minDist) { minDist = kmDist; bestAngle = line.angle; }
+        } else {
+          // For ASC/DSC: check distance to each point on the curve
+          const pts = line.svgPoints.split(' ').filter(Boolean);
+          for (const pt of pts) {
+            const [x,y] = pt.split(',').map(Number);
+            const lon = (x/100)*360 - 180;
+            const lat = 80 - (y/60)*160;
+            const dLon = (cityLon - lon) * 111.32 * Math.cos(cityLat * Math.PI/180);
+            const dLat = (cityLat - lat) * 111.32;
+            const km = Math.sqrt(dLon*dLon + dLat*dLat);
+            if (km < minDist) { minDist = km; bestAngle = line.angle; }
+          }
+        }
+      }
+
+      const influence: 'strong'|'moderate'|'mild' =
+        minDist < 300 ? 'strong' : minDist < 800 ? 'moderate' : 'mild';
+
+      // Generate personalised meaning based on angle, dasha status, and distance
+      const baseMeaning = MEANINGS[bestAngle]?.[g.id] ?? '';
+      const isDashaGraha = isDasha(g.id);
+      const distKm = Math.round(minDist);
+
+      let personalMeaning = '';
+      if (influence === 'strong') {
+        personalMeaning = isDashaGraha
+          ? `⚡ POWERFUL — ${foundCity} sits within ${distKm}km of your ${g.name} ${bestAngle} line, and ${g.name} is your active Dasha lord. This creates a rare double activation. ${baseMeaning}`
+          : `✦ ACTIVE — ${foundCity} is ${distKm}km from your ${g.name} ${bestAngle} line. ${baseMeaning}`;
+      } else if (influence === 'moderate') {
+        personalMeaning = isDashaGraha
+          ? `~ ELEVATED — ${foundCity} is ${distKm}km from your ${g.name} ${bestAngle} line. With ${g.name} as your Dasha lord, you still feel this influence. ${baseMeaning}`
+          : `~ PRESENT — ${foundCity} is ${distKm}km from your ${g.name} ${bestAngle} line. The influence is present but not dominant. ${baseMeaning}`;
+      } else {
+        personalMeaning = `· BACKGROUND — ${foundCity} is ${distKm}km from your nearest ${g.name} line. ${g.name}'s energy operates in the background here${isDashaGraha ? ', though your Dasha amplifies it somewhat':''}. ${baseMeaning}`;
+      }
+
+      grahaReadings.push({
+        id: g.id, name: g.name, color: g.color,
+        angle: bestAngle, distance: distKm,
+        influence, meaning: personalMeaning
+      });
+    }
+
+    // Sort: strong first, then by dasha, then by distance
+    grahaReadings.sort((a,b)=>{
+      const strengthOrder = {strong:0,moderate:1,mild:2};
+      const aStr = strengthOrder[a.influence];
+      const bStr = strengthOrder[b.influence];
+      if (aStr !== bStr) return aStr - bStr;
+      const aDasha = isDasha(a.id) ? 0 : 1;
+      const bDasha = isDasha(b.id) ? 0 : 1;
+      if (aDasha !== bDasha) return aDasha - bDasha;
+      return a.distance - b.distance;
+    });
+
+    // Overall city summary
+    const strongGrahas = grahaReadings.filter(g=>g.influence==='strong');
+    const strongNames = strongGrahas.map(g=>g.name).join(', ');
+    const dashaStrong = strongGrahas.filter(g=>isDasha(g.id));
+    let summary = '';
+    if (dashaStrong.length > 0) {
+      summary = `${foundCity} is a HIGH-FREQUENCY zone for you right now. Your active Dasha Graha ${dashaStrong.map(g=>g.name).join(' and ')} has a strong angular line passing through or near this city. This is a karmic activation zone during your current ${mahaRaw} Mahadasha.`;
+    } else if (strongGrahas.length > 0) {
+      const benefic = strongGrahas.filter(g=>['jupiter','venus','moon','mercury'].includes(g.id));
+      const malefic = strongGrahas.filter(g=>!['jupiter','venus','moon','mercury'].includes(g.id));
+      if (benefic.length > malefic.length) {
+        summary = `${foundCity} carries predominantly benefic Graha energy for you. ${strongNames} lines are active here. Opportunities for ${benefic.map(g=>MEANINGS[g.angle]?.[g.id]?.split('.')[0]).filter(Boolean).join('; ')}.`;
+      } else if (malefic.length > 0) {
+        summary = `${foundCity} carries intense transformative energy. ${strongNames} lines activate strongly here. This can bring power and success but requires conscious navigation of ${malefic.map(g=>g.name).join(' and ')}'s challenging qualities.`;
+      }
+    } else {
+      summary = `${foundCity} is a relatively neutral zone for you — no major Graha lines pass directly through, meaning life here flows without strong planetary amplification. This can be restful or feel unstimulating depending on what you seek.`;
+    }
+
+    setCityResult({ city: foundCity, reading: summary, grahas: grahaReadings });
+    setCityLoading(false);
+  };
+
   if (!birthData) return (
     <div style={{textAlign:'center' as const,padding:'40px 20px',color:'rgba(255,255,255,0.4)',fontSize:13,lineHeight:1.7}}>
       <div style={{fontSize:32,marginBottom:12,opacity:0.3}}>🌍</div>
@@ -579,6 +716,7 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipT
 
   return (
     <div style={{fontFamily:"'Plus Jakarta Sans','Inter',sans-serif"}}>
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
 
       {/* Header */}
       <div style={{marginBottom:16}}>
@@ -610,7 +748,7 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipT
 
       {/* Sub-tabs */}
       <div style={{display:'flex',marginBottom:16,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.05)',borderRadius:50,padding:3,width:'fit-content',overflowX:'auto' as const}}>
-        {([{key:'map',label:'🌍 Map',ok:true},{key:'lines',label:`☉ Lines (${acgLines.length})`,ok:canPrana},{key:'parans',label:`✦ Parans (${parans.length})`,ok:canSiddha},{key:'blueprint',label:'Blueprint',ok:canAkasha}] as const).filter(t=>t.ok).map(t=>(
+        {([{key:'map',label:'🌍 Map',ok:true},{key:'lines',label:`☉ Lines (${acgLines.length})`,ok:canPrana},{key:'parans',label:`✦ Parans (${parans.length})`,ok:canSiddha},{key:'blueprint',label:'Blueprint',ok:canAkasha},{key:'search',label:'🔍 City Search',ok:canPrana}] as const).filter(t=>t.ok).map(t=>(
           <button key={t.key} onClick={()=>setSubTab(t.key as typeof subTab)} style={{background:subTab===t.key?'rgba(212,175,55,0.12)':'transparent',border:'none',borderRadius:50,color:subTab===t.key?'#D4AF37':'rgba(255,255,255,0.35)',padding:'6px 14px',cursor:'pointer',fontSize:10,fontWeight:subTab===t.key?700:400,whiteSpace:'nowrap' as const}}>{t.label}</button>
         ))}
       </div>
@@ -812,6 +950,136 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any;membershipT
               <div style={{fontSize:9,color:'rgba(255,255,255,0.2)',marginTop:6}}>Near {p.lon.toFixed(0)}° longitude</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ══ CITY SEARCH ══ */}
+      {subTab==='search' && (
+        <div>
+          {/* Search input */}
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:'0.4em',color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,marginBottom:10}}>
+              Prashna · City Reading
+            </div>
+            <div style={{fontSize:12,color:'rgba(255,255,255,0.4)',lineHeight:1.6,marginBottom:16}}>
+              Type any city or place on Earth. Every Graha will tell you exactly how it influences your life there — based on how close that place is to your personal ACG lines.
+            </div>
+            <div style={{display:'flex',gap:10,alignItems:'center'}}>
+              <input
+                value={cityQuery}
+                onChange={e=>setCityQuery(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&searchCity(cityQuery)}
+                placeholder="Type a city — Madurai, Chicago, Bali, Paris..."
+                style={{
+                  flex:1, background:'rgba(255,255,255,0.04)',
+                  border:'1px solid rgba(255,255,255,0.1)',
+                  borderRadius:14, padding:'12px 16px',
+                  color:'white', fontSize:13, fontFamily:'inherit',
+                  outline:'none',
+                }}
+              />
+              <button
+                onClick={()=>searchCity(cityQuery)}
+                disabled={cityLoading || !cityQuery.trim()}
+                style={{
+                  background: cityLoading||!cityQuery.trim() ? 'rgba(212,175,55,0.1)' : 'rgba(212,175,55,0.15)',
+                  border:'1px solid rgba(212,175,55,0.3)',
+                  borderRadius:14, padding:'12px 20px',
+                  color:'#D4AF37', fontSize:12, fontWeight:700,
+                  cursor: cityLoading||!cityQuery.trim() ? 'not-allowed' : 'pointer',
+                  fontFamily:'inherit', whiteSpace:'nowrap' as const,
+                  transition:'all 0.2s',
+                }}
+              >
+                {cityLoading ? '...' : 'Read City'}
+              </button>
+            </div>
+
+            {/* Quick city suggestions */}
+            <div style={{display:'flex',gap:6,flexWrap:'wrap' as const,marginTop:10}}>
+              {['Madurai','Tiruvannamalai','Rishikesh','Bali','Sedona','Glastonbury','Kyoto','Cairo','Cusco','Varanasi'].map(c=>(
+                <button key={c} onClick={()=>{setCityQuery(c);searchCity(c);}}
+                  style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:20,padding:'4px 12px',cursor:'pointer',color:'rgba(255,255,255,0.45)',fontSize:10,fontFamily:'inherit',transition:'all 0.2s'}}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Loading */}
+          {cityLoading && (
+            <div style={{textAlign:'center' as const,padding:'40px 20px'}}>
+              <div style={{fontSize:24,marginBottom:12,animation:'spin 2s linear infinite',display:'inline-block'}}>✦</div>
+              <div style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>Reading the Graha-Geographic intelligence for {cityQuery}...</div>
+            </div>
+          )}
+
+          {/* Results */}
+          {cityResult && !cityLoading && (
+            <div>
+              {/* City header */}
+              <div style={{background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:18,padding:'18px 20px',marginBottom:18}}>
+                <div style={{fontSize:8,letterSpacing:'0.4em',color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,marginBottom:6}}>
+                  Bhumi Reading · {cityResult.city}
+                </div>
+                <div style={{fontSize:13,color:'rgba(255,255,255,0.75)',lineHeight:1.7}}>
+                  {cityResult.reading}
+                </div>
+                {mahaRaw && <div style={{fontSize:10,color:'rgba(255,255,255,0.35)',marginTop:10}}>
+                  Based on your {mahaRaw} Mahadasha{antarRaw?` · ${antarRaw} Antardasha`:''} · {moonNak&&`${moonNak} Nakshatra`}
+                </div>}
+              </div>
+
+              {/* Graha readings grid */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
+                {cityResult.grahas.map((g,i)=>{
+                  const influenceStyle = g.influence==='strong'
+                    ? {border:`1px solid ${g.color}44`,boxShadow:`0 0 20px ${g.color}15`}
+                    : g.influence==='moderate'
+                    ? {border:`1px solid ${g.color}22`}
+                    : {border:'1px solid rgba(255,255,255,0.06)',opacity:0.85};
+                  const graha = GRAHAS.find(gr=>gr.id===g.id);
+                  return (
+                    <div key={i} style={{background:'rgba(255,255,255,0.02)',borderRadius:16,padding:'16px 18px',position:'relative' as const,...influenceStyle}}>
+                      {/* Influence badge */}
+                      <div style={{position:'absolute' as const,top:10,right:10,display:'flex',gap:5,alignItems:'center'}}>
+                        {isDasha(g.id) && <span style={{background:'rgba(212,175,55,0.15)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:6,padding:'1px 6px',fontSize:7,fontWeight:800,color:'#D4AF37',textTransform:'uppercase' as const,letterSpacing:'0.2em'}}>DASHA</span>}
+                        <span style={{background:g.influence==='strong'?`${g.color}22`:g.influence==='moderate'?`${g.color}12`:'rgba(255,255,255,0.04)',border:`1px solid ${g.influence==='strong'?g.color+'44':g.influence==='moderate'?g.color+'22':'rgba(255,255,255,0.08)'}`,borderRadius:6,padding:'1px 6px',fontSize:7,fontWeight:800,color:g.influence==='strong'?g.color:g.influence==='moderate'?g.color:'rgba(255,255,255,0.3)',textTransform:'uppercase' as const,letterSpacing:'0.15em'}}>
+                          {g.influence}
+                        </span>
+                      </div>
+
+                      {/* Planet header */}
+                      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                        <div style={{width:36,height:36,borderRadius:10,background:`${g.color}12`,border:`1px solid ${g.color}25`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:g.color,flexShrink:0}}>
+                          {graha?.sym ?? '✦'}
+                        </div>
+                        <div>
+                          <div style={{fontSize:14,fontWeight:800,color:g.color,letterSpacing:'-0.02em'}}>{g.name}</div>
+                          <div style={{fontSize:9,color:'rgba(255,255,255,0.3)',fontWeight:600}}>
+                            {g.angle} line · {g.distance < 1000 ? `${g.distance}km away` : `${(g.distance/1000).toFixed(1)}k km away`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reading */}
+                      <div style={{fontSize:11,color:'rgba(255,255,255,0.65)',lineHeight:1.7}}>
+                        {g.meaning}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* New search prompt */}
+              <div style={{marginTop:20,textAlign:'center' as const}}>
+                <button onClick={()=>{setCityResult(null);setCityQuery('');}}
+                  style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'10px 20px',color:'rgba(255,255,255,0.35)',cursor:'pointer',fontSize:11,fontFamily:'inherit'}}>
+                  ← Search another city
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
