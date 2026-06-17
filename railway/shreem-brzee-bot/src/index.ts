@@ -493,16 +493,30 @@ async function edgePost(route: string, body: unknown): Promise<void> {
   try {
     const r = await fetch(`${EDGE_BASE}${route}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY,
+      },
       body: JSON.stringify(body),
     });
-    if (!r.ok) console.error(`[edge] POST ${route} → ${r.status}`);
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      console.error(`[edge] POST ${route} → ${r.status} ${txt.slice(0,120)}`);
+    } else {
+      console.log(`[edge] POST ${route} → ${r.status} ✓`);
+    }
   } catch (e: any) { console.error(`[edge] failed:`, e.message); }
 }
 
 async function edgeGet(route: string): Promise<any> {
   try {
-    const r = await fetch(`${EDGE_BASE}${route}`);
+    const r = await fetch(`${EDGE_BASE}${route}`, {
+      headers: {
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY,
+      },
+    });
     return r.ok ? r.json() : null;
   } catch { return null; }
 }
@@ -1032,13 +1046,11 @@ async function main() {
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'shreem_brzee_signals' },
       async (payload) => {
-        // Only process test signals (sig starts with TEST_) via Supabase
-        // Real whale signals come via Enhanced WebSocket above
+        // Process ALL signals from Realtime — catches test signals + any missed by WS
         const sig = payload.new?.sig || '';
-        if (sig.startsWith('TEST_')) {
-          try { await processSignal(payload.new); }
-          catch (e: any) { console.error('[fallback]', e.message); }
-        }
+        console.log(`[realtime] signal received: ${sig.slice(0,20)} action=${payload.new?.action}`);
+        try { await processSignal(payload.new); }
+        catch (e: any) { console.error('[fallback]', e.message); }
       }
     )
     .subscribe((status) => {
