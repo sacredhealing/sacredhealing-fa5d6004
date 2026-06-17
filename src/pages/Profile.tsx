@@ -491,7 +491,7 @@ const Profile: React.FC = () => {
         </section>
 
         {/* ══ MEMBERSHIP ══ */}
-        <SLabel>Membership</SLabel>
+        <SLabel>{t('profile.sectionMembership')}</SLabel>
         <Card onClick={()=>setShowPortal(true)}>
           <div style={{padding:'18px 20px',display:'flex',alignItems:'center',gap:16,position:'relative',zIndex:1}}>
             <div style={{width:48,height:48,borderRadius:16,background:`${haloConfig?haloConfig.color+'18':'rgba(212,175,55,.1)'}`,border:`1px solid ${haloConfig?haloConfig.color+'44':'rgba(212,175,55,.3)'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0,animation:'btnGlow 4s ease-in-out infinite'}}>
@@ -632,7 +632,7 @@ const Profile: React.FC = () => {
         )}
 
         {/* ══ MY RECORDINGS ══ */}
-        <SLabel mt={20}>My Recordings</SLabel>
+        <SLabel mt={20}>{t('profile.sectionRecordings')}</SLabel>
         <Card>
           <div style={{padding:'18px 20px',position:'relative',zIndex:1}}>
             <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
@@ -640,12 +640,12 @@ const Profile: React.FC = () => {
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="16" height="12" rx="2.5" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><path d="M18 9L22 6.5V17.5L18 15Z" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><circle cx="10" cy="12" r="3" stroke="#22D3EE" strokeWidth="1.3" fill="none"/><circle cx="10" cy="12" r="1.2" fill="rgba(34,211,238,.5)"/></svg>
               </IconBox>
               <div>
-                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.42em',textTransform:'uppercase',color:'rgba(34,211,238,.65)',marginBottom:3}}>◈ 1-on-1 Sessions</div>
-                <div style={{fontSize:15,fontWeight:800,color:'#fff'}}>Your Recordings</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,.3)',marginTop:2}}>Private healing sessions archived here</div>
+                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.42em',textTransform:'uppercase',color:'rgba(34,211,238,.65)',marginBottom:3}}>{t('profile.recordingsLabel')}</div>
+                <div style={{fontSize:15,fontWeight:800,color:'#fff'}}>{t('profile.recordingsTitle')}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.3)',marginTop:2}}>{t('profile.recordingsSub')}</div>
               </div>
             </div>
-            <RecordingsList callType="dm" largeText emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
+            <RecordingsList callType="dm" largeText {...{emptyText: t('profile.recordingsEmpty')}} />
           </div>
         </Card>
 
@@ -691,11 +691,11 @@ const Profile: React.FC = () => {
         </Card>
 
         {/* ══ SETTINGS ══ */}
-        <SLabel mt={20}>Account</SLabel>
+        <SLabel mt={20}>{t('profile.sectionAccount')}</SLabel>
         <div style={{margin:'0 16px',display:'flex',flexDirection:'column',gap:2}}>
-          <SRow icon={<IconBox><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={G} strokeWidth="1.5" fill="rgba(212,175,55,.08)"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke={G} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg></IconBox>} label={t('profile.editProfile')} sub="Name · photo · bio · birth chart" onClick={()=>setProfileEditOpen(true)} />
+          <SRow icon={<IconBox><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={G} strokeWidth="1.5" fill="rgba(212,175,55,.08)"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke={G} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg></IconBox>} label={t('profile.editProfile')} sub={t('profile.editProfileSub')} onClick={()=>setProfileEditOpen(true)} />
 
-          <SRow icon={<IconBox color="rgba(212,175,55,.08)" border="rgba(212,175,55,.25)" glowColor="rgba(212,175,55,.7)"><Key size={18} color={G}/></IconBox>} label="Change Password" sub="Update or reset your sacred access key" onClick={()=>setPasswordDialogOpen(true)} />
+          <SRow icon={<IconBox color="rgba(212,175,55,.08)" border="rgba(212,175,55,.25)" glowColor="rgba(212,175,55,.7)"><Key size={18} color={G}/></IconBox>} label={t('profile.changePassword')} sub={t('profile.changePasswordSub')} onClick={()=>setPasswordDialogOpen(true)} />
 
           <SRow icon={<IconBox color="rgba(34,211,238,.08)" border="rgba(34,211,238,.2)" glowColor="rgba(34,211,238,.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><path d="M16 16L20 20" stroke="#22D3EE" strokeWidth="1.8" strokeLinecap="round"/></svg></IconBox>} label={t('profile.language.label')} sub={langs[activeLangIdx].flag+' '+langs[activeLangIdx].label} onClick={()=>setLangOpen(o=>!o)} right={<div style={{fontSize:14,color:'rgba(255,255,255,.18)',transform:langOpen?'rotate(180deg)':'none',transition:'transform .25s'}}>›</div>} />
           {langOpen && (
@@ -710,14 +710,14 @@ const Profile: React.FC = () => {
           )}
         </div>
 
-        <SLabel mt={20}>Notifications & Privacy</SLabel>
+        <SLabel mt={20}>{t('profile.sectionNotificationsPrivacy')}</SLabel>
         <div style={{margin:'0 16px',display:'flex',flexDirection:'column',gap:2}}>
           <SRow icon={<IconBox><Bell size={18} color={G}/></IconBox>} label={t('profile.notifications')} sub={t('profile.dailyReminders')} onClick={()=>setNotificationsOpen(true)} />
           <SRow icon={<IconBox color="rgba(139,92,246,.08)" border="rgba(139,92,246,.2)" glowColor="rgba(139,92,246,.7)"><Shield size={18} color="#a855f7"/></IconBox>} label={t('profile.privacy')} sub={t('profile.dataAndSecurity')} onClick={()=>setPrivacyOpen(true)} />
           <SRow icon={<IconBox><Settings size={18} color={G}/></IconBox>} label={t('profile.settings.title')} sub={t('profile.appPreferences')} onClick={()=>setSettingsOpen(true)} />
         </div>
 
-        <SLabel mt={20}>How To Use</SLabel>
+        <SLabel mt={20}>{t('profile.sectionHowToUse')}</SLabel>
         <div style={{margin:'0 16px'}}>
           <a href="https://www.youtube.com/watch?v=9dtcEjXA8e0" target="_blank" rel="noopener noreferrer" style={{textDecoration:'none'}}>
             <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:16,border:'1px solid rgba(212,175,55,.16)',background:'rgba(212,175,55,.04)',cursor:'pointer'}}>
