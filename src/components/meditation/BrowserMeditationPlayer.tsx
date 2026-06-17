@@ -273,7 +273,7 @@ export default function BrowserMeditationPlayer({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm flex items-center gap-2">
-                  <Headphones className="w-4 h-4 text-blue-400" />
+                  <Headphones className="w-4 h-4 text-[#D4AF37]" />
                   Binaural Beats ({binauralBeatHz} Hz)
                 </Label>
                 <span className="text-xs text-muted-foreground">{binauralVolume}%</span>
@@ -284,7 +284,7 @@ export default function BrowserMeditationPlayer({
                 min={0}
                 max={100}
                 step={1}
-                className="[&>span:first-child]:bg-blue-500/20 [&_[role=slider]]:bg-blue-500"
+                className="[&>span:first-child]:bg-[#D4AF37]/20 [&_[role=slider]]:bg-[#D4AF37]"
               />
             </div>
           )}

@@ -141,10 +141,10 @@ const SQI_STYLES = `
 
   .btn-cyan {
     padding: 12px 28px;
-    background: rgba(34,211,238,0.08);
-    border: 1px solid rgba(34,211,238,0.25);
+    background: rgba(212,175,55,0.08);
+    border: 1px solid rgba(212,175,55,0.25);
     border-radius: 9999px;
-    color: #22D3EE;
+    color: #D4AF37;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 800;
     font-size: 9px;
@@ -154,8 +154,8 @@ const SQI_STYLES = `
     transition: all 0.3s ease;
   }
   .btn-cyan:hover {
-    background: rgba(34,211,238,0.14);
-    box-shadow: 0 0 20px rgba(34,211,238,0.1);
+    background: rgba(212,175,55,0.14);
+    box-shadow: 0 0 20px rgba(212,175,55,0.1);
   }
 
   /* Pulse ring animation for scan state */
