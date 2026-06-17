@@ -1,0 +1,60 @@
+name: Ping Edge Function Version
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version + test signal
+        run: |
+          BASE="https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
+          
+          echo "=== GET /ping (version check) ==="
+          curl -s "${BASE}/ping" | tee /tmp/ping.txt
+          echo ""
+          
+          echo "=== POST /test ==="
+          curl -s -X POST "${BASE}/test" -H "Content-Type: application/json" -d "{}" | tee /tmp/test.txt
+          echo ""
+          
+          # Check if version=v3 is in response
+          if grep -q "v3" /tmp/ping.txt 2>/dev/null || grep -q "v3" /tmp/test.txt 2>/dev/null; then
+            echo "✅ v3 IS DEPLOYED — correct version running"
+          else
+            echo "❌ v3 NOT deployed — old version still running"
+            echo "ping response: $(cat /tmp/ping.txt)"
+            echo "test response: $(cat /tmp/test.txt)"
+          fi
+          
+          # Check if test signal actually inserted
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          sleep 2
+          COUNT=$(curl -s \
+            "https://ssygukfdbtehvtndandn.supabase.co/rest/v1/shreem_brzee_signals?order=created_at.desc&limit=5" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null)
+          echo "Signals in DB: $COUNT"
+          
+          if [ "$COUNT" != "0" ] && [ -n "$COUNT" ]; then
+            echo "✅ SIGNALS IN DB — test signal worked!"
+          else
+            echo "❌ NO SIGNALS — /test not inserting"
+          fi
+          
+          # Save results
+          cat > _ping_result.txt << EOF
+ping: $(cat /tmp/ping.txt)
+test: $(cat /tmp/test.txt)
+signals_count: $COUNT
+EOF
+
+      - name: Save
+        run: |
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _ping_result.txt || true
+          git commit -m "data: ping test result" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
