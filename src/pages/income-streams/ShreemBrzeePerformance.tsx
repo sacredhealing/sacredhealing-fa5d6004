@@ -223,25 +223,16 @@ export default function ShreemBrzeePerformance(){
   const testSignal=async()=>{
     setBusy(true);
     try{
-      // Inject directly via supabase client (bypasses edge function)
-      const sig='TEST_'+Date.now();
-      const{error}=await(supabase as any).from('shreem_brzee_signals').upsert({
-        sig,
-        wallet:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu',
-        label:'Remusofmars',
-        action:'BUY',
-        mint:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr',
-        symbol:'POPCAT',
-        amount_sol:1.5,
-        token_amount:50000,
-        is_pump_fun:true,
-        block_time:Math.floor(Date.now()/1000),
-        created_at:new Date().toISOString(),
-      },{onConflict:'sig'});
-      if(error){flash(`Test failed: ${error.message}`,'err');}
-      else{
-        flash('⚡ POPCAT test signal injected — check Signal Feed','ok');
+      // Use edge function /test — runs with service role key, bypasses RLS
+      const r=await fetch(`${EDGE}/test`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      if(!r.ok){const t=await r.text();throw new Error(`HTTP ${r.status}: ${t.slice(0,60)}`);}
+      const d=await r.json();
+      if(d.sig){
+        flash('⚡ POPCAT test signal injected — check Signal Feed & Trade History','ok');
         setTimeout(loadAll,2000);
+        setTimeout(loadAll,5000);
+      } else {
+        flash(`Test error: ${JSON.stringify(d).slice(0,80)}`,'err');
       }
     }catch(e:any){flash(`Test failed: ${e.message?.slice(0,80)}`,'err');}
     setBusy(false);
