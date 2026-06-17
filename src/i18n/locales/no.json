@@ -1736,7 +1736,19 @@
       "overview": "Overview",
       "activity": "Activity",
       "achievements": "Achievements"
-    }
+    },
+    "sectionMembership": "Medlemskap",
+    "sectionRecordings": "Mine Opptak",
+    "recordingsLabel": "◈ 1-til-1 Økter",
+    "recordingsTitle": "Dine Opptak",
+    "recordingsSub": "Private helbredelsesøkter arkivert her",
+    "recordingsEmpty": "Ingen 1-til-1-opptak ennå. De vises her automatisk etter øktene dine.",
+    "sectionAccount": "Konto",
+    "editProfileSub": "Navn · foto · bio · horoskop",
+    "changePassword": "Endre passord",
+    "changePasswordSub": "Oppdater eller tilbakestill din hellige tilgangsnøkkel",
+    "sectionNotificationsPrivacy": "Varsler og Personvern",
+    "sectionHowToUse": "Hvordan bruke"
   },
   "appearance": {
     "title": "Utseende",
