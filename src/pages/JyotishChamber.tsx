@@ -3896,7 +3896,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         {/* ══════════════ BHUMI ORACLE ══════════════ */}
         {activeTab === 'bhumi' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
-            <BhumiOraclePanel birthData={birthData} ephemeris={ephemeris} />
+            <BhumiOraclePanel birthData={birthData} ephemeris={ephemeris} membershipTier={membershipTier} isAdmin={isAdmin} />
           </motion.div>
         )}
 
