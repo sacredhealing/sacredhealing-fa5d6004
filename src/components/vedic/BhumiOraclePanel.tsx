@@ -94,6 +94,215 @@ const MEANINGS: Record<string,Record<string,string>> = {
   },
 };
 
+
+// ── Geographic place lookup ─────────────────────────────────────
+// lon: -180..180, lat: -90..90
+interface GeoPlace {
+  name: string; lat: number; lon: number; region: string;
+}
+
+const GEO_PLACES: GeoPlace[] = [
+  // Europe
+  {name:'Reykjavik',lat:64.1,lon:-21.9,region:'Iceland'},
+  {name:'Oslo',lat:59.9,lon:10.8,region:'Norway'},
+  {name:'Stockholm',lat:59.3,lon:18.1,region:'Sweden'},
+  {name:'Helsinki',lat:60.2,lon:24.9,region:'Finland'},
+  {name:'Copenhagen',lat:55.7,lon:12.6,region:'Denmark'},
+  {name:'Edinburgh',lat:55.9,lon:-3.2,region:'Scotland'},
+  {name:'London',lat:51.5,lon:-0.1,region:'England'},
+  {name:'Dublin',lat:53.3,lon:-6.3,region:'Ireland'},
+  {name:'Amsterdam',lat:52.4,lon:4.9,region:'Netherlands'},
+  {name:'Brussels',lat:50.8,lon:4.4,region:'Belgium'},
+  {name:'Paris',lat:48.9,lon:2.4,region:'France'},
+  {name:'Zurich',lat:47.4,lon:8.5,region:'Switzerland'},
+  {name:'Berlin',lat:52.5,lon:13.4,region:'Germany'},
+  {name:'Vienna',lat:48.2,lon:16.4,region:'Austria'},
+  {name:'Prague',lat:50.1,lon:14.4,region:'Czech Republic'},
+  {name:'Warsaw',lat:52.2,lon:21.0,region:'Poland'},
+  {name:'Kyiv',lat:50.5,lon:30.5,region:'Ukraine'},
+  {name:'Madrid',lat:40.4,lon:-3.7,region:'Spain'},
+  {name:'Lisbon',lat:38.7,lon:-9.1,region:'Portugal'},
+  {name:'Barcelona',lat:41.4,lon:2.2,region:'Spain'},
+  {name:'Lyon',lat:45.7,lon:4.8,region:'France'},
+  {name:'Milan',lat:45.5,lon:9.2,region:'Italy'},
+  {name:'Rome',lat:41.9,lon:12.5,region:'Italy'},
+  {name:'Athens',lat:37.9,lon:23.7,region:'Greece'},
+  {name:'Istanbul',lat:41.0,lon:28.9,region:'Turkey'},
+  {name:'Bucharest',lat:44.4,lon:26.1,region:'Romania'},
+  {name:'Budapest',lat:47.5,lon:19.0,region:'Hungary'},
+  {name:'Belgrade',lat:44.8,lon:20.5,region:'Serbia'},
+  {name:'Sofia',lat:42.7,lon:23.3,region:'Bulgaria'},
+  {name:'Tallinn',lat:59.4,lon:24.7,region:'Estonia'},
+  {name:'Riga',lat:56.9,lon:24.1,region:'Latvia'},
+  {name:'Vilnius',lat:54.7,lon:25.3,region:'Lithuania'},
+  // Russia / Central Asia
+  {name:'Moscow',lat:55.8,lon:37.6,region:'Russia'},
+  {name:'St Petersburg',lat:59.9,lon:30.3,region:'Russia'},
+  {name:'Novosibirsk',lat:55.0,lon:82.9,region:'Russia'},
+  {name:'Almaty',lat:43.3,lon:76.9,region:'Kazakhstan'},
+  {name:'Tashkent',lat:41.3,lon:69.2,region:'Uzbekistan'},
+  // Middle East
+  {name:'Ankara',lat:39.9,lon:32.9,region:'Turkey'},
+  {name:'Beirut',lat:33.9,lon:35.5,region:'Lebanon'},
+  {name:'Tel Aviv',lat:32.1,lon:34.8,region:'Israel'},
+  {name:'Jerusalem',lat:31.8,lon:35.2,region:'Israel'},
+  {name:'Amman',lat:31.9,lon:35.9,region:'Jordan'},
+  {name:'Baghdad',lat:33.3,lon:44.4,region:'Iraq'},
+  {name:'Tehran',lat:35.7,lon:51.4,region:'Iran'},
+  {name:'Dubai',lat:25.2,lon:55.3,region:'UAE'},
+  {name:'Riyadh',lat:24.7,lon:46.7,region:'Saudi Arabia'},
+  {name:'Muscat',lat:23.6,lon:58.6,region:'Oman'},
+  // South Asia
+  {name:'Karachi',lat:24.9,lon:67.0,region:'Pakistan'},
+  {name:'Lahore',lat:31.5,lon:74.3,region:'Pakistan'},
+  {name:'New Delhi',lat:28.6,lon:77.2,region:'India'},
+  {name:'Mumbai',lat:19.1,lon:72.9,region:'India'},
+  {name:'Bangalore',lat:13.0,lon:77.6,region:'India'},
+  {name:'Chennai',lat:13.1,lon:80.3,region:'India'},
+  {name:'Kolkata',lat:22.6,lon:88.4,region:'India'},
+  {name:'Varanasi',lat:25.3,lon:83.0,region:'India'},
+  {name:'Tiruvannamalai',lat:12.2,lon:79.1,region:'Tamil Nadu'},
+  {name:'Madurai',lat:9.9,lon:78.1,region:'Tamil Nadu'},
+  {name:'Kathmandu',lat:27.7,lon:85.3,region:'Nepal'},
+  {name:'Colombo',lat:6.9,lon:79.9,region:'Sri Lanka'},
+  {name:'Dhaka',lat:23.8,lon:90.4,region:'Bangladesh'},
+  // East/SE Asia
+  {name:'Lhasa',lat:29.6,lon:91.1,region:'Tibet'},
+  {name:'Chengdu',lat:30.7,lon:104.1,region:'China'},
+  {name:'Beijing',lat:39.9,lon:116.4,region:'China'},
+  {name:'Shanghai',lat:31.2,lon:121.5,region:'China'},
+  {name:'Hong Kong',lat:22.3,lon:114.2,region:'Hong Kong'},
+  {name:'Taipei',lat:25.0,lon:121.5,region:'Taiwan'},
+  {name:'Seoul',lat:37.6,lon:126.9,region:'South Korea'},
+  {name:'Tokyo',lat:35.7,lon:139.7,region:'Japan'},
+  {name:'Osaka',lat:34.7,lon:135.5,region:'Japan'},
+  {name:'Bangkok',lat:13.8,lon:100.5,region:'Thailand'},
+  {name:'Chiang Mai',lat:18.8,lon:99.0,region:'Thailand'},
+  {name:'Yangon',lat:16.8,lon:96.2,region:'Myanmar'},
+  {name:'Hanoi',lat:21.0,lon:105.8,region:'Vietnam'},
+  {name:'Ho Chi Minh City',lat:10.8,lon:106.7,region:'Vietnam'},
+  {name:'Phnom Penh',lat:11.6,lon:104.9,region:'Cambodia'},
+  {name:'Vientiane',lat:17.9,lon:102.6,region:'Laos'},
+  {name:'Kuala Lumpur',lat:3.1,lon:101.7,region:'Malaysia'},
+  {name:'Singapore',lat:1.4,lon:103.8,region:'Singapore'},
+  {name:'Jakarta',lat:-6.2,lon:106.8,region:'Indonesia'},
+  {name:'Bali',lat:-8.4,lon:115.2,region:'Indonesia'},
+  {name:'Manila',lat:14.6,lon:121.0,region:'Philippines'},
+  // Oceania
+  {name:'Darwin',lat:-12.5,lon:130.8,region:'Australia'},
+  {name:'Perth',lat:-31.9,lon:115.9,region:'Australia'},
+  {name:'Sydney',lat:-33.9,lon:151.2,region:'Australia'},
+  {name:'Melbourne',lat:-37.8,lon:144.9,region:'Australia'},
+  {name:'Brisbane',lat:-27.5,lon:153.0,region:'Australia'},
+  {name:'Auckland',lat:-36.9,lon:174.8,region:'New Zealand'},
+  // Africa
+  {name:'Cairo',lat:30.0,lon:31.2,region:'Egypt'},
+  {name:'Luxor',lat:25.7,lon:32.6,region:'Egypt'},
+  {name:'Addis Ababa',lat:9.0,lon:38.7,region:'Ethiopia'},
+  {name:'Nairobi',lat:-1.3,lon:36.8,region:'Kenya'},
+  {name:'Dar es Salaam',lat:-6.8,lon:39.3,region:'Tanzania'},
+  {name:'Johannesburg',lat:-26.2,lon:28.0,region:'South Africa'},
+  {name:'Cape Town',lat:-33.9,lon:18.4,region:'South Africa'},
+  {name:'Lagos',lat:6.5,lon:3.4,region:'Nigeria'},
+  {name:'Accra',lat:5.6,lon:-0.2,region:'Ghana'},
+  {name:'Dakar',lat:14.7,lon:-17.4,region:'Senegal'},
+  {name:'Casablanca',lat:33.6,lon:-7.6,region:'Morocco'},
+  {name:'Tunis',lat:36.8,lon:10.2,region:'Tunisia'},
+  // Americas
+  {name:'Anchorage',lat:61.2,lon:-149.9,region:'Alaska'},
+  {name:'Vancouver',lat:49.3,lon:-123.1,region:'Canada'},
+  {name:'Seattle',lat:47.6,lon:-122.3,region:'USA'},
+  {name:'San Francisco',lat:37.8,lon:-122.4,region:'USA'},
+  {name:'Los Angeles',lat:34.1,lon:-118.2,region:'USA'},
+  {name:'Las Vegas',lat:36.2,lon:-115.1,region:'USA'},
+  {name:'Denver',lat:39.7,lon:-104.9,region:'USA'},
+  {name:'Chicago',lat:41.9,lon:-87.6,region:'USA'},
+  {name:'New York',lat:40.7,lon:-74.0,region:'USA'},
+  {name:'Miami',lat:25.8,lon:-80.2,region:'USA'},
+  {name:'Toronto',lat:43.7,lon:-79.4,region:'Canada'},
+  {name:'Montreal',lat:45.5,lon:-73.6,region:'Canada'},
+  {name:'Mexico City',lat:19.4,lon:-99.1,region:'Mexico'},
+  {name:'Havana',lat:23.1,lon:-82.4,region:'Cuba'},
+  {name:'Guatemala City',lat:14.6,lon:-90.5,region:'Guatemala'},
+  {name:'Bogotá',lat:4.7,lon:-74.1,region:'Colombia'},
+  {name:'Quito',lat:-0.2,lon:-78.5,region:'Ecuador'},
+  {name:'Lima',lat:-12.1,lon:-77.0,region:'Peru'},
+  {name:'Cusco',lat:-13.5,lon:-71.9,region:'Peru'},
+  {name:'La Paz',lat:-16.5,lon:-68.1,region:'Bolivia'},
+  {name:'São Paulo',lat:-23.5,lon:-46.6,region:'Brazil'},
+  {name:'Rio de Janeiro',lat:-22.9,lon:-43.2,region:'Brazil'},
+  {name:'Brasília',lat:-15.8,lon:-47.9,region:'Brazil'},
+  {name:'Buenos Aires',lat:-34.6,lon:-58.4,region:'Argentina'},
+  {name:'Santiago',lat:-33.5,lon:-70.7,region:'Chile'},
+  {name:'Montevideo',lat:-34.9,lon:-56.2,region:'Uruguay'},
+  {name:'Caracas',lat:10.5,lon:-66.9,region:'Venezuela'},
+];
+
+/**
+ * Find place names near a geographic longitude (for MC/IC lines)
+ * or along an ASC/DSC curve's lat/lon points
+ */
+function placesNearLon(lon: number, radius = 18): string[] {
+  const nearby = GEO_PLACES.filter(p => {
+    const diff = Math.abs(p.lon - lon);
+    return diff <= radius || diff >= (360 - radius);
+  });
+  // Sort by latitude (north to south) and deduplicate regions
+  nearby.sort((a,b) => b.lat - a.lat);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const p of nearby) {
+    if (!seen.has(p.region)) {
+      seen.add(p.region);
+      result.push(p.name);
+    }
+    if (result.length >= 6) break;
+  }
+  return result;
+}
+
+function placesAlongCurve(svgPts: string, radius = 14): string[] {
+  // Parse SVG points back to geo coords
+  // SVG: x = (lon+180)/360*100, y = (80-lat)/160*60
+  const pts = svgPts.split(' ').filter(Boolean).slice(0, 60);
+  const geoPts = pts.map(pt => {
+    const [x,y] = pt.split(',').map(Number);
+    const lon = (x/100)*360 - 180;
+    const lat = 80 - (y/60)*160;
+    return {lon, lat};
+  });
+
+  const nearby: GeoPlace[] = [];
+  for (const p of GEO_PLACES) {
+    for (const gp of geoPts) {
+      const dLon = Math.abs(p.lon - gp.lon);
+      const dLat = Math.abs(p.lat - gp.lat);
+      if (dLon <= radius && dLat <= 8) {
+        nearby.push(p);
+        break;
+      }
+    }
+  }
+  nearby.sort((a,b) => b.lat - a.lat);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const p of nearby) {
+    if (!seen.has(p.region)) {
+      seen.add(p.region);
+      result.push(p.name);
+    }
+    if (result.length >= 6) break;
+  }
+  return result;
+}
+
+function getLinePlaces(line: ACGLine): string[] {
+  if (line.angle === 'MC' || line.angle === 'IC') {
+    return placesNearLon(line.mcLon ?? 0);
+  }
+  return placesAlongCurve(line.svgPoints);
+}
+
 // ── ACG Mathematics ─────────────────────────────────────────────
 function toRad(d: number) { return d * Math.PI / 180; }
 function toDeg(r: number) { return r * 180 / Math.PI; }
@@ -270,6 +479,7 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
   const [activeAngle,setActiveAngle] = useState<string|null>(null);
   const [subTab,setSubTab] = useState<'map'|'lines'|'parans'|'blueprint'>('map');
   const [beneficOnly,setBeneficOnly] = useState(false);
+  const [hoveredLine,setHoveredLine] = useState<string|null>(null);
   const [pulse,setPulse] = useState(0);
 
   useEffect(()=>{
@@ -448,6 +658,8 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                       strokeDasharray={ANGLE_DASH[line.angle]}
                       opacity={op} style={{cursor:'pointer'}}
                       onClick={()=>setSelected(isSel?null:`${line.planet}-${line.angle}`)}
+                      onMouseEnter={()=>setHoveredLine(`${line.planet}-${line.angle}`)}
+                      onMouseLeave={()=>setHoveredLine(null)}
                     />
                   );
                 })}
@@ -463,6 +675,20 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                 <circle cx={birthMarker.x} cy={birthMarker.y} r="2.2" fill="none" stroke="#D4AF37" strokeWidth="0.3" opacity={0.3+0.2*sinPulse} style={{pointerEvents:'none' as const}}/>
                 <text x={birthMarker.x+1.5} y={birthMarker.y-1} fontSize="1.4" fill="#D4AF37" fontWeight="800" opacity="0.85" style={{pointerEvents:'none' as const}}>✦ {cityLabel}</text>
 
+                {/* Hover tooltip */}
+                {hoveredLine && (() => {
+                  const hl = acgLines.find(l=>`${l.planet}-${l.angle}`===hoveredLine);
+                  if (!hl) return null;
+                  const places = getLinePlaces(hl).slice(0,4);
+                  const label = `${hl.name} ${hl.angle}${places.length ? ' — ' + places.join(', ') : ''}`;
+                  return (
+                    <text x="50" y="5" textAnchor="middle" fontSize="1.6" fill={hl.color}
+                      fontWeight="700" style={{pointerEvents:'none' as const}}
+                      filter="url(#shadow)">
+                      {label}
+                    </text>
+                  );
+                })()}
                 <text x="1" y="57.8" fontSize="1.05" fill="rgba(255,255,255,0.18)" style={{pointerEvents:'none' as const}}>— ASC · ‐ ‐ MC · - - DSC · · · IC · ✦ Paran</text>
                 <text x="1" y="59.2" fontSize="1.05" fill="rgba(255,255,255,0.12)" style={{pointerEvents:'none' as const}}>Brighter = your Dasha-active Graha · Tap line for reading</text>
               </svg>
@@ -488,9 +714,28 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                 <div style={{fontSize:10,color:'rgba(255,255,255,0.35)',marginBottom:14}}>
                   {selLine.angle==='ASC'?'Rising — Identity & Self':selLine.angle==='MC'?'Culminating — Career & Fame':selLine.angle==='DSC'?'Setting — Partnerships & Love':'Nadir — Home & Roots'}
                 </div>
-                <div style={{background:`${selLine.color}0c`,border:`1px solid ${selLine.color}20`,borderRadius:11,padding:13,marginBottom:13}}>
+                <div style={{background:`${selLine.color}0c`,border:`1px solid ${selLine.color}20`,borderRadius:11,padding:13,marginBottom:10}}>
                   <div style={{fontSize:12,lineHeight:1.65,color:'rgba(255,255,255,0.75)'}}>{selLine.meaning}</div>
                 </div>
+                {/* Places this line passes through */}
+                {(() => {
+                  const places = getLinePlaces(selLine);
+                  if (!places.length) return null;
+                  return (
+                    <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:11,padding:'10px 13px',marginBottom:13}}>
+                      <div style={{fontSize:8,letterSpacing:'0.3em',color:'rgba(255,255,255,0.3)',fontWeight:800,textTransform:'uppercase' as const,marginBottom:7}}>
+                        Passes Through
+                      </div>
+                      <div style={{display:'flex',gap:6,flexWrap:'wrap' as const}}>
+                        {places.map((p,i) => (
+                          <span key={i} style={{background:`${selLine.color}12`,border:`1px solid ${selLine.color}25`,borderRadius:20,padding:'3px 10px',fontSize:10,color:selLine.color,fontWeight:600}}>
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {isDasha(selLine.planet) && (
                   <div style={{background:'rgba(212,175,55,0.07)',border:'1px solid rgba(212,175,55,0.18)',borderRadius:10,padding:11,marginBottom:11}}>
                     <div style={{fontSize:8,letterSpacing:'0.3em',color:'#D4AF37',fontWeight:800,textTransform:'uppercase' as const,marginBottom:3}}>✦ Dasha Activated Now</div>
@@ -536,7 +781,11 @@ export const BhumiOraclePanel: React.FC<{birthData:any;ephemeris:any}> = ({birth
                     style={{background:'rgba(255,255,255,0.02)',border:`1px solid ${l.color}${isDasha(l.planet)?'44':'18'}`,borderRadius:13,padding:'12px 13px',cursor:'pointer',position:'relative' as const,boxShadow:isDasha(l.planet)?`0 0 14px ${l.color}12`:'none'}}>
                     {isDasha(l.planet)&&<div style={{position:'absolute' as const,top:7,right:7,background:'rgba(212,175,55,0.12)',border:'1px solid rgba(212,175,55,0.25)',borderRadius:6,padding:'1px 5px',fontSize:7,fontWeight:800,color:'#D4AF37',textTransform:'uppercase' as const,letterSpacing:'0.2em'}}>DASHA</div>}
                     <div style={{fontSize:12,fontWeight:800,color:l.color,marginBottom:4}}>{l.name}</div>
-                    <div style={{fontSize:10,color:'rgba(255,255,255,0.45)',lineHeight:1.55}}>{l.meaning.split('.')[0]}.</div>
+                    <div style={{fontSize:10,color:'rgba(255,255,255,0.45)',lineHeight:1.55,marginBottom:5}}>{l.meaning.split('.')[0]}.</div>
+                  {(() => {
+                    const pp = getLinePlaces(l).slice(0,3);
+                    return pp.length ? <div style={{fontSize:9,color:`${l.color}`,opacity:0.7}}>{pp.join(' · ')}</div> : null;
+                  })()}
                   </div>
                 ))}
               </div>
