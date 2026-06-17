@@ -17,4 +17,15 @@ jobs:
           ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
           
           sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
-            'echo "=== PM2 LIST ===" && pm2 list && echo "" && echo "=== SHREEM LOGS (last 60) ===" && pm2 logs shreem-brzee --lines 60 --nostream 2>/dev/null || true'
+            'echo "=== PM2 LIST ===" && pm2 list && echo "" && echo "=== SHREEM LOGS ===" && pm2 logs shreem-brzee --lines 80 --nostream 2>/dev/null || true' \
+            > /tmp/bot_logs.txt 2>&1
+          
+          cat /tmp/bot_logs.txt
+
+      - name: Save logs
+        run: |
+          cp /tmp/bot_logs.txt _bot_logs.txt
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _bot_logs.txt || true
+          git commit -m "data: bot logs $(date -u +%H%M)" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
