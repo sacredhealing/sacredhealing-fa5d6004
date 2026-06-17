@@ -1,0 +1,149 @@
+name: Fix Helius Webhook — Register Correct 21 Wallets
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'list | delete-all | register | full-fix'
+        required: true
+        default: 'full-fix'
+        type: choice
+        options: [list, delete-all, register, full-fix]
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fix Helius Webhook
+        run: |
+          HELIUS_KEY="775d3d1f-6801-41de-a063-8aee4382d0f4"
+          EDGE_URL="https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
+          ACTION="${{ github.event.inputs.action }}"
+
+          node << JSEOF
+          const https = require('https');
+          const KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+          const EDGE_URL = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
+          const ACTION = process.env.ACTION || 'full-fix';
+
+          // CORRECT 21 whale wallets — match edge function exactly
+          const CORRECT_WALLETS = [
+            'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', // Cupsey
+            'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', // Heyitsyolo
+            'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', // Remusofmars
+            '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5', // Orange
+            'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt', // Shreem Brzee
+            'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm', // Lenion
+            'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',  // Boredboar
+            'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp', // Hades
+            'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm',  // Kubera 72
+            'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k', // Brzee God
+            '9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm', // GBack
+            'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f',  // Tuna
+            'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51', // Fireball
+            'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS', // Hachjdn
+            '5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc', // Crypto Circle
+            '2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv', // Crocodile
+            '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3', // Snow Spirit
+            'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o', // Cented
+            'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA', // The Grande
+            'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW', // A Milly
+            'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG', // J2ANNaq
+          ];
+
+          const heliusReq = (method, path, body) => new Promise((res, rej) => {
+            const opts = {
+              hostname: 'api.helius.xyz',
+              path: `${path}?api-key=${KEY}`,
+              method,
+              headers: { 'Content-Type': 'application/json' },
+            };
+            if (body) opts.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(body));
+            const req = https.request(opts, (r) => {
+              let d = '';
+              r.on('data', c => d += c);
+              r.on('end', () => {
+                try { res({ status: r.statusCode, data: JSON.parse(d) }); }
+                catch { res({ status: r.statusCode, data: d }); }
+              });
+            });
+            req.on('error', rej);
+            if (body) req.write(JSON.stringify(body));
+            req.end();
+          });
+
+          async function listWebhooks() {
+            console.log('\n=== LISTING HELIUS WEBHOOKS ===');
+            const r = await heliusReq('GET', '/v0/webhooks');
+            const hooks = r.data;
+            if (!Array.isArray(hooks)) { console.log('Response:', JSON.stringify(r.data, null, 2)); return []; }
+            console.log(`Total webhooks: ${hooks.length}`);
+            hooks.forEach((h, i) => {
+              console.log(`\n[${i+1}] ID: ${h.webhookID}`);
+              console.log(`    URL: ${h.webhookURL}`);
+              console.log(`    Wallets: ${h.accountAddresses?.length || 0}`);
+              console.log(`    Type: ${h.webhookType}`);
+              // Check if it matches correct wallets
+              const correctSet = new Set(CORRECT_WALLETS);
+              const hookSet = new Set(h.accountAddresses || []);
+              const matching = [...hookSet].filter(w => correctSet.has(w)).length;
+              console.log(`    Correct wallets: ${matching}/21`);
+              console.log(`    → ${h.webhookURL === EDGE_URL ? '✅ URL correct' : '❌ WRONG URL'}`);
+            });
+            return hooks;
+          }
+
+          async function deleteWebhook(id) {
+            console.log(`Deleting webhook ${id}...`);
+            const r = await heliusReq('DELETE', `/v0/webhooks/${id}`);
+            console.log(`  → ${r.status === 200 ? '✅ Deleted' : '❌ Failed: ' + JSON.stringify(r.data)}`);
+          }
+
+          async function registerWebhook() {
+            console.log('\n=== REGISTERING WEBHOOK WITH CORRECT 21 WALLETS ===');
+            console.log(`URL: ${EDGE_URL}`);
+            console.log(`Wallets: ${CORRECT_WALLETS.length}`);
+            const body = {
+              webhookURL: EDGE_URL,
+              transactionTypes: ['SWAP'],
+              accountAddresses: CORRECT_WALLETS,
+              webhookType: 'enhanced',
+              txnStatus: 'success',
+            };
+            const r = await heliusReq('POST', '/v0/webhooks', body);
+            if (r.status === 200 || r.status === 201) {
+              console.log(`✅ Registered! Webhook ID: ${r.data.webhookID}`);
+              console.log(JSON.stringify(r.data, null, 2));
+            } else {
+              console.log(`❌ Failed (${r.status}):`, JSON.stringify(r.data, null, 2));
+            }
+            return r.data;
+          }
+
+          (async () => {
+            if (ACTION === 'list') {
+              await listWebhooks();
+              return;
+            }
+
+            const hooks = await listWebhooks();
+
+            if (ACTION === 'delete-all' || ACTION === 'full-fix') {
+              console.log('\n=== DELETING EXISTING WEBHOOKS ===');
+              for (const h of hooks) {
+                await deleteWebhook(h.webhookID);
+                await new Promise(r => setTimeout(r, 500));
+              }
+            }
+
+            if (ACTION === 'register' || ACTION === 'full-fix') {
+              await registerWebhook();
+            }
+
+            console.log('\n=== DONE ===');
+            console.log('Next: Start the Shreem Brzee bot, inject a test signal, verify signals appear.');
+          })();
+          JSEOF
+        env:
+          ACTION: ${{ github.event.inputs.action }}
