@@ -1,0 +1,32 @@
+name: Shreem Backfill — Batch C (wallets 14-21)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run backfill wallets 14-21 (Crypto Circle→J2ANNaq)
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+        run: |
+          HELIUS_KEY=775d3d1f-6801-41de-a063-8aee4382d0f4 \
+          SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co \
+          SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY \
+          WALLET_START=14 WALLET_END=21 PAGES=3 DELAY=8000 \
+          node scripts/shreem_backfill.mjs 2>&1 | tee _backfill_c.txt
+          echo "=== RESULT ===" && grep -E "(🏆|✅|inserted)" _backfill_c.txt | tail -20
+      - name: Commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _backfill_c.txt || true
+          git commit -m "data: batch C backfill $(date -u +%Y-%m-%d-%H%M)" || true
+          git push "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
