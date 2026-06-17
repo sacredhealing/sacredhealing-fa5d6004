@@ -1,649 +1,454 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-// ── constants ────────────────────────────────────────────────
 const EDGE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
-const HELIUS = `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY || '775d3d1f-6801-41de-a063-8aee4382d0f4'}`;
-const G='#D4AF37', BLK='#0a0e1a', CARD='#1a1f2e', BDR='#2d3748';
-const GRN='#10b981', RED='#ef4444', CYN='#00d4ff';
+const HELIUS = `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY||'775d3d1f-6801-41de-a063-8aee4382d0f4'}`;
+const G='#D4AF37',BLK='#0a0e1a',CARD='#1a1f2e',BDR='#2d3748',GRN='#10b981',RED='#ef4444',CYN='#00d4ff';
 
-const WHALES = [
-  { label:'Cupsey',        addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', vip:true  },
-  { label:'Heyitsyolo',    addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', vip:true  },
-  { label:'Remusofmars',   addr:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', vip:true  },
-  { label:'Orange',        addr:'96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5', vip:false },
-  { label:'Shreem Brzee',  addr:'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt', vip:false },
-  { label:'Lenion',        addr:'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm', vip:false },
-  { label:'Boredboar',     addr:'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',  vip:false },
-  { label:'Hades',         addr:'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp', vip:false },
-  { label:'Kubera 72',     addr:'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm',  vip:false },
-  { label:'Brzee God',     addr:'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k', vip:false },
-  { label:'GBack',         addr:'9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm', vip:false },
-  { label:'Tuna',          addr:'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f',  vip:false },
-  { label:'Fireball',      addr:'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51', vip:false },
-  { label:'Hachjdn',       addr:'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS', vip:false },
-  { label:'Crypto Circle', addr:'5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc', vip:false },
-  { label:'Crocodile',     addr:'2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv', vip:false },
-  { label:'Snow Spirit',   addr:'4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3', vip:false },
-  { label:'Cented',        addr:'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o', vip:false },
-  { label:'The Grande',    addr:'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA', vip:false },
-  { label:'A Milly',       addr:'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW', vip:false },
-  { label:'J2ANNaq',       addr:'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG', vip:false },
+const WHALES=[
+  {label:'Cupsey',addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',vip:true},
+  {label:'Heyitsyolo',addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ',vip:true},
+  {label:'Remusofmars',addr:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu',vip:true},
+  {label:'Orange',addr:'96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',vip:false},
+  {label:'Shreem Brzee',addr:'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt',vip:false},
+  {label:'Lenion',addr:'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm',vip:false},
+  {label:'Boredboar',addr:'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',vip:false},
+  {label:'Hades',addr:'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp',vip:false},
+  {label:'Kubera 72',addr:'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm',vip:false},
+  {label:'Brzee God',addr:'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k',vip:false},
+  {label:'GBack',addr:'9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm',vip:false},
+  {label:'Tuna',addr:'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f',vip:false},
+  {label:'Fireball',addr:'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51',vip:false},
+  {label:'Hachjdn',addr:'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS',vip:false},
+  {label:'Crypto Circle',addr:'5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc',vip:false},
+  {label:'Crocodile',addr:'2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv',vip:false},
+  {label:'Snow Spirit',addr:'4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3',vip:false},
+  {label:'Cented',addr:'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o',vip:false},
+  {label:'The Grande',addr:'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA',vip:false},
+  {label:'A Milly',addr:'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW',vip:false},
+  {label:'J2ANNaq',addr:'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG',vip:false},
 ];
 
-// ── helpers ──────────────────────────────────────────────────
-const isValidSolana = (a:string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a.trim());
+const isValidSolana=(a:string)=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a.trim());
+const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+const timeAgo=(ts:string)=>{const m=Math.floor((Date.now()-new Date(ts).getTime())/60000);if(m<1)return'now';if(m<60)return`${m}m`;if(m<1440)return`${Math.floor(m/60)}h`;return`${Math.floor(m/1440)}d`;};
+async function getSolEur(){try{const[p,fx]=await Promise.all([fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').then(r=>r.json()),fetch('https://api.exchangerate-api.com/v4/latest/USD').then(r=>r.json())]);return{usd:parseFloat(p.price)||150,eur:fx?.rates?.EUR||0.92};}catch{return{usd:150,eur:0.92};}}
+async function getWalletBal(addr:string){try{const r=await fetch(HELIUS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr]})});const d=await r.json();return(d.result?.value||0)/1e9;}catch{return 0;}}
 
-async function getSolEur():Promise<{usd:number,eur:number}> {
-  try {
-    const [p,fx] = await Promise.all([
-      fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').then(r=>r.json()),
-      fetch('https://api.exchangerate-api.com/v4/latest/USD').then(r=>r.json()),
-    ]);
-    const usd = parseFloat(p.price)||150;
-    const eur = fx?.rates?.EUR||0.92;
-    return { usd, eur };
-  } catch { return { usd:150, eur:0.92 }; }
+// ── card wrapper with collapse ──────────────────────────────
+function Card({title,badge,right,children,defaultOpen=true,accent}:{title:string,badge?:React.ReactNode,right?:React.ReactNode,children:React.ReactNode,defaultOpen?:boolean,accent?:string}){
+  const[open,setOpen]=useState(defaultOpen);
+  return(
+    <div style={{background:CARD,border:`1px solid ${accent||BDR}`,borderRadius:16,overflow:'hidden'}}>
+      <div onClick={()=>setOpen(o=>!o)} style={{padding:'12px 16px',borderBottom:open?`1px solid ${BDR}`:'none',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none' as const}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)'}}>{title}</span>
+          {badge}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          {right}
+          <span style={{color:'#64748b',fontSize:14,lineHeight:1,transform:open?'rotate(0)':'rotate(-90deg)',transition:'transform .2s'}}>{open?'▾':'▾'}</span>
+        </div>
+      </div>
+      {open&&<div style={{padding:16}}>{children}</div>}
+    </div>
+  );
 }
 
-async function getWalletBal(addr:string):Promise<number> {
-  try {
-    const r = await fetch(HELIUS,{ method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr]}) });
-    const d = await r.json();
-    return (d.result?.value||0)/1e9;
-  } catch { return 0; }
-}
+export default function ShreemBrzeePerformance(){
+  const nav=useNavigate();
+  const[session,setSession]=useState<any>(null);
+  const[trades,setTrades]=useState<any[]>([]);
+  const[signals,setSignals]=useState<any[]>([]);
+  const[whaleSigs,setWhaleSigs]=useState<any[]>([]);
+  const[period,setPeriod]=useState<'daily'|'weekly'|'monthly'|'yearly'>('weekly');
+  const[mode,setMode]=useState<'paper'|'live'>('paper');
+  const[startSOL,setStartSOL]=useState('1');
+  const[busy,setBusy]=useState(false);
+  const[msg,setMsg]=useState('');
+  const[msgType,setMsgType]=useState<'ok'|'err'|'info'>('ok');
+  const[walletIn,setWalletIn]=useState('');
+  const[walletSaved,setWalletSaved]=useState('');
+  const[walletBal,setWalletBal]=useState<number|null>(null);
+  const[walletOk,setWalletOk]=useState<boolean|null>(null);
+  const[connecting,setConnecting]=useState(false);
+  const[solUSD,setSolUSD]=useState(150);
+  const[eurRate,setEurRate]=useState(0.92);
+  // live position ticker
+  const[livePrices,setLivePrices]=useState<Record<string,number>>({});
+  const tickerRef=useRef<any>(null);
 
-const timeAgo = (ts:string) => {
-  const m = Math.floor((Date.now()-new Date(ts).getTime())/60000);
-  if(m<1) return 'now'; if(m<60) return `${m}m`; if(m<1440) return `${Math.floor(m/60)}h`; return `${Math.floor(m/1440)}d`;
-};
+  const toE=(sol:number)=>(sol*solUSD*eurRate).toFixed(2);
+  const toEn=(sol:number)=>sol*solUSD*eurRate;
+  const flash=(m:string,t:'ok'|'err'|'info'='ok')=>{setMsg(m);setMsgType(t);setTimeout(()=>setMsg(''),5000);};
 
-// ── style helpers ─────────────────────────────────────────────
-const s = {
-  card: { background:CARD, border:`1px solid ${BDR}`, borderRadius:16, overflow:'hidden' } as React.CSSProperties,
-  head: { padding:'12px 16px', borderBottom:`1px solid ${BDR}`, display:'flex', alignItems:'center', justifyContent:'space-between' } as React.CSSProperties,
-  lbl:  { fontSize:9, fontWeight:800, letterSpacing:'.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,.65)' },
-  body: { padding:16 } as React.CSSProperties,
-  pill: (bg:string,bc:string,c:string):React.CSSProperties => ({ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 10px', borderRadius:20, fontSize:10, fontWeight:700, letterSpacing:'.06em', textTransform:'uppercase' as const, background:bg, border:`1px solid ${bc}`, color:c }),
-  btn:  (bg:string,c:string,extra?:React.CSSProperties):React.CSSProperties => ({ width:'100%', padding:'13px 0', borderRadius:13, border:'none', background:bg, color:c, fontSize:12, fontWeight:900, letterSpacing:'.12em', cursor:'pointer', ...extra }),
-  input:(bc:string):React.CSSProperties => ({ width:'100%', padding:'11px 14px', borderRadius:12, border:`1px solid ${bc}`, background:'#111827', color:'#fff', fontSize:14, fontWeight:600, outline:'none', boxSizing:'border-box' as const }),
-};
-
-export default function ShreemBrzeePerformance() {
-  const nav = useNavigate();
-
-  // ── state ──────────────────────────────────────────────────
-  const [session,    setSession]    = useState<any>(null);
-  const [trades,     setTrades]     = useState<any[]>([]);
-  const [signals,    setSignals]    = useState<any[]>([]);
-  const [whaleSigs,  setWhaleSigs]  = useState<any[]>([]); // all signals for whale stats
-  const [period,     setPeriod]     = useState<'daily'|'weekly'|'monthly'|'yearly'>('weekly');
-  const [mode,       setMode]       = useState<'paper'|'live'>('paper');
-  const [startSOL,   setStartSOL]   = useState('2');
-  const [busy,       setBusy]       = useState(false);
-  const [msg,        setMsg]        = useState('');
-  const [msgType,    setMsgType]    = useState<'ok'|'err'|'info'>('ok');
-  const [walletIn,   setWalletIn]   = useState('');
-  const [walletSaved,setWalletSaved]= useState('');
-  const [walletBal,  setWalletBal]  = useState<number|null>(null);
-  const [walletOk,   setWalletOk]   = useState<boolean|null>(null);
-  const [connecting, setConnecting] = useState(false);
-  const [solUSD,     setSolUSD]     = useState(150);
-  const [eurRate,    setEurRate]    = useState(0.92);
-
-  const toE = (sol:number) => (sol*solUSD*eurRate).toFixed(2);
-  const toEn = (sol:number) => sol*solUSD*eurRate;
-  const flash = (m:string, t:'ok'|'err'|'info'='ok') => { setMsg(m); setMsgType(t); setTimeout(()=>setMsg(''),4000); };
-
-  // ── loaders ───────────────────────────────────────────────
-  const loadSession = useCallback(async()=>{
-    try {
-      const r = await fetch(`${EDGE}/session`);
-      if(r.ok){ const d=await r.json(); setSession(d||null); }
-    } catch{}
+  const loadSession=useCallback(async()=>{
+    try{const r=await fetch(`${EDGE}/session`);if(r.ok){const d=await r.json();setSession(d||null);}}catch{}
   },[]);
-
-  const loadTrades = useCallback(async()=>{
-    const { data } = await (supabase as any)
-      .from('shreem_brzee_paper_trades').select('*')
-      .order('created_at',{ascending:false}).limit(30);
+  const loadTrades=useCallback(async()=>{
+    const{data}=await(supabase as any).from('shreem_brzee_paper_trades').select('*').order('created_at',{ascending:false}).limit(50);
     setTrades(data||[]);
   },[]);
-
-  const loadSignals = useCallback(async()=>{
-    const { data } = await (supabase as any)
-      .from('shreem_brzee_signals').select('*')
-      .order('created_at',{ascending:false}).limit(20);
+  const loadSignals=useCallback(async()=>{
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(25);
     setSignals(data||[]);
   },[]);
-
-  // ── whale perf: query shreem_brzee_signals by period ──────
-  const loadWhaleSigs = useCallback(async()=>{
-    const now = new Date();
-    const since = new Date(now);
-    if(period==='daily')   since.setHours(0,0,0,0);
-    if(period==='weekly')  since.setDate(now.getDate()-7);
-    if(period==='monthly') since.setMonth(now.getMonth()-1);
-    if(period==='yearly')  since.setFullYear(now.getFullYear()-1);
-    const { data } = await (supabase as any)
-      .from('shreem_brzee_signals').select('label,action,amount_sol,block_time,created_at')
-      .gte('created_at', since.toISOString())
-      .order('created_at',{ascending:false});
+  const loadWhaleSigs=useCallback(async()=>{
+    const now=new Date(),since=new Date(now);
+    if(period==='daily')since.setHours(0,0,0,0);
+    if(period==='weekly')since.setDate(now.getDate()-7);
+    if(period==='monthly')since.setMonth(now.getMonth()-1);
+    if(period==='yearly')since.setFullYear(now.getFullYear()-1);
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,action,amount_sol,created_at').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
     setWhaleSigs(data||[]);
   },[period]);
-
-  const loadAll = useCallback(()=>{
-    loadSession(); loadTrades(); loadSignals(); loadWhaleSigs();
-  },[loadSession,loadTrades,loadSignals,loadWhaleSigs]);
+  const loadAll=useCallback(()=>{loadSession();loadTrades();loadSignals();loadWhaleSigs();},[loadSession,loadTrades,loadSignals,loadWhaleSigs]);
 
   useEffect(()=>{
     loadAll();
-    getSolEur().then(({usd,eur})=>{ setSolUSD(usd); setEurRate(eur); });
-    const t = setInterval(loadAll,12000);
-    return ()=>clearInterval(t);
+    getSolEur().then(({usd,eur})=>{setSolUSD(usd);setEurRate(eur);});
+    const t=setInterval(()=>{loadAll();getSolEur().then(({usd,eur})=>{setSolUSD(usd);setEurRate(eur);});},15000);
+    return()=>clearInterval(t);
   },[loadAll]);
+  useEffect(()=>{loadWhaleSigs();},[period,loadWhaleSigs]);
 
-  useEffect(()=>{ loadWhaleSigs(); },[period,loadWhaleSigs]);
-
-  // realtime
+  // live price ticker for open positions
   useEffect(()=>{
-    const c1 = supabase.channel('sb_sigs').on('postgres_changes',{event:'INSERT',schema:'public',table:'shreem_brzee_signals'},()=>{ loadSignals(); loadWhaleSigs(); }).subscribe();
-    const c2 = supabase.channel('sb_trd').on('postgres_changes',{event:'INSERT',schema:'public',table:'shreem_brzee_paper_trades'},()=>{ loadTrades(); loadSession(); }).subscribe();
-    return ()=>{ supabase.removeChannel(c1); supabase.removeChannel(c2); };
+    const positions=Object.values(session?.positions||{}) as any[];
+    if(!positions.length){clearInterval(tickerRef.current);return;}
+    const fetchPrices=async()=>{
+      const prices:Record<string,number>={};
+      for(const p of positions){
+        try{
+          const r=await fetch(`https://api.jup.ag/price/v2?ids=${p.mint}`);
+          const d=await r.json();
+          const price=d?.data?.[p.mint]?.price;
+          if(price)prices[p.mint]=parseFloat(price);
+        }catch{}
+      }
+      setLivePrices(prices);
+    };
+    fetchPrices();
+    tickerRef.current=setInterval(fetchPrices,10000);
+    return()=>clearInterval(tickerRef.current);
+  },[session?.positions]);
+
+  useEffect(()=>{
+    const c1=supabase.channel('sb_sigs').on('postgres_changes',{event:'INSERT',schema:'public',table:'shreem_brzee_signals'},()=>{loadSignals();loadWhaleSigs();}).subscribe();
+    const c2=supabase.channel('sb_trd').on('postgres_changes',{event:'INSERT',schema:'public',table:'shreem_brzee_paper_trades'},()=>{loadTrades();loadSession();}).subscribe();
+    return()=>{supabase.removeChannel(c1);supabase.removeChannel(c2);};
   },[loadSignals,loadTrades,loadSession,loadWhaleSigs]);
 
-  // ── wallet ────────────────────────────────────────────────
-  const onWalletChange = (v:string) => {
-    setWalletIn(v);
-    setWalletOk(v.trim().length>0 ? isValidSolana(v) : null);
+  const onWalletChange=(v:string)=>{setWalletIn(v);setWalletOk(v.trim().length>0?isValidSolana(v):null);};
+  const saveWallet=async()=>{
+    if(!isValidSolana(walletIn)){flash('Invalid Solana address','err');return;}
+    const addr=walletIn.trim();setWalletSaved(addr);setWalletIn('');setWalletOk(null);
+    const bal=await getWalletBal(addr);setWalletBal(bal);flash('Wallet saved ✓','ok');
   };
-  const saveWallet = async()=>{
-    if(!isValidSolana(walletIn)){ flash('Invalid Solana address — check and try again','err'); return; }
-    const addr=walletIn.trim();
-    setWalletSaved(addr); setWalletIn(''); setWalletOk(null);
-    const bal = await getWalletBal(addr);
-    setWalletBal(bal);
-    flash('Wallet saved ✓','ok');
-  };
-  const connectPhantom = async()=>{
-    if(!(window as any).solana?.isPhantom){ flash('Phantom not found — install at phantom.app','err'); return; }
+  const connectPhantom=async()=>{
+    if(!(window as any).solana?.isPhantom){flash('Phantom not found — install at phantom.app','err');return;}
     setConnecting(true);
-    try {
-      const r = await (window as any).solana.connect();
-      const addr = r.publicKey.toString();
-      setWalletSaved(addr);
-      const bal = await getWalletBal(addr);
-      setWalletBal(bal);
-      flash('Phantom connected ✓','ok');
-    } catch { flash('Connection cancelled','info'); }
+    try{const r=await(window as any).solana.connect();const addr=r.publicKey.toString();setWalletSaved(addr);const bal=await getWalletBal(addr);setWalletBal(bal);flash('Phantom connected ✓','ok');}
+    catch{flash('Connection cancelled','info');}
     setConnecting(false);
   };
 
-  // ── session ───────────────────────────────────────────────
-  // running = session exists and has started_at
-  const running = !!session?.started_at;
+  const running=!!session?.started_at;
 
-  const startSession = async()=>{
+  const startSession=async()=>{
     setBusy(true);
-    const sol = parseFloat(startSOL)||2;
-    try {
-      // clear old paper trades
-      await (supabase as any).from('shreem_brzee_paper_trades').delete().neq('id',0);
-      const res = await fetch(`${EDGE}/paper`,{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ type:'session', session:{
-          portfolio:sol, start_balance:sol, positions:{},
-          total_pnl:0, wins:0, losses:0, started_at:new Date().toISOString(),
-        }}),
-      });
-      if(!res.ok) throw new Error(await res.text());
-      await loadAll();
-      flash(`Bot started with ${sol} SOL ✓`,'ok');
-    } catch(e:any){ flash(`Start failed: ${e.message?.slice(0,60)}`,'err'); }
+    const sol=parseFloat(startSOL)||1;
+    try{
+      await(supabase as any).from('shreem_brzee_paper_trades').delete().neq('id',0);
+      const res=await fetch(`${EDGE}/paper`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({type:'session',session:{portfolio:sol,start_balance:sol,positions:{},total_pnl:0,wins:0,losses:0,started_at:new Date().toISOString()}})});
+      if(!res.ok)throw new Error(await res.text());
+      await loadAll();flash(`Paper bot started with ${sol} SOL ✓`,'ok');
+    }catch(e:any){flash(`Error: ${e.message?.slice(0,60)}`,'err');}
+    setBusy(false);
+  };
+  const stopSession=async()=>{
+    setBusy(true);
+    try{
+      await fetch(`${EDGE}/paper`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({type:'session',session:{...session,started_at:null,stopped_at:new Date().toISOString()}})});
+      await loadSession();flash('Bot stopped','info');
+    }catch{flash('Error stopping','err');}
     setBusy(false);
   };
 
-  const stopSession = async()=>{
+  // TEST SIGNAL: uses /test endpoint on edge fn (service key, bypasses RLS)
+  const testSignal=async()=>{
+    if(!running){flash('Start the bot first ↑','err');return;}
     setBusy(true);
-    try {
-      await fetch(`${EDGE}/paper`,{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ type:'session', session:{
-          ...session, started_at:null, stopped_at:new Date().toISOString(),
-        }}),
-      });
-      await loadSession();
-      flash('Bot stopped','info');
-    } catch { flash('Stop failed','err'); }
+    try{
+      const r=await fetch(`${EDGE}/test`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      if(!r.ok){const t=await r.text();throw new Error(t);}
+      flash('⚡ Test signal sent — watch Signal Feed below','info');
+      setTimeout(loadAll,3000);
+    }catch(e:any){flash(`Test failed: ${e.message?.slice(0,80)}`,'err');}
     setBusy(false);
   };
 
-  const testSignal = async()=>{
-    if(!running){ flash('Start the bot first','err'); return; }
-    setBusy(true);
-    try {
-      await (supabase as any).from('shreem_brzee_signals').insert({
-        sig:'TEST_'+Date.now(),
-        wallet:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu',
-        label:'Remusofmars', action:'BUY',
-        mint:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr',
-        symbol:'POPCAT', amount_sol:1.5, token_amount:50000,
-        is_pump_fun:true, block_time:Math.floor(Date.now()/1000),
-        created_at:new Date().toISOString(),
-      });
-      setTimeout(loadAll,2500);
-      flash('Test signal sent ⚡','info');
-    } catch(e:any){ flash('Failed: '+e.message?.slice(0,50),'err'); }
-    setBusy(false);
-  };
-
-  // ── whale stats from signals ──────────────────────────────
-  const whaleMap:Record<string,{buys:number,sells:number,totalSol:number}> = {};
+  // whale stats
+  const whaleMap:Record<string,{buys:number,sells:number,totalSol:number}>={};
   whaleSigs.forEach((s:any)=>{
-    const l=s.label||'?';
-    if(!whaleMap[l]) whaleMap[l]={buys:0,sells:0,totalSol:0};
-    if(s.action==='BUY'){ whaleMap[l].buys++; whaleMap[l].totalSol+=s.amount_sol||0; }
-    if(s.action==='SELL') whaleMap[l].sells++;
+    const l=s.label||'?';if(!whaleMap[l])whaleMap[l]={buys:0,sells:0,totalSol:0};
+    if(s.action==='BUY'){whaleMap[l].buys++;whaleMap[l].totalSol+=s.amount_sol||0;}
+    if(s.action==='SELL')whaleMap[l].sells++;
   });
+  const whaleRows=WHALES.map(w=>{const st=whaleMap[w.label]||{buys:0,sells:0,totalSol:0};return{...w,...st,total:st.buys+st.sells};}).sort((a,b)=>b.totalSol-a.totalSol);
+  const maxSol=Math.max(...whaleRows.map(w=>w.totalSol),0.001);
 
-  const whaleRows = WHALES.map(w=>{
-    const st = whaleMap[w.label]||{buys:0,sells:0,totalSol:0};
-    const total = st.buys+st.sells;
-    const winPct = total>0 ? Math.round((st.buys/total)*100) : 0;
-    return { ...w, ...st, total, winPct };
-  }).sort((a,b)=>b.totalSol-a.totalSol);
+  const pnlSol=session?.total_pnl||0;
+  const balSol=session?.portfolio||(parseFloat(startSOL)||1);
+  const startBal=session?.start_balance||(parseFloat(startSOL)||1);
+  const pnlPct=startBal>0?((pnlSol/startBal)*100).toFixed(1):'0.0';
+  const openPos=Object.values(session?.positions||{}) as any[];
 
-  const maxSol = Math.max(...whaleRows.map(w=>w.totalSol),0.001);
+  const st=(bg:string,bc:string,c:string):React.CSSProperties=>({display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase' as const,background:bg,border:`1px solid ${bc}`,color:c});
+  const inp=(bc:string):React.CSSProperties=>({width:'100%',padding:'11px 14px',borderRadius:12,border:`1px solid ${bc}`,background:'#111827',color:'#fff',fontSize:14,fontWeight:600,outline:'none',boxSizing:'border-box' as const});
 
-  // ── derived ───────────────────────────────────────────────
-  const pnlSol  = session?.total_pnl||0;
-  const balSol  = session?.portfolio||(parseFloat(startSOL)||2);
-  const startBal= session?.start_balance||(parseFloat(startSOL)||2);
-  const pnlPct  = startBal>0 ? ((pnlSol/startBal)*100).toFixed(1) : '0.0';
-  const openPos = Object.values(session?.positions||{});
+  const rowStyle:React.CSSProperties={display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:`1px solid rgba(45,55,72,.4)`};
+  const iconBox=(color:string,bg:string,ch:string):React.CSSProperties&{children?:string}=>({width:32,height:32,borderRadius:9,background:bg,color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0} as any);
 
-  // ── mobile-first styles ───────────────────────────────────
-  const page:React.CSSProperties = {
-    minHeight:'100vh', background:BLK, color:'#fff',
-    fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",
-    paddingBottom:100,
-  };
-  // full-width container, max 600px centered
-  const wrap:React.CSSProperties = {
-    padding:'0 14px', maxWidth:600, margin:'0 auto',
-    display:'flex', flexDirection:'column', gap:12,
-  };
+  return(
+    <div style={{minHeight:'100vh',background:BLK,color:'#fff',fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
 
-  return (
-    <div style={page}>
-
-      {/* ── HEADER ── */}
-      <div style={{ background:'#111827', borderBottom:`1px solid ${BDR}`, padding:'12px 16px',
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        position:'sticky', top:0, zIndex:60 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <button onClick={()=>nav(-1)} style={{ background:'none', border:'none', color:'#64748b', fontSize:22, cursor:'pointer', lineHeight:1 }}>←</button>
-          <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#b8860b,#D4AF37)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0 }}>🔱</div>
+      {/* HEADER */}
+      <div style={{background:'#111827',borderBottom:`1px solid ${BDR}`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:60}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <button onClick={()=>nav(-1)} style={{background:'none',border:'none',color:'#64748b',fontSize:22,cursor:'pointer',lineHeight:1}}>←</button>
+          <div style={{width:34,height:34,borderRadius:10,background:'linear-gradient(135deg,#b8860b,#D4AF37)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17}}>🔱</div>
           <div>
-            <div style={{ fontSize:15, fontWeight:900, color:G, letterSpacing:'-.03em' }}>Shreem Brzee Bot</div>
-            <div style={{ fontSize:9, color:'#64748b', letterSpacing:'.35em', textTransform:'uppercase' }}>SQI 2050 · Solana</div>
+            <div style={{fontSize:15,fontWeight:900,color:G,letterSpacing:'-.03em'}}>Shreem Brzee Bot</div>
+            <div style={{fontSize:9,color:'#64748b',letterSpacing:'.35em',textTransform:'uppercase'}}>SQI 2050 · Paper Trading</div>
           </div>
         </div>
-        <div style={{ display:'flex', gap:6, alignItems:'center', flexShrink:0 }}>
-          <span style={s.pill(running?'rgba(16,185,129,.1)':'rgba(255,255,255,.04)', running?'rgba(16,185,129,.3)':BDR, running?GRN:'#64748b')}>
-            <span style={{ width:5,height:5,borderRadius:'50%',background:'currentColor' }}/>
+        <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+          <span style={st(running?'rgba(16,185,129,.1)':'rgba(255,255,255,.04)',running?'rgba(16,185,129,.3)':BDR,running?GRN:'#64748b')}>
+            <span style={{width:5,height:5,borderRadius:'50%',background:'currentColor',animation:running?'pulse 1.5s infinite':'none'}}/>
             {running?'Running':'Stopped'}
           </span>
-          <span style={{ fontSize:11, color:'#64748b', whiteSpace:'nowrap' }}>€{(solUSD*eurRate).toFixed(0)}/SOL</span>
+          <span style={{fontSize:11,color:'#64748b',whiteSpace:'nowrap'}}>€{(solUSD*eurRate).toFixed(0)}/SOL</span>
         </div>
       </div>
 
-      {/* msg toast */}
-      {msg && (
-        <div style={{ margin:'10px 14px 0', padding:'11px 14px', borderRadius:12, fontSize:13, fontWeight:600,
-          background:msgType==='ok'?'rgba(16,185,129,.1)':msgType==='err'?'rgba(239,68,68,.1)':'rgba(0,212,255,.08)',
-          border:`1px solid ${msgType==='ok'?'rgba(16,185,129,.3)':msgType==='err'?'rgba(239,68,68,.3)':'rgba(0,212,255,.25)'}`,
-          color:msgType==='ok'?GRN:msgType==='err'?RED:CYN }}>
-          {msg}
-        </div>
-      )}
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
 
-      <div style={{ ...wrap, paddingTop:12 }}>
+      {msg&&<div style={{margin:'10px 14px 0',padding:'11px 14px',borderRadius:12,fontSize:13,fontWeight:600,background:msgType==='ok'?'rgba(16,185,129,.1)':msgType==='err'?'rgba(239,68,68,.1)':'rgba(0,212,255,.08)',border:`1px solid ${msgType==='ok'?'rgba(16,185,129,.3)':msgType==='err'?'rgba(239,68,68,.3)':'rgba(0,212,255,.25)'}`,color:msgType==='ok'?GRN:msgType==='err'?RED:CYN}}>{msg}</div>}
 
-        {/* ① STATS — 2×2 grid on mobile */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+      <div style={{padding:'12px 14px',maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
+
+        {/* STATS 2x2 */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           {[
-            { i:'💰', v:`€${toE(balSol)}`,        l:'Balance',      s:`${balSol.toFixed(3)} SOL`, c:G   },
-            { i:'📈', v:`${pnlSol>=0?'+':''}€${toE(pnlSol)}`, l:'P&L', s:`${pnlSol>=0?'+':''}${pnlPct}%`, c:pnlSol>=0?GRN:RED },
-            { i:'🎯', v:`${session?.wins||0}/${session?.losses||0}`, l:'Win/Loss', s:`${session?.wins&&(session.wins+session.losses)>0?Math.round(session.wins/(session.wins+session.losses)*100):0}% win rate`, c:'#fff' },
-            { i:'📂', v:String(openPos.length),   l:'Positions',    s:'open now',                 c:CYN  },
-          ].map(st=>(
-            <div key={st.l} style={{ ...s.card, padding:'14px 12px', textAlign:'center' }}>
-              <div style={{ fontSize:20, marginBottom:5 }}>{st.i}</div>
-              <div style={{ fontSize:18, fontWeight:900, color:st.c, letterSpacing:'-.02em', lineHeight:1 }}>{st.v}</div>
-              <div style={{ fontSize:9, fontWeight:800, letterSpacing:'.3em', textTransform:'uppercase', color:'#64748b', margin:'4px 0 2px' }}>{st.l}</div>
-              <div style={{ fontSize:11, color:'#64748b' }}>{st.s}</div>
+            {i:'💰',v:`€${toE(balSol)}`,l:'Balance',s:`${balSol.toFixed(3)} SOL`,c:G},
+            {i:'📈',v:`${pnlSol>=0?'+':''}€${toE(pnlSol)}`,l:'P&L',s:`${pnlSol>=0?'+':''}${pnlPct}%`,c:pnlSol>=0?GRN:RED},
+            {i:'🎯',v:`${session?.wins||0}/${session?.losses||0}`,l:'Win/Loss',s:`${session?.wins&&(session.wins+session.losses)>0?Math.round(session.wins/(session.wins+session.losses)*100):0}% win rate`,c:'#fff'},
+            {i:'📂',v:String(openPos.length),l:'Positions',s:running?'live now':'start bot',c:openPos.length>0?GRN:CYN},
+          ].map(s=>(
+            <div key={s.l} style={{background:CARD,border:`1px solid ${BDR}`,borderRadius:16,padding:'14px 12px',textAlign:'center'}}>
+              <div style={{fontSize:20,marginBottom:5}}>{s.i}</div>
+              <div style={{fontSize:18,fontWeight:900,color:s.c,letterSpacing:'-.02em',lineHeight:1}}>{s.v}</div>
+              <div style={{fontSize:9,fontWeight:800,letterSpacing:'.3em',textTransform:'uppercase',color:'#64748b',margin:'4px 0 2px'}}>{s.l}</div>
+              <div style={{fontSize:11,color:'#64748b'}}>{s.s}</div>
             </div>
           ))}
         </div>
 
-        {/* ② WALLET ── */}
-        <div style={{ ...s.card, border:`1px solid rgba(212,175,55,.28)` }}>
-          <div style={s.head}>
-            <span style={s.lbl}>👛 My Wallet</span>
-            <span style={{ fontSize:9, color:GRN, fontWeight:700 }}>🔒 Public only — never private key</span>
-          </div>
-          <div style={{ ...s.body, display:'flex', flexDirection:'column', gap:11 }}>
-
-            {/* Phantom */}
-            <button onClick={connectPhantom} disabled={connecting}
-              style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'13px 14px',
-                borderRadius:13, border:'1px solid rgba(139,92,246,.35)', background:'rgba(139,92,246,.08)',
-                cursor:'pointer', textAlign:'left', opacity:connecting?.6:1 }}>
-              <div style={{ width:30, height:30, borderRadius:8, background:'#ab9ff2', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>👻</div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:13, fontWeight:800, color:'#c4b5fd' }}>{connecting?'Connecting…':'Connect Phantom'}</div>
-                <div style={{ fontSize:10, color:'#64748b', marginTop:1 }}>Safest — key never leaves Phantom</div>
+        {/* WALLET */}
+        <Card title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{fontSize:9,color:GRN,fontWeight:700}}>🔒 Public only</span>}>
+          <div style={{display:'flex',flexDirection:'column',gap:11}}>
+            <button onClick={connectPhantom} disabled={connecting} style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'13px 14px',borderRadius:13,border:'1px solid rgba(139,92,246,.35)',background:'rgba(139,92,246,.08)',cursor:'pointer',textAlign:'left',opacity:connecting?.6:1}}>
+              <div style={{width:30,height:30,borderRadius:8,background:'#ab9ff2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>👻</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:800,color:'#c4b5fd'}}>{connecting?'Connecting…':'Connect Phantom'}</div>
+                <div style={{fontSize:10,color:'#64748b',marginTop:1}}>Safest — key never leaves Phantom</div>
               </div>
             </button>
-
-            <div style={{ display:'flex', alignItems:'center', gap:8, color:'#64748b', fontSize:10 }}>
-              <div style={{ flex:1, height:1, background:BDR }}/> or paste address <div style={{ flex:1, height:1, background:BDR }}/>
-            </div>
-
-            <div style={{ display:'flex', gap:8 }}>
-              <input value={walletIn} onChange={e=>onWalletChange(e.target.value)}
-                placeholder="Solana address (32–44 chars)" maxLength={44}
-                style={{ ...s.input(walletOk===null?BDR:walletOk?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)'), flex:1 }}
-              />
-              <button onClick={saveWallet} disabled={!walletOk}
-                style={{ padding:'0 14px', borderRadius:12, border:`1px solid ${walletOk?'rgba(212,175,55,.35)':BDR}`,
-                  background:walletOk?'rgba(212,175,55,.1)':'transparent',
-                  color:walletOk?G:'#64748b', fontSize:11, fontWeight:800, cursor:walletOk?'pointer':'not-allowed', flexShrink:0 }}>
-                {walletOk===false?'✗':'✓ Save'}
+            <div style={{display:'flex',alignItems:'center',gap:8,color:'#64748b',fontSize:10}}><div style={{flex:1,height:1,background:BDR}}/>or paste<div style={{flex:1,height:1,background:BDR}}/></div>
+            <div style={{display:'flex',gap:8}}>
+              <input value={walletIn} onChange={e=>onWalletChange(e.target.value)} placeholder="Solana address (32–44 chars)" maxLength={44} style={{...inp(walletOk===null?BDR:walletOk?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)'),flex:1}}/>
+              <button onClick={saveWallet} disabled={!walletOk} style={{padding:'0 14px',borderRadius:12,border:`1px solid ${walletOk?'rgba(212,175,55,.35)':BDR}`,background:walletOk?'rgba(212,175,55,.1)':'transparent',color:walletOk?G:'#64748b',fontSize:11,fontWeight:800,cursor:walletOk?'pointer':'not-allowed',flexShrink:0}}>
+                {walletOk===false?'✗':'✓'}
               </button>
             </div>
-
-            {/* security note */}
-            <div style={{ padding:'10px 12px', borderRadius:12, background:'rgba(16,185,129,.05)', border:'1px solid rgba(16,185,129,.2)', fontSize:11, color:'rgba(16,185,129,.9)', lineHeight:1.6 }}>
-              🛡️ <strong>100% safe.</strong> We only store your <em>public address</em> — like a bank account number. We <strong>never</strong> ask for your seed phrase or private key.
+            <div style={{padding:'10px 12px',borderRadius:12,background:'rgba(16,185,129,.05)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.9)',lineHeight:1.6}}>
+              🛡️ <strong>100% safe.</strong> Only your <em>public address</em> — never your seed phrase or private key.
             </div>
-
-            {/* connected */}
-            {walletSaved && (
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', borderRadius:13, background:'rgba(16,185,129,.05)', border:'1px solid rgba(16,185,129,.25)' }}>
+            {walletSaved&&(
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderRadius:13,background:'rgba(16,185,129,.05)',border:'1px solid rgba(16,185,129,.25)'}}>
                 <div>
-                  <div style={{ fontSize:9, color:'#64748b', letterSpacing:'.3em', textTransform:'uppercase', marginBottom:3 }}>Connected</div>
-                  <div style={{ fontSize:12, fontFamily:'monospace', color:'#cbd5e0' }}>
-                    {walletSaved.slice(0,6)}…{walletSaved.slice(-6)}
-                    <span style={{ display:'inline-block', width:6, height:6, borderRadius:'50%', background:GRN, marginLeft:6, boxShadow:'0 0 5px rgba(16,185,129,.7)' }}/>
-                  </div>
+                  <div style={{fontSize:9,color:'#64748b',letterSpacing:'.3em',textTransform:'uppercase',marginBottom:3}}>Connected</div>
+                  <div style={{fontSize:12,fontFamily:'monospace',color:'#cbd5e0'}}>{walletSaved.slice(0,6)}…{walletSaved.slice(-6)}<span style={{display:'inline-block',width:6,height:6,borderRadius:'50%',background:GRN,marginLeft:6,boxShadow:'0 0 5px rgba(16,185,129,.7)'}}/></div>
                 </div>
-                <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:15, fontWeight:900, color:G }}>{walletBal!==null?`${walletBal.toFixed(3)} SOL`:'—'}</div>
-                  <div style={{ fontSize:11, color:'#64748b' }}>{walletBal!==null?`€${toE(walletBal)}`:''}</div>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:15,fontWeight:900,color:G}}>{walletBal!==null?`${walletBal.toFixed(3)} SOL`:'—'}</div>
+                  <div style={{fontSize:11,color:'#64748b'}}>{walletBal!==null?`€${toE(walletBal)}`:''}</div>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* ③ MODE + START — stacked on mobile */}
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-
-          {/* mode */}
-          <div style={s.card}>
-            <div style={s.head}><span style={s.lbl}>⚙️ Mode</span></div>
-            <div style={{ ...s.body, display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-              {(['paper','live'] as const).map(m=>(
-                <div key={m} onClick={()=>setMode(m)}
-                  style={{ padding:'13px 10px', borderRadius:13, cursor:'pointer',
-                    border:`2px solid ${mode===m?(m==='paper'?'rgba(16,185,129,.45)':'rgba(239,68,68,.45)'):BDR}`,
-                    background:mode===m?(m==='paper'?'rgba(16,185,129,.08)':'rgba(239,68,68,.08)'):'transparent',
-                    textAlign:'center' as const }}>
-                  <div style={{ fontSize:20, marginBottom:6 }}>{m==='paper'?'📄':'⚡'}</div>
-                  <div style={{ fontSize:13, fontWeight:800, color:mode===m?(m==='paper'?GRN:RED):'#cbd5e0' }}>{m==='paper'?'Paper':'Live'}</div>
-                  <div style={{ fontSize:10, color:'#64748b', marginTop:3, lineHeight:1.4 }}>{m==='paper'?'Fake SOL, safe test':'Real swaps, Phantom needed'}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* balance + start */}
-          <div style={s.card}>
-            <div style={s.head}><span style={s.lbl}>💰 Starting SOL</span></div>
-            <div style={s.body}>
-              <div style={{ display:'flex', gap:7, marginBottom:10, flexWrap:'wrap' }}>
-                {['0.5','1','2','5','10'].map(v=>(
-                  <button key={v} onClick={()=>setStartSOL(v)}
-                    style={{ padding:'7px 0', borderRadius:10, cursor:'pointer', flex:'1 1 0',
-                      minWidth:44,
-                      border:`1px solid ${startSOL===v?'rgba(212,175,55,.4)':BDR}`,
-                      background:startSOL===v?'rgba(212,175,55,.12)':'transparent',
-                      color:startSOL===v?G:'#64748b', fontSize:13, fontWeight:700 }}>
-                    {v}
-                  </button>
-                ))}
+        {/* MODE */}
+        <Card title="⚙️ Mode">
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            {(['paper','live'] as const).map(m=>(
+              <div key={m} onClick={()=>setMode(m)} style={{padding:'13px 10px',borderRadius:13,cursor:'pointer',border:`2px solid ${mode===m?(m==='paper'?'rgba(16,185,129,.45)':'rgba(239,68,68,.45)'):BDR}`,background:mode===m?(m==='paper'?'rgba(16,185,129,.08)':'rgba(239,68,68,.08)'):'transparent',textAlign:'center' as const}}>
+                <div style={{fontSize:20,marginBottom:6}}>{m==='paper'?'📄':'⚡'}</div>
+                <div style={{fontSize:13,fontWeight:800,color:mode===m?(m==='paper'?GRN:RED):'#cbd5e0'}}>{m==='paper'?'Paper':'Live'}</div>
+                <div style={{fontSize:10,color:'#64748b',marginTop:3,lineHeight:1.4}}>{m==='paper'?'Fake SOL · zero risk':'Real swaps · Phantom needed'}</div>
               </div>
-              <input type="number" value={startSOL} onChange={e=>setStartSOL(e.target.value)}
-                min="0.1" step="0.1"
-                style={{ ...s.input(BDR), marginBottom:12, fontSize:16 }}
-              />
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                <button onClick={startSession} disabled={busy}
-                  style={{ ...s.btn('linear-gradient(135deg,#D4AF37,#c9930a)','#000',{ boxShadow:'0 0 16px rgba(212,175,55,.3)', opacity:busy?.6:1 }) }}>
-                  {busy?'…':'▶ START'}
-                </button>
-                <button onClick={stopSession} disabled={busy}
-                  style={{ ...s.btn('transparent',RED,{ border:`1px solid rgba(239,68,68,.35)`, background:'rgba(239,68,68,.08)', opacity:busy?.6:1 }) }}>
-                  ⏹ STOP
-                </button>
-              </div>
-              {!running && !busy && (
-                <div style={{ marginTop:10, padding:'9px 12px', borderRadius:10, background:'rgba(212,175,55,.06)', border:`1px solid rgba(212,175,55,.2)`, fontSize:11, color:'rgba(212,175,55,.7)', textAlign:'center' }}>
-                  Set your balance above then tap ▶ START
-                </div>
-              )}
-            </div>
+            ))}
           </div>
-        </div>
+        </Card>
 
-        {/* ④ WHALE PERFORMANCE ── */}
-        <div style={s.card}>
-          <div style={s.head}>
-            <span style={s.lbl}>🐋 Whale Performance</span>
-            <div style={{ display:'flex', gap:5 }}>
-              {(['daily','weekly','monthly','yearly'] as const).map(p=>(
-                <button key={p} onClick={()=>setPeriod(p)}
-                  style={{ padding:'4px 10px', borderRadius:20, cursor:'pointer',
-                    border:`1px solid ${period===p?'rgba(212,175,55,.4)':BDR}`,
-                    background:period===p?'rgba(212,175,55,.12)':'transparent',
-                    color:period===p?G:'#64748b',
-                    fontSize:9, fontWeight:800, letterSpacing:'.06em', textTransform:'uppercase' as const }}>
-                  {p==='daily'?'D':p==='weekly'?'W':p==='monthly'?'M':'Y'}
-                </button>
-              ))}
-            </div>
+        {/* BALANCE + START */}
+        <Card title="💰 Starting SOL">
+          <div style={{display:'flex',gap:7,marginBottom:10,flexWrap:'wrap'}}>
+            {['0.5','1','2','5','10'].map(v=>(
+              <button key={v} onClick={()=>setStartSOL(v)} style={{padding:'7px 0',borderRadius:10,cursor:'pointer',flex:'1 1 0',minWidth:44,border:`1px solid ${startSOL===v?'rgba(212,175,55,.4)':BDR}`,background:startSOL===v?'rgba(212,175,55,.12)':'transparent',color:startSOL===v?G:'#64748b',fontSize:13,fontWeight:700}}>{v}</button>
+            ))}
           </div>
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', minWidth:320 }}>
+          <input type="number" value={startSOL} onChange={e=>setStartSOL(e.target.value)} min="0.1" step="0.1" style={{...inp(BDR),marginBottom:12,fontSize:16}}/>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            <button onClick={startSession} disabled={busy} style={{padding:14,borderRadius:13,border:'none',background:'linear-gradient(135deg,#D4AF37,#c9930a)',color:'#000',fontSize:12,fontWeight:900,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',boxShadow:'0 0 16px rgba(212,175,55,.28)',opacity:busy?.6:1}}>
+              {busy?'…':'▶ START'}
+            </button>
+            <button onClick={stopSession} disabled={busy} style={{padding:14,borderRadius:13,border:'1px solid rgba(239,68,68,.35)',background:'rgba(239,68,68,.08)',color:RED,fontSize:12,fontWeight:900,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>
+              ⏹ STOP
+            </button>
+          </div>
+          {!running&&!busy&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(212,175,55,.06)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.7)',textAlign:'center'}}>Set balance above then tap ▶ START</div>}
+          {running&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(16,185,129,.06)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.8)',textAlign:'center'}}>✅ Bot running · watching 21 whale wallets</div>}
+        </Card>
+
+        {/* OPEN POSITIONS — live ticker */}
+        <Card title="📂 Open Positions" badge={openPos.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openPos.length} live</span>:undefined} right={running&&openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
+          {openPos.length===0?(
+            <div style={{textAlign:'center',padding:'20px 0'}}>
+              <div style={{fontSize:28,marginBottom:8}}>👀</div>
+              <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>Watching for whale BUYs</div>
+              <div style={{fontSize:11,color:'#64748b',marginBottom:running?14:4}}>Positions open instantly when a whale swaps</div>
+              {!running&&<div style={{fontSize:11,color:'rgba(212,175,55,.7)'}}>↑ Start the bot to enable</div>}
+            </div>
+          ):openPos.map((p:any)=>{
+            const livePrice=livePrices[p.mint];
+            const entrySOL=p.entrySOL||p.entry_sol||0;
+            const pnl=livePrice&&p.entryPrice?(livePrice-p.entryPrice)/p.entryPrice*100:null;
+            return(
+              <div key={p.mint} style={{...rowStyle,background:'rgba(16,185,129,.03)',borderRadius:12,padding:'12px 14px',border:`1px solid rgba(16,185,129,.2)`,marginBottom:8}}>
+                <div style={{...iconBox(GRN,'rgba(16,185,129,.12)','↑') as any}}>↑</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                    <span style={{fontSize:14,fontWeight:900,color:G}}>{p.symbol||'?'}</span>
+                    <span style={{fontSize:9,fontWeight:800,letterSpacing:'.2em',color:'rgba(16,185,129,.8)',animation:'blink 2s infinite'}}>● LIVE</span>
+                  </div>
+                  <div style={{fontSize:10,color:'#64748b'}}>via {p.label} · entry {entrySOL.toFixed(4)} SOL</div>
+                  {livePrice&&<div style={{fontSize:11,color:'#94a3b8',marginTop:3}}>Current: ${livePrice.toFixed(6)}</div>}
+                </div>
+                <div style={{textAlign:'right',flexShrink:0}}>
+                  <div style={{fontSize:14,fontWeight:900,color:pnl!==null?(pnl>=0?GRN:RED):'#64748b'}}>
+                    {pnl!==null?`${pnl>=0?'+':''}${pnl.toFixed(1)}%`:'—'}
+                  </div>
+                  <div style={{fontSize:11,color:'#64748b',marginTop:2}}>€{toE(entrySOL)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </Card>
+
+        {/* SIGNAL FEED */}
+        <Card title="📡 Signal Feed" right={<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.28)',color:CYN}}><span style={{width:5,height:5,borderRadius:'50%',background:CYN,animation:'pulse 1.5s infinite'}}/>Helius</span>}>
+          {signals.length===0?(
+            <div style={{textAlign:'center',padding:'20px 0'}}>
+              <div style={{fontSize:28,marginBottom:8}}>🐋</div>
+              <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>Watching 21 wallets on Solana</div>
+              <div style={{fontSize:11,color:'#64748b',marginBottom:14}}>Signals appear here the moment any whale swaps</div>
+              {running&&<button onClick={testSignal} disabled={busy} style={{padding:'9px 20px',borderRadius:11,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:11,fontWeight:800,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Inject Test Signal</button>}
+            </div>
+          ):signals.map((sig:any)=>(
+            <div key={sig.id} style={{...rowStyle}}>
+              <div style={{...iconBox(sig.action==='BUY'?GRN:RED,sig.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',sig.action==='BUY'?'↑':'↓') as any}}>{sig.action==='BUY'?'↑':'↓'}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
+                  {sig.symbol||sig.mint?.slice(0,8)}
+                  {sig.is_pump_fun&&<span style={{marginLeft:5,padding:'1px 5px',borderRadius:4,background:'rgba(139,92,246,.15)',color:'#a78bfa',fontSize:9,fontWeight:700}}>pump</span>}
+                </div>
+                <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{sig.label}</div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <div style={{fontSize:12,fontWeight:700}}>{sig.amount_sol?.toFixed(3)} SOL</div>
+                <div style={{fontSize:10,color:'#64748b'}}>{timeAgo(sig.created_at)}</div>
+              </div>
+            </div>
+          ))}
+        </Card>
+
+        {/* TRADE HISTORY */}
+        <Card title="📋 Trade History" badge={trades.length>0?<span style={{marginLeft:6,fontSize:10,color:'#64748b'}}>{trades.length} trades</span>:undefined}>
+          {trades.length===0?(
+            <div style={{textAlign:'center',padding:'20px 0'}}>
+              <div style={{fontSize:28,marginBottom:8}}>📊</div>
+              <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>No trades yet</div>
+              <div style={{fontSize:11,color:'#64748b'}}>Start bot → inject test signal → first trade appears</div>
+            </div>
+          ):trades.map((t:any)=>(
+            <div key={t.id} style={{...rowStyle}}>
+              <div style={{...iconBox(t.failed?'#64748b':t.action==='BUY'?GRN:RED,t.failed?'rgba(255,255,255,.04)':t.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',t.failed?'✗':t.action==='BUY'?'↑':'↓') as any}}>{t.failed?'✗':t.action==='BUY'?'↑':'↓'}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{t.symbol||'?'}</div>
+                <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{t.action}·{t.label}{t.failed&&<span style={{marginLeft:5,padding:'1px 5px',borderRadius:4,background:'rgba(239,68,68,.12)',color:RED,fontSize:9,fontWeight:700}}>FAILED</span>}</div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                {t.action==='SELL'&&!t.failed?<div style={{fontSize:14,fontWeight:900,color:(t.pnl_sol||0)>=0?GRN:RED}}>{(t.pnl_sol||0)>=0?'+':'-'}€{Math.abs(toEn(t.pnl_sol||0)).toFixed(2)}</div>:<div style={{fontSize:12,fontWeight:700,color:'#64748b'}}>{(t.gross_sol||0).toFixed(4)} SOL</div>}
+                <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{timeAgo(t.created_at)}</div>
+              </div>
+            </div>
+          ))}
+        </Card>
+
+        {/* WHALE PERFORMANCE */}
+        <Card title="🐋 Whale Performance" right={
+          <div style={{display:'flex',gap:4}}>
+            {(['daily','weekly','monthly','yearly'] as const).map(p=>(
+              <button key={p} onClick={e=>{e.stopPropagation();setPeriod(p);}} style={{padding:'4px 9px',borderRadius:20,cursor:'pointer',border:`1px solid ${period===p?'rgba(212,175,55,.4)':BDR}`,background:period===p?'rgba(212,175,55,.12)':'transparent',color:period===p?G:'#64748b',fontSize:9,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase' as const}}>
+                {p==='daily'?'D':p==='weekly'?'W':p==='monthly'?'M':'Y'}
+              </button>
+            ))}
+          </div>
+        } defaultOpen={false}>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',minWidth:320,tableLayout:'fixed' as const}}>
               <thead>
-                <tr>
-                  {['#','Whale','Buys','Sells','Vol SOL','Vol €'].map(h=>(
-                    <th key={h} style={{ padding:'8px 10px', textAlign:'left' as const, fontSize:9,
-                      fontWeight:800, letterSpacing:'.3em', textTransform:'uppercase' as const,
-                      color:'#64748b', borderBottom:`1px solid ${BDR}`, whiteSpace:'nowrap' as const }}>{h}</th>
-                  ))}
-                </tr>
+                <tr>{['#','Whale','Buys','Sells','Vol SOL','Vol €'].map(h=><th key={h} style={{padding:'8px 10px',textAlign:'left' as const,fontSize:9,fontWeight:800,letterSpacing:'.3em',textTransform:'uppercase' as const,color:'#64748b',borderBottom:`1px solid ${BDR}`,whiteSpace:'nowrap' as const}}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {whaleRows.map((w,i)=>{
-                  const hasData = w.total>0;
-                  const barW = Math.min(100,(w.totalSol/maxSol)*100);
-                  return (
-                    <tr key={w.addr} style={{ background:i%2===0?'transparent':'rgba(255,255,255,.01)' }}>
-                      <td style={{ padding:'9px 10px', fontSize:12, color:'#64748b', fontWeight:700, whiteSpace:'nowrap' as const }}>
-                        {i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}
+                  const has=w.total>0;
+                  const barW=Math.min(100,(w.totalSol/maxSol)*100);
+                  return(
+                    <tr key={w.addr} style={{background:i%2===0?'transparent':'rgba(255,255,255,.012)'}}>
+                      <td style={{padding:'9px 10px',fontSize:12,color:'#64748b',fontWeight:700,whiteSpace:'nowrap' as const}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+                      <td style={{padding:'9px 10px'}}>
+                        <div style={{fontSize:12,fontWeight:800,color:'#fff',whiteSpace:'nowrap' as const}}>{w.label}{w.vip&&<span style={{color:G,marginLeft:3}}>⭐</span>}</div>
+                        <div style={{fontSize:9,color:'#64748b',fontFamily:'monospace',marginTop:1}}>{w.addr.slice(0,6)}…{w.addr.slice(-4)}</div>
                       </td>
-                      <td style={{ padding:'9px 10px' }}>
-                        <div style={{ fontSize:12, fontWeight:800, color:'#fff', whiteSpace:'nowrap' as const }}>
-                          {w.label}{w.vip&&<span style={{ color:G, marginLeft:3 }}>⭐</span>}
-                        </div>
-                        <div style={{ fontSize:9, color:'#64748b', fontFamily:'monospace', marginTop:1 }}>
-                          {w.addr.slice(0,6)}…{w.addr.slice(-4)}
-                        </div>
-                      </td>
-                      <td style={{ padding:'9px 10px', fontSize:12, fontWeight:700, color:hasData?GRN:'#64748b' }}>{hasData?w.buys:'—'}</td>
-                      <td style={{ padding:'9px 10px', fontSize:12, fontWeight:700, color:hasData?RED:'#64748b' }}>{hasData?w.sells:'—'}</td>
-                      <td style={{ padding:'9px 10px' }}>
-                        {hasData?(
-                          <div>
-                            <div style={{ fontSize:12, fontWeight:700, color:'#fff' }}>{w.totalSol.toFixed(2)}</div>
-                            <div style={{ width:60, background:'rgba(255,255,255,.06)', borderRadius:3, height:4, marginTop:3 }}>
-                              <div style={{ width:`${barW}%`, height:4, borderRadius:3, background:G }}/>
-                            </div>
-                          </div>
-                        ):<span style={{ color:'#64748b' }}>—</span>}
-                      </td>
-                      <td style={{ padding:'9px 10px', fontSize:12, fontWeight:700, color:hasData?G:'#64748b' }}>
-                        {hasData?`€${toEn(w.totalSol).toFixed(0)}`:'—'}
-                      </td>
+                      <td style={{padding:'9px 10px',fontSize:12,fontWeight:700,color:has?GRN:'#64748b'}}>{has?w.buys:'—'}</td>
+                      <td style={{padding:'9px 10px',fontSize:12,fontWeight:700,color:has?RED:'#64748b'}}>{has?w.sells:'—'}</td>
+                      <td style={{padding:'9px 10px'}}>{has?<div><div style={{fontSize:12,fontWeight:700,color:'#fff'}}>{w.totalSol.toFixed(2)}</div><div style={{width:50,background:'rgba(255,255,255,.06)',borderRadius:3,height:4,marginTop:3}}><div style={{width:`${barW}%`,height:4,borderRadius:3,background:G}}/></div></div>:<span style={{color:'#64748b'}}>—</span>}</td>
+                      <td style={{padding:'9px 10px',fontSize:12,fontWeight:700,color:has?G:'#64748b'}}>{has?`€${toEn(w.totalSol).toFixed(0)}`:'—'}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          {whaleSigs.length===0 && (
-            <div style={{ padding:'20px', textAlign:'center', fontSize:12, color:'#64748b' }}>
-              No whale data yet for this period — backfill running on Hetzner
-            </div>
-          )}
-        </div>
-
-        {/* ⑤ OPEN POSITIONS + SIGNALS — stacked on mobile */}
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-
-          {/* positions */}
-          <div style={s.card}>
-            <div style={s.head}>
-              <span style={s.lbl}>📂 Open Positions</span>
-              <span style={{ fontSize:10, color:openPos.length>0?GRN:'#64748b' }}>{openPos.length} active</span>
-            </div>
-            <div style={s.body}>
-              {openPos.length===0?(
-                <div style={{ textAlign:'center', padding:'20px 0' }}>
-                  <div style={{ fontSize:26, marginBottom:8 }}>👀</div>
-                  <div style={{ fontSize:13, color:'#cbd5e0', fontWeight:700, marginBottom:4 }}>Watching for whale BUYs</div>
-                  <div style={{ fontSize:11, color:'#64748b', marginBottom:14 }}>Positions open here instantly</div>
-                  <button onClick={testSignal} disabled={busy||!running}
-                    style={{ padding:'9px 20px', borderRadius:11, border:`1px solid ${!running?BDR:'rgba(0,212,255,.3)'}`,
-                      background:running?'rgba(0,212,255,.08)':'transparent',
-                      color:running?CYN:'#64748b', fontSize:11, fontWeight:800, letterSpacing:'.12em',
-                      cursor:running?'pointer':'not-allowed' }}>
-                    ⚡ Test Signal {!running?'(start bot first)':''}
-                  </button>
-                </div>
-              ):openPos.map((p:any)=>(
-                <div key={p.mint} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderBottom:`1px solid rgba(45,55,72,.4)` }}>
-                  <div style={{ width:32, height:32, borderRadius:9, background:'rgba(16,185,129,.1)', color:GRN, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, flexShrink:0 }}>↑</div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:900, color:G }}>{p.symbol||'?'}</div>
-                    <div style={{ fontSize:10, color:'#64748b', marginTop:1 }}>{p.label}</div>
-                  </div>
-                  <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:13, fontWeight:800, color:GRN }}>{p.entrySOL?.toFixed(4)} SOL</div>
-                    <div style={{ fontSize:10, color:'#64748b' }}>€{toE(p.entrySOL||0)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* signal feed */}
-          <div style={s.card}>
-            <div style={s.head}>
-              <span style={s.lbl}>📡 Signal Feed</span>
-              <span style={s.pill('rgba(0,212,255,.08)','rgba(0,212,255,.28)',CYN)}>
-                <span style={{ width:5,height:5,borderRadius:'50%',background:CYN }}/>Live
-              </span>
-            </div>
-            <div style={s.body}>
-              {signals.length===0?(
-                <div style={{ textAlign:'center', padding:'20px 0' }}>
-                  <div style={{ fontSize:26, marginBottom:8 }}>🐋</div>
-                  <div style={{ fontSize:13, color:'#cbd5e0', fontWeight:700, marginBottom:4 }}>Watching 21 wallets</div>
-                  <div style={{ fontSize:11, color:'#64748b' }}>Signals appear here instantly when a whale swaps</div>
-                </div>
-              ):signals.map((sig:any)=>(
-                <div key={sig.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderBottom:`1px solid rgba(45,55,72,.4)` }}>
-                  <div style={{ width:32, height:32, borderRadius:9, flexShrink:0,
-                    background:sig.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',
-                    color:sig.action==='BUY'?GRN:RED,
-                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900 }}>
-                    {sig.action==='BUY'?'↑':'↓'}
-                  </div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:800, color:G, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>
-                      {sig.symbol||sig.mint?.slice(0,8)}
-                      {sig.is_pump_fun&&<span style={{ marginLeft:5, padding:'1px 5px', borderRadius:4, background:'rgba(139,92,246,.15)', color:'#a78bfa', fontSize:9, fontWeight:700 }}>pump</span>}
-                    </div>
-                    <div style={{ fontSize:10, color:'#64748b', marginTop:1 }}>{sig.label}</div>
-                  </div>
-                  <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:12, fontWeight:700 }}>{sig.amount_sol?.toFixed(3)} SOL</div>
-                    <div style={{ fontSize:10, color:'#64748b' }}>{timeAgo(sig.created_at)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ⑥ TRADE HISTORY ── */}
-        <div style={s.card}>
-          <div style={s.head}>
-            <span style={s.lbl}>📋 Trade History</span>
-            <span style={{ fontSize:10, color:'#64748b' }}>{trades.length} trades</span>
-          </div>
-          <div style={s.body}>
-            {trades.length===0?(
-              <div style={{ textAlign:'center', padding:'20px 0' }}>
-                <div style={{ fontSize:26, marginBottom:8 }}>📊</div>
-                <div style={{ fontSize:13, color:'#cbd5e0', fontWeight:700, marginBottom:4 }}>No trades yet</div>
-                <div style={{ fontSize:11, color:'#64748b' }}>Start bot → inject test signal → see first trade</div>
-              </div>
-            ):trades.map((t:any)=>(
-              <div key={t.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderBottom:`1px solid rgba(45,55,72,.4)` }}>
-                <div style={{ width:32, height:32, borderRadius:9, flexShrink:0,
-                  background:t.failed?'rgba(255,255,255,.04)':t.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',
-                  color:t.failed?'#64748b':t.action==='BUY'?GRN:RED,
-                  display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900 }}>
-                  {t.failed?'✗':t.action==='BUY'?'↑':'↓'}
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:800, color:G, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>{t.symbol||'?'}</div>
-                  <div style={{ fontSize:10, color:'#64748b', marginTop:1 }}>
-                    {t.action}·{t.label}{t.failed&&<span style={{ marginLeft:5, padding:'1px 5px', borderRadius:4, background:'rgba(239,68,68,.12)', color:RED, fontSize:9, fontWeight:700 }}>FAILED</span>}
-                  </div>
-                </div>
-                <div style={{ textAlign:'right', flexShrink:0 }}>
-                  {t.action==='SELL'&&!t.failed?(
-                    <div style={{ fontSize:14, fontWeight:900, color:(t.pnl_sol||0)>=0?GRN:RED }}>
-                      {(t.pnl_sol||0)>=0?'+':'-'}€{Math.abs(toEn(t.pnl_sol||0)).toFixed(2)}
-                    </div>
-                  ):(
-                    <div style={{ fontSize:12, fontWeight:700, color:'#64748b' }}>{(t.gross_sol||0).toFixed(4)} SOL</div>
-                  )}
-                  <div style={{ fontSize:10, color:'#64748b', marginTop:1 }}>{timeAgo(t.created_at)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+          {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No data yet for this period · backfill runs tonight at midnight UTC</div>}
+        </Card>
 
       </div>
     </div>
