@@ -19,6 +19,226 @@ const VIMSHOTTARI = [
   { p: "Mercury", y: 17 },
 ] as const;
 
+
+// ════════════════════════════════════════════════════════════════
+// BHUMI ORACLE — ACG Line Calculator (36 true angular lines)
+// ════════════════════════════════════════════════════════════════
+
+const PLANET_COLORS: Record<string, string> = {
+  sun:"#F59E0B", moon:"#C0C8E8", mars:"#EF4444", mercury:"#10B981",
+  jupiter:"#D4AF37", venus:"#EC4899", saturn:"#6366F1", rahu:"#8B5CF6", ketu:"#F97316",
+};
+
+const ANGLE_MEANINGS: Record<string, Record<string, string>> = {
+  ASC: {
+    sun:"Identity and leadership radiate from you here. Seen as radiant and authoritative. Best for personal brand.",
+    moon:"Deep emotional intelligence is your public face. Healing and nurturing roles come naturally.",
+    mars:"Bold and energised presence. Physical vitality peaks. Channel Agni consciously.",
+    mercury:"Sharp intellect defines you. Teaching, writing, and business thrive here.",
+    jupiter:"Guru energy radiates from you. Wisdom and dharma are your identity. Expansion in all areas.",
+    venus:"Beauty and charm become your signature. Love and artistic creation flow. Most magnetic zone.",
+    saturn:"Disciplined and serious persona. Life demands hard work but rewards mastery.",
+    rahu:"Foreign, innovative, boundary-breaking identity. Fame possible — use ambition with awareness.",
+    ketu:"Spiritual and mystical presence. Past-life gifts surface. Others sense your otherworldly wisdom.",
+  },
+  MC: {
+    sun:"Career and public reputation peak. Government favour, recognition, and authority.",
+    moon:"Career in healing, hospitality, or public service. Public emotional intelligence.",
+    mars:"Driven professional energy. Leadership and engineering success. Ambition amplified.",
+    mercury:"Communication and intellect define career. Writing, teaching, business intelligence peaks.",
+    jupiter:"Most auspicious MC. Career in dharma, education, law, or spiritual work. Wealth through wisdom.",
+    venus:"Artistic career peaks. Fame in beauty, arts, luxury. Love life public and beautiful.",
+    saturn:"Career requires discipline. Slow but permanent gains. Authority through mastery over time.",
+    rahu:"Unconventional fame. Technology, foreign career, or media success.",
+    ketu:"Spiritual vocation becomes public. Renunciation respected. Moksha-related career.",
+  },
+  DSC: {
+    sun:"Powerful and authoritative partners appear. Marriage to someone solar and commanding.",
+    moon:"Deeply nurturing partnerships. Emotional bonds heal. Marriage is the sanctuary.",
+    mars:"Passionate and intense partnerships. Magnetic but requires conscious channeling.",
+    mercury:"Intellectual partnerships. Communication is the bond. Business partnerships sharp.",
+    jupiter:"Most auspicious for marriage. Wise, dharmic, expansive partners appear here.",
+    venus:"Zone of love and romance. Marriage prospects peak. Beautiful partnerships blossom.",
+    saturn:"Karmic partnerships. Long-lasting but requiring work and patience.",
+    rahu:"Foreign or unusual partnerships. Intense attraction with karmic undercurrent.",
+    ketu:"Past-life partnerships resurface. Spiritually significant bonds. Detachment from identity.",
+  },
+  IC: {
+    sun:"Ancestral solar power. Rootedness in identity. Family as foundation of authority.",
+    moon:"Deepest emotional home. Most nurturing zone. Ideal for family life and inner peace.",
+    mars:"Intense home environment. Property acquisition possible. Active domestic life.",
+    mercury:"Intellectual home life. Study and writing in private. Family of thinkers.",
+    jupiter:"Home as temple. Most auspicious IC — filled with dharma, learning, and expansion.",
+    venus:"Beautiful and harmonious home. Artistic domestic environment. Joy in private life.",
+    saturn:"Home as place of discipline. Ancestral duties. Long-term stability through effort.",
+    rahu:"Foreign or unusual home. Restless roots. Innovation in private life.",
+    ketu:"Home as ashram. Deep spiritual private life. Ancestor karma resolves.",
+  },
+};
+
+interface PlanetLongitudes {
+  sun?: number; moon?: number; mars?: number; mercury?: number;
+  jupiter?: number; venus?: number; saturn?: number; rahu?: number; ketu?: number;
+}
+
+interface ACGLine {
+  planet: string;
+  planetName: string;
+  angle: string;
+  color: string;
+  points: { lon: number; lat: number }[];
+  meaning: string;
+  isBenefic: boolean;
+}
+
+interface ParanPoint {
+  planet1: string; planet2: string;
+  angle1: string; angle2: string;
+  lat: number; lon: number; meaning: string;
+}
+
+function toRad(d: number) { return d * Math.PI / 180; }
+function toDeg(r: number) { return r * 180 / Math.PI; }
+
+function calcGMST(jd: number): number {
+  const T = (jd - 2451545.0) / 36525.0;
+  let g = 280.46061837 + 360.98564736629*(jd-2451545.0) + 0.000387933*T*T - T*T*T/38710000.0;
+  return ((g % 360) + 360) % 360;
+}
+
+function birthToJD(birthDate: string, birthTime: string, birthLon: number): number {
+  const [yr,mo,dy] = birthDate.split("-").map(Number);
+  const [hr,mn] = (birthTime||"12:00").split(":").map(Number);
+  const tzOffset = birthLon / 15;
+  const utcHr = hr + mn/60 - tzOffset;
+  const a = Math.floor((14-mo)/12);
+  const y = yr+4800-a;
+  const m = mo+12*a-3;
+  const jdn = dy+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;
+  return jdn + (utcHr-12)/24;
+}
+
+function extractPlanetLongitudes(payload: Record<string, unknown>): PlanetLongitudes {
+  const apd = (payload?.AllPlanetData || payload) as Record<string, unknown>;
+  const lons: PlanetLongitudes = {};
+  const keyMap: Record<string, keyof PlanetLongitudes> = {
+    Sun:"sun",Moon:"moon",Mars:"mars",Mercury:"mercury",Jupiter:"jupiter",
+    Venus:"venus",Saturn:"saturn",Rahu:"rahu",NorthNode:"rahu",Ketu:"ketu",SouthNode:"ketu",
+  };
+  for (const [apiKey, ourKey] of Object.entries(keyMap)) {
+    const pData = apd[apiKey] as Record<string, unknown>|undefined;
+    if (pData?.Longitude != null) lons[ourKey] = parseFloat(String(pData.Longitude));
+  }
+  return lons;
+}
+
+function guessBirthCoords(place: string): { lat: number; lon: number } {
+  const p = place.toLowerCase();
+  const locs: { keys: string[]; lat: number; lon: number }[] = [
+    {keys:["uddevalla"],lat:58.35,lon:11.93},{keys:["stockholm"],lat:59.33,lon:18.06},
+    {keys:["gothenburg","göteborg"],lat:57.70,lon:11.97},{keys:["malmö","malmo"],lat:55.60,lon:13.00},
+    {keys:["sweden","sverige"],lat:59.33,lon:18.06},{keys:["oslo"],lat:59.91,lon:10.75},
+    {keys:["norway"],lat:59.91,lon:10.75},{keys:["copenhagen"],lat:55.67,lon:12.57},
+    {keys:["denmark"],lat:55.67,lon:12.57},{keys:["helsinki","finland"],lat:60.17,lon:24.93},
+    {keys:["london"],lat:51.51,lon:-0.13},{keys:["uk","england","britain","ireland"],lat:51.51,lon:-0.13},
+    {keys:["paris","france"],lat:48.86,lon:2.35},{keys:["berlin","germany"],lat:52.52,lon:13.41},
+    {keys:["amsterdam","netherlands"],lat:52.37,lon:4.90},{keys:["vienna","austria"],lat:48.21,lon:16.37},
+    {keys:["madrid","spain"],lat:40.42,lon:-3.70},{keys:["rome","italy"],lat:41.90,lon:12.50},
+    {keys:["moscow","russia"],lat:55.75,lon:37.62},{keys:["istanbul","turkey"],lat:41.01,lon:28.97},
+    {keys:["dubai","uae"],lat:25.20,lon:55.27},{keys:["delhi","new delhi"],lat:28.61,lon:77.23},
+    {keys:["mumbai","bombay"],lat:19.08,lon:72.88},{keys:["chennai","madras"],lat:13.08,lon:80.27},
+    {keys:["bangalore","bengaluru"],lat:12.97,lon:77.59},{keys:["kolkata"],lat:22.57,lon:88.36},
+    {keys:["india","bharat"],lat:20.59,lon:78.96},{keys:["kathmandu","nepal"],lat:27.71,lon:85.31},
+    {keys:["beijing","china"],lat:39.91,lon:116.39},{keys:["tokyo","japan"],lat:35.68,lon:139.69},
+    {keys:["singapore"],lat:1.35,lon:103.82},{keys:["bali"],lat:-8.41,lon:115.19},
+    {keys:["jakarta","indonesia"],lat:-6.21,lon:106.85},{keys:["sydney","australia"],lat:-33.87,lon:151.21},
+    {keys:["cairo","egypt"],lat:30.04,lon:31.24},{keys:["new york","nyc"],lat:40.71,lon:-74.01},
+    {keys:["los angeles","california"],lat:34.05,lon:-118.24},{keys:["toronto","canada"],lat:43.65,lon:-79.38},
+    {keys:["mexico city","mexico"],lat:19.43,lon:-99.13},{keys:["sao paulo","brazil"],lat:-23.55,lon:-46.63},
+    {keys:["buenos aires","argentina"],lat:-34.60,lon:-58.38},{keys:["lima","peru"],lat:-12.05,lon:-77.03},
+  ];
+  for (const loc of locs) {
+    if (loc.keys.some(k => p.includes(k))) return {lat:loc.lat,lon:loc.lon};
+  }
+  return {lat:0,lon:0};
+}
+
+function computeACGLines(
+  planetLons: PlanetLongitudes, birthDate: string, birthTime: string,
+  birthLat: number, birthLon: number
+): { acgLines: ACGLine[]; parans: ParanPoint[] } {
+  const jd   = birthToJD(birthDate, birthTime, birthLon);
+  const gmst = calcGMST(jd);
+  const eps  = 23.44;
+
+  const PLANET_DISPLAY: Record<string, string> = {
+    sun:"Surya",moon:"Chandra",mars:"Mangala",mercury:"Budha",
+    jupiter:"Guru",venus:"Shukra",saturn:"Shani",rahu:"Rāhu",ketu:"Ketu",
+  };
+  const BENEFIC = new Set(["jupiter","venus","moon","mercury"]);
+  const acgLines: ACGLine[] = [];
+
+  for (const [pid, pname] of Object.entries(PLANET_DISPLAY)) {
+    const lon = planetLons[pid as keyof PlanetLongitudes];
+    if (lon == null) continue;
+
+    const eLon = toRad(lon);
+    const epsR = toRad(eps);
+    const ra   = toDeg(Math.atan2(Math.sin(eLon)*Math.cos(epsR), Math.cos(eLon)));
+    const raPos= ((ra%360)+360)%360;
+    const dec  = toDeg(Math.asin(Math.sin(eLon)*Math.sin(epsR)));
+    const tanDec = Math.tan(toRad(dec));
+
+    // MC line (vertical, at fixed longitude)
+    const mcLon = ((raPos - gmst + 180 + 360) % 360) - 180;
+    const mcPts = [];
+    for (let lat=-80;lat<=80;lat+=4) mcPts.push({lon:mcLon,lat});
+    acgLines.push({planet:pid,planetName:pname,angle:"MC",color:PLANET_COLORS[pid],points:mcPts,meaning:ANGLE_MEANINGS.MC[pid]??"",isBenefic:BENEFIC.has(pid)});
+
+    // IC line (opposite MC)
+    const icLon = ((mcLon+180+360)%360)-180;
+    const icPts = [];
+    for (let lat=-80;lat<=80;lat+=4) icPts.push({lon:icLon,lat});
+    acgLines.push({planet:pid,planetName:pname,angle:"IC",color:PLANET_COLORS[pid],points:icPts,meaning:ANGLE_MEANINGS.IC[pid]??"",isBenefic:BENEFIC.has(pid)});
+
+    // ASC + DSC lines (curved great circles)
+    if (Math.abs(tanDec) > 0.001) {
+      const ascPts: {lon:number;lat:number}[] = [];
+      const dscPts: {lon:number;lat:number}[] = [];
+      for (let gLon=-180;gLon<=180;gLon+=3) {
+        const lst = ((gmst+gLon+360)%360);
+        const H  = toRad(((lst-raPos+360)%360));
+        const latR = Math.atan(-Math.cos(H)/tanDec);
+        const lat  = toDeg(latR);
+        if (lat>=-80&&lat<=80) ascPts.push({lon:gLon,lat:Math.round(lat*10)/10});
+        const H2 = toRad(((lst-raPos+180+360)%360));
+        const latR2 = Math.atan(-Math.cos(H2)/tanDec);
+        const lat2  = toDeg(latR2);
+        if (lat2>=-80&&lat2<=80) dscPts.push({lon:gLon,lat:Math.round(lat2*10)/10});
+      }
+      if (ascPts.length>2) acgLines.push({planet:pid,planetName:pname,angle:"ASC",color:PLANET_COLORS[pid],points:ascPts,meaning:ANGLE_MEANINGS.ASC[pid]??"",isBenefic:BENEFIC.has(pid)});
+      if (dscPts.length>2) acgLines.push({planet:pid,planetName:pname,angle:"DSC",color:PLANET_COLORS[pid],points:dscPts,meaning:ANGLE_MEANINGS.DSC[pid]??"",isBenefic:BENEFIC.has(pid)});
+    }
+  }
+
+  // Parans: MC lines within 5° longitude
+  const mcLines = acgLines.filter(l=>l.angle==="MC");
+  const parans: ParanPoint[] = [];
+  for (let i=0;i<mcLines.length;i++) {
+    for (let j=i+1;j<mcLines.length;j++) {
+      const l1=mcLines[i],l2=mcLines[j];
+      if (!l1.points[0]||!l2.points[0]) continue;
+      const diff = Math.abs(l1.points[0].lon-l2.points[0].lon);
+      if (diff<=5||diff>=355) {
+        parans.push({planet1:l1.planet,planet2:l2.planet,angle1:"MC",angle2:"MC",lat:0,
+          lon:(l1.points[0].lon+l2.points[0].lon)/2,
+          meaning:`${l1.planetName} × ${l2.planetName} paran — blended energies intensify this zone.`});
+      }
+    }
+  }
+  return {acgLines,parans};
+}
+
 const NAKSHATRA_LORD: Record<string, string> = {
   Ashwini: "Ketu",
   Bharani: "Venus",
@@ -204,6 +424,7 @@ serve(async (req) => {
 
     let moonNakshatra = "";
     let moonLongitude = 0;
+    let planetLongitudes: PlanetLongitudes = {};
     let ascendantSign = "";
     let sunSign = "";
     let nakProgress = 0.5;
@@ -308,6 +529,9 @@ serve(async (req) => {
 
       // Mars flat-structure fallbacks
       if (!marsSign && payload?.MarsSign) marsSign = String(payload.MarsSign).trim();
+
+      // Extract ALL planet longitudes for ACG
+      planetLongitudes = extractPlanetLongitudes(payload as Record<string, unknown>);
       if (!marsSign) {
         const keys = Object.keys(payload?.AllPlanetData || {});
         const marsKey = keys.find(k => /^mars$/i.test(k));
@@ -440,6 +664,21 @@ serve(async (req) => {
     // ── Vimshottari Dasha ──
     const dashaResult = calcVimshottari(moonNakshatra, nakProgress, birthDate);
 
+    // ── Bhumi Oracle: Compute real ACG lines ──
+    let acgLines: ACGLine[] = [];
+    let parans: ParanPoint[] = [];
+    if (Object.keys(planetLongitudes).length >= 4 && birthDate && birthTime) {
+      try {
+        const birthCoords = guessBirthCoords(birthPlace || "");
+        const acgResult = computeACGLines(planetLongitudes, birthDate, birthTime, birthCoords.lat, birthCoords.lon);
+        acgLines = acgResult.acgLines;
+        parans   = acgResult.parans;
+        console.log("ACG lines computed:", acgLines.length, "parans:", parans.length);
+      } catch (acgErr) {
+        console.error("ACG error:", acgErr);
+      }
+    }
+
     const ephemerisData = {
       source: moonLongitude > 0 ? "vedastro_swiss_ephemeris" : "date_fallback",
       calculatedAt: new Date().toISOString(),
@@ -481,6 +720,9 @@ serve(async (req) => {
         sunSign,
         marsSign,
         ephemerisData: ephemerisData,
+        acgLines,
+        parans,
+        planetLongitudes,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
