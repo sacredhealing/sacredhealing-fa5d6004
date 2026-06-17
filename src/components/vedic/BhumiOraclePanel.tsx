@@ -2,7 +2,6 @@
 // Graha-Geographic Intelligence · Akasha-Neural Archive
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 
 interface BirthData {
   birth_name: string;
