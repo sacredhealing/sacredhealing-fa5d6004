@@ -139,7 +139,7 @@ const SQI_STYLES = `
     color: rgba(255,255,255,0.7);
   }
 
-  .btn-cyan {
+  .btn-gold-outline {
     padding: 12px 28px;
     background: rgba(212,175,55,0.08);
     border: 1px solid rgba(212,175,55,0.25);
@@ -153,7 +153,7 @@ const SQI_STYLES = `
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  .btn-cyan:hover {
+  .btn-gold-outline:hover {
     background: rgba(212,175,55,0.14);
     box-shadow: 0 0 20px rgba(212,175,55,0.1);
   }
@@ -931,7 +931,7 @@ function DigitalNadiInner() {
                   Cancel
                 </button>
                 {bpm && (
-                  <button type="button" onClick={finishScan} className="btn-cyan">
+                  <button type="button" onClick={finishScan} className="btn-gold-outline">
                     View Reading →
                   </button>
                 )}
