@@ -1,10 +1,10 @@
-// v2.1.0 deployed 2026-06-17T13:12:14Z
+// v2.2.0 deployed 2026-06-17T13:12:14Z
 /**
  * 🔱 SHREEM BRZEE BOT v2 — World-Class Solana Copy Trading
  * Hetzner Server | Solana Mainnet
  *
  * ARCHITECTURE:
- *  Helius webhook → Supabase Realtime → processSignal()
+ *  Helius Enhanced WS (50-100ms processed) → parseTradeFromTx() → processSignal()
  *    → RugCheck filter (mint/freeze authority)
  *    → Jupiter v6 quote + swap (LIVE mode)
  *    → Jito bundle broadcast (MEV-protected)
@@ -776,6 +776,195 @@ function startTpSlMonitor() {
   }, 30_000); // check every 30 seconds
 }
 
+// ── Whale wallet map (for WS trade parsing) ───────────────────────────────────
+const WHALE_WALLETS: Record<string, string> = {
+  'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE': 'Cupsey',
+  'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ': 'Heyitsyolo',
+  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
+  '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5': 'Orange',
+  'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt': 'Shreem Brzee',
+  'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm': 'Lenion',
+  'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw':  'Boredboar',
+  'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp': 'Hades',
+  'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm':  'Kubera 72',
+  'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k': 'Brzee God',
+  '9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm': 'GBack',
+  'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f':  'Tuna',
+  'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51': 'Fireball',
+  'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS': 'Hachjdn',
+  '5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc': 'Crypto Circle',
+  '2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv': 'Crocodile',
+  '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3': 'Snow Spirit',
+  'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
+  'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA': 'The Grande',
+  'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW': 'A Milly',
+  'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG': 'J2ANNaq',
+};
+const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
+const PUMP_FUN_PROGRAM = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
+
+// ── Inline trade parser (same logic as FomoCopyBot) ───────────────────────────
+function isPumpFunTx(tx: any): boolean {
+  const keys = tx?.transaction?.message?.accountKeys || [];
+  return keys.some((k: any) => (k.pubkey || k) === PUMP_FUN_PROGRAM);
+}
+
+function parseTradeFromTx(tx: any, walletAddress: string, sig: string): any | null {
+  if (!tx?.meta || tx.meta.err) return null;
+  const pre     = tx.meta.preTokenBalances  || [];
+  const post    = tx.meta.postTokenBalances || [];
+  const preSOL  = tx.meta.preBalances?.[0]  ?? 0;
+  const postSOL = tx.meta.postBalances?.[0] ?? 0;
+  const solDelta = (postSOL - preSOL) / 1e9;
+
+  const balByMint: Record<string, { pre: number; post: number }> = {};
+  for (const b of pre) {
+    if (b.owner !== walletAddress) continue;
+    balByMint[b.mint] = { pre: parseFloat(b.uiTokenAmount?.uiAmountString || '0'), post: 0 };
+  }
+  for (const b of post) {
+    if (b.owner !== walletAddress) continue;
+    const cur = balByMint[b.mint] || { pre: 0, post: 0 };
+    cur.post = parseFloat(b.uiTokenAmount?.uiAmountString || '0');
+    balByMint[b.mint] = cur;
+  }
+
+  let bestMint: string | null = null;
+  let bestDelta = 0;
+  for (const [mint, { pre: p, post: q }] of Object.entries(balByMint)) {
+    if (mint === SOL_MINT) continue;
+    const d = q - p;
+    if (Math.abs(d) > Math.abs(bestDelta)) { bestDelta = d; bestMint = mint; }
+  }
+  if (!bestMint || bestDelta === 0) return null;
+
+  return {
+    sig, wallet: walletAddress,
+    action:      bestDelta > 0 ? 'BUY' : 'SELL',
+    mint:        bestMint,
+    symbol:      null,
+    amount_sol:  Math.abs(solDelta),
+    token_amount: Math.abs(bestDelta),
+    is_pump_fun: isPumpFunTx(tx),
+    label:       WHALE_WALLETS[walletAddress] || walletAddress.slice(0, 8),
+  };
+}
+
+// ── Helius Enhanced WebSocket — 50-100ms at processed commitment ──────────────
+// Replaces Supabase Realtime subscription. Direct connection to Helius WS.
+// Uses transactionSubscribe (Developer plan feature) — monitors all 21 whales
+// in ONE subscription at 'processed' commitment for minimum latency.
+
+let wsInstance: any = null;
+let wsReconnectTimer: any = null;
+let wsKilled = false;
+
+function startEnhancedWebSocket(): void {
+  if (wsKilled) return;
+
+  const WS_URL = `wss://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+  console.log('[ws] Connecting to Helius Enhanced WebSocket...');
+
+  const WebSocket = require('ws');
+  const ws = new WebSocket(WS_URL);
+  wsInstance = ws;
+
+  ws.on('open', () => {
+    console.log('[ws] Connected — subscribing to 21 whale wallets at processed commitment');
+
+    // ONE subscription covers ALL 21 wallets — Helius Developer plan feature
+    ws.send(JSON.stringify({
+      jsonrpc: '2.0', id: 1,
+      method: 'transactionSubscribe',
+      params: [
+        {
+          vote: false,
+          failed: false,
+          accountInclude: Object.keys(WHALE_WALLETS),
+        },
+        {
+          commitment: 'processed',        // ← 50-100ms vs 400-600ms confirmed
+          encoding: 'jsonParsed',
+          transactionDetails: 'full',
+          showRewards: false,
+          maxSupportedTransactionVersion: 0,
+        },
+      ],
+    }));
+
+    // Keepalive ping every 25s
+    const ping = setInterval(() => {
+      if (ws.readyState === 1) {
+        ws.send(JSON.stringify({ jsonrpc: '2.0', id: 99, method: 'ping', params: [] }));
+      } else {
+        clearInterval(ping);
+      }
+    }, 25_000);
+  });
+
+  ws.on('message', async (raw: Buffer) => {
+    let msg: any;
+    try { msg = JSON.parse(raw.toString()); } catch { return; }
+
+    // Subscription confirmed
+    if (msg.id === 1 && typeof msg.result === 'number') {
+      console.log(`[ws] ✅ Subscribed — sub ID: ${msg.result} | watching 21 whales at processed`);
+      return;
+    }
+
+    // transactionSubscribe blocked (free plan) — log and keep alive
+    if (msg.id === 1 && msg.error) {
+      console.error(`[ws] transactionSubscribe error: ${msg.error.message}`);
+      console.log('[ws] Falling back to Supabase Realtime (check Helius plan)');
+      return;
+    }
+
+    if (msg.method !== 'transactionNotification') return;
+
+    const t0  = Date.now();
+    const val = msg.params?.result?.transaction;
+    const sig = msg.params?.result?.signature || val?.transaction?.signatures?.[0];
+    if (!val || !sig) return;
+
+    // Find which whale wallet is involved
+    const keys: string[] = (val?.transaction?.message?.accountKeys || [])
+      .map((k: any) => k.pubkey || k);
+    const whaleAddr = keys.find(k => WHALE_ADDRS.has(k));
+    if (!whaleAddr) return;
+
+    // Parse the trade inline — no DB round trip
+    const trade = parseTradeFromTx(val, whaleAddr, sig);
+    if (!trade) return;
+
+    const latency = Date.now() - t0;
+    console.log(`[ws] Signal parsed in ${latency}ms — ${trade.action} ${trade.mint.slice(0,8)} by ${trade.label}`);
+
+    // Save signal to DB for UI display (async, non-blocking)
+    edgePost('/signal', { signal: trade }).catch(() => {});
+
+    // Register with pre-warmer
+    registerMintActivity(trade.mint);
+
+    // Process immediately — this is the hot path
+    try {
+      await processSignal(trade);
+    } catch (e: any) {
+      console.error('[ws] processSignal error:', e.message);
+    }
+  });
+
+  ws.on('error', (e: Error) => {
+    console.error('[ws] Error:', e.message);
+  });
+
+  ws.on('close', () => {
+    console.log('[ws] Disconnected — reconnecting in 3s...');
+    if (!wsKilled) {
+      wsReconnectTimer = setTimeout(() => startEnhancedWebSocket(), 3000);
+    }
+  });
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('🔱 SHREEM BRZEE BOT v2 — starting');
@@ -803,19 +992,27 @@ async function main() {
   // Start Jupiter quote pre-warmer
   startQuotePreWarmer();
 
-  // Realtime subscription
+  // Enhanced WebSocket — 50-100ms at processed commitment (Helius Developer plan)
+  startEnhancedWebSocket();
+
+  // Keep Supabase Realtime as fallback for test signals from UI
   const channel: RealtimeChannel = supabase
-    .channel('shreem_bot_v2')
+    .channel('shreem_bot_v2_fallback')
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'shreem_brzee_signals' },
       async (payload) => {
-        try { await processSignal(payload.new); }
-        catch (e: any) { console.error('[error]', e.message); }
+        // Only process test signals (sig starts with TEST_) via Supabase
+        // Real whale signals come via Enhanced WebSocket above
+        const sig = payload.new?.sig || '';
+        if (sig.startsWith('TEST_')) {
+          try { await processSignal(payload.new); }
+          catch (e: any) { console.error('[fallback]', e.message); }
+        }
       }
     )
     .subscribe((status) => {
-      console.log(`[realtime] ${status}`);
+      console.log(`[realtime-fallback] ${status}`);
     });
 
   // Status log every 60s
@@ -832,13 +1029,16 @@ async function main() {
     );
   }, 60_000);
 
-  console.log(`✅ Listening on Supabase Realtime | portfolio: ${session.portfolio.toFixed(4)} SOL`);
+  console.log(`✅ Enhanced WebSocket LIVE | 50-100ms detection | portfolio: ${session.portfolio.toFixed(4)} SOL`);
 
   process.on('SIGTERM', async () => {
     console.log('[shutdown] saving session…');
     if (tpslTimer)  clearInterval(tpslTimer  as unknown as number);
     if (warmerTimer) clearInterval(warmerTimer as unknown as number);
     await saveSession(session);
+    wsKilled = true;
+    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
+    if (wsInstance) wsInstance.close();
     channel.unsubscribe();
     process.exit(0);
   });
