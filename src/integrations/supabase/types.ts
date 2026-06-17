@@ -9213,6 +9213,7 @@ export type Database = {
         Args: { email_input: string; name_input?: string }
         Returns: Json
       }
+      tier_name_to_level: { Args: { tier_name: string }; Returns: number }
       update_mantra_admin: { Args: { data: Json }; Returns: Json }
     }
     Enums: {
