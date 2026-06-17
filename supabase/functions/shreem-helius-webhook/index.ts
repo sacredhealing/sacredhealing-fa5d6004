@@ -103,6 +103,17 @@ serve(async (req) => {
   const url = new URL(req.url);
   const path = url.pathname;
 
+  // GET /signals — bot poller fetches latest signals every 3s
+  if (req.method === "GET" && path.endsWith("/signals")) {
+    const { data, error } = await sb
+      .from("shreem_brzee_signals")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) return jsonResp({ error: error.message }, 500);
+    return jsonResp(data || []);
+  }
+
   // GET /session
   if (req.method === "GET" && path.endsWith("/session")) {
     const { data, error } = await sb
