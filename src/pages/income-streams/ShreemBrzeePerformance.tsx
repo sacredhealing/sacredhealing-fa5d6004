@@ -31,12 +31,10 @@ const WHALES=[
 ];
 
 const isValidSolana=(a:string)=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a.trim());
-const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 const timeAgo=(ts:string)=>{const m=Math.floor((Date.now()-new Date(ts).getTime())/60000);if(m<1)return'now';if(m<60)return`${m}m`;if(m<1440)return`${Math.floor(m/60)}h`;return`${Math.floor(m/1440)}d`;};
 async function getSolEur(){try{const[p,fx]=await Promise.all([fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').then(r=>r.json()),fetch('https://api.exchangerate-api.com/v4/latest/USD').then(r=>r.json())]);return{usd:parseFloat(p.price)||150,eur:fx?.rates?.EUR||0.92};}catch{return{usd:150,eur:0.92};}}
 async function getWalletBal(addr:string){try{const r=await fetch(HELIUS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr]})});const d=await r.json();return(d.result?.value||0)/1e9;}catch{return 0;}}
 
-// ── card wrapper with collapse ──────────────────────────────
 function Card({title,badge,right,children,defaultOpen=true,accent}:{title:string,badge?:React.ReactNode,right?:React.ReactNode,children:React.ReactNode,defaultOpen?:boolean,accent?:string}){
   const[open,setOpen]=useState(defaultOpen);
   return(
@@ -52,6 +50,39 @@ function Card({title,badge,right,children,defaultOpen=true,accent}:{title:string
         </div>
       </div>
       {open&&<div style={{padding:16}}>{children}</div>}
+    </div>
+  );
+}
+
+// ── Diagnostic Panel Component ────────────────────────────────────────────────
+function DiagnosticPanel({running,signalCount,edgeOk}:{running:boolean,signalCount:number,edgeOk:boolean|null}){
+  const checks=[
+    {label:'Helius Webhook',status:edgeOk===null?'checking':edgeOk?'ok':'fail',
+     detail:edgeOk===null?'Checking…':edgeOk?'Edge function reachable ✓':'Edge function unreachable — re-register needed',
+     fix:edgeOk===false?'Run workflow: register-helius-shreem.yml with correct wallets':undefined},
+    {label:'Bot Session',status:running?'ok':'warn',
+     detail:running?'Session active, processing signals':'Session stopped — start bot above'},
+    {label:'Signal Pipeline',status:signalCount>0?'ok':'warn',
+     detail:signalCount>0?`${signalCount} signals received from Helius`:'0 signals — Helius may not be sending to correct wallets',
+     fix:signalCount===0?'Check Helius dashboard: webhook must point to correct 21 wallet addresses':undefined},
+    {label:'Blockchain',status:'ok',detail:'Solana mainnet via Helius RPC'},
+  ];
+  const stC={ok:GRN,warn:'#f59e0b',fail:RED,checking:'#64748b'};
+  return(
+    <div style={{background:'rgba(0,0,0,.35)',border:`1px solid rgba(255,255,255,.06)`,borderRadius:14,padding:14}}>
+      <div style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)',marginBottom:12}}>⚡ System Diagnostics</div>
+      {checks.map(c=>(
+        <div key={c.label} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:10}}>
+          <div style={{width:8,height:8,borderRadius:'50%',background:stC[c.status as keyof typeof stC]||'#64748b',marginTop:4,flexShrink:0,
+            boxShadow:c.status==='ok'?`0 0 6px ${GRN}`:c.status==='fail'?`0 0 6px ${RED}`:'none',
+            animation:c.status==='checking'?'pulse 1.5s infinite':'none'}}/>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,fontWeight:700,color:stC[c.status as keyof typeof stC]||'#64748b'}}>{c.label}</div>
+            <div style={{fontSize:10,color:'#64748b',marginTop:2,lineHeight:1.4}}>{c.detail}</div>
+            {c.fix&&<div style={{fontSize:10,color:'rgba(239,68,68,.8)',marginTop:3,lineHeight:1.4}}>🔧 {c.fix}</div>}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -75,13 +106,23 @@ export default function ShreemBrzeePerformance(){
   const[connecting,setConnecting]=useState(false);
   const[solUSD,setSolUSD]=useState(150);
   const[eurRate,setEurRate]=useState(0.92);
-  // live position ticker
   const[livePrices,setLivePrices]=useState<Record<string,number>>({});
+  const[edgeOk,setEdgeOk]=useState<boolean|null>(null);
+  const[startActive,setStartActive]=useState(false);
+  const[stopActive,setStopActive]=useState(false);
   const tickerRef=useRef<any>(null);
 
   const toE=(sol:number)=>(sol*solUSD*eurRate).toFixed(2);
   const toEn=(sol:number)=>sol*solUSD*eurRate;
-  const flash=(m:string,t:'ok'|'err'|'info'='ok')=>{setMsg(m);setMsgType(t);setTimeout(()=>setMsg(''),5000);};
+  const flash=(m:string,t:'ok'|'err'|'info'='ok')=>{setMsg(m);setMsgType(t);setTimeout(()=>setMsg(''),6000);};
+
+  // Check edge function health
+  const checkEdge=useCallback(async()=>{
+    try{
+      const r=await fetch(`${EDGE}/session`,{signal:AbortSignal.timeout(5000)});
+      setEdgeOk(r.ok||r.status===200);
+    }catch{setEdgeOk(false);}
+  },[]);
 
   const loadSession=useCallback(async()=>{
     try{const r=await fetch(`${EDGE}/session`);if(r.ok){const d=await r.json();setSession(d||null);}}catch{}
@@ -107,13 +148,14 @@ export default function ShreemBrzeePerformance(){
 
   useEffect(()=>{
     loadAll();
+    checkEdge();
     getSolEur().then(({usd,eur})=>{setSolUSD(usd);setEurRate(eur);});
     const t=setInterval(()=>{loadAll();getSolEur().then(({usd,eur})=>{setSolUSD(usd);setEurRate(eur);});},15000);
     return()=>clearInterval(t);
-  },[loadAll]);
+  },[loadAll,checkEdge]);
   useEffect(()=>{loadWhaleSigs();},[period,loadWhaleSigs]);
 
-  // live price ticker for open positions
+  // Live price ticker
   useEffect(()=>{
     const positions=Object.values(session?.positions||{}) as any[];
     if(!positions.length){clearInterval(tickerRef.current);return;}
@@ -154,10 +196,10 @@ export default function ShreemBrzeePerformance(){
     setConnecting(false);
   };
 
-  const running=!!session?.started_at;
+  const running=!!session?.started_at&&!session?.stopped_at;
 
   const startSession=async()=>{
-    setBusy(true);
+    setBusy(true);setStartActive(true);
     const sol=parseFloat(startSOL)||1;
     try{
       await(supabase as any).from('shreem_brzee_paper_trades').delete().neq('id',0);
@@ -165,20 +207,19 @@ export default function ShreemBrzeePerformance(){
         body:JSON.stringify({type:'session',session:{portfolio:sol,start_balance:sol,positions:{},total_pnl:0,wins:0,losses:0,started_at:new Date().toISOString()}})});
       if(!res.ok)throw new Error(await res.text());
       await loadAll();flash(`Paper bot started with ${sol} SOL ✓`,'ok');
-    }catch(e:any){flash(`Error: ${e.message?.slice(0,60)}`,'err');}
+    }catch(e:any){flash(`Error: ${e.message?.slice(0,60)}`,'err');setStartActive(false);}
     setBusy(false);
   };
   const stopSession=async()=>{
-    setBusy(true);
+    setBusy(true);setStopActive(true);
     try{
       await fetch(`${EDGE}/paper`,{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({type:'session',session:{...session,started_at:null,stopped_at:new Date().toISOString()}})});
       await loadSession();flash('Bot stopped','info');
     }catch{flash('Error stopping','err');}
-    setBusy(false);
+    setBusy(false);setStopActive(false);
   };
 
-  // TEST SIGNAL: uses /test endpoint on edge fn (service key, bypasses RLS)
   const testSignal=async()=>{
     if(!running){flash('Start the bot first ↑','err');return;}
     setBusy(true);
@@ -191,7 +232,7 @@ export default function ShreemBrzeePerformance(){
     setBusy(false);
   };
 
-  // whale stats
+  // Whale stats
   const whaleMap:Record<string,{buys:number,sells:number,totalSol:number}>={};
   whaleSigs.forEach((s:any)=>{
     const l=s.label||'?';if(!whaleMap[l])whaleMap[l]={buys:0,sells:0,totalSol:0};
@@ -209,9 +250,7 @@ export default function ShreemBrzeePerformance(){
 
   const st=(bg:string,bc:string,c:string):React.CSSProperties=>({display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase' as const,background:bg,border:`1px solid ${bc}`,color:c});
   const inp=(bc:string):React.CSSProperties=>({width:'100%',padding:'11px 14px',borderRadius:12,border:`1px solid ${bc}`,background:'#111827',color:'#fff',fontSize:14,fontWeight:600,outline:'none',boxSizing:'border-box' as const});
-
   const rowStyle:React.CSSProperties={display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:`1px solid rgba(45,55,72,.4)`};
-  const iconBox=(color:string,bg:string,ch:string):React.CSSProperties&{children?:string}=>({width:32,height:32,borderRadius:9,background:bg,color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0} as any);
 
   return(
     <div style={{minHeight:'100vh',background:BLK,color:'#fff',fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
@@ -227,17 +266,37 @@ export default function ShreemBrzeePerformance(){
           </div>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
-          <span style={st(running?'rgba(16,185,129,.1)':'rgba(255,255,255,.04)',running?'rgba(16,185,129,.3)':BDR,running?GRN:'#64748b')}>
-            <span style={{width:5,height:5,borderRadius:'50%',background:'currentColor',animation:running?'pulse 1.5s infinite':'none'}}/>
+          {/* STATUS PILL — glows green when running */}
+          <span style={{
+            display:'inline-flex',alignItems:'center',gap:5,padding:'4px 12px',
+            borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase' as const,
+            background:running?'rgba(16,185,129,.15)':'rgba(255,255,255,.04)',
+            border:`1px solid ${running?'rgba(16,185,129,.5)':BDR}`,
+            color:running?GRN:'#64748b',
+            boxShadow:running?'0 0 12px rgba(16,185,129,.25)':'none',
+            transition:'all .3s ease',
+          }}>
+            <span style={{width:6,height:6,borderRadius:'50%',background:'currentColor',
+              animation:running?'pulse 1.5s infinite':'none',
+              boxShadow:running?`0 0 6px ${GRN}`:'none'}}/>
             {running?'Running':'Stopped'}
           </span>
           <span style={{fontSize:11,color:'#64748b',whiteSpace:'nowrap'}}>€{(solUSD*eurRate).toFixed(0)}/SOL</span>
         </div>
       </div>
 
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+        @keyframes goldPulse{0%,100%{box-shadow:0 0 16px rgba(212,175,55,.28)}50%{box-shadow:0 0 28px rgba(212,175,55,.55)}}
+        @keyframes redPulse{0%,100%{box-shadow:0 0 8px rgba(239,68,68,.2)}50%{box-shadow:0 0 18px rgba(239,68,68,.45)}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      `}</style>
 
-      {msg&&<div style={{margin:'10px 14px 0',padding:'11px 14px',borderRadius:12,fontSize:13,fontWeight:600,background:msgType==='ok'?'rgba(16,185,129,.1)':msgType==='err'?'rgba(239,68,68,.1)':'rgba(0,212,255,.08)',border:`1px solid ${msgType==='ok'?'rgba(16,185,129,.3)':msgType==='err'?'rgba(239,68,68,.3)':'rgba(0,212,255,.25)'}`,color:msgType==='ok'?GRN:msgType==='err'?RED:CYN}}>{msg}</div>}
+      {msg&&<div style={{margin:'10px 14px 0',padding:'11px 14px',borderRadius:12,fontSize:13,fontWeight:600,
+        background:msgType==='ok'?'rgba(16,185,129,.1)':msgType==='err'?'rgba(239,68,68,.1)':'rgba(0,212,255,.08)',
+        border:`1px solid ${msgType==='ok'?'rgba(16,185,129,.3)':msgType==='err'?'rgba(239,68,68,.3)':'rgba(0,212,255,.25)'}`,
+        color:msgType==='ok'?GRN:msgType==='err'?RED:CYN}}>{msg}</div>}
 
       <div style={{padding:'12px 14px',maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
 
@@ -258,40 +317,8 @@ export default function ShreemBrzeePerformance(){
           ))}
         </div>
 
-        {/* WALLET */}
-        <Card title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{fontSize:9,color:GRN,fontWeight:700}}>🔒 Public only</span>}>
-          <div style={{display:'flex',flexDirection:'column',gap:11}}>
-            <button onClick={connectPhantom} disabled={connecting} style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'13px 14px',borderRadius:13,border:'1px solid rgba(139,92,246,.35)',background:'rgba(139,92,246,.08)',cursor:'pointer',textAlign:'left',opacity:connecting?.6:1}}>
-              <div style={{width:30,height:30,borderRadius:8,background:'#ab9ff2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>👻</div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:800,color:'#c4b5fd'}}>{connecting?'Connecting…':'Connect Phantom'}</div>
-                <div style={{fontSize:10,color:'#64748b',marginTop:1}}>Safest — key never leaves Phantom</div>
-              </div>
-            </button>
-            <div style={{display:'flex',alignItems:'center',gap:8,color:'#64748b',fontSize:10}}><div style={{flex:1,height:1,background:BDR}}/>or paste<div style={{flex:1,height:1,background:BDR}}/></div>
-            <div style={{display:'flex',gap:8}}>
-              <input value={walletIn} onChange={e=>onWalletChange(e.target.value)} placeholder="Solana address (32–44 chars)" maxLength={44} style={{...inp(walletOk===null?BDR:walletOk?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)'),flex:1}}/>
-              <button onClick={saveWallet} disabled={!walletOk} style={{padding:'0 14px',borderRadius:12,border:`1px solid ${walletOk?'rgba(212,175,55,.35)':BDR}`,background:walletOk?'rgba(212,175,55,.1)':'transparent',color:walletOk?G:'#64748b',fontSize:11,fontWeight:800,cursor:walletOk?'pointer':'not-allowed',flexShrink:0}}>
-                {walletOk===false?'✗':'✓'}
-              </button>
-            </div>
-            <div style={{padding:'10px 12px',borderRadius:12,background:'rgba(16,185,129,.05)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.9)',lineHeight:1.6}}>
-              🛡️ <strong>100% safe.</strong> Only your <em>public address</em> — never your seed phrase or private key.
-            </div>
-            {walletSaved&&(
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderRadius:13,background:'rgba(16,185,129,.05)',border:'1px solid rgba(16,185,129,.25)'}}>
-                <div>
-                  <div style={{fontSize:9,color:'#64748b',letterSpacing:'.3em',textTransform:'uppercase',marginBottom:3}}>Connected</div>
-                  <div style={{fontSize:12,fontFamily:'monospace',color:'#cbd5e0'}}>{walletSaved.slice(0,6)}…{walletSaved.slice(-6)}<span style={{display:'inline-block',width:6,height:6,borderRadius:'50%',background:GRN,marginLeft:6,boxShadow:'0 0 5px rgba(16,185,129,.7)'}}/></div>
-                </div>
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:15,fontWeight:900,color:G}}>{walletBal!==null?`${walletBal.toFixed(3)} SOL`:'—'}</div>
-                  <div style={{fontSize:11,color:'#64748b'}}>{walletBal!==null?`€${toE(walletBal)}`:''}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
+        {/* DIAGNOSTICS */}
+        <DiagnosticPanel running={running} signalCount={signals.length} edgeOk={edgeOk}/>
 
         {/* MODE */}
         <Card title="⚙️ Mode">
@@ -306,34 +333,130 @@ export default function ShreemBrzeePerformance(){
           </div>
         </Card>
 
-        {/* BALANCE + START */}
+        {/* START / STOP — FULLY REACTIVE BUTTONS */}
         <Card title="💰 Starting SOL">
           <div style={{display:'flex',gap:7,marginBottom:10,flexWrap:'wrap'}}>
             {['0.5','1','2','5','10'].map(v=>(
-              <button key={v} onClick={()=>setStartSOL(v)} style={{padding:'7px 0',borderRadius:10,cursor:'pointer',flex:'1 1 0',minWidth:44,border:`1px solid ${startSOL===v?'rgba(212,175,55,.4)':BDR}`,background:startSOL===v?'rgba(212,175,55,.12)':'transparent',color:startSOL===v?G:'#64748b',fontSize:13,fontWeight:700}}>{v}</button>
+              <button key={v} onClick={()=>setStartSOL(v)} style={{padding:'7px 0',borderRadius:10,cursor:'pointer',flex:'1 1 0',minWidth:44,
+                border:`1px solid ${startSOL===v?'rgba(212,175,55,.4)':BDR}`,
+                background:startSOL===v?'rgba(212,175,55,.12)':'transparent',
+                color:startSOL===v?G:'#64748b',fontSize:13,fontWeight:700}}>{v}</button>
             ))}
           </div>
           <input type="number" value={startSOL} onChange={e=>setStartSOL(e.target.value)} min="0.1" step="0.1" style={{...inp(BDR),marginBottom:12,fontSize:16}}/>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <button onClick={startSession} disabled={busy} style={{padding:14,borderRadius:13,border:'none',background:'linear-gradient(135deg,#D4AF37,#c9930a)',color:'#000',fontSize:12,fontWeight:900,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',boxShadow:'0 0 16px rgba(212,175,55,.28)',opacity:busy?.6:1}}>
-              {busy?'…':'▶ START'}
+
+            {/* START BUTTON — glows gold when bot is running */}
+            <button
+              onClick={startSession}
+              disabled={busy}
+              style={{
+                padding:14,borderRadius:13,border:'none',
+                background: running
+                  ? 'linear-gradient(135deg,#D4AF37,#f0c84a)'  // bright gold = ACTIVE
+                  : busy&&startActive
+                    ? 'linear-gradient(135deg,#a07820,#c9930a)'  // dim = loading
+                    : 'linear-gradient(135deg,#7a5e10,#9a7018)',  // muted = stopped
+                color: running ? '#000' : '#fff',
+                fontSize:12,fontWeight:900,letterSpacing:'.12em',
+                cursor:busy?'not-allowed':'pointer',
+                animation: running ? 'goldPulse 2s infinite' : 'none',
+                boxShadow: running ? '0 0 20px rgba(212,175,55,.5)' : '0 0 8px rgba(212,175,55,.1)',
+                transition:'all .3s ease',
+                position:'relative' as const,
+                overflow:'hidden' as const,
+              }}>
+              {busy&&startActive
+                ? <span style={{display:'inline-block',animation:'spin 1s linear infinite'}}>⚙</span>
+                : running ? '● RUNNING' : '▶ START'}
+              {running&&<span style={{position:'absolute' as const,top:0,left:0,right:0,bottom:0,
+                background:'linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)',
+                animation:'shimmer 2s infinite'}}/>}
             </button>
-            <button onClick={stopSession} disabled={busy} style={{padding:14,borderRadius:13,border:'1px solid rgba(239,68,68,.35)',background:'rgba(239,68,68,.08)',color:RED,fontSize:12,fontWeight:900,letterSpacing:'.12em',cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>
-              ⏹ STOP
+
+            {/* STOP BUTTON — glows red when bot is running */}
+            <button
+              onClick={stopSession}
+              disabled={busy||!running}
+              style={{
+                padding:14,borderRadius:13,
+                border:`1px solid ${running?'rgba(239,68,68,.6)':'rgba(239,68,68,.2)'}`,
+                background: running
+                  ? 'rgba(239,68,68,.18)'  // visible red = active
+                  : 'rgba(239,68,68,.04)', // faded = nothing to stop
+                color: running ? RED : 'rgba(239,68,68,.35)',
+                fontSize:12,fontWeight:900,letterSpacing:'.12em',
+                cursor:busy||!running?'not-allowed':'pointer',
+                animation: running&&!busy ? 'redPulse 2.5s infinite' : 'none',
+                boxShadow: running ? '0 0 12px rgba(239,68,68,.2)' : 'none',
+                transition:'all .3s ease',
+              }}>
+              {busy&&stopActive
+                ? <span style={{display:'inline-block',animation:'spin 1s linear infinite'}}>⚙</span>
+                : '⏹ STOP'}
             </button>
+
           </div>
           {!running&&!busy&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(212,175,55,.06)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.7)',textAlign:'center'}}>Set balance above then tap ▶ START</div>}
-          {running&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(16,185,129,.06)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.8)',textAlign:'center'}}>✅ Bot running · watching 21 whale wallets</div>}
+          {running&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(16,185,129,.06)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.8)',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+            <span style={{width:6,height:6,borderRadius:'50%',background:GRN,animation:'pulse 1.5s infinite',boxShadow:`0 0 6px ${GRN}`}}/>
+            Bot running · watching 21 whale wallets on Solana mainnet
+          </div>}
         </Card>
 
-        {/* OPEN POSITIONS — live ticker */}
-        <Card title="📂 Open Positions" badge={openPos.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openPos.length} live</span>:undefined} right={running&&openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
+        {/* OPEN POSITIONS — with market context when empty */}
+        <Card
+          title="📂 Open Positions"
+          badge={openPos.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openPos.length} live</span>:undefined}
+          right={running&&openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
           {openPos.length===0?(
-            <div style={{textAlign:'center',padding:'20px 0'}}>
-              <div style={{fontSize:28,marginBottom:8}}>👀</div>
-              <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>Watching for whale BUYs</div>
-              <div style={{fontSize:11,color:'#64748b',marginBottom:running?14:4}}>Positions open instantly when a whale swaps</div>
-              {!running&&<div style={{fontSize:11,color:'rgba(212,175,55,.7)'}}>↑ Start the bot to enable</div>}
+            <div>
+              {/* Empty state with market context */}
+              <div style={{textAlign:'center',padding:'16px 0 10px'}}>
+                <div style={{fontSize:28,marginBottom:8}}>👀</div>
+                <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>No Open Positions</div>
+                <div style={{fontSize:11,color:'#64748b',marginBottom:12,lineHeight:1.5}}>
+                  {running
+                    ? 'Waiting for a whale to swap on Solana — can take minutes to hours'
+                    : 'Start the bot above to begin watching for whale swaps'}
+                </div>
+              </div>
+
+              {/* Market Context Box */}
+              <div style={{background:'rgba(0,0,0,.25)',border:`1px solid rgba(255,255,255,.06)`,borderRadius:12,padding:14}}>
+                <div style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)',marginBottom:10}}>📊 Market Context</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+                  {[
+                    {l:'SOL Price',v:`$${solUSD.toFixed(2)}`,sub:`€${(solUSD*eurRate).toFixed(2)}`},
+                    {l:'Bot Status',v:running?'🟢 Online':'🔴 Offline',sub:running?'Listening to Helius':'Not listening'},
+                    {l:'Signals Received',v:String(signals.length),sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:'None yet'},
+                    {l:'Whale Wallets',v:'21',sub:'On Solana mainnet'},
+                  ].map(item=>(
+                    <div key={item.l} style={{background:'rgba(255,255,255,.03)',borderRadius:10,padding:'10px 12px'}}>
+                      <div style={{fontSize:9,color:'#64748b',letterSpacing:'.2em',textTransform:'uppercase' as const,marginBottom:4}}>{item.l}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#fff'}}>{item.v}</div>
+                      <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{item.sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Signal health indicator */}
+                <div style={{padding:'10px 12px',borderRadius:10,
+                  background:signals.length>0?'rgba(16,185,129,.05)':'rgba(239,68,68,.05)',
+                  border:`1px solid ${signals.length>0?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)'}`,
+                  fontSize:11,lineHeight:1.5,
+                  color:signals.length>0?'rgba(16,185,129,.85)':'rgba(239,68,68,.8)'}}>
+                  {signals.length>0
+                    ? `✅ Helius is delivering signals. Last whale swap: ${timeAgo(signals[0]?.created_at)} ago by ${signals[0]?.label}. Positions open when a BUY triggers.`
+                    : `⚠️ No signals received yet. This means either: (1) no whales have swapped recently, or (2) Helius webhook is not registered correctly with the 21 wallet addresses. Use ⚡ Test Signal to verify the pipeline.`}
+                </div>
+
+                {!running&&signals.length===0&&(
+                  <div style={{marginTop:8,padding:'10px 12px',borderRadius:10,background:'rgba(212,175,55,.05)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.8)',lineHeight:1.5}}>
+                    💡 To verify the bot works without waiting for whale activity, start the bot and tap ⚡ Test Signal in the Signal Feed card below.
+                  </div>
+                )}
+              </div>
             </div>
           ):openPos.map((p:any)=>{
             const livePrice=livePrices[p.mint];
@@ -341,7 +464,7 @@ export default function ShreemBrzeePerformance(){
             const pnl=livePrice&&p.entryPrice?(livePrice-p.entryPrice)/p.entryPrice*100:null;
             return(
               <div key={p.mint} style={{...rowStyle,background:'rgba(16,185,129,.03)',borderRadius:12,padding:'12px 14px',border:`1px solid rgba(16,185,129,.2)`,marginBottom:8}}>
-                <div style={{...iconBox(GRN,'rgba(16,185,129,.12)','↑') as any}}>↑</div>
+                <div style={{width:32,height:32,borderRadius:9,background:'rgba(16,185,129,.12)',color:GRN,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>↑</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
                     <span style={{fontSize:14,fontWeight:900,color:G}}>{p.symbol||'?'}</span>
@@ -361,6 +484,38 @@ export default function ShreemBrzeePerformance(){
           })}
         </Card>
 
+        {/* WALLET */}
+        <Card title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{fontSize:9,color:GRN,fontWeight:700}}>🔒 Public only</span>}>
+          <div style={{display:'flex',flexDirection:'column',gap:11}}>
+            <button onClick={connectPhantom} disabled={connecting} style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'13px 14px',borderRadius:13,border:'1px solid rgba(139,92,246,.35)',background:'rgba(139,92,246,.08)',cursor:'pointer',textAlign:'left',opacity:connecting?.6:1}}>
+              <div style={{width:30,height:30,borderRadius:8,background:'#ab9ff2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>👻</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:800,color:'#c4b5fd'}}>{connecting?'Connecting…':'Connect Phantom'}</div>
+                <div style={{fontSize:10,color:'#64748b',marginTop:1}}>Safest — key never leaves Phantom</div>
+              </div>
+            </button>
+            <div style={{display:'flex',alignItems:'center',gap:8,color:'#64748b',fontSize:10}}><div style={{flex:1,height:1,background:BDR}}/>or paste<div style={{flex:1,height:1,background:BDR}}/></div>
+            <div style={{display:'flex',gap:8}}>
+              <input value={walletIn} onChange={e=>onWalletChange(e.target.value)} placeholder="Solana address (32–44 chars)" maxLength={44} style={{...inp(walletOk===null?BDR:walletOk?'rgba(16,185,129,.5)':'rgba(239,68,68,.5)'),flex:1}}/>
+              <button onClick={saveWallet} disabled={!walletOk} style={{padding:'0 14px',borderRadius:12,border:`1px solid ${walletOk?'rgba(212,175,55,.35)':BDR}`,background:walletOk?'rgba(212,175,55,.1)':'transparent',color:walletOk?G:'#64748b',fontSize:11,fontWeight:800,cursor:walletOk?'pointer':'not-allowed',flexShrink:0}}>
+                {walletOk===false?'✗':'✓'}
+              </button>
+            </div>
+            {walletSaved&&(
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',borderRadius:13,background:'rgba(16,185,129,.05)',border:'1px solid rgba(16,185,129,.25)'}}>
+                <div>
+                  <div style={{fontSize:9,color:'#64748b',letterSpacing:'.3em',textTransform:'uppercase',marginBottom:3}}>Connected</div>
+                  <div style={{fontSize:12,fontFamily:'monospace',color:'#cbd5e0'}}>{walletSaved.slice(0,6)}…{walletSaved.slice(-6)}<span style={{display:'inline-block',width:6,height:6,borderRadius:'50%',background:GRN,marginLeft:6,boxShadow:'0 0 5px rgba(16,185,129,.7)'}}/></div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:15,fontWeight:900,color:G}}>{walletBal!==null?`${walletBal.toFixed(3)} SOL`:'—'}</div>
+                  <div style={{fontSize:11,color:'#64748b'}}>{walletBal!==null?`€${toE(walletBal)}`:''}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+
         {/* SIGNAL FEED */}
         <Card title="📡 Signal Feed" right={<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.28)',color:CYN}}><span style={{width:5,height:5,borderRadius:'50%',background:CYN,animation:'pulse 1.5s infinite'}}/>Helius</span>}>
           {signals.length===0?(
@@ -372,7 +527,7 @@ export default function ShreemBrzeePerformance(){
             </div>
           ):signals.map((sig:any)=>(
             <div key={sig.id} style={{...rowStyle}}>
-              <div style={{...iconBox(sig.action==='BUY'?GRN:RED,sig.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',sig.action==='BUY'?'↑':'↓') as any}}>{sig.action==='BUY'?'↑':'↓'}</div>
+              <div style={{width:32,height:32,borderRadius:9,background:sig.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',color:sig.action==='BUY'?GRN:RED,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>{sig.action==='BUY'?'↑':'↓'}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
                   {sig.symbol||sig.mint?.slice(0,8)}
@@ -398,7 +553,7 @@ export default function ShreemBrzeePerformance(){
             </div>
           ):trades.map((t:any)=>(
             <div key={t.id} style={{...rowStyle}}>
-              <div style={{...iconBox(t.failed?'#64748b':t.action==='BUY'?GRN:RED,t.failed?'rgba(255,255,255,.04)':t.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',t.failed?'✗':t.action==='BUY'?'↑':'↓') as any}}>{t.failed?'✗':t.action==='BUY'?'↑':'↓'}</div>
+              <div style={{width:32,height:32,borderRadius:9,background:t.failed?'rgba(255,255,255,.04)':t.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',color:t.failed?'#64748b':t.action==='BUY'?GRN:RED,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>{t.failed?'✗':t.action==='BUY'?'↑':'↓'}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{t.symbol||'?'}</div>
                 <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{t.action}·{t.label}{t.failed&&<span style={{marginLeft:5,padding:'1px 5px',borderRadius:4,background:'rgba(239,68,68,.12)',color:RED,fontSize:9,fontWeight:700}}>FAILED</span>}</div>
@@ -447,7 +602,7 @@ export default function ShreemBrzeePerformance(){
               </tbody>
             </table>
           </div>
-          {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No data yet for this period · backfill runs tonight at midnight UTC</div>}
+          {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No data yet for this period · signals appear when Helius delivers whale swaps</div>}
         </Card>
 
       </div>
