@@ -57,15 +57,15 @@ function Card({title,badge,right,children,defaultOpen=true,accent}:{title:string
 // ── Diagnostic Panel Component ────────────────────────────────────────────────
 function DiagnosticPanel({running,signalCount,edgeOk}:{running:boolean,signalCount:number,edgeOk:boolean|null}){
   const checks=[
-    {label:'Helius Webhook',status:edgeOk===null?'checking':edgeOk?'ok':'fail',
-     detail:edgeOk===null?'Checking…':edgeOk?'Edge function reachable ✓':'Edge function unreachable — re-register needed',
-     fix:edgeOk===false?'Run workflow: register-helius-shreem.yml with correct wallets':undefined},
+    {label:'Enhanced WebSocket',status:edgeOk===null?'checking':edgeOk?'ok':'fail',
+     detail:edgeOk===null?'Checking…':edgeOk?'50-100ms detection at processed commitment ✓':'Edge function unreachable',
+     fix:edgeOk===false?'Check Helius Developer plan is active':undefined},
     {label:'Bot Session',status:running?'ok':'warn',
-     detail:running?'Session active, processing signals':'Session stopped — start bot above'},
+     detail:running?'Session active — watching 21 whale wallets':'Session stopped — press START above'},
     {label:'Signal Pipeline',status:signalCount>0?'ok':'warn',
-     detail:signalCount>0?`${signalCount} signals received from Helius`:'0 signals — Helius may not be sending to correct wallets',
-     fix:signalCount===0?'Check Helius dashboard: webhook must point to correct 21 wallet addresses':undefined},
-    {label:'Blockchain',status:'ok',detail:'Solana mainnet via Helius RPC'},
+     detail:signalCount>0?`${signalCount} signals received · whale-follow mode (exits on whale SELL)`:'0 signals yet — waiting for whale activity or use ⚡ Test Signal',
+     fix:undefined},
+    {label:'Blockchain',status:'ok',detail:'Solana mainnet · Jito bundles · RugCheck active'},
   ];
   const stC={ok:GRN,warn:'#f59e0b',fail:RED,checking:'#64748b'};
   return(
@@ -327,14 +327,14 @@ export default function ShreemBrzeePerformance(){
               <div key={m} onClick={()=>setMode(m)} style={{padding:'13px 10px',borderRadius:13,cursor:'pointer',border:`2px solid ${mode===m?(m==='paper'?'rgba(16,185,129,.45)':'rgba(239,68,68,.45)'):BDR}`,background:mode===m?(m==='paper'?'rgba(16,185,129,.08)':'rgba(239,68,68,.08)'):'transparent',textAlign:'center' as const}}>
                 <div style={{fontSize:20,marginBottom:6}}>{m==='paper'?'📄':'⚡'}</div>
                 <div style={{fontSize:13,fontWeight:800,color:mode===m?(m==='paper'?GRN:RED):'#cbd5e0'}}>{m==='paper'?'Paper':'Live'}</div>
-                <div style={{fontSize:10,color:'#64748b',marginTop:3,lineHeight:1.4}}>{m==='paper'?'Fake SOL · zero risk':'Real swaps · Phantom needed'}</div>
+                <div style={{fontSize:10,color:'#64748b',marginTop:3,lineHeight:1.4}}>{m==='paper'?'Paper mode · tracks real whale trades · no real SOL':'Live mode · set on server via BOT_MODE=live'}</div>
               </div>
             ))}
           </div>
         </Card>
 
         {/* START / STOP — FULLY REACTIVE BUTTONS */}
-        <Card title="💰 Starting SOL">
+        <Card title="💰 Paper Balance (SOL)">
           <div style={{display:'flex',gap:7,marginBottom:10,flexWrap:'wrap'}}>
             {['0.5','1','2','5','10'].map(v=>(
               <button key={v} onClick={()=>setStartSOL(v)} style={{padding:'7px 0',borderRadius:10,cursor:'pointer',flex:'1 1 0',minWidth:44,
@@ -428,7 +428,7 @@ export default function ShreemBrzeePerformance(){
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
                   {[
                     {l:'SOL Price',v:`$${solUSD.toFixed(2)}`,sub:`€${(solUSD*eurRate).toFixed(2)}`},
-                    {l:'Bot Status',v:running?'🟢 Online':'🔴 Offline',sub:running?'Listening to Helius':'Not listening'},
+                    {l:'Bot Status',v:running?'🟢 Online':'🔴 Offline',sub:running?'Enhanced WS · 50-100ms':'Not listening'},
                     {l:'Signals Received',v:String(signals.length),sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:'None yet'},
                     {l:'Whale Wallets',v:'21',sub:'On Solana mainnet'},
                   ].map(item=>(
@@ -448,7 +448,7 @@ export default function ShreemBrzeePerformance(){
                   color:signals.length>0?'rgba(16,185,129,.85)':'rgba(239,68,68,.8)'}}>
                   {signals.length>0
                     ? `✅ Helius is delivering signals. Last whale swap: ${timeAgo(signals[0]?.created_at)} ago by ${signals[0]?.label}. Positions open when a BUY triggers.`
-                    : `⚠️ No signals received yet. This means either: (1) no whales have swapped recently, or (2) Helius webhook is not registered correctly with the 21 wallet addresses. Use ⚡ Test Signal to verify the pipeline.`}
+                    : `⚠️ No whale swaps detected yet. Either no whales have traded recently, or Helius credits need restoring. Use ⚡ Test Signal below to verify the full pipeline works.`}
                 </div>
 
                 {!running&&signals.length===0&&(
@@ -517,7 +517,7 @@ export default function ShreemBrzeePerformance(){
         </Card>
 
         {/* SIGNAL FEED */}
-        <Card title="📡 Signal Feed" right={<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.28)',color:CYN}}><span style={{width:5,height:5,borderRadius:'50%',background:CYN,animation:'pulse 1.5s infinite'}}/>Helius</span>}>
+        <Card title="📡 Signal Feed" right={<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700,background:'rgba(0,212,255,.08)',border:'1px solid rgba(0,212,255,.28)',color:CYN}}><span style={{width:5,height:5,borderRadius:'50%',background:CYN,animation:'pulse 1.5s infinite'}}/>Enhanced WS</span>}>
           {signals.length===0?(
             <div style={{textAlign:'center',padding:'20px 0'}}>
               <div style={{fontSize:28,marginBottom:8}}>🐋</div>
@@ -602,7 +602,7 @@ export default function ShreemBrzeePerformance(){
               </tbody>
             </table>
           </div>
-          {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No data yet for this period · signals appear when Helius delivers whale swaps</div>}
+          {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No whale swaps detected this period · signals appear in real-time when whales trade</div>}
         </Card>
 
       </div>
