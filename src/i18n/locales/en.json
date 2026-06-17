@@ -1812,7 +1812,19 @@
       "achievements": "Achievements"
     },
     "sovereignAbundanceNetwork": "✦ Sovereign Abundance Network",
-    "sovereignAbundanceNetworkDesc": "Quantum dividends, links & payouts"
+    "sovereignAbundanceNetworkDesc": "Quantum dividends, links & payouts",
+    "sectionMembership": "Membership",
+    "sectionRecordings": "My Recordings",
+    "recordingsLabel": "◈ 1-on-1 Sessions",
+    "recordingsTitle": "Your Recordings",
+    "recordingsSub": "Private healing sessions archived here",
+    "recordingsEmpty": "No 1-on-1 call recordings yet. They'll appear here automatically after your sessions.",
+    "sectionAccount": "Account",
+    "editProfileSub": "Name · photo · bio · birth chart",
+    "changePassword": "Change Password",
+    "changePasswordSub": "Update or reset your sacred access key",
+    "sectionNotificationsPrivacy": "Notifications & Privacy",
+    "sectionHowToUse": "How To Use"
   },
   "settings": {
     "legal": {
