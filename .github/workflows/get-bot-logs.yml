@@ -6,26 +6,53 @@ on:
 jobs:
   logs:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - name: Get PM2 logs from Hetzner
+      - uses: actions/checkout@v4
+      - name: Get logs + check version + rebuild if needed
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
         run: |
           sudo apt-get install -y sshpass -qq
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
-          
-          sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
-            'echo "=== PM2 LIST ===" && pm2 list && echo "" && echo "=== SHREEM LOGS ===" && pm2 logs shreem-brzee --lines 80 --nostream 2>/dev/null || true' \
-            > /tmp/bot_logs.txt 2>&1
-          
-          cat /tmp/bot_logs.txt
 
-      - name: Save logs
+          sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+            'echo "=== PM2 LIST ===" && pm2 list && echo "" && echo "=== VERSION ===" && grep -m1 "v2\." /root/shreem-brzee/railway/shreem-brzee-bot/src/index.ts 2>/dev/null || echo "no src" && echo "" && echo "=== POLLER IN DIST ===" && grep -c "pollTimer\|poller" /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js 2>/dev/null || echo 0 && echo "" && echo "=== LAST LOGS ===" && pm2 logs shreem-brzee --lines 40 --nostream 2>/dev/null || true' \
+            > /tmp/logs.txt 2>&1 || true
+          cat /tmp/logs.txt
+
+          # Check if poller is in compiled code
+          POLLER_COUNT=$(sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+            'grep -c "pollTimer\|poller\|edgeGet" /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js 2>/dev/null || echo 0' 2>/dev/null || echo 0)
+          echo "Poller refs in dist: $POLLER_COUNT"
+
+          if [ "$POLLER_COUNT" -lt 3 ] 2>/dev/null; then
+            echo "=== REBUILDING — poller not in dist ==="
+            sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 << SSHEOF
+              cd /root/shreem-brzee
+              git remote set-url origin "https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+              git fetch origin main --quiet && git reset --hard origin/main --quiet
+              echo "Code: $(grep -m1 'v2\.' railway/shreem-brzee-bot/src/index.ts)"
+              cd railway/shreem-brzee-bot
+              npm install --omit=dev --silent 2>&1 | tail -3
+              npx tsc --skipLibCheck 2>&1 | tail -5
+              echo "Poller in new dist: $(grep -c 'pollTimer' dist/index.js 2>/dev/null)"
+              pm2 restart shreem-brzee --update-env
+              sleep 5
+              pm2 logs shreem-brzee --lines 25 --nostream 2>/dev/null || true
+SSHEOF
+          else
+            echo "✅ Poller already in dist — just restarting"
+            sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 \
+              'pm2 restart shreem-brzee --update-env && sleep 5 && pm2 logs shreem-brzee --lines 20 --nostream 2>/dev/null || true'
+          fi
+
+      - name: Save
         run: |
-          cp /tmp/bot_logs.txt _bot_logs.txt
+          cp /tmp/logs.txt _bot_logs.txt 2>/dev/null || echo "no logs file" > _bot_logs.txt
           git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
-          git add _bot_logs.txt || true
+          git add _bot_logs.txt
           git commit -m "data: bot logs $(date -u +%H%M)" || true
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
