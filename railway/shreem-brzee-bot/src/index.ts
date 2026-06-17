@@ -1,4 +1,4 @@
-// v2.2.0 deployed 2026-06-17T13:12:14Z
+// v2.3.0 deployed 2026-06-17T13:12:14Z
 /**
  * 🔱 SHREEM BRZEE BOT v2 — World-Class Solana Copy Trading
  * Hetzner Server | Solana Mainnet
@@ -38,21 +38,43 @@ import {
 import bs58 from 'bs58';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const HELIUS_KEY   = process.env.HELIUS_API_KEY || '775d3d1f-6801-41de-a063-8aee4382d0f4';
-const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const BOT_MODE     = (process.env.BOT_MODE || 'paper') as 'paper' | 'live';
-const RISK_PCT     = parseFloat(process.env.RISK_PCT || '0.05');
-const MAX_SLIP_BPS = parseInt(process.env.MAX_SLIPPAGE_BPS || '300');
-const JITO_TIP_LAM = parseInt(process.env.JITO_TIP_LAMPORTS || '1000000'); // 0.001 SOL
-const TP_MULT      = parseFloat(process.env.TP_MULTIPLIER || '2.0');
-const SL_MULT      = parseFloat(process.env.SL_MULTIPLIER || '0.5');
-const SESSION_ID   = 'default';
+const HELIUS_KEY    = process.env.HELIUS_API_KEY || '775d3d1f-6801-41de-a063-8aee4382d0f4';
+const HELIUS_RPC    = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const BOT_MODE      = (process.env.BOT_MODE || 'paper') as 'paper' | 'live';
+const SESSION_ID    = 'default';
+
+// ── Tunable risk settings (change via PM2 env — no redeploy needed) ──────────
+const RISK_PCT      = parseFloat(process.env.RISK_PCT              || '0.05');   // 5% per trade
+const MAX_SLIP_BPS  = parseInt(process.env.MAX_SLIPPAGE_BPS        || '300');    // 3% slippage
+const JITO_TIP_LAM  = parseInt(process.env.JITO_TIP_LAMPORTS       || '1000000');// 0.001 SOL tip
+const TP_MULT       = parseFloat(process.env.TP_MULTIPLIER         || '2.0');    // 2× take profit
+const SL_MULT       = parseFloat(process.env.SL_MULTIPLIER         || '0.5');    // 50% stop loss
+const TP_CHECK_MS   = parseInt(process.env.TP_CHECK_INTERVAL_MS    || '30000');  // check every 30s
+const MAX_HOLD_MIN  = parseInt(process.env.MAX_POSITION_HOLD_MINUTES|| '240');   // 4h force exit
+const MAX_POSITIONS = parseInt(process.env.MAX_OPEN_POSITIONS      || '5');      // max 5 at once
+const MIN_WHALE_SOL = parseFloat(process.env.MIN_WHALE_SOL         || '0.1');    // skip tiny trades
+const VIP_MULT      = parseFloat(process.env.VIP_MULTIPLIER        || '2.0');    // VIP 2× risk
+
+// VIP whales — boosted risk + priority fee multiplier
+const VIP_WHALES = new Set([
+  'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', // Cupsey
+  'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', // Heyitsyolo
+  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', // Remusofmars
+]);
 
 // Supabase
 const EDGE_BASE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
 const SUPA_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
 const ANON_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
 const supabase  = createClient(SUPA_URL, ANON_KEY);
+
+// ── Redis hot state — zero-cost in-memory (pure Node.js Maps) ───────────────
+// Eliminates Supabase round-trips on the critical signal path.
+// hotPositions: O(1) position lookup — no DB call per signal
+// processedSigs: dedup — never execute same tx twice
+const hotPositions  = new Map<string, any>();
+const processedSigs = new Set<string>();
+const SIG_DEDUP_MAX = 10_000;
 
 // Jupiter
 const JUP_QUOTE = 'https://quote-api.jup.ag/v6/quote';
@@ -548,13 +570,30 @@ async function processSignal(signal: any): Promise<void> {
 
   // ── BUY ───────────────────────────────────────────────────────────────────
   if (action === 'BUY') {
-    if (session.positions[mint]) {
+    if (hotPositions.has(mint) || session.positions[mint]) {
       console.log(`[skip] already holding ${sym}`);
       return;
     }
 
-    const gross = Math.min(session.portfolio * RISK_PCT, session.portfolio);
+    // ── Smart filters ─────────────────────────────────────────────────────
+    // Dedup sig (O(1) Set check)
+    const sigKey = signal.sig || '';
+    if (sigKey && processedSigs.has(sigKey)) { console.log(`[skip] dup sig`); return; }
+    if (sigKey) { processedSigs.add(sigKey); if (processedSigs.size > SIG_DEDUP_MAX) processedSigs.delete(processedSigs.values().next().value); }
+
+    // Max open positions
+    if (hotPositions.size >= MAX_POSITIONS) { console.log(`[skip] max positions (${hotPositions.size}/${MAX_POSITIONS})`); return; }
+
+    // Minimum whale trade size
+    const whaleSOL = parseFloat(signal.amount_sol || '0');
+    if (whaleSOL > 0 && whaleSOL < MIN_WHALE_SOL) { console.log(`[skip] whale spent only ${whaleSOL.toFixed(3)} SOL`); return; }
+
+    // VIP boost
+    const isVip = VIP_WHALES.has(signal.wallet || '');
+    const riskMultiplier = isVip ? VIP_MULT : 1.0;
+    const gross = Math.min(session.portfolio * RISK_PCT * riskMultiplier, session.portfolio * 0.20);
     if (gross < 0.01) { console.log('[skip] portfolio too low'); return; }
+    if (isVip) console.log(`[VIP] ${signal.label} — ${riskMultiplier}× risk → ${gross.toFixed(4)} SOL`);
 
     // ── RUG CHECK (both modes) ───────────────────────────────────────────────
     console.log(`[rugcheck] checking ${sym} (${mint.slice(0, 8)}…)`);
@@ -636,13 +675,11 @@ async function processSignal(signal: any): Promise<void> {
     const entryPrice = await getTokenPriceUSD(mint);
 
     session.portfolio -= (gross + f);
-    session.positions[mint] = {
-      mint, symbol: sym, label,
-      entrySOL: gross, netPosition: net,
-      tokenAmount: token_amount || 0,
-      entryTime: Date.now(), whaleEntrySol: amount_sol || 0,
-      entryPrice, liveMode: false,
-    };
+    const posObj = { mint, symbol: sym, label, entrySOL: gross, netPosition: net,
+      tokenAmount: token_amount || 0, entryTime: Date.now(),
+      whaleEntrySol: amount_sol || 0, entryPrice, liveMode: false };
+    session.positions[mint] = posObj;
+    hotPositions.set(mint, posObj); // RAM sync
 
     await saveTrade({
       session_id: SESSION_ID, sig, mint, symbol: sym, label,
@@ -736,7 +773,7 @@ let tpslTimer: NodeJS.Timer | null = null;
 
 function startTpSlMonitor() {
   tpslTimer = setInterval(async () => {
-    const positions = Object.values(session.positions);
+    const positions = [...hotPositions.values()]; // O(1) RAM read
     if (!positions.length) return;
 
     for (const pos of positions) {
@@ -762,7 +799,7 @@ function startTpSlMonitor() {
         }
 
         // FORCE EXIT: held >4h without TP/SL trigger (stale position)
-        if (holdMins > 240) {
+        if (holdMins > MAX_HOLD_MIN) {
           console.log(`[SL-timeout] ${pos.symbol} held ${holdMins.toFixed(0)} min — force exit`);
           await executeSell(pos.mint, pos, 'sl');
           continue;
@@ -773,7 +810,7 @@ function startTpSlMonitor() {
         console.error(`[tpsl] error for ${pos.symbol}:`, e.message);
       }
     }
-  }, 30_000); // check every 30 seconds
+  }, TP_CHECK_MS);
 }
 
 // ── Whale wallet map (for WS trade parsing) ───────────────────────────────────
@@ -967,11 +1004,12 @@ function startEnhancedWebSocket(): void {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('🔱 SHREEM BRZEE BOT v2 — starting');
+  console.log('🔱 SHREEM BRZEE BOT v2.3 — Hot State + Smart Filters');
   console.log(`   Mode:    ${BOT_MODE.toUpperCase()}`);
   console.log(`   Risk:    ${(RISK_PCT * 100).toFixed(0)}% per trade`);
   console.log(`   Slippage: ${MAX_SLIP_BPS}bps max`);
-  console.log(`   TP:      ${TP_MULT}× | SL: ${SL_MULT}× (every 30s)`);
+  console.log(`   TP:      ${TP_MULT}× | SL: ${SL_MULT}× | Check: ${TP_CHECK_MS/1000}s | Hold max: ${MAX_HOLD_MIN}min`);
+  console.log(`   Filters: max ${MAX_POSITIONS} pos | min whale ${MIN_WHALE_SOL} SOL | VIP ${VIP_MULT}× risk`);
   if (botKeypair) console.log(`   Wallet:  ${botKeypair.publicKey.toBase58()}`);
   console.log(`   Jito:    ${JITO_TIP_LAM / 1e9} SOL tip per bundle`);
   console.log(`   RPC:     Helius mainnet`);
@@ -1029,7 +1067,7 @@ async function main() {
     );
   }, 60_000);
 
-  console.log(`✅ Enhanced WebSocket LIVE | 50-100ms detection | portfolio: ${session.portfolio.toFixed(4)} SOL`);
+  console.log(`✅ v2.3 LIVE | Enhanced WS 50-100ms | Hot RAM state | Smart filters | portfolio: ${session.portfolio.toFixed(4)} SOL`);
 
   process.on('SIGTERM', async () => {
     console.log('[shutdown] saving session…');
