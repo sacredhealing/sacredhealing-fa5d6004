@@ -253,7 +253,7 @@ const AffiliateDetail: React.FC = () => {
             <div className="flex gap-3">
               <Button 
                 onClick={copyToClipboard} 
-                className="flex-1 bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] border-0"
+                className="flex-1 bg-[#D4AF37] text-black font-extrabold hover:bg-[#C4943A] shadow-[0_0_25px_rgba(212,175,55,0.4)] border-0"
               >
                 {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                 {copied ? t('affiliate.copied', 'Copied!') : t('affiliate.copyLink', 'Copy Link')}
@@ -287,7 +287,7 @@ const AffiliateDetail: React.FC = () => {
                       onClick={saveCustomCode} 
                       size="sm" 
                       disabled={isSaving || customCode.length < 3}
-                      className="flex-1 bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_15px_rgba(0,242,254,0.4)] border-0"
+                      className="flex-1 bg-[#D4AF37] text-black font-extrabold hover:bg-[#C4943A] shadow-[0_0_15px_rgba(212,175,55,0.4)] border-0"
                     >
                       {isSaving ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
