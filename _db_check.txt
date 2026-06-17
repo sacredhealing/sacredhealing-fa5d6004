@@ -1,10 +1,15 @@
 === INJECT TEST SIGNAL ===
-{"ok":true,"inserted":0,"skipped":1}
+{"ok":true,"sig":"TEST_1781712148480","version":"v3"}
 === SIGNALS (last 5) ===
-TOTAL: 0 signals
+sig=TEST_1781712148480 action=BUY label=Remusofmars time=16:02:28
+sig=TEST_1781712048102 action=BUY label=Remusofmars time=16:00:48
+sig=TEST_1781711783450 action=BUY label=Remusofmars time=15:56:23
+sig=TEST_1781711774522 action=BUY label=Remusofmars time=15:56:14
+sig=TEST_1781711448062 action=BUY label=Remusofmars time=15:50:48
+TOTAL: 5 signals
 
 === SESSION ===
-started_at=2026-06-17T13:18:35.783+00:00 portfolio=1 mode=?
+started_at=2026-06-17T13:18:35.783+00:00 portfolio=1 mode=paper
 
 === PAPER TRADES (last 3) ===
 TOTAL: 0 trades
