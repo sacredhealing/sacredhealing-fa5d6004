@@ -22,8 +22,18 @@
     "save": "Guardar",
     "cancel": "Cancelar",
     "loading": "Cargando...",
-    "error": "Error",
-    "success": "Éxito",
+    "error": {
+      "generic": "Algo salió mal. Por favor, inténtalo de nuevo.",
+      "notFound": "Contenido no encontrado.",
+      "unauthorized": "No tienes acceso a este contenido.",
+      "network": "Error de conexión. Por favor, revisa tu internet."
+    },
+    "success": {
+      "saved": "Guardado exitosamente.",
+      "updated": "Actualizado exitosamente.",
+      "deleted": "Eliminado exitosamente.",
+      "sent": "Enviado exitosamente."
+    },
     "signIn": "Iniciar sesión",
     "learnMore": "Más información",
     "viewAll": "Ver todo",
@@ -53,16 +63,76 @@
     "no": "No",
     "or": "o",
     "and": "y",
-    "from": "desde",
-    "to": "hasta",
+    "from": "de",
+    "to": "a",
     "new": "Nuevo",
     "delete": "Eliminar",
     "edit": "Editar",
     "confirm": "Confirmar",
-    "complete": "completado",
+    "complete": "completo",
     "notNow": "Ahora no",
     "soulAwaits": "El alma espera.",
-    "disclaimer": "Esta aplicación es solo para fines espirituales y de entretenimiento y no pretende proporcionar asesoramiento médico, diagnóstico o tratamiento."
+    "disclaimer": "Esta app es solo para fines espirituales y de entretenimiento y no pretende proporcionar asesoramiento médico, diagnóstico o tratamiento.",
+    "search": "Buscar...",
+    "hide": "Ocultar",
+    "show": "Mostrar",
+    "buttons": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "done": "Listo",
+      "close": "Cerrar",
+      "submit": "Enviar",
+      "startNow": "Comenzar ahora",
+      "learnMore": "Más información",
+      "upgrade": "Actualizar",
+      "subscribe": "Suscribirse",
+      "tryFree": "Prueba gratis",
+      "getAccess": "Obtener acceso",
+      "continue": "Continuar",
+      "share": "Compartir",
+      "download": "Descargar",
+      "play": "Reproducir",
+      "pause": "Pausar",
+      "stop": "Detener",
+      "retry": "Reintentar",
+      "viewAll": "Ver todo",
+      "seeMore": "Ver más",
+      "copyLink": "Copiar enlace",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú"
+    },
+    "empty": {
+      "noResults": "No se encontraron resultados.",
+      "noContent": "Aún no hay contenido disponible.",
+      "comingSoon": "Próximamente.",
+      "noData": "No hay datos para mostrar."
+    },
+    "nav": {
+      "home": "Inicio",
+      "explore": "Explorar",
+      "healing": "Sanación",
+      "meditations": "Meditaciones",
+      "music": "Música",
+      "community": "Comunidad",
+      "profile": "Perfil",
+      "dashboard": "Panel",
+      "settings": "Configuración",
+      "logout": "Cerrar sesión"
+    },
+    "labels": {
+      "new": "NUEVO",
+      "premium": "PREMIUM",
+      "free": "GRATIS",
+      "locked": "BLOQUEADO",
+      "featured": "DESTACADO",
+      "live": "EN VIVO",
+      "coming_soon": "PRÓXIMAMENTE"
+    }
   },
   "membership": {
     "meditationMembership": "Membresía de Meditación",
@@ -89,7 +159,65 @@
     "perSession": "por sesión",
     "perTrack": "por pista",
     "renews": "Se renueva",
-    "soon": "pronto"
+    "soon": "pronto",
+    "unlockPremium": "Desbloquear acceso Premium",
+    "accessPremium": "Acceder a Premium",
+    "bannerDesc": "Todas las meditaciones, música y audio de sanación – ilimitado",
+    "viewPlans": "Ver planes",
+    "managePlan": "Gestionar",
+    "title": "Elige Tu Camino Soberano",
+    "subtitle": "Selecciona el nivel que corresponde a tu etapa evolutiva",
+    "current": "Plan actual",
+    "popular": "MÁS ELEGIDO",
+    "tiers": {
+      "seeker": {
+        "name": "Buscador",
+        "tagline": "Comienza el despertar",
+        "price": "Gratis",
+        "description": "Accede a herramientas de sanación fundamentales y comienza tu viaje cuántico."
+      },
+      "prana": {
+        "name": "Prana-Flujo",
+        "tagline": "Activa tu fuerza vital",
+        "description": "Desbloquea meditaciones ampliadas, sesiones de sanación y herramientas védicas.",
+        "perMonth": "/ mes",
+        "perYear": "/ año"
+      },
+      "siddha": {
+        "name": "Siddha-Quantum",
+        "tagline": "Domina el campo",
+        "description": "Acceso completo a todas las herramientas SQI, sesiones Oracle y transmisiones avanzadas.",
+        "perMonth": "/ mes",
+        "perYear": "/ año"
+      },
+      "akasha": {
+        "name": "Akasha-Infinity",
+        "tagline": "Conviértete en el Akasha",
+        "description": "Acceso de por vida a todas las funciones, sesiones privadas y futuras versiones.",
+        "lifetime": "De por vida",
+        "oneTime": "pago único"
+      }
+    },
+    "features": {
+      "title": "Qué incluye",
+      "compare": "Comparar planes"
+    },
+    "cta": {
+      "getStarted": "Comenzar",
+      "upgrade": "Actualizar ahora",
+      "current": "Plan actual",
+      "downgrade": "Cambiar plan"
+    },
+    "billing": {
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "save": "Ahorra {{percent}}%",
+      "cancelAnytime": "Cancela en cualquier momento",
+      "secureCheckout": "Pago seguro a través de Stripe"
+    },
+    "faq": {
+      "title": "Preguntas frecuentes"
+    }
   },
   "soul": {
     "heroTitle": "30 Días de Alma Sagrada",
@@ -163,7 +291,82 @@
     "premiumAudio": "Audio de sanación premium",
     "owned": "ADQUIRIDO",
     "allAudioTracks": "Todas las pistas de audio de sanación",
-    "dailyGuided": "Sesiones guiadas diarias"
+    "dailyGuided": "Sesiones guiadas diarias",
+    "meditationLanguage": "Idioma de meditación",
+    "pageTitle": "30 días de apoyo sagrado",
+    "pageSubtitle": "Sesiones guiadas y transmisiones tranquilas. Solo escucha y descansa.",
+    "ctaStartSession": "Iniciar una sesión",
+    "recommendedForYou": "Recomendado para ti",
+    "viewAllSessions": "Ver todas las sesiones",
+    "yourJourney": "Tu viaje",
+    "nextSession": "Próxima sesión",
+    "whatHappensTitle": "Qué sucede en una sesión",
+    "whatHappensBullet1": "Te sientas o te acuestas",
+    "whatHappensBullet2": "Escuchas",
+    "whatHappensBullet3": "El cuerpo se asienta naturalmente",
+    "whatHappensBullet4": "No se necesita esfuerzo",
+    "reassurance1": "No tienes que creer en nada.",
+    "reassurance2": "Solo prueba una sesión y nota cómo te sientes después.",
+    "testimonialsTitle": "Lo que la gente notó",
+    "testimonialsSubtitle": "Cada uno lo experimenta de manera diferente.",
+    "seeMore": "Ver más",
+    "choosePlanTitle": "¿Cuánto tiempo quieres practicar?",
+    "choosePlanSubtitle": "Puedes comenzar con un período corto y extender cuando se sienta bien.",
+    "distanceDisclosure": "Sesiones de apoyo remoto. Esta app es solo para fines espirituales y de entretenimiento. No pretende proporcionar asesoramiento médico, diagnóstico o tratamiento.",
+    "faqTitle": "Preguntas frecuentes",
+    "testimonialVideo": "Testimonio",
+    "choosePaymentMethod": "Elegir método de pago",
+    "payWithCard": "Pagar con tarjeta",
+    "payWithCrypto": "Pagar con Crypto (SOL)",
+    "journeyTitle": "Tu viaje",
+    "level": "Nivel",
+    "streakDays": "días de racha",
+    "sessionsCount": "sesiones",
+    "toNextLevel": "al siguiente nivel",
+    "moreSessionsToLevel": "más sesiones para alcanzar el Nivel",
+    "meditationsLabel": "Meditaciones",
+    "mantrasLabel": "Mantras",
+    "daysActiveLabel": "Días Activos",
+    "shcEarnedLabel": "SHC Ganado",
+    "recommendedNextLabel": "Próximo Recomendado",
+    "minutesShort": "{{count}} min",
+    "shcRewardShort": "+{{count}} SHC",
+    "startSessionButton": "Iniciar Sesión",
+    "shortSessions": "Sesiones Cortas",
+    "deepSessions": "Sesiones Profundas",
+    "noSessionsInEnglish": "Aún no hay sesiones en inglés. Se añadirán pronto.",
+    "noSessionsInSwedish": "Aún no hay sesiones en sueco. Se añadirán pronto.",
+    "ongoing": "En curso",
+    "seeLess": "Ver menos",
+    "filters": {
+      "all": "Todos",
+      "featured": "Destacados",
+      "new": "Nuevos",
+      "byLanguage": "Idioma"
+    },
+    "session": {
+      "start": "Comenzar sesión",
+      "resume": "Reanudar",
+      "completed": "Completado",
+      "duration": "{{minutes}} min",
+      "level": "Nivel {{level}}"
+    },
+    "locked": {
+      "title": "Transmisión Sagrada Bloqueada",
+      "message": "Actualiza para acceder a esta frecuencia de sanación.",
+      "cta": "Desbloquear acceso"
+    },
+    "empty": {
+      "title": "No hay sesiones disponibles",
+      "subtitle": "Se están canalizando nuevas transmisiones de sanación."
+    },
+    "categories": {
+      "sound": "Sanación con Sonido",
+      "frequency": "Medicina de Frecuencia",
+      "breathwork": "Respiración",
+      "movement": "Movimiento Sagrado",
+      "chakra": "Activación de Chakras"
+    }
   },
   "meditations": {
     "title": "Meditaciones",
@@ -185,7 +388,8 @@
       "buttonHeavy": "Empezar consuelo",
       "buttonEngaged": "Empezar ahora",
       "buttonCalm": "Empezar ahora",
-      "selecting": "Seleccionando una meditación…"
+      "selecting": "Seleccionando una meditación…",
+      "lineage": "El linaje aguarda tu presencia."
     },
     "sections": {
       "short": "Resets rápidos",
@@ -292,7 +496,33 @@
     "langSv": "Svenska",
     "langEn": "English",
     "langSvAria": "Sueco",
-    "langEnAria": "Inglés"
+    "langEnAria": "Inglés",
+    "templeGreeting": "El Salón de la Quietud",
+    "sacredCommissions": "Comisiones Sagradas",
+    "filters": {
+      "all": "Todos",
+      "guided": "Guiado",
+      "silent": "Silencioso",
+      "mantra": "Mantra",
+      "sleep": "Sueño",
+      "morning": "Mañana",
+      "language": "Idioma"
+    },
+    "empty": {
+      "title": "No hay meditaciones disponibles",
+      "message": "Se están preparando más transmisiones."
+    },
+    "session": {
+      "start": "Comenzar Meditación",
+      "duration": "{{minutes}} min",
+      "level": "{{level}}"
+    },
+    "locked": {
+      "title": "Meditación Bloqueada",
+      "message": "Esta transmisión requiere un nivel de acceso superior."
+    },
+    "completed": "Meditación completada",
+    "completedMessage": "Tu campo ha sido recalibrado."
   },
   "wealth": {
     "badge": "Activación de riqueza",
@@ -514,13 +744,24 @@
     "soul": "Alma",
     "meditate": "Meditar",
     "sacredSoul": "Alma Sagrada",
-    "streak": "días de racha",
+    "streak": {
+      "label": "RACHA",
+      "days": "{{count}} días",
+      "keep": "Mantén tu llama viva"
+    },
     "balance": "Tu Saldo SHC",
     "claimRewards": "Reclamar Recompensas",
     "todaysWisdom": "Sabiduría del Día",
     "todaysMeditation": "Meditación del Día",
     "startSession": "Iniciar Sesión",
-    "quickActions": "Acciones Rápidas",
+    "quickActions": {
+      "meditate": "Meditar",
+      "heal": "Sanar",
+      "breathe": "Respirar",
+      "scan": "Escaneo del Alma",
+      "mantras": "Mantras",
+      "journal": "Diario"
+    },
     "inviteFriends": "Invitar amigos",
     "inviteDescription": "Comparte Siddha Quantum Nexus con tus amigos y ayúdalos en su viaje espiritual.",
     "loadingWisdom": "Cargando sabiduría...",
@@ -686,7 +927,47 @@
     "sadhanaPhaseEvening": "Integración lunar",
     "sadhanaCompleteProgress": "{{count}} / {{total}} COMPLETADO",
     "gateComplete": "Completo",
-    "somaHarmonicCredits": "+ {{amount}} CRÉDITOS SOMÁTICO-ARMÓNICOS"
+    "somaHarmonicCredits": "+ {{amount}} CRÉDITOS SOMÁTICO-ARMÓNICOS",
+    "heroOpeningLoading": "Accediendo a tu Archivo Akasha-Neural...",
+    "heroOpeningWithDasha": "Mientras atraviesas tu ciclo {{dasha}}{{hasAntardasha, select, 1{, sub-período {{antardasha}}} other{}}}...",
+    "heroOpeningDefault": "Al entrar en este campo de transmisión Prema-Pulse...",
+    "sacredSound": "Sonido Sagrado",
+    "innerLight": "Luz Interior",
+    "stillness": "Quietud",
+    "listenNow": "Escucha ahora",
+    "listenNowSubtitle": "Elige cómo quieres comenzar",
+    "ritualMantra": "Mantra",
+    "ritualMantraDesc": "Enfoque suave del corazón",
+    "ritualMeditate": "Meditación",
+    "ritualMeditateDesc": "Quietud interior guiada",
+    "ritualMusic": "Música",
+    "ritualMusicDesc": "Calma de fondo",
+    "ritualBreath": "Respiración",
+    "dailyRoutineSection": "Práctica Diaria",
+    "activeTransmissions": "Transmisiones Activas",
+    "kineticIdle": "Campo inactivo",
+    "kineticNadiLine": "Flujo Nadi: {{nadis}} / 72.000 · Bloqueo: {{block}}%",
+    "kineticNadiHint": "Realiza un Escaneo Nadi para calibrar tu Campo del Alma.",
+    "hero": {
+      "greeting": "Namaste, {{name}}",
+      "tagline": "Tu campo akáshico está activo",
+      "wisdom": "Código de Luz Védica Diario"
+    },
+    "soma": {
+      "title": "Balance Soma",
+      "label": "BALANCE"
+    },
+    "sections": {
+      "continueJourney": "Continúa Tu Viaje",
+      "recommended": "Recomendado para Ti",
+      "recentActivity": "Actividad Reciente",
+      "dailyPractice": "Práctica Diaria",
+      "quickAccess": "Acceso Rápido"
+    },
+    "empty": {
+      "noActivity": "Tu viaje apenas comienza.",
+      "startFirst": "Inicia tu primera sesión"
+    }
   },
   "journeys": {
     "breathingTitle": "Viajes de respiración",
@@ -1391,8 +1672,23 @@
       "label": "SALDO"
     },
     "badges": "Insignias",
-    "settings": "Configuración",
-    "language": "Idioma",
+    "settings": {
+      "title": "Configuración",
+      "notifications": "Notificaciones",
+      "privacy": "Privacidad",
+      "account": "Configuración de cuenta",
+      "logout": "Cerrar sesión",
+      "deleteAccount": "Eliminar cuenta",
+      "deleteWarning": "Esta acción no se puede deshacer. Todos tus datos serán eliminados permanentemente."
+    },
+    "language": {
+      "label": "IDIOMA",
+      "title": "Seleccionar idioma",
+      "en": "Inglés",
+      "sv": "Sueco",
+      "no": "Noruego",
+      "es": "Español"
+    },
     "howAppWorks": "Cómo funciona esta app",
     "howAppWorksVideoLink": "Ver guía en YouTube",
     "notifications": "Notificaciones",
@@ -1517,7 +1813,11 @@
     "beginJourney": "Comienza tu viaje de sanación",
     "yourName": "Tu nombre",
     "emailAddress": "Correo electrónico",
-    "password": "Contraseña",
+    "password": {
+      "label": "Contraseña",
+      "placeholder": "Ingresa tu contraseña",
+      "forgot": "¿Olvidaste tu contraseña?"
+    },
     "signIn": "Iniciar sesión",
     "signUp": "Registrarse",
     "createAccount": "Crear cuenta",
@@ -1528,7 +1828,10 @@
     "alreadyHaveAccount": "¿Ya tienes cuenta?",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "fullName": "Nombre Completo",
-    "email": "Correo electrónico",
+    "email": {
+      "label": "Correo electrónico",
+      "placeholder": "Ingresa tu correo"
+    },
     "missingFields": "Campos faltantes",
     "enterEmailPassword": "Por favor ingresa tu correo y contraseña",
     "signInFailed": "Error al iniciar sesión",
@@ -1546,7 +1849,41 @@
     "somethingWrong": "Algo salió mal. Por favor intenta de nuevo.",
     "resetEmailTitle": "Revisa tu correo",
     "resetEmailDescription": "Se ha enviado un enlace para restablecer la contraseña a tu correo.",
-    "referralBonus": "¡Fuiste referido! Recibirás 50 SHC de bono al registrarte."
+    "referralBonus": "¡Fuiste referido! Recibirás 50 SHC de bono al registrarte.",
+    "title": "Bienvenido a Siddha Quantum Nexus",
+    "subtitle": "Tu viaje de sanación sagrada comienza aquí",
+    "name": {
+      "label": "Nombre completo",
+      "placeholder": "Ingresa tu nombre completo"
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "button": "Iniciar sesión",
+      "noAccount": "¿No tienes cuenta?",
+      "signUp": "Regístrate"
+    },
+    "signup": {
+      "title": "Crear cuenta",
+      "button": "Crear cuenta",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "signIn": "Iniciar sesión",
+      "terms": "Al registrarte, aceptas nuestros Términos de servicio y Política de privacidad."
+    },
+    "resetPassword": {
+      "title": "Restablecer contraseña",
+      "subtitle": "Ingresa tu correo y te enviaremos un enlace de restablecimiento.",
+      "button": "Enviar enlace",
+      "backToLogin": "Volver al inicio de sesión",
+      "success": "Enlace enviado. Revisa tu correo."
+    },
+    "errors": {
+      "invalidEmail": "Por favor ingresa un correo válido.",
+      "invalidCredentials": "Correo o contraseña inválidos.",
+      "emailInUse": "Este correo ya está registrado.",
+      "weakPassword": "La contraseña debe tener al menos 8 caracteres.",
+      "generic": "Error de autenticación. Por favor, inténtalo de nuevo."
+    },
+    "verifyEmail": "Por favor verifica tu correo para continuar."
   },
   "admin": {
     "title": "Panel de Admin",
@@ -4841,5 +5178,11 @@
     "tierAkashaFeature4": "Campo Siddha 1:1",
     "priceFree": "Gratis",
     "priceAkasha": "€1.111 de por vida"
+  },
+  "settings": {
+    "legal": {
+      "title": "Legal y Avisos",
+      "subtitle": "Aviso médico y términos"
+    }
   }
 }
