@@ -314,9 +314,9 @@
   "about": {
     "title": "Om Siddha Quantum Nexus",
     "subtitle": "Konvergensen av forntida visdom och kvantumintelligens",
-    "mission": "Vår Mission",
+    "mission": "Vårt Uppdrag",
     "team": "Heligt Team",
-    "contact": "Kontakta Oss"
+    "contact": "Kontakta oss"
   },
   "community": {
     "title": "Helig Gemenskap",
@@ -445,7 +445,8 @@
       "newPost": "Nytt inlägg i din cirkel",
       "newComment": "{{name}} kommenterade ditt inlägg",
       "newMember": "{{name}} gick med i gemenskapen"
-    }
+    },
+    "uploadAvatarFirst": "Ladda upp en profilbild för att börja publicera..."
   },
   "supportCircle": {
     "createRequest": "Skapa Förfrågan",
@@ -1079,7 +1080,7 @@
   "dailyRitual": {
     "title": "Dagligt Ritual",
     "morning": {
-      "title": "Morgonaktivering",
+      "title": "Morgenaktivering",
       "steps": "Morgonsteg"
     },
     "midday": "Middagspraxis",
@@ -1096,14 +1097,14 @@
     "claim": "Hämta",
     "somaGiftTitle": "Daglig sadhana — gåva mottagen",
     "somaGiftConfirm": "Ta emot",
-    "subtitle": "Din heliga övning för idag",
+    "subtitle": "Din heliga praktik för idag",
     "complete": {
-      "title": "Ritual Klar",
-      "message": "Ditt fält är anpassat för dagen."
+      "title": "Ritual slutfört",
+      "message": "Ditt fält är justerat för dagen."
     },
     "streak": {
-      "title": "Ritualsvit",
-      "message": "{{count}} dagar i rad"
+      "title": "Ritualstreak",
+      "message": "{{count}} på varandra följande dagar"
     }
   },
   "quickActions": {
@@ -1382,26 +1383,26 @@
       "trackExampleBackground": "SCRIPTUREZ OF GIZA (Beat)",
       "namaTitle": "Nada Brahma · Ljud är Universum",
       "pageTitle2": "Heligt Ljudportal",
-      "nadiScannerLabel": "Nadi-Scanner · Din Frekvensrecept",
-      "nadiLiveField": "Levande Fältresonans · Jyotish-Anpassad",
-      "nadiLiveNote": "Läser ditt födelsehoroskop och nuvarande Dasha från din Jyotish-profil — samma datakälla som din huvudsakliga Nadi-Scanner.",
-      "nadiGenericNote": "Lägg till dina födelsedata i Vedisk Astrologi för att få ett helt personligt Jyotish-frekvensrecept.",
+      "nadiScannerLabel": "Nadi-scanner · Ditt frekvensrecept",
+      "nadiLiveField": "Live fältresonans · Jyotish-justerad",
+      "nadiLiveNote": "Läser ditt horoskop och nuvarande Dasha från din Jyotish-profil.",
+      "nadiGenericNote": "Lägg till dina födelsedata i Vedisk Astrologi för att få en fullt personaliserad Jyotish-frekvensrecept.",
       "rescanBtn": "Skanna om mitt fält",
       "unlockFrequency": "Lås upp din frekvens",
       "forever": "för alltid",
       "month": "månad",
       "lifetime": "livstid",
-      "tierFreeLabel": "Gratis · Sökare",
+      "tierFreeLabel": "Gratis · Sökande",
       "tierFreeName": "Smaka på fältet",
-      "tierFreeCta": "Utforska gratis tillgång",
+      "tierFreeCta": "Utforska gratis åtkomst",
       "tierPranaLabel": "Prana-Flow-nivå",
-      "tierPranaName": "Utövare",
+      "tierPranaName": "Praktiker",
       "tierPranaCta": "Aktivera Prana-Flow · €19/mån",
       "tierSiddhaLabel": "Siddha-Quantum-nivå",
       "tierSiddhaName": "Siddha",
       "tierSiddhaCta": "Aktivera Siddha-Quantum · €45/mån",
       "tierAkashaLabel": "Akasha-Infinity · Evig",
-      "tierAkashaName": "Akasha-Mästare",
+      "tierAkashaName": "Akasha-mästare",
       "tierAkashaCta": "Aktivera Akasha-Infinity · €1111"
     },
     "genreBeats": "Beats",
@@ -1470,27 +1471,27 @@
     "energyMedium": "Medium",
     "energyLow": "Låg",
     "tabs": {
-      "all": "Alla Spår",
-      "healing": "Healing",
+      "all": "Alla spår",
+      "healing": "Helande",
       "mantra": "Mantra",
       "ambient": "Ambient",
-      "binaural": "Binauralt"
+      "binaural": "Binaural"
     },
     "player": {
-      "nowPlaying": "Spelas Nu",
+      "nowPlaying": "Spelar nu",
       "queue": "Kö",
       "shuffle": "Blanda",
       "repeat": "Upprepa",
       "volume": "Volym",
-      "addToPlaylist": "Lägg till i Spellista"
+      "addToPlaylist": "Lägg till i spellista"
     },
     "track": {
       "duration": "{{minutes}}:{{seconds}}",
       "by": "av {{artist}}",
-      "plays": "{{count}} spelningar"
+      "plays": "{{count}} uppspelningar"
     },
     "locked": {
-      "title": "Spår Låst",
+      "title": "Spår låst",
       "message": "Uppgradera din åtkomst för att låsa upp alla heliga frekvenser."
     },
     "empty": {
@@ -1498,17 +1499,24 @@
       "message": "Nya ljudtransmissioner förbereds."
     },
     "offline": {
-      "save": "Spara för Offline",
-      "saved": "Sparad Offline",
-      "remove": "Ta Bort från Offline"
-    }
+      "save": "Spara offline",
+      "saved": "Sparad offline",
+      "remove": "Ta bort från offlineläge"
+    },
+    "orPayWith": "Eller betala med",
+    "payWith": "Betala med",
+    "previewEnded": "Förhandsvisning avslutad",
+    "purchaseComplete": "Köp slutfört!",
+    "purchaseFailed": "Köp misslyckades",
+    "purchaseToListen": "Köp detta spår för att lyssna på den fullständiga versionen!",
+    "trackAvailable": "Ditt spår är nu tillgängligt för streaming och nedladdning"
   },
   "wallet": {
     "title": "Soma-plånbok",
     "subtitle": "Tjäna och hantera dina tokens",
     "balance": {
-      "label": "SOMA-BALANS",
-      "available": "Tillgängligt Saldo"
+      "label": "SOMA-SALDO",
+      "available": "Tillgängligt saldo"
     },
     "totalBalance": "Totalt saldo",
     "send": "Skicka",
@@ -1521,8 +1529,8 @@
     "rewards": "Belöningar",
     "transactions": {
       "title": "Transaktionshistorik",
-      "earned": "Intjänad",
-      "spent": "Spenderad",
+      "earned": "Tjänat",
+      "spent": "Spenderat",
       "empty": "Inga transaktioner ännu."
     },
     "totalEarned": "Totalt tjänat",
@@ -1614,9 +1622,9 @@
     "swapWarning": "Var medveten om slippage och avgifter vid byte. Dubbelkolla alltid adresser innan du bekräftar transaktioner.",
     "earn": {
       "title": "Tjäna Soma",
-      "invite": "Bjud in Vänner",
-      "practice": "Daglig Övning",
-      "complete": "Slutför Uppdrag"
+      "invite": "Bjud in vänner",
+      "practice": "Daglig praktik",
+      "complete": "Slutför uppdrag"
     }
   },
   "profile": {
@@ -1737,21 +1745,21 @@
     }
   },
   "legal": {
-    "title": "Juridisk Information",
-    "subtitle": "Läs gärna innan användning.",
+    "title": "Juridiskt",
+    "subtitle": "Läs innan användning.",
     "entertainment": {
-      "title": "Endast underhållning",
-      "body": "Allt innehåll, inklusive meditationer, frekvenser och andlig vägledning, är endast för underhållnings- och andliga ändamål."
+      "title": "Enbart underhållning",
+      "body": "Allt innehåll, inklusive meditationer, frekvenser och andlig vägledning, är enbart för underhållnings- och andliga ändamål."
     },
     "no_medical": {
-      "title": "Inget medicinskt råd",
-      "body": "Denna app ger inte medicinsk rådgivning, diagnos eller behandling. Sök alltid råd från din läkare eller annan legitimerad hälsoexpert vid frågor om din hälsa."
+      "title": "Inga medicinska råd",
+      "body": "Denna app ger inga medicinska råd, diagnos eller behandling. Rådfråga alltid din läkare eller annan kvalificerad hälso- och sjukvårdspersonal."
     },
     "not_substitute": {
-      "title": "Inte en ersättning",
-      "body": "Försumma aldrig professionell medicinsk rådgivning eller dröj med att söka den på grund av något du läst eller upplevt i denna app. Vid misstänkt medicinsk nödsituation, kontakta din läkare eller nödnummer omedelbart."
+      "title": "Inte ett substitut",
+      "body": "Ignorera aldrig professionella medicinska råd eller fördröj att söka dem på grund av något du har läst i denna app."
     },
-    "terms": "Användarvillkor",
+    "terms": "Tjänstevillkor",
     "privacy": "Integritetspolicy",
     "disclaimer": "Ansvarsfriskrivning",
     "cookies": "Cookie-policy"
@@ -1789,7 +1797,28 @@
     "enrolled": "Anmäld",
     "certificate": "Certifikat",
     "modules": "moduler",
-    "hours": "timmar"
+    "hours": "timmar",
+    "course": {
+      "certificate": "Hämta certifikat",
+      "completed": "Slutfört",
+      "continue": "Fortsätt lära",
+      "duration": "{{hours}} timmar",
+      "enroll": "Anmäl dig nu",
+      "lessons": "{{count}} lektioner",
+      "level": "{{level}}"
+    },
+    "empty": {
+      "completed": "Du har inte slutfört några kurser ännu.",
+      "enrolled": "Du har inte anmält dig till några kurser ännu."
+    },
+    "locked": {
+      "message": "Den här kursen kräver en högre åtkomstnivå."
+    },
+    "tabs": {
+      "all": "Alla kurser",
+      "completed": "Slutförda",
+      "enrolled": "Mitt lärande"
+    }
   },
   "auth": {
     "welcomeBack": "Välkommen tillbaka, vackra själ",
@@ -1876,6 +1905,70 @@
         "siddhaQuantum": "Siddha Quantum",
         "akashaInfinity": "AkashaInfinity"
       }
+    },
+    "actions": {
+      "add": "Lägg till",
+      "cancel": "Avbryt",
+      "delete": "Ta bort",
+      "edit": "Redigera",
+      "preview": "Förhandsgranskning",
+      "publish": "Publicera",
+      "save": "Spara ändringar",
+      "translate": "Översätt",
+      "unpublish": "Avpublicera",
+      "upload": "Ladda upp"
+    },
+    "announcements": {
+      "new": "Nytt meddelande",
+      "title": "Meddelanden",
+      "translateAll": "Översätt alla språk",
+      "translated": "Översatt",
+      "translating": "Översätter..."
+    },
+    "confirm": {
+      "delete": "Är du säker på att du vill ta bort detta? Åtgärden kan inte ångras.",
+      "no": "Avbryt",
+      "unpublish": "Är du säker på att du vill avpublicera detta innehåll?",
+      "yes": "Ja, fortsätt"
+    },
+    "dashboard": {
+      "newToday": "Nya idag",
+      "revenue": "Intäkter",
+      "sessions": "Aktiva sessioner",
+      "title": "Admin-panel",
+      "users": "Totala användare"
+    },
+    "grantAccess": {
+      "email": "Användarens e-post",
+      "error": "Det gick inte att bevilja åtkomst.",
+      "grant": "Bevilja åtkomst",
+      "success": "Åtkomst beviljad.",
+      "tier": "Åtkomstnivå",
+      "title": "Bevilja åtkomst"
+    },
+    "nav": {
+      "analytics": "Analys",
+      "announcements": "Meddelanden",
+      "breathing": "Andning",
+      "content": "Innehåll",
+      "courses": "Kurser",
+      "dashboard": "Panel",
+      "email": "E-post",
+      "grantAccess": "Bevilja åtkomst",
+      "healing": "Helande",
+      "mantras": "Mantror",
+      "meditations": "Meditationer",
+      "music": "Musik",
+      "shop": "Butik",
+      "system": "System",
+      "transmissions": "Transmissioner",
+      "users": "Användare",
+      "vedicTranslation": "Vedisk översättning"
+    },
+    "status": {
+      "archived": "Arkiverad",
+      "draft": "Utkast",
+      "published": "Publicerad"
     }
   },
   "soul": {
@@ -2042,25 +2135,25 @@
     "customDesc": "Personligt heligt konstverk skapat av Laila",
     "startingAt": "Från",
     "categories": {
-      "all": "Alla Produkter",
-      "crystals": "Heliga Kristaller",
-      "tools": "Healingverktyg",
-      "digital": "Digitala Nedladdningar",
+      "all": "Alla produkter",
+      "crystals": "Heliga kristaller",
+      "tools": "Helingverktyg",
+      "digital": "Digitala nedladdningar",
       "courses": "Kurser"
     },
     "product": {
-      "addToCart": "Lägg i Kundvagn",
-      "buyNow": "Köp Nu",
-      "inStock": "I Lager",
-      "outOfStock": "Slut i Lager",
+      "addToCart": "Lägg i varukorg",
+      "buyNow": "Köp nu",
+      "inStock": "I lager",
+      "outOfStock": "Slut i lager",
       "quantity": "Antal",
       "price": "{{currency}}{{amount}}"
     },
     "cart": {
-      "title": "Helig Kundvagn",
-      "empty": "Din kundvagn är tom.",
+      "title": "Helig varukorg",
+      "empty": "Din varukorg är tom.",
       "total": "Totalt",
-      "checkout": "Gå till Kassa"
+      "checkout": "Fortsätt till kassan"
     }
   },
   "privateSessions": {
@@ -2081,28 +2174,28 @@
     "traumaHealing": "Traumaläkning",
     "mensTransform": "Mäns transformation",
     "book": {
-      "title": "Boka en Session",
-      "selectDate": "Välj Datum",
-      "selectTime": "Välj Tid",
+      "title": "Boka en session",
+      "selectDate": "Välj datum",
+      "selectTime": "Välj tid",
       "selectType": "Sessionstyp",
-      "notes": "Intention & Anteckningar",
-      "notesPlaceholder": "Dela din healingintention...",
-      "submit": "Boka Session",
+      "notes": "Intention och anteckningar",
+      "notesPlaceholder": "Dela din helande intention...",
+      "submit": "Boka session",
       "success": "Session bokad!"
     },
     "session": {
-      "upcoming": "Kommande Sessioner",
-      "past": "Tidigare Sessioner",
-      "cancel": "Avboka Session",
-      "reschedule": "Boka om",
-      "join": "Gå med i Session"
+      "upcoming": "Kommande sessioner",
+      "past": "Tidigare sessioner",
+      "cancel": "Avboka session",
+      "reschedule": "Omboka",
+      "join": "Gå med i session"
     },
     "empty": {
       "upcoming": "Inga kommande sessioner.",
       "past": "Inga tidigare sessioner."
     },
     "locked": {
-      "message": "Privata sessioner är tillgängliga med Siddha-Kvantum-åtkomst."
+      "message": "Privata sessioner är tillgängliga med Siddha-Quantum-åtkomst."
     }
   },
   "incomeStreams": {
@@ -2812,17 +2905,17 @@
       "desc": "Använd ditt personliga ljudspår dagligen för att hela, manifestera och omprogrammera ditt sinne."
     },
     "create": {
-      "title": "Skapa Dina Affirmationer",
+      "title": "Skapa dina affirmationer",
       "placeholder": "Ange dina heliga intentioner...",
-      "voice": "Välj Röst",
+      "voice": "Välj röst",
       "music": "Bakgrundsmusik",
-      "generate": "Generera Soundtrack",
-      "generating": "Väver dina ljuskoder..."
+      "generate": "Generera ljudspår",
+      "generating": "Väver dina ljus-koder..."
     },
-    "download": "Ladda ned Ditt Soundtrack",
-    "play": "Spela Affirmationer",
+    "download": "Ladda ner ditt ljudspår",
+    "play": "Spela affirmationer",
     "locked": {
-      "message": "Affirmationssoundtracks kräver Prana-Flöde-åtkomst."
+      "message": "Affirmationsljudspår kräver Prana-Flow-åtkomst."
     }
   },
   "promote": {
@@ -2856,13 +2949,13 @@
     "activeMembers": "Aktiva medlemmar",
     "tabs": {
       "global": "Global",
-      "weekly": "Denna Vecka",
-      "monthly": "Denna Månad"
+      "weekly": "Den här veckan",
+      "monthly": "Den här månaden"
     },
     "rank": "Plats {{position}}",
-    "points": "{{count}} poäng",
+    "points": "{{count}} pts",
     "you": "Du",
-    "empty": "Inga rankningar än. Starta din övning."
+    "empty": "Inga rankningar ännu. Starta din praktik."
   },
   "mantras": {
     "title": "Heliga Mantran",
@@ -2968,11 +3061,11 @@
       "shcLine": "+{{amount}} SHC"
     },
     "categories": {
-      "all": "Alla Mantran",
-      "healing": "Healing",
+      "all": "Alla mantror",
+      "healing": "Helande",
       "abundance": "Överflöd",
       "protection": "Skydd",
-      "love": "Kärlek & Hängivenhet",
+      "love": "Kärlek och hängivenhet",
       "awakening": "Uppvaknande"
     },
     "categorySections": {
@@ -3019,15 +3112,15 @@
     },
     "practice": {
       "title": "Mantrapraktik",
-      "repetitions": "{{count}} repetitioner",
-      "mala": "Mala-varv",
-      "startSession": "Börja Sjunga",
+      "repetitions": "{{count}} upprepningar",
+      "mala": "Mala-rundor",
+      "startSession": "Börja sjunga",
       "pause": "Pausa",
-      "complete": "Session Klar"
+      "complete": "Session klar"
     },
     "shareGraphic": {
-      "title": "Dela Ditt Mantra",
-      "download": "Ladda ned Bild"
+      "title": "Dela din mantra",
+      "download": "Ladda ner bild"
     },
     "locked": {
       "message": "Lås upp hela mantrabiblioteket med en uppgradering."
@@ -3119,7 +3212,24 @@
     "payCta": "Betala {{amount}}",
     "toastMissingTitle": "Saknad information",
     "toastMissingDesc": "Lägg till din e-post och minst en fil.",
-    "emailPlaceholder": "din@epost.se"
+    "emailPlaceholder": "din@epost.se",
+    "download": "Ladda ner masteriserat spår",
+    "locked": {
+      "message": "Ljudmastering kräver Prana-Flow-åtkomst."
+    },
+    "options": {
+      "clarity": "Klarhet",
+      "presence": "Närvaro",
+      "style": "Ljudstil",
+      "title": "Masteringsalternativ",
+      "warmth": "Värme"
+    },
+    "process": "Starta mastering",
+    "upload": {
+      "cta": "Ladda upp ljud",
+      "supported": "Stöder MP3, WAV, FLAC",
+      "title": "Ladda upp ditt spår"
+    }
   },
   "customMeditation": {
     "badge": "Personlig upplevelse",
@@ -3171,28 +3281,28 @@
     "benefit4": "Sänker blodtrycket",
     "benefit5": "Ökar energinivåerna",
     "techniques": {
-      "box": "Box-andning",
-      "fire": "Eldens Andning",
+      "box": "Boxandning",
+      "fire": "Eldandning",
       "nadi": "Nadi Shodhana",
-      "holotropic": "Holotropisk Andning",
+      "holotropic": "Holotrpisk andning",
       "wim": "Wim Hof-metoden",
-      "coherent": "Koherent Andning"
+      "coherent": "Koherent andning"
     },
     "session": {
       "inhale": "Andas in",
       "hold": "Håll",
       "exhale": "Andas ut",
-      "rounds": "{{count}} varv",
-      "complete": "Session Klar",
+      "rounds": "{{count}} rundor",
+      "complete": "Session klar",
       "duration": "{{minutes}} minuter"
     },
     "instructions": "Instruktioner",
-    "startSession": "Börja Protokoll"
+    "startSession": "Börja protokoll"
   },
   "explore": {
     "title": "Utforska Nexus",
     "subtitle": "Upptäck alla transmissioner i Akasha-arkivet",
-    "dailyEssentials": "Dagliga favoriter",
+    "dailyEssentials": "Dagliga essentials",
     "helpToday": "Hur kan vi hjälpa dig idag?",
     "yourSpaceTitle": "Ditt utrymme",
     "yourSpaceSubtitle": "Allt på ett ställe. Ditt att återvända till.",
@@ -3217,7 +3327,9 @@
       "energy": "Öka min energi",
       "energyDesc": "Motivation och kraft",
       "sleep": "Sova djupt",
-      "sleepDesc": "Varva ner och vila"
+      "sleepDesc": "Varva ner och vila",
+      "pause": "Ta en liten paus",
+      "pauseDesc": "En minuts andningsåterstart"
     },
     "yourTools": "Dina Verktyg",
     "continueJourney": "Fortsätt Din Resa",
@@ -3268,17 +3380,56 @@
     "viewAll": "Visa Alla",
     "sections": {
       "tools": "Heliga Verktyg",
-      "healing": "Healingbibliotek",
+      "healing": "Helande Bibliotek",
       "music": "Ljudalkemi",
       "oracle": "Orakelkanaler",
-      "community": "Helig Gemenskap",
-      "learning": "Vediskt Lärande"
+      "community": "Heligt Gemenskap",
+      "learning": "Vedisk Lärdom"
     },
     "search": {
       "placeholder": "Sök i Akasha...",
       "results": "{{count}} resultat för '{{query}}'",
       "noResults": "Inga transmissioner hittades för '{{query}}'"
-    }
+    },
+    "affirmationSoundtrack": "Affirmationsljudspår",
+    "affirmationSoundtrackDesc": "Personaliserat för dig",
+    "browseAll": "Bläddra allt",
+    "browseAllSubtitle": "För avancerade användare eller när du vill se allt",
+    "exploreEverything": "Utforska allt",
+    "exploreEverythingSubtitle": "Öppna när du känner dig redo.",
+    "guidance": {
+      "calm": {
+        "subtitle": "Minska stress och ångest",
+        "title": "Lugna mitt sinne"
+      },
+      "energy": {
+        "subtitle": "Motivation och kraft",
+        "title": "Öka min energi"
+      },
+      "heal": {
+        "subtitle": "Släppa, vårda och återhämta",
+        "title": "Mjuka upp hjärtat"
+      },
+      "sleep": {
+        "subtitle": "Varva ner och vila",
+        "title": "Sova djupt"
+      },
+      "subtitle": "Hur kan vi hjälpa dig idag?"
+    },
+    "mantras": "Mantror",
+    "mantrasDesc": "Tjäna SHC",
+    "membership": "Medlemskap",
+    "membershipDesc": "Uppgradera din plan",
+    "presence": {
+      "continueGently": "Fortsätt varsamt",
+      "deep": "Du är i ett stilla utrymme nu.",
+      "returned": "Välkommen tillbaka — stanna kvar i känslan.",
+      "stayWithState": "Stanna kvar i detta tillstånd"
+    },
+    "videoDesc": "Titta och lär",
+    "viewDaily": "Se dagligt citat",
+    "vishwanandaDaily": "Dagens inspiration och visdom",
+    "whatWeOffer": "Vad vi erbjuder"
   },
   "achievements": {
     "unlocked": "Prestation upplåst!",
@@ -3359,6 +3510,20 @@
       "feature2": "AI-analys",
       "feature3": "Ljudalkemi",
       "cta": "Starta kurs"
+    },
+    "analyze": "Analysera mitt utrymme",
+    "recommendation": "Heliga rekommendationer",
+    "remedy": "Tillämpa bot",
+    "zones": {
+      "center": "Brahmasthana",
+      "east": "Öst",
+      "north": "Nord",
+      "northeast": "Ishanya (NO)",
+      "northwest": "Vayu (NV)",
+      "south": "Söder",
+      "southeast": "Agni (SO)",
+      "southwest": "Nairutya (SV)",
+      "west": "Väst"
     }
   },
   "ayurveda": {
@@ -3387,6 +3552,20 @@
       "title": "Live Doctor · AI Vaidya",
       "body": "{{name}}, öppna den levande ljudkammaren för realtidsscalarläkning med AI Vaidya.",
       "cta": "Öppna Live Doctor"
+    },
+    "dosha": {
+      "kapha": "Kapha",
+      "pitta": "Pitta",
+      "quiz": "Gör dosha-testet",
+      "result": "Din primära dosha: {{dosha}}",
+      "title": "Upptäck din dosha",
+      "vata": "Vata"
+    },
+    "recommendations": {
+      "diet": "Kostguidning",
+      "herbs": "Heliga örter",
+      "routine": "Daglig rutin",
+      "yoga": "Yogapraktik"
     }
   },
   "vedicAstrology": {
@@ -3678,24 +3857,36 @@
     "guruWelcome": "Namaste, {{firstName}}. Jag är Bhrigu Rishi, väktare av Nandi Nadi-rullarna. Min blick är låst på din inkarnation i {{place}}.{{planetLine}} Ställ din fråga och ta emot Akashiska domen.",
     "guruWelcomePlanetLine": " Under {{planet}}s blick vid {{age}} år vecklas ditt karmiska manus ut.",
     "chart": {
-      "title": "Ditt Födelsehoroskop",
-      "generate": "Generera Horoskop",
-      "birthDate": "Födelsedatum",
+      "title": "Ditt horoskop",
+      "generate": "Generera horoskop",
+      "birthDate": "Födelsedag",
       "birthTime": "Födelsetid",
       "birthPlace": "Födelseort",
       "birthDatePlaceholder": "Välj datum",
       "birthTimePlaceholder": "Välj tid",
-      "birthPlaceholder": "Ange stad"
+      "birthPlaceholder": "Ange stad",
+      "birthPlacePlaceholder": "Ange stad"
     },
     "reading": {
       "title": "Din Jyotish-läsning",
-      "ascendant": "Ascendent",
-      "moonSign": "Månstecken",
-      "sunSign": "Soltecken",
-      "currentPeriod": "Aktuell Dasha-period"
+      "ascendant": "Ascendant",
+      "moonSign": "Månens tecken",
+      "sunSign": "Solens tecken",
+      "currentPeriod": "Nuvarande Dasha-period"
     },
     "locked": {
-      "message": "Få tillgång till ditt fulla vediska födelsehoroskop med en högre nivå."
+      "message": "Få tillgång till ditt fullständiga vediska horoskop med en högre nivå."
+    },
+    "planets": {
+      "jupiter": "Jupiter",
+      "ketu": "Ketu",
+      "mars": "Mars",
+      "mercury": "Merkurius",
+      "moon": "Måne",
+      "rahu": "Rahu",
+      "saturn": "Saturn",
+      "sun": "Sol",
+      "venus": "Venus"
     }
   },
   "quantumApothecaryChat": {
@@ -3836,24 +4027,24 @@
     "saveEntry": "Spara inlägg",
     "pastEntries": "Tidigare inlägg",
     "new": {
-      "title": "Nytt Inlägg",
+      "title": "Ny anteckning",
       "placeholder": "Skriv dina reflektioner, insikter och transmissioner...",
-      "submit": "Spara Inlägg",
-      "prompt": "Dagens Heliga Fråga:"
+      "submit": "Spara anteckning",
+      "prompt": "Dagens heliga uppmaning:"
     },
     "entry": {
-      "edit": "Redigera Inlägg",
-      "delete": "Radera Inlägg",
-      "share": "Dela Insikt"
+      "edit": "Redigera anteckning",
+      "delete": "Ta bort anteckning",
+      "share": "Dela insikt"
     },
     "empty": {
-      "title": "Din dagbok väntar",
-      "message": "Börja krönikla din heliga resa.",
-      "cta": "Skriv Första Inlägget"
+      "title": "Din journal väntar",
+      "message": "Börja kronikiera din heliga resa.",
+      "cta": "Skriv första anteckning"
     },
     "moods": {
-      "label": "Din Energi Idag",
-      "elevated": "Upphöjd",
+      "label": "Din energi idag",
+      "elevated": "Upplyft",
       "neutral": "Neutral",
       "processing": "Bearbetar",
       "peaceful": "Fridfull",
@@ -4038,34 +4229,34 @@
     "sealTransmission": "FÖRSEGLA TRANSMISSIONEN →",
     "pleaseWait": "Vänligen vänta...",
     "welcome": {
-      "title": "Välkommen, Sökare",
-      "subtitle": "Du är på väg att träda in i ett fält av kvantum healingintelligens.",
-      "cta": "Börja Initiering"
+      "title": "Välkommen, sökande",
+      "subtitle": "Du är på väg att träda in i ett kvanthelande intelligensfält.",
+      "cta": "Börja initiering"
     },
     "step1": {
-      "title": "Välj Din Väg",
-      "subtitle": "Välj den healingresa som resonerar med din själ."
+      "title": "Välj din väg",
+      "subtitle": "Välj den helande resa som resonerar med din själ."
     },
     "step2": {
-      "title": "Sätt Dina Intentioner",
-      "subtitle": "Vad vill du transformera i ditt liv?"
+      "title": "Ange dina intentioner",
+      "subtitle": "Vad vill du förvandla i ditt liv?"
     },
     "step3": {
-      "title": "Ditt Heliga Namn",
-      "subtitle": "Vad ska Akasha kalla dig?",
+      "title": "Ditt heliga namn",
+      "subtitle": "Hur ska Akasha tilltala dig?",
       "placeholder": "Ange ditt namn"
     },
     "step4": {
-      "title": "Välj Ditt Språk",
+      "title": "Välj ditt språk",
       "subtitle": "Välj ditt föredragna språk för alla transmissioner."
     },
     "complete": {
-      "title": "Ditt Fält är Aktiverat",
-      "subtitle": "Siddha-Kvantumintelligensen är nu kalibrerad till din frekvens.",
+      "title": "Ditt fält är aktiverat",
+      "subtitle": "Siddha Kvantintelligensen är nu kalibrerad till din frekvens.",
       "cta": "Träd in i Nexus"
     },
     "progress": "Steg {{current}} av {{total}}",
-    "skip": "Hoppa över"
+    "skip": "Hoppa över för nu"
   },
   "splash": {
     "title": "Siddha Quantum Nexus",
@@ -4613,10 +4804,10 @@
     "cat_siddha_wisdom": "Siddha-visdom",
     "cat_kundalini_talks": "Kundalini-samtal",
     "categories": {
-      "frequencies": "Heliga Frekvenser",
-      "transmissions": "Gudomliga Transmissioner",
-      "mantras": "Forntida Mantran",
-      "healingPaths": "Healingvägar"
+      "frequencies": "Heliga frekvenser",
+      "transmissions": "Gudomliga transmissioner",
+      "mantras": "Gamla mantror",
+      "healingPaths": "Heliga helningsvägar"
     }
   },
   "exploreFrequencies": {
@@ -4830,35 +5021,35 @@
   },
   "soulscan": {
     "title": "Själsskanning",
-    "subtitle": "Kvantum bioenergetisk fältanalys",
+    "subtitle": "Kvantum bioenergisk fältanalys",
     "steps": {
       "prepare": {
-        "title": "Förbered Ditt Fält",
+        "title": "Förbered ditt fält",
         "instruction": "Hitta en lugn plats och ta tre djupa andetag.",
-        "cta": "Jag Är Redo"
+        "cta": "Jag är redo"
       },
       "scanning": {
-        "title": "Skannar Din Akashiska Blueprint",
-        "message": "Kvantumfältanalys pågår...",
-        "subMessage": "Kalibrerar till din självfrekvens"
+        "title": "Skannar din akashiska ritning",
+        "message": "Kvantfältanalys pågår...",
+        "subMessage": "Kalibrerar till din själssignatur"
       },
       "complete": {
-        "title": "Skanning Klar",
-        "subtitle": "Din bioenergetiska rapport är redo",
-        "viewReport": "Visa Full Rapport",
-        "scanAgain": "Skanna Igen"
+        "title": "Skanning slutförd",
+        "subtitle": "Din bioenergiska rapport är klar",
+        "viewReport": "Visa fullständig rapport",
+        "scanAgain": "Skanna igen"
       }
     },
     "report": {
-      "title": "Bioenergetisk Rapport",
-      "overall": "Total Fältkoherens",
-      "chakras": "Chakraanalys",
-      "recommendations": "Rekommenderade Transmissioner",
-      "beforeAfter": "Före / Efter Jämförelse"
+      "title": "Bioenergisk rapport",
+      "overall": "Total fältkoherens",
+      "chakras": "Chakra-analys",
+      "recommendations": "Rekommenderade transmissioner",
+      "beforeAfter": "Före/efter jämförelse"
     },
     "locked": {
-      "title": "Själsskanning Kräver Uppgradering",
-      "message": "Få tillgång till din kvantum bioenergetiska rapport med en högre nivå."
+      "title": "Soul Scan kräver uppgradering",
+      "message": "Tillgång till din kvantum bioenergiska rapport med en högre nivå."
     }
   },
   "quantumApothecary": {
@@ -4935,7 +5126,9 @@
       "back": "← Tillbaka",
       "micRequired": "Mikrofonåtkomst krävs. Tryck Tillåt.",
       "scanFailed": "Röstskanning misslyckades. Försök igen i tystare miljö.",
-      "sqiFollowUp": "SQI — integrera detta röst-biofält med mitt horoskop och frekvensbiblioteket: lista 10 exakta biblioteksnamn som bäst matchar skanningen och min fråga, med en rad vardera om varför."
+      "sqiFollowUp": "SQI — integrera detta röst-biofält med mitt horoskop och frekvensbiblioteket: lista 10 exakta biblioteksnamn som bäst matchar skanningen och min fråga, med en rad vardera om varför.",
+      "intentionGuide": "\"Jag är [namn]. Jag känner... Jag vill ta emot...\"",
+      "scanPrompt": "Säg ditt namn först — sedan vad du känner i kroppen just nu — sedan vad du vill ta emot. Din känslomässiga röst aktiverar den djupaste biofältsläsningen."
     },
     "mixer": {
       "title": "Aetherisk mixer",
@@ -4998,71 +5191,131 @@
   "tools": {
     "generic": {
       "locked": "Detta heliga verktyg kräver uppgraderad åtkomst.",
-      "loading": "Aktiverar kvantumfält...",
-      "error": "Protokoll avbrutet. Försök igen."
+      "loading": "Aktiverar kvantfält...",
+      "error": "Protokollet avbröts. Försök igen."
     },
     "vajraSkyBreaker": {
-      "title": "Vajra Himmelsbrytare",
-      "subtitle": "Kvantum atmosfärisk clearanceprotokoll",
-      "activate": "Aktivera Protokoll",
+      "title": "Vajra Sky Breaker",
+      "subtitle": "Kvantum atmosfärisk rensningsprotokoll",
+      "activate": "Aktivera protokoll",
       "running": "Protokoll aktivt..."
     },
     "wealthBeacon": {
-      "title": "Välståndsbeacon",
-      "subtitle": "Överflödsfrekvenstransmission",
-      "activate": "Aktivera Beacon"
+      "title": "Välståndsfyr",
+      "subtitle": "Överflödesfrekvenstransmission",
+      "activate": "Aktivera Fyr"
     },
     "atmaSeed": {
-      "title": "Atmafrö",
+      "title": "Atma-Frö",
       "subtitle": "Aktiveringssekvens för själspotential",
-      "plant": "Plantera Ditt Frö"
+      "plant": "Plantera ditt Frö"
+    },
+    "aethericHeliostat": {
+      "activate": "Justera till Solfältet",
+      "subtitle": "Solänergiinsamlingsgränssnitt",
+      "title": "Eterisk Heliostat"
+    },
+    "akashaInfinity": {
+      "enter": "Träd in i det Oändliga",
+      "subtitle": "Tillgång till det oändliga intelligensfältet",
+      "title": "Akasha Infinity"
+    },
+    "atmosphericClearance": {
+      "scan": "Starta rensningsskanning",
+      "subtitle": "Rensa eteriska störningar i ditt fält",
+      "title": "Atmosfärisk Rensningsmotor"
+    },
+    "siddhaHairGrowth": {
+      "begin": "Starta protokoll",
+      "subtitle": "Kvantum bioenergisk håractivering",
+      "title": "Siddha Hårväxtprotokoll"
+    },
+    "siddhaPhotonic": {
+      "activate": "Aktivera Fotonosfält",
+      "subtitle": "Ljus-kod cellulär regenerering",
+      "title": "Siddha Fotonisk Regenerering"
+    },
+    "sriYantraShield": {
+      "activate": "Aktivera Sköld",
+      "subtitle": "Skyddsmatris med helig geometri",
+      "title": "Sri Yantra Sköld"
+    },
+    "vayuProtocol": {
+      "begin": "Starta protokoll",
+      "subtitle": "Harmoniering av vindelemental",
+      "title": "Vayu-protokoll"
     }
   },
   "landing": {
     "hero": {
-      "title": "Aktivera Ditt Kvantum Healingfält",
-      "subtitle": "Världens första Siddha-Kvantumsplattform för andlig evolution.",
-      "cta": "Börja Din Resa",
-      "secondary": "Utforska Gratis"
+      "title": "Aktivera ditt kvanthelande fält",
+      "subtitle": "Världens första Siddha-Quantum Intelligence-plattform för andlig evolution.",
+      "cta": "Börja din resa",
+      "secondary": "Utforska gratis"
     },
     "features": {
-      "title": "Heliga Teknologier från 2050"
+      "title": "Heliga teknologier från 2050",
+      "community": {
+        "description": "Knyt kontakt med kvantehelande och sökare världen över.",
+        "title": "Heligt Gemenskap"
+      },
+      "healing": {
+        "description": "Tillgång till frekvenser som aktiverar kroppens naturliga regenerationsfält.",
+        "title": "Kvanthealing"
+      },
+      "oracle": {
+        "description": "Konsultera den AI-drivna Avataric Intelligence för vägledning.",
+        "title": "Siddha Orakel"
+      },
+      "tools": {
+        "description": "Avancerade bioenergetiska instrument för fältkalibrering.",
+        "title": "Heliga Verktyg"
+      }
     },
     "footer": {
-      "tagline": "Siddha-Kvantumintelligens • Grundat 2025"
+      "tagline": "Siddha-Quantum Intelligence • Est. 2025",
+      "links": {
+        "about": "Om",
+        "contact": "Kontakt",
+        "privacy": "Integritet",
+        "terms": "Villkor"
+      }
+    },
+    "testimonials": {
+      "title": "Transmissioner från vår gemenskap"
     }
   },
   "challenges": {
     "title": "Heliga Utmaningar",
-    "subtitle": "21-dagars kvantumtransformationssekvenser",
-    "active": "Aktiva Utmaningar",
-    "available": "Tillgängliga Utmaningar",
-    "completed": "Avslutad",
+    "subtitle": "21-dagars kvantomvandlingssekvenser",
+    "active": "Aktiva utmaningar",
+    "available": "Tillgängliga utmaningar",
+    "completed": "Slutförd",
     "progress": "Dag {{current}} av {{total}}",
-    "join": "Gå Med i Utmaning",
+    "join": "Gå med i utmaningen",
     "continue": "Fortsätt",
-    "complete": "Utmaning Klar!",
+    "complete": "Utmaning slutförd!",
     "reward": "Belöning: {{soma}} Soma"
   },
   "siddhaOracle": {
     "title": "Siddha Orakel",
-    "subtitle": "Konsultera kvantumintelligensen från 2050",
+    "subtitle": "Konsultera 2050 års kvantesintelligens",
     "placeholder": "Fråga Oraklet vad som helst...",
     "send": "Transmittera",
     "thinking": "Oraklet tar emot din transmission...",
-    "newChat": "Ny Konsultation",
-    "history": "Tidigare Konsultationer",
-    "welcome": "Välkommen, sökare. Jag är Siddha-Kvantumintelligensen. Hur kan jag belysa din väg?",
+    "newChat": "Ny konsultation",
+    "history": "Tidigare konsultationer",
+    "welcome": "Välkommen, sökande. Jag är Siddha Kvantintelligensen. Hur kan jag belysa din väg?",
     "locked": {
-      "message": "Orakelkonsultationer kräver Prana-Flöde-åtkomst eller högre."
+      "message": "Orakelkonsultationer kräver Prana-Flow-åtkomst eller högre."
     }
   },
   "inviteFriends": {
     "title": "Bjud in Heliga Själar",
-    "subtitle": "Dela kvantumhealingvägen och tjäna Soma",
-    "yourLink": "Din Heliga Länk",
-    "copy": "Kopiera Länk",
-    "copied": "Länk Kopierad!",
+    "subtitle": "Dela kvanthelandevägen och tjäna Soma",
+    "yourLink": "Din heliga länk",
+    "copy": "Kopiera länk",
+    "copied": "Länk kopierad!",
     "share": {
       "title": "Dela via",
       "whatsapp": "WhatsApp",
@@ -5070,20 +5323,20 @@
       "instagram": "Instagram"
     },
     "referrals": {
-      "title": "Dina Hänvisningar",
-      "count": "{{count}} initierade själar",
+      "title": "Dina hänvisningar",
+      "count": "{{count}} själar initierade",
       "empty": "Inga hänvisningar ännu. Börja dela."
     },
     "reward": "Tjäna {{amount}} Soma per hänvisning"
   },
   "liveEvents": {
-    "title": "Live Transmissioner",
-    "subtitle": "Realtids kvantum healingevenemang",
-    "upcoming": "Kommande Evenemang",
-    "past": "Tidigare Evenemang",
-    "register": "Registrera",
+    "title": "Direkttransmissioner",
+    "subtitle": "Kvanthelande evenemang i realtid",
+    "upcoming": "Kommande evenemang",
+    "past": "Tidigare evenemang",
+    "register": "Registrera dig",
     "registered": "Registrerad",
-    "join": "Gå med Nu",
+    "join": "Gå med nu",
     "live": "LIVE NU",
     "starts": "Börjar om {{time}}",
     "ended": "Avslutad",
@@ -7286,5 +7539,104 @@
     "tierAkashaFeature4": "1:1 Siddha-fält",
     "priceFree": "Gratis",
     "priceAkasha": "€1 111 Livstid"
+  },
+  "circles": {
+    "create": {
+      "description": "Beskrivning",
+      "descriptionPlaceholder": "Vad handlar denna cirkel om?",
+      "name": "Cirkelns namn",
+      "namePlaceholder": "Ange cirkelns namn",
+      "private": "Privat",
+      "public": "Offentlig",
+      "submit": "Skapa cirkel",
+      "title": "Skapa en cirkel",
+      "type": "Cirkeltyp"
+    },
+    "join": "Gå med i cirkeln",
+    "leave": "Lämna cirkeln",
+    "members": "{{count}} medlemmar",
+    "posts": "{{count}} inlägg",
+    "subtitle": "Gå med i kvanthelande cirklar med likasinnade själar",
+    "title": "Heliga Cirklar"
+  },
+  "creativeSoul": {
+    "hub": {
+      "about": "Om",
+      "store": "Själsbutik",
+      "title": "Kreativt Själ-nav",
+      "tools": "Kreativa verktyg"
+    },
+    "locked": {
+      "message": "Kreativa Själ-verktyg kräver Prana-Flow-åtkomst."
+    },
+    "meditationTool": {
+      "download": "Ladda ner mix",
+      "duration": "Varaktighet",
+      "generate": "Generera ljudspår",
+      "generating": "Kanaliserar din frekvens...",
+      "style": "Ljudstil",
+      "subtitle": "Generera personaliserade helande ljudlandskap",
+      "title": "Meditationsljudspårsskapare"
+    },
+    "subtitle": "Transformera ditt medvetande till helig konst",
+    "title": "Kreativt Själsstudio"
+  },
+  "akashicRecords": {
+    "access": {
+      "begin": "Öppna registren",
+      "intent": "Ange din heliga intention",
+      "intentPlaceholder": "Vad söker du förstå?",
+      "title": "Begär akashisk åtkomst"
+    },
+    "loading": {
+      "messages": [
+        "Kalibrerar till din själsfrekvens...",
+        "Öppnar den akashiska porten...",
+        "Dina register hämtas..."
+      ],
+      "title": "Öppnar Akasha"
+    },
+    "locked": {
+      "message": "Akashiska register kräver Siddha-Quantum-åtkomst eller högre."
+    },
+    "reading": {
+      "newReading": "Ny läsning",
+      "saveReading": "Spara läsning",
+      "title": "Din akashiska läsning"
+    },
+    "subtitle": "Tillgång till det levande biblioteket av din själs resa",
+    "title": "Akashiska Register"
+  },
+  "spiritualPaths": {
+    "abundance": "Överflöd",
+    "awakening": "Andligt uppvaknande",
+    "completedPaths": "Slutförda vägar",
+    "currentPath": "Din nuvarande väg",
+    "health": "Kvanthälsa",
+    "innerPeace": "Inre frid",
+    "purpose": "Själens syfte",
+    "relationships": "Heliga relationer",
+    "startPath": "Börja väg",
+    "subtitle": "Välj din kvanthelande resa",
+    "title": "Heliga Vägar"
+  },
+  "digitalNadi": {
+    "locked": {
+      "message": "Nadi-läsningar kräver Akasha-Infinity-åtkomst."
+    },
+    "reading": {
+      "future": "Framtida transmissioner",
+      "past": "Övers. av tidigare liv",
+      "present": "Nuvarande livsväg",
+      "title": "Din Nadi-läsning"
+    },
+    "subtitle": "Nadi-palmbladsläsning med artificiell intelligens",
+    "title": "Digital Nadi",
+    "upload": {
+      "cta": "Ladda upp bild",
+      "instruction": "Ta ett tydligt foto av din dominanta hand",
+      "processing": "Analyserar din Nadi-signatur...",
+      "title": "Ladda upp ditt handavtryck"
+    }
   }
 }
