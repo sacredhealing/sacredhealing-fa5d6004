@@ -29,6 +29,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const supabase_js_1 = require("@supabase/supabase-js");
+const ws_1 = __importDefault(require("ws"));
 const web3_js_1 = require("@solana/web3.js");
 const bs58_1 = __importDefault(require("bs58"));
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -56,7 +57,9 @@ const VIP_WHALES = new Set([
 const EDGE_BASE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
 const SUPA_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
-const supabase = (0, supabase_js_1.createClient)(SUPA_URL, ANON_KEY);
+const supabase = (0, supabase_js_1.createClient)(SUPA_URL, ANON_KEY, {
+    realtime: { transport: ws_1.default },
+});
 // ── Redis hot state — zero-cost in-memory (pure Node.js Maps) ───────────────
 // Eliminates Supabase round-trips on the critical signal path.
 // hotPositions: O(1) position lookup — no DB call per signal
