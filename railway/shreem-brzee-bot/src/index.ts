@@ -24,7 +24,7 @@
  *  SL_MULTIPLIER           — 0.5 (stop loss at 50% of entry, default)
  */
 
-import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import {
   Connection,
   Keypair,
@@ -1039,23 +1039,38 @@ async function main() {
   // Enhanced WebSocket — 50-100ms at processed commitment (Helius Developer plan)
   startEnhancedWebSocket();
 
-  // Keep Supabase Realtime as fallback for test signals from UI
-  const channel: RealtimeChannel = supabase
-    .channel('shreem_bot_v2_fallback')
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'shreem_brzee_signals' },
-      async (payload) => {
-        // Process ALL signals from Realtime — catches test signals + any missed by WS
-        const sig = payload.new?.sig || '';
-        console.log(`[realtime] signal received: ${sig.slice(0,20)} action=${payload.new?.action}`);
-        try { await processSignal(payload.new); }
-        catch (e: any) { console.error('[fallback]', e.message); }
+  // ── Signal poller — HTTP polling every 3s (replaces unreliable Realtime) ──────
+  // Fetches latest signals from edge function, processes any not yet seen.
+  // Works regardless of RLS, Realtime config, or WebSocket issues.
+  const seenSigs = new Set<string>();
+  // Pre-seed with existing signals so we don't reprocess old ones on startup
+  try {
+    const existing = await edgeGet('/signals');
+    if (Array.isArray(existing)) {
+      existing.forEach((s: any) => seenSigs.add(s.sig));
+      console.log(`[poller] seeded ${seenSigs.size} existing signals`);
+    }
+  } catch {}
+
+  const pollTimer = setInterval(async () => {
+    try {
+      const signals = await edgeGet('/signals');
+      if (!Array.isArray(signals)) return;
+      for (const signal of signals) {
+        if (!signal.sig || seenSigs.has(signal.sig)) continue;
+        seenSigs.add(signal.sig);
+        console.log(`[poller] new signal: ${signal.sig.slice(0,20)} ${signal.action} ${signal.symbol || signal.mint?.slice(0,8)}`);
+        try { await processSignal(signal); }
+        catch (e: any) { console.error('[poller] processSignal error:', e.message); }
       }
-    )
-    .subscribe((status) => {
-      console.log(`[realtime-fallback] ${status}`);
-    });
+    } catch (e: any) {
+      console.error('[poller] fetch error:', e.message);
+    }
+  }, 3_000);
+
+  // Keep channel var for SIGTERM cleanup compatibility
+  const channel = { unsubscribe: () => { clearInterval(pollTimer); } };
+  console.log('[poller] signal poller started — checking every 3s');
 
   // Status log every 60s
   setInterval(async () => {
