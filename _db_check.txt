@@ -1,11 +1,11 @@
 === INJECT TEST SIGNAL ===
-{"ok":true,"sig":"TEST_1781714421412","action":"BUY","version":"v3"}
+{"ok":true,"sig":"TEST_1781715700420","action":"BUY","version":"v3"}
 === SIGNALS (last 5) ===
+sig=TEST_1781715700420 action=BUY label=Remusofmars time=17:01:40
 sig=TEST_1781714421412 action=BUY label=Remusofmars time=16:40:21
 sig=TEST_1781713948624 action=BUY label=Remusofmars time=16:32:28
 sig=TEST_SELL_1781713850 action=SELL label=Remusofmars time=16:30:50
 sig=TEST_1781713661556 action=BUY label=Remusofmars time=16:27:41
-sig=TEST_1781713648105 action=BUY label=Remusofmars time=16:27:28
 TOTAL: 5 signals
 
 === SESSION ===
