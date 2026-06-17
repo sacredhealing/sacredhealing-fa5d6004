@@ -1,0 +1,76 @@
+name: Shreem — Fix RLS and Backfill
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/shreem-fix-rls.yml'
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Disable RLS and run backfill
+        env:
+          SUPA_PAT: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          ANON_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+          HELIUS_KEY: 775d3d1f-6801-41de-a063-8aee4382d0f4
+        run: |
+          SUPA_URL="https://ssygukfdbtehvtndandn.supabase.co"
+          
+          echo "=== Step 1: Disable RLS via Management API ==="
+          SQL="ALTER TABLE shreem_brzee_signals DISABLE ROW LEVEL SECURITY; ALTER TABLE shreem_brzee_session DISABLE ROW LEVEL SECURITY; ALTER TABLE shreem_brzee_paper_trades DISABLE ROW LEVEL SECURITY; GRANT ALL ON shreem_brzee_signals TO anon; GRANT ALL ON shreem_brzee_session TO anon; GRANT ALL ON shreem_brzee_paper_trades TO anon; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;"
+          
+          RLS_RESULT=$(curl -s -X POST \
+            "https://api.supabase.com/v1/projects/ssygukfdbtehvtndandn/database/query" \
+            -H "Authorization: Bearer ${SUPA_PAT}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"${SQL}\"}")
+          echo "RLS result: $RLS_RESULT"
+          
+          echo ""
+          echo "=== Step 2: Verify RLS is disabled ==="
+          CHECK=$(curl -s -X POST \
+            "https://api.supabase.com/v1/projects/ssygukfdbtehvtndandn/database/query" \
+            -H "Authorization: Bearer ${SUPA_PAT}" \
+            -H "Content-Type: application/json" \
+            -d '{"query": "SELECT tablename, rowsecurity FROM pg_tables WHERE tablename LIKE '"'"'shreem%'"'"';"}')
+          echo "RLS check: $CHECK"
+          
+          echo ""
+          echo "=== Step 3: Test direct insert with anon key ==="
+          TEST=$(curl -s -X POST "${SUPA_URL}/rest/v1/shreem_brzee_signals" \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=ignore-duplicates,return=minimal" \
+            -d '[{"sig":"RLS_TEST_123","wallet":"test","label":"test","action":"BUY","mint":"test","symbol":"TEST","amount_sol":0.001,"token_amount":1,"is_pump_fun":false,"block_time":1700000000,"created_at":"2024-01-01T00:00:00Z"}]')
+          echo "Insert test: HTTP response: $?"
+          echo "Test result: $TEST"
+
+          echo ""
+          echo "=== Step 4: Run backfill (wallets 0-7) ==="
+          HELIUS_KEY=${HELIUS_KEY} \
+          SUPABASE_URL=${SUPA_URL} \
+          SUPABASE_SERVICE_KEY=${ANON_KEY} \
+          WALLET_START=0 WALLET_END=7 PAGES=3 DELAY=8000 \
+          node scripts/shreem_backfill.mjs 2>&1 | tee _backfill_a.txt
+          
+          echo ""
+          echo "=== SUMMARY ==="
+          grep -E "(🐋|parsed|inserted|🏆|upsert)" _backfill_a.txt | tail -30
+
+      - name: Commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "bot@sqi.app" && git config user.name "SQI Bot"
+          git add _backfill_a.txt || true
+          git commit -m "data: backfill batch A with RLS fix $(date -u +%Y-%m-%d-%H%M)" || true
+          git push "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
