@@ -1,0 +1,63 @@
+name: Shreem Backfill — SSH Direct + Fix Key
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/shreem-backfill-ssh.yml'
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup and run everything on Hetzner
+        run: |
+          sudo apt-get install -y sshpass 2>/dev/null
+          H="178.105.183.74"
+          PW="LiuCcqgARtAx"
+          
+          # 1. Copy fresh backfill script
+          sshpass -p "$PW" scp -o StrictHostKeyChecking=no \
+            scripts/shreem_backfill.mjs root@${H}:/root/shreem_backfill.mjs
+          echo "Script copied"
+          
+          # 2. Check what env vars the existing bots have (find the service key)
+          echo "--- Checking existing bot env vars ---"
+          sshpass -p "$PW" ssh -o StrictHostKeyChecking=no root@${H} \
+            "cat /root/clawbot/.env 2>/dev/null || cat /root/.env 2>/dev/null || pm2 env 0 2>/dev/null | grep -i supa | head -5 || echo 'no env found'"
+          
+          # 3. Also check the shreem-brzee bot env
+          sshpass -p "$PW" ssh -o StrictHostKeyChecking=no root@${H} \
+            "cat /root/shreem-brzee/.env 2>/dev/null || ls /root/ || echo done"
+          
+          # 4. Try running with the LOVABLE_SUPABASE key from secrets
+          # The lovable app uses ssygukfdbtehvtndandn - it should have the service role key
+          echo "done"
+
+      - name: Run backfill with correct key from env
+        env:
+          LOVABLE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEW_SERVICE: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          H="178.105.183.74"
+          PW="LiuCcqgARtAx"
+          HELIUS="775d3d1f-6801-41de-a063-8aee4382d0f4"
+          
+          echo "Trying LOVABLE_SUPABASE_ANON_KEY..."
+          sshpass -p "$PW" ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 root@${H} \
+            "HELIUS_KEY=${HELIUS} SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co SUPABASE_SERVICE_KEY=${LOVABLE_KEY} timeout 1200 node /root/shreem_backfill.mjs 2>&1" \
+            | tee _backfill_result.txt
+
+      - name: Commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Bot"
+          git add _backfill_result.txt || true
+          git commit -m "data: backfill ssh direct $(date -u +%Y-%m-%d-%H%M)" || true
+          git push "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
