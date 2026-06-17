@@ -1,0 +1,82 @@
+
+🔱 Shreem Backfill v4 — wallets 0–7 (7 wallets)
+   Key: eyJhbGciOiJIUzI1NiIs... | URL: https://ssygukfdbtehvtndandn.supabase.co
+
+🐋 Cupsey
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🐋 Heyitsyolo
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🐋 Remusofmars
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🐋 Orange
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🐋 Shreem Brzee
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🐋 Lenion
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🐋 Boredboar
+  ⏳ 429 wait 8s
+  ⏳ 429 wait 16s
+  ⏳ 429 wait 24s
+  ⏳ 429 wait 32s
+  ⏳ 429 wait 40s
+  ✗ max 429 retries
+   p1: done
+   parsed: 0
+   ✅ inserted: 0
+
+🏆 DONE: 0 rows
