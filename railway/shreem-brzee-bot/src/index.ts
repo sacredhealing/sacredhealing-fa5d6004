@@ -21,7 +21,6 @@
  *  RISK_PCT                — 0.05 (5% per trade, default)
  *  MAX_SLIPPAGE_BPS        — 300 (3%, default)
  *  JITO_TIP_LAMPORTS       — 1000000 (0.001 SOL, default)
- *  TP_MULTIPLIER           — 2.0 (take profit at 2× entry, default)
  *  SL_MULTIPLIER           — 0.5 (stop loss at 50% of entry, default)
  */
 
@@ -47,7 +46,6 @@ const SESSION_ID    = 'default';
 const RISK_PCT      = parseFloat(process.env.RISK_PCT              || '0.05');   // 5% per trade
 const MAX_SLIP_BPS  = parseInt(process.env.MAX_SLIPPAGE_BPS        || '300');    // 3% slippage
 const JITO_TIP_LAM  = parseInt(process.env.JITO_TIP_LAMPORTS       || '1000000');// 0.001 SOL tip
-const TP_MULT       = parseFloat(process.env.TP_MULTIPLIER         || '2.0');    // 2× take profit
 const SL_MULT       = parseFloat(process.env.SL_MULTIPLIER         || '0.5');    // 50% stop loss
 const TP_CHECK_MS   = parseInt(process.env.TP_CHECK_INTERVAL_MS    || '30000');  // check every 30s
 const MAX_HOLD_MIN  = parseInt(process.env.MAX_POSITION_HOLD_MINUTES|| '240');   // 4h force exit
@@ -743,7 +741,7 @@ async function executeSell(
   const whaleMult = (whaleAmountSol && pos.whaleEntrySol)
     ? Number(whaleAmountSol) / pos.whaleEntrySol : undefined;
 
-  const mult   = reason === 'tp' ? TP_MULT : reason === 'sl' ? SL_MULT : exitMult(whaleMult);
+  const mult   = reason === 'sl' ? SL_MULT : exitMult(whaleMult);
   const gross  = pos.netPosition * mult;
   const s      = slip(gross);
   const f      = fees();
@@ -785,12 +783,6 @@ function startTpSlMonitor() {
         const holdMins = (Date.now() - pos.entryTime) / 60000;
 
         // TAKE PROFIT: price is 2× entry
-        if (mult >= TP_MULT) {
-          console.log(`[TP] ${pos.symbol} hit ${mult.toFixed(2)}× — taking profit`);
-          await executeSell(pos.mint, pos, 'tp');
-          continue;
-        }
-
         // STOP LOSS: price is 50% of entry
         if (mult <= SL_MULT) {
           console.log(`[SL] ${pos.symbol} at ${mult.toFixed(2)}× — stop loss`);
