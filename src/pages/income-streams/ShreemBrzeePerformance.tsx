@@ -413,6 +413,21 @@ export default function ShreemBrzeePerformance(){
     }catch(e:any){flash(`Close failed: ${e.message?.slice(0,60)}`,'err');}
   },[livePosPrices,loadAll,loadOpenTrades,fetchJupPrice]);
 
+  // Admin: force close every open position at current price
+  const forceCloseAll=useCallback(async()=>{
+    if(!openTrades.length){flash('No open positions to close','info');return;}
+    if(!confirm(`Force close ${openTrades.length} open position(s) at current market price?`))return;
+    setForceBusy(true);
+    try{
+      for(const t of openTrades){
+        // eslint-disable-next-line no-await-in-loop
+        await closePosition(t,'admin_force');
+      }
+      flash(`✓ Force-closed ${openTrades.length} position(s)`,'ok');
+    }catch(e:any){flash(`Force close failed: ${e.message?.slice(0,60)}`,'err');}
+    finally{setForceBusy(false);setShowAdminMenu(false);}
+  },[openTrades,closePosition]);
+
   // Auto-close: 4h timeout OR -30% stop loss
   useEffect(()=>{
     if(!openTrades.length)return;
