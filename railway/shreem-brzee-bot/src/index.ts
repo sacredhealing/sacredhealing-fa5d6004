@@ -56,7 +56,7 @@ const VIP_MULT      = parseFloat(process.env.VIP_MULTIPLIER        || '2.0');   
 
 // VIP whales — boosted risk + priority fee multiplier
 const VIP_WHALES = new Set([
-  'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', // Cupsey
+  'Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB', // Euris
   'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', // Heyitsyolo
   'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', // Remusofmars
 ]);
@@ -824,7 +824,7 @@ function startTpSlMonitor() {
 
 // ── Whale wallet map (for WS trade parsing) ───────────────────────────────────
 const WHALE_WALLETS: Record<string, string> = {
-  'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE': 'Cupsey',
+  'Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB': 'Euris',
   'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ': 'Heyitsyolo',
   'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
   '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5': 'Orange',
