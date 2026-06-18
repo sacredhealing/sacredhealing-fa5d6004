@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminRole } from '@/hooks/useAdminRole';
 
 const EDGE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
 const HELIUS = `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_HELIUS_API_KEY||'775d3d1f-6801-41de-a063-8aee4382d0f4'}`;
@@ -305,6 +306,9 @@ export default function ShreemBrzeePerformance(){
   const[livePosPrices,setLivePosPrices]=useState<Record<string,number>>({});
   const[selectedTrade,setSelectedTrade]=useState<any>(null);
   const posTickerRef=useRef<any>(null);
+  const{isAdmin}=useAdminRole();
+  const[showAdminMenu,setShowAdminMenu]=useState(false);
+  const[forceBusy,setForceBusy]=useState(false);
 
   const loadOpenTrades=useCallback(async()=>{
     const{data}=await(supabase as any).from('shreem_brzee_paper_trades')
@@ -408,6 +412,21 @@ export default function ShreemBrzeePerformance(){
       loadAll();loadOpenTrades();
     }catch(e:any){flash(`Close failed: ${e.message?.slice(0,60)}`,'err');}
   },[livePosPrices,loadAll,loadOpenTrades,fetchJupPrice]);
+
+  // Admin: force close every open position at current price
+  const forceCloseAll=useCallback(async()=>{
+    if(!openTrades.length){flash('No open positions to close','info');return;}
+    if(!confirm(`Force close ${openTrades.length} open position(s) at current market price?`))return;
+    setForceBusy(true);
+    try{
+      for(const t of openTrades){
+        // eslint-disable-next-line no-await-in-loop
+        await closePosition(t,'admin_force');
+      }
+      flash(`✓ Force-closed ${openTrades.length} position(s)`,'ok');
+    }catch(e:any){flash(`Force close failed: ${e.message?.slice(0,60)}`,'err');}
+    finally{setForceBusy(false);setShowAdminMenu(false);}
+  },[openTrades,closePosition]);
 
   // Auto-close: 4h timeout OR -30% stop loss
   useEffect(()=>{
@@ -632,7 +651,22 @@ export default function ShreemBrzeePerformance(){
         <Card
           title="📂 Open Positions"
           badge={openTrades.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openTrades.length} live</span>:undefined}
-          right={openTrades.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
+          right={<div style={{display:'flex',alignItems:'center',gap:6,position:'relative' as const}}>
+            {openTrades.length===0&&<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>}
+            {isAdmin&&<>
+              <button onClick={(e)=>{e.stopPropagation();setShowAdminMenu(s=>!s);}} title="Admin tools"
+                style={{padding:'4px 8px',borderRadius:8,border:`1px solid rgba(212,175,55,.25)`,background:'rgba(212,175,55,.06)',color:G,fontSize:12,cursor:'pointer',lineHeight:1}}>⚙</button>
+              {showAdminMenu&&<div onClick={(e)=>e.stopPropagation()} style={{position:'absolute' as const,top:'calc(100% + 6px)',right:0,zIndex:50,minWidth:220,background:'#0a0a0a',border:`1px solid rgba(212,175,55,.3)`,borderRadius:10,padding:8,boxShadow:'0 8px 24px rgba(0,0,0,.6)'}}>
+                <div style={{fontSize:9,letterSpacing:'.2em',color:'rgba(212,175,55,.6)',padding:'4px 8px 6px',textTransform:'uppercase' as const}}>Admin Tools</div>
+                <button onClick={forceCloseAll} disabled={forceBusy||openTrades.length===0}
+                  style={{width:'100%',textAlign:'left' as const,padding:'8px 10px',borderRadius:8,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.08)',color:RED,fontSize:11,fontWeight:800,cursor:(forceBusy||openTrades.length===0)?'not-allowed':'pointer',opacity:(forceBusy||openTrades.length===0)?.5:1}}>
+                  {forceBusy?'Closing…':`✕ Force Close All (${openTrades.length})`}
+                </button>
+                <div style={{fontSize:9,color:'#64748b',padding:'6px 8px 2px',lineHeight:1.4}}>Closes every open position at current price and books PnL into balance + W/L counter.</div>
+              </div>}
+            </>}
+          </div>}>
+
           {openTrades.length===0?(
             <div>
               <div style={{textAlign:'center',padding:'16px 0 10px'}}>
