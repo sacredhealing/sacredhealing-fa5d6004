@@ -758,7 +758,7 @@ export default function ShreemBrzeePerformance(){
               <div style={{width:32,height:32,borderRadius:9,background:sig.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',color:sig.action==='BUY'?GRN:RED,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>{sig.action==='BUY'?'↑':'↓'}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
-                  {sig.symbol||sig.mint?.slice(0,8)}
+                  {sig.symbol||sig.mint?.slice(0,6)}
                   {sig.is_pump_fun&&<span style={{marginLeft:5,padding:'1px 5px',borderRadius:4,background:'rgba(139,92,246,.15)',color:'#a78bfa',fontSize:9,fontWeight:700}}>pump</span>}
                 </div>
                 <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{sig.label}</div>
