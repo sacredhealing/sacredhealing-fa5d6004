@@ -258,6 +258,30 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       }
 
+      case "set_password": {
+        if (!userId) throw new Error("userId required");
+        const newPassword = body.password || updates?.password;
+        if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+          throw new Error("password required (min 6 chars)");
+        }
+
+        // Resolve auth user id (caller may pass profiles.id)
+        let authUserId = userId;
+        const { data: byAuth } = await adminClient.auth.admin.getUserById(userId);
+        if (!byAuth?.user) {
+          const { data: prof } = await adminClient
+            .from("profiles").select("user_id").eq("id", userId).maybeSingle();
+          if (prof?.user_id) authUserId = prof.user_id;
+        }
+
+        const { error } = await adminClient.auth.admin.updateUserById(authUserId, {
+          password: newPassword,
+        });
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+      }
+
+
       case "get_user": {
         if (!userId) throw new Error("userId required");
         const { data, error } = await adminClient.auth.admin.getUserById(userId);
