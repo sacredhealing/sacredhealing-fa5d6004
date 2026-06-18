@@ -306,6 +306,9 @@ export default function ShreemBrzeePerformance(){
   const[livePosPrices,setLivePosPrices]=useState<Record<string,number>>({});
   const[selectedTrade,setSelectedTrade]=useState<any>(null);
   const posTickerRef=useRef<any>(null);
+  const{isAdmin}=useAdminRole();
+  const[showAdminMenu,setShowAdminMenu]=useState(false);
+  const[forceBusy,setForceBusy]=useState(false);
 
   const loadOpenTrades=useCallback(async()=>{
     const{data}=await(supabase as any).from('shreem_brzee_paper_trades')
