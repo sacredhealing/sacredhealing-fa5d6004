@@ -60,7 +60,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
 
   const paras = text.split(/\n\n+/).filter(p => p.trim());
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif" }}>
       {paras.map((para, pi) => {
         const l = para.trim();
         if (!l) return null;
@@ -146,7 +146,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
               );
               // Body paragraph
               return (
-                <p key={li} style={{ fontSize: 16, lineHeight: 1.8, color: body, marginBottom: 6 }}>
+                <p key={li} style={{ fontSize: 16, lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', marginBottom: 6, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", letterSpacing: '0.008em' }}>
                   {renderInline(line)}
                 </p>
               );
@@ -329,9 +329,15 @@ const STYLES = `
   .sqi-mrow.user { align-items: flex-end; }
   .sqi-mrow.agent { align-items: flex-start; }
   .sqi-mrole {
-    font-size: 9px; font-weight: 800; letter-spacing: 0.3em;
-    text-transform: uppercase; color: rgba(212,175,55,0.5);
-    margin-bottom: 6px; padding: 0 4px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 9px; font-weight: 900; letter-spacing: 0.35em;
+    text-transform: uppercase; color: #D4AF37;
+    text-shadow: 0 0 12px rgba(212,175,55,0.4);
+    margin-bottom: 10px; padding: 0 2px;
+  }
+  .sqi-mrole::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.3) 0%, transparent 100%);
   }
   .sqi-bbl {
     padding: 14px 20px; border-radius: 20px;
@@ -343,8 +349,12 @@ const STYLES = `
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .sqi-bbl.agent {
-    width: 100%; border-radius: 5px 20px 20px 20px;
-    background: rgba(8,4,2,0.98); border: 1px solid rgba(212,175,55,0.09);
+    width: 100%; border-radius: 0;
+    background: rgba(255,255,255,0.016);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-left: none; border-right: none;
+    padding: 20px 16px 14px;
   }
   .sqi-cpbtn {
     margin-top: 4px; background: transparent; border: none; cursor: pointer;
