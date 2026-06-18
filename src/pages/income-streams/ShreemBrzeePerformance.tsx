@@ -297,7 +297,7 @@ export default function ShreemBrzeePerformance(){
     {name:'Kev',       addr:'KEVsznx5Yx2NVHM5GvBprv1zXTFDvAHMrmeDuYQzqfgh',pnl7d:22717, pnl30d:122059,wr:52.3},
     {name:'Clukz',     addr:'CLUKZpUxEfhbgGz9TqkCrHGkSGiDFDhNt3eSFGmLjTuv',pnl7d:18856, pnl30d:92000, wr:62.6},
     {name:'Heyitsyolo',addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ',pnl7d:10746, pnl30d:88376, wr:54.6},
-    {name:'Cupsey',    addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',pnl7d:16382, pnl30d:83971, wr:51.4},
+    {name:'West',      addr:'JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN',pnl7d:16382, pnl30d:83971, wr:51.4},
     {name:'Limfork',   addr:'LIMforkXzPwrpFXCjMBmZ9VQcZBNrYrFJLV6PeKLqxHj',pnl7d:6793,  pnl30d:72393, wr:52.4},
     {name:'Tdmilky',   addr:'TDmilkyxVHs8YWz4Ny5JEJJzZ2TLQfJKiUGBnPmLxhHp',pnl7d:10386, pnl30d:76602, wr:47.3},
     {name:'Trunoest',  addr:'TRUnoEst9vPKDmKrjFHmBzFLHRPpTdxTAqJNaRJFfxhK',pnl7d:24975, pnl30d:77853, wr:65.8},
