@@ -303,6 +303,7 @@ export default function ShreemBrzeePerformance(){
   const[scanPeriod,setScanPeriod]=useState<'7D'|'30D'>('30D');
   const[openTrades,setOpenTrades]=useState<any[]>([]);
   const[livePosPrices,setLivePosPrices]=useState<Record<string,number>>({});
+  const[selectedTrade,setSelectedTrade]=useState<any>(null);
   const posTickerRef=useRef<any>(null);
 
   const loadOpenTrades=useCallback(async()=>{
