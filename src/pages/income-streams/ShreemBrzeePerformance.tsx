@@ -269,46 +269,47 @@ export default function ShreemBrzeePerformance() {
     fetchSession(); fetchTrades(); fetchSignals(); fetchPeriod();
   }, [fetchSession, fetchTrades, fetchSignals, fetchPeriod]);
 
-  // ── Price fetch for open positions ─────────────────────────────────────────
-  // FIX BUG 2: Never self-destruct the interval. Use stable ref that always restarts.
+  // ── Price fetch via edge function (avoids browser CORS / CF rate limits) ──
+  const PRICE_URL = `${EDGE_BASE.replace(/\/[^/]+$/, "")}/token-price-batch`;
+
   const fetchTokenPrice = useCallback(async (mint: string): Promise<number> => {
     if (!mint) return 0;
     try {
-      const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal:AbortSignal.timeout(4000), cache:"no-store" });
+      const r = await fetch(`${PRICE_URL}?mints=${mint}`, { signal: AbortSignal.timeout(8000), cache: "no-store" });
       if (r.ok) {
-        const pairs = ((await r.json())?.pairs || []).filter((p: any) => p?.priceUsd && parseFloat(p.priceUsd) > 0);
-        if (pairs.length) {
-          pairs.sort((a: any, b: any) => parseFloat(b.liquidity?.usd||0) - parseFloat(a.liquidity?.usd||0));
-          const p = parseFloat(pairs[0].priceUsd);
-          if (p > 0) return p;
-        }
+        const j = await r.json();
+        const p = Number(j?.prices?.[mint]);
+        if (p > 0) return p;
       }
     } catch {}
-    try {
-      const r = await fetch(`https://price.jup.ag/v6/price?ids=${mint}`);
-      if (r.ok) { const p = parseFloat((await r.json())?.data?.[mint]?.price); if (p > 0) return p; }
-    } catch {}
-    try {
-      const r = await fetch(`https://api.jup.ag/price/v2?ids=${mint}`);
-      if (r.ok) { const p = parseFloat((await r.json())?.data?.[mint]?.price); if (p > 0) return p; }
-    } catch {}
     return 0;
-  }, []);
+  }, [PRICE_URL]);
 
-  const updatePrices  = useCallback(async () => {
-    // BUG 2 FIX: always run regardless of openPos.length — empty positions just means no work
+  const updatePrices = useCallback(async () => {
     if (!openPos.length) return;
     const mints = [...new Set(openPos.map((p: any) => p.mint).filter(Boolean))];
-    const updated: Record<string,number> = {};
-    for (const mint of mints) {
-      const price = await fetchTokenPrice(mint);
-      if (price > 0) updated[mint] = price;
-      await new Promise(r => setTimeout(r, 300));
+    if (!mints.length) return;
+    try {
+      const r = await fetch(PRICE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mints }),
+        signal: AbortSignal.timeout(15000),
+        cache: "no-store",
+      });
+      if (!r.ok) return;
+      const j = await r.json();
+      const updated: Record<string, number> = {};
+      for (const [m, p] of Object.entries<any>(j?.prices || {})) {
+        const n = Number(p);
+        if (n > 0) updated[m] = n;
+      }
+      if (Object.keys(updated).length) setLivePrices(prev => ({ ...prev, ...updated }));
+    } catch (e) {
+      console.warn("[ShreemBrzee] price batch failed", e);
     }
-    setLivePrices(prev => ({ ...prev, ...updated }));
-  }, [openPos, fetchTokenPrice]);
+  }, [openPos, PRICE_URL]);
 
-  // BUG 2 FIX: stable interval that never self-terminates
   useEffect(() => {
     updatePrices();
     if (priceIntervalRef.current) clearInterval(priceIntervalRef.current);
