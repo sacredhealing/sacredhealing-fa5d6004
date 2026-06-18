@@ -700,7 +700,8 @@ export default function ShreemBrzeePerformance(){
           </>}
         </Card>
 
-        {selectedTrade&&(()=>{
+        {(()=>{
+          if(!selectedTrade)return null;
           const t=selectedTrade;
           const entry=Number(t.entry_price)||0;
           const amt=Number(t.amount_sol)||0;
@@ -713,8 +714,7 @@ export default function ShreemBrzeePerformance(){
           const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
           const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
           const sym=t.symbol||t.mint?.slice(0,6)||'?';
-          return(
-            <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',alignItems:'flex-end',
+          return <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',alignItems:'flex-end',
               background:'rgba(0,0,0,.8)',backdropFilter:'blur(10px)'}}
               onClick={e=>{if(e.target===e.currentTarget)setSelectedTrade(null);}}>
               <div style={{width:'100%',maxWidth:560,margin:'0 auto',background:'#0d0d0d',
@@ -772,8 +772,7 @@ export default function ShreemBrzeePerformance(){
                   </button>
                 </div>
               </div>
-            </div>
-          );
+            </div>;
         })()}
 
 
