@@ -825,7 +825,8 @@ export default function ShreemBrzeePerformance(){
           <div style={{padding:'10px 16px',borderTop:'1px solid rgba(255,255,255,0.05)',fontSize:9,color:'#64748b',textAlign:'center'}}>
             Live data from KOLExplorer.com · 30D top Solana meme traders by realized PNL
           </div>
-        </Card>
+        </div>
+
 
       </div>
     </div>
