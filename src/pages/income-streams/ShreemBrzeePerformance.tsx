@@ -475,40 +475,17 @@ export default function ShreemBrzeePerformance() {
   }, [fetchOpen]);
 
 
-  // ── Live mode executor poll ────────────────────────────────────────────────
-  // When mode='live', polls the shreem-live-executor edge fn every 5s
-  const LIVE_EXECUTOR = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor";
-  const liveIntervalRef = useRef<ReturnType<typeof setInterval>|null>(null);
-
-  const pollLiveExecutor = useCallback(async () => {
-    if (!isRunning) return;
-    const { data: sess } = await d.from("shreem_brzee_session").select("mode").eq("id","default").single();
-    if (sess?.mode !== "live") return;
-    try {
-      await fetch(LIVE_EXECUTOR, {
-        method: "POST",
-        headers: { "Content-Type": "application/json",
-          "Authorization": `Bearer ${(await d.auth.getSession()).data.session?.access_token || ""}` }
-      });
-    } catch {}
-  }, [isRunning]);
-
-  useEffect(() => {
-    if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
-    liveIntervalRef.current = setInterval(pollLiveExecutor, 5000);
-    return () => { if (liveIntervalRef.current) clearInterval(liveIntervalRef.current); };
-  }, [pollLiveExecutor]);
-
-  // ── Live mode toggle ────────────────────────────────────────────────────────
-  const [liveMode, setLiveMode]     = useState(false);
-  const [liveConfirm, setLiveConfirm] = useState(false);
-  const [botWallet, setBotWallet]   = useState<{wallet:string;balance_sol:number}|null>(null);
-  const [liveLoading, setLiveLoading] = useState(false);
+  // ── Live mode toggle state ─────────────────────────────────────────────────
+  const [liveMode, setLiveMode]         = useState(false);
+  const [liveConfirm, setLiveConfirm]   = useState(false);
+  const [botWallet, setBotWallet]       = useState<{wallet:string;balance_sol:number}|null>(null);
+  const [liveLoading, setLiveLoading]   = useState(false);
+  const liveIntervalRef                 = useRef<ReturnType<typeof setInterval>|null>(null);
 
   const checkBotWallet = useCallback(async () => {
     try {
-      const r = await fetch(`${LIVE_EXECUTOR}/health`);
-      if (r.ok) { const d = await r.json(); if (d.wallet) setBotWallet(d); }
+      const r = await fetch("https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health");
+      if (r.ok) { const data = await r.json(); if (data.wallet) setBotWallet(data); }
     } catch {}
   }, []);
 
@@ -1146,7 +1123,6 @@ export default function ShreemBrzeePerformance() {
             {KOL_EXPLORER.map((kol, i) => {
               const alreadyTracked = trackedWhalesAddrs.has(kol.addr);
               const pnl = kolPeriod === "7D" ? kol.pnl7d : kol.pnl30d;
-              const isAdding = false;
               return (
                 <div key={kol.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", background:i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
                   {/* Rank */}
