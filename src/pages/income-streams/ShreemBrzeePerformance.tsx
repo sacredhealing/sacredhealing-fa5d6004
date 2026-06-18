@@ -466,7 +466,11 @@ export default function ShreemBrzeePerformance(){
         added_by:user?.id||null,added_at:new Date().toISOString(),
       },{onConflict:'address'});
       if(error)throw error;
-      flash(`✅ ${kol.name} added to tracked whales`,'ok');
+      flash(`Syncing ${kol.name} to Helius webhook…`,'info');
+      const{data:syncRes,error:syncErr}=await supabase.functions.invoke('helius-webhook-sync',{body:{}});
+      if(syncErr)throw syncErr;
+      if(!syncRes?.ok)throw new Error(syncRes?.error||'helius sync failed');
+      flash(`✅ ${kol.name} tracked · Helius now watching ${syncRes.wallet_count} wallets`,'ok');
     }catch(e:any){
       flash(`Add failed: ${e?.message?.slice(0,80)||'unknown error'}`,'err');
     }
