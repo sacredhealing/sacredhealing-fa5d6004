@@ -47,18 +47,18 @@ const timeAgo    = (d: string) => {
 // Top KOL explorer data (static reference)
 const KOL_EXPLORER = [
   { name:"Cented",     addr:"CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", pnl7d:95641,  pnl30d:576766, wr:63.8 },
-  { name:"Theo",       addr:"5iMC3bBMnQfvnBR3FNySzPeANLjNqBMoAjnG6uB1FXKP", pnl7d:51079,  pnl30d:402366, wr:56   },
-  { name:"Decu",       addr:"DECUDohNAFsV4GKEv4yjJrWiL7RAwtH7jGjuEPTNpEyh", pnl7d:34606,  pnl30d:221024, wr:65.1 },
-  { name:"Kev",        addr:"KEVsznx5Yx2NVHM5GvBprv1zXTFDvAHMrmeDuYQzqfgh", pnl7d:22717,  pnl30d:122059, wr:52.3 },
-  { name:"Clukz",      addr:"CLUKZpUxEfhbgGz9TqkCrHGkSGiDFDhNt3eSFGmLjTuv", pnl7d:18856,  pnl30d:92000,  wr:62.6 },
+  { name:"Euris",      addr:"Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", pnl7d:51079,  pnl30d:402366, wr:56   },
+  { name:"Trunoest",   addr:"ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  pnl7d:24975,  pnl30d:77853,  wr:65.8 },
+  { name:"Kev",        addr:"BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", pnl7d:22717,  pnl30d:122059, wr:52.3 },
+  { name:"clukz",      addr:"G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", pnl7d:18856,  pnl30d:92000,  wr:62.6 },
   { name:"Heyitsyolo", addr:"Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", pnl7d:10746,  pnl30d:88376,  wr:54.6 },
   { name:"West",       addr:"JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", pnl7d:16382,  pnl30d:83971,  wr:51.4 },
-  { name:"Limfork",    addr:"LIMforkXzPwrpFXCjMBmZ9VQcZBNrYrFJLV6PeKLqxHj", pnl7d:6793,   pnl30d:72393,  wr:52.4 },
-  { name:"Tdmilky",    addr:"TDmilkyxVHs8YWz4Ny5JEJJzZ2TLQfJKiUGBnPmLxhHp", pnl7d:10386,  pnl30d:76602,  wr:47.3 },
-  { name:"Trunoest",   addr:"TRUnoEst9vPKDmKrjFHmBzFLHRPpTdxTAqJNaRJFfxhK", pnl7d:24975,  pnl30d:77853,  wr:65.8 },
+  { name:"Limfork",    addr:"BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", pnl7d:6793,   pnl30d:72393,  wr:52.4 },
+  { name:"Yenni",      addr:"5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", pnl7d:10386,  pnl30d:76602,  wr:47.3 },
+  { name:"Remusofmars",addr:"BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", pnl7d:24200,  pnl30d:68000,  wr:65.8 },
 ];
 
-const TRACKED_ADDRS = new Set(KOL_LIST.map(k => k.addr));
+// TRACKED_ADDRS built from KOL_LIST — merged with trackedWhalesAddrs state below
 
 // ─── Compounding Position Sizer ───────────────────────────────────────────────
 // Kelly-inspired: position grows with win rate AND account size.
@@ -204,7 +204,23 @@ export default function ShreemBrzeePerformance() {
   const [stoppingBot, setStoppingBot] = useState(false);
 
   // KOL Explorer
-  const [kolPeriod, setKolPeriod] = useState<"7D"|"30D">("30D");
+  const [kolPeriod, setKolPeriod]           = useState<"7D"|"30D">("30D");
+  const [trackedWhalesAddrs, setTrackedWhalesAddrs] = useState<Set<string>>(
+    new Set(KOL_LIST.map(k => k.addr))
+  );
+
+  const fetchTrackedWhales = useCallback(async () => {
+    try {
+      const { data } = await d.from("tracked_whales").select("address");
+      if (data && data.length > 0) {
+        const allAddrs = new Set<string>([
+          ...KOL_LIST.map(k => k.addr),
+          ...data.map((w: any) => w.address).filter(Boolean),
+        ]);
+        setTrackedWhalesAddrs(allAddrs);
+      }
+    } catch {}
+  }, []);
 
   // Admin
   const { isAdmin } = useAdminRole();
@@ -515,7 +531,7 @@ export default function ShreemBrzeePerformance() {
 
   // ── Bootstrap ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    refreshAll(); fetchOpen(); checkEdge();
+    refreshAll(); fetchOpen(); checkEdge(); fetchTrackedWhales();
     getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
     const masterInterval = setInterval(() => {
       refreshAll();
@@ -637,6 +653,8 @@ export default function ShreemBrzeePerformance() {
         console.warn("[helius-sync] Exception:", syncEx.message);
         notify(`✅ ${kol.name} saved · Helius sync will retry on next add`, "info");
       }
+      // Refresh the tracked set so UI updates immediately
+      setTrackedWhalesAddrs(prev => new Set([...prev, kol.addr]));
     } catch (e: any) {
       notify(`Add failed: ${e?.message?.slice(0,80) || "unknown error"}`, "err");
     }
@@ -1124,40 +1142,45 @@ export default function ShreemBrzeePerformance() {
               ))}
             </div>
           </div>
-          <div style={{ overflowX:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", minWidth:500 }}>
-              <thead>
-                <tr style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                  {["#","TRADER",`${kolPeriod} PNL`,"WIN RATE","",""].map((h,i) => <th key={i} style={{ padding:"8px 12px", fontSize:8, fontWeight:800, letterSpacing:"0.12em", color:"#64748b", textAlign:"left" }}>{h}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {KOL_EXPLORER.map((kol, i) => {
-                  const alreadyTracked = TRACKED_ADDRS.has(kol.addr);
-                  const pnl = kolPeriod === "7D" ? kol.pnl7d : kol.pnl30d;
-                  return (
-                    <tr key={kol.addr} style={{ borderBottom:"1px solid rgba(255,255,255,0.03)", background:i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
-                      <td style={{ padding:"10px 12px", fontSize:11, color:GOLD, fontWeight:800 }}>#{i+1}</td>
-                      <td style={{ padding:"10px 12px" }}>
-                        <div style={{ fontSize:12, fontWeight:800, color:"#fff" }}>{kol.name}</div>
-                        <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace" }}>{kol.addr.slice(0,6)}…{kol.addr.slice(-4)}</div>
-                      </td>
-                      <td style={{ padding:"10px 12px", fontSize:12, fontWeight:800, color:"#22c55e" }}>+${pnl.toLocaleString()}</td>
-                      <td style={{ padding:"10px 12px", fontSize:12, fontWeight:700, color:GOLD }}>{kol.wr}%</td>
-                      <td style={{ padding:"10px 12px" }}>
-                        {alreadyTracked
-                          ? <span style={{ fontSize:9, fontWeight:800, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"2px 8px", borderRadius:20 }}>✓ TRACKING</span>
-                          : <span style={{ fontSize:9, color:"#64748b", background:"rgba(255,255,255,0.05)", padding:"2px 8px", borderRadius:20 }}>NOT TRACKED</span>}
-                      </td>
-                      <td style={{ padding:"10px 12px" }}>
-                        {/* BUG 3 FIX: addKolTrader decouples DB insert from Helius sync */}
-                        {!alreadyTracked && <button onClick={() => addKolTrader(kol)} style={{ padding:"5px 14px", borderRadius:20, border:`1px solid ${GOLD}`, background:"rgba(212,175,55,0.1)", color:GOLD, fontSize:9, fontWeight:800, letterSpacing:"0.1em", cursor:"pointer" }}>+ ADD</button>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div style={{ padding:"0 0 4px" }}>
+            {KOL_EXPLORER.map((kol, i) => {
+              const alreadyTracked = trackedWhalesAddrs.has(kol.addr);
+              const pnl = kolPeriod === "7D" ? kol.pnl7d : kol.pnl30d;
+              const isAdding = false;
+              return (
+                <div key={kol.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", background:i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
+                  {/* Rank */}
+                  <div style={{ width:22, textAlign:"center", fontSize:11, fontWeight:900, color:i<3?GOLD:"#64748b", flexShrink:0 }}>
+                    {i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`}
+                  </div>
+                  {/* Name + addr */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{kol.name}</div>
+                    <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{kol.addr.slice(0,8)}…{kol.addr.slice(-4)}</div>
+                  </div>
+                  {/* PNL */}
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <div style={{ fontSize:12, fontWeight:800, color:"#22c55e" }}>+${pnl.toLocaleString()}</div>
+                    <div style={{ fontSize:10, color:kol.wr>=60?GREEN:kol.wr>=50?"#f59e0b":RED, fontWeight:700 }}>{kol.wr}% WR</div>
+                  </div>
+                  {/* Status / Add button */}
+                  <div style={{ flexShrink:0, marginLeft:4 }}>
+                    {alreadyTracked ? (
+                      <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:9, fontWeight:800, color:GREEN, background:"rgba(16,185,129,0.1)", padding:"4px 10px", borderRadius:20, border:"1px solid rgba(16,185,129,0.3)" }}>
+                        <span style={{ width:5, height:5, borderRadius:"50%", background:GREEN }} />TRACKING
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => addKolTrader(kol)}
+                        style={{ padding:"6px 14px", borderRadius:20, border:`1px solid ${GOLD}`, background:"rgba(212,175,55,0.1)", color:GOLD, fontSize:10, fontWeight:800, letterSpacing:"0.08em", cursor:"pointer", whiteSpace:"nowrap" }}
+                      >
+                        + ADD
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div style={{ padding:"10px 16px", borderTop:"1px solid rgba(255,255,255,0.05)", fontSize:9, color:"#64748b", textAlign:"center" }}>Live data from KOLExplorer.com · 30D top Solana meme traders by realized PNL</div>
         </div>
