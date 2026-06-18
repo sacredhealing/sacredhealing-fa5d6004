@@ -361,9 +361,7 @@ export default function ShreemBrzeePerformance(){
   const closePosition=useCallback(async(t:any,reason:string='manual')=>{
     try{
       let currentPrice=livePosPrices[t.mint];
-      if(!currentPrice){
-        try{const r=await fetch(`https://api.jup.ag/price/v2?ids=${t.mint}`);const d=await r.json();currentPrice=parseFloat(d?.data?.[t.mint]?.price||'0');}catch{}
-      }
+      if(!currentPrice){currentPrice=await fetchJupPrice(t.mint);}
       const entry=Number(t.entry_price)||0;
       const amt=Number(t.amount_sol)||0;
       const pnlPct=entry>0&&currentPrice?((currentPrice-entry)/entry)*100:0;
