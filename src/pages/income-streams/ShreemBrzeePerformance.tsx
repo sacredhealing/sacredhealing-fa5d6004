@@ -425,8 +425,17 @@ export default function ShreemBrzeePerformance(){
 
   const addWhaleToTracking=async(kol:{name:string,addr:string})=>{
     flash(`Adding ${kol.name}…`,'info');
-    await(supabase as any).from('tracked_whales').upsert({address:kol.addr,label:kol.name,source:'kolexplorer',added_at:new Date().toISOString()},{onConflict:'address'});
-    flash(`✅ ${kol.name} added! Tell Lovable: "Add ${kol.addr} labeled ${kol.name} to the Helius webhook whale list"`,'ok');
+    try{
+      const{data:{user}}=await supabase.auth.getUser();
+      const{error}=await(supabase as any).from('tracked_whales').upsert({
+        address:kol.addr,label:kol.name,source:'kolexplorer',
+        added_by:user?.id||null,added_at:new Date().toISOString(),
+      },{onConflict:'address'});
+      if(error)throw error;
+      flash(`✅ ${kol.name} added to tracked whales`,'ok');
+    }catch(e:any){
+      flash(`Add failed: ${e?.message?.slice(0,80)||'unknown error'}`,'err');
+    }
   };
 
   return(
