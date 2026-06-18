@@ -748,6 +748,30 @@ export default function ShreemBrzeePerformance() {
           ))}
         </div>
 
+        <Section title="💰 Paper Balance (SOL)">
+          <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
+            {["0.5","1","2","5","10"].map(v => (
+              <button key={v} onClick={() => setBalInput(v)} style={{ padding:"7px 0", borderRadius:10, cursor:"pointer", flex:"1 1 0", minWidth:44, border:`1px solid ${balInput===v?"rgba(212,175,55,.4)":GOLD20}`, background:balInput===v?"rgba(212,175,55,.12)":"transparent", color:balInput===v?GOLD:"#64748b", fontSize:13, fontWeight:700 }}>{v}</button>
+            ))}
+          </div>
+          <input type="number" value={balInput} onChange={e => setBalInput(e.target.value)} min="0.1" step="0.1" style={{ ...inputStyle(GOLD20), marginBottom:12, fontSize:16 }} />
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+            <button onClick={startBot} disabled={loading} style={{ padding:14, borderRadius:13, border:"none", background:isRunning?"linear-gradient(135deg,#D4AF37,#f0c84a)":"linear-gradient(135deg,#7a5e10,#9a7018)", color:isRunning?"#000":"#fff", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading?"not-allowed":"pointer", animation:isRunning?"goldPulse 2s infinite":"none" }}>
+              {loading&&startingBot ? "⚙" : isRunning ? "● RUNNING" : "▶ START"}
+            </button>
+            <button onClick={stopBot} disabled={loading||!isRunning} style={{ padding:14, borderRadius:13, border:`1px solid ${isRunning?"rgba(239,68,68,.6)":"rgba(239,68,68,.2)"}`, background:isRunning?"rgba(239,68,68,.18)":"rgba(239,68,68,.04)", color:isRunning?RED:"rgba(239,68,68,.35)", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading||!isRunning?"not-allowed":"pointer" }}>
+              {loading&&stoppingBot ? "⚙" : "⏹ STOP"}
+            </button>
+          </div>
+          {isRunning && (
+            <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
+              Bot running · mirrors whale BUY & SELL · 20 wallets on Solana mainnet
+            </div>
+          )}
+        </Section>
+
+        {/* Open Positions */}
         {/* Compounding Engine stats */}
         {(() => {
           const sizing = calculatePositionSize(
@@ -842,30 +866,6 @@ export default function ShreemBrzeePerformance() {
         <Diagnostics running={isRunning} signalCount={signals.length} edgeOk={edgeOk} />
 
         {/* Bot controls */}
-        <Section title="💰 Paper Balance (SOL)">
-          <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
-            {["0.5","1","2","5","10"].map(v => (
-              <button key={v} onClick={() => setBalInput(v)} style={{ padding:"7px 0", borderRadius:10, cursor:"pointer", flex:"1 1 0", minWidth:44, border:`1px solid ${balInput===v?"rgba(212,175,55,.4)":GOLD20}`, background:balInput===v?"rgba(212,175,55,.12)":"transparent", color:balInput===v?GOLD:"#64748b", fontSize:13, fontWeight:700 }}>{v}</button>
-            ))}
-          </div>
-          <input type="number" value={balInput} onChange={e => setBalInput(e.target.value)} min="0.1" step="0.1" style={{ ...inputStyle(GOLD20), marginBottom:12, fontSize:16 }} />
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <button onClick={startBot} disabled={loading} style={{ padding:14, borderRadius:13, border:"none", background:isRunning?"linear-gradient(135deg,#D4AF37,#f0c84a)":"linear-gradient(135deg,#7a5e10,#9a7018)", color:isRunning?"#000":"#fff", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading?"not-allowed":"pointer", animation:isRunning?"goldPulse 2s infinite":"none" }}>
-              {loading&&startingBot ? "⚙" : isRunning ? "● RUNNING" : "▶ START"}
-            </button>
-            <button onClick={stopBot} disabled={loading||!isRunning} style={{ padding:14, borderRadius:13, border:`1px solid ${isRunning?"rgba(239,68,68,.6)":"rgba(239,68,68,.2)"}`, background:isRunning?"rgba(239,68,68,.18)":"rgba(239,68,68,.04)", color:isRunning?RED:"rgba(239,68,68,.35)", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading||!isRunning?"not-allowed":"pointer" }}>
-              {loading&&stoppingBot ? "⚙" : "⏹ STOP"}
-            </button>
-          </div>
-          {isRunning && (
-            <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-              <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
-              Bot running · mirrors whale BUY & SELL · 20 wallets on Solana mainnet
-            </div>
-          )}
-        </Section>
-
-        {/* Open Positions */}
         <Section
           title="📂 Open Positions"
           badge={openPos.length>0?<span style={{ marginLeft:6, padding:"2px 8px", borderRadius:20, background:"rgba(16,185,129,.15)", color:GREEN, fontSize:10, fontWeight:800 }}>{openPos.length} live</span>:undefined}
