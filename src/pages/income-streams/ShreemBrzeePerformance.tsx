@@ -13,27 +13,29 @@ const RED = "#ef4444";
 const CYAN = "#00d4ff";
 
 // ─── Static KOL list ─────────────────────────────────────────────────────────
+// Synced exactly with edge function WHALE_WALLETS — every wallet the bot trades gets shown
 const KOL_LIST = [
-  { label: "Euris",      addr: "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", vip: true },
-  { label: "Heyitsyolo", addr: "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", vip: true },
-  { label: "Remusofmars",addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
-  { label: "Lenion",     addr: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", vip: false },
-  { label: "Boredboar",  addr: "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw",  vip: false },
-  { label: "Hades",      addr: "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", vip: false },
-  { label: "Fireball",   addr: "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", vip: false },
-  { label: "Hachjdn",    addr: "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", vip: false },
-  { label: "Cented",     addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: false },
-  { label: "The Grande", addr: "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA", vip: false },
-  { label: "West",       addr: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", vip: false },
-  { label: "Yenni",      addr: "5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", vip: false },
-  { label: "Doji",       addr: "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  vip: false },
-  { label: "Trenchman",  addr: "Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7", vip: false },
-  { label: "OGAntD",     addr: "215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP", vip: false },
-  { label: "Kev",        addr: "BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", vip: false },
-  { label: "decu",       addr: "4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9", vip: false },
-  { label: "trunoest",   addr: "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  vip: false },
-  { label: "clukz",      addr: "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", vip: false },
-  { label: "Limfork",    addr: "BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", vip: false },
+  { label: "Euris",         addr: "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", vip: true },
+  { label: "Heyitsyolo",    addr: "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", vip: true },
+  { label: "Remusofmars",   addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
+  { label: "Orange",        addr: "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", vip: true },
+  { label: "Shreem Brzee",  addr: "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt", vip: true },
+  { label: "Lenion",        addr: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", vip: false },
+  { label: "Boredboar",     addr: "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw",  vip: false },
+  { label: "Hades",         addr: "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", vip: false },
+  { label: "Kubera 72",     addr: "AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm", vip: false },
+  { label: "Brzee God",     addr: "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k", vip: false },
+  { label: "GBack",         addr: "9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm", vip: false },
+  { label: "Tuna",          addr: "GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f",  vip: false },
+  { label: "Fireball",      addr: "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", vip: false },
+  { label: "Hachjdn",       addr: "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", vip: false },
+  { label: "Crypto Circle", addr: "5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc", vip: false },
+  { label: "Crocodile",     addr: "2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv", vip: false },
+  { label: "Snow Spirit",   addr: "4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3", vip: false },
+  { label: "Cented",        addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: false },
+  { label: "The Grande",    addr: "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA", vip: false },
+  { label: "A Milly",       addr: "Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW", vip: false },
+  { label: "J2ANNaq",       addr: "J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG", vip: false },
 ];
 
 const KOL_LABELS = new Set(KOL_LIST.map(k => k.label));
@@ -234,7 +236,12 @@ export default function ShreemBrzeePerformance() {
 
   const fetchTrades   = useCallback(async () => {
     const { data } = await d.from("shreem_brzee_paper_trades").select("*").order("created_at",{ascending:false}).limit(100);
-    setTrades((data || []).filter((t: any) => !t.sig?.startsWith("TEST_") && !t.sig?.startsWith("DIAG_") && t.symbol !== "TEST"));
+    // Filter: keep ALL real trades. A row is test-only if sig starts with TEST_/DIAG_ AND has no real entry_price
+    setTrades((data || []).filter((t: any) => {
+      const sig = t.sig || "";
+      const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_") || sig.startsWith("test-") || sig === "paper-bootstrap") && !t.entry_price && !t.amount_sol;
+      return !isPureTest;
+    }));
   }, []);
 
   const fetchSignals  = useCallback(async () => {
@@ -601,6 +608,15 @@ export default function ShreemBrzeePerformance() {
   const portfolio = session?.portfolio || parseFloat(balInput) || 1;
   const startBal  = session?.start_balance || parseFloat(balInput) || 1;
   const pnlPct    = startBal > 0 ? (pnlTotal / startBal * 100).toFixed(1) : "0.0";
+  // Recalculate wins/losses from actual closed trades (more accurate than session counter)
+  const closedTrades = trades.filter((t: any) => t.status === "closed");
+  const realWins   = closedTrades.filter((t: any) => (t.pnl_sol || 0) >= 0).length;
+  const realLosses = closedTrades.filter((t: any) => (t.pnl_sol || 0) < 0).length;
+  const realTotal  = realWins + realLosses;
+  const realWinRate = realTotal > 0 ? Math.round(realWins / realTotal * 100) : 0;
+  // Total PNL from actual trades (sum of pnl_sol)
+  const realPnlSol = closedTrades.reduce((s: number, t: any) => s + (Number(t.pnl_sol) || 0), 0);
+  const realPnlEur = realPnlSol * solUsd * solEur;
 
   // Whale table aggregation
   const whaleMap: Record<string,{buys:number;sells:number;totalSol:number}> = {};
@@ -657,8 +673,8 @@ export default function ShreemBrzeePerformance() {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
             { i:"💰", v:`€${toEur(portfolio)}`, l:"Balance", s:`${portfolio.toFixed(3)} SOL`, c:GOLD },
-            { i:"📈", v:`${pnlTotal>=0?"+":""}€${toEur(pnlTotal)}`, l:"P&L", s:`${pnlTotal>=0?"+":""}${pnlPct}%`, c:pnlTotal>=0?GREEN:RED },
-            { i:"🎯", v:`${session?.wins||0}/${session?.losses||0}`, l:"Win/Loss", s:`${session?.wins&&(session.wins+session.losses)>0?Math.round(session.wins/(session.wins+session.losses)*100):0}% win rate`, c:"#fff" },
+            { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realTotal>0?(realPnlSol/startBal*100).toFixed(1):0}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
+            { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
           ].map(card => (
             <div key={card.l} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,175,55,0.2)", borderRadius:16, backdropFilter:"blur(40px)", boxShadow:"0 0 20px rgba(212,175,55,0.05)", padding:"14px 12px", textAlign:"center" }}>
@@ -793,9 +809,12 @@ export default function ShreemBrzeePerformance() {
               const entry   = Number(pos.entry_price) || 0;
               const size    = Number(pos.amount_sol) || 0;
               const price   = livePrices[pos.mint];
-              const pnlPct  = entry > 0 && price ? (price - entry) / entry * 100 : null;
+              // If entry_price was 0 (failed at open), show current price but mark PNL as pending
+              const hasPriceData = entry > 0 && price && price > 0;
+              const pnlPct  = hasPriceData ? (price - entry) / entry * 100 : null;
               const pnlSol  = pnlPct !== null ? size * (pnlPct / 100) : null;
               const pnlEur  = pnlSol !== null ? pnlSol * solUsd * solEur : null;
+              const entryMissing = entry <= 0;
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
               const ageStr  = ageMins < 60 ? `${ageMins}m` : `${Math.floor(ageMins/60)}h ${ageMins%60}m`;
@@ -937,8 +956,15 @@ export default function ShreemBrzeePerformance() {
                 </div>
               </div>
               <div style={{ textAlign:"right", flexShrink:0 }}>
-                {t.action==="SELL"&&!t.failed ? (
-                  <div style={{ fontSize:14, fontWeight:900, color:(t.pnl_sol||0)>=0?GREEN:RED }}>{(t.pnl_sol||0)>=0?"+":"-"}€{Math.abs(toEurN(t.pnl_sol||0)).toFixed(2)}</div>
+                {t.status==="closed" ? (
+                  <div>
+                    <div style={{ fontSize:14, fontWeight:900, color:(t.pnl_sol||0)>=0?GREEN:RED }}>
+                      {(t.pnl_sol||0)>=0?"+":"-"}€{Math.abs(toEurN(t.pnl_sol||0)).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize:10, color:(t.pnl_pct||0)>=0?GREEN:RED }}>
+                      {(t.pnl_pct||0)>=0?"+":""}{(t.pnl_pct||0).toFixed(1)}%
+                    </div>
+                  </div>
                 ) : (
                   <div style={{ fontSize:12, fontWeight:700, color:"#64748b" }}>{(t.gross_sol||0).toFixed(4)} SOL</div>
                 )}
