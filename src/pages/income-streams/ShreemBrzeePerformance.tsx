@@ -323,14 +323,18 @@ export default function ShreemBrzeePerformance(){
 
   // Fetch live token price — DexScreener primary, Jupiter fallback
   const fetchJupPrice=useCallback(async(mint:string):Promise<number>=>{
-    // 1) DexScreener
+    if(!mint)return 0;
+    // 1) DexScreener — best for pump.fun, sort by liquidity
     try{
-      const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+      const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`,{signal:AbortSignal.timeout(5000)});
       if(r.ok){
         const d=await r.json();
-        const p=d?.pairs?.[0]?.priceUsd;
-        const n=parseFloat(p);
-        if(n>0)return n;
+        const pairs=(d?.pairs||[]).filter((x:any)=>x?.priceUsd&&parseFloat(x.priceUsd)>0);
+        if(pairs.length>0){
+          pairs.sort((a:any,b:any)=>parseFloat(b.liquidity?.usd||0)-parseFloat(a.liquidity?.usd||0));
+          const n=parseFloat(pairs[0].priceUsd);
+          if(n>0)return n;
+        }
       }
     }catch{}
     // 2) Jupiter v6
@@ -434,8 +438,9 @@ export default function ShreemBrzeePerformance(){
           const{data:existing}=await(supabase as any).from('shreem_brzee_paper_trades')
             .select('id').eq('status','open').eq('mint',sig.mint).limit(1);
           if(existing&&existing.length)return;
-          // Fetch token price (USD) from Jupiter
-          const entryPrice=await fetchJupPrice(sig.mint);
+          // Fetch token price — retry once if 0 (pump.fun tokens slow to index)
+          let entryPrice=await fetchJupPrice(sig.mint);
+          if(entryPrice===0){await new Promise(r=>setTimeout(r,3000));entryPrice=await fetchJupPrice(sig.mint);}
           const amt=portfolio*0.05;
           await(supabase as any).from('shreem_brzee_paper_trades').insert({
             session_id:'default',sig:sig.sig+'_open',mint:sig.mint,symbol:sig.symbol,
@@ -716,8 +721,8 @@ export default function ShreemBrzeePerformance(){
                       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,padding:'10px 12px 0'}}>
                         {[
                           {l:'SIZE',v:`${amt.toFixed(4)}`,u:'SOL',s:`≈${(amt*solUSD*eurRate).toFixed(2)}€`},
-                          {l:'ENTRY',v:entry>0?`$${entry.toFixed(entry<0.01?8:5)}`:'—',u:'',s:'price at open'},
-                          {l:'NOW',v:(cur&&cur>0)?`$${cur.toFixed(cur<0.01?8:5)}`:'...',u:'',s:(cur&&cur>0)?`≈${(cur*amt/((solUSD||1))*eurRate).toFixed(2)}€`:'fetching'},
+                          {l:'ENTRY',v:(entry>0&&!isNaN(entry))?`$${entry.toFixed(entry<0.001?8:entry<0.1?6:4)}`:'—',u:'',s:(entry>0)?`≈${(entry*amt/Math.max(solUSD,1)*eurRate).toFixed(2)}€`:'will retry'},
+                          {l:'NOW',v:(cur&&cur>0&&!isNaN(cur))?`$${cur.toFixed(cur<0.001?8:cur<0.1?6:4)}`:'fetching…',u:'',s:(cur&&cur>0)?`≈${(cur*amt/Math.max(solUSD,1)*eurRate).toFixed(2)}€`:''},
                         ].map(item=>(
                           <div key={item.l} style={{background:'rgba(0,0,0,.3)',borderRadius:10,padding:'8px 10px',
                             border:'1px solid rgba(255,255,255,.05)'}}>
