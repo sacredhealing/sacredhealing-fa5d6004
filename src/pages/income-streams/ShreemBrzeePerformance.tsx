@@ -729,10 +729,10 @@ export default function ShreemBrzeePerformance(){
                   <div style={{display:'flex',alignItems:'center',gap:12}}>
                     <div style={{textAlign:'right'}}>
                       <div style={{fontSize:24,fontWeight:900,color:pnlColor}}>
-                        {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
+                        {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'price loading…'}
                       </div>
                       <div style={{fontSize:13,fontWeight:700,color:pnlColor}}>
-                        {pnlEur!==null?`${pnlEur>=0?'+':''}${pnlEur.toFixed(2)}€`:''}
+                        {pnlEur!==null?`${pnlEur>=0?'+':''}${pnlEur.toFixed(2)}€`:'waiting for price'}
                       </div>
                     </div>
                     <button onClick={()=>setSelectedTrade(null)}
@@ -744,8 +744,8 @@ export default function ShreemBrzeePerformance(){
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,padding:'12px 20px'}}>
                   {[
                     {l:'SIZE',v:`${amt.toFixed(4)} SOL`,s:`≈${(amt*solUSD*eurRate).toFixed(2)}€`},
-                    {l:'ENTRY',v:entry>0?`$${entry.toFixed(entry<0.01?8:6)}`:'—',s:''},
-                    {l:'NOW',v:cur?`$${cur.toFixed(cur<0.01?8:6)}`:'...',s:''},
+                    {l:'ENTRY',v:entry>0?`$${entry.toFixed(entry<0.01?8:6)}`:'no data',s:entry>0?`≈${(entry*amt/(solUSD||1)*eurRate).toFixed(2)}€`:'price at open'},
+                    {l:'NOW',v:cur?`$${cur.toFixed(cur<0.01?8:6)}`:'fetching…',s:cur?`≈${(cur*amt/(solUSD||1)*eurRate).toFixed(2)}€`:''},
                   ].map(item=>(
                     <div key={item.l} style={{background:'rgba(255,255,255,.03)',borderRadius:12,
                       padding:'10px 12px',border:'1px solid rgba(255,255,255,.06)'}}>
@@ -755,10 +755,21 @@ export default function ShreemBrzeePerformance(){
                     </div>
                   ))}
                 </div>
-                <div style={{margin:'0 20px',borderRadius:16,overflow:'hidden',
-                  border:'1px solid rgba(255,255,255,.06)',height:300}}>
-                  <iframe src={`https://dexscreener.com/solana/${t.mint}?embed=1&theme=dark&trades=0&info=0`}
-                    style={{width:'100%',height:'100%',border:'none'}} title="chart"/>
+                <div style={{margin:'0 20px',display:'flex',flexDirection:'column',gap:8}}>
+                  <a href={`https://dexscreener.com/solana/${t.mint}`} target="_blank" rel="noreferrer"
+                    style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,
+                      padding:'14px',borderRadius:16,border:'1px solid rgba(212,175,55,.3)',
+                      background:'rgba(212,175,55,.08)',color:G,fontSize:13,fontWeight:800,
+                      letterSpacing:'.1em',textDecoration:'none',cursor:'pointer'}}>
+                    📊 VIEW LIVE CHART ON DEXSCREENER ↗
+                  </a>
+                  <a href={`https://solscan.io/token/${t.mint}`} target="_blank" rel="noreferrer"
+                    style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                      padding:'10px',borderRadius:12,border:'1px solid rgba(255,255,255,.06)',
+                      background:'rgba(255,255,255,.02)',color:'#64748b',fontSize:11,fontWeight:700,
+                      letterSpacing:'.08em',textDecoration:'none',cursor:'pointer'}}>
+                    🔍 VIEW TOKEN ON SOLSCAN ↗
+                  </a>
                 </div>
                 <div style={{padding:'6px 20px 0',fontSize:9,color:'#64748b',fontFamily:'monospace',textAlign:'center',wordBreak:'break-all'}}>
                   {t.mint}
