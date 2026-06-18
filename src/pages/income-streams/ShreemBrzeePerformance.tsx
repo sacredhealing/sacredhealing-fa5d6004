@@ -466,7 +466,11 @@ export default function ShreemBrzeePerformance(){
         added_by:user?.id||null,added_at:new Date().toISOString(),
       },{onConflict:'address'});
       if(error)throw error;
-      flash(`✅ ${kol.name} added to tracked whales`,'ok');
+      flash(`Syncing ${kol.name} to Helius webhook…`,'info');
+      const{data:syncRes,error:syncErr}=await supabase.functions.invoke('helius-webhook-sync',{body:{}});
+      if(syncErr)throw syncErr;
+      if(!syncRes?.ok)throw new Error(syncRes?.error||'helius sync failed');
+      flash(`✅ ${kol.name} tracked · Helius now watching ${syncRes.wallet_count} wallets`,'ok');
     }catch(e:any){
       flash(`Add failed: ${e?.message?.slice(0,80)||'unknown error'}`,'err');
     }
@@ -734,8 +738,8 @@ export default function ShreemBrzeePerformance(){
                       </div>
                       {/* PNL highlight */}
                       <div style={{margin:'8px 12px',padding:'10px 14px',borderRadius:12,
-                        background:`rgba(${pnlColor==='#22c55e'?'34,197,94':'239,68,68'},.08)`,
-                        border:`1px solid rgba(${pnlColor==='#22c55e'?'34,197,94':'239,68,68'},.2)`,
+                        background:`rgba(${pnlPct!==null&&pnlPct>=0?'34,197,94':'239,68,68'},.08)`,
+                        border:`1px solid rgba(${pnlPct!==null&&pnlPct>=0?'34,197,94':'239,68,68'},.2)`,
                         display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                         <div style={{fontSize:9,color:'#64748b',letterSpacing:'.1em'}}>UNREALIZED PNL</div>
                         <div style={{display:'flex',gap:12,alignItems:'center'}}>
