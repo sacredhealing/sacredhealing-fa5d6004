@@ -433,7 +433,7 @@ export default function ShreemBrzeePerformance(){
         }catch(e){console.error('[auto-open]',e);}
       }).subscribe();
     return()=>{supabase.removeChannel(ch);};
-  },[loadAll,loadOpenTrades]);
+  },[loadAll,loadOpenTrades,fetchJupPrice]);
 
   const addWhaleToTracking=async(kol:{name:string,addr:string})=>{
     flash(`Adding ${kol.name}…`,'info');
