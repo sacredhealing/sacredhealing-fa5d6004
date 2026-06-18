@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // All 21 tracked whale wallets
 const WALLET_MAP: Record<string, string> = {
-  "GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE": "Cupsey",
+  "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB": "Euris",
   "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5": "Orange",
   "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt": "Shreem Brzee",
   "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ": "Heyitsyolo",

@@ -7,7 +7,7 @@ const HELIUS = `https://mainnet.helius-rpc.com/?api-key=${import.meta.env.VITE_H
 const G='#D4AF37',BLK='#050505',CARD='rgba(212,175,55,0.04)',BDR='rgba(212,175,55,0.2)',GRN='#10b981',RED='#ef4444',CYN='#00d4ff',GOLD_GLOW='rgba(212,175,55,0.15)';
 
 const WHALES=[
-  {label:'Cupsey',addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',vip:true},
+  {label:'Euris',addr:'Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB',vip:true},
   {label:'Heyitsyolo',addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ',vip:true},
   {label:'Remusofmars',addr:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu',vip:true},
   {label:'Orange',addr:'96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',vip:false},

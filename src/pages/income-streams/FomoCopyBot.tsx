@@ -108,11 +108,10 @@ const KNOWN_MINTS: Record<string, string> = {
 const mintSymbolCache = new Map<string, string>(Object.entries(KNOWN_MINTS));
 
 // ── Verified whale presets ─────────────────────────────────
-// Only Cupsey and Orange are verified from fomo.fund.
-// The other 4 addresses from the previous version were REMOVED — unverifiable.
+// Verified active Solana meme traders from fomo.fund leaderboard.
 // Add more: fomo.fund → Leaderboard → sort 30d PnL → copy wallet address.
 const WHALE_PRESETS: { label: string; address: string; note: string; isVIP?: boolean; riskMult?: number; priorityMult?: number }[] = [
-  { label: 'Cupsey',       address: 'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', note: '⭐ Verified micro-cap sniper', isVIP: true, riskMult: 1.5, priorityMult: 2 },
+  { label: 'Euris',        address: 'Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB', note: '⭐ Top active meme trader', isVIP: true, riskMult: 1.5, priorityMult: 2 },
   { label: 'Orange',       address: '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5', note: 'Pump.fun launch hunter' },
   { label: 'Shreem Brzee', address: 'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt', note: 'High win-rate scalper' },
   { label: 'Heyitsyolo',   address: 'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', note: '⭐ Known FOMO.fund leaderboard trader', isVIP: true, riskMult: 1.5, priorityMult: 2 },

@@ -17,7 +17,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 
 const WHALE_WALLETS: Record<string, string> = {
-  "GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE": "Cupsey",
+  "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB": "Euris",
   "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ": "Heyitsyolo",
   "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu": "Remusofmars",
   "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5": "Orange",

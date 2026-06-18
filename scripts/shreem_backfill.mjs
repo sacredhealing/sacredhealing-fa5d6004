@@ -15,7 +15,7 @@ const DELAY      = parseInt(process.env.DELAY||'8000');
 if (!SUPA_KEY) { console.error('SUPABASE_SERVICE_KEY missing'); process.exit(1); }
 
 const WHALES = [
-  { label:'Cupsey',        addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE' },
+  { label:'Euris',         addr:'Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB' },
   { label:'Heyitsyolo',    addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ' },
   { label:'Remusofmars',   addr:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu' },
   { label:'Orange',        addr:'96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5' },
