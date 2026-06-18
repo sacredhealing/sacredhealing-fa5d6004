@@ -7747,6 +7747,39 @@ export type Database = {
           },
         ]
       }
+      tracked_whales: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          address: string
+          created_at: string
+          id: string
+          label: string
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          address: string
+          created_at?: string
+          id?: string
+          label: string
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          address?: string
+          created_at?: string
+          id?: string
+          label?: string
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transformation_enrollments: {
         Row: {
           created_at: string
