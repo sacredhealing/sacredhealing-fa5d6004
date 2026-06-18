@@ -125,7 +125,10 @@ export default function ShreemBrzeePerformance(){
   },[]);
 
   const loadSession=useCallback(async()=>{
-    try{const r=await fetch(`${EDGE}/session`);if(r.ok){const d=await r.json();setSession(d||null);}}catch{}
+    try{
+      const{data}=await(supabase as any).from('shreem_brzee_session').select('*').eq('id','default').single();
+      setSession(data||null);
+    }catch{}
   },[]);
   const loadTrades=useCallback(async()=>{
     const{data}=await(supabase as any).from('shreem_brzee_paper_trades').select('*').order('created_at',{ascending:false}).limit(100);
@@ -207,9 +210,11 @@ export default function ShreemBrzeePerformance(){
     const sol=parseFloat(startSOL)||1;
     try{
       await(supabase as any).from('shreem_brzee_paper_trades').delete().neq('id',0);
-      const res=await fetch(`${EDGE}/paper`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({type:'session',session:{portfolio:sol,start_balance:sol,positions:{},total_pnl:0,wins:0,losses:0,started_at:new Date().toISOString()}})});
-      if(!res.ok)throw new Error(await res.text());
+      const{error}=await(supabase as any).from('shreem_brzee_session').upsert({
+        id:'default',portfolio:sol,start_balance:sol,positions:{},total_pnl:0,wins:0,losses:0,
+        started_at:new Date().toISOString(),stopped_at:null,mode:'paper',updated_at:new Date().toISOString()
+      },{onConflict:'id'});
+      if(error)throw new Error(error.message);
       await loadAll();flash(`Paper bot started with ${sol} SOL ✓`,'ok');
     }catch(e:any){flash(`Error: ${e.message?.slice(0,60)}`,'err');setStartActive(false);}
     setBusy(false);
@@ -217,10 +222,12 @@ export default function ShreemBrzeePerformance(){
   const stopSession=async()=>{
     setBusy(true);setStopActive(true);
     try{
-      await fetch(`${EDGE}/paper`,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({type:'session',session:{...session,started_at:null,stopped_at:new Date().toISOString()}})});
+      const{error}=await(supabase as any).from('shreem_brzee_session').upsert({
+        id:'default',...session,stopped_at:new Date().toISOString(),updated_at:new Date().toISOString()
+      },{onConflict:'id'});
+      if(error)throw new Error(error.message);
       await loadSession();flash('Bot stopped','info');
-    }catch{flash('Error stopping','err');}
+    }catch(e:any){flash(`Error stopping: ${e.message?.slice(0,60)}`,'err');}
     setBusy(false);setStopActive(false);
   };
 
