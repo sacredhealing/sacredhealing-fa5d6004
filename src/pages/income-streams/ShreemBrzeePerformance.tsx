@@ -382,7 +382,7 @@ export default function ShreemBrzeePerformance(){
   useEffect(()=>{
     fetchOpenPrices();
     clearInterval(posTickerRef.current);
-    posTickerRef.current=setInterval(fetchOpenPrices,20000);
+    posTickerRef.current=setInterval(fetchOpenPrices,8000);
     return()=>clearInterval(posTickerRef.current);
   },[fetchOpenPrices]);
 
