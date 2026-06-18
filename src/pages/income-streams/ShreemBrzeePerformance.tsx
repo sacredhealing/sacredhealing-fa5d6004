@@ -280,7 +280,7 @@ export default function ShreemBrzeePerformance(){
   const rowStyle:React.CSSProperties={display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:`1px solid rgba(212,175,55,0.1)`};
 
   return(
-    <div style={{minHeight:'100vh',background:'#050505',color:'#fff',fontFamily:"'Inter','Plus Jakarta Sans',system-ui,sans-serif",fontFamily:"'Plus Jakarta Sans',-apple-system,sans-serif",paddingBottom:100}}>
+    <div style={{minHeight:'100vh',background:'#050505',color:'#fff',fontFamily:"'Plus Jakarta Sans','Inter',-apple-system,system-ui,sans-serif",paddingBottom:100}}>
 
       {/* HEADER */}
       <div style={{background:'#050505',borderBottom:`1px solid rgba(212,175,55,0.3)`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:60}}>
