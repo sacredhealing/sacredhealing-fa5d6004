@@ -78,15 +78,29 @@ function parseSwap(tx: any, wallet: string) {
   );
   if (!tokenTx) return null;
 
-  const solTx = (tx.nativeTransfers || []).find((t: any) =>
-    t.fromUserAccount === wallet || t.toUserAccount === wallet
-  );
+  // Use accountData native balance change for accurate SOL amount (not gas fee)
+  const acctData = (tx.accountData || []).find((a: any) => a.account === wallet);
+  let amountSol: number | null = null;
+  if (acctData && typeof acctData.nativeBalanceChange === 'number') {
+    amountSol = Math.abs(acctData.nativeBalanceChange) / 1_000_000_000;
+  }
+  // Fallback: sum all native transfers involving whale (minus tiny dust < 0.001 SOL)
+  if (!amountSol || amountSol < 0.001) {
+    const solTransfers = (tx.nativeTransfers || []).filter((t: any) =>
+      (t.fromUserAccount === wallet || t.toUserAccount === wallet) &&
+      (t.amount || 0) > 100_000 // > 0.0001 SOL
+    );
+    if (solTransfers.length > 0) {
+      amountSol = solTransfers.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) / 1_000_000_000;
+    }
+  }
 
+  const action = (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY" | "SELL";
   return {
-    action: (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY" | "SELL",
+    action,
     mint: tokenTx.mint as string,
     symbol: (tokenTx.tokenName || tokenTx.symbol || null) as string | null,
-    amountSol: solTx ? (solTx.amount || 0) / 1_000_000_000 : null,
+    amountSol,
     tokenAmount: (tokenTx.tokenAmount || null) as number | null,
     isPumpFun: (tx.source || "").toLowerCase().includes("pump") ||
       (tx.instructions || []).some((ix: any) =>
@@ -129,7 +143,7 @@ serve(async (req) => {
 
   // GET /ping — version check
   if (req.method === "GET" && path.endsWith("/ping")) {
-    return jsonResp({ ok: true, version: "v3", timestamp: new Date().toISOString() });
+    return jsonResp({ ok: true, version: "v4", timestamp: new Date().toISOString() });
   }
 
   // POST /test — inject a BUY test signal
@@ -149,8 +163,8 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
     };
     const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
-    return jsonResp({ ok: true, sig, action: "BUY", version: "v3" });
+    if (error) return jsonResp({ error: error.message, version: "v4" }, 500);
+    return jsonResp({ ok: true, sig, action: "BUY", version: "v4" });
   }
 
   // POST /test-sell — inject a SELL test signal (closes POPCAT position)
@@ -170,8 +184,8 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
     };
     const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
-    return jsonResp({ ok: true, sig, action: "SELL", version: "v3" });
+    if (error) return jsonResp({ error: error.message, version: "v4" }, 500);
+    return jsonResp({ ok: true, sig, action: "SELL", version: "v4" });
   }
 
   // POST /signal — manual insert of a single signal row
@@ -193,8 +207,8 @@ serve(async (req) => {
       block_time:   signal.block_time ?? signal.blockTime ?? Math.floor(Date.now() / 1000),
     };
     const { error } = await sb.from("shreem_brzee_signals").upsert(row, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
-    return jsonResp({ ok: true, sig: row.sig, version: "v3" });
+    if (error) return jsonResp({ error: error.message, version: "v4" }, 500);
+    return jsonResp({ ok: true, sig: row.sig, version: "v4" });
   }
 
   // POST /paper
