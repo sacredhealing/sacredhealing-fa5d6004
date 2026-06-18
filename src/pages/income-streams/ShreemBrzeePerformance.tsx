@@ -300,7 +300,129 @@ export default function ShreemBrzeePerformance(){
     {name:'Trunoest',  addr:'TRUnoEst9vPKDmKrjFHmBzFLHRPpTdxTAqJNaRJFfxhK',pnl7d:24975, pnl30d:77853, wr:65.8},
   ];
   const WHALE_ADDRS_UI=new Set(WHALES.map((w:any)=>w.addr));
-  const[scanPeriod,setScanPeriod]=React.useState<'7D'|'30D'>('30D');
+  const[scanPeriod,setScanPeriod]=useState<'7D'|'30D'>('30D');
+  const[openTrades,setOpenTrades]=useState<any[]>([]);
+  const[livePosPrices,setLivePosPrices]=useState<Record<string,number>>({});
+  const posTickerRef=useRef<any>(null);
+
+  const loadOpenTrades=useCallback(async()=>{
+    const{data}=await(supabase as any).from('shreem_brzee_paper_trades')
+      .select('*').eq('status','open').order('opened_at',{ascending:false});
+    setOpenTrades(data||[]);
+  },[]);
+
+  useEffect(()=>{loadOpenTrades();const t=setInterval(loadOpenTrades,10000);return()=>clearInterval(t);},[loadOpenTrades]);
+
+  useEffect(()=>{
+    const ch=supabase.channel('sb_open_trd')
+      .on('postgres_changes',{event:'*',schema:'public',table:'shreem_brzee_paper_trades'},()=>loadOpenTrades())
+      .subscribe();
+    return()=>{supabase.removeChannel(ch);};
+  },[loadOpenTrades]);
+
+  // Fetch live token prices for open positions
+  const fetchOpenPrices=useCallback(async()=>{
+    if(!openTrades.length){setLivePosPrices({});return;}
+    const out:Record<string,number>={};
+    await Promise.all(openTrades.map(async(t:any)=>{
+      try{
+        const r=await fetch(`https://api.jup.ag/price/v2?ids=${t.mint}`);
+        const d=await r.json();
+        const p=d?.data?.[t.mint]?.price;
+        if(p)out[t.mint]=parseFloat(p);
+      }catch{}
+    }));
+    setLivePosPrices(prev=>({...prev,...out}));
+  },[openTrades]);
+
+  useEffect(()=>{
+    fetchOpenPrices();
+    clearInterval(posTickerRef.current);
+    posTickerRef.current=setInterval(fetchOpenPrices,15000);
+    return()=>clearInterval(posTickerRef.current);
+  },[fetchOpenPrices]);
+
+  // Close a position (manual or auto)
+  const closePosition=useCallback(async(t:any,reason:string='manual')=>{
+    try{
+      let currentPrice=livePosPrices[t.mint];
+      if(!currentPrice){
+        try{const r=await fetch(`https://api.jup.ag/price/v2?ids=${t.mint}`);const d=await r.json();currentPrice=parseFloat(d?.data?.[t.mint]?.price||'0');}catch{}
+      }
+      const entry=Number(t.entry_price)||0;
+      const amt=Number(t.amount_sol)||0;
+      const pnlPct=entry>0&&currentPrice?((currentPrice-entry)/entry)*100:0;
+      const returned=amt*(1+pnlPct/100);
+      const pnlSol=returned-amt;
+      await(supabase as any).from('shreem_brzee_paper_trades').update({
+        status:'closed',closed_at:new Date().toISOString(),
+        exit_price:currentPrice||null,pnl_pct:pnlPct,pnl_sol:pnlSol,
+        sell_reason:reason,
+      }).eq('id',t.id);
+      // Refund SOL to session
+      const{data:s}=await(supabase as any).from('shreem_brzee_session').select('*').eq('id','default').single();
+      if(s){
+        const newPortfolio=Number(s.portfolio||0)+returned;
+        const newTotalPnl=Number(s.total_pnl||0)+pnlSol;
+        const wins=Number(s.wins||0)+(pnlSol>=0?1:0);
+        const losses=Number(s.losses||0)+(pnlSol<0?1:0);
+        await(supabase as any).from('shreem_brzee_session').upsert({
+          id:'default',...s,portfolio:newPortfolio,total_pnl:newTotalPnl,
+          wins,losses,updated_at:new Date().toISOString(),
+        },{onConflict:'id'});
+      }
+      loadAll();loadOpenTrades();
+    }catch(e:any){flash(`Close failed: ${e.message?.slice(0,60)}`,'err');}
+  },[livePosPrices,loadAll,loadOpenTrades]);
+
+  // Auto-close: 4h timeout OR -30% stop loss
+  useEffect(()=>{
+    if(!openTrades.length)return;
+    const FOUR_H=4*60*60*1000;
+    openTrades.forEach((t:any)=>{
+      const age=Date.now()-new Date(t.opened_at||t.created_at).getTime();
+      const cur=livePosPrices[t.mint];
+      const entry=Number(t.entry_price)||0;
+      if(age>=FOUR_H){closePosition(t,'4h_timeout');return;}
+      if(entry>0&&cur&&((cur-entry)/entry)*100<=-30){closePosition(t,'stop_loss');return;}
+    });
+  },[openTrades,livePosPrices,closePosition]);
+
+  // Listen for new BUY signals → open paper trade
+  useEffect(()=>{
+    const ch=supabase.channel('sb_sig_to_trade')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'shreem_brzee_signals'},async(payload:any)=>{
+        const sig=payload?.new;
+        if(!sig||sig.action!=='BUY'||!sig.mint)return;
+        try{
+          // Check session is running
+          const{data:s}=await(supabase as any).from('shreem_brzee_session').select('*').eq('id','default').single();
+          if(!s||!s.started_at||s.stopped_at)return;
+          const portfolio=Number(s.portfolio||0);
+          if(portfolio<=0)return;
+          // Avoid duplicate (one open trade per mint at a time)
+          const{data:existing}=await(supabase as any).from('shreem_brzee_paper_trades')
+            .select('id').eq('status','open').eq('mint',sig.mint).limit(1);
+          if(existing&&existing.length)return;
+          // Fetch token price (USD) from Jupiter
+          let entryPrice=0;
+          try{const r=await fetch(`https://api.jup.ag/price/v2?ids=${sig.mint}`);const d=await r.json();entryPrice=parseFloat(d?.data?.[sig.mint]?.price||'0');}catch{}
+          const amt=portfolio*0.05;
+          await(supabase as any).from('shreem_brzee_paper_trades').insert({
+            session_id:'default',sig:sig.sig+'_open',mint:sig.mint,symbol:sig.symbol,
+            label:sig.label,wallet:sig.wallet,action:'BUY',
+            entry_price:entryPrice,amount_sol:amt,gross_sol:amt,net_sol:amt,
+            status:'open',opened_at:new Date().toISOString(),
+          });
+          await(supabase as any).from('shreem_brzee_session').upsert({
+            id:'default',...s,portfolio:portfolio-amt,updated_at:new Date().toISOString(),
+          },{onConflict:'id'});
+          loadAll();loadOpenTrades();
+        }catch(e){console.error('[auto-open]',e);}
+      }).subscribe();
+    return()=>{supabase.removeChannel(ch);};
+  },[loadAll,loadOpenTrades]);
+
   const addWhaleToTracking=async(kol:{name:string,addr:string})=>{
     flash(`Adding ${kol.name}…`,'info');
     await(supabase as any).from('tracked_whales').upsert({address:kol.addr,label:kol.name,source:'kolexplorer',added_at:new Date().toISOString()},{onConflict:'address'});
