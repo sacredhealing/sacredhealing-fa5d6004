@@ -300,7 +300,129 @@ export default function ShreemBrzeePerformance(){
     {name:'Trunoest',  addr:'TRUnoEst9vPKDmKrjFHmBzFLHRPpTdxTAqJNaRJFfxhK',pnl7d:24975, pnl30d:77853, wr:65.8},
   ];
   const WHALE_ADDRS_UI=new Set(WHALES.map((w:any)=>w.addr));
-  const[scanPeriod,setScanPeriod]=React.useState<'7D'|'30D'>('30D');
+  const[scanPeriod,setScanPeriod]=useState<'7D'|'30D'>('30D');
+  const[openTrades,setOpenTrades]=useState<any[]>([]);
+  const[livePosPrices,setLivePosPrices]=useState<Record<string,number>>({});
+  const posTickerRef=useRef<any>(null);
+
+  const loadOpenTrades=useCallback(async()=>{
+    const{data}=await(supabase as any).from('shreem_brzee_paper_trades')
+      .select('*').eq('status','open').order('opened_at',{ascending:false});
+    setOpenTrades(data||[]);
+  },[]);
+
+  useEffect(()=>{loadOpenTrades();const t=setInterval(loadOpenTrades,10000);return()=>clearInterval(t);},[loadOpenTrades]);
+
+  useEffect(()=>{
+    const ch=supabase.channel('sb_open_trd')
+      .on('postgres_changes',{event:'*',schema:'public',table:'shreem_brzee_paper_trades'},()=>loadOpenTrades())
+      .subscribe();
+    return()=>{supabase.removeChannel(ch);};
+  },[loadOpenTrades]);
+
+  // Fetch live token prices for open positions
+  const fetchOpenPrices=useCallback(async()=>{
+    if(!openTrades.length){setLivePosPrices({});return;}
+    const out:Record<string,number>={};
+    await Promise.all(openTrades.map(async(t:any)=>{
+      try{
+        const r=await fetch(`https://api.jup.ag/price/v2?ids=${t.mint}`);
+        const d=await r.json();
+        const p=d?.data?.[t.mint]?.price;
+        if(p)out[t.mint]=parseFloat(p);
+      }catch{}
+    }));
+    setLivePosPrices(prev=>({...prev,...out}));
+  },[openTrades]);
+
+  useEffect(()=>{
+    fetchOpenPrices();
+    clearInterval(posTickerRef.current);
+    posTickerRef.current=setInterval(fetchOpenPrices,15000);
+    return()=>clearInterval(posTickerRef.current);
+  },[fetchOpenPrices]);
+
+  // Close a position (manual or auto)
+  const closePosition=useCallback(async(t:any,reason:string='manual')=>{
+    try{
+      let currentPrice=livePosPrices[t.mint];
+      if(!currentPrice){
+        try{const r=await fetch(`https://api.jup.ag/price/v2?ids=${t.mint}`);const d=await r.json();currentPrice=parseFloat(d?.data?.[t.mint]?.price||'0');}catch{}
+      }
+      const entry=Number(t.entry_price)||0;
+      const amt=Number(t.amount_sol)||0;
+      const pnlPct=entry>0&&currentPrice?((currentPrice-entry)/entry)*100:0;
+      const returned=amt*(1+pnlPct/100);
+      const pnlSol=returned-amt;
+      await(supabase as any).from('shreem_brzee_paper_trades').update({
+        status:'closed',closed_at:new Date().toISOString(),
+        exit_price:currentPrice||null,pnl_pct:pnlPct,pnl_sol:pnlSol,
+        sell_reason:reason,
+      }).eq('id',t.id);
+      // Refund SOL to session
+      const{data:s}=await(supabase as any).from('shreem_brzee_session').select('*').eq('id','default').single();
+      if(s){
+        const newPortfolio=Number(s.portfolio||0)+returned;
+        const newTotalPnl=Number(s.total_pnl||0)+pnlSol;
+        const wins=Number(s.wins||0)+(pnlSol>=0?1:0);
+        const losses=Number(s.losses||0)+(pnlSol<0?1:0);
+        await(supabase as any).from('shreem_brzee_session').upsert({
+          id:'default',...s,portfolio:newPortfolio,total_pnl:newTotalPnl,
+          wins,losses,updated_at:new Date().toISOString(),
+        },{onConflict:'id'});
+      }
+      loadAll();loadOpenTrades();
+    }catch(e:any){flash(`Close failed: ${e.message?.slice(0,60)}`,'err');}
+  },[livePosPrices,loadAll,loadOpenTrades]);
+
+  // Auto-close: 4h timeout OR -30% stop loss
+  useEffect(()=>{
+    if(!openTrades.length)return;
+    const FOUR_H=4*60*60*1000;
+    openTrades.forEach((t:any)=>{
+      const age=Date.now()-new Date(t.opened_at||t.created_at).getTime();
+      const cur=livePosPrices[t.mint];
+      const entry=Number(t.entry_price)||0;
+      if(age>=FOUR_H){closePosition(t,'4h_timeout');return;}
+      if(entry>0&&cur&&((cur-entry)/entry)*100<=-30){closePosition(t,'stop_loss');return;}
+    });
+  },[openTrades,livePosPrices,closePosition]);
+
+  // Listen for new BUY signals → open paper trade
+  useEffect(()=>{
+    const ch=supabase.channel('sb_sig_to_trade')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'shreem_brzee_signals'},async(payload:any)=>{
+        const sig=payload?.new;
+        if(!sig||sig.action!=='BUY'||!sig.mint)return;
+        try{
+          // Check session is running
+          const{data:s}=await(supabase as any).from('shreem_brzee_session').select('*').eq('id','default').single();
+          if(!s||!s.started_at||s.stopped_at)return;
+          const portfolio=Number(s.portfolio||0);
+          if(portfolio<=0)return;
+          // Avoid duplicate (one open trade per mint at a time)
+          const{data:existing}=await(supabase as any).from('shreem_brzee_paper_trades')
+            .select('id').eq('status','open').eq('mint',sig.mint).limit(1);
+          if(existing&&existing.length)return;
+          // Fetch token price (USD) from Jupiter
+          let entryPrice=0;
+          try{const r=await fetch(`https://api.jup.ag/price/v2?ids=${sig.mint}`);const d=await r.json();entryPrice=parseFloat(d?.data?.[sig.mint]?.price||'0');}catch{}
+          const amt=portfolio*0.05;
+          await(supabase as any).from('shreem_brzee_paper_trades').insert({
+            session_id:'default',sig:sig.sig+'_open',mint:sig.mint,symbol:sig.symbol,
+            label:sig.label,wallet:sig.wallet,action:'BUY',
+            entry_price:entryPrice,amount_sol:amt,gross_sol:amt,net_sol:amt,
+            status:'open',opened_at:new Date().toISOString(),
+          });
+          await(supabase as any).from('shreem_brzee_session').upsert({
+            id:'default',...s,portfolio:portfolio-amt,updated_at:new Date().toISOString(),
+          },{onConflict:'id'});
+          loadAll();loadOpenTrades();
+        }catch(e){console.error('[auto-open]',e);}
+      }).subscribe();
+    return()=>{supabase.removeChannel(ch);};
+  },[loadAll,loadOpenTrades]);
+
   const addWhaleToTracking=async(kol:{name:string,addr:string})=>{
     flash(`Adding ${kol.name}…`,'info');
     await(supabase as any).from('tracked_whales').upsert({address:kol.addr,label:kol.name,source:'kolexplorer',added_at:new Date().toISOString()},{onConflict:'address'});
@@ -361,7 +483,7 @@ export default function ShreemBrzeePerformance(){
             {i:'💰',v:`€${toE(balSol)}`,l:'Balance',s:`${balSol.toFixed(3)} SOL`,c:G},
             {i:'📈',v:`${pnlSol>=0?'+':''}€${toE(pnlSol)}`,l:'P&L',s:`${pnlSol>=0?'+':''}${pnlPct}%`,c:pnlSol>=0?GRN:RED},
             {i:'🎯',v:`${session?.wins||0}/${session?.losses||0}`,l:'Win/Loss',s:`${session?.wins&&(session.wins+session.losses)>0?Math.round(session.wins/(session.wins+session.losses)*100):0}% win rate`,c:'#fff'},
-            {i:'📂',v:String(openPos.length),l:'Positions',s:running?'live now':'start bot',c:openPos.length>0?GRN:CYN},
+            {i:'📂',v:String(openTrades.length),l:'Positions',s:running?'live now':'start bot',c:openTrades.length>0?GRN:CYN},
           ].map(s=>(
             <div key={s.l} style={{background:'rgba(255,255,255,0.02)',border:`1px solid rgba(212,175,55,0.2)`,borderRadius:16,backdropFilter:'blur(40px)',boxShadow:'0 0 20px rgba(212,175,55,0.05)',padding:'14px 12px',textAlign:'center'}}>
               <div style={{fontSize:20,marginBottom:5}}>{s.i}</div>
@@ -459,25 +581,22 @@ export default function ShreemBrzeePerformance(){
           </div>}
         </Card>
 
-        {/* OPEN POSITIONS — with market context when empty */}
+        {/* OPEN POSITIONS — live from shreem_brzee_paper_trades */}
         <Card
           title="📂 Open Positions"
-          badge={openPos.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openPos.length} live</span>:undefined}
-          right={openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
-          {openPos.length===0?(
+          badge={openTrades.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openTrades.length} live</span>:undefined}
+          right={openTrades.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
+          {openTrades.length===0?(
             <div>
-              {/* Empty state with market context */}
               <div style={{textAlign:'center',padding:'16px 0 10px'}}>
                 <div style={{fontSize:28,marginBottom:8}}>👀</div>
                 <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>No Open Positions</div>
                 <div style={{fontSize:11,color:'#64748b',marginBottom:12,lineHeight:1.5}}>
                   {running
-                    ? 'Waiting for a whale to swap on Solana — can take minutes to hours'
+                    ? 'Waiting for a whale BUY signal — auto-opens at 5% of portfolio · auto-closes at 4h or -30%'
                     : 'Start the bot above to begin watching for whale swaps'}
                 </div>
               </div>
-
-              {/* Market Context Box */}
               <div style={{background:'rgba(212,175,55,0.03)',border:`1px solid rgba(212,175,55,0.15)`,borderRadius:12,padding:14}}>
                 <div style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)',marginBottom:10}}>📊 Market Context</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
@@ -494,50 +613,64 @@ export default function ShreemBrzeePerformance(){
                     </div>
                   ))}
                 </div>
-
-                {/* Signal health indicator */}
-                <div style={{padding:'10px 12px',borderRadius:10,
-                  background:signals.length>0?'rgba(16,185,129,.05)':'rgba(239,68,68,.05)',
-                  border:`1px solid ${signals.length>0?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)'}`,
-                  fontSize:11,lineHeight:1.5,
-                  color:signals.length>0?'rgba(16,185,129,.85)':'rgba(239,68,68,.8)'}}>
-                  {signals.length>0
-                    ? `✅ Helius is delivering signals. Last whale swap: ${timeAgo(signals[0]?.created_at)} ago by ${signals[0]?.label}. Positions open when a BUY triggers.`
-                    : `⚠️ No whale swaps detected yet. Either no whales have traded recently, or Helius credits need restoring. Use ⚡ Test Signal below to verify the full pipeline works.`}
-                </div>
-
-                {!running&&signals.length===0&&(
-                  <div style={{marginTop:8,padding:'10px 12px',borderRadius:10,background:'rgba(212,175,55,.05)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.8)',lineHeight:1.5}}>
-                    💡 To verify the bot works without waiting for whale activity, start the bot and tap ⚡ Test Signal in the Signal Feed card below.
-                  </div>
-                )}
               </div>
             </div>
-          ):openPos.map((p:any)=>{
-            const livePrice=livePrices[p.mint];
-            const entrySOL=p.entrySOL||p.entry_sol||0;
-            const pnl=livePrice&&p.entryPrice?(livePrice-p.entryPrice)/p.entryPrice*100:null;
+          ):openTrades.map((t:any)=>{
+            const entry=Number(t.entry_price)||0;
+            const amt=Number(t.amount_sol)||0;
+            const cur=livePosPrices[t.mint];
+            const pnlPct=entry>0&&cur?((cur-entry)/entry)*100:null;
+            const pnlSol=pnlPct!==null?amt*(pnlPct/100):null;
+            const openedMs=new Date(t.opened_at||t.created_at).getTime();
+            const ageMin=Math.max(0,Math.floor((Date.now()-openedMs)/60000));
+            const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
+            const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
             return(
-              <div key={p.mint} style={{...rowStyle,background:'rgba(16,185,129,.03)',borderRadius:12,padding:'12px 14px',border:`1px solid rgba(16,185,129,.2)`,marginBottom:8}}>
-                <div style={{width:32,height:32,borderRadius:9,background:'rgba(16,185,129,.12)',color:GRN,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>↑</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                    <span style={{fontSize:14,fontWeight:900,color:G}}>{p.symbol||'?'}</span>
-                    <span style={{fontSize:9,fontWeight:800,letterSpacing:'.2em',color:'rgba(16,185,129,.8)',animation:'blink 2s infinite'}}>● LIVE</span>
+              <div key={t.id} style={{background:'rgba(16,185,129,.03)',borderRadius:14,padding:'14px',border:`1px solid rgba(16,185,129,.22)`,marginBottom:10}}>
+                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10,marginBottom:10}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3,flexWrap:'wrap'}}>
+                      <span style={{fontSize:15,fontWeight:900,color:G}}>{t.symbol||t.mint?.slice(0,6)||'?'}</span>
+                      <span style={{fontSize:9,fontWeight:800,letterSpacing:'.2em',color:'rgba(16,185,129,.85)',animation:'blink 2s infinite'}}>● OPEN</span>
+                      <span style={{fontSize:9,color:'#64748b'}}>{ageStr}</span>
+                    </div>
+                    <div style={{fontSize:10,color:'#94a3b8'}}>via <span style={{color:G,fontWeight:700}}>{t.label||'whale'}</span></div>
+                    <div style={{fontSize:9,color:'#64748b',fontFamily:'monospace',marginTop:2}}>{t.mint?.slice(0,8)}…{t.mint?.slice(-4)}</div>
                   </div>
-                  <div style={{fontSize:10,color:'#64748b'}}>via {p.label} · entry {entrySOL.toFixed(4)} SOL</div>
-                  {livePrice&&<div style={{fontSize:11,color:'#94a3b8',marginTop:3}}>Current: ${livePrice.toFixed(6)}</div>}
-                </div>
-                <div style={{textAlign:'right',flexShrink:0}}>
-                  <div style={{fontSize:14,fontWeight:900,color:pnl!==null?(pnl>=0?GRN:RED):'#64748b'}}>
-                    {pnl!==null?`${pnl>=0?'+':''}${pnl.toFixed(1)}%`:'—'}
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div style={{fontSize:18,fontWeight:900,color:pnlColor,letterSpacing:'-.02em'}}>
+                      {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
+                    </div>
+                    <div style={{fontSize:11,fontWeight:700,color:pnlColor,marginTop:2}}>
+                      {pnlSol!==null?`${pnlSol>=0?'+':''}${pnlSol.toFixed(4)} SOL`:''}
+                    </div>
                   </div>
-                  <div style={{fontSize:11,color:'#64748b',marginTop:2}}>€{toE(entrySOL)}</div>
                 </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,marginBottom:10}}>
+                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
+                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Size</div>
+                    <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>{amt.toFixed(4)}</div>
+                    <div style={{fontSize:9,color:'#64748b'}}>SOL</div>
+                  </div>
+                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
+                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Entry</div>
+                    <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>${entry>0?entry.toFixed(entry<0.01?8:6):'—'}</div>
+                  </div>
+                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
+                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Now</div>
+                    <div style={{fontSize:12,fontWeight:800,color:cur?'#fff':'#64748b'}}>{cur?`$${cur.toFixed(cur<0.01?8:6)}`:'…'}</div>
+                  </div>
+                </div>
+                <button onClick={()=>closePosition(t,'manual')} style={{
+                  width:'100%',padding:'10px',borderRadius:10,
+                  border:'1px solid rgba(239,68,68,.5)',background:'rgba(239,68,68,.15)',
+                  color:RED,fontSize:11,fontWeight:900,letterSpacing:'.15em',cursor:'pointer',
+                }}>✕ CLOSE POSITION</button>
               </div>
             );
           })}
         </Card>
+
 
         {/* WALLET */}
         <Card title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{fontSize:9,color:GRN,fontWeight:700}}>🔒 Public only</span>}>
@@ -663,7 +796,7 @@ export default function ShreemBrzeePerformance(){
           {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No whale swaps detected this period · signals appear in real-time when whales trade</div>}
         </Card>
 
-        <Card className="glass-card" style={{border:'1px solid rgba(212,175,55,0.25)',marginTop:16,borderRadius:24}}>
+        <div className="glass-card" style={{border:'1px solid rgba(212,175,55,0.25)',marginTop:16,borderRadius:24}}>
           <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.05)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
             <span style={{fontSize:10,letterSpacing:'0.15em',fontWeight:800,color:'#D4AF37'}}>🔭 WHALE SCANNER · TOP KOL TRADERS</span>
             <div style={{display:'flex',gap:6}}>
@@ -703,7 +836,8 @@ export default function ShreemBrzeePerformance(){
           <div style={{padding:'10px 16px',borderTop:'1px solid rgba(255,255,255,0.05)',fontSize:9,color:'#64748b',textAlign:'center'}}>
             Live data from KOLExplorer.com · 30D top Solana meme traders by realized PNL
           </div>
-        </Card>
+        </div>
+
 
       </div>
     </div>

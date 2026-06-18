@@ -6672,7 +6672,11 @@ export type Database = {
       shreem_brzee_paper_trades: {
         Row: {
           action: string
+          amount_sol: number | null
+          closed_at: string | null
           created_at: string | null
+          entry_price: number | null
+          exit_price: number | null
           fail_reason: string | null
           failed: boolean | null
           fee_sol: number | null
@@ -6684,17 +6688,25 @@ export type Database = {
           mult: number | null
           mult_source: string | null
           net_sol: number | null
+          opened_at: string | null
+          pnl_pct: number | null
           pnl_sol: number | null
           portfolio_after: number | null
           sell_reason: string | null
           session_id: string | null
           sig: string | null
           slip_sol: number | null
+          status: string | null
           symbol: string | null
+          wallet: string | null
         }
         Insert: {
           action: string
+          amount_sol?: number | null
+          closed_at?: string | null
           created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
           fail_reason?: string | null
           failed?: boolean | null
           fee_sol?: number | null
@@ -6706,17 +6718,25 @@ export type Database = {
           mult?: number | null
           mult_source?: string | null
           net_sol?: number | null
+          opened_at?: string | null
+          pnl_pct?: number | null
           pnl_sol?: number | null
           portfolio_after?: number | null
           sell_reason?: string | null
           session_id?: string | null
           sig?: string | null
           slip_sol?: number | null
+          status?: string | null
           symbol?: string | null
+          wallet?: string | null
         }
         Update: {
           action?: string
+          amount_sol?: number | null
+          closed_at?: string | null
           created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
           fail_reason?: string | null
           failed?: boolean | null
           fee_sol?: number | null
@@ -6728,13 +6748,17 @@ export type Database = {
           mult?: number | null
           mult_source?: string | null
           net_sol?: number | null
+          opened_at?: string | null
+          pnl_pct?: number | null
           pnl_sol?: number | null
           portfolio_after?: number | null
           sell_reason?: string | null
           session_id?: string | null
           sig?: string | null
           slip_sol?: number | null
+          status?: string | null
           symbol?: string | null
+          wallet?: string | null
         }
         Relationships: []
       }
