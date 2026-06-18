@@ -320,25 +320,40 @@ export default function ShreemBrzeePerformance(){
     return()=>{supabase.removeChannel(ch);};
   },[loadOpenTrades]);
 
+  // Fetch live token price from Jupiter (tries v6 then v2 fallback)
+  const fetchJupPrice=useCallback(async(mint:string):Promise<number>=>{
+    const urls=[
+      `https://price.jup.ag/v6/price?ids=${mint}`,
+      `https://api.jup.ag/price/v2?ids=${mint}`,
+    ];
+    for(const u of urls){
+      try{
+        const r=await fetch(u);
+        if(!r.ok)continue;
+        const d=await r.json();
+        const p=d?.data?.[mint]?.price;
+        const n=parseFloat(p);
+        if(n>0)return n;
+      }catch{}
+    }
+    return 0;
+  },[]);
+
   // Fetch live token prices for open positions
   const fetchOpenPrices=useCallback(async()=>{
     if(!openTrades.length){setLivePosPrices({});return;}
     const out:Record<string,number>={};
     await Promise.all(openTrades.map(async(t:any)=>{
-      try{
-        const r=await fetch(`https://api.jup.ag/price/v2?ids=${t.mint}`);
-        const d=await r.json();
-        const p=d?.data?.[t.mint]?.price;
-        if(p)out[t.mint]=parseFloat(p);
-      }catch{}
+      const p=await fetchJupPrice(t.mint);
+      if(p>0)out[t.mint]=p;
     }));
     setLivePosPrices(prev=>({...prev,...out}));
-  },[openTrades]);
+  },[openTrades,fetchJupPrice]);
 
   useEffect(()=>{
     fetchOpenPrices();
     clearInterval(posTickerRef.current);
-    posTickerRef.current=setInterval(fetchOpenPrices,15000);
+    posTickerRef.current=setInterval(fetchOpenPrices,30000);
     return()=>clearInterval(posTickerRef.current);
   },[fetchOpenPrices]);
 
