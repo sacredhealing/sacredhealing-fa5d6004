@@ -306,6 +306,23 @@ export default function UserManagementPanel() {
     } finally { setResetingId(null); }
   };
 
+  const handleSetPassword = async (userId: string) => {
+    const pwd = window.prompt("Set new password for this user (min 6 chars):");
+    if (!pwd) return;
+    if (pwd.length < 6) { toast({ title:"Too short", description:"Password must be ≥ 6 characters", variant:"destructive" }); return; }
+    setResetingId(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "set_password", userId, password: pwd },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title:"🔐 Password Set", description:"The user can now sign in with the new password." });
+    } catch (e: any) {
+      toast({ title:"Set Password Failed", description:e.message, variant:"destructive" });
+    } finally { setResetingId(null); }
+  };
+
   const handleDelete = async (userId: string) => {
     const prev = users;
     setUsers(u => u.filter(x => x.id !== userId));
@@ -635,6 +652,12 @@ export default function UserManagementPanel() {
               onClick={()=>handleResetPassword(selectedUser.id, selectedUser.full_name)}
               loading={resetingId===selectedUser.id}
               color={cyan}
+            />
+            <SQIBtn
+              label="🔐 Set Password"
+              onClick={()=>handleSetPassword(selectedUser.id)}
+              loading={resetingId===selectedUser.id}
+              color="#D4AF37"
             />
             <SQIBtn label="Delete" onClick={()=>{ setModalMode(null); setConfirmDelete(selectedUser.id); }} color="#ef4444" />
           </div>
