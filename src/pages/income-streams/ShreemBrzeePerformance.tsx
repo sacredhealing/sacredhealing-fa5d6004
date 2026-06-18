@@ -13,29 +13,26 @@ const RED = "#ef4444";
 const CYAN = "#00d4ff";
 
 // ─── Static KOL list ─────────────────────────────────────────────────────────
-// Synced exactly with edge function WHALE_WALLETS — every wallet the bot trades gets shown
 const KOL_LIST = [
   { label: "Euris",         addr: "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", vip: true },
   { label: "Heyitsyolo",    addr: "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", vip: true },
   { label: "Remusofmars",   addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
-  { label: "Orange",        addr: "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", vip: true },
-  { label: "Shreem Brzee",  addr: "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt", vip: true },
   { label: "Lenion",        addr: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", vip: false },
-  { label: "Boredboar",     addr: "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw",  vip: false },
   { label: "Hades",         addr: "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", vip: false },
-  { label: "Kubera 72",     addr: "AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm", vip: false },
-  { label: "Brzee God",     addr: "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k", vip: false },
-  { label: "GBack",         addr: "9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm", vip: false },
-  { label: "Tuna",          addr: "GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f",  vip: false },
   { label: "Fireball",      addr: "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", vip: false },
   { label: "Hachjdn",       addr: "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", vip: false },
-  { label: "Crypto Circle", addr: "5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc", vip: false },
-  { label: "Crocodile",     addr: "2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv", vip: false },
-  { label: "Snow Spirit",   addr: "4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3", vip: false },
   { label: "Cented",        addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: false },
   { label: "The Grande",    addr: "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA", vip: false },
-  { label: "A Milly",       addr: "Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW", vip: false },
-  { label: "J2ANNaq",       addr: "J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG", vip: false },
+  { label: "West",          addr: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", vip: false },
+  { label: "Yenni",         addr: "5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", vip: false },
+  { label: "Doji",          addr: "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg", vip: false },
+  { label: "Trenchman",     addr: "Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7", vip: false },
+  { label: "OGAntD",        addr: "215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP", vip: false },
+  { label: "Kev",           addr: "BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", vip: false },
+  { label: "decu",          addr: "4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9", vip: false },
+  { label: "trunoest",      addr: "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT", vip: false },
+  { label: "clukz",         addr: "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", vip: false },
+  { label: "Limfork",       addr: "BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", vip: false },
 ];
 
 const KOL_LABELS = new Set(KOL_LIST.map(k => k.label));
