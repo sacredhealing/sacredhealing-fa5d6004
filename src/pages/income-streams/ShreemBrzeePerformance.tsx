@@ -330,7 +330,7 @@ export default function ShreemBrzeePerformance(){
     if(!mint)return 0;
     // 1) DexScreener — best for pump.fun, sort by liquidity
     try{
-      const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`,{signal:AbortSignal.timeout(5000)});
+      const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`,{signal:AbortSignal.timeout(4000),cache:'no-store'});
       if(r.ok){
         const d=await r.json();
         const pairs=(d?.pairs||[]).filter((x:any)=>x?.priceUsd&&parseFloat(x.priceUsd)>0);
@@ -364,21 +364,23 @@ export default function ShreemBrzeePerformance(){
     return 0;
   },[]);
 
-  // Fetch live token prices for open positions
+  // Fetch live token prices — deduplicated, sequential with delay to avoid rate limits
   const fetchOpenPrices=useCallback(async()=>{
     if(!openTrades.length){setLivePosPrices({});return;}
+    const uniqueMints=[...new Set(openTrades.map((t:any)=>t.mint).filter(Boolean))];
     const out:Record<string,number>={};
-    await Promise.all(openTrades.map(async(t:any)=>{
-      const p=await fetchJupPrice(t.mint);
-      if(p>0)out[t.mint]=p;
-    }));
+    for(const mint of uniqueMints){
+      const p=await fetchJupPrice(mint);
+      if(p>0)out[mint]=p;
+      await new Promise(r=>setTimeout(r,300)); // 300ms between requests — avoids rate limit
+    }
     setLivePosPrices(prev=>({...prev,...out}));
   },[openTrades,fetchJupPrice]);
 
   useEffect(()=>{
     fetchOpenPrices();
     clearInterval(posTickerRef.current);
-    posTickerRef.current=setInterval(fetchOpenPrices,30000);
+    posTickerRef.current=setInterval(fetchOpenPrices,20000);
     return()=>clearInterval(posTickerRef.current);
   },[fetchOpenPrices]);
 
