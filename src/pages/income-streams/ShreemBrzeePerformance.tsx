@@ -64,7 +64,7 @@ function DiagnosticPanel({running,signalCount,edgeOk}:{running:boolean,signalCou
      detail:edgeOk===null?'Checking…':edgeOk?'50-100ms detection at processed commitment ✓':'Edge function unreachable',
      fix:edgeOk===false?'Check Helius Developer plan is active':undefined},
     {label:'Bot Session',status:running?'ok':'warn',
-     detail:running?'Session active — watching 21 whale wallets':'Session stopped — press START above'},
+     detail:running?'Session active — watching 20 whale wallets':'Session stopped — press START above'},
     {label:'Signal Pipeline',status:signalCount>0?'ok':'warn',
      detail:signalCount>0?`${signalCount} signals received · whale-follow mode (exits on whale SELL)`:'0 signals yet — waiting for whale activity or use ⚡ Test Signal',
      fix:undefined},
@@ -647,7 +647,7 @@ export default function ShreemBrzeePerformance(){
           {!running&&!busy&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(212,175,55,.06)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.7)',textAlign:'center'}}>Set balance above then tap ▶ START</div>}
           {running&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(16,185,129,.06)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.8)',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
             <span style={{width:6,height:6,borderRadius:'50%',background:GRN,animation:'pulse 1.5s infinite',boxShadow:`0 0 6px ${GRN}`}}/>
-            Bot running · watching 21 whale wallets on Solana mainnet
+            Bot running · watching 20 whale wallets on Solana mainnet
           </div>}
         </Card>
 
@@ -689,7 +689,7 @@ export default function ShreemBrzeePerformance(){
                     {l:'SOL Price',v:`$${solUSD.toFixed(2)}`,sub:`€${(solUSD*eurRate).toFixed(2)}`},
                     {l:'Bot Status',v:running?'🟢 Online':'🔴 Offline',sub:running?'Enhanced WS · 50-100ms':'Not listening'},
                     {l:'Signals Received',v:String(signals.length),sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:'None yet'},
-                    {l:'Whale Wallets',v:'21',sub:'On Solana mainnet'},
+                    {l:'Whale Wallets',v:'20',sub:'On Solana mainnet'},
                   ].map(item=>(
                     <div key={item.l} style={{background:'rgba(212,175,55,0.05)',borderRadius:10,padding:'10px 12px',border:'1px solid rgba(212,175,55,0.1)'}}>
                       <div style={{fontSize:9,color:'#64748b',letterSpacing:'.2em',textTransform:'uppercase' as const,marginBottom:4}}>{item.l}</div>
