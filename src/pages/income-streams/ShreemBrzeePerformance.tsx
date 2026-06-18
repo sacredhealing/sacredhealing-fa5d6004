@@ -714,12 +714,13 @@ export default function ShreemBrzeePerformance(){
           const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
           const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
           const sym=t.symbol||t.mint?.slice(0,6)||'?';
-          return <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',alignItems:'flex-end',
+          return <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',
               background:'rgba(0,0,0,.8)',backdropFilter:'blur(10px)'}}
               onClick={e=>{if(e.target===e.currentTarget)setSelectedTrade(null);}}>
-              <div style={{width:'100%',maxWidth:560,margin:'0 auto',background:'#0d0d0d',
-                borderRadius:'28px 28px 0 0',border:'1px solid rgba(212,175,55,.2)',
-                maxHeight:'90vh',overflowY:'auto',paddingBottom:40}}>
+              <div style={{width:'calc(100% - 32px)',maxWidth:520,background:'#0d0d0d',
+                borderRadius:28,border:'1px solid rgba(212,175,55,.25)',
+                maxHeight:'85vh',overflowY:'auto',paddingBottom:24,
+                boxShadow:'0 0 60px rgba(212,175,55,.15)'}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
                   padding:'18px 20px 14px',borderBottom:'1px solid rgba(255,255,255,.05)'}}>
                   <div>
@@ -729,10 +730,10 @@ export default function ShreemBrzeePerformance(){
                   <div style={{display:'flex',alignItems:'center',gap:12}}>
                     <div style={{textAlign:'right'}}>
                       <div style={{fontSize:24,fontWeight:900,color:pnlColor}}>
-                        {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'price loading…'}
+                        {(pnlPct!==null&&cur&&cur>0)?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
                       </div>
-                      <div style={{fontSize:13,fontWeight:700,color:pnlColor}}>
-                        {pnlEur!==null?`${pnlEur>=0?'+':''}${pnlEur.toFixed(2)}€`:'waiting for price'}
+                      <div style={{fontSize:11,color:'#64748b'}}>
+                        {(cur&&cur>0)?'live price':'fetching price…'}
                       </div>
                     </div>
                     <button onClick={()=>setSelectedTrade(null)}
@@ -745,7 +746,7 @@ export default function ShreemBrzeePerformance(){
                   {[
                     {l:'SIZE',v:`${amt.toFixed(4)} SOL`,s:`≈${(amt*solUSD*eurRate).toFixed(2)}€`},
                     {l:'ENTRY',v:entry>0?`$${entry.toFixed(entry<0.01?8:6)}`:'no data',s:entry>0?`≈${(entry*amt/(solUSD||1)*eurRate).toFixed(2)}€`:'price at open'},
-                    {l:'NOW',v:cur?`$${cur.toFixed(cur<0.01?8:6)}`:'fetching…',s:cur?`≈${(cur*amt/(solUSD||1)*eurRate).toFixed(2)}€`:''},
+                    {l:'NOW',v:(cur&&cur>0)?`$${cur.toFixed(cur<0.01?8:6)}`:'fetching…',s:(cur&&cur>0)?`≈${(cur*amt/(solUSD||1)*eurRate).toFixed(2)}€`:''},
                   ].map(item=>(
                     <div key={item.l} style={{background:'rgba(255,255,255,.03)',borderRadius:12,
                       padding:'10px 12px',border:'1px solid rgba(255,255,255,.06)'}}>
