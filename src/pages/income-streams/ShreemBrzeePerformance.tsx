@@ -366,60 +366,30 @@ export default function ShreemBrzeePerformance() {
     } catch (e: any) { notify(`Close failed: ${e.message?.slice(0,60)}`, "err"); }
   }, [livePrices, refreshAll, fetchOpen, fetchTokenPrice]);
 
-  // ── Auto-close triggers ──────────────────────────────────────────────────
-  // PRIMARY exit: whale SELL signal (handled in realtime subscription above)
-  // SECONDARY exits below — only fire when whale hasn't sold yet:
+  // ── Auto-close triggers — PURE WHALE FOLLOW ──────────────────────────────
+  // We exit when the WHALE exits. Period.
   //
-  //  1. Stop-loss:        -30% from entry → cut immediately
-  //  2. Trailing stop:    if ever up >50%, protect 70% of peak gains
-  //                       e.g. peak +200% → exit if drops back to +60%
-  //  3. Safety cap:       24h absolute max — dead token with no whale exit signal
+  // Exit 1 (primary): Whale SELL signal → realtime channel above closes instantly
+  // Exit 2: Stop-loss -30% → protects against rugs / bad entries only
+  // Exit 3: 24h safety cap → only if Helius missed the whale SELL signal
   //
-  // 4h timer REMOVED — a whale gem can run for 8h, 12h, 24h+
-  // We follow the WHALE, not a clock.
+  // NO trailing stop — if the whale holds a 10x for 3 days, we hold 3 days.
+  // Trailing stops fight the strategy. Pure follow = maximum capture of whale gains.
   useEffect(() => {
     if (!openPos.length) return;
     openPos.forEach((pos: any) => {
       const price = livePrices[pos.mint];
       const entry = Number(pos.entry_price) || 0;
-      if (!price || entry <= 0) return; // no price yet, wait
+      if (!price || entry <= 0) return;
 
       const pnlPct = (price - entry) / entry * 100;
-      const age    = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
-      const ageH   = age / (60 * 60 * 1000);
+      const ageH   = (Date.now() - new Date(pos.opened_at || pos.created_at).getTime()) / 3_600_000;
 
-      // 1. Hard stop-loss: -30%
-      if (pnlPct <= -30) {
-        closePosition(pos, "stop_loss");
-        return;
-      }
+      // Exit 2: Hard stop-loss -30% — only safety net against rugs
+      if (pnlPct <= -30) { closePosition(pos, "stop_loss"); return; }
 
-      // 2. Trailing stop: only activates after position is up >50%
-      // Track peak in a ref — use pos.id as key
-      const peakKey = `peak_${pos.id}`;
-      const storedPeak = Number(sessionStorage.getItem(peakKey) || 0);
-      const currentPeak = Math.max(storedPeak, pnlPct);
-      if (currentPeak !== storedPeak) sessionStorage.setItem(peakKey, String(currentPeak));
-
-      if (currentPeak >= 50) {
-        // Protect 70% of peak gains
-        // e.g. peak=+200% → trail = +200% * 0.30 = +60%  (exit if drops to +60%)
-        // e.g. peak=+100% → trail = +100% * 0.30 = +30%  (exit if drops to +30%)
-        // e.g. peak=+50%  → trail = +50%  * 0.30 = +15%  (exit if drops to +15%)
-        const trailFloor = currentPeak * 0.30;
-        if (pnlPct <= trailFloor) {
-          closePosition(pos, "trailing_stop");
-          sessionStorage.removeItem(peakKey);
-          return;
-        }
-      }
-
-      // 3. Safety cap: 24h — if whale never sent SELL and token is still alive
-      // This catches dead tokens where Helius missed the whale exit signal
-      if (ageH >= 24) {
-        closePosition(pos, "24h_safety_cap");
-        sessionStorage.removeItem(peakKey);
-      }
+      // Exit 3: 24h safety cap — Helius missed whale SELL or token is dead
+      if (ageH >= 24) { closePosition(pos, "24h_safety_cap"); }
     });
   }, [openPos, livePrices, closePosition]);
 
@@ -923,7 +893,7 @@ export default function ShreemBrzeePerformance() {
                 <div style={{ fontSize:28, marginBottom:8 }}>👀</div>
                 <div style={{ fontSize:13, color:"#cbd5e0", fontWeight:700, marginBottom:4 }}>No Open Positions</div>
                 <div style={{ fontSize:11, color:"#64748b", marginBottom:12, lineHeight:1.5 }}>
-                  {isRunning ? "Waiting for whale BUY signal — auto-opens · follows whale exit · trailing stop · -30% stop loss" : "Start the bot above to begin watching for whale swaps"}
+                  {isRunning ? "Waiting for whale BUY signal — holds as long as whale holds · exits when whale exits · -30% stop loss only" : "Start the bot above to begin watching for whale swaps"}
                 </div>
               </div>
               {/* Market context */}
