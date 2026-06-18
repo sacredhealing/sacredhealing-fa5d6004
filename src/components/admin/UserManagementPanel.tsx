@@ -653,6 +653,12 @@ export default function UserManagementPanel() {
               loading={resetingId===selectedUser.id}
               color={cyan}
             />
+            <SQIBtn
+              label="🔐 Set Password"
+              onClick={()=>handleSetPassword(selectedUser.id)}
+              loading={resetingId===selectedUser.id}
+              color="#D4AF37"
+            />
             <SQIBtn label="Delete" onClick={()=>{ setModalMode(null); setConfirmDelete(selectedUser.id); }} color="#ef4444" />
           </div>
         </SQIModal>
