@@ -389,7 +389,7 @@ export default function ShreemBrzeePerformance() {
       if (pnlPct <= -30) { closePosition(pos, "stop_loss"); return; }
 
       // Exit 3: 24h safety cap — Helius missed whale SELL or token is dead
-      if (ageH >= 24) { closePosition(pos, "24h_safety_cap"); }
+      if (ageH >= 48) { closePosition(pos, "48h_safety_cap"); }
     });
   }, [openPos, livePrices, closePosition]);
 
