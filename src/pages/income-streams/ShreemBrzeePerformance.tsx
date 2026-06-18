@@ -458,6 +458,61 @@ export default function ShreemBrzeePerformance() {
     return () => { d.removeChannel(ch); };
   }, [fetchOpen]);
 
+
+  // ── Live mode executor poll ────────────────────────────────────────────────
+  // When mode='live', polls the shreem-live-executor edge fn every 5s
+  const LIVE_EXECUTOR = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor";
+  const liveIntervalRef = useRef<ReturnType<typeof setInterval>|null>(null);
+
+  const pollLiveExecutor = useCallback(async () => {
+    if (!isRunning) return;
+    const { data: sess } = await d.from("shreem_brzee_session").select("mode").eq("id","default").single();
+    if (sess?.mode !== "live") return;
+    try {
+      await fetch(LIVE_EXECUTOR, {
+        method: "POST",
+        headers: { "Content-Type": "application/json",
+          "Authorization": `Bearer ${(await d.auth.getSession()).data.session?.access_token || ""}` }
+      });
+    } catch {}
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
+    liveIntervalRef.current = setInterval(pollLiveExecutor, 5000);
+    return () => { if (liveIntervalRef.current) clearInterval(liveIntervalRef.current); };
+  }, [pollLiveExecutor]);
+
+  // ── Live mode toggle ────────────────────────────────────────────────────────
+  const [liveMode, setLiveMode]     = useState(false);
+  const [liveConfirm, setLiveConfirm] = useState(false);
+  const [botWallet, setBotWallet]   = useState<{wallet:string;balance_sol:number}|null>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+
+  const checkBotWallet = useCallback(async () => {
+    try {
+      const r = await fetch(`${LIVE_EXECUTOR}/health`);
+      if (r.ok) { const d = await r.json(); if (d.wallet) setBotWallet(d); }
+    } catch {}
+  }, []);
+
+  const toggleLiveMode = async (goLive: boolean) => {
+    setLiveLoading(true);
+    try {
+      const { error } = await d.from("shreem_brzee_session").update({
+        mode: goLive ? "live" : "paper", updated_at: new Date().toISOString()
+      }).eq("id","default");
+      if (error) throw error;
+      setLiveMode(goLive);
+      setLiveConfirm(false);
+      notify(goLive ? "🔴 LIVE MODE ACTIVE — real SOL trading" : "📋 Paper mode restored", goLive ? "err" : "ok");
+      await fetchSession();
+    } catch (e: any) { notify(`Mode switch failed: ${e.message?.slice(0,60)}`, "err"); }
+    setLiveLoading(false);
+  };
+
+  useEffect(() => { checkBotWallet(); }, [checkBotWallet]);
+
   // ── Bootstrap ──────────────────────────────────────────────────────────────
   useEffect(() => {
     refreshAll(); fetchOpen(); checkEdge();
@@ -724,6 +779,55 @@ export default function ShreemBrzeePerformance() {
             </div>
           );
         })()}
+
+
+        {/* ── LIVE MODE PANEL ────────────────────────────────────────────── */}
+        <div style={{ background:"rgba(239,68,68,0.04)", border:`1px solid ${liveMode?"rgba(239,68,68,0.5)":"rgba(239,68,68,0.15)"}`, borderRadius:14, padding:14, boxShadow:liveMode?"0 0 20px rgba(239,68,68,0.15)":"none" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:liveMode||liveConfirm?12:0 }}>
+            <div>
+              <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:liveMode?"rgba(239,68,68,.8)":"rgba(255,255,255,.3)" }}>
+                {liveMode ? "🔴 LIVE TRADING ACTIVE" : "📋 Paper Mode"}
+              </div>
+              {!liveMode && <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>Real SOL copy trades — enable when ready</div>}
+            </div>
+            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading||!isRunning} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading||!isRunning?"not-allowed":"pointer", letterSpacing:".06em" }}>
+              {liveLoading ? "⚙" : liveMode ? "⏹ STOP LIVE" : "▶ GO LIVE"}
+            </button>
+          </div>
+          {/* Bot wallet info */}
+          {botWallet && (
+            <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:10, background:"rgba(0,0,0,.3)", border:"1px solid rgba(255,255,255,.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:2 }}>Bot Wallet</div>
+                <div style={{ fontSize:11, fontFamily:"monospace", color:"#cbd5e0" }}>{botWallet.wallet.slice(0,8)}…{botWallet.wallet.slice(-6)}</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:15, fontWeight:900, color:GOLD }}>{botWallet.balance_sol.toFixed(3)} SOL</div>
+                <div style={{ fontSize:10, color:"#64748b" }}>€{(botWallet.balance_sol*solUsd*solEur).toFixed(2)}</div>
+              </div>
+            </div>
+          )}
+          {/* Confirmation dialog */}
+          {liveConfirm && !liveMode && (
+            <div style={{ padding:"14px", borderRadius:12, background:"rgba(239,68,68,.06)", border:"1px solid rgba(239,68,68,.3)" }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#ef4444", marginBottom:8 }}>⚠️ Going live means REAL SOL</div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", marginBottom:12, lineHeight:1.5 }}>
+                The bot will execute real Solana swaps using the bot wallet. Every whale BUY signal triggers a real Jupiter swap. Max {(50).toFixed(0)}% of bot wallet can be in open positions at once.
+              </div>
+              {!botWallet && (
+                <div style={{ padding:"10px 12px", borderRadius:10, background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", marginBottom:12, fontSize:11, color:"#ef4444" }}>
+                  ❌ Bot wallet not configured. Add SHREEM_BOT_KEYPAIR to Supabase Edge Function secrets first.
+                </div>
+              )}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                <button onClick={() => setLiveConfirm(false)} style={{ padding:"10px", borderRadius:10, border:"1px solid rgba(255,255,255,.1)", background:"transparent", color:"#64748b", fontSize:12, fontWeight:700, cursor:"pointer" }}>Cancel</button>
+                <button onClick={() => toggleLiveMode(true)} disabled={!botWallet||liveLoading} style={{ padding:"10px", borderRadius:10, border:"none", background:botWallet?"#ef4444":"rgba(239,68,68,.3)", color:"#fff", fontSize:12, fontWeight:900, cursor:botWallet?"pointer":"not-allowed" }}>
+                  {liveLoading ? "Switching…" : "CONFIRM GO LIVE"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <Diagnostics running={isRunning} signalCount={signals.length} edgeOk={edgeOk} />
 
