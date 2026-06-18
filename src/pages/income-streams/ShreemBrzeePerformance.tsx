@@ -11,25 +11,27 @@ const WHALES=[
   {label:'Euris',addr:'Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB',vip:true},
   {label:'Heyitsyolo',addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ',vip:true},
   {label:'Remusofmars',addr:'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu',vip:true},
-  {label:'Orange',addr:'96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',vip:false},
-  {label:'Shreem Brzee',addr:'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt',vip:false},
   {label:'Lenion',addr:'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm',vip:false},
   {label:'Boredboar',addr:'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',vip:false},
   {label:'Hades',addr:'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp',vip:false},
-  {label:'Kubera 72',addr:'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm',vip:false},
-  {label:'Brzee God',addr:'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k',vip:false},
-  {label:'GBack',addr:'9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm',vip:false},
-  {label:'Tuna',addr:'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f',vip:false},
   {label:'Fireball',addr:'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51',vip:false},
   {label:'Hachjdn',addr:'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS',vip:false},
-  {label:'Crypto Circle',addr:'5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc',vip:false},
-  {label:'Crocodile',addr:'2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv',vip:false},
-  {label:'Snow Spirit',addr:'4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3',vip:false},
   {label:'Cented',addr:'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o',vip:false},
   {label:'The Grande',addr:'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA',vip:false},
-  {label:'A Milly',addr:'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW',vip:false},
-  {label:'J2ANNaq',addr:'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG',vip:false},
+  {label:'West',addr:'JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN',vip:false},
+  {label:'Yenni',addr:'5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG',vip:false},
+  {label:'Doji',addr:'5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg',vip:false},
+  {label:'Trenchman',addr:'Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7',vip:false},
+  {label:'OGAntD',addr:'215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP',vip:false},
+  {label:'Kev',addr:'BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd',vip:false},
+  {label:'decu',addr:'4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9',vip:false},
+  {label:'trunoest',addr:'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT',vip:false},
+  {label:'clukz',addr:'G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC',vip:false},
+  {label:'Limfork',addr:'BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB',vip:false},
 ];
+const VALID_WHALE_LABELS=new Set(WHALES.map(w=>w.label));
+const VALID_WHALE_ADDRS=new Set(WHALES.map(w=>w.addr));
+const isValidWhaleSig=(s:any)=>VALID_WHALE_LABELS.has(s?.label)||VALID_WHALE_ADDRS.has(s?.wallet);
 
 const isValidSolana=(a:string)=>/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a.trim());
 const timeAgo=(ts:string)=>{const m=Math.floor((Date.now()-new Date(ts).getTime())/60000);if(m<1)return'now';if(m<60)return`${m}m`;if(m<1440)return`${Math.floor(m/60)}h`;return`${Math.floor(m/1440)}d`;};
@@ -62,7 +64,7 @@ function DiagnosticPanel({running,signalCount,edgeOk}:{running:boolean,signalCou
      detail:edgeOk===null?'Checking…':edgeOk?'50-100ms detection at processed commitment ✓':'Edge function unreachable',
      fix:edgeOk===false?'Check Helius Developer plan is active':undefined},
     {label:'Bot Session',status:running?'ok':'warn',
-     detail:running?'Session active — watching 21 whale wallets':'Session stopped — press START above'},
+     detail:running?'Session active — watching 20 whale wallets':'Session stopped — press START above'},
     {label:'Signal Pipeline',status:signalCount>0?'ok':'warn',
      detail:signalCount>0?`${signalCount} signals received · whale-follow mode (exits on whale SELL)`:'0 signals yet — waiting for whale activity or use ⚡ Test Signal',
      fix:undefined},
@@ -137,10 +139,10 @@ export default function ShreemBrzeePerformance(){
     setTrades((data||[]).filter((t:any)=>!t.sig?.startsWith('TEST_')&&!t.sig?.startsWith('DIAG_')&&t.symbol!=='TEST'));
   },[]);
   const loadSignals=useCallback(async()=>{
-    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(100);
-    // Filter out test signals - only show real whale signals
-    const real=(data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_'));
-    setSignals(real);
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(200);
+    // Filter out test signals AND signals from removed/dead wallets
+    const real=(data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')&&isValidWhaleSig(s));
+    setSignals(real.slice(0,100));
   },[]);
   const loadWhaleSigs=useCallback(async()=>{
     const now=new Date(),since=new Date(now);
@@ -148,9 +150,9 @@ export default function ShreemBrzeePerformance(){
     if(period==='weekly')since.setDate(now.getDate()-7);
     if(period==='monthly')since.setMonth(now.getMonth()-1);
     if(period==='yearly')since.setFullYear(now.getFullYear()-1);
-    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,action,amount_sol,created_at,sig').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
-    // Filter out test/diagnostic signals from whale performance
-    setWhaleSigs((data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')));
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,wallet,action,amount_sol,created_at,sig').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
+    // Filter out test/diagnostic signals + dead wallets
+    setWhaleSigs((data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')&&isValidWhaleSig(s)));
   },[period]);
   const loadAll=useCallback(()=>{loadSession();loadTrades();loadSignals();loadWhaleSigs();},[loadSession,loadTrades,loadSignals,loadWhaleSigs]);
 
@@ -295,7 +297,7 @@ export default function ShreemBrzeePerformance(){
     {name:'Kev',       addr:'KEVsznx5Yx2NVHM5GvBprv1zXTFDvAHMrmeDuYQzqfgh',pnl7d:22717, pnl30d:122059,wr:52.3},
     {name:'Clukz',     addr:'CLUKZpUxEfhbgGz9TqkCrHGkSGiDFDhNt3eSFGmLjTuv',pnl7d:18856, pnl30d:92000, wr:62.6},
     {name:'Heyitsyolo',addr:'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ',pnl7d:10746, pnl30d:88376, wr:54.6},
-    {name:'Cupsey',    addr:'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',pnl7d:16382, pnl30d:83971, wr:51.4},
+    {name:'West',      addr:'JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN',pnl7d:16382, pnl30d:83971, wr:51.4},
     {name:'Limfork',   addr:'LIMforkXzPwrpFXCjMBmZ9VQcZBNrYrFJLV6PeKLqxHj',pnl7d:6793,  pnl30d:72393, wr:52.4},
     {name:'Tdmilky',   addr:'TDmilkyxVHs8YWz4Ny5JEJJzZ2TLQfJKiUGBnPmLxhHp',pnl7d:10386, pnl30d:76602, wr:47.3},
     {name:'Trunoest',  addr:'TRUnoEst9vPKDmKrjFHmBzFLHRPpTdxTAqJNaRJFfxhK',pnl7d:24975, pnl30d:77853, wr:65.8},
@@ -380,7 +382,7 @@ export default function ShreemBrzeePerformance(){
   useEffect(()=>{
     fetchOpenPrices();
     clearInterval(posTickerRef.current);
-    posTickerRef.current=setInterval(fetchOpenPrices,20000);
+    posTickerRef.current=setInterval(fetchOpenPrices,8000);
     return()=>clearInterval(posTickerRef.current);
   },[fetchOpenPrices]);
 
@@ -645,7 +647,7 @@ export default function ShreemBrzeePerformance(){
           {!running&&!busy&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(212,175,55,.06)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.7)',textAlign:'center'}}>Set balance above then tap ▶ START</div>}
           {running&&<div style={{marginTop:10,padding:'9px 12px',borderRadius:10,background:'rgba(16,185,129,.06)',border:'1px solid rgba(16,185,129,.2)',fontSize:11,color:'rgba(16,185,129,.8)',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
             <span style={{width:6,height:6,borderRadius:'50%',background:GRN,animation:'pulse 1.5s infinite',boxShadow:`0 0 6px ${GRN}`}}/>
-            Bot running · watching 21 whale wallets on Solana mainnet
+            Bot running · watching 20 whale wallets on Solana mainnet
           </div>}
         </Card>
 
@@ -687,7 +689,7 @@ export default function ShreemBrzeePerformance(){
                     {l:'SOL Price',v:`$${solUSD.toFixed(2)}`,sub:`€${(solUSD*eurRate).toFixed(2)}`},
                     {l:'Bot Status',v:running?'🟢 Online':'🔴 Offline',sub:running?'Enhanced WS · 50-100ms':'Not listening'},
                     {l:'Signals Received',v:String(signals.length),sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:'None yet'},
-                    {l:'Whale Wallets',v:'21',sub:'On Solana mainnet'},
+                    {l:'Whale Wallets',v:'20',sub:'On Solana mainnet'},
                   ].map(item=>(
                     <div key={item.l} style={{background:'rgba(212,175,55,0.05)',borderRadius:10,padding:'10px 12px',border:'1px solid rgba(212,175,55,0.1)'}}>
                       <div style={{fontSize:9,color:'#64748b',letterSpacing:'.2em',textTransform:'uppercase' as const,marginBottom:4}}>{item.l}</div>
