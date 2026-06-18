@@ -748,6 +748,7 @@ export default function ShreemBrzeePerformance() {
           ))}
         </div>
 
+        {/* Bot controls */}
         <Section title="💰 Paper Balance (SOL)">
           <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
             {["0.5","1","2","5","10"].map(v => (
@@ -865,7 +866,6 @@ export default function ShreemBrzeePerformance() {
 
         <Diagnostics running={isRunning} signalCount={signals.length} edgeOk={edgeOk} />
 
-        {/* Bot controls */}
         <Section
           title="📂 Open Positions"
           badge={openPos.length>0?<span style={{ marginLeft:6, padding:"2px 8px", borderRadius:20, background:"rgba(16,185,129,.15)", color:GREEN, fontSize:10, fontWeight:800 }}>{openPos.length} live</span>:undefined}
