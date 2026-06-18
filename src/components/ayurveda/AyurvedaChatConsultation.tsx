@@ -1,3 +1,4 @@
+// AyurvedaChatConsultation v6.0
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
