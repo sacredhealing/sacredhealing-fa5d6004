@@ -581,25 +581,22 @@ export default function ShreemBrzeePerformance(){
           </div>}
         </Card>
 
-        {/* OPEN POSITIONS — with market context when empty */}
+        {/* OPEN POSITIONS — live from shreem_brzee_paper_trades */}
         <Card
           title="📂 Open Positions"
-          badge={openPos.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openPos.length} live</span>:undefined}
-          right={openPos.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
-          {openPos.length===0?(
+          badge={openTrades.length>0?<span style={{marginLeft:6,padding:'2px 8px',borderRadius:20,background:'rgba(16,185,129,.15)',color:GRN,fontSize:10,fontWeight:800}}>{openTrades.length} live</span>:undefined}
+          right={openTrades.length===0?<button onClick={testSignal} disabled={busy} style={{padding:'5px 12px',borderRadius:9,border:`1px solid rgba(0,212,255,.3)`,background:'rgba(0,212,255,.08)',color:CYN,fontSize:10,fontWeight:800,cursor:busy?'not-allowed':'pointer',opacity:busy?.6:1}}>⚡ Test Signal</button>:undefined}>
+          {openTrades.length===0?(
             <div>
-              {/* Empty state with market context */}
               <div style={{textAlign:'center',padding:'16px 0 10px'}}>
                 <div style={{fontSize:28,marginBottom:8}}>👀</div>
                 <div style={{fontSize:13,color:'#cbd5e0',fontWeight:700,marginBottom:4}}>No Open Positions</div>
                 <div style={{fontSize:11,color:'#64748b',marginBottom:12,lineHeight:1.5}}>
                   {running
-                    ? 'Waiting for a whale to swap on Solana — can take minutes to hours'
+                    ? 'Waiting for a whale BUY signal — auto-opens at 5% of portfolio · auto-closes at 4h or -30%'
                     : 'Start the bot above to begin watching for whale swaps'}
                 </div>
               </div>
-
-              {/* Market Context Box */}
               <div style={{background:'rgba(212,175,55,0.03)',border:`1px solid rgba(212,175,55,0.15)`,borderRadius:12,padding:14}}>
                 <div style={{fontSize:9,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase' as const,color:'rgba(212,175,55,.65)',marginBottom:10}}>📊 Market Context</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
@@ -616,50 +613,64 @@ export default function ShreemBrzeePerformance(){
                     </div>
                   ))}
                 </div>
-
-                {/* Signal health indicator */}
-                <div style={{padding:'10px 12px',borderRadius:10,
-                  background:signals.length>0?'rgba(16,185,129,.05)':'rgba(239,68,68,.05)',
-                  border:`1px solid ${signals.length>0?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)'}`,
-                  fontSize:11,lineHeight:1.5,
-                  color:signals.length>0?'rgba(16,185,129,.85)':'rgba(239,68,68,.8)'}}>
-                  {signals.length>0
-                    ? `✅ Helius is delivering signals. Last whale swap: ${timeAgo(signals[0]?.created_at)} ago by ${signals[0]?.label}. Positions open when a BUY triggers.`
-                    : `⚠️ No whale swaps detected yet. Either no whales have traded recently, or Helius credits need restoring. Use ⚡ Test Signal below to verify the full pipeline works.`}
-                </div>
-
-                {!running&&signals.length===0&&(
-                  <div style={{marginTop:8,padding:'10px 12px',borderRadius:10,background:'rgba(212,175,55,.05)',border:'1px solid rgba(212,175,55,.2)',fontSize:11,color:'rgba(212,175,55,.8)',lineHeight:1.5}}>
-                    💡 To verify the bot works without waiting for whale activity, start the bot and tap ⚡ Test Signal in the Signal Feed card below.
-                  </div>
-                )}
               </div>
             </div>
-          ):openPos.map((p:any)=>{
-            const livePrice=livePrices[p.mint];
-            const entrySOL=p.entrySOL||p.entry_sol||0;
-            const pnl=livePrice&&p.entryPrice?(livePrice-p.entryPrice)/p.entryPrice*100:null;
+          ):openTrades.map((t:any)=>{
+            const entry=Number(t.entry_price)||0;
+            const amt=Number(t.amount_sol)||0;
+            const cur=livePosPrices[t.mint];
+            const pnlPct=entry>0&&cur?((cur-entry)/entry)*100:null;
+            const pnlSol=pnlPct!==null?amt*(pnlPct/100):null;
+            const openedMs=new Date(t.opened_at||t.created_at).getTime();
+            const ageMin=Math.max(0,Math.floor((Date.now()-openedMs)/60000));
+            const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
+            const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
             return(
-              <div key={p.mint} style={{...rowStyle,background:'rgba(16,185,129,.03)',borderRadius:12,padding:'12px 14px',border:`1px solid rgba(16,185,129,.2)`,marginBottom:8}}>
-                <div style={{width:32,height:32,borderRadius:9,background:'rgba(16,185,129,.12)',color:GRN,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>↑</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                    <span style={{fontSize:14,fontWeight:900,color:G}}>{p.symbol||'?'}</span>
-                    <span style={{fontSize:9,fontWeight:800,letterSpacing:'.2em',color:'rgba(16,185,129,.8)',animation:'blink 2s infinite'}}>● LIVE</span>
+              <div key={t.id} style={{background:'rgba(16,185,129,.03)',borderRadius:14,padding:'14px',border:`1px solid rgba(16,185,129,.22)`,marginBottom:10}}>
+                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10,marginBottom:10}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3,flexWrap:'wrap'}}>
+                      <span style={{fontSize:15,fontWeight:900,color:G}}>{t.symbol||t.mint?.slice(0,6)||'?'}</span>
+                      <span style={{fontSize:9,fontWeight:800,letterSpacing:'.2em',color:'rgba(16,185,129,.85)',animation:'blink 2s infinite'}}>● OPEN</span>
+                      <span style={{fontSize:9,color:'#64748b'}}>{ageStr}</span>
+                    </div>
+                    <div style={{fontSize:10,color:'#94a3b8'}}>via <span style={{color:G,fontWeight:700}}>{t.label||'whale'}</span></div>
+                    <div style={{fontSize:9,color:'#64748b',fontFamily:'monospace',marginTop:2}}>{t.mint?.slice(0,8)}…{t.mint?.slice(-4)}</div>
                   </div>
-                  <div style={{fontSize:10,color:'#64748b'}}>via {p.label} · entry {entrySOL.toFixed(4)} SOL</div>
-                  {livePrice&&<div style={{fontSize:11,color:'#94a3b8',marginTop:3}}>Current: ${livePrice.toFixed(6)}</div>}
-                </div>
-                <div style={{textAlign:'right',flexShrink:0}}>
-                  <div style={{fontSize:14,fontWeight:900,color:pnl!==null?(pnl>=0?GRN:RED):'#64748b'}}>
-                    {pnl!==null?`${pnl>=0?'+':''}${pnl.toFixed(1)}%`:'—'}
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div style={{fontSize:18,fontWeight:900,color:pnlColor,letterSpacing:'-.02em'}}>
+                      {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
+                    </div>
+                    <div style={{fontSize:11,fontWeight:700,color:pnlColor,marginTop:2}}>
+                      {pnlSol!==null?`${pnlSol>=0?'+':''}${pnlSol.toFixed(4)} SOL`:''}
+                    </div>
                   </div>
-                  <div style={{fontSize:11,color:'#64748b',marginTop:2}}>€{toE(entrySOL)}</div>
                 </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,marginBottom:10}}>
+                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
+                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Size</div>
+                    <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>{amt.toFixed(4)}</div>
+                    <div style={{fontSize:9,color:'#64748b'}}>SOL</div>
+                  </div>
+                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
+                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Entry</div>
+                    <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>${entry>0?entry.toFixed(entry<0.01?8:6):'—'}</div>
+                  </div>
+                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
+                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Now</div>
+                    <div style={{fontSize:12,fontWeight:800,color:cur?'#fff':'#64748b'}}>{cur?`$${cur.toFixed(cur<0.01?8:6)}`:'…'}</div>
+                  </div>
+                </div>
+                <button onClick={()=>closePosition(t,'manual')} style={{
+                  width:'100%',padding:'10px',borderRadius:10,
+                  border:'1px solid rgba(239,68,68,.5)',background:'rgba(239,68,68,.15)',
+                  color:RED,fontSize:11,fontWeight:900,letterSpacing:'.15em',cursor:'pointer',
+                }}>✕ CLOSE POSITION</button>
               </div>
             );
           })}
         </Card>
+
 
         {/* WALLET */}
         <Card title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{fontSize:9,color:GRN,fontWeight:700}}>🔒 Public only</span>}>
