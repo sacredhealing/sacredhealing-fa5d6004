@@ -665,7 +665,8 @@ export default function ShreemBrzeePerformance(){
                 <div style={{fontSize:9,color:'#64748b',padding:'6px 8px 2px',lineHeight:1.4}}>Closes every open position at current price and books PnL into balance + W/L counter.</div>
               </div>}
             </>}
-          </div>}
+          </div>}>
+
           {openTrades.length===0?(
             <div>
               <div style={{textAlign:'center',padding:'16px 0 10px'}}>
