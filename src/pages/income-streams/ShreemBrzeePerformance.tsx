@@ -483,7 +483,7 @@ export default function ShreemBrzeePerformance(){
             {i:'💰',v:`€${toE(balSol)}`,l:'Balance',s:`${balSol.toFixed(3)} SOL`,c:G},
             {i:'📈',v:`${pnlSol>=0?'+':''}€${toE(pnlSol)}`,l:'P&L',s:`${pnlSol>=0?'+':''}${pnlPct}%`,c:pnlSol>=0?GRN:RED},
             {i:'🎯',v:`${session?.wins||0}/${session?.losses||0}`,l:'Win/Loss',s:`${session?.wins&&(session.wins+session.losses)>0?Math.round(session.wins/(session.wins+session.losses)*100):0}% win rate`,c:'#fff'},
-            {i:'📂',v:String(openPos.length),l:'Positions',s:running?'live now':'start bot',c:openPos.length>0?GRN:CYN},
+            {i:'📂',v:String(openTrades.length),l:'Positions',s:running?'live now':'start bot',c:openTrades.length>0?GRN:CYN},
           ].map(s=>(
             <div key={s.l} style={{background:'rgba(255,255,255,0.02)',border:`1px solid rgba(212,175,55,0.2)`,borderRadius:16,backdropFilter:'blur(40px)',boxShadow:'0 0 20px rgba(212,175,55,0.05)',padding:'14px 12px',textAlign:'center'}}>
               <div style={{fontSize:20,marginBottom:5}}>{s.i}</div>
