@@ -320,22 +320,38 @@ export default function ShreemBrzeePerformance(){
     return()=>{supabase.removeChannel(ch);};
   },[loadOpenTrades]);
 
-  // Fetch live token price from Jupiter (tries v6 then v2 fallback)
+  // Fetch live token price — DexScreener primary, Jupiter fallback
   const fetchJupPrice=useCallback(async(mint:string):Promise<number>=>{
-    const urls=[
-      `https://price.jup.ag/v6/price?ids=${mint}`,
-      `https://api.jup.ag/price/v2?ids=${mint}`,
-    ];
-    for(const u of urls){
-      try{
-        const r=await fetch(u);
-        if(!r.ok)continue;
+    // 1) DexScreener
+    try{
+      const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+      if(r.ok){
+        const d=await r.json();
+        const p=d?.pairs?.[0]?.priceUsd;
+        const n=parseFloat(p);
+        if(n>0)return n;
+      }
+    }catch{}
+    // 2) Jupiter v6
+    try{
+      const r=await fetch(`https://price.jup.ag/v6/price?ids=${mint}`);
+      if(r.ok){
         const d=await r.json();
         const p=d?.data?.[mint]?.price;
         const n=parseFloat(p);
         if(n>0)return n;
-      }catch{}
-    }
+      }
+    }catch{}
+    // 3) Jupiter v2
+    try{
+      const r=await fetch(`https://api.jup.ag/price/v2?ids=${mint}`);
+      if(r.ok){
+        const d=await r.json();
+        const p=d?.data?.[mint]?.price;
+        const n=parseFloat(p);
+        if(n>0)return n;
+      }
+    }catch{}
     return 0;
   },[]);
 
