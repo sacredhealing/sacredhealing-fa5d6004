@@ -45,7 +45,7 @@ const SL_MULT = parseFloat(process.env.SL_MULTIPLIER || '0.5'); // 50% stop loss
 const TP_CHECK_MS = parseInt(process.env.TP_CHECK_INTERVAL_MS || '30000'); // check every 30s
 const MAX_HOLD_MIN = parseInt(process.env.MAX_POSITION_HOLD_MINUTES || '240'); // 4h force exit
 const MAX_POSITIONS = parseInt(process.env.MAX_OPEN_POSITIONS || '5'); // max 5 at once
-const MIN_WHALE_SOL = parseFloat(process.env.MIN_WHALE_SOL || '0.1'); // skip tiny trades
+const MIN_WHALE_SOL = parseFloat(process.env.MIN_WHALE_SOL || '0.01'); // skip tiny trades
 const VIP_MULT = parseFloat(process.env.VIP_MULTIPLIER || '2.0'); // VIP 2× risk
 // VIP whales — boosted risk + priority fee multiplier
 const VIP_WHALES = new Set([
@@ -759,8 +759,11 @@ function parseTradeFromTx(tx, walletAddress, sig) {
         return null;
     const pre = tx.meta.preTokenBalances || [];
     const post = tx.meta.postTokenBalances || [];
-    const preSOL = tx.meta.preBalances?.[0] ?? 0;
-    const postSOL = tx.meta.postBalances?.[0] ?? 0;
+    // Find whale wallet index for correct SOL delta
+    const accountKeys = (tx.transaction?.message?.accountKeys || []).map(k => k.pubkey || k);
+    const whaleIdx = accountKeys.indexOf(walletAddress);
+    const preSOL = tx.meta.preBalances?.[whaleIdx >= 0 ? whaleIdx : 0] ?? 0;
+    const postSOL = tx.meta.postBalances?.[whaleIdx >= 0 ? whaleIdx : 0] ?? 0;
     const solDelta = (postSOL - preSOL) / 1e9;
     const balByMint = {};
     for (const b of pre) {
@@ -884,7 +887,9 @@ function startEnhancedWebSocket() {
         const latency = Date.now() - t0;
         console.log(`[ws] Signal parsed in ${latency}ms — ${trade.action} ${trade.mint.slice(0, 8)} by ${trade.label}`);
         // Save signal to DB for UI display (async, non-blocking)
-        edgePost('/signal', { signal: trade }).catch(() => { });
+        // Write signal directly to Supabase REST
+        const signalRow = { sig: trade.sig, wallet: trade.wallet, label: trade.label, action: trade.action, mint: trade.mint, symbol: trade.symbol || null, amount_sol: trade.amount_sol, token_amount: trade.token_amount, is_pump_fun: trade.is_pump_fun, block_time: Math.floor(Date.now() / 1000), created_at: new Date().toISOString() };
+        fetch(`${SUPA_URL}/rest/v1/shreem_brzee_signals`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}`, 'apikey': ANON_KEY, 'Prefer': 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify(signalRow) }).catch(() => {});
         // Register with pre-warmer
         registerMintActivity(trade.mint);
         // Process immediately — this is the hot path
@@ -907,7 +912,7 @@ function startEnhancedWebSocket() {
 }
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-    console.log('🔱 SHREEM BRZEE BOT v2.3 — Hot State + Smart Filters');
+    console.log('🔱 SHREEM BRZEE BOT v2.7 — Signal Write Fix + Lower Filter');
     console.log(`   Mode:    ${BOT_MODE.toUpperCase()}`);
     console.log(`   Risk:    ${(RISK_PCT * 100).toFixed(0)}% per trade`);
     console.log(`   Slippage: ${MAX_SLIP_BPS}bps max`);
@@ -983,7 +988,7 @@ async function main() {
             ` | P&L: ${session.totalPnl >= 0 ? '+' : ''}${session.totalPnl.toFixed(4)} SOL` +
             ` | W/L: ${session.wins}/${session.losses} | open: ${open}`);
     }, 60000);
-    console.log(`✅ v2.3 LIVE | Enhanced WS 50-100ms | Hot RAM state | Smart filters | portfolio: ${session.portfolio.toFixed(4)} SOL`);
+    console.log(`✅ v2.7 LIVE | Signal Fix | Lower Filter | Enhanced WS | portfolio: ${session.portfolio.toFixed(4)} SOL`);
     process.on('SIGTERM', async () => {
         console.log('[shutdown] saving session…');
         if (tpslTimer)
