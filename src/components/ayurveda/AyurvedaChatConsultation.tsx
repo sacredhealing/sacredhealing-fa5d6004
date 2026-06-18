@@ -1,4 +1,3 @@
-// AyurvedaChatConsultation v6.0
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,17 +119,17 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
 
               // Headings
               if (line.startsWith('### ')) return (
-                <h3 key={li} style={{ color: gold, fontWeight: 800, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 12, marginBottom: 6, textShadow: headingGlowSoft }}>
+                <h3 key={li} style={{ color: gold, fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 14, marginBottom: 8, textShadow: headingGlowSoft, fontFamily: "'Cinzel', serif" }}>
                   {renderInline(line.slice(4))}
                 </h3>
               );
               if (line.startsWith('## ')) return (
-                <h2 key={li} style={{ color: gold, fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', marginTop: 14, marginBottom: 6, textShadow: headingGlow }}>
+                <h2 key={li} style={{ color: gold, fontWeight: 700, fontSize: 20, letterSpacing: '0.02em', marginTop: 16, marginBottom: 8, textShadow: headingGlow, fontFamily: "'Cinzel', serif" }}>
                   {renderInline(line.slice(3))}
                 </h2>
               );
               if (line.startsWith('# ')) return (
-                <h1 key={li} style={{ color: gold, fontWeight: 900, fontSize: 17, letterSpacing: '-0.01em', marginTop: 14, marginBottom: 6, textShadow: headingGlow }}>
+                <h1 key={li} style={{ color: gold, fontWeight: 700, fontSize: 24, letterSpacing: '0.02em', marginTop: 16, marginBottom: 8, textShadow: headingGlow, fontFamily: "'Cinzel', serif" }}>
                   {renderInline(line.slice(2))}
                 </h1>
               );
@@ -329,16 +328,37 @@ const STYLES = `
   .sqi-mrow { display: flex; flex-direction: column; }
   .sqi-mrow.user { align-items: flex-end; }
   .sqi-mrow.agent { align-items: flex-start; }
+  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
+
+  @keyframes agastyaShimmer {
+    0%   { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+  @keyframes agastyaGlow {
+    0%,100% { text-shadow: 0 0 10px rgba(212,175,55,0.3), 0 0 22px rgba(212,175,55,0.15); }
+    50%      { text-shadow: 0 0 20px rgba(212,175,55,0.6), 0 0 40px rgba(212,175,55,0.3); }
+  }
+
   .sqi-mrole {
     display: flex; align-items: center; gap: 10px;
-    font-size: 9px; font-weight: 900; letter-spacing: 0.35em;
-    text-transform: uppercase; color: #D4AF37;
-    text-shadow: 0 0 12px rgba(212,175,55,0.4);
-    margin-bottom: 10px; padding: 0 2px;
+    margin-bottom: 14px; padding: 0 2px;
+  }
+  .sqi-mrole-name {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: agastyaShimmer 5s linear infinite;
   }
   .sqi-mrole::after {
     content: ''; flex: 1; height: 1px;
-    background: linear-gradient(90deg, rgba(212,175,55,0.3) 0%, transparent 100%);
+    background: linear-gradient(90deg, rgba(212,175,55,0.35) 0%, transparent 100%);
   }
   .sqi-bbl {
     padding: 14px 20px; border-radius: 20px;
@@ -356,6 +376,10 @@ const STYLES = `
     border-bottom: 1px solid rgba(255,255,255,0.05);
     border-left: none; border-right: none;
     padding: 20px 16px 14px;
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.9;
+    color: rgba(225,210,185,0.92);
   }
   .sqi-cpbtn {
     margin-top: 4px; background: transparent; border: none; cursor: pointer;
@@ -867,7 +891,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`sqi-mrow ${msg.role === 'user' ? 'user' : 'agent'}`}>
                 <div className="sqi-mrole">
-                  {msg.role === 'user' ? 'You' : '◈ Agastya Muni'}
+                  {msg.role === 'user'
+                    ? <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>You</span>
+                    : <><span style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 600, color: '#D4AF37', flexShrink: 0 }}>◈</span><span className="sqi-mrole-name">Agastya Muni</span></>
+                  }
                 </div>
                 <div className={`sqi-bbl ${msg.role === 'user' ? 'user' : 'agent'}`}>
                   {msg.role === 'user'
