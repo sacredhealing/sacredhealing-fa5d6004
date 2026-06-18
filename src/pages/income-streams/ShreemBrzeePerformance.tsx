@@ -418,8 +418,7 @@ export default function ShreemBrzeePerformance(){
             .select('id').eq('status','open').eq('mint',sig.mint).limit(1);
           if(existing&&existing.length)return;
           // Fetch token price (USD) from Jupiter
-          let entryPrice=0;
-          try{const r=await fetch(`https://api.jup.ag/price/v2?ids=${sig.mint}`);const d=await r.json();entryPrice=parseFloat(d?.data?.[sig.mint]?.price||'0');}catch{}
+          const entryPrice=await fetchJupPrice(sig.mint);
           const amt=portfolio*0.05;
           await(supabase as any).from('shreem_brzee_paper_trades').insert({
             session_id:'default',sig:sig.sig+'_open',mint:sig.mint,symbol:sig.symbol,
