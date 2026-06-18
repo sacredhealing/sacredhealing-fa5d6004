@@ -386,7 +386,7 @@ export default function ShreemBrzeePerformance(){
       }
       loadAll();loadOpenTrades();
     }catch(e:any){flash(`Close failed: ${e.message?.slice(0,60)}`,'err');}
-  },[livePosPrices,loadAll,loadOpenTrades]);
+  },[livePosPrices,loadAll,loadOpenTrades,fetchJupPrice]);
 
   // Auto-close: 4h timeout OR -30% stop loss
   useEffect(()=>{
