@@ -174,6 +174,29 @@ serve(async (req) => {
     return jsonResp({ ok: true, sig, action: "SELL", version: "v3" });
   }
 
+  // POST /signal — manual insert of a single signal row
+  if (req.method === "POST" && path.endsWith("/signal")) {
+    let body: any;
+    try { body = await req.json(); } catch { return jsonResp({ error: "bad json" }, 400); }
+    const signal = body?.signal;
+    if (!signal || !signal.sig) return jsonResp({ error: "missing signal.sig" }, 400);
+    const row = {
+      sig:          signal.sig,
+      wallet:       signal.wallet,
+      label:        signal.label ?? (signal.wallet ? WHALE_WALLETS[signal.wallet] ?? null : null),
+      action:       signal.action,
+      mint:         signal.mint,
+      symbol:       signal.symbol ?? null,
+      amount_sol:   signal.amount_sol ?? signal.amountSol ?? null,
+      token_amount: signal.token_amount ?? signal.tokenAmount ?? null,
+      is_pump_fun:  signal.is_pump_fun ?? signal.isPumpFun ?? false,
+      block_time:   signal.block_time ?? signal.blockTime ?? Math.floor(Date.now() / 1000),
+    };
+    const { error } = await sb.from("shreem_brzee_signals").upsert(row, { onConflict: "sig" });
+    if (error) return jsonResp({ error: error.message, version: "v3" }, 500);
+    return jsonResp({ ok: true, sig: row.sig, version: "v3" });
+  }
+
   // POST /paper
   if (req.method === "POST" && path.endsWith("/paper")) {
     let body: any;
