@@ -425,8 +425,17 @@ export default function ShreemBrzeePerformance(){
 
   const addWhaleToTracking=async(kol:{name:string,addr:string})=>{
     flash(`Adding ${kol.name}…`,'info');
-    await(supabase as any).from('tracked_whales').upsert({address:kol.addr,label:kol.name,source:'kolexplorer',added_at:new Date().toISOString()},{onConflict:'address'});
-    flash(`✅ ${kol.name} added! Tell Lovable: "Add ${kol.addr} labeled ${kol.name} to the Helius webhook whale list"`,'ok');
+    try{
+      const{data:{user}}=await supabase.auth.getUser();
+      const{error}=await(supabase as any).from('tracked_whales').upsert({
+        address:kol.addr,label:kol.name,source:'kolexplorer',
+        added_by:user?.id||null,added_at:new Date().toISOString(),
+      },{onConflict:'address'});
+      if(error)throw error;
+      flash(`✅ ${kol.name} added to tracked whales`,'ok');
+    }catch(e:any){
+      flash(`Add failed: ${e?.message?.slice(0,80)||'unknown error'}`,'err');
+    }
   };
 
   return(
@@ -758,10 +767,10 @@ export default function ShreemBrzeePerformance(){
         </Card>
 
         {/* WHALE PERFORMANCE */}
-        <Card title="🐋 Whale Performance" right={
+        <Card title={`🐋 Whale Performance · ${period.toUpperCase()}`} right={
           <div style={{display:'flex',gap:4}}>
             {(['daily','weekly','monthly','yearly'] as const).map(p=>(
-              <button key={p} onClick={e=>{e.stopPropagation();setPeriod(p);}} style={{padding:'4px 9px',borderRadius:20,cursor:'pointer',border:`1px solid ${period===p?'rgba(212,175,55,.4)':BDR}`,background:period===p?'rgba(212,175,55,.12)':'transparent',color:period===p?G:'#64748b',fontSize:9,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase' as const}}>
+              <button key={p} onClick={e=>{e.stopPropagation();setPeriod(p);setTimeout(()=>loadWhaleSigs(),0);}} style={{padding:'4px 9px',borderRadius:20,cursor:'pointer',border:`1px solid ${period===p?'rgba(212,175,55,.4)':BDR}`,background:period===p?'rgba(212,175,55,.12)':'transparent',color:period===p?G:'#64748b',fontSize:9,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase' as const}}>
                 {p==='daily'?'D':p==='weekly'?'W':p==='monthly'?'M':'Y'}
               </button>
             ))}
