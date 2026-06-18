@@ -139,10 +139,10 @@ export default function ShreemBrzeePerformance(){
     setTrades((data||[]).filter((t:any)=>!t.sig?.startsWith('TEST_')&&!t.sig?.startsWith('DIAG_')&&t.symbol!=='TEST'));
   },[]);
   const loadSignals=useCallback(async()=>{
-    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(100);
-    // Filter out test signals - only show real whale signals
-    const real=(data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_'));
-    setSignals(real);
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('*').order('created_at',{ascending:false}).limit(200);
+    // Filter out test signals AND signals from removed/dead wallets
+    const real=(data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')&&isValidWhaleSig(s));
+    setSignals(real.slice(0,100));
   },[]);
   const loadWhaleSigs=useCallback(async()=>{
     const now=new Date(),since=new Date(now);
@@ -150,9 +150,9 @@ export default function ShreemBrzeePerformance(){
     if(period==='weekly')since.setDate(now.getDate()-7);
     if(period==='monthly')since.setMonth(now.getMonth()-1);
     if(period==='yearly')since.setFullYear(now.getFullYear()-1);
-    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,action,amount_sol,created_at,sig').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
-    // Filter out test/diagnostic signals from whale performance
-    setWhaleSigs((data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')));
+    const{data}=await(supabase as any).from('shreem_brzee_signals').select('label,wallet,action,amount_sol,created_at,sig').gte('created_at',since.toISOString()).order('created_at',{ascending:false});
+    // Filter out test/diagnostic signals + dead wallets
+    setWhaleSigs((data||[]).filter((s:any)=>!s.sig?.startsWith('TEST_')&&!s.sig?.startsWith('DIAG_')&&isValidWhaleSig(s)));
   },[period]);
   const loadAll=useCallback(()=>{loadSession();loadTrades();loadSignals();loadWhaleSigs();},[loadSession,loadTrades,loadSignals,loadWhaleSigs]);
 
