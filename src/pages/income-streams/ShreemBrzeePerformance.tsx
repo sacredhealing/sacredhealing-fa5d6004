@@ -785,7 +785,7 @@ export default function ShreemBrzeePerformance(){
           {whaleSigs.length===0&&<div style={{padding:'12px',textAlign:'center',fontSize:11,color:'#64748b'}}>No whale swaps detected this period · signals appear in real-time when whales trade</div>}
         </Card>
 
-        <Card className="glass-card" style={{border:'1px solid rgba(212,175,55,0.25)',marginTop:16,borderRadius:24}}>
+        <div className="glass-card" style={{border:'1px solid rgba(212,175,55,0.25)',marginTop:16,borderRadius:24}}>
           <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.05)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
             <span style={{fontSize:10,letterSpacing:'0.15em',fontWeight:800,color:'#D4AF37'}}>🔭 WHALE SCANNER · TOP KOL TRADERS</span>
             <div style={{display:'flex',gap:6}}>
