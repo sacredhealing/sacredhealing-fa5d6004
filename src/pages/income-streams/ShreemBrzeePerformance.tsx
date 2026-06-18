@@ -748,124 +748,6 @@ export default function ShreemBrzeePerformance() {
           ))}
         </div>
 
-        {/* Bot controls */}
-        <Section title="💰 Paper Balance (SOL)">
-          <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
-            {["0.5","1","2","5","10"].map(v => (
-              <button key={v} onClick={() => setBalInput(v)} style={{ padding:"7px 0", borderRadius:10, cursor:"pointer", flex:"1 1 0", minWidth:44, border:`1px solid ${balInput===v?"rgba(212,175,55,.4)":GOLD20}`, background:balInput===v?"rgba(212,175,55,.12)":"transparent", color:balInput===v?GOLD:"#64748b", fontSize:13, fontWeight:700 }}>{v}</button>
-            ))}
-          </div>
-          <input type="number" value={balInput} onChange={e => setBalInput(e.target.value)} min="0.1" step="0.1" style={{ ...inputStyle(GOLD20), marginBottom:12, fontSize:16 }} />
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <button onClick={startBot} disabled={loading} style={{ padding:14, borderRadius:13, border:"none", background:isRunning?"linear-gradient(135deg,#D4AF37,#f0c84a)":"linear-gradient(135deg,#7a5e10,#9a7018)", color:isRunning?"#000":"#fff", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading?"not-allowed":"pointer", animation:isRunning?"goldPulse 2s infinite":"none" }}>
-              {loading&&startingBot ? "⚙" : isRunning ? "● RUNNING" : "▶ START"}
-            </button>
-            <button onClick={stopBot} disabled={loading||!isRunning} style={{ padding:14, borderRadius:13, border:`1px solid ${isRunning?"rgba(239,68,68,.6)":"rgba(239,68,68,.2)"}`, background:isRunning?"rgba(239,68,68,.18)":"rgba(239,68,68,.04)", color:isRunning?RED:"rgba(239,68,68,.35)", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading||!isRunning?"not-allowed":"pointer" }}>
-              {loading&&stoppingBot ? "⚙" : "⏹ STOP"}
-            </button>
-          </div>
-          {isRunning && (
-            <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-              <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
-              Bot running · mirrors whale BUY & SELL · 20 wallets on Solana mainnet
-            </div>
-          )}
-        </Section>
-
-        {/* Open Positions */}
-        {/* Compounding Engine stats */}
-        {(() => {
-          const sizing = calculatePositionSize(
-            portfolio,
-            session?.wins  || 0,
-            session?.losses|| 0,
-            openPos,
-          );
-          const openExposure = openPos.reduce((s: number, p: any) => s + (Number(p.amount_sol)||0), 0);
-          const maxExposure  = portfolio * 0.50;
-          const exposurePct  = maxExposure > 0 ? Math.min(100, openExposure / maxExposure * 100) : 0;
-          const totalTrades  = (session?.wins||0) + (session?.losses||0);
-          const wr           = totalTrades >= 5 ? Math.round((session?.wins||0)/totalTrades*100) : null;
-          return (
-            <div style={{ background:"rgba(212,175,55,0.04)", border:"1px solid rgba(212,175,55,0.2)", borderRadius:14, padding:14 }}>
-              <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:"rgba(212,175,55,.65)", marginBottom:12 }}>⚛️ Compounding Engine</div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
-                {[
-                  { l:"Next Trade Size", v:sizing.blocked?"BLOCKED":`${sizing.size.toFixed(4)} SOL`, s:sizing.blocked?sizing.reason:`${(sizing.pct*100).toFixed(1)}% of balance`, c:sizing.blocked?RED:GOLD },
-                  { l:"Live Win Rate",   v:wr !== null ? `${wr}%` : `—`, s:totalTrades>=5?`from ${totalTrades} trades`:"need 5+ trades", c:wr !== null && wr >= 55 ? GREEN : wr !== null && wr < 45 ? RED : "#fff" },
-                  { l:"Open Exposure",   v:`${openExposure.toFixed(3)} SOL`, s:`${exposurePct.toFixed(0)}% of 50% cap`, c:exposurePct > 80 ? RED : exposurePct > 60 ? "#f59e0b" : GREEN },
-                  { l:"Exposure Room",   v:`${Math.max(0, maxExposure-openExposure).toFixed(3)} SOL`, s:`${Math.max(0,100-exposurePct).toFixed(0)}% remaining`, c:GOLD },
-                ].map(card => (
-                  <div key={card.l} style={{ background:"rgba(0,0,0,.2)", borderRadius:10, padding:"10px 12px", border:"1px solid rgba(212,175,55,0.08)" }}>
-                    <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:4 }}>{card.l}</div>
-                    <div style={{ fontSize:13, fontWeight:700, color:card.c }}>{card.v}</div>
-                    <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{card.s}</div>
-                  </div>
-                ))}
-              </div>
-              {/* Exposure bar */}
-              <div style={{ background:"rgba(255,255,255,.04)", borderRadius:6, height:6, overflow:"hidden" }}>
-                <div style={{ width:`${exposurePct}%`, height:6, borderRadius:6, background:exposurePct>80?RED:exposurePct>60?"#f59e0b":GREEN, transition:"width .5s ease" }} />
-              </div>
-              <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
-                <span style={{ fontSize:9, color:"#64748b" }}>0%</span>
-                <span style={{ fontSize:9, color:"#f59e0b" }}>50% cap</span>
-              </div>
-            </div>
-          );
-        })()}
-
-
-        {/* ── LIVE MODE PANEL ────────────────────────────────────────────── */}
-        <div style={{ background:"rgba(239,68,68,0.04)", border:`1px solid ${liveMode?"rgba(239,68,68,0.5)":"rgba(239,68,68,0.15)"}`, borderRadius:14, padding:14, boxShadow:liveMode?"0 0 20px rgba(239,68,68,0.15)":"none" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:liveMode||liveConfirm?12:0 }}>
-            <div>
-              <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:liveMode?"rgba(239,68,68,.8)":"rgba(255,255,255,.3)" }}>
-                {liveMode ? "🔴 LIVE TRADING ACTIVE" : "📋 Paper Mode"}
-              </div>
-              {!liveMode && <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>Real SOL copy trades — enable when ready</div>}
-            </div>
-            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading||!isRunning} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading||!isRunning?"not-allowed":"pointer", letterSpacing:".06em" }}>
-              {liveLoading ? "⚙" : liveMode ? "⏹ STOP LIVE" : "▶ GO LIVE"}
-            </button>
-          </div>
-          {/* Bot wallet info */}
-          {botWallet && (
-            <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:10, background:"rgba(0,0,0,.3)", border:"1px solid rgba(255,255,255,.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div>
-                <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:2 }}>Bot Wallet</div>
-                <div style={{ fontSize:11, fontFamily:"monospace", color:"#cbd5e0" }}>{botWallet.wallet.slice(0,8)}…{botWallet.wallet.slice(-6)}</div>
-              </div>
-              <div style={{ textAlign:"right" }}>
-                <div style={{ fontSize:15, fontWeight:900, color:GOLD }}>{botWallet.balance_sol.toFixed(3)} SOL</div>
-                <div style={{ fontSize:10, color:"#64748b" }}>€{(botWallet.balance_sol*solUsd*solEur).toFixed(2)}</div>
-              </div>
-            </div>
-          )}
-          {/* Confirmation dialog */}
-          {liveConfirm && !liveMode && (
-            <div style={{ padding:"14px", borderRadius:12, background:"rgba(239,68,68,.06)", border:"1px solid rgba(239,68,68,.3)" }}>
-              <div style={{ fontSize:13, fontWeight:800, color:"#ef4444", marginBottom:8 }}>⚠️ Going live means REAL SOL</div>
-              <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", marginBottom:12, lineHeight:1.5 }}>
-                The bot will execute real Solana swaps using the bot wallet. Every whale BUY signal triggers a real Jupiter swap. Max {(50).toFixed(0)}% of bot wallet can be in open positions at once.
-              </div>
-              {!botWallet && (
-                <div style={{ padding:"10px 12px", borderRadius:10, background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", marginBottom:12, fontSize:11, color:"#ef4444" }}>
-                  ❌ Bot wallet not configured. Add SHREEM_BOT_KEYPAIR to Supabase Edge Function secrets first.
-                </div>
-              )}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-                <button onClick={() => setLiveConfirm(false)} style={{ padding:"10px", borderRadius:10, border:"1px solid rgba(255,255,255,.1)", background:"transparent", color:"#64748b", fontSize:12, fontWeight:700, cursor:"pointer" }}>Cancel</button>
-                <button onClick={() => toggleLiveMode(true)} disabled={!botWallet||liveLoading} style={{ padding:"10px", borderRadius:10, border:"none", background:botWallet?"#ef4444":"rgba(239,68,68,.3)", color:"#fff", fontSize:12, fontWeight:900, cursor:botWallet?"pointer":"not-allowed" }}>
-                  {liveLoading ? "Switching…" : "CONFIRM GO LIVE"}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <Diagnostics running={isRunning} signalCount={signals.length} edgeOk={edgeOk} />
-
         <Section
           title="📂 Open Positions"
           badge={openPos.length>0?<span style={{ marginLeft:6, padding:"2px 8px", borderRadius:20, background:"rgba(16,185,129,.15)", color:GREEN, fontSize:10, fontWeight:800 }}>{openPos.length} live</span>:undefined}
@@ -988,6 +870,124 @@ export default function ShreemBrzeePerformance() {
         </Section>
 
         {/* My Wallet */}
+        {/* Bot controls */}
+        <Section title="💰 Paper Balance (SOL)">
+          <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
+            {["0.5","1","2","5","10"].map(v => (
+              <button key={v} onClick={() => setBalInput(v)} style={{ padding:"7px 0", borderRadius:10, cursor:"pointer", flex:"1 1 0", minWidth:44, border:`1px solid ${balInput===v?"rgba(212,175,55,.4)":GOLD20}`, background:balInput===v?"rgba(212,175,55,.12)":"transparent", color:balInput===v?GOLD:"#64748b", fontSize:13, fontWeight:700 }}>{v}</button>
+            ))}
+          </div>
+          <input type="number" value={balInput} onChange={e => setBalInput(e.target.value)} min="0.1" step="0.1" style={{ ...inputStyle(GOLD20), marginBottom:12, fontSize:16 }} />
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+            <button onClick={startBot} disabled={loading} style={{ padding:14, borderRadius:13, border:"none", background:isRunning?"linear-gradient(135deg,#D4AF37,#f0c84a)":"linear-gradient(135deg,#7a5e10,#9a7018)", color:isRunning?"#000":"#fff", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading?"not-allowed":"pointer", animation:isRunning?"goldPulse 2s infinite":"none" }}>
+              {loading&&startingBot ? "⚙" : isRunning ? "● RUNNING" : "▶ START"}
+            </button>
+            <button onClick={stopBot} disabled={loading||!isRunning} style={{ padding:14, borderRadius:13, border:`1px solid ${isRunning?"rgba(239,68,68,.6)":"rgba(239,68,68,.2)"}`, background:isRunning?"rgba(239,68,68,.18)":"rgba(239,68,68,.04)", color:isRunning?RED:"rgba(239,68,68,.35)", fontSize:12, fontWeight:900, letterSpacing:".12em", cursor:loading||!isRunning?"not-allowed":"pointer" }}>
+              {loading&&stoppingBot ? "⚙" : "⏹ STOP"}
+            </button>
+          </div>
+          {isRunning && (
+            <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
+              Bot running · mirrors whale BUY & SELL · 20 wallets on Solana mainnet
+            </div>
+          )}
+        </Section>
+
+        {/* Open Positions */}
+        {/* Compounding Engine stats */}
+        {(() => {
+          const sizing = calculatePositionSize(
+            portfolio,
+            session?.wins  || 0,
+            session?.losses|| 0,
+            openPos,
+          );
+          const openExposure = openPos.reduce((s: number, p: any) => s + (Number(p.amount_sol)||0), 0);
+          const maxExposure  = portfolio * 0.50;
+          const exposurePct  = maxExposure > 0 ? Math.min(100, openExposure / maxExposure * 100) : 0;
+          const totalTrades  = (session?.wins||0) + (session?.losses||0);
+          const wr           = totalTrades >= 5 ? Math.round((session?.wins||0)/totalTrades*100) : null;
+          return (
+            <div style={{ background:"rgba(212,175,55,0.04)", border:"1px solid rgba(212,175,55,0.2)", borderRadius:14, padding:14 }}>
+              <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:"rgba(212,175,55,.65)", marginBottom:12 }}>⚛️ Compounding Engine</div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+                {[
+                  { l:"Next Trade Size", v:sizing.blocked?"BLOCKED":`${sizing.size.toFixed(4)} SOL`, s:sizing.blocked?sizing.reason:`${(sizing.pct*100).toFixed(1)}% of balance`, c:sizing.blocked?RED:GOLD },
+                  { l:"Live Win Rate",   v:wr !== null ? `${wr}%` : `—`, s:totalTrades>=5?`from ${totalTrades} trades`:"need 5+ trades", c:wr !== null && wr >= 55 ? GREEN : wr !== null && wr < 45 ? RED : "#fff" },
+                  { l:"Open Exposure",   v:`${openExposure.toFixed(3)} SOL`, s:`${exposurePct.toFixed(0)}% of 50% cap`, c:exposurePct > 80 ? RED : exposurePct > 60 ? "#f59e0b" : GREEN },
+                  { l:"Exposure Room",   v:`${Math.max(0, maxExposure-openExposure).toFixed(3)} SOL`, s:`${Math.max(0,100-exposurePct).toFixed(0)}% remaining`, c:GOLD },
+                ].map(card => (
+                  <div key={card.l} style={{ background:"rgba(0,0,0,.2)", borderRadius:10, padding:"10px 12px", border:"1px solid rgba(212,175,55,0.08)" }}>
+                    <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:4 }}>{card.l}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:card.c }}>{card.v}</div>
+                    <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{card.s}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Exposure bar */}
+              <div style={{ background:"rgba(255,255,255,.04)", borderRadius:6, height:6, overflow:"hidden" }}>
+                <div style={{ width:`${exposurePct}%`, height:6, borderRadius:6, background:exposurePct>80?RED:exposurePct>60?"#f59e0b":GREEN, transition:"width .5s ease" }} />
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
+                <span style={{ fontSize:9, color:"#64748b" }}>0%</span>
+                <span style={{ fontSize:9, color:"#f59e0b" }}>50% cap</span>
+              </div>
+            </div>
+          );
+        })()}
+
+
+        {/* ── LIVE MODE PANEL ────────────────────────────────────────────── */}
+        <div style={{ background:"rgba(239,68,68,0.04)", border:`1px solid ${liveMode?"rgba(239,68,68,0.5)":"rgba(239,68,68,0.15)"}`, borderRadius:14, padding:14, boxShadow:liveMode?"0 0 20px rgba(239,68,68,0.15)":"none" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:liveMode||liveConfirm?12:0 }}>
+            <div>
+              <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:liveMode?"rgba(239,68,68,.8)":"rgba(255,255,255,.3)" }}>
+                {liveMode ? "🔴 LIVE TRADING ACTIVE" : "📋 Paper Mode"}
+              </div>
+              {!liveMode && <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>Real SOL copy trades — enable when ready</div>}
+            </div>
+            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading||!isRunning} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading||!isRunning?"not-allowed":"pointer", letterSpacing:".06em" }}>
+              {liveLoading ? "⚙" : liveMode ? "⏹ STOP LIVE" : "▶ GO LIVE"}
+            </button>
+          </div>
+          {/* Bot wallet info */}
+          {botWallet && (
+            <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:10, background:"rgba(0,0,0,.3)", border:"1px solid rgba(255,255,255,.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:2 }}>Bot Wallet</div>
+                <div style={{ fontSize:11, fontFamily:"monospace", color:"#cbd5e0" }}>{botWallet.wallet.slice(0,8)}…{botWallet.wallet.slice(-6)}</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:15, fontWeight:900, color:GOLD }}>{botWallet.balance_sol.toFixed(3)} SOL</div>
+                <div style={{ fontSize:10, color:"#64748b" }}>€{(botWallet.balance_sol*solUsd*solEur).toFixed(2)}</div>
+              </div>
+            </div>
+          )}
+          {/* Confirmation dialog */}
+          {liveConfirm && !liveMode && (
+            <div style={{ padding:"14px", borderRadius:12, background:"rgba(239,68,68,.06)", border:"1px solid rgba(239,68,68,.3)" }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#ef4444", marginBottom:8 }}>⚠️ Going live means REAL SOL</div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", marginBottom:12, lineHeight:1.5 }}>
+                The bot will execute real Solana swaps using the bot wallet. Every whale BUY signal triggers a real Jupiter swap. Max {(50).toFixed(0)}% of bot wallet can be in open positions at once.
+              </div>
+              {!botWallet && (
+                <div style={{ padding:"10px 12px", borderRadius:10, background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", marginBottom:12, fontSize:11, color:"#ef4444" }}>
+                  ❌ Bot wallet not configured. Add SHREEM_BOT_KEYPAIR to Supabase Edge Function secrets first.
+                </div>
+              )}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                <button onClick={() => setLiveConfirm(false)} style={{ padding:"10px", borderRadius:10, border:"1px solid rgba(255,255,255,.1)", background:"transparent", color:"#64748b", fontSize:12, fontWeight:700, cursor:"pointer" }}>Cancel</button>
+                <button onClick={() => toggleLiveMode(true)} disabled={!botWallet||liveLoading} style={{ padding:"10px", borderRadius:10, border:"none", background:botWallet?"#ef4444":"rgba(239,68,68,.3)", color:"#fff", fontSize:12, fontWeight:900, cursor:botWallet?"pointer":"not-allowed" }}>
+                  {liveLoading ? "Switching…" : "CONFIRM GO LIVE"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Diagnostics running={isRunning} signalCount={signals.length} edgeOk={edgeOk} />
+
         <Section title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{ fontSize:9, color:GREEN, fontWeight:700 }}>🔒 Public only</span>}>
           <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
             <button onClick={connectPhantom} disabled={phantomLoading} style={{ display:"flex", alignItems:"center", gap:10, width:"100%", padding:"13px 14px", borderRadius:13, border:"1px solid rgba(139,92,246,.35)", background:"rgba(139,92,246,.08)", cursor:"pointer", textAlign:"left" }}>
