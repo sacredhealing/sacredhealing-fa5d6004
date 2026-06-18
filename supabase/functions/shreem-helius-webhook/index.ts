@@ -233,46 +233,55 @@ serve(async (req) => {
   }
 
   // POST / — Helius webhook
+  // IMPORTANT: Helius auto-disables webhooks that return non-200.
+  // Every path below must return HTTP 200, even on errors.
   if (req.method !== "POST") return jsonResp({ error: "method" }, 405);
 
-  let body: any;
-  try { body = await req.json(); } catch { return jsonResp({ error: "bad json" }, 400); }
-
-  const txs = Array.isArray(body) ? body : [body];
-  let inserted = 0, skipped = 0;
-
-  for (const tx of txs) {
-    try {
-      const sig = tx.signature;
-      if (!sig) { skipped++; continue; }
-      const wallet = findWhale(tx);
-      if (!wallet) { skipped++; continue; }
-      const swap = parseSwap(tx, wallet);
-      if (!swap) { skipped++; continue; }
-
-      const { error } = await sb.from("shreem_brzee_signals").upsert({
-        sig,
-        wallet,
-        label:        WHALE_WALLETS[wallet],
-        action:       swap.action,
-        mint:         swap.mint,
-        symbol:       swap.symbol,
-        amount_sol:   swap.amountSol,
-        token_amount: swap.tokenAmount,
-        is_pump_fun:  swap.isPumpFun,
-        block_time:   tx.timestamp || null,
-      }, { onConflict: "sig" });
-
-      if (error) { console.error("[signal]", error.message); skipped++; }
-      else {
-        inserted++;
-        console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
-      }
-    } catch (e: any) {
-      console.error("[tx]", e.message);
-      skipped++;
+  try {
+    let body: any;
+    try { body = await req.json(); } catch {
+      return jsonResp({ ok: false, error: "bad json", fallback: true });
     }
-  }
 
-  return jsonResp({ ok: true, inserted, skipped });
+    const txs = Array.isArray(body) ? body : [body];
+    let inserted = 0, skipped = 0;
+
+    for (const tx of txs) {
+      try {
+        const sig = tx.signature;
+        if (!sig) { skipped++; continue; }
+        const wallet = findWhale(tx);
+        if (!wallet) { skipped++; continue; }
+        const swap = parseSwap(tx, wallet);
+        if (!swap) { skipped++; continue; }
+
+        const { error } = await sb.from("shreem_brzee_signals").upsert({
+          sig,
+          wallet,
+          label:        WHALE_WALLETS[wallet],
+          action:       swap.action,
+          mint:         swap.mint,
+          symbol:       swap.symbol,
+          amount_sol:   swap.amountSol,
+          token_amount: swap.tokenAmount,
+          is_pump_fun:  swap.isPumpFun,
+          block_time:   tx.timestamp || null,
+        }, { onConflict: "sig" });
+
+        if (error) { console.error("[signal]", error.message); skipped++; }
+        else {
+          inserted++;
+          console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
+        }
+      } catch (e: any) {
+        console.error("[tx]", e.message);
+        skipped++;
+      }
+    }
+
+    return jsonResp({ ok: true, inserted, skipped });
+  } catch (e: any) {
+    console.error("[webhook]", e);
+    return jsonResp({ ok: false, error: e?.message ?? String(e), fallback: true });
+  }
 });
