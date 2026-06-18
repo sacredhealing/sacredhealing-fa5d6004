@@ -783,7 +783,7 @@ export default function ShreemBrzeePerformance(){
             <div key={t.id} style={{...rowStyle}}>
               <div style={{width:32,height:32,borderRadius:9,background:t.failed?'rgba(255,255,255,.04)':t.action==='BUY'?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)',color:t.failed?'#64748b':t.action==='BUY'?GRN:RED,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:900,flexShrink:0}}>{t.failed?'✗':t.action==='BUY'?'↑':'↓'}</div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{t.symbol||'?'}</div>
+                <div style={{fontSize:13,fontWeight:800,color:G,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{t.symbol||t.mint?.slice(0,6)||'?'}</div>
                 <div style={{fontSize:10,color:'#64748b',marginTop:1}}>{t.action}·{t.label}{t.failed&&<span style={{marginLeft:5,padding:'1px 5px',borderRadius:4,background:'rgba(239,68,68,.12)',color:RED,fontSize:9,fontWeight:700}}>FAILED</span>}</div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
