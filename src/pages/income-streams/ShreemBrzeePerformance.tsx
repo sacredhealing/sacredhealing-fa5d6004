@@ -652,61 +652,128 @@ export default function ShreemBrzeePerformance(){
                 </div>
               </div>
             </div>
-          ):openTrades.map((t:any)=>{
-            const entry=Number(t.entry_price)||0;
-            const amt=Number(t.amount_sol)||0;
-            const cur=livePosPrices[t.mint];
-            const pnlPct=entry>0&&cur?((cur-entry)/entry)*100:null;
-            const pnlSol=pnlPct!==null?amt*(pnlPct/100):null;
-            const openedMs=new Date(t.opened_at||t.created_at).getTime();
-            const ageMin=Math.max(0,Math.floor((Date.now()-openedMs)/60000));
-            const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
-            const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
-            return(
-              <div key={t.id} style={{background:'rgba(16,185,129,.03)',borderRadius:14,padding:'14px',border:`1px solid rgba(16,185,129,.22)`,marginBottom:10}}>
-                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10,marginBottom:10}}>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3,flexWrap:'wrap'}}>
-                      <span style={{fontSize:15,fontWeight:900,color:G}}>{t.symbol||t.mint?.slice(0,6)||'?'}</span>
-                      <span style={{fontSize:9,fontWeight:800,letterSpacing:'.2em',color:'rgba(16,185,129,.85)',animation:'blink 2s infinite'}}>● OPEN</span>
-                      <span style={{fontSize:9,color:'#64748b'}}>{ageStr}</span>
+          ):<>
+            {openTrades.map((t:any)=>{
+              const entry=Number(t.entry_price)||0;
+              const amt=Number(t.amount_sol)||0;
+              const cur=livePosPrices[t.mint];
+              const pnlPct=entry>0&&cur?((cur-entry)/entry)*100:null;
+              const pnlSol=pnlPct!==null?amt*(pnlPct/100):null;
+              const openedMs=new Date(t.opened_at||t.created_at).getTime();
+              const ageMin=Math.max(0,Math.floor((Date.now()-openedMs)/60000));
+              const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
+              const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
+              const sym=t.symbol||t.mint?.slice(0,6)||'?';
+              return(
+                <div key={t.id} onClick={()=>setSelectedTrade(t)}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+                    padding:'10px 14px',borderRadius:14,marginBottom:6,cursor:'pointer',
+                    background:'rgba(16,185,129,.03)',border:`1px solid rgba(16,185,129,.2)`,transition:'background .15s'}}
+                  onMouseEnter={e=>(e.currentTarget.style.background='rgba(16,185,129,.08)')}
+                  onMouseLeave={e=>(e.currentTarget.style.background='rgba(16,185,129,.03)')}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
+                    <div style={{width:32,height:32,borderRadius:10,background:'rgba(212,175,55,.1)',
+                      border:'1px solid rgba(212,175,55,.2)',display:'flex',alignItems:'center',
+                      justifyContent:'center',fontSize:11,fontWeight:900,color:G,flexShrink:0}}>
+                      {sym.slice(0,2).toUpperCase()}
                     </div>
-                    <div style={{fontSize:10,color:'#94a3b8'}}>via <span style={{color:G,fontWeight:700}}>{t.label||'whale'}</span></div>
-                    <div style={{fontSize:9,color:'#64748b',fontFamily:'monospace',marginTop:2}}>{t.mint?.slice(0,8)}…{t.mint?.slice(-4)}</div>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:900,color:'#fff'}}>{sym}</div>
+                      <div style={{fontSize:9,color:'#64748b'}}>via <span style={{color:G}}>{t.label||'whale'}</span> · {ageStr}</div>
+                    </div>
                   </div>
-                  <div style={{textAlign:'right',flexShrink:0}}>
-                    <div style={{fontSize:18,fontWeight:900,color:pnlColor,letterSpacing:'-.02em'}}>
-                      {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
+                  <div style={{display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
+                    <div style={{textAlign:'right',minWidth:64}}>
+                      <div style={{fontSize:15,fontWeight:900,color:pnlColor}}>
+                        {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
+                      </div>
+                      <div style={{fontSize:9,color:pnlColor}}>
+                        {pnlSol!==null?`${pnlSol>=0?'+':''}${(pnlSol*solUSD*eurRate).toFixed(2)}€`:''}
+                      </div>
                     </div>
-                    <div style={{fontSize:11,fontWeight:700,color:pnlColor,marginTop:2}}>
-                      {pnlSol!==null?`${pnlSol>=0?'+':''}${pnlSol.toFixed(4)} SOL`:''}
-                    </div>
+                    <span style={{color:'#64748b',fontSize:16}}>›</span>
                   </div>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,marginBottom:10}}>
-                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
-                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Size</div>
-                    <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>{amt.toFixed(4)}</div>
-                    <div style={{fontSize:9,color:'#64748b'}}>SOL</div>
-                  </div>
-                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
-                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Entry</div>
-                    <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>${entry>0?entry.toFixed(entry<0.01?8:6):'—'}</div>
-                  </div>
-                  <div style={{background:'rgba(0,0,0,.25)',borderRadius:8,padding:'6px 8px'}}>
-                    <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',textTransform:'uppercase' as const}}>Now</div>
-                    <div style={{fontSize:12,fontWeight:800,color:cur?'#fff':'#64748b'}}>{cur?`$${cur.toFixed(cur<0.01?8:6)}`:'…'}</div>
-                  </div>
-                </div>
-                <button onClick={()=>closePosition(t,'manual')} style={{
-                  width:'100%',padding:'10px',borderRadius:10,
-                  border:'1px solid rgba(239,68,68,.5)',background:'rgba(239,68,68,.15)',
-                  color:RED,fontSize:11,fontWeight:900,letterSpacing:'.15em',cursor:'pointer',
-                }}>✕ CLOSE POSITION</button>
-              </div>
-            );
-          })}
+              );
+            })}
+          </>}
         </Card>
+
+        {selectedTrade&&(()=>{
+          const t=selectedTrade;
+          const entry=Number(t.entry_price)||0;
+          const amt=Number(t.amount_sol)||0;
+          const cur=livePosPrices[t.mint];
+          const pnlPct=entry>0&&cur?((cur-entry)/entry)*100:null;
+          const pnlSol=pnlPct!==null?amt*(pnlPct/100):null;
+          const pnlEur=pnlSol!==null?pnlSol*solUSD*eurRate:null;
+          const openedMs=new Date(t.opened_at||t.created_at).getTime();
+          const ageMin=Math.max(0,Math.floor((Date.now()-openedMs)/60000));
+          const ageStr=ageMin<60?`${ageMin}m`:`${Math.floor(ageMin/60)}h ${ageMin%60}m`;
+          const pnlColor=pnlPct===null?'#64748b':pnlPct>=0?GRN:RED;
+          const sym=t.symbol||t.mint?.slice(0,6)||'?';
+          return(
+            <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',alignItems:'flex-end',
+              background:'rgba(0,0,0,.8)',backdropFilter:'blur(10px)'}}
+              onClick={e=>{if(e.target===e.currentTarget)setSelectedTrade(null);}}>
+              <div style={{width:'100%',maxWidth:560,margin:'0 auto',background:'#0d0d0d',
+                borderRadius:'28px 28px 0 0',border:'1px solid rgba(212,175,55,.2)',
+                maxHeight:'90vh',overflowY:'auto',paddingBottom:40}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+                  padding:'18px 20px 14px',borderBottom:'1px solid rgba(255,255,255,.05)'}}>
+                  <div>
+                    <div style={{fontSize:20,fontWeight:900,color:G}}>{sym}</div>
+                    <div style={{fontSize:10,color:'#64748b'}}>via <span style={{color:G,fontWeight:700}}>{t.label}</span> · open {ageStr}</div>
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:12}}>
+                    <div style={{textAlign:'right'}}>
+                      <div style={{fontSize:24,fontWeight:900,color:pnlColor}}>
+                        {pnlPct!==null?`${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%`:'—'}
+                      </div>
+                      <div style={{fontSize:13,fontWeight:700,color:pnlColor}}>
+                        {pnlEur!==null?`${pnlEur>=0?'+':''}${pnlEur.toFixed(2)}€`:''}
+                      </div>
+                    </div>
+                    <button onClick={()=>setSelectedTrade(null)}
+                      style={{width:34,height:34,borderRadius:50,border:'1px solid rgba(255,255,255,.1)',
+                        background:'rgba(255,255,255,.05)',color:'#fff',fontSize:16,cursor:'pointer',
+                        display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>✕</button>
+                  </div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,padding:'12px 20px'}}>
+                  {[
+                    {l:'SIZE',v:`${amt.toFixed(4)} SOL`,s:`≈${(amt*solUSD*eurRate).toFixed(2)}€`},
+                    {l:'ENTRY',v:entry>0?`$${entry.toFixed(entry<0.01?8:6)}`:'—',s:''},
+                    {l:'NOW',v:cur?`$${cur.toFixed(cur<0.01?8:6)}`:'...',s:''},
+                  ].map(item=>(
+                    <div key={item.l} style={{background:'rgba(255,255,255,.03)',borderRadius:12,
+                      padding:'10px 12px',border:'1px solid rgba(255,255,255,.06)'}}>
+                      <div style={{fontSize:8,color:'#64748b',letterSpacing:'.15em',marginBottom:4}}>{item.l}</div>
+                      <div style={{fontSize:12,fontWeight:800,color:'#fff'}}>{item.v}</div>
+                      {item.s&&<div style={{fontSize:9,color:'#64748b',marginTop:2}}>{item.s}</div>}
+                    </div>
+                  ))}
+                </div>
+                <div style={{margin:'0 20px',borderRadius:16,overflow:'hidden',
+                  border:'1px solid rgba(255,255,255,.06)',height:300}}>
+                  <iframe src={`https://dexscreener.com/solana/${t.mint}?embed=1&theme=dark&trades=0&info=0`}
+                    style={{width:'100%',height:'100%',border:'none'}} title="chart"/>
+                </div>
+                <div style={{padding:'6px 20px 0',fontSize:9,color:'#64748b',fontFamily:'monospace',textAlign:'center',wordBreak:'break-all'}}>
+                  {t.mint}
+                </div>
+                <div style={{padding:'16px 20px 0'}}>
+                  <button onClick={()=>{closePosition(t,'manual');setSelectedTrade(null);}}
+                    style={{width:'100%',padding:'14px',borderRadius:16,
+                      border:'1px solid rgba(239,68,68,.5)',background:'rgba(239,68,68,.15)',
+                      color:RED,fontSize:13,fontWeight:900,letterSpacing:'.15em',cursor:'pointer'}}>
+                    ✕ CLOSE POSITION
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
 
         {/* WALLET */}
