@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const AUTH_STORAGE_KEY = 'sqi-2050-auth-token';
 const AUTH_CHECK_TIMEOUT_MS = 2500;
-const AUTH_REQUEST_TIMEOUT_MS = 9000;
+const AUTH_REQUEST_TIMEOUT_MS = 30000;
 
 const getClientConfig = () => {
   const client = supabase as unknown as { supabaseUrl?: string; supabaseKey?: string };
@@ -130,8 +130,8 @@ function passwordSignInRequest(email: string, password: string): Promise<Session
       reject(new Error(payload?.error_description || payload?.msg || payload?.message || payload?.error || 'Sign in failed.'));
     };
 
-    request.onerror = () => reject(new Error('Network connection failed. Open the preview in a new tab if this continues.'));
-    request.ontimeout = () => reject(new Error('Sign in timed out. Please try again.'));
+    request.onerror = () => reject(new Error('Network connection failed. Please check your connection and try again.'));
+    request.ontimeout = () => reject(new Error('Login timed out. Please check your connection and try again.'));
     request.send(JSON.stringify({ email, password, gotrue_meta_security: {} }));
   });
 }
@@ -214,25 +214,25 @@ export const useAuth = () => {
     let error: any = null;
 
     try {
-      const result = await withTimeout(
-        supabase.auth.signInWithPassword({ email, password }),
-        AUTH_REQUEST_TIMEOUT_MS,
-        'Sign in timed out. Please try again.'
-      );
-      data = result.data;
-      error = result.error;
-    } catch (err) {
-      error = err;
+      const fallbackSession = await passwordSignInRequest(email, password);
+      const session = await activateSession(fallbackSession);
+      data = { session, user: session.user };
+      error = null;
+    } catch (fallbackError) {
+      error = fallbackError;
     }
 
     if (isNetworkAuthFailure(error)) {
       try {
-        const fallbackSession = await passwordSignInRequest(email, password);
-        const session = await activateSession(fallbackSession);
-        data = { session, user: session.user };
-        error = null;
-      } catch (fallbackError) {
-        error = fallbackError;
+        const result = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
+          AUTH_REQUEST_TIMEOUT_MS,
+          'Login timed out. Please check your connection and try again.'
+        );
+        data = result.data;
+        error = result.error;
+      } catch (err) {
+        error = err;
       }
     }
 
