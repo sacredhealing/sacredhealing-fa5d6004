@@ -109,7 +109,7 @@ export default defineConfig(({ mode }) => {
             urlPattern: ({ request }) => request.destination === "document",
             handler: "NetworkFirst",
             options: {
-              cacheName: "html-shell-v3",
+              cacheName: "html-shell-v4",
               networkTimeoutSeconds: 2,
               expiration: { maxEntries: 8, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
@@ -121,17 +121,30 @@ export default defineConfig(({ mode }) => {
             handler: "CacheFirst",
             method: "GET",
             options: {
-              cacheName: "assets-immutable-v3",
+              cacheName: "assets-immutable-v4",
               expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [200] },
             },
           },
           {
+            // CRITICAL: Auth, realtime, and storage endpoints must NEVER be cached.
+            // Stale auth tokens cause "failed to fetch" / login failures.
+            urlPattern: ({ url }) =>
+              url.hostname.includes("supabase.co") &&
+              (url.pathname.startsWith("/auth/") ||
+               url.pathname.startsWith("/realtime/") ||
+               url.pathname.startsWith("/storage/") ||
+               url.pathname.includes("token") ||
+               url.pathname.includes("session") ||
+               url.pathname.includes("logout")),
+            handler: "NetworkOnly",
+          },
+          {
             urlPattern: ({ url }) => url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/"),
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "supabase-api-v3",
-              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+              cacheName: "supabase-api-v4",
+              expiration: { maxEntries: 50, maxAgeSeconds: 3 * 60 },
               cacheableResponse: { statuses: [200] },
             },
           },
@@ -169,3 +182,4 @@ export default defineConfig(({ mode }) => {
   },
 };
 });
+
