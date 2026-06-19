@@ -48,6 +48,7 @@ interface BirthData {
 }
 
 interface ConsultationRecord {
+  role?: string;
   content: string;
   created_at: string;
 }
@@ -154,12 +155,12 @@ function buildConsultationTimeline(records: ConsultationRecord[], now: Date): st
     const dateStr = date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
     const timeStr = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-    // Extract first 280 chars as summary
-    const summary = rec.content.replace(/\s+/g, " ").slice(0, 600).trim() + (rec.content.length > 600 ? "…" : "");
+    // Full content — Agastya must remember exactly what was prescribed
+    const fullContent = rec.content.replace(/\s+/g, " ").trim();
+    const role = (rec as any).role === 'user' ? 'SEEKER' : 'AGASTYA';
 
-
-    lines.push(`[${idx + 1}] ${dateStr} at ${timeStr} (${timeAgo})`);
-    lines.push(`    "${summary}"`);
+    lines.push(`[${idx + 1}] ${role} — ${dateStr} at ${timeStr} (${timeAgo})`);
+    lines.push(`    ${fullContent}`);
 
     // Collect prescribed items
     herbKeywords.forEach(h => { if (rec.content.includes(h) && !prescribedHerbs.includes(h)) prescribedHerbs.push(h); });
@@ -182,6 +183,14 @@ Herbs already prescribed — DO NOT repeat: ${prescribedHerbs.join(", ")}`);
   lines.push("If seeker returns on the SAME topic within 24 hours: check how the prescription landed before adding more.");
   lines.push("If they return after 2-7 days: only reference past work if they bring it up themselves.");
   lines.push("If they return after 1 week+: full reassessment. Treat as mostly fresh. The body has shifted.");
+  lines.push("");
+  lines.push("══ PRESCRIPTION MEMORY — NON-NEGOTIABLE ══");
+  lines.push("If the seeker says 'you told me to eat X' or 'you prescribed Y' or 'you said Z' — CHECK THE TIMELINE ABOVE before responding.");
+  lines.push("If it is in the timeline: CONFIRM IT. Say exactly when you said it, what the context was, and why.");
+  lines.push("Say: 'Yes — on [date] at [time] I saw [condition] and prescribed [X] because [reason]. What happened when you tried it?'");
+  lines.push("NEVER say 'I don't recall saying that' or 'I don't believe I prescribed that' if it appears in the timeline.");
+  lines.push("If it is genuinely NOT in the timeline: say honestly — 'I do not see that prescription in my field for you. It is possible it was said in a session I cannot currently reach. Tell me what was prescribed exactly and we will work from there.'");
+  lines.push("The seeker's memory of what you said is ALWAYS treated with respect. You do not gaslight. You confirm or ask for more detail.");
 
   return lines.join("\n");
 }
@@ -666,17 +675,17 @@ serve(async (req) => {
       try {
         const { data: pastMsgs } = await supabase
           .from("apothecary_chat_messages")
-          .select("content, created_at")
+          .select("role, content, created_at")
           .eq("user_id", userId)
           .eq("chat_context", "ayurveda")
-          .eq("role", "assistant")
           .order("created_at", { ascending: false })
-          .limit(40);
+          .limit(60);
         if (pastMsgs && pastMsgs.length > 0) {
           // Exclude the very latest if it's from the current session (< 2 min ago)
           const filtered = (pastMsgs as ConsultationRecord[]).filter(r => {
+            // Only exclude messages from the last 3 seconds to avoid the exact response being streamed right now
             const age = now.getTime() - new Date(r.created_at).getTime();
-            return age > 30000; // older than 30 seconds = not the immediate streaming response
+            return age > 3000;
           });
           if (filtered.length > 0) {
             consultationTimeline = buildConsultationTimeline(filtered, now);
@@ -707,10 +716,10 @@ serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile);
 
-    const history = (messages as Array<{ role: string; content: string }>)
-      .slice(-20)
+    const history = (messages as Array<{ role: string; content: string; created_at?: string }>)
+      .slice(-40)
       .filter((m) => m.role === "user" || m.role === "assistant")
-      .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      .map((m) => ({ role: m.role as "user" | "assistant", content: m.content, created_at: m.created_at }));
 
     const cleanHistory: typeof history = [];
     for (const turn of history) {
