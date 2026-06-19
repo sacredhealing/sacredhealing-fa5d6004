@@ -230,7 +230,8 @@ function buildSystemPrompt(
   birth: BirthData,
   consultationTimeline: string,
   currentDateTime: string,
-  userProfile?: UserPersonalityProfile
+  userProfile?: UserPersonalityProfile,
+  alternateNames?: string[]
 ): string {
   const doshaLine = dosha?.primary
     ? `Prakriti: ${dosha.primary}${dosha.secondary ? `-${dosha.secondary}` : ""}${dosha.scores ? ` (Vata ${dosha.scores.vata ?? "?"} · Pitta ${dosha.scores.pitta ?? "?"} · Kapha ${dosha.scores.kapha ?? "?"})` : ""}.`
@@ -353,7 +354,8 @@ WHAT AGASTYA ALWAYS DOES:
 - Remembers. Everything. Ten thousand years of memory.
 - Delivers one thing that is surprising — the line they did not expect — in every response.
 
-SEEKER: ${name || "Seeker"}
+SEEKER: ${name || "Seeker"}${alternateNames && alternateNames.length > 0 ? ` (also known as: ${alternateNames.join(" / ")})` : ""}
+This seeker may appear under different names across sessions — all names refer to the same person, same body, same healing journey. If you have addressed them by a spiritual name in past messages, continue using that name. If the profile shows a different name than past sessions, both are valid — use the one they prefer, recognize the other.
 ${doshaLine}
 ${nadiLine}
 LANGUAGE: ${langInstruction}
@@ -717,7 +719,16 @@ serve(async (req) => {
       } catch { /* non-fatal */ }
     }
 
-    const userName = profile?.name || profile?.full_name || "Seeker";
+    // Seeker may use multiple names (legal name + spiritual name)
+    // Also detect from profile fields and past timeline content
+    const legalName = profile?.name || profile?.full_name || "";
+    const spiritualName = profile?.spiritual_name || profile?.siddha_name || "";
+    const userName = spiritualName || legalName || "Seeker";
+    
+    // Build alternate names list — all names = same person
+    const alternateNamesRaw = [legalName, spiritualName, profile?.display_name]
+      .filter((n): n is string => Boolean(n) && n !== userName);
+    const alternateNames = [...new Set(alternateNamesRaw)];
     const lang = language || profile?.language || "en";
     // Build user personality profile from past responses
     const userProfile = buildUserPersonalityProfile(
@@ -737,7 +748,7 @@ serve(async (req) => {
       })())
     );
 
-    const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile);
+    const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile, alternateNames);
 
     // FULL HISTORY — Agastya remembers everything
     // The [CURRENT MESSAGE] marker in the last message tells Gemini what to respond to NOW
