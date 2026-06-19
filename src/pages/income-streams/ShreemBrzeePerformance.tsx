@@ -438,6 +438,8 @@ export default function ShreemBrzeePerformance() {
       if (data?.wallet) {
         setBotWallet(data);
         console.log("[botWallet] connected:", data.wallet, data.balance_sol, "SOL");
+        // Auto-populate balance input with real wallet balance
+        if (data.balance_sol > 0) setBalInput(data.balance_sol.toFixed(4));
       } else {
         console.warn("[botWallet] health check failed:", data);
       }
@@ -497,7 +499,10 @@ export default function ShreemBrzeePerformance() {
   // ── Bot controls ───────────────────────────────────────────────────────────
   const startBot = async () => {
     setLoading(true); setStartingBot(true);
-    const bal = parseFloat(balInput) || 1;
+    // In live mode, always use real wallet balance; in paper, use input
+    const bal = liveMode && botWallet?.balance_sol
+      ? botWallet.balance_sol
+      : (parseFloat(balInput) || 1);
     try {
       // NEVER delete trade history — only update session state
       // Recalculate real balances from existing closed trades
