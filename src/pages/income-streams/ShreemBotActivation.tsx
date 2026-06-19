@@ -65,7 +65,7 @@ export default function ShreemBotActivation() {
         atma_seeds: 70, prana_flow: 50, siddha_quantum: 25, akasha_infinity: 10, lifetime: 0
       };
 
-      const { error } = await supabase.from("shreem_bot_members").upsert({
+      const { error } = await (supabase as any).from("shreem_bot_members").upsert({
         user_id: user.id,
         wallet_address: walletAddress,
         tier,
@@ -80,7 +80,7 @@ export default function ShreemBotActivation() {
 
       // Resolve MLM upline if referral code was used
       if (refCode) {
-        await supabase.rpc("shreem_resolve_upline", {
+        await (supabase as any).rpc("shreem_resolve_upline", {
           p_user_id: user.id,
           p_referrer_code: refCode
         });
