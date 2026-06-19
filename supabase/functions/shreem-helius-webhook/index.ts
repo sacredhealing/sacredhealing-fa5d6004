@@ -495,10 +495,26 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
     };
     await sb.from("shreem_brzee_signals").upsert(signal, { onConflict: "sig" });
-    // Open paper trade immediately server-side
+
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
-    if (sess) await openTrade(signal, sess);
-    return jsonResp({ ok: true, sig, action: "BUY", version: "v5" });
+
+    if (sess?.mode === "live") {
+      // LIVE MODE: trigger real executor
+      const execResp = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({
+          direct_signal: { sig: signal.sig, mint: signal.mint, symbol: signal.symbol, label: signal.label, wallet: signal.wallet, amount_sol: signal.amount_sol },
+          session: { portfolio: sess.portfolio, wins: sess.wins, losses: sess.losses }
+        }),
+      });
+      const execResult = await execResp.json().catch(() => ({}));
+      return jsonResp({ ok: true, sig, mode: "live", exec: execResult, version: "v5" });
+    } else {
+      // PAPER MODE: open paper trade
+      if (sess) await openTrade(signal, sess);
+      return jsonResp({ ok: true, sig, mode: "paper", action: "BUY", version: "v5" });
+    }
   }
 
   if (req.method === "POST" && path.endsWith("/test-sell")) {
