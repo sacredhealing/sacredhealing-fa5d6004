@@ -8755,6 +8755,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sync_chat_messages: {
+        Row: {
+          chat_context: string
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          chat_context: string
+          content?: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          chat_context?: string
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_vedic_astrology_access: {
         Row: {
           expires_at: string | null
