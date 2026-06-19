@@ -588,28 +588,45 @@ serve(async (req) => {
 
         if (sessNow?.started_at && !sessNow?.stopped_at) {
           if (sessNow.mode === "live") {
-            // LIVE MODE: trigger the live executor (fire-and-forget) — it will
-            // pull unprocessed BUY signals and run real Jupiter swaps.
+            // LIVE MODE: pass signal directly to executor — no flag polling needed
             if (swap.action === "BUY") {
+              // Fire and forget — executor runs Jupiter swap immediately
               fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   "Authorization": `Bearer ${SUPABASE_KEY}`,
                 },
-                body: JSON.stringify({ trigger: "webhook", sig }),
-              }).catch(e => console.error("[live-exec trigger]", e?.message));
+                body: JSON.stringify({
+                  direct_signal: {
+                    sig:        signal.sig,
+                    mint:       signal.mint,
+                    symbol:     signal.symbol,
+                    label:      signal.label,
+                    wallet:     signal.wallet,
+                    amount_sol: signal.amount_sol,
+                  },
+                  session: {
+                    portfolio: sessNow.portfolio,
+                    wins:      sessNow.wins,
+                    losses:    sessNow.losses,
+                  }
+                }),
+              }).catch(e => console.error("[live-exec]", e?.message));
+              console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
+
             } else if (swap.action === "SELL") {
-              // Close any live positions in this mint (paper-style close — TODO: real sell swap)
+              // Close live positions immediately in DB
               const { data: openLive } = await sb.from("shreem_brzee_live_trades")
                 .select("*").eq("status","open").eq("mint", swap.mint);
               for (const pos of (openLive || [])) {
                 await sb.from("shreem_brzee_live_trades").update({
-                  status: "closed",
-                  close_reason: "whale_sell_mirror",
-                  closed_at: new Date().toISOString(),
+                  status:       "closed",
+                  sell_reason:  "whale_sell_mirror",
+                  closed_at:    new Date().toISOString(),
                 }).eq("id", pos.id);
               }
+              console.log(`[live-close] SELL ${signal.symbol} — closed ${(openLive||[]).length} positions`);
             }
           } else {
             // PAPER MODE: original behaviour
