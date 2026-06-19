@@ -10,7 +10,7 @@ import bs58 from "https://esm.sh/bs58@5.0.0";
 // ── Constants ─────────────────────────────────────────────────────────────────
 const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const JUPITER    = "https://quote-api.jup.ag/v6";
+const JUPITER    = "https://lite-api.jup.ag/swap/v1";
 const SOL_MINT   = "So11111111111111111111111111111111111111112";
 const LAMPORTS   = 1_000_000_000;
 
