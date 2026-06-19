@@ -40,8 +40,8 @@ export default function ShreemBotActivation() {
     if (!user) { setLoading(false); return; }
 
     const [{ data: m }, { data: e }, { data: ap }] = await Promise.all([
-      supabase.from("shreem_bot_members").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase.from("shreem_mlm_earnings").select("*").eq("user_id", user.id).maybeSingle(),
+      (supabase as any).from("shreem_bot_members").select("*").eq("user_id", user.id).maybeSingle(),
+      (supabase as any).from("shreem_mlm_earnings").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("affiliate_profiles").select("affiliate_code").eq("user_id", user.id).maybeSingle(),
     ]);
 
@@ -65,7 +65,7 @@ export default function ShreemBotActivation() {
         atma_seeds: 70, prana_flow: 50, siddha_quantum: 25, akasha_infinity: 10, lifetime: 0
       };
 
-      const { error } = await supabase.from("shreem_bot_members").upsert({
+      const { error } = await (supabase as any).from("shreem_bot_members").upsert({
         user_id: user.id,
         wallet_address: walletAddress,
         tier,
@@ -80,7 +80,7 @@ export default function ShreemBotActivation() {
 
       // Resolve MLM upline if referral code was used
       if (refCode) {
-        await supabase.rpc("shreem_resolve_upline", {
+        await (supabase as any).rpc("shreem_resolve_upline", {
           p_user_id: user.id,
           p_referrer_code: refCode
         });
@@ -96,7 +96,7 @@ export default function ShreemBotActivation() {
 
   async function updateWallet() {
     if (!walletAddress || !member) return;
-    await supabase.from("shreem_bot_members")
+    await (supabase as any).from("shreem_bot_members")
       .update({ wallet_address: walletAddress, updated_at: new Date().toISOString() })
       .eq("user_id", member.user_id);
     toast({ title: "Wallet updated", description: "Profits will now flow to your connected wallet" });
