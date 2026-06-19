@@ -451,9 +451,13 @@ export default function ShreemBrzeePerformance() {
     try {
       const bal = parseFloat(balInput) || 0.3;
       if (goLive) {
-        // Start session in live mode — one step, no separate START needed
+        // Clear ALL paper trades — fresh start for live
+        await d.from("shreem_brzee_paper_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        await d.from("shreem_brzee_signals").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+        // Start fresh session in live mode
         const { error } = await d.from("shreem_brzee_session").upsert({
-          id: "default",
+          id:            "default",
           portfolio:     bal,
           start_balance: bal,
           positions:     {},
