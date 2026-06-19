@@ -666,7 +666,7 @@ serve(async (req) => {
         .filter(m => m.role === "user").slice(-1)[0];
       if (latestUserMsg?.content && !isFirstMessage) {
         supabase
-          .from("apothecary_chat_messages")
+          .from("user_sync_chat_messages")
           .insert([{ user_id: userId, chat_context: "ayurveda", role: "user", content: latestUserMsg.content }])
           .then(() => {}).catch(() => {});
       }
@@ -674,7 +674,7 @@ serve(async (req) => {
       // Fetch past consultation timeline for cross-session memory
       try {
         const { data: pastMsgs } = await supabase
-          .from("apothecary_chat_messages")
+          .from("user_sync_chat_messages")
           .select("role, content, created_at")
           .eq("user_id", userId)
           .eq("chat_context", "ayurveda")
@@ -702,7 +702,7 @@ serve(async (req) => {
         if (!userId) return [];
         try {
           const { data } = await supabase
-            .from("apothecary_chat_messages")
+            .from("user_sync_chat_messages")
             .select("content, created_at")
             .eq("user_id", userId)
             .eq("chat_context", "ayurveda")
@@ -716,8 +716,8 @@ serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile);
 
+    // NO LIMIT — send full conversation history so Agastya remembers everything
     const history = (messages as Array<{ role: string; content: string; created_at?: string }>)
-      .slice(-40)
       .filter((m) => m.role === "user" || m.role === "assistant")
       .map((m) => ({ role: m.role as "user" | "assistant", content: m.content, created_at: m.created_at }));
 
@@ -806,7 +806,7 @@ serve(async (req) => {
         controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
         if (userId && fullResponse) {
           supabase
-            .from("apothecary_chat_messages")
+            .from("user_sync_chat_messages")
             .insert([{ user_id: userId, chat_context: "ayurveda", role: "assistant", content: fullResponse }])
             .then(() => {}).catch(() => {});
         }
