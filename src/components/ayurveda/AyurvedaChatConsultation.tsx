@@ -607,8 +607,11 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     const trimmed = (text || input).trim();
     if (!trimmed || isLoading || chatHistoryLoading) return;
     const userMsg: ChatMessage = { role: 'user', content: trimmed };
-    const apiMessages = [...persistedMsgs, userMsg].map(m => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
+    // Send only last 10 messages as active context — prevents Agastya anchoring to old sessions
+    // Full history is in consultationTimeline (Supabase) for memory reference
+    const recentHistory = persistedMsgs.slice(-10);
+    const apiMessages = [...recentHistory, userMsg].map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content, created_at: m.created_at,
     }));
     // Clear any previous pending, then set new one immediately
     setPendingUserMsg(null);
