@@ -738,9 +738,13 @@ serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile);
 
-    // NO LIMIT — send full conversation history so Agastya remembers everything
-    const history = (messages as Array<{ role: string; content: string; created_at?: string }>)
-      .filter((m) => m.role === "user" || m.role === "assistant")
+    // ACTIVE CONTEXT: last 10 messages only — prevents Agastya reading old sessions as current
+    // Full history is already in consultationTimeline for memory reference
+    // Gemini reads conversation top-to-bottom — if we send 200 msgs, he anchors to oldest
+    const allHistory = (messages as Array<{ role: string; content: string; created_at?: string }>)
+      .filter((m) => m.role === "user" || m.role === "assistant");
+    
+    const history = allHistory.slice(-10)
       .map((m) => ({ role: m.role as "user" | "assistant", content: m.content, created_at: m.created_at }));
 
     const cleanHistory: typeof history = [];
