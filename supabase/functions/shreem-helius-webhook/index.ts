@@ -446,8 +446,10 @@ serve(async (req) => {
         updated_at:    new Date().toISOString(),
       }, { onConflict: "id" });
 
+      // Re-sync wallets to tracked_whales (ensures Helius keeps watching)
+      await syncWallets();
       console.log(`[go-live] ✅ Clean start with ${bal} SOL`);
-      return jsonResp({ ok: true, balance_sol: bal, mode: "live", message: "🔴 Live mode active — paper data cleared" });
+      return jsonResp({ ok: true, balance_sol: bal, mode: "live", message: "🔴 Live mode active — paper data cleared, wallets synced" });
     } catch (e: any) {
       return jsonResp({ ok: false, error: e.message }, 500);
     }
