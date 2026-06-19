@@ -719,7 +719,7 @@ export default function ShreemBrzeePerformance() {
           <div style={{ width:34, height:34, borderRadius:10, background:"linear-gradient(135deg,#b8860b,#D4AF37)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>🔱</div>
           <div>
             <div style={{ fontSize:15, fontWeight:900, color:GOLD, letterSpacing:"-.03em" }}>Shreem Brzee Bot</div>
-            <div style={{ fontSize:9, color:"#64748b", letterSpacing:".35em", textTransform:"uppercase" }}>SQI 2050 · Paper Trading</div>
+            <div style={{ fontSize:9, color:"#64748b", letterSpacing:".35em", textTransform:"uppercase" }}>SQI 2050 · {liveMode ? "Live Trading" : "Paper Trading"}</div>
           </div>
         </div>
         <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
