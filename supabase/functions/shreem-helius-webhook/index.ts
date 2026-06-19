@@ -465,7 +465,9 @@ serve(async (req) => {
         updated_at:    new Date().toISOString(),
       }, { onConflict: "id" });
 
-      // Re-sync wallets to tracked_whales (ensures Helius keeps watching)
+      // Clear tracked_whales and re-sync ONLY our confirmed wallets
+      // This removes stale wallets like Cupsey that were previously added
+      await sb.from("tracked_whales").delete().neq("address", "none");
       await syncWallets();
       console.log(`[go-live] ✅ Clean start with ${bal} SOL`);
       return jsonResp({ ok: true, balance_sol: bal, mode: "live", message: "🔴 Live mode active — paper data cleared, wallets synced" });
