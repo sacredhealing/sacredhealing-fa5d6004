@@ -607,11 +607,16 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     const trimmed = (text || input).trim();
     if (!trimmed || isLoading || chatHistoryLoading) return;
     const userMsg: ChatMessage = { role: 'user', content: trimmed };
-    // Send only last 10 messages as active context — prevents Agastya anchoring to old sessions
-    // Full history is in consultationTimeline (Supabase) for memory reference
-    const recentHistory = persistedMsgs.slice(-10);
-    const apiMessages = [...recentHistory, userMsg].map(m => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content, created_at: m.created_at,
+    // Send FULL history — Agastya must remember everything
+    // Inject a session boundary marker so Gemini knows current message is NOW
+    const allMsgs = [...persistedMsgs, userMsg];
+    const apiMessages = allMsgs.map((m, i) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: i === allMsgs.length - 1
+        ? `[CURRENT MESSAGE — respond to THIS]
+${m.content}`
+        : m.content,
+      created_at: m.created_at,
     }));
     // Clear any previous pending, then set new one immediately
     setPendingUserMsg(null);
