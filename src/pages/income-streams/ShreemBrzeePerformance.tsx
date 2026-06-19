@@ -594,19 +594,37 @@ export default function ShreemBrzeePerformance() {
 
   // ── Derived data ───────────────────────────────────────────────────────────
   const isRunning = !!session?.started_at && !session?.stopped_at;
-  const pnlTotal  = session?.total_pnl || 0;
-  const portfolio = session?.portfolio || parseFloat(balInput) || 1;
-  const startBal  = session?.start_balance || parseFloat(balInput) || 1;
-  const pnlPct    = startBal > 0 ? (pnlTotal / startBal * 100).toFixed(1) : "0.0";
-  // Recalculate wins/losses from actual closed trades (more accurate than session counter)
-  const closedTrades = trades.filter((t: any) => t.status === "closed");
-  const realWins   = closedTrades.filter((t: any) => (t.pnl_sol || 0) >= 0).length;
-  const realLosses = closedTrades.filter((t: any) => (t.pnl_sol || 0) < 0).length;
-  const realTotal  = realWins + realLosses;
+
+  // ── Derive ALL numbers from actual trade data — never from session counters ──
+  // session.portfolio drifts with restarts and is unreliable for display
+  const closedTrades  = trades.filter((t: any) => t.status === "closed");
+  const openTrades    = trades.filter((t: any) => t.status === "open");
+
+  // Real P&L = sum of pnl_sol from all closed trades
+  const realPnlSol  = closedTrades.reduce((s: number, t: any) => s + (Number(t.pnl_sol) || 0), 0);
+  const realPnlEur  = realPnlSol * solUsd * solEur;
+
+  // Win/loss from actual trades
+  const realWins    = closedTrades.filter((t: any) => (t.pnl_sol || 0) >= 0).length;
+  const realLosses  = closedTrades.filter((t: any) => (t.pnl_sol || 0) < 0).length;
+  const realTotal   = realWins + realLosses;
   const realWinRate = realTotal > 0 ? Math.round(realWins / realTotal * 100) : 0;
-  // Total PNL from actual trades (sum of pnl_sol)
-  const realPnlSol = closedTrades.reduce((s: number, t: any) => s + (Number(t.pnl_sol) || 0), 0);
-  const realPnlEur = realPnlSol * solUsd * solEur;
+
+  // Start balance = what was set at last START (most recent session.start_balance)
+  const startBal    = Number(session?.start_balance || parseFloat(balInput) || 1);
+
+  // Current balance = start balance + all closed PNL - capital in open trades
+  const openExposureSol = openTrades.reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+  const currentBalSol   = startBal + realPnlSol - openExposureSol;
+  const currentBalEur   = currentBalSol * solUsd * solEur;
+
+  // P&L % relative to start balance
+  const realPnlPct  = startBal > 0 ? (realPnlSol / startBal * 100) : 0;
+
+  // Keep portfolio for backward compat (compounding engine)
+  const portfolio   = currentBalSol > 0 ? currentBalSol : startBal;
+  const pnlTotal    = realPnlSol;
+  const pnlPct      = realPnlPct.toFixed(1);
 
   // Whale table aggregation
   const whaleMap: Record<string,{buys:number;sells:number;totalSol:number}> = {};
@@ -662,8 +680,8 @@ export default function ShreemBrzeePerformance() {
         {/* Stats grid */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${toEur(portfolio)}`, l:"Balance", s:`${portfolio.toFixed(3)} SOL`, c:GOLD },
-            { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realTotal>0?(realPnlSol/startBal*100).toFixed(1):0}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
+            { i:"💰", v:`€${currentBalEur.toFixed(2)}`, l:"Balance", s:`${currentBalSol.toFixed(3)} SOL`, c:GOLD },
+            { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
             { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
           ].map(card => (
