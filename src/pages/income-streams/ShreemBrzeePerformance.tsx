@@ -353,16 +353,30 @@ export default function ShreemBrzeePerformance() {
   // Calls edge function /signal to trigger server-side close
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
     try {
-      // Insert a synthetic SELL signal — edge function detects it and closes the position
-      const sellSig = `MANUAL_CLOSE_${pos.id}_${Date.now()}`;
-      await d.from("shreem_brzee_signals").insert({
-        sig: sellSig, wallet: pos.wallet, label: pos.label,
-        action: "SELL", mint: pos.mint, symbol: pos.symbol,
-        amount_sol: pos.amount_sol, created_at: new Date().toISOString(),
+      notify("Closing position…", "info");
+      // Call edge function /close-trade directly — server fetches price and closes
+      const r = await fetch(`${EDGE_BASE}/close-trade`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trade_id: pos.id }),
       });
-      setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); }, 2000);
+      const result = r.ok ? await r.json() : null;
+      if (!r.ok || !result?.ok) {
+        // Fallback: write directly to DB if edge fn fails
+        await d.from("shreem_brzee_paper_trades").update({
+          status: "closed",
+          closed_at: new Date().toISOString(),
+          sell_reason: "manual",
+          pnl_pct: 0,
+          pnl_sol: 0,
+        }).eq("id", pos.id);
+        notify("Position closed (no price data)", "info");
+      } else {
+        notify(`✅ ${result.symbol || "Position"} closed`, "ok");
+      }
+      setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); }, 1500);
     } catch (e: any) { notify(`Close failed: ${e.message?.slice(0,60)}`, "err"); }
-  }, [fetchOpen, fetchTrades, fetchSession]);
+  }, [fetchOpen, fetchTrades, fetchSession, notify]);
 
   // v5: ALL exit logic runs server-side in edge function:
   //   whale_sell_mirror — whale SELL signal detected → close immediately
