@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,15 +28,28 @@ async function ensureUserProfile(session: Session | null) {
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
+  // Safety: if the query never resolves, force isLoading false after 5s
+  const [safetyTimedOut, setSafetyTimedOut] = useState(false);
 
-  const { data: session, isLoading } = useQuery({
+  useEffect(() => {
+    const t = window.setTimeout(() => setSafetyTimedOut(true), 5000);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const { data: session, isLoading: queryLoading } = useQuery({
     queryKey: ['auth-user'],
     queryFn: getSession,
     staleTime: 30 * 60 * 1000,       // 30 minutes — no refetch churn
     gcTime: 24 * 60 * 60 * 1000,     // cache for 24h so reloads restore instantly
     retry: false,
     refetchOnWindowFocus: true,
+    // CRITICAL: must be 'always' — global 'offlineFirst' causes this query
+    // to hang indefinitely when there is no cached session on first load.
+    networkMode: 'always',
   });
+
+  // isLoading is false once query resolves OR safety timeout fires
+  const isLoading = queryLoading && !safetyTimedOut;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
