@@ -1,21 +1,32 @@
 // supabase/functions/shreem-helius-webhook/index.ts
-// SHREEM BRZEE — Helius Webhook + Paper Trade Relay
-// Redeployed: 2026-06-17T15:12:37.009163
-// Deployed to: ssygukfdbtehvtndandn (live Supabase)
-// Routes:
-//   POST /                        → Helius enhanced webhook (whale swap)
-//   POST /shreem-helius-webhook/paper    → Hetzner paper server writes
-//   GET  /shreem-helius-webhook/session  → Hetzner paper server reads
+// SHREEM BRZEE v5 — 100% SERVER-SIDE. Phone off = bot still runs.
+//
+// ALL trading logic runs here — no browser needed:
+//   • Helius webhook → detect whale swap → write signal
+//   • On BUY signal → immediately open paper trade (server-side)
+//   • On SELL signal → immediately close matching paper trade (server-side)
+//   • GET /cron → called every 5 min by Supabase cron job
+//                 checks stop-loss and 48h safety cap on all open positions
+//   • GET /session → frontend reads session (display only)
+//   • GET /trades → frontend reads trades (display only)
+//   • GET /signals → frontend reads signals (display only)
+//   • POST /test, /test-sell → inject test signals
+//
+// Frontend is READ-ONLY. It displays data. All logic is here.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// ── Constants ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb           = createClient(SUPABASE_URL, SUPABASE_KEY);
+const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
+const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const SOL_MINT     = "So11111111111111111111111111111111111111112";
+const LAMPORTS     = 1_000_000_000;
 
-const SOL_MINT = "So11111111111111111111111111111111111111112";
-
+// ── Whale wallet list ─────────────────────────────────────────────────────────
 const WHALE_WALLETS: Record<string, string> = {
   "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB": "Euris",
   "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ": "Heyitsyolo",
@@ -28,246 +39,384 @@ const WHALE_WALLETS: Record<string, string> = {
   "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA": "The Grande",
   "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN": "West",
   "5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG": "Yenni",
-  "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg": "Doji",
+  "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg":  "Doji",
   "Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7": "Trenchman",
   "215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP": "OGAntD",
   "BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd": "Kev",
   "4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9": "decu",
-  "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT": "trunoest",
+  "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT":  "trunoest",
   "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC": "clukz",
   "BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB": "Limfork",
 };
-
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
 
-// Auto-sync WHALE_WALLETS into tracked_whales on every cold start
-// This ensures Helius always watches the right wallets even after code updates
-async function syncWalletsToDb(sb: any) {
-  try {
-    const rows = Object.entries(WHALE_WALLETS).map(([address, label]) => ({
-      address, label, source: "kollist", added_at: new Date().toISOString()
-    }));
-    await sb.from("tracked_whales").upsert(rows, { onConflict: "address", ignoreDuplicates: false });
-    console.log(`[SYNC] Upserted ${rows.length} wallets to tracked_whales`);
-  } catch (e: any) {
-    console.warn("[SYNC] tracked_whales upsert failed:", e.message);
-  }
-}
-
-const corsHeaders = {
+// ── CORS ──────────────────────────────────────────────────────────────────────
+const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
+const jsonResp = (d: unknown, s = 200) =>
+  new Response(JSON.stringify(d), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
-function jsonResp(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+// ── Price fetch (server-side, no browser) ─────────────────────────────────────
+async function fetchPrice(mint: string): Promise<number> {
+  // Try DexScreener first
+  try {
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const pairs = ((await r.json())?.pairs || []).filter((p: any) => p?.priceUsd && parseFloat(p.priceUsd) > 0);
+      if (pairs.length) {
+        pairs.sort((a: any, b: any) => parseFloat(b.liquidity?.usd || 0) - parseFloat(a.liquidity?.usd || 0));
+        const p = parseFloat(pairs[0].priceUsd);
+        if (p > 0) return p;
+      }
+    }
+  } catch {}
+  // Fallback: Jupiter
+  try {
+    const r = await fetch(`https://price.jup.ag/v6/price?ids=${mint}`, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) { const p = parseFloat((await r.json())?.data?.[mint]?.price); if (p > 0) return p; }
+  } catch {}
+  return 0;
 }
 
+// ── Kelly position sizing ─────────────────────────────────────────────────────
+function calcPositionSize(portfolio: number, wins: number, losses: number, openExposure: number): number {
+  if (portfolio <= 0) return 0;
+  const total    = wins + losses;
+  const winRate  = total >= 5 ? wins / total : 0.5;
+  const pct      = Math.min(0.10, Math.max(0.05, winRate * 0.12));
+  const maxExp   = portfolio * 0.50;
+  const room     = maxExp - openExposure;
+  if (room <= 0.001) return 0; // 50% cap hit
+  return Math.min(portfolio * pct, room);
+}
+
+// ── Open paper trade (server-side) ───────────────────────────────────────────
+async function openTrade(signal: any, sess: any): Promise<void> {
+  if (!sess?.started_at || sess?.stopped_at) return;
+
+  const portfolio = Number(sess.portfolio || 0);
+  if (portfolio <= 0) { console.log("[open] zero portfolio"); return; }
+
+  // No duplicate positions in same token
+  const { data: existing } = await sb.from("shreem_brzee_paper_trades")
+    .select("id").eq("status", "open").eq("mint", signal.mint).limit(1);
+  if (existing?.length) { console.log(`[open] already have position in ${signal.mint}`); return; }
+
+  // Check exposure
+  const { data: openTrades } = await sb.from("shreem_brzee_paper_trades")
+    .select("amount_sol").eq("status", "open");
+  const openExposure = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+
+  const size = calcPositionSize(portfolio, Number(sess.wins || 0), Number(sess.losses || 0), openExposure);
+  if (size < 0.001) { console.log(`[open] blocked — 50% cap or zero size`); return; }
+
+  // Fetch entry price
+  let entryPrice = 0;
+  if (signal.mint) {
+    entryPrice = await fetchPrice(signal.mint);
+    if (!entryPrice) {
+      // Wait 3s and retry once
+      await new Promise(r => setTimeout(r, 3000));
+      entryPrice = await fetchPrice(signal.mint);
+    }
+  }
+
+  // Insert paper trade
+  const { error } = await sb.from("shreem_brzee_paper_trades").insert({
+    session_id:  "default",
+    sig:         signal.sig + "_open",
+    mint:        signal.mint,
+    symbol:      signal.symbol,
+    label:       signal.label,
+    wallet:      signal.wallet,
+    action:      "BUY",
+    entry_price: entryPrice || null,
+    amount_sol:  size,
+    gross_sol:   size,
+    net_sol:     size,
+    status:      "open",
+    opened_at:   new Date().toISOString(),
+  });
+
+  if (error) { console.error("[open] insert error:", error.message); return; }
+
+  // Deduct from portfolio
+  await sb.from("shreem_brzee_session").upsert({
+    id: "default", ...sess,
+    portfolio:  portfolio - size,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "id" });
+
+  console.log(`[open] ✅ ${signal.symbol || signal.mint?.slice(0,8)} | ${size.toFixed(4)} SOL | via ${signal.label} | entry=$${entryPrice || "?"}`);
+}
+
+// ── Close paper trade (server-side) ──────────────────────────────────────────
+async function closeTrade(pos: any, reason: string, exitPriceOverride?: number): Promise<void> {
+  const entry = Number(pos.entry_price) || 0;
+  const size  = Number(pos.amount_sol)  || 0;
+
+  let exitPrice = exitPriceOverride || 0;
+  if (!exitPrice && pos.mint) {
+    exitPrice = await fetchPrice(pos.mint);
+  }
+
+  const pnlPct = entry > 0 && exitPrice > 0 ? (exitPrice - entry) / entry * 100 : 0;
+  const pnlSol = size * (pnlPct / 100);
+  const exitSol = size + pnlSol;
+  const won = pnlSol >= 0;
+
+  await sb.from("shreem_brzee_paper_trades").update({
+    status:      "closed",
+    closed_at:   new Date().toISOString(),
+    exit_price:  exitPrice || null,
+    pnl_pct:     pnlPct,
+    pnl_sol:     pnlSol,
+    sell_reason: reason,
+  }).eq("id", pos.id);
+
+  // Update session
+  const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
+  if (sess) {
+    await sb.from("shreem_brzee_session").upsert({
+      id:         "default",
+      ...sess,
+      portfolio:  Number(sess.portfolio || 0) + exitSol,
+      total_pnl:  Number(sess.total_pnl  || 0) + pnlSol,
+      wins:       Number(sess.wins   || 0) + (won ? 1 : 0),
+      losses:     Number(sess.losses || 0) + (won ? 0 : 1),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+  }
+
+  console.log(`[close] ${won?"✅":"❌"} ${pos.symbol || pos.mint?.slice(0,8)} | ${pnlPct.toFixed(1)}% | ${reason}`);
+}
+
+// ── Cron job: check stop-loss + 48h cap on ALL open positions ─────────────────
+async function runCron(): Promise<object> {
+  const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
+  if (!sess?.started_at || sess?.stopped_at) return { skipped: "session not running" };
+
+  const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
+    .select("*").eq("status", "open");
+
+  if (!openPos?.length) return { checked: 0 };
+
+  let closed = 0;
+  const results: any[] = [];
+
+  for (const pos of openPos) {
+    const entry  = Number(pos.entry_price) || 0;
+    const ageH   = (Date.now() - new Date(pos.opened_at || pos.created_at).getTime()) / 3_600_000;
+
+    // 48h safety cap (no browser needed — runs server-side every 5min)
+    if (ageH >= 48) {
+      await closeTrade(pos, "48h_safety_cap");
+      closed++; results.push({ id: pos.id, reason: "48h_safety_cap", ageH: ageH.toFixed(1) });
+      continue;
+    }
+
+    // Stop-loss: need current price
+    if (entry > 0 && pos.mint) {
+      const price = await fetchPrice(pos.mint);
+      if (price > 0) {
+        const pnlPct = (price - entry) / entry * 100;
+        if (pnlPct <= -30) {
+          await closeTrade(pos, "stop_loss", price);
+          closed++; results.push({ id: pos.id, reason: "stop_loss", pnlPct: pnlPct.toFixed(1) });
+          continue;
+        }
+        // Update live PNL in DB so frontend always sees current value even without browser
+        await sb.from("shreem_brzee_paper_trades").update({
+          exit_price: price, // store current price as "exit_price" for display
+          pnl_pct:    pnlPct,
+          pnl_sol:    Number(pos.amount_sol || 0) * (pnlPct / 100),
+        }).eq("id", pos.id).eq("status", "open"); // only updates if still open
+      }
+    }
+  }
+
+  return { checked: openPos.length, closed, results };
+}
+
+// ── Sync wallets to tracked_whales ───────────────────────────────────────────
+async function syncWallets(): Promise<void> {
+  try {
+    const rows = Object.entries(WHALE_WALLETS).map(([address, label]) => ({
+      address, label, source: "kollist", added_at: new Date().toISOString()
+    }));
+    await sb.from("tracked_whales").upsert(rows, { onConflict: "address" });
+  } catch (e: any) { console.warn("[sync]", e.message); }
+}
+
+// ── Parse swap from Helius tx ─────────────────────────────────────────────────
 function findWhale(tx: any): string | null {
   if (tx.feePayer && WHALE_ADDRS.has(tx.feePayer)) return tx.feePayer;
-  for (const a of (tx.accountData || [])) {
+  for (const a of (tx.accountData || []))
     if (WHALE_ADDRS.has(a.account)) return a.account;
-  }
   for (const t of (tx.nativeTransfers || [])) {
     if (WHALE_ADDRS.has(t.fromUserAccount)) return t.fromUserAccount;
-    if (WHALE_ADDRS.has(t.toUserAccount)) return t.toUserAccount;
+    if (WHALE_ADDRS.has(t.toUserAccount))   return t.toUserAccount;
   }
   for (const t of (tx.tokenTransfers || [])) {
     if (WHALE_ADDRS.has(t.fromUserAccount)) return t.fromUserAccount;
-    if (WHALE_ADDRS.has(t.toUserAccount)) return t.toUserAccount;
+    if (WHALE_ADDRS.has(t.toUserAccount))   return t.toUserAccount;
   }
   return null;
 }
 
 function parseSwap(tx: any, wallet: string) {
   const tokenTx = (tx.tokenTransfers || []).find((t: any) =>
-    (t.fromUserAccount === wallet || t.toUserAccount === wallet) &&
-    t.mint !== SOL_MINT
+    (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.mint !== SOL_MINT
   );
   if (!tokenTx) return null;
-
-  // Use accountData native balance change for accurate SOL amount (not gas fee)
   const acctData = (tx.accountData || []).find((a: any) => a.account === wallet);
-  let amountSol: number | null = null;
-  if (acctData && typeof acctData.nativeBalanceChange === 'number') {
-    amountSol = Math.abs(acctData.nativeBalanceChange) / 1_000_000_000;
-  }
-  // Fallback: sum all native transfers involving whale (minus tiny dust < 0.001 SOL)
+  let amountSol = acctData?.nativeBalanceChange ? Math.abs(acctData.nativeBalanceChange) / LAMPORTS : 0;
   if (!amountSol || amountSol < 0.001) {
-    const solTransfers = (tx.nativeTransfers || []).filter((t: any) =>
-      (t.fromUserAccount === wallet || t.toUserAccount === wallet) &&
-      (t.amount || 0) > 100_000 // > 0.0001 SOL
-    );
-    if (solTransfers.length > 0) {
-      amountSol = solTransfers.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) / 1_000_000_000;
-    }
+    amountSol = (tx.nativeTransfers || [])
+      .filter((t: any) => (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.amount > 100_000)
+      .reduce((s: number, t: any) => s + t.amount, 0) / LAMPORTS;
   }
-
-  const action = (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY" | "SELL";
   return {
-    action,
-    mint: tokenTx.mint as string,
-    symbol: (tokenTx.tokenName || tokenTx.symbol || null) as string | null,
+    action:     (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY"|"SELL",
+    mint:       tokenTx.mint as string,
+    symbol:     tokenTx.tokenName || tokenTx.symbol || null,
     amountSol,
-    tokenAmount: (tokenTx.tokenAmount || null) as number | null,
-    isPumpFun: (tx.source || "").toLowerCase().includes("pump") ||
-      (tx.instructions || []).some((ix: any) =>
-        ix.programId === "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
-      ),
+    tokenAmount: tokenTx.tokenAmount || null,
+    isPumpFun:  (tx.source||"").toLowerCase().includes("pump") ||
+                (tx.instructions||[]).some((ix: any) => ix.programId === "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"),
   };
 }
 
+// ── Main handler ──────────────────────────────────────────────────────────────
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
-  const url = new URL(req.url);
+  const url  = new URL(req.url);
   const path = url.pathname;
 
-  // GET /signals — bot poller fetches latest signals every 3s
-  if (req.method === "GET" && path.endsWith("/signals")) {
-    const { data, error } = await sb
-      .from("shreem_brzee_signals")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (error) return jsonResp({ error: error.message }, 500);
-    return jsonResp(data || []);
+  // ── Cron endpoint — called every 5 min by Supabase cron ──────────────────
+  // Set up: Supabase Dashboard → Database → Extensions → pg_cron
+  // Then: select cron.schedule('shreem-cron', '*/5 * * * *',
+  //   $$select net.http_get(url := 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/cron')$$);
+  if (req.method === "GET" && path.endsWith("/cron")) {
+    const result = await runCron();
+    return jsonResp({ ok: true, ...result, ts: new Date().toISOString() });
   }
 
-  // GET /session
+  // ── Read endpoints (frontend display) ────────────────────────────────────
   if (req.method === "GET" && path.endsWith("/session")) {
-    const { data, error } = await sb
-      .from("shreem_brzee_session")
-      .select("*")
-      .eq("id", "default")
-      .single();
-    if (error && error.code !== "PGRST116") {
-      return jsonResp({ error: error.message }, 500);
-    }
+    const { data } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
     return jsonResp(data || null);
   }
 
-  // GET /ping — version check
-  if (req.method === "GET" && path.endsWith("/ping")) {
-    return jsonResp({ ok: true, version: "v4", timestamp: new Date().toISOString() });
+  if (req.method === "GET" && path.endsWith("/trades")) {
+    const { data } = await sb.from("shreem_brzee_paper_trades")
+      .select("*").order("created_at", { ascending: false }).limit(100);
+    return jsonResp(data || []);
   }
 
-  // POST /test — inject a BUY test signal
+  if (req.method === "GET" && path.endsWith("/signals")) {
+    const { data } = await sb.from("shreem_brzee_signals")
+      .select("*").order("created_at", { ascending: false }).limit(100);
+    return jsonResp(data || []);
+  }
+
+  if (req.method === "GET" && path.endsWith("/open")) {
+    const { data } = await sb.from("shreem_brzee_paper_trades")
+      .select("*").eq("status","open").order("opened_at", { ascending: false });
+    return jsonResp(data || []);
+  }
+
+  if (req.method === "GET" && path.endsWith("/ping")) {
+    return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
+  }
+
+  // ── Test signals ──────────────────────────────────────────────────────────
   if (req.method === "POST" && path.endsWith("/test")) {
     const sig = "TEST_" + Date.now();
-    const testRow = {
-      sig,
-      wallet: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",
-      label: "Remusofmars",
-      action: "BUY",
+    const signal = {
+      sig, wallet: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",
+      label: "Remusofmars", action: "BUY",
       mint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
-      symbol: "POPCAT",
-      amount_sol: 1.5,
-      token_amount: 50000,
-      is_pump_fun: true,
-      block_time: Math.floor(Date.now() / 1000),
+      symbol: "POPCAT", amount_sol: 1.5, token_amount: 50000,
+      is_pump_fun: true, block_time: Math.floor(Date.now()/1000),
       created_at: new Date().toISOString(),
     };
-    const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message, version: "v4" }, 500);
-    return jsonResp({ ok: true, sig, action: "BUY", version: "v4" });
+    await sb.from("shreem_brzee_signals").upsert(signal, { onConflict: "sig" });
+    // Open paper trade immediately server-side
+    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
+    if (sess) await openTrade(signal, sess);
+    return jsonResp({ ok: true, sig, action: "BUY", version: "v5" });
   }
 
-  // POST /test-sell — inject a SELL test signal (closes POPCAT position)
   if (req.method === "POST" && path.endsWith("/test-sell")) {
     const sig = "TEST_SELL_" + Date.now();
-    const testRow = {
-      sig,
-      wallet: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",
-      label: "Remusofmars",
-      action: "SELL",
+    const signal = {
+      sig, wallet: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",
+      label: "Remusofmars", action: "SELL",
       mint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
-      symbol: "POPCAT",
-      amount_sol: 3.2,
-      token_amount: 50000,
-      is_pump_fun: true,
-      block_time: Math.floor(Date.now() / 1000),
+      symbol: "POPCAT", amount_sol: 3.2,
       created_at: new Date().toISOString(),
     };
-    const { error } = await sb.from("shreem_brzee_signals").upsert(testRow, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message, version: "v4" }, 500);
-    return jsonResp({ ok: true, sig, action: "SELL", version: "v4" });
+    await sb.from("shreem_brzee_signals").upsert(signal, { onConflict: "sig" });
+    // Close matching positions server-side
+    const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
+      .select("*").eq("status","open").eq("mint", signal.mint);
+    for (const pos of (openPos || [])) await closeTrade(pos, "whale_sell_mirror");
+    return jsonResp({ ok: true, sig, action: "SELL", closed: (openPos||[]).length, version: "v5" });
   }
 
-  // POST /signal — manual insert of a single signal row
+  // ── Manual signal insert ──────────────────────────────────────────────────
   if (req.method === "POST" && path.endsWith("/signal")) {
     let body: any;
     try { body = await req.json(); } catch { return jsonResp({ error: "bad json" }, 400); }
-    const signal = body?.signal;
-    if (!signal || !signal.sig) return jsonResp({ error: "missing signal.sig" }, 400);
+    const s = body?.signal;
+    if (!s?.sig) return jsonResp({ error: "missing signal.sig" }, 400);
     const row = {
-      sig:          signal.sig,
-      wallet:       signal.wallet,
-      label:        signal.label ?? (signal.wallet ? WHALE_WALLETS[signal.wallet] ?? null : null),
-      action:       signal.action,
-      mint:         signal.mint,
-      symbol:       signal.symbol ?? null,
-      amount_sol:   signal.amount_sol ?? signal.amountSol ?? null,
-      token_amount: signal.token_amount ?? signal.tokenAmount ?? null,
-      is_pump_fun:  signal.is_pump_fun ?? signal.isPumpFun ?? false,
-      block_time:   signal.block_time ?? signal.blockTime ?? Math.floor(Date.now() / 1000),
+      sig: s.sig, wallet: s.wallet,
+      label: s.label ?? WHALE_WALLETS[s.wallet] ?? null,
+      action: s.action, mint: s.mint, symbol: s.symbol ?? null,
+      amount_sol: s.amount_sol ?? null, token_amount: s.token_amount ?? null,
+      is_pump_fun: s.is_pump_fun ?? false,
+      block_time: s.block_time ?? Math.floor(Date.now()/1000),
     };
-    const { error } = await sb.from("shreem_brzee_signals").upsert(row, { onConflict: "sig" });
-    if (error) return jsonResp({ error: error.message, version: "v4" }, 500);
-    return jsonResp({ ok: true, sig: row.sig, version: "v4" });
+    await sb.from("shreem_brzee_signals").upsert(row, { onConflict: "sig" });
+    return jsonResp({ ok: true, sig: row.sig, version: "v5" });
   }
 
-  // POST /paper
-  if (req.method === "POST" && path.endsWith("/paper")) {
-    let body: any;
-    try { body = await req.json(); } catch { return jsonResp({ error: "bad json" }, 400); }
-    const { type, trade, session } = body;
-    try {
-      if ((type === "trade" || type === "both") && trade) {
-        await sb.from("shreem_brzee_paper_trades").insert(trade);
-      }
-      if ((type === "session" || type === "both") && session) {
-        await sb.from("shreem_brzee_session").upsert({
-          id: "default", ...session, updated_at: new Date().toISOString(),
-        });
-      }
-    } catch (e: any) {
-      console.error("[paper]", e.message);
-      return jsonResp({ error: e.message }, 500);
-    }
-    return jsonResp({ ok: true });
-  }
-
-  // POST / — Helius webhook
-  // IMPORTANT: Helius auto-disables webhooks that return non-200.
-  // Every path below must return HTTP 200, even on errors.
+  // ── Helius webhook (main entry point) ────────────────────────────────────
+  // IMPORTANT: must always return 200 or Helius disables the webhook
   if (req.method !== "POST") return jsonResp({ error: "method" }, 405);
 
   try {
+    // Sync wallets in background (don't await — don't slow down webhook response)
+    syncWallets().catch(() => {});
+
     let body: any;
     try { body = await req.json(); } catch {
-      return jsonResp({ ok: false, error: "bad json", fallback: true });
+      return jsonResp({ ok: false, error: "bad json" });
     }
 
     const txs = Array.isArray(body) ? body : [body];
     let inserted = 0, skipped = 0;
 
+    // Load session once for all txs
+    const { data: sess } = await sb.from("shreem_brzee_session")
+      .select("*").eq("id","default").single();
+
     for (const tx of txs) {
       try {
-        const sig = tx.signature;
+        const sig    = tx.signature;
         if (!sig) { skipped++; continue; }
         const wallet = findWhale(tx);
         if (!wallet) { skipped++; continue; }
-        const swap = parseSwap(tx, wallet);
+        const swap   = parseSwap(tx, wallet);
         if (!swap) { skipped++; continue; }
 
-        const { error } = await sb.from("shreem_brzee_signals").upsert({
+        const signal = {
           sig,
           wallet,
           label:        WHALE_WALLETS[wallet],
@@ -278,12 +427,29 @@ serve(async (req) => {
           token_amount: swap.tokenAmount,
           is_pump_fun:  swap.isPumpFun,
           block_time:   tx.timestamp || null,
-        }, { onConflict: "sig" });
+          created_at:   new Date().toISOString(),
+        };
 
-        if (error) { console.error("[signal]", error.message); skipped++; }
-        else {
-          inserted++;
-          console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
+        const { error } = await sb.from("shreem_brzee_signals")
+          .upsert(signal, { onConflict: "sig" });
+
+        if (error) { console.error("[signal]", error.message); skipped++; continue; }
+        inserted++;
+        console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
+
+        // ── SERVER-SIDE TRADE EXECUTION (phone can be off) ──────────────
+        if (sess?.started_at && !sess?.stopped_at) {
+          if (swap.action === "BUY") {
+            // Open paper trade immediately — no browser needed
+            await openTrade(signal, sess);
+          } else if (swap.action === "SELL") {
+            // Close matching open positions immediately — no browser needed
+            const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
+              .select("*").eq("status","open").eq("mint", swap.mint);
+            for (const pos of (openPos || [])) {
+              await closeTrade(pos, "whale_sell_mirror");
+            }
+          }
         }
       } catch (e: any) {
         console.error("[tx]", e.message);
@@ -291,9 +457,9 @@ serve(async (req) => {
       }
     }
 
-    return jsonResp({ ok: true, inserted, skipped });
+    return jsonResp({ ok: true, inserted, skipped, version: "v5" });
   } catch (e: any) {
     console.error("[webhook]", e);
-    return jsonResp({ ok: false, error: e?.message ?? String(e), fallback: true });
+    return jsonResp({ ok: false, error: e?.message ?? String(e) });
   }
 });
