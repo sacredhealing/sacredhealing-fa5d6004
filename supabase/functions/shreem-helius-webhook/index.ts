@@ -297,13 +297,65 @@ serve(async (req) => {
   const url  = new URL(req.url);
   const path = url.pathname;
 
-  // ── Cron endpoint — called every 5 min by Supabase cron ──────────────────
-  // Set up: Supabase Dashboard → Database → Extensions → pg_cron
-  // Then: select cron.schedule('shreem-cron', '*/5 * * * *',
-  //   $$select net.http_get(url := 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/cron')$$);
+  // ── Cron endpoint — called every 5 min by Supabase cron ────────────────
   if (req.method === "GET" && path.endsWith("/cron")) {
     const result = await runCron();
     return jsonResp({ ok: true, ...result, ts: new Date().toISOString() });
+  }
+
+  // ── Setup endpoint — call ONCE to install the pg_cron job automatically ──
+  // GET /setup-cron  →  installs pg_cron + pg_net + creates the 5-min schedule
+  if (req.method === "GET" && path.endsWith("/setup-cron")) {
+    try {
+      const SUPA_URL = Deno.env.get("SUPABASE_URL")!;
+      const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const EDGE_URL = `${SUPA_URL.replace("supabase.co","supabase.co")}/functions/v1/shreem-helius-webhook/cron`;
+      
+      // Use Supabase's SQL execution endpoint (requires service role)
+      const sqlStatements = [
+        "CREATE EXTENSION IF NOT EXISTS pg_cron;",
+        "CREATE EXTENSION IF NOT EXISTS pg_net;",
+        // Remove existing job if any
+        "SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'shreem-brzee-cron';",
+        // Create the 5-minute cron job
+        `SELECT cron.schedule('shreem-brzee-cron','*/5 * * * *',
+          $$SELECT net.http_get(url := '${SUPA_URL}/functions/v1/shreem-helius-webhook/cron') AS result;$$
+        );`,
+      ];
+
+      const results: any[] = [];
+      for (const sql of sqlStatements) {
+        const r = await fetch(`${SUPA_URL}/rest/v1/rpc/`, {
+          method: "POST",
+          headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ query: sql }),
+        });
+        results.push({ sql: sql.slice(0, 60), status: r.status });
+      }
+
+      // Verify the job exists
+      const { data: jobs } = await sb.from("cron.job" as any).select("jobname,schedule,active").eq("jobname","shreem-brzee-cron");
+
+      return jsonResp({
+        ok: true,
+        message: "Cron job setup complete — bot runs every 5 min server-side",
+        results,
+        job: jobs?.[0] || null,
+        cron_url: `${SUPA_URL}/functions/v1/shreem-helius-webhook/cron`,
+      });
+    } catch (e: any) {
+      // pg_cron may need to be enabled in Supabase Dashboard first
+      return jsonResp({
+        ok: false,
+        error: e.message,
+        manual_steps: [
+          "1. Supabase Dashboard → Database → Extensions → enable pg_cron",
+          "2. Supabase Dashboard → Database → Extensions → enable pg_net",
+          "3. Then call GET /setup-cron again",
+          "OR: run SETUP_CRON_JOB.sql in Supabase SQL Editor"
+        ]
+      }, 500);
+    }
   }
 
   // ── Read endpoints (frontend display) ────────────────────────────────────
