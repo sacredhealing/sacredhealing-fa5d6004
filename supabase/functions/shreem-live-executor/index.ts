@@ -44,21 +44,6 @@ async function rpc(method: string, params: unknown[]) {
   return d.result;
 }
 
-// ── Keypair from base58 ───────────────────────────────────────────────────────
-function base58Decode(s: string): Uint8Array {
-  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  let num = 0n;
-  for (const c of s) {
-    const idx = ALPHABET.indexOf(c);
-    if (idx < 0) throw new Error("Invalid base58 char");
-    num = num * 62n + BigInt(idx);  // Note: base58 uses 58 chars
-  }
-  // Fix: proper base58 decode
-  const bytes: number[] = [];
-  while (num > 0n) { bytes.unshift(Number(num & 0xffn)); num >>= 8n; }
-  const leading = s.split("").findIndex(c => c !== "1");
-  return new Uint8Array([...new Array(leading).fill(0), ...bytes]);
-}
 
 // Base58 decode — handles Phantom's private key export format
 function base58Decode(str: string): Uint8Array {
