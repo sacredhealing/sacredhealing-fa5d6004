@@ -202,96 +202,101 @@ serve(async (req) => {
     if (!kp) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not configured" }, 400);
 
     const wallet = pubkeyToBase58(kp.publicKey);
+    const body   = await req.json().catch(() => ({}));
 
-    // Check session is in live mode
-    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
-    if (!sess) return jsonResp({ ok: false, error: "No session" }, 400);
+    // Get signal — either passed directly from webhook or from DB
+    const directSig  = body?.direct_signal;
+    const sessHint   = body?.session;
+
+    // Load session for sizing
+    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
+    if (!sess) return jsonResp({ ok: false, error: "No session" });
     if (sess.stopped_at) return jsonResp({ ok: false, skipped: true, reason: "Session stopped" });
     if (sess.mode !== "live") return jsonResp({ ok: false, skipped: true, reason: "Not in live mode" });
 
-    // Get unprocessed BUY signals
-    const { data: signals } = await sb
-      .from("shreem_brzee_signals")
-      .select("*")
-      .eq("action", "BUY")
-      .eq("live_processed", false)
-      .order("created_at", { ascending: true })
-      .limit(5);
+    // Use passed signal or skip
+    if (!directSig?.mint) return jsonResp({ ok: true, skipped: true, reason: "No signal provided" });
 
-    if (!signals?.length) return jsonResp({ ok: true, skipped: true, reason: "No pending signals" });
+    const sig = directSig;
 
-    const results: any[] = [];
+    // Duplicate check — don't open two positions in same mint
+    const { data: existingMint } = await sb.from("shreem_brzee_live_trades")
+      .select("id").eq("status","open").eq("mint", sig.mint).limit(1);
+    if (existingMint?.length) return jsonResp({ ok: true, skipped: true, reason: "Already have live position in this token" });
 
-    for (const sig of signals) {
-      try {
-        // Mark processed immediately to prevent double-execution
-        await sb.from("shreem_brzee_signals").update({ live_processed: true }).eq("id", sig.id);
+    // Duplicate sig check
+    const { data: existingSig } = await sb.from("shreem_brzee_live_trades")
+      .select("id").eq("sig", sig.sig + "_live").limit(1);
+    if (existingSig?.length) return jsonResp({ ok: true, skipped: true, reason: "Signal already executed" });
 
-        // Check SOL balance
-        const balRes = await rpc("getBalance", [wallet]);
-        const balSol = balRes.value / LAMPORTS;
+    // Check real SOL balance in bot wallet
+    const balRes = await rpc("getBalance", [wallet]);
+    const balSol = balRes.value / LAMPORTS;
 
-        // Check 50% exposure cap
-        const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
-          .select("amount_sol").eq("status", "open");
-        const openExp = (openTrades || []).reduce((s: number, t: any) => s + (t.amount_sol || 0), 0);
-        const maxExp  = balSol * 0.5;
-        if (openExp >= maxExp) {
-          results.push({ sig: sig.sig, skipped: true, reason: "50% cap" });
-          continue;
-        }
+    if (balSol < 0.01) return jsonResp({ ok: false, error: `Bot wallet balance too low: ${balSol} SOL` });
 
-        // Kelly sizing 5-10%
-        const wins = Number(sess.wins || 0), losses = Number(sess.losses || 0);
-        const wr   = (wins + losses) >= 5 ? wins / (wins + losses) : 0.5;
-        const pct  = Math.min(0.10, Math.max(0.05, wr * 0.12));
-        const size = Math.min(balSol * pct, maxExp - openExp);
+    // 50% exposure cap
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
+      .select("amount_sol").eq("status","open");
+    const openExp = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol)||0), 0);
+    const maxExp  = balSol * 0.5;
+    if (openExp >= maxExp) return jsonResp({ ok: true, skipped: true, reason: "50% exposure cap reached" });
 
-        if (size < 0.01) {
-          results.push({ sig: sig.sig, skipped: true, reason: `Too small: ${size.toFixed(4)} SOL` });
-          continue;
-        }
+    // Kelly sizing 5-10% of REAL wallet balance
+    const wins = Number(sess.wins || 0), losses = Number(sess.losses || 0);
+    const wr   = (wins + losses) >= 5 ? wins / (wins + losses) : 0.5;
+    const pct  = Math.min(0.10, Math.max(0.05, wr * 0.12));
+    const size = Math.min(balSol * pct, maxExp - openExp);
 
-        const lamports = Math.floor(size * LAMPORTS);
+    if (size < 0.005) return jsonResp({ ok: false, error: `Trade size too small: ${size.toFixed(4)} SOL` });
 
-        // Jupiter quote
-        const quote = await jupiterQuote(SOL_MINT, sig.mint, lamports);
-        const slippage = Number(quote.inAmount) > 0
-          ? (Number(quote.inAmount) - Number(quote.otherAmountThreshold)) / Number(quote.inAmount)
-          : 0;
+    const lamports = Math.floor(size * LAMPORTS);
+    console.log(`[live] Executing: ${sig.symbol} | ${size.toFixed(4)} SOL | wallet balance: ${balSol.toFixed(4)} SOL`);
 
-        if (slippage > 0.05) {
-          results.push({ sig: sig.sig, skipped: true, reason: `Slippage ${(slippage*100).toFixed(1)}%` });
-          continue;
-        }
+    // Jupiter quote
+    const quote = await jupiterQuote(SOL_MINT, sig.mint, lamports);
+    const slippage = Number(quote.inAmount) > 0
+      ? (Number(quote.inAmount) - Number(quote.otherAmountThreshold)) / Number(quote.inAmount) : 0;
 
-        // Build + sign + send
-        const swapTx  = await jupiterSwapTx(quote, wallet);
-        const txSig   = await signAndSendTx(swapTx, kp);
-        const confirmed = await waitConfirm(txSig);
+    if (slippage > 0.05) return jsonResp({ ok: false, error: `Slippage too high: ${(slippage*100).toFixed(1)}%` });
 
-        const entryPrice = Number(quote.inAmount) > 0 && Number(quote.outAmount) > 0
-          ? (Number(quote.inAmount) / LAMPORTS) / (Number(quote.outAmount) / 1e6)
-          : null;
+    // Sign + send
+    const swapTx    = await jupiterSwapTx(quote, wallet);
+    const txSig     = await signAndSendTx(swapTx, kp);
+    const confirmed = await waitConfirm(txSig);
 
-        await sb.from("shreem_brzee_live_trades").insert({
-          session_id: "default", sig: sig.sig + "_live", tx_sig: txSig,
-          mint: sig.mint, symbol: sig.symbol, label: sig.label, wallet: sig.wallet,
-          action: "BUY", amount_sol: size, entry_price: entryPrice,
-          tokens_received: Number(quote.outAmount),
-          status: confirmed ? "open" : "unconfirmed",
-          opened_at: new Date().toISOString(), slippage_pct: slippage * 100,
-        });
+    const entryPrice = Number(quote.inAmount) > 0 && Number(quote.outAmount) > 0
+      ? (Number(quote.inAmount) / LAMPORTS) / (Number(quote.outAmount) / 1e6) : null;
 
-        results.push({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, sol: size });
-      } catch (e: any) {
-        await sb.from("shreem_brzee_signals").update({ live_processed: false }).eq("id", sig.id);
-        results.push({ sig: sig.sig, error: e.message });
-      }
-    }
+    await sb.from("shreem_brzee_live_trades").insert({
+      session_id: "default",
+      sig:        sig.sig + "_live",
+      tx_sig:     txSig,
+      mint:       sig.mint,
+      symbol:     sig.symbol,
+      label:      sig.label,
+      wallet:     sig.wallet,
+      action:     "BUY",
+      amount_sol: size,
+      entry_price: entryPrice,
+      tokens_received: Number(quote.outAmount),
+      status:     confirmed ? "open" : "unconfirmed",
+      opened_at:  new Date().toISOString(),
+      slippage_pct: slippage * 100,
+    });
 
-    return jsonResp({ ok: true, results, wallet });
+    // Update session portfolio
+    await sb.from("shreem_brzee_session").upsert({
+      id: "default", ...sess,
+      portfolio:  Number(sess.portfolio || 0) - size,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+
+    console.log(`[live] ✅ ${sig.symbol} | tx: ${txSig.slice(0,16)}... | confirmed: ${confirmed}`);
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet });
+
   } catch (e: any) {
+    console.error("[live-executor]", e.message);
     return jsonResp({ ok: false, error: e.message }, 500);
   }
 });
