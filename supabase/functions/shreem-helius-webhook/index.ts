@@ -701,33 +701,33 @@ serve(async (req) => {
           if (sessNow.mode === "live") {
             // LIVE MODE: pass signal directly to executor — no flag polling needed
             if (swap.action === "BUY") {
-              // Fire and forget — executor runs Jupiter swap immediately
-              fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${SUPABASE_KEY}`,
-                },
-                body: JSON.stringify({
-                  direct_signal: {
-                    sig:        signal.sig,
-                    mint:       signal.mint,
-                    symbol:     signal.symbol,
-                    label:      signal.label,
-                    wallet:     signal.wallet,
-                    amount_sol: signal.amount_sol,
+              try {
+                const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${SUPABASE_KEY}`,
                   },
-                  session: {
-                    portfolio: sessNow.portfolio,
-                    wins:      sessNow.wins,
-                    losses:    sessNow.losses,
-                  }
-                }),
-              });
+                  body: JSON.stringify({
+                    direct_signal: {
+                      sig:        signal.sig,
+                      mint:       signal.mint,
+                      symbol:     signal.symbol,
+                      label:      signal.label,
+                      wallet:     signal.wallet,
+                      amount_sol: signal.amount_sol,
+                    },
+                    session: {
+                      portfolio: sessNow.portfolio,
+                      wins:      sessNow.wins,
+                      losses:    sessNow.losses,
+                    }
+                  }),
+                });
                 const execData = await execR.json().catch(() => ({}));
                 console.log("[live-exec RESULT]", JSON.stringify(execData));
-              } catch(execErr: any) {
-                console.error("[live-exec ERROR]", execErr.message);
+              } catch (execErr: any) {
+                console.error("[live-exec ERROR]", execErr?.message ?? String(execErr));
               }
               console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
