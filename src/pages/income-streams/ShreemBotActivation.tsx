@@ -96,7 +96,7 @@ export default function ShreemBotActivation() {
 
   async function updateWallet() {
     if (!walletAddress || !member) return;
-    await supabase.from("shreem_bot_members")
+    await (supabase as any).from("shreem_bot_members")
       .update({ wallet_address: walletAddress, updated_at: new Date().toISOString() })
       .eq("user_id", member.user_id);
     toast({ title: "Wallet updated", description: "Profits will now flow to your connected wallet" });
