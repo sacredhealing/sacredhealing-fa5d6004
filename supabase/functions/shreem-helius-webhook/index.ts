@@ -25,6 +25,8 @@ const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-
 const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 const SOL_MINT     = "So11111111111111111111111111111111111111112";
 const LAMPORTS     = 1_000_000_000;
+const WEBHOOK_DB_WRITES_ENABLED = Deno.env.get("SHREEM_WEBHOOK_DB_WRITES_ENABLED") === "true";
+const MAX_WEBHOOK_TXS_PER_BATCH = 10;
 
 // ── Whale wallet list ─────────────────────────────────────────────────────────
 const WHALE_WALLETS: Record<string, string> = {
@@ -627,16 +629,17 @@ serve(async (req) => {
   if (req.method !== "POST") return jsonResp({ error: "method" }, 405);
 
   try {
-    // Sync wallets in background (don't await — don't slow down webhook response)
-    syncWallets().catch(() => {});
-
     let body: any;
     try { body = await req.json(); } catch {
       return jsonResp({ ok: false, error: "bad json" });
     }
 
-    const txs = Array.isArray(body) ? body : [body];
+    const txs = (Array.isArray(body) ? body : [body]).slice(0, MAX_WEBHOOK_TXS_PER_BATCH);
     let inserted = 0, skipped = 0;
+
+    if (!WEBHOOK_DB_WRITES_ENABLED) {
+      return jsonResp({ ok: true, inserted, skipped: txs.length, paused: "db_writes_disabled", version: "v5-safe" });
+    }
 
     for (const tx of txs) {
       // Load FRESH session for each tx — reflects portfolio deductions from prior txs in same batch
