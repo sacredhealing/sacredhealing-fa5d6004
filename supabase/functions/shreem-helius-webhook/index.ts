@@ -395,7 +395,9 @@ serve(async (req) => {
   }
 
   if (req.method === "GET" && path.endsWith("/trades")) {
-    const { data } = await sb.from("shreem_brzee_paper_trades")
+    const { data: sessRow } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
+    const table = sessRow?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
+    const { data } = await sb.from(table)
       .select("*").order("created_at", { ascending: false }).limit(100);
     return jsonResp(data || []);
   }
@@ -407,7 +409,9 @@ serve(async (req) => {
   }
 
   if (req.method === "GET" && path.endsWith("/open")) {
-    const { data } = await sb.from("shreem_brzee_paper_trades")
+    const { data: sessRow } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
+    const table = sessRow?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
+    const { data } = await sb.from(table)
       .select("*").eq("status","open").order("opened_at", { ascending: false });
     return jsonResp(data || []);
   }
@@ -422,8 +426,9 @@ serve(async (req) => {
       const body = await req.json().catch(() => ({}));
       const bal  = Number(body?.balance_sol || 0.3);
 
-      // Delete ALL paper trades and signals (service role bypasses RLS)
+      // Delete ALL paper trades, live trades, and signals (service role bypasses RLS)
       await sb.from("shreem_brzee_paper_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await sb.from("shreem_brzee_live_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await sb.from("shreem_brzee_signals").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
       // Fresh live session
@@ -582,13 +587,40 @@ serve(async (req) => {
           .select("*").eq("id","default").single();
 
         if (sessNow?.started_at && !sessNow?.stopped_at) {
-          if (swap.action === "BUY") {
-            await openTrade(signal, sessNow);
-          } else if (swap.action === "SELL") {
-            const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
-              .select("*").eq("status","open").eq("mint", swap.mint);
-            for (const pos of (openPos || [])) {
-              await closeTrade(pos, "whale_sell_mirror");
+          if (sessNow.mode === "live") {
+            // LIVE MODE: trigger the live executor (fire-and-forget) — it will
+            // pull unprocessed BUY signals and run real Jupiter swaps.
+            if (swap.action === "BUY") {
+              fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${SUPABASE_KEY}`,
+                },
+                body: JSON.stringify({ trigger: "webhook", sig }),
+              }).catch(e => console.error("[live-exec trigger]", e?.message));
+            } else if (swap.action === "SELL") {
+              // Close any live positions in this mint (paper-style close — TODO: real sell swap)
+              const { data: openLive } = await sb.from("shreem_brzee_live_trades")
+                .select("*").eq("status","open").eq("mint", swap.mint);
+              for (const pos of (openLive || [])) {
+                await sb.from("shreem_brzee_live_trades").update({
+                  status: "closed",
+                  close_reason: "whale_sell_mirror",
+                  closed_at: new Date().toISOString(),
+                }).eq("id", pos.id);
+              }
+            }
+          } else {
+            // PAPER MODE: original behaviour
+            if (swap.action === "BUY") {
+              await openTrade(signal, sessNow);
+            } else if (swap.action === "SELL") {
+              const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
+                .select("*").eq("status","open").eq("mint", swap.mint);
+              for (const pos of (openPos || [])) {
+                await closeTrade(pos, "whale_sell_mirror");
+              }
             }
           }
         }

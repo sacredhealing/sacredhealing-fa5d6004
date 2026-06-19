@@ -6669,6 +6669,87 @@ export type Database = {
         }
         Relationships: []
       }
+      shreem_brzee_live_trades: {
+        Row: {
+          action: string | null
+          amount_sol: number | null
+          close_reason: string | null
+          closed_at: string | null
+          created_at: string | null
+          entry_price: number | null
+          exit_price: number | null
+          gross_sol: number | null
+          id: string
+          label: string | null
+          mint: string | null
+          net_sol: number | null
+          opened_at: string | null
+          pnl_pct: number | null
+          pnl_sol: number | null
+          session_id: string
+          sig: string | null
+          slippage_pct: number | null
+          status: string | null
+          symbol: string | null
+          tokens_received: number | null
+          tx_sig: string | null
+          updated_at: string | null
+          wallet: string | null
+        }
+        Insert: {
+          action?: string | null
+          amount_sol?: number | null
+          close_reason?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
+          gross_sol?: number | null
+          id?: string
+          label?: string | null
+          mint?: string | null
+          net_sol?: number | null
+          opened_at?: string | null
+          pnl_pct?: number | null
+          pnl_sol?: number | null
+          session_id?: string
+          sig?: string | null
+          slippage_pct?: number | null
+          status?: string | null
+          symbol?: string | null
+          tokens_received?: number | null
+          tx_sig?: string | null
+          updated_at?: string | null
+          wallet?: string | null
+        }
+        Update: {
+          action?: string | null
+          amount_sol?: number | null
+          close_reason?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
+          gross_sol?: number | null
+          id?: string
+          label?: string | null
+          mint?: string | null
+          net_sol?: number | null
+          opened_at?: string | null
+          pnl_pct?: number | null
+          pnl_sol?: number | null
+          session_id?: string
+          sig?: string | null
+          slippage_pct?: number | null
+          status?: string | null
+          symbol?: string | null
+          tokens_received?: number | null
+          tx_sig?: string | null
+          updated_at?: string | null
+          wallet?: string | null
+        }
+        Relationships: []
+      }
       shreem_brzee_paper_trades: {
         Row: {
           action: string
@@ -6813,6 +6894,7 @@ export type Database = {
           id: number
           is_pump_fun: boolean | null
           label: string | null
+          live_processed: boolean
           mint: string | null
           sig: string
           symbol: string | null
@@ -6827,6 +6909,7 @@ export type Database = {
           id?: number
           is_pump_fun?: boolean | null
           label?: string | null
+          live_processed?: boolean
           mint?: string | null
           sig: string
           symbol?: string | null
@@ -6841,6 +6924,7 @@ export type Database = {
           id?: number
           is_pump_fun?: boolean | null
           label?: string | null
+          live_processed?: boolean
           mint?: string | null
           sig?: string
           symbol?: string | null
