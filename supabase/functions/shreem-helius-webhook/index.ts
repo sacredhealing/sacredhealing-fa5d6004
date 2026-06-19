@@ -83,18 +83,17 @@ async function fetchPrice(mint: string): Promise<number> {
 
 // ── Kelly position sizing ─────────────────────────────────────────────────────
 function calcPositionSize(portfolio: number, wins: number, losses: number, openExposure: number): number {
+  // Pure compounding Kelly sizer — no hard cap, grows with account
+  // 5% base → scales up to 10% as win rate improves
+  // 50% max exposure across all open trades combined
   if (portfolio <= 0) return 0;
-  const total    = wins + losses;
-  const winRate  = total >= 5 ? wins / total : 0.5;
-  const pct      = Math.min(0.10, Math.max(0.05, winRate * 0.12));
-  const maxExp   = portfolio * 0.50;
-  const room     = maxExp - openExposure;
-  if (room <= 0.001) return 0; // 50% cap hit
-  const rawSize  = Math.min(portfolio * pct, room);
-  // Hard cap: never more than 0.5 SOL per trade in paper mode
-  // Prevents outsized trades from inflated paper portfolio
-  const MAX_TRADE_SOL = 0.5;
-  return Math.min(rawSize, MAX_TRADE_SOL);
+  const total   = wins + losses;
+  const winRate = total >= 5 ? wins / total : 0.5;
+  const pct     = Math.min(0.10, Math.max(0.05, winRate * 0.12));
+  const maxExp  = portfolio * 0.50;  // never more than 50% in open trades total
+  const room    = maxExp - openExposure;
+  if (room <= 0.001) return 0;
+  return Math.min(portfolio * pct, room); // 5-10% of portfolio, auto-grows with account
 }
 
 // ── Open paper trade (server-side) ───────────────────────────────────────────
