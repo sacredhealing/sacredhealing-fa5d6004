@@ -723,7 +723,12 @@ serve(async (req) => {
                     losses:    sessNow.losses,
                   }
                 }),
-              }).catch(e => console.error("[live-exec]", e?.message));
+              });
+                const execData = await execR.json().catch(() => ({}));
+                console.log("[live-exec RESULT]", JSON.stringify(execData));
+              } catch(execErr: any) {
+                console.error("[live-exec ERROR]", execErr.message);
+              }
               console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
             } else if (swap.action === "SELL") {
