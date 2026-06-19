@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
  * useChatMessages — reads/writes ayurveda_chat_messages (same table the edge function uses).
  * The edge function already saves assistant replies server-side; the frontend only saves user messages.
  */
-const TABLE_AYURVEDA = 'apothecary_chat_messages' as const;
-const TABLE_APOTHECARY = 'apothecary_chat_messages' as const;
+// CORRECT TABLE: user_sync_chat_messages (from migration 20260508180000)
+const TABLE_AYURVEDA = 'user_sync_chat_messages' as const;
+const TABLE_APOTHECARY = 'user_sync_chat_messages' as const;
 
 export interface ChatMessage {
   id?: string;
