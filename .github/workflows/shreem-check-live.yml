@@ -1,0 +1,49 @@
+name: Shreem Check and Go Live
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: SSH key setup and deploy
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          BK: ${{ secrets.BOT_WALLET_PRIVATE_KEY }}
+          SB: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          SK: ${{ secrets.HETZNER_SSH_KEY }}
+        run: |
+          sudo apt-get install -y sshpass openssh-client -qq
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+          # Write our private key
+          echo "${SK}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Add public key to server using password (one time)
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74             "mkdir -p ~/.ssh && echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBSp3N8MiahdB90OHJAn229dhbUP1C0MPWcFmbxu2SSa' >> ~/.ssh/authorized_keys && sort -u ~/.ssh/authorized_keys -o ~/.ssh/authorized_keys && echo KEY-INSTALLED" || echo "password-auth-failed-trying-key"
+
+          SSH="ssh -T -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no root@178.105.183.74"
+
+          echo "=== PM2 STATUS ==="
+          $SSH "pm2 list 2>/dev/null || echo no-pm2"
+
+          echo "=== PULL REPO ==="
+          $SSH "cd /root/shreem-brzee && git remote set-url origin https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git && git fetch origin main --quiet && git reset --hard origin/main --quiet && echo REPO-OK"
+
+          echo "=== NPM INSTALL ==="
+          $SSH "cd /root/shreem-brzee/railway/shreem-brzee-bot && npm install --omit=dev --silent && echo NPM-OK"
+
+          echo "=== WRITE LIVE ECOSYSTEM ==="
+          $SSH "printf 'module.exports={apps:[{name:\"shreem-live\",script:\"/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js\",cwd:\"/root/shreem-brzee/railway/shreem-brzee-bot\",restart_delay:5000,max_restarts:10,env:{BOT_MODE:\"live\",BOT_WALLET_PRIVATE_KEY:\"%s\",HELIUS_API_KEY:\"775d3d1f-6801-41de-a063-8aee4382d0f4\",SUPABASE_URL:\"https://ssygukfdbtehvtndandn.supabase.co\",SUPABASE_SERVICE_ROLE_KEY:\"%s\"}}]};\n' '${BK}' '${SB}' > /root/shreem-live-ecosystem.config.js && echo ECOSYSTEM-OK"
+
+          echo "=== RESTART PM2 LIVE ==="
+          $SSH "pm2 stop shreem-live 2>/dev/null; pm2 delete shreem-live 2>/dev/null; pm2 start /root/shreem-live-ecosystem.config.js && pm2 save --force && echo PM2-LIVE-OK"
+
+          echo "=== WAIT AND CHECK LOGS ==="
+          sleep 10
+          $SSH "pm2 list && echo '---LOGS---' && pm2 logs shreem-live --lines 50 --nostream 2>/dev/null"
