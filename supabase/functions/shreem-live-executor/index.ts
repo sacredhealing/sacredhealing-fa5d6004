@@ -60,19 +60,59 @@ function base58Decode(s: string): Uint8Array {
   return new Uint8Array([...new Array(leading).fill(0), ...bytes]);
 }
 
+// Base58 decode — handles Phantom's private key export format
+function base58Decode(str: string): Uint8Array {
+  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const ALPHABET_MAP: Record<string, number> = {};
+  for (let i = 0; i < ALPHABET.length; i++) ALPHABET_MAP[ALPHABET[i]] = i;
+
+  let result = [0];
+  for (const char of str) {
+    if (!(char in ALPHABET_MAP)) throw new Error(`Invalid base58 char: ${char}`);
+    let carry = ALPHABET_MAP[char];
+    for (let i = 0; i < result.length; i++) {
+      carry += result[i] * 58;
+      result[i] = carry & 0xff;
+      carry >>= 8;
+    }
+    while (carry > 0) { result.push(carry & 0xff); carry >>= 8; }
+  }
+  // Add leading zeros for leading "1"s
+  for (const char of str) {
+    if (char === "1") result.push(0); else break;
+  }
+  return new Uint8Array(result.reverse());
+}
+
 async function loadKeypair(): Promise<CryptoKeyPair | null> {
   const raw = Deno.env.get("SHREEM_BOT_KEYPAIR");
-  if (!raw) return null;
+  if (!raw) { console.error("[KEYPAIR] SHREEM_BOT_KEYPAIR secret not set"); return null; }
+
   try {
-    // Expect 64-byte secret key as base64 or comma-separated numbers
     let secretBytes: Uint8Array;
-    if (raw.includes(",")) {
-      secretBytes = new Uint8Array(raw.split(",").map(Number));
+    const trimmed = raw.trim();
+
+    if (trimmed.startsWith("[") || trimmed.startsWith(",") || trimmed.includes(",")) {
+      // Format: [1,2,3,...] or 1,2,3,... (Solana CLI / array format)
+      const cleaned = trimmed.replace(/[\[\]\s]/g, "");
+      secretBytes = new Uint8Array(cleaned.split(",").map(Number));
+      console.log("[KEYPAIR] Parsed as array format");
+    } else if (/^[A-Za-z0-9+/]+=*$/.test(trimmed) && trimmed.length % 4 === 0 && trimmed.length < 100) {
+      // Format: base64
+      secretBytes = Uint8Array.from(atob(trimmed), c => c.charCodeAt(0));
+      console.log("[KEYPAIR] Parsed as base64 format");
     } else {
-      // base64
-      secretBytes = Uint8Array.from(atob(raw), c => c.charCodeAt(0));
+      // Format: base58 (Phantom default export)
+      secretBytes = base58Decode(trimmed);
+      console.log("[KEYPAIR] Parsed as base58 format, length:", secretBytes.length);
     }
-    // secretBytes is 64 bytes: first 32 = private, last 32 = public
+
+    if (secretBytes.length !== 64) {
+      console.error(`[KEYPAIR] Wrong key length: ${secretBytes.length} bytes (expected 64)`);
+      return null;
+    }
+
+    // Ed25519: first 32 bytes = private key seed, last 32 = public key
     const privateKey = await crypto.subtle.importKey(
       "raw", secretBytes.slice(0, 32),
       { name: "Ed25519" }, false, ["sign"]
@@ -81,9 +121,11 @@ async function loadKeypair(): Promise<CryptoKeyPair | null> {
       "raw", secretBytes.slice(32),
       { name: "Ed25519" }, true, ["verify"]
     );
+    console.log("[KEYPAIR] Loaded successfully");
     return { privateKey, publicKey };
-  } catch (e) {
+  } catch (e: any) {
     console.error("[KEYPAIR] Failed to load:", e.message);
+    console.error("[KEYPAIR] Key format hint: Phantom exports base58 (88 chars). Solana CLI exports as JSON array.");
     return null;
   }
 }
@@ -192,8 +234,18 @@ serve(async (req) => {
   // GET /health — check bot wallet balance
   const url = new URL(req.url);
   if (req.method === "GET" && url.pathname.endsWith("/health")) {
+    const rawKey = Deno.env.get("SHREEM_BOT_KEYPAIR");
+    if (!rawKey) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR secret not set — add it in Supabase Edge Function secrets" });
+
     const keypair = await loadKeypair();
-    if (!keypair) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not set" });
+    if (!keypair) return jsonResp({
+      ok: false,
+      error: "Key found but failed to parse",
+      hint: "Phantom exports base58 (88 chars). Check the key was copied correctly.",
+      key_length: rawKey.trim().length,
+      key_preview: rawKey.trim().slice(0,8) + "...",
+    });
+
     const pubBytes = await getPublicKeyBytes(keypair);
     const pubkey = pubkeyToBase58(pubBytes);
     let balanceSol = 0;
@@ -201,7 +253,13 @@ serve(async (req) => {
       const result = await rpc("getBalance", [pubkey]);
       balanceSol = result.value / LAMPORTS;
     } catch {}
-    return jsonResp({ ok: true, wallet: pubkey, balance_sol: balanceSol });
+    return jsonResp({
+      ok: true,
+      wallet: pubkey,
+      balance_sol: balanceSol,
+      ready: balanceSol >= 0.05,
+      message: balanceSol >= 0.05 ? "Bot wallet ready for live trading" : "Fund wallet with at least 0.05 SOL"
+    });
   }
 
   // POST — execute live swap for a given signal
