@@ -451,28 +451,18 @@ export default function ShreemBrzeePerformance() {
     try {
       const bal = parseFloat(balInput) || 0.3;
       if (goLive) {
-        // Clear ALL paper trades — fresh start for live
-        await d.from("shreem_brzee_paper_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-        await d.from("shreem_brzee_signals").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-
-        // Start fresh session in live mode
-        const { error } = await d.from("shreem_brzee_session").upsert({
-          id:            "default",
-          portfolio:     bal,
-          start_balance: bal,
-          positions:     {},
-          total_pnl:     0,
-          wins:          0,
-          losses:        0,
-          started_at:    new Date().toISOString(),
-          stopped_at:    null,
-          mode:          "live",
-          updated_at:    new Date().toISOString(),
-        }, { onConflict: "id" });
-        if (error) throw error;
+        // Call edge function /go-live — has service role to wipe paper data + start fresh
+        notify("Clearing paper data and going live…", "info");
+        const r = await fetch(`${EDGE_BASE}/go-live`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ balance_sol: bal }),
+        });
+        const result = r.ok ? await r.json() : null;
+        if (!result?.ok) throw new Error(result?.error || "go-live endpoint failed");
         setLiveMode(true);
         setLiveConfirm(false);
-        notify("🔴 LIVE MODE ACTIVE — real SOL trading", "err");
+        notify("🔴 LIVE MODE ACTIVE — paper data cleared, real SOL trading", "err");
       } else {
         // Stop live — back to paper
         const { error } = await d.from("shreem_brzee_session").update({
