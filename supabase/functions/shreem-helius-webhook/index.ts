@@ -370,6 +370,18 @@ serve(async (req) => {
   const url  = new URL(req.url);
   const path = url.pathname;
 
+  // ── Raw payload logging (debug: see every incoming request) ──
+  if (req.method === "POST") {
+    try {
+      const cloned = req.clone();
+      const rawBody = await cloned.text();
+      console.log(`[RAW-INCOMING] path=${path} bytes=${rawBody.length} body=${rawBody.slice(0, 4000)}`);
+    } catch (e: any) {
+      console.log(`[RAW-INCOMING] failed to clone/read: ${e?.message}`);
+    }
+  }
+
+
   // ── Cron endpoint — called every 5 min by Supabase cron ────────────────
   if (req.method === "GET" && path.endsWith("/cron")) {
     const result = await runCron();
