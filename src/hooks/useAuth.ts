@@ -210,18 +210,38 @@ export const useAuth = () => {
   };
 
   const signIn = async (email: string, password: string) => {
-    // Direct SDK call only — XHR fallback removed as it caused "Network connection failed"
-    // errors on corporate firewalls and restricted browsers (Edge, Safari with strict settings)
+    let data: any = { session: null, user: null };
+    let error: any = null;
+
     try {
-      const result = await supabase.auth.signInWithPassword({ email, password });
-      if (result.data?.session) {
-        queryClient.setQueryData(['auth-user'], result.data.session);
-        window.setTimeout(() => void ensureUserProfile(result.data.session), 0);
-      }
-      return { data: result.data ?? { session: null, user: null }, error: result.error };
-    } catch (err: any) {
-      return { data: { session: null, user: null }, error: err };
+      const fallbackSession = await passwordSignInRequest(email, password);
+      const session = await activateSession(fallbackSession);
+      data = { session, user: session.user };
+      error = null;
+    } catch (fallbackError) {
+      error = fallbackError;
     }
+
+    if (isNetworkAuthFailure(error)) {
+      try {
+        const result = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
+          AUTH_REQUEST_TIMEOUT_MS,
+          'Login timed out. Please check your connection and try again.'
+        );
+        data = result.data;
+        error = result.error;
+      } catch (err) {
+        error = err;
+      }
+    }
+
+    // Immediately seed the cache so ProtectedRoute sees session before navigation
+    if (data.session) {
+      queryClient.setQueryData(['auth-user'], data.session);
+      window.setTimeout(() => void ensureUserProfile(data.session), 0);
+    }
+    return { data, error };
   };
 
   const signOut = async () => {
