@@ -1,0 +1,36 @@
+name: Shreem Go Live
+
+on:
+  workflow_dispatch:
+
+jobs:
+  go-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Deploy live mode to Hetzner
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          BK: ${{ secrets.BOT_WALLET_PRIVATE_KEY }}
+          SB: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          sudo apt-get install -y sshpass -qq
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          echo "=== 1. PULL LATEST ==="
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "cd /root/shreem-brzee && git remote set-url origin https://x-access-token:${GH}@github.com/sacredhealing/sacredhealing-fa5d6004.git && git fetch origin main --quiet && git reset --hard origin/main --quiet && echo REPO-OK"
+
+          echo "=== 2. NPM INSTALL ==="
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "cd /root/shreem-brzee/railway/shreem-brzee-bot && npm install --omit=dev --silent && echo NPM-OK"
+
+          echo "=== 3. WRITE LIVE ECOSYSTEM ==="
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "printf 'module.exports={apps:[{name:\"shreem-live\",script:\"/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js\",cwd:\"/root/shreem-brzee/railway/shreem-brzee-bot\",restart_delay:5000,max_restarts:10,env:{BOT_MODE:\"live\",BOT_WALLET_PRIVATE_KEY:\"%s\",HELIUS_API_KEY:\"775d3d1f-6801-41de-a063-8aee4382d0f4\",SUPABASE_URL:\"https://ssygukfdbtehvtndandn.supabase.co\",SUPABASE_SERVICE_ROLE_KEY:\"%s\"}}]};\n' '${BK}' '${SB}' > /root/shreem-live-ecosystem.config.js && echo ECOSYSTEM-OK"
+
+          echo "=== 4. RESTART PM2 LIVE ==="
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 stop shreem-live 2>/dev/null; pm2 delete shreem-live 2>/dev/null; pm2 start /root/shreem-live-ecosystem.config.js && pm2 save --force && echo PM2-LIVE-OK"
+
+          echo "=== 5. VERIFY ==="
+          sleep 6
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 list && pm2 logs shreem-live --lines 40 --nostream 2>/dev/null || true"
