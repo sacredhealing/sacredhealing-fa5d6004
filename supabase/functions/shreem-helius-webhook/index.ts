@@ -90,7 +90,11 @@ function calcPositionSize(portfolio: number, wins: number, losses: number, openE
   const maxExp   = portfolio * 0.50;
   const room     = maxExp - openExposure;
   if (room <= 0.001) return 0; // 50% cap hit
-  return Math.min(portfolio * pct, room);
+  const rawSize  = Math.min(portfolio * pct, room);
+  // Hard cap: never more than 0.5 SOL per trade in paper mode
+  // Prevents outsized trades from inflated paper portfolio
+  const MAX_TRADE_SOL = 0.5;
+  return Math.min(rawSize, MAX_TRADE_SOL);
 }
 
 // ── Open paper trade (server-side) ───────────────────────────────────────────
@@ -100,10 +104,16 @@ async function openTrade(signal: any, sess: any): Promise<void> {
   const portfolio = Number(sess.portfolio || 0);
   if (portfolio <= 0) { console.log("[open] zero portfolio"); return; }
 
-  // No duplicate positions in same token
-  const { data: existing } = await sb.from("shreem_brzee_paper_trades")
+  // No duplicate positions — check BOTH mint (no double position) AND sig (no duplicate webhook)
+  const { data: existingMint } = await sb.from("shreem_brzee_paper_trades")
     .select("id").eq("status", "open").eq("mint", signal.mint).limit(1);
-  if (existing?.length) { console.log(`[open] already have position in ${signal.mint}`); return; }
+  if (existingMint?.length) { console.log(`[open] already open in ${signal.mint}`); return; }
+
+  // Also check if this exact signal was already processed (Helius duplicate webhook protection)
+  const sigKey = signal.sig + "_open";
+  const { data: existingSig } = await sb.from("shreem_brzee_paper_trades")
+    .select("id").eq("sig", sigKey).limit(1);
+  if (existingSig?.length) { console.log(`[open] duplicate webhook for sig ${signal.sig}`); return; }
 
   // Check exposure
   const { data: openTrades } = await sb.from("shreem_brzee_paper_trades")
@@ -113,15 +123,16 @@ async function openTrade(signal: any, sess: any): Promise<void> {
   const size = calcPositionSize(portfolio, Number(sess.wins || 0), Number(sess.losses || 0), openExposure);
   if (size < 0.001) { console.log(`[open] blocked — 50% cap or zero size`); return; }
 
-  // Fetch entry price
+  // Fetch entry price — retry up to 3 times with delays
   let entryPrice = 0;
   if (signal.mint) {
-    entryPrice = await fetchPrice(signal.mint);
-    if (!entryPrice) {
-      // Wait 3s and retry once
-      await new Promise(r => setTimeout(r, 3000));
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 3000));
       entryPrice = await fetchPrice(signal.mint);
+      if (entryPrice > 0) break;
+      console.log(`[price] attempt ${attempt+1} failed for ${signal.mint}`);
     }
+    if (!entryPrice) console.warn(`[price] could not fetch price for ${signal.mint} after 3 attempts`);
   }
 
   // Insert paper trade
