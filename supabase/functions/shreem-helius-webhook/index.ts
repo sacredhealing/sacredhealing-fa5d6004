@@ -395,7 +395,9 @@ serve(async (req) => {
   }
 
   if (req.method === "GET" && path.endsWith("/trades")) {
-    const { data } = await sb.from("shreem_brzee_paper_trades")
+    const { data: sessRow } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
+    const table = sessRow?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
+    const { data } = await sb.from(table)
       .select("*").order("created_at", { ascending: false }).limit(100);
     return jsonResp(data || []);
   }
@@ -407,7 +409,9 @@ serve(async (req) => {
   }
 
   if (req.method === "GET" && path.endsWith("/open")) {
-    const { data } = await sb.from("shreem_brzee_paper_trades")
+    const { data: sessRow } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
+    const table = sessRow?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
+    const { data } = await sb.from(table)
       .select("*").eq("status","open").order("opened_at", { ascending: false });
     return jsonResp(data || []);
   }
