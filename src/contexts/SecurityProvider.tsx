@@ -4,6 +4,7 @@
 // ============================================================
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +66,7 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
   const [isSessionValid, setIsSessionValid] = useState(true);
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const devToolsCount = useRef(0);
+  const { user } = useAuth(); // Only open Realtime for authenticated users
 
   const addSecurityEvent = useCallback((type: string, severity: SecurityEvent['severity'], metadata?: Record<string, unknown>) => {
     setSecurityEvents((prev) => [
@@ -158,8 +160,9 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Real-time security events from DB ──────────────────
+  // ── Real-time security events from DB (auth-gated) ─────
   useEffect(() => {
+    if (!user?.id) return; // Don't open Realtime channel for unauthenticated visitors
     const channel = supabase
       .channel('security-monitor')
       .on(
@@ -187,7 +190,7 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [addSecurityEvent]);
+  }, [addSecurityEvent, user?.id]);
 
   // ── Clipboard hijack protection ─────────────────────────
   useEffect(() => {
@@ -281,3 +284,4 @@ export function ThreatLevelIndicator() {
     </div>
   );
 }
+
