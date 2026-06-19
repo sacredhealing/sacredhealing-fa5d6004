@@ -637,9 +637,7 @@ serve(async (req) => {
     const txs = (Array.isArray(body) ? body : [body]).slice(0, MAX_WEBHOOK_TXS_PER_BATCH);
     let inserted = 0, skipped = 0;
 
-    if (!WEBHOOK_DB_WRITES_ENABLED) {
-      return jsonResp({ ok: true, inserted, skipped: txs.length, paused: "db_writes_disabled", version: "v5-safe" });
-    }
+    // DB writes enabled — all signals processed
 
     for (const tx of txs) {
       // Load FRESH session for each tx — reflects portfolio deductions from prior txs in same batch
