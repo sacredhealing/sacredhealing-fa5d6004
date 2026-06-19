@@ -420,6 +420,25 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // ── Status — debug endpoint ──────────────────────────────────────────────
+  if (req.method === "GET" && path.endsWith("/status")) {
+    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,status").limit(10);
+    const { data: recentSigs } = await sb.from("shreem_brzee_signals").select("action,symbol,label,created_at").order("created_at",{ascending:false}).limit(5);
+    return jsonResp({
+      session: {
+        mode:         sess?.mode,
+        started_at:   sess?.started_at,
+        stopped_at:   sess?.stopped_at,
+        portfolio:    sess?.portfolio,
+        start_balance: sess?.start_balance,
+        is_running:   !!(sess?.started_at && !sess?.stopped_at),
+      },
+      live_trades:   openTrades || [],
+      recent_signals: recentSigs || [],
+    });
+  }
+
   // ── Go Live — wipe paper data, start fresh live session ──────────────────
   if (req.method === "POST" && path.endsWith("/go-live")) {
     try {
