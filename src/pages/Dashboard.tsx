@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
@@ -203,6 +204,28 @@ const LifeBookNexusBlock: React.FC<{ userId: string }> = ({ userId }) => {
 const Dashboard: React.FC = () => {
   const { t, language } = useTranslation();
   const navigate = useNavigate();
+
+  // Onboarding check (moved here from ProtectedRoute to avoid blocking all protected routes)
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!user?.id) return;
+      // Check sessionStorage cache first to avoid repeat DB calls
+      const cacheKey = `sqi_onboarding_${user.id}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached === 'done') return;
+      try {
+        const { data } = await supabase.from('profiles').select('onboarding_completed').eq('user_id', user.id).maybeSingle();
+        if (data?.onboarding_completed) {
+          sessionStorage.setItem(cacheKey, 'done');
+        } else if (data?.onboarding_completed === false) {
+          navigate('/onboarding', { replace: true });
+        }
+      } catch {
+        // Never block dashboard for a failed onboarding check
+      }
+    };
+    void checkOnboarding();
+  }, [user?.id, navigate]);
   const { user } = useAuth();
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
