@@ -416,6 +416,38 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // ── Go Live — wipe paper data, start fresh live session ──────────────────
+  if (req.method === "POST" && path.endsWith("/go-live")) {
+    try {
+      const body = await req.json().catch(() => ({}));
+      const bal  = Number(body?.balance_sol || 0.3);
+
+      // Delete ALL paper trades and signals (service role bypasses RLS)
+      await sb.from("shreem_brzee_paper_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await sb.from("shreem_brzee_signals").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+      // Fresh live session
+      await sb.from("shreem_brzee_session").upsert({
+        id:            "default",
+        portfolio:     bal,
+        start_balance: bal,
+        positions:     {},
+        total_pnl:     0,
+        wins:          0,
+        losses:        0,
+        started_at:    new Date().toISOString(),
+        stopped_at:    null,
+        mode:          "live",
+        updated_at:    new Date().toISOString(),
+      }, { onConflict: "id" });
+
+      console.log(`[go-live] ✅ Clean start with ${bal} SOL`);
+      return jsonResp({ ok: true, balance_sol: bal, mode: "live", message: "🔴 Live mode active — paper data cleared" });
+    } catch (e: any) {
+      return jsonResp({ ok: false, error: e.message }, 500);
+    }
+  }
+
   // ── Manual close endpoint ────────────────────────────────────────────────
   // Called by the frontend CLOSE TRADE button
   // POST /close-trade  body: { trade_id: string }
