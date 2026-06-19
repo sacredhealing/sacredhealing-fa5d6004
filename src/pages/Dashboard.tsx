@@ -8,7 +8,6 @@ import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
-import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
