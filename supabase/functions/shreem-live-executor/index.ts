@@ -45,74 +45,59 @@ async function rpc(method: string, params: unknown[]) {
 }
 
 
-// Base58 decode — handles Phantom's private key export format
-function base58Decode(str: string): Uint8Array {
-  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  const ALPHABET_MAP: Record<string, number> = {};
-  for (let i = 0; i < ALPHABET.length; i++) ALPHABET_MAP[ALPHABET[i]] = i;
+// ── Keypair handling using tweetnacl (standard Solana approach) ──────────────
+import nacl from "https://esm.sh/tweetnacl@1.0.3";
+import { decode as b58decode } from "https://esm.sh/bs58@5.0.0";
 
-  let result = [0];
-  for (const char of str) {
-    if (!(char in ALPHABET_MAP)) throw new Error(`Invalid base58 char: ${char}`);
-    let carry = ALPHABET_MAP[char];
-    for (let i = 0; i < result.length; i++) {
-      carry += result[i] * 58;
-      result[i] = carry & 0xff;
-      carry >>= 8;
-    }
-    while (carry > 0) { result.push(carry & 0xff); carry >>= 8; }
-  }
-  // Add leading zeros for leading "1"s
-  for (const char of str) {
-    if (char === "1") result.push(0); else break;
-  }
-  return new Uint8Array(result.reverse());
+interface SolanaKeypair {
+  publicKey: Uint8Array;
+  secretKey: Uint8Array; // full 64 bytes
 }
 
-async function loadKeypair(): Promise<CryptoKeyPair | null> {
+function loadSolanaKeypair(): SolanaKeypair | null {
   const raw = Deno.env.get("SHREEM_BOT_KEYPAIR");
-  if (!raw) { console.error("[KEYPAIR] SHREEM_BOT_KEYPAIR secret not set"); return null; }
+  if (!raw) {
+    console.error("[KEYPAIR] SHREEM_BOT_KEYPAIR not set");
+    return null;
+  }
 
   try {
-    let secretBytes: Uint8Array;
     const trimmed = raw.trim();
+    let secretKey: Uint8Array;
 
-    if (trimmed.startsWith("[") || trimmed.startsWith(",") || trimmed.includes(",")) {
-      // Format: [1,2,3,...] or 1,2,3,... (Solana CLI / array format)
-      const cleaned = trimmed.replace(/[\[\]\s]/g, "");
-      secretBytes = new Uint8Array(cleaned.split(",").map(Number));
-      console.log("[KEYPAIR] Parsed as array format");
-    } else if (/^[A-Za-z0-9+/]+=*$/.test(trimmed) && trimmed.length % 4 === 0 && trimmed.length < 100) {
-      // Format: base64
-      secretBytes = Uint8Array.from(atob(trimmed), c => c.charCodeAt(0));
-      console.log("[KEYPAIR] Parsed as base64 format");
+    if (trimmed.startsWith("[")) {
+      // JSON array format: [1,2,3,...64 numbers]
+      secretKey = new Uint8Array(JSON.parse(trimmed));
+    } else if (trimmed.includes(",")) {
+      // Comma-separated: 1,2,3,...
+      secretKey = new Uint8Array(trimmed.split(",").map(Number));
     } else {
-      // Format: base58 (Phantom default export)
-      secretBytes = base58Decode(trimmed);
-      console.log("[KEYPAIR] Parsed as base58 format, length:", secretBytes.length);
+      // Base58 (Phantom export) — standard Solana private key format
+      secretKey = b58decode(trimmed);
     }
 
-    if (secretBytes.length !== 64) {
-      console.error(`[KEYPAIR] Wrong key length: ${secretBytes.length} bytes (expected 64)`);
+    if (secretKey.length !== 64) {
+      console.error(`[KEYPAIR] Expected 64 bytes, got ${secretKey.length}`);
       return null;
     }
 
-    // Ed25519: first 32 bytes = private key seed, last 32 = public key
-    const privateKey = await crypto.subtle.importKey(
-      "raw", secretBytes.slice(0, 32),
-      { name: "Ed25519" }, false, ["sign"]
-    );
-    const publicKey = await crypto.subtle.importKey(
-      "raw", secretBytes.slice(32),
-      { name: "Ed25519" }, true, ["verify"]
-    );
-    console.log("[KEYPAIR] Loaded successfully");
-    return { privateKey, publicKey };
+    // nacl keypair from seed (first 32 bytes)
+    const keypair = nacl.sign.keyPair.fromSecretKey(secretKey);
+    console.log("[KEYPAIR] Loaded OK, pubkey:", Buffer.from(keypair.publicKey).toString("hex").slice(0,16) + "...");
+    return { publicKey: keypair.publicKey, secretKey: keypair.secretKey };
   } catch (e: any) {
-    console.error("[KEYPAIR] Failed to load:", e.message);
-    console.error("[KEYPAIR] Key format hint: Phantom exports base58 (88 chars). Solana CLI exports as JSON array.");
+    console.error("[KEYPAIR] Parse error:", e.message);
     return null;
   }
+}
+
+// Wrapper to maintain compatibility with rest of code
+async function loadKeypair() {
+  return loadSolanaKeypair();
+}
+
+async function getPublicKeyBytes(kp: any): Promise<Uint8Array> {
+  return kp.publicKey;
 }
 
 async function getPublicKeyBytes(kp: CryptoKeyPair): Promise<Uint8Array> {
@@ -155,40 +140,30 @@ async function jupiterSwapTx(quoteResponse: unknown, walletAddress: string): Pro
   return swapTransaction; // base64 encoded versioned transaction
 }
 
-async function signAndSendTx(txBase64: string, keypair: CryptoKeyPair): Promise<string> {
-  // Decode the versioned transaction
+async function signAndSendTx(txBase64: string, keypair: any): Promise<string> {
   const txBytes = Uint8Array.from(atob(txBase64), c => c.charCodeAt(0));
 
-  // The first byte is version prefix (0x80 for versioned transactions)
-  // We need to sign the message portion
-  // For versioned transactions: skip 1 byte version + compact array of signatures
-  // Simple approach: sign the raw transaction bytes as message
-  // Jupiter returns partially-constructed tx, we add our signature
-
-  // Find the message start (after signature array)
-  // Format: [version_prefix][num_sigs varint][...sig_slots][message...]
-  let offset = 1; // skip version byte
-  const numSigs = txBytes[offset]; // compact-u16, assume < 128
+  // Parse versioned transaction structure
+  // Format: [version_prefix][num_sigs compact-u16][...sig_slots 64 bytes each][message...]
+  let offset = 1; // skip version byte (0x80)
+  const numSigs = txBytes[offset];
   offset += 1;
   const sigStart = offset;
-  offset += numSigs * 64; // skip existing (empty) sig slots
+  offset += numSigs * 64;
   const messageBytes = txBytes.slice(offset);
 
-  // Sign the message
-  const signature = new Uint8Array(await crypto.subtle.sign(
-    "Ed25519", keypair.privateKey, messageBytes
-  ));
+  // Sign with nacl
+  const signature = nacl.sign.detached(messageBytes, keypair.secretKey);
 
-  // Insert our signature at the first slot
+  // Insert signature
   txBytes.set(signature, sigStart);
 
-  // Send via Helius sendTransaction
   const encoded = btoa(String.fromCharCode(...txBytes));
   const result = await rpc("sendTransaction", [
     encoded,
     { encoding: "base64", preflightCommitment: "confirmed", skipPreflight: false }
   ]);
-  return result; // transaction signature (base58)
+  return result;
 }
 
 // ── Wait for confirmation ─────────────────────────────────────────────────────
@@ -222,7 +197,7 @@ serve(async (req) => {
     const rawKey = Deno.env.get("SHREEM_BOT_KEYPAIR");
     if (!rawKey) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR secret not set — add it in Supabase Edge Function secrets" });
 
-    const keypair = await loadKeypair();
+    const keypair = loadSolanaKeypair();
     if (!keypair) return jsonResp({
       ok: false,
       error: "Key found but failed to parse",
@@ -231,8 +206,7 @@ serve(async (req) => {
       key_preview: rawKey.trim().slice(0,8) + "...",
     });
 
-    const pubBytes = await getPublicKeyBytes(keypair);
-    const pubkey = pubkeyToBase58(pubBytes);
+    const pubkey = pubkeyToBase58(keypair.publicKey);
     let balanceSol = 0;
     try {
       const result = await rpc("getBalance", [pubkey]);
@@ -252,11 +226,10 @@ serve(async (req) => {
 
   try {
     // Load keypair
-    const keypair = await loadKeypair();
+    const keypair = loadSolanaKeypair();
     if (!keypair) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not configured — add it in Supabase secrets" }, 400);
 
-    const pubBytes = await getPublicKeyBytes(keypair);
-    const walletPubkey = pubkeyToBase58(pubBytes);
+    const walletPubkey = pubkeyToBase58(keypair.publicKey);
 
     // Get session — must be in live mode
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
