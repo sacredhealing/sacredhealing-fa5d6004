@@ -60,10 +60,9 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  useEffect(() => {
-    fetchSounds();
-  }, [fetchSounds]);
-
+  // Lazy-load sounds on first explicit fetch call (e.g. when user opens player)
+  // Removed auto-fetch on boot — was triggering a Supabase query on EVERY page load
+  // even when the ambient player is never opened, adding 200-600ms to startup.
   useEffect(() => {
     const savedVolume = localStorage.getItem('ambient-audio-volume');
     if (savedVolume) {
@@ -254,3 +253,4 @@ export const useAmbientAudio = () => {
   }
   return context;
 };
+
