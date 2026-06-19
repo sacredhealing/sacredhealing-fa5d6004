@@ -134,8 +134,8 @@ async function openTrade(signal: any, sess: any): Promise<void> {
     if (!entryPrice) console.warn(`[price] could not fetch price for ${signal.mint} after 3 attempts`);
   }
 
-  // Insert paper trade
-  const { error } = await sb.from("shreem_brzee_paper_trades").insert({
+  // Upsert (not insert) — prevents duplicate if two webhooks race past the checks above
+  const tradeRow = {
     session_id:  "default",
     sig:         signal.sig + "_open",
     mint:        signal.mint,
@@ -149,9 +149,11 @@ async function openTrade(signal: any, sess: any): Promise<void> {
     net_sol:     size,
     status:      "open",
     opened_at:   new Date().toISOString(),
-  });
+  };
+  const { error } = await sb.from("shreem_brzee_paper_trades")
+    .upsert(tradeRow, { onConflict: "sig", ignoreDuplicates: true });
 
-  if (error) { console.error("[open] insert error:", error.message); return; }
+  if (error) { console.error("[open] upsert error:", error.message); return; }
 
   // Deduct from portfolio
   await sb.from("shreem_brzee_session").upsert({
@@ -168,24 +170,42 @@ async function closeTrade(pos: any, reason: string, exitPriceOverride?: number):
   const entry = Number(pos.entry_price) || 0;
   const size  = Number(pos.amount_sol)  || 0;
 
+  // Fetch exit price — retry 3 times
   let exitPrice = exitPriceOverride || 0;
   if (!exitPrice && pos.mint) {
-    exitPrice = await fetchPrice(pos.mint);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
+      exitPrice = await fetchPrice(pos.mint);
+      if (exitPrice > 0) break;
+    }
   }
 
-  const pnlPct = entry > 0 && exitPrice > 0 ? (exitPrice - entry) / entry * 100 : 0;
+  // If entry_price was never captured, try to use exit price as estimate
+  // This happens when price fetch failed at open time
+  // In this case PNL is unknown — record as 0 and flag it
+  const hasValidEntry = entry > 0;
+  const hasValidExit  = exitPrice > 0;
+
+  const pnlPct = hasValidEntry && hasValidExit ? (exitPrice - entry) / entry * 100 : 0;
   const pnlSol = size * (pnlPct / 100);
   const exitSol = size + pnlSol;
   const won = pnlSol >= 0;
 
-  await sb.from("shreem_brzee_paper_trades").update({
+  // If no entry price: update the entry price with exit price so it shows something
+  const updateData: any = {
     status:      "closed",
     closed_at:   new Date().toISOString(),
     exit_price:  exitPrice || null,
     pnl_pct:     pnlPct,
     pnl_sol:     pnlSol,
     sell_reason: reason,
-  }).eq("id", pos.id);
+  };
+  // Backfill entry_price if it was missing (shows as entry≈exit, PNL≈0 which is accurate)
+  if (!hasValidEntry && hasValidExit) {
+    updateData.entry_price = exitPrice;
+  }
+
+  await sb.from("shreem_brzee_paper_trades").update(updateData).eq("id", pos.id);
 
   // Update session
   const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
@@ -201,7 +221,7 @@ async function closeTrade(pos: any, reason: string, exitPriceOverride?: number):
     }, { onConflict: "id" });
   }
 
-  console.log(`[close] ${won?"✅":"❌"} ${pos.symbol || pos.mint?.slice(0,8)} | ${pnlPct.toFixed(1)}% | ${reason}`);
+  console.log(`[close] ${won?"✅":"❌"} ${pos.symbol || pos.mint?.slice(0,8)} | ${pnlPct.toFixed(1)}% | entry=${entry>0?"$"+entry.toFixed(6):"missing"} exit=${exitPrice>0?"$"+exitPrice.toFixed(6):"missing"} | ${reason}`);
 }
 
 // ── Cron job: check stop-loss + 48h cap on ALL open positions ─────────────────
@@ -493,11 +513,8 @@ serve(async (req) => {
     const txs = Array.isArray(body) ? body : [body];
     let inserted = 0, skipped = 0;
 
-    // Load session once for all txs
-    const { data: sess } = await sb.from("shreem_brzee_session")
-      .select("*").eq("id","default").single();
-
     for (const tx of txs) {
+      // Load FRESH session for each tx — reflects portfolio deductions from prior txs in same batch
       try {
         const sig    = tx.signature;
         if (!sig) { skipped++; continue; }
@@ -528,12 +545,14 @@ serve(async (req) => {
         console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
 
         // ── SERVER-SIDE TRADE EXECUTION (phone can be off) ──────────────
-        if (sess?.started_at && !sess?.stopped_at) {
+        // Load fresh session each time to get latest portfolio balance
+        const { data: sessNow } = await sb.from("shreem_brzee_session")
+          .select("*").eq("id","default").single();
+
+        if (sessNow?.started_at && !sessNow?.stopped_at) {
           if (swap.action === "BUY") {
-            // Open paper trade immediately — no browser needed
-            await openTrade(signal, sess);
+            await openTrade(signal, sessNow);
           } else if (swap.action === "SELL") {
-            // Close matching open positions immediately — no browser needed
             const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
               .select("*").eq("status","open").eq("mint", swap.mint);
             for (const pos of (openPos || [])) {
