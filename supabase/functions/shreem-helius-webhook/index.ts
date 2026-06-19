@@ -437,6 +437,12 @@ serve(async (req) => {
     return jsonResp(data || null);
   }
 
+  if (req.method === "GET" && path.endsWith("/live-trades")) {
+    const { data } = await sb.from("shreem_brzee_live_trades")
+      .select("*").order("opened_at", { ascending: false }).limit(100);
+    return jsonResp(data || []);
+  }
+
   if (req.method === "GET" && path.endsWith("/trades")) {
     const { data: sessRow } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
     const table = sessRow?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
