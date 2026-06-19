@@ -452,15 +452,30 @@ export default function ShreemBrzeePerformance() {
     setLoading(true); setStartingBot(true);
     const bal = parseFloat(balInput) || 1;
     try {
-      await d.from("shreem_brzee_paper_trades").delete().neq("id", 0);
+      // NEVER delete trade history — only update session state
+      // Recalculate real balances from existing closed trades
+      const { data: closedTrades } = await d.from("shreem_brzee_paper_trades")
+        .select("pnl_sol").eq("status","closed");
+      const realPnl  = (closedTrades || []).reduce((s: number, t: any) => s + (Number(t.pnl_sol)||0), 0);
+      const realWins  = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) >= 0).length;
+      const realLoss  = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) <  0).length;
+
       const { error } = await d.from("shreem_brzee_session").upsert({
-        id:"default", portfolio:bal, start_balance:bal, positions:{}, total_pnl:0,
-        wins:0, losses:0, started_at:new Date().toISOString(), stopped_at:null,
-        mode:"paper", updated_at:new Date().toISOString(),
+        id:"default",
+        portfolio:   bal,
+        start_balance: bal,
+        positions:   {},
+        total_pnl:   realPnl,   // carry over real PNL
+        wins:        realWins,  // carry over real wins
+        losses:      realLoss,  // carry over real losses
+        started_at:  new Date().toISOString(),
+        stopped_at:  null,
+        mode:        "paper",
+        updated_at:  new Date().toISOString(),
       }, { onConflict:"id" });
       if (error) throw new Error(error.message);
       await refreshAll();
-      notify(`Paper bot started with ${bal} SOL ✓`, "ok");
+      notify(`Bot started with ${bal} SOL ✓`, "ok");
     } catch (e: any) { notify(`Error: ${e.message?.slice(0,60)}`, "err"); setStartingBot(false); }
     setLoading(false);
   };
