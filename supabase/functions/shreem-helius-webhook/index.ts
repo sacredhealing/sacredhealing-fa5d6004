@@ -583,7 +583,11 @@ serve(async (req) => {
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
 
     if (sess?.mode === "live") {
-      // LIVE MODE: trigger real executor
+      // LIVE MODE: filter out USDC dust and micro trades before calling executor
+      const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+      if (signal.mint === USDC_MINT) return jsonResp({ ok: true, sig, mode: "live", skipped: true, reason: "USDC — not a trade target" });
+      if (signal.amount_sol < 0.01) return jsonResp({ ok: true, sig, mode: "live", skipped: true, reason: `Trade too small: ${signal.amount_sol} SOL` });
+
       const execResp = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
