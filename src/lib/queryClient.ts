@@ -32,11 +32,14 @@ export const queryClient = new QueryClient({
       // Reconnect refetch still useful
       refetchOnReconnect: 'always',
       
-      // Serve cache immediately while revalidating in background
-      networkMode: 'offlineFirst',
+      // FIXED: was 'offlineFirst' which caused auth query to hang indefinitely
+      // on fresh page load with no cached session. 'always' ensures queries
+      // always fire a real network request regardless of online/offline status.
+      networkMode: 'always',
     },
     mutations: {
       retry: 1,
+      networkMode: 'always',
       onError: (error) => {
         logger.error('Mutation failed', error);
       },
