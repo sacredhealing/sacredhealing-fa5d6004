@@ -430,21 +430,54 @@ export default function ShreemBrzeePerformance() {
 
   const checkBotWallet = useCallback(async () => {
     try {
-      const r = await fetch("https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health");
-      if (r.ok) { const data = await r.json(); if (data.wallet) setBotWallet(data); }
-    } catch {}
+      const r = await fetch(
+        "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health",
+        { signal: AbortSignal.timeout(8000) }
+      );
+      const data = r.ok ? await r.json() : null;
+      if (data?.wallet) {
+        setBotWallet(data);
+        console.log("[botWallet] connected:", data.wallet, data.balance_sol, "SOL");
+      } else {
+        console.warn("[botWallet] health check failed:", data);
+      }
+    } catch (e: any) {
+      console.warn("[botWallet] unreachable:", e.message);
+    }
   }, []);
 
   const toggleLiveMode = async (goLive: boolean) => {
     setLiveLoading(true);
     try {
-      const { error } = await d.from("shreem_brzee_session").update({
-        mode: goLive ? "live" : "paper", updated_at: new Date().toISOString()
-      }).eq("id","default");
-      if (error) throw error;
-      setLiveMode(goLive);
-      setLiveConfirm(false);
-      notify(goLive ? "🔴 LIVE MODE ACTIVE — real SOL trading" : "📋 Paper mode restored", goLive ? "err" : "ok");
+      const bal = parseFloat(balInput) || 0.3;
+      if (goLive) {
+        // Start session in live mode — one step, no separate START needed
+        const { error } = await d.from("shreem_brzee_session").upsert({
+          id: "default",
+          portfolio:     bal,
+          start_balance: bal,
+          positions:     {},
+          total_pnl:     0,
+          wins:          0,
+          losses:        0,
+          started_at:    new Date().toISOString(),
+          stopped_at:    null,
+          mode:          "live",
+          updated_at:    new Date().toISOString(),
+        }, { onConflict: "id" });
+        if (error) throw error;
+        setLiveMode(true);
+        setLiveConfirm(false);
+        notify("🔴 LIVE MODE ACTIVE — real SOL trading", "err");
+      } else {
+        // Stop live — back to paper
+        const { error } = await d.from("shreem_brzee_session").update({
+          mode: "paper", stopped_at: new Date().toISOString(), updated_at: new Date().toISOString()
+        }).eq("id", "default");
+        if (error) throw error;
+        setLiveMode(false);
+        notify("📋 Paper mode restored", "ok");
+      }
       await fetchSession();
     } catch (e: any) { notify(`Mode switch failed: ${e.message?.slice(0,60)}`, "err"); }
     setLiveLoading(false);
@@ -460,7 +493,9 @@ export default function ShreemBrzeePerformance() {
       refreshAll();
       getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
     }, 15000);
-    return () => clearInterval(masterInterval);
+    // Re-check bot wallet every 30s
+    const walletInterval = setInterval(checkBotWallet, 30000);
+    return () => { clearInterval(masterInterval); clearInterval(walletInterval); };
   }, []); // eslint-disable-line
 
   useEffect(() => { fetchPeriod(); }, [period]);
@@ -911,7 +946,7 @@ export default function ShreemBrzeePerformance() {
               </div>
               {!liveMode && <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>Real SOL copy trades — enable when ready</div>}
             </div>
-            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading||!isRunning} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading||!isRunning?"not-allowed":"pointer", letterSpacing:".06em" }}>
+            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading||!isRunning?"not-allowed":"pointer", letterSpacing:".06em" }}>
               {liveLoading ? "⚙" : liveMode ? "⏹ STOP LIVE" : "▶ GO LIVE"}
             </button>
           </div>
