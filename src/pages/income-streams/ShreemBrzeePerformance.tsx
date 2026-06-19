@@ -243,24 +243,32 @@ export default function ShreemBrzeePerformance() {
 
   // ── Data fetchers ──────────────────────────────────────────────────────────
   const fetchSession  = useCallback(async () => {
-    const { data } = await d.from("shreem_brzee_session").select("*").eq("id","default").single();
-    setSession(data || null);
+    try {
+      const r = await fetch(`${EDGE_BASE}/session`);
+      const data = r.ok ? await r.json() : null;
+      setSession(data);
+    } catch {}
   }, []);
 
   const fetchTrades   = useCallback(async () => {
-    const { data } = await d.from("shreem_brzee_paper_trades").select("*").order("created_at",{ascending:false}).limit(100);
-    // Filter: keep ALL real trades. A row is test-only if sig starts with TEST_/DIAG_ AND has no real entry_price
-    setTrades((data || []).filter((t: any) => {
-      const sig = t.sig || "";
-      const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_") || sig.startsWith("test-") || sig === "paper-bootstrap") && !t.entry_price && !t.amount_sol;
-      return !isPureTest;
-    }));
+    try {
+      const r = await fetch(`${EDGE_BASE}/trades`);
+      const data = r.ok ? await r.json() : [];
+      setTrades((data || []).filter((t: any) => {
+        const sig = t.sig || "";
+        const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_") || sig.startsWith("test-") || sig === "paper-bootstrap") && !t.entry_price && !t.amount_sol;
+        return !isPureTest;
+      }));
+    } catch {}
   }, []);
 
   const fetchSignals  = useCallback(async () => {
-    const { data } = await d.from("shreem_brzee_signals").select("*").order("created_at",{ascending:false}).limit(200);
-    const filtered = (data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_") && isTracked(s));
-    setSignals(filtered.slice(0, 100));
+    try {
+      const r = await fetch(`${EDGE_BASE}/signals`);
+      const data = r.ok ? await r.json() : [];
+      const filtered = (data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_") && isTracked(s));
+      setSignals(filtered.slice(0, 100));
+    } catch {}
   }, []);
 
   const fetchPeriod   = useCallback(async () => {
@@ -274,8 +282,11 @@ export default function ShreemBrzeePerformance() {
   }, [period]);
 
   const fetchOpen     = useCallback(async () => {
-    const { data } = await d.from("shreem_brzee_paper_trades").select("*").eq("status","open").order("opened_at",{ascending:false});
-    setOpenPos(data || []);
+    try {
+      const r = await fetch(`${EDGE_BASE}/open`);
+      const data = r.ok ? await r.json() : [];
+      setOpenPos(data || []);
+    } catch {}
   }, []);
 
   const checkEdge     = useCallback(async () => {
@@ -338,137 +349,35 @@ export default function ShreemBrzeePerformance() {
   }, [updatePrices]);
 
   // ── Close a position ───────────────────────────────────────────────────────
+  // closePosition: only used for manual "CLOSE TRADE" button
+  // Calls edge function /signal to trigger server-side close
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
     try {
-      let exitPrice = livePrices[pos.mint];
-      if (!exitPrice) exitPrice = await fetchTokenPrice(pos.mint);
-      const entry   = Number(pos.entry_price) || 0;
-      const size    = Number(pos.amount_sol) || 0;
-      const pnlPct  = entry > 0 && exitPrice ? (exitPrice - entry) / entry * 100 : 0;
-      const exitSol = size * (1 + pnlPct / 100);
-      const pnlSol  = exitSol - size;
-      await d.from("shreem_brzee_paper_trades").update({
-        status:"closed", closed_at:new Date().toISOString(),
-        exit_price:exitPrice||null, pnl_pct:pnlPct, pnl_sol:pnlSol, sell_reason:reason,
-      }).eq("id", pos.id);
-      const { data: sess } = await d.from("shreem_brzee_session").select("*").eq("id","default").single();
-      if (sess) {
-        await d.from("shreem_brzee_session").upsert({
-          id:"default", ...sess,
-          portfolio:   Number(sess.portfolio||0)   + exitSol,
-          total_pnl:   Number(sess.total_pnl||0)   + pnlSol,
-          wins:        Number(sess.wins||0)         + (pnlSol >= 0 ? 1 : 0),
-          losses:      Number(sess.losses||0)       + (pnlSol <  0 ? 1 : 0),
-          updated_at:  new Date().toISOString(),
-        }, { onConflict:"id" });
-      }
-      refreshAll(); fetchOpen();
+      // Insert a synthetic SELL signal — edge function detects it and closes the position
+      const sellSig = `MANUAL_CLOSE_${pos.id}_${Date.now()}`;
+      await d.from("shreem_brzee_signals").insert({
+        sig: sellSig, wallet: pos.wallet, label: pos.label,
+        action: "SELL", mint: pos.mint, symbol: pos.symbol,
+        amount_sol: pos.amount_sol, created_at: new Date().toISOString(),
+      });
+      setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); }, 2000);
     } catch (e: any) { notify(`Close failed: ${e.message?.slice(0,60)}`, "err"); }
-  }, [livePrices, refreshAll, fetchOpen, fetchTokenPrice]);
+  }, [fetchOpen, fetchTrades, fetchSession]);
 
-  // ── Auto-close triggers — PURE WHALE FOLLOW ──────────────────────────────
-  // We exit when the WHALE exits. Period.
-  //
-  // Exit 1 (primary): Whale SELL signal → realtime channel above closes instantly
-  // Exit 2: Stop-loss -30% → protects against rugs / bad entries only
-  // Exit 3: 24h safety cap → only if Helius missed the whale SELL signal
-  //
-  // NO trailing stop — if the whale holds a 10x for 3 days, we hold 3 days.
-  // Trailing stops fight the strategy. Pure follow = maximum capture of whale gains.
-  useEffect(() => {
-    if (!openPos.length) return;
-    openPos.forEach((pos: any) => {
-      const price = livePrices[pos.mint];
-      const entry = Number(pos.entry_price) || 0;
-      if (!price || entry <= 0) return;
-
-      const pnlPct = (price - entry) / entry * 100;
-      const ageH   = (Date.now() - new Date(pos.opened_at || pos.created_at).getTime()) / 3_600_000;
-
-      // Exit 2: Hard stop-loss -30% — only safety net against rugs
-      if (pnlPct <= -30) { closePosition(pos, "stop_loss"); return; }
-
-      // Exit 3: 24h safety cap — Helius missed whale SELL or token is dead
-      if (ageH >= 48) { closePosition(pos, "48h_safety_cap"); }
-    });
-  }, [openPos, livePrices, closePosition]);
+  // v5: Stop-loss and 48h cap run server-side via cron every 5 min.
+  // Browser does NOT execute any trade logic. Phone can be off.
 
   // ── Realtime subscriptions ─────────────────────────────────────────────────
-  // BUG 1 FIX: sb_sig_to_trade now handles BOTH BUY and SELL signals
+  // v5: Trade execution is 100% server-side in the edge function.
+  // Browser just listens for DB changes and refreshes display.
+  // No trade logic runs in the browser — phone can be off.
   useEffect(() => {
-    const ch = d.channel("sb_sig_to_trade")
-      .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_signals" }, async (payload) => {
-        const sig = payload?.new as any;
-        if (!sig || !sig.mint) return;
-
-        // ── BUY: auto-open paper trade ────────────────────────────────────
-        if (sig.action === "BUY") {
-          try {
-            const { data: sess } = await d.from("shreem_brzee_session").select("*").eq("id","default").single();
-            if (!sess || !sess.started_at || sess.stopped_at) return;
-            const portfolio = Number(sess.portfolio || 0);
-            if (portfolio <= 0) return;
-
-            // Already in this token? Skip.
-            const { data: existing } = await d.from("shreem_brzee_paper_trades").select("id").eq("status","open").eq("mint",sig.mint).limit(1);
-            if (existing && existing.length) return;
-
-            // ── COMPOUNDING: calculate position size dynamically ──────────
-            const { data: currentOpen } = await d.from("shreem_brzee_paper_trades").select("amount_sol").eq("status","open");
-            const sizing = calculatePositionSize(
-              portfolio,
-              Number(sess.wins   || 0),
-              Number(sess.losses || 0),
-              currentOpen || [],
-            );
-
-            if (sizing.blocked) {
-              console.log(`[auto-open BLOCKED] ${sizing.reason} | portfolio:${portfolio.toFixed(3)} SOL`);
-              return; // 50% cap reached — skip this signal
-            }
-
-            let price = await fetchTokenPrice(sig.mint);
-            if (price === 0) { await new Promise(r => setTimeout(r, 3000)); price = await fetchTokenPrice(sig.mint); }
-
-            const size = sizing.size;
-            console.log(`[auto-open] size=${size.toFixed(4)} SOL (${(sizing.pct*100).toFixed(1)}%) | portfolio=${portfolio.toFixed(3)} | mint=${sig.mint}`);
-
-            await d.from("shreem_brzee_paper_trades").insert({
-              session_id:"default", sig:sig.sig+"_open", mint:sig.mint,
-              symbol:sig.symbol, label:sig.label, wallet:sig.wallet,
-              action:"BUY", entry_price:price, amount_sol:size,
-              gross_sol:size, net_sol:size, status:"open",
-              opened_at:new Date().toISOString(),
-            });
-            await d.from("shreem_brzee_session").upsert({
-              id:"default", ...sess, portfolio:portfolio - size, updated_at:new Date().toISOString(),
-            }, { onConflict:"id" });
-            refreshAll(); fetchOpen();
-          } catch (e) { console.error("[auto-open]", e); }
-        }
-
-        // ── BUG 1 FIX: SELL → auto-close matching open positions ──────────
-        if (sig.action === "SELL") {
-          try {
-            const { data: sess } = await d.from("shreem_brzee_session").select("*").eq("id","default").single();
-            if (!sess || !sess.started_at || sess.stopped_at) return;
-            // Find open positions in the same token from this same whale
-            const { data: positions } = await d.from("shreem_brzee_paper_trades")
-              .select("*")
-              .eq("status","open")
-              .eq("mint", sig.mint)
-              .limit(5);
-            if (!positions || !positions.length) return;
-            console.log(`[auto-close] ${sig.label} sold ${sig.mint} → closing ${positions.length} position(s)`);
-            for (const pos of positions) {
-              await closePosition(pos, "whale_sell_mirror");
-            }
-          } catch (e) { console.error("[auto-close]", e); }
-        }
-      })
+    const ch = d.channel("sb_sig_display")
+      .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_signals" },
+        () => { fetchSignals(); fetchPeriod(); fetchOpen(); fetchTrades(); fetchSession(); })
       .subscribe();
     return () => { d.removeChannel(ch); };
-  }, [refreshAll, fetchOpen, fetchTokenPrice, closePosition]);
+  }, [fetchSignals, fetchPeriod, fetchOpen, fetchTrades, fetchSession]);
 
   // Realtime: signal feed + trade history
   useEffect(() => {
