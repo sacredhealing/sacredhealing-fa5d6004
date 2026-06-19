@@ -291,8 +291,8 @@ export default function ShreemBrzeePerformance() {
 
   const checkEdge     = useCallback(async () => {
     try {
-      const r = await fetch(`${EDGE_BASE}/session`, { signal: AbortSignal.timeout(5000) });
-      setEdgeOk(r.ok || r.status === 200);
+      const r = await fetch(`${EDGE_BASE}/ping`, { signal: AbortSignal.timeout(5000) });
+      setEdgeOk(r.ok);
     } catch { setEdgeOk(false); }
   }, []);
 
@@ -372,11 +372,15 @@ export default function ShreemBrzeePerformance() {
   // Browser just listens for DB changes and refreshes display.
   // No trade logic runs in the browser — phone can be off.
   useEffect(() => {
-    const ch = d.channel("sb_sig_display")
+    const chSig = d.channel("sb_sig_v5")
       .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_signals" },
-        () => { fetchSignals(); fetchPeriod(); fetchOpen(); fetchTrades(); fetchSession(); })
+        () => { fetchSignals(); fetchPeriod(); })
       .subscribe();
-    return () => { d.removeChannel(ch); };
+    const chTrd5 = d.channel("sb_trd_v5")
+      .on("postgres_changes", { event:"*", schema:"public", table:"shreem_brzee_paper_trades" },
+        () => { fetchOpen(); fetchTrades(); fetchSession(); })
+      .subscribe();
+    return () => { d.removeChannel(chSig); d.removeChannel(chTrd5); };
   }, [fetchSignals, fetchPeriod, fetchOpen, fetchTrades, fetchSession]);
 
   // Realtime: signal feed + trade history
