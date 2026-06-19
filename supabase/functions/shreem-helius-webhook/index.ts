@@ -536,9 +536,12 @@ serve(async (req) => {
       const tradeId = body?.trade_id;
       if (!tradeId) return jsonResp({ error: "missing trade_id" }, 400);
 
-      // Fetch the open position
+      // Check session mode to know which table to use
+      const { data: sess } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
+      const table = sess?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
+
       const { data: pos, error: fetchErr } = await sb
-        .from("shreem_brzee_paper_trades")
+        .from(table)
         .select("*")
         .eq("id", tradeId)
         .eq("status", "open")
@@ -546,10 +549,19 @@ serve(async (req) => {
 
       if (fetchErr || !pos) return jsonResp({ error: "trade not found or already closed" }, 404);
 
-      // Close it server-side with current market price
-      await closeTrade(pos, "manual");
+      if (sess?.mode === "live") {
+        // Close live trade — just update DB (no sell swap for now, manual close)
+        await sb.from("shreem_brzee_live_trades").update({
+          status: "closed",
+          sell_reason: "manual",
+          closed_at: new Date().toISOString(),
+          pnl_pct: 0, pnl_sol: 0,
+        }).eq("id", tradeId);
+      } else {
+        await closeTrade(pos, "manual");
+      }
 
-      return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual" });
+      return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual", table });
     } catch (e: any) {
       return jsonResp({ ok: false, error: e.message }, 500);
     }
