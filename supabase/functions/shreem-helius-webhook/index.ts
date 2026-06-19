@@ -271,24 +271,27 @@ async function runCron(): Promise<object> {
   return { checked: openPos.length, closed, results };
 }
 
-// ── Sync wallets to tracked_whales AND update Helius webhook ─────────────────
+// ── Sync wallets to tracked_whales (DB only — fast, runs on every request) ────
 async function syncWallets(): Promise<void> {
   try {
-    // 1. Upsert all wallets into tracked_whales
     const rows = Object.entries(WHALE_WALLETS).map(([address, label]) => ({
       address, label, source: "kollist", added_at: new Date().toISOString()
     }));
     await sb.from("tracked_whales").upsert(rows, { onConflict: "address" });
+  } catch (e: any) { console.warn("[sync]", e.message); }
+}
 
-    // 2. Update Helius webhook to watch all current wallets
+// ── Update Helius webhook registration (only called explicitly via /sync-helius) ──
+async function syncHelius(): Promise<{ ok: boolean; message: string; count?: number }> {
+  try {
     const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
     const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
     const addresses = Object.keys(WHALE_WALLETS);
 
-    // Find existing webhook
-    const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
-    const hooks  = listR.ok ? await listR.json() : [];
-    const ours   = Array.isArray(hooks) ? hooks.find((h: any) => h?.webhookURL === WEBHOOK_URL) : null;
+    const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`, { signal: AbortSignal.timeout(8000) });
+    if (!listR.ok) throw new Error(`Helius list failed: ${listR.status}`);
+    const hooks = await listR.json();
+    const ours  = Array.isArray(hooks) ? hooks.find((h: any) => h?.webhookURL === WEBHOOK_URL) : null;
 
     const payload = {
       webhookURL:       WEBHOOK_URL,
@@ -298,19 +301,25 @@ async function syncWallets(): Promise<void> {
       txnStatus:        "success",
     };
 
+    let r;
     if (ours?.webhookID) {
-      const r = await fetch(`https://api.helius.xyz/v0/webhooks/${ours.webhookID}?api-key=${HELIUS_KEY}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+      r = await fetch(`https://api.helius.xyz/v0/webhooks/${ours.webhookID}?api-key=${HELIUS_KEY}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: AbortSignal.timeout(10000)
       });
-      console.log(`[helius] Updated webhook ${ours.webhookID} watching ${addresses.length} wallets — status ${r.status}`);
     } else {
-      const r = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+      r = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: AbortSignal.timeout(10000)
       });
-      const d = await r.json().catch(() => ({}));
-      console.log(`[helius] Created new webhook watching ${addresses.length} wallets — status ${r.status}, id: ${d.webhookID}`);
     }
-  } catch (e: any) { console.warn("[sync]", e.message); }
+
+    const result = await r.json().catch(() => ({}));
+    const msg = `${ours ? "Updated" : "Created"} Helius webhook watching ${addresses.length} wallets`;
+    console.log(`[helius-sync] ${msg}, status: ${r.status}`);
+    return { ok: r.ok, message: msg, count: addresses.length };
+  } catch (e: any) {
+    console.error("[helius-sync] failed:", e.message);
+    return { ok: false, message: e.message };
+  }
 }
 
 // ── Parse swap from Helius tx ─────────────────────────────────────────────────
@@ -454,9 +463,10 @@ serve(async (req) => {
 
   // ── Manual Helius sync ────────────────────────────────────────────────────
   if (req.method === "GET" && path.endsWith("/sync-helius")) {
-    await syncWallets(); // syncs DB + updates Helius
+    await syncWallets(); // sync DB first
+    const result = await syncHelius(); // then update Helius
     const { data: rows } = await sb.from("tracked_whales").select("address,label");
-    return jsonResp({ ok: true, synced: rows?.length, wallets: rows?.map((r:any) => r.label), message: "Helius webhook updated" });
+    return jsonResp({ ...result, synced: rows?.length, wallets: rows?.map((r:any) => r.label) });
   }
 
   // ── Status — debug endpoint ──────────────────────────────────────────────
