@@ -40,8 +40,8 @@ export default function ShreemBotActivation() {
     if (!user) { setLoading(false); return; }
 
     const [{ data: m }, { data: e }, { data: ap }] = await Promise.all([
-      supabase.from("shreem_bot_members").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase.from("shreem_mlm_earnings").select("*").eq("user_id", user.id).maybeSingle(),
+      (supabase as any).from("shreem_bot_members").select("*").eq("user_id", user.id).maybeSingle(),
+      (supabase as any).from("shreem_mlm_earnings").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("affiliate_profiles").select("affiliate_code").eq("user_id", user.id).maybeSingle(),
     ]);
 
