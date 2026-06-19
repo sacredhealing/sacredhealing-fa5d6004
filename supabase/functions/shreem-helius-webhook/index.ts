@@ -40,6 +40,20 @@ const WHALE_WALLETS: Record<string, string> = {
 
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
 
+// Auto-sync WHALE_WALLETS into tracked_whales on every cold start
+// This ensures Helius always watches the right wallets even after code updates
+async function syncWalletsToDb(sb: any) {
+  try {
+    const rows = Object.entries(WHALE_WALLETS).map(([address, label]) => ({
+      address, label, source: "kollist", added_at: new Date().toISOString()
+    }));
+    await sb.from("tracked_whales").upsert(rows, { onConflict: "address", ignoreDuplicates: false });
+    console.log(`[SYNC] Upserted ${rows.length} wallets to tracked_whales`);
+  } catch (e: any) {
+    console.warn("[SYNC] tracked_whales upsert failed:", e.message);
+  }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
