@@ -426,8 +426,9 @@ serve(async (req) => {
       const body = await req.json().catch(() => ({}));
       const bal  = Number(body?.balance_sol || 0.3);
 
-      // Delete ALL paper trades and signals (service role bypasses RLS)
+      // Delete ALL paper trades, live trades, and signals (service role bypasses RLS)
       await sb.from("shreem_brzee_paper_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await sb.from("shreem_brzee_live_trades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await sb.from("shreem_brzee_signals").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
       // Fresh live session
