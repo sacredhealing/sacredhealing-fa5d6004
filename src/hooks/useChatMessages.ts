@@ -42,7 +42,7 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
           .eq('user_id', user.id)
           .eq('chat_context', 'ayurveda')
           .order('created_at', { ascending: true })
-          .limit(500);
+          .limit(200);
       } else {
         query = (supabase as any)
           .from(TABLE_APOTHECARY)
@@ -141,8 +141,9 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
       .from(TABLE_AYURVEDA)
       .select('id, role, content, created_at')
       .eq('user_id', user.id)
+      .eq('chat_context', 'ayurveda')
       .order('created_at', { ascending: true })
-      .limit(500);
+      .limit(200);
     if (!error && data) {
       setMessages(data as ChatMessage[]);
     }
