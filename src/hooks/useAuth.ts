@@ -9,9 +9,10 @@ const AUTH_REQUEST_TIMEOUT_MS = 30000;
 
 const getClientConfig = () => {
   const client = supabase as unknown as { supabaseUrl?: string; supabaseKey?: string };
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   return {
     url: client.supabaseUrl || import.meta.env.VITE_SUPABASE_URL,
-    key: client.supabaseKey || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY,
+    key: publishableKey || client.supabaseKey,
   };
 };
 
