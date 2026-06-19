@@ -386,6 +386,34 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // ── Manual close endpoint ────────────────────────────────────────────────
+  // Called by the frontend CLOSE TRADE button
+  // POST /close-trade  body: { trade_id: string }
+  if (req.method === "POST" && path.endsWith("/close-trade")) {
+    try {
+      const body = await req.json();
+      const tradeId = body?.trade_id;
+      if (!tradeId) return jsonResp({ error: "missing trade_id" }, 400);
+
+      // Fetch the open position
+      const { data: pos, error: fetchErr } = await sb
+        .from("shreem_brzee_paper_trades")
+        .select("*")
+        .eq("id", tradeId)
+        .eq("status", "open")
+        .single();
+
+      if (fetchErr || !pos) return jsonResp({ error: "trade not found or already closed" }, 404);
+
+      // Close it server-side with current market price
+      await closeTrade(pos, "manual");
+
+      return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual" });
+    } catch (e: any) {
+      return jsonResp({ ok: false, error: e.message }, 500);
+    }
+  }
+
   // ── Test signals ──────────────────────────────────────────────────────────
   if (req.method === "POST" && path.endsWith("/test")) {
     const sig = "TEST_" + Date.now();
