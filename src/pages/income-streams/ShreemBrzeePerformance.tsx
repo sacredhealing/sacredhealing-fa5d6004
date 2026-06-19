@@ -568,6 +568,24 @@ export default function ShreemBrzeePerformance() {
     setLoading(false);
   };
 
+  const triggerExecutor = async () => {
+    try {
+      notify("⚡ Triggering live executor…", "info");
+      const EXEC = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor";
+      const r = await fetch(EXEC, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ trigger:"manual" }) });
+      const d = await r.json();
+      console.log("[executor]", JSON.stringify(d, null, 2));
+      if (d.skipped) notify(`Executor skipped: ${d.reason}`, "info");
+      else if (d.results?.length) {
+        const ok   = d.results.filter((x:any) => x.ok).length;
+        const errs = d.results.filter((x:any) => x.error);
+        notify(`Executor: ${ok} traded · ${errs.length} errors · see console`, ok ? "ok" : "err");
+        if (errs.length) errs.forEach((e:any) => console.error("[exec err]", e));
+      } else notify(`Executor: ${JSON.stringify(d).slice(0,120)}`, "info");
+      setTimeout(refreshAll, 2000);
+    } catch(e:any) { notify(`Executor error: ${e.message?.slice(0,60)}`, "err"); }
+  };
+
   // ── Wallet ────────────────────────────────────────────────────────────────
   const handleWalletInput = (val: string) => {
     setWalletInput(val);
@@ -751,6 +769,7 @@ export default function ShreemBrzeePerformance() {
           badge={openPos.length>0?<span style={{ marginLeft:6, padding:"2px 8px", borderRadius:20, background:"rgba(16,185,129,.15)", color:GREEN, fontSize:10, fontWeight:800 }}>{openPos.length} live</span>:undefined}
           right={
             <div style={{ display:"flex", alignItems:"center", gap:6, position:"relative" }}>
+              {liveMode && <button onClick={triggerExecutor} disabled={loading} style={{ padding:"5px 12px", borderRadius:9, border:"1px solid rgba(212,175,55,.4)", background:"rgba(212,175,55,.1)", color:"#D4AF37", fontSize:10, fontWeight:800, cursor:"pointer", marginRight:4 }}>▶ Run Executor</button>}
               {openPos.length===0 && <button onClick={testBuy} disabled={loading} style={{ padding:"5px 12px", borderRadius:9, border:"1px solid rgba(0,212,255,.3)", background:"rgba(0,212,255,.08)", color:CYAN, fontSize:10, fontWeight:800, cursor:"pointer" }}>⚡ Test Signal</button>}
               {isAdmin && (
                 <>
