@@ -364,8 +364,12 @@ export default function ShreemBrzeePerformance() {
     } catch (e: any) { notify(`Close failed: ${e.message?.slice(0,60)}`, "err"); }
   }, [fetchOpen, fetchTrades, fetchSession]);
 
-  // v5: Stop-loss and 48h cap run server-side via cron every 5 min.
-  // Browser does NOT execute any trade logic. Phone can be off.
+  // v5: ALL exit logic runs server-side in edge function:
+  //   whale_sell_mirror — whale SELL signal detected → close immediately
+  //   stop_loss        — price drops -30% from entry → close immediately  
+  //   48h_safety_cap   — position open 48h with no whale SELL → close
+  // Browser is READ-ONLY. Phone can be off. Bot runs 24/7.
+  // Exit reasons: "whale_sell_mirror" | "stop_loss" | "48h_safety_cap" | "manual"
 
   // ── Realtime subscriptions ─────────────────────────────────────────────────
   // v5: Trade execution is 100% server-side in the edge function.
@@ -1009,7 +1013,13 @@ export default function ShreemBrzeePerformance() {
                 <div style={{ fontSize:13, fontWeight:800, color:GOLD, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t.symbol||t.mint?.slice(0,6)||"?"}</div>
                 <div style={{ fontSize:10, color:"#64748b", marginTop:1 }}>
                   {t.action} · {t.label}
-                  {t.sell_reason && <span style={{ marginLeft:5, padding:"1px 5px", borderRadius:4, background:"rgba(212,175,55,.1)", color:GOLD, fontSize:9 }}>{t.sell_reason.replace(/_/g," ")}</span>}
+                  {t.sell_reason && <span style={{ marginLeft:5, padding:"2px 7px", borderRadius:20, fontSize:9, fontWeight:700,
+                      background:t.sell_reason==="whale_sell_mirror"?"rgba(16,185,129,.12)":t.sell_reason==="stop_loss"?"rgba(239,68,68,.12)":t.sell_reason==="48h_safety_cap"?"rgba(100,116,139,.12)":"rgba(212,175,55,.1)",
+                      color:t.sell_reason==="whale_sell_mirror"?GREEN:t.sell_reason==="stop_loss"?RED:t.sell_reason==="48h_safety_cap"?"#94a3b8":GOLD,
+                      border:`1px solid ${t.sell_reason==="whale_sell_mirror"?"rgba(16,185,129,.25)":t.sell_reason==="stop_loss"?"rgba(239,68,68,.25)":"rgba(212,175,55,.2)"}`
+                    }}>
+                      {t.sell_reason==="whale_sell_mirror"?"🐋 Whale exit":t.sell_reason==="stop_loss"?"🛑 Stop loss":t.sell_reason==="48h_safety_cap"?"⏱ 48h cap":t.sell_reason.replace(/_/g," ")}
+                    </span>}
                 </div>
               </div>
               <div style={{ textAlign:"right", flexShrink:0 }}>
