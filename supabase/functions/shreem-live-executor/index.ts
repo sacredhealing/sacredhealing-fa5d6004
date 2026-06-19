@@ -116,27 +116,28 @@ async function jupiterSwapTx(quote: unknown, wallet: string): Promise<string> {
   return swapTransaction;
 }
 
-// ── Sign and send transaction ─────────────────────────────────────────────────
+// ── Sign and send transaction (Jupiter v6 VersionedTransaction) ───────────────
+const connection = new Connection(HELIUS_RPC, "confirmed");
+
 async function signAndSendTx(txBase64: string, kp: SolanaKeypair): Promise<string> {
-  const txBytes = Uint8Array.from(atob(txBase64), c => c.charCodeAt(0));
+  // Decode Jupiter's swapTransaction (base64 VersionedTransaction)
+  const swapTransactionBuf = Buffer.from(txBase64, "base64");
+  const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
-  // Versioned tx: [version][numSigs][sig slots...][message...]
-  let offset = 1; // skip version byte
-  const numSigs = txBytes[offset];
-  offset += 1;
-  const sigStart = offset;
-  offset += numSigs * 64;
-  const message = txBytes.slice(offset);
+  // Rebuild a web3.js Keypair from the raw 64-byte secret
+  const keypair = Keypair.fromSecretKey(kp.secretKey);
 
-  // Sign with nacl
-  const sig = nacl.sign.detached(message, kp.secretKey);
-  txBytes.set(sig, sigStart);
+  // Sign with keypair
+  transaction.sign([keypair]);
 
-  const encoded = btoa(String.fromCharCode(...txBytes));
-  return await rpc("sendTransaction", [
-    encoded,
-    { encoding: "base64", preflightCommitment: "confirmed", skipPreflight: false }
-  ]);
+  // Send raw — DO NOT re-serialize manually beyond .serialize()
+  const rawTransaction = transaction.serialize();
+  const txid = await connection.sendRawTransaction(rawTransaction, {
+    skipPreflight: true,
+    maxRetries: 3,
+    preflightCommitment: "confirmed",
+  });
+  return txid;
 }
 
 // ── Wait for confirmation ─────────────────────────────────────────────────────
