@@ -3,9 +3,38 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
 const AUTH_STORAGE_KEY = 'sqi-2050-auth-token';
+const AUTH_CHECK_TIMEOUT_MS = 2500;
+const AUTH_REQUEST_TIMEOUT_MS = 9000;
+
+const getClientConfig = () => {
+  const client = supabase as unknown as { supabaseUrl?: string; supabaseKey?: string };
+  return {
+    url: client.supabaseUrl || import.meta.env.VITE_SUPABASE_URL,
+    key: client.supabaseKey || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY,
+  };
+};
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), ms);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  });
+}
+
+function isNetworkAuthFailure(error: unknown) {
+  const maybe = error as { name?: string; message?: string; status?: number };
+  return (
+    maybe?.status === 0 ||
+    maybe?.name === 'AuthRetryableFetchError' ||
+    maybe?.message?.toLowerCase().includes('failed to fetch') ||
+    maybe?.message?.toLowerCase().includes('timed out')
+  );
+}
 
 function readCachedSession(): Session | null {
   try {
@@ -16,26 +45,36 @@ function readCachedSession(): Session | null {
     if (session?.access_token && session?.refresh_token && session?.user && expiresAt > Date.now() / 1000 + 60) {
       return session;
     }
-  } catch {}
+  } catch {
+    // Ignore corrupt browser storage and fall back to a clean auth check.
+  }
   return null;
 }
 
-async function getSession(): Promise<Session | null> {
-  // 1. Try localStorage first — instant, no network
-  const cached = readCachedSession();
-  if (cached) return cached;
-
-  // 2. Ask Supabase SDK — hard 5s cap
+function clearStaleAuthStorage() {
   try {
-    const controller = new AbortController();
-    const tid = window.setTimeout(() => controller.abort(), 5000);
-    const { data: { session } } = await supabase.auth.getSession();
-    window.clearTimeout(tid);
-    if (session) {
-      try { window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session)); } catch {}
-    }
-    return session;
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+      .forEach((key) => window.localStorage.removeItem(key));
   } catch {
+    // Browser storage can be unavailable in restricted contexts.
+  }
+}
+
+async function getSession(): Promise<Session | null> {
+  const cachedSession = readCachedSession();
+  if (cachedSession) return cachedSession;
+
+  try {
+    const { data: { session } } = await withTimeout(
+      supabase.auth.getSession(),
+      AUTH_CHECK_TIMEOUT_MS,
+      'Auth check timed out'
+    );
+    return session;
+  } catch (error) {
+    if (isNetworkAuthFailure(error)) clearStaleAuthStorage();
     return null;
   }
 }
@@ -43,40 +82,107 @@ async function getSession(): Promise<Session | null> {
 async function ensureUserProfile(session: Session | null) {
   const user = session?.user;
   if (!user) return;
+
   try {
     await supabase.from('profiles').upsert(
-      { user_id: user.id, full_name: (user.user_metadata?.full_name as string | undefined) ?? user.email ?? null, preferred_language: 'en' },
+      {
+        user_id: user.id,
+        full_name: (user.user_metadata?.full_name as string | undefined) ?? user.email ?? null,
+        preferred_language: 'en',
+      },
       { onConflict: 'user_id', ignoreDuplicates: true }
     );
-  } catch {}
+  } catch {
+    // A missing profile must never block a successful auth session.
+  }
+}
+
+function passwordSignInRequest(email: string, password: string): Promise<Session> {
+  const { url, key } = getClientConfig();
+
+  return new Promise((resolve, reject) => {
+    if (!url || !key) {
+      reject(new Error('Authentication is not configured.'));
+      return;
+    }
+
+    const request = new XMLHttpRequest();
+    request.open('POST', `${url}/auth/v1/token?grant_type=password`);
+    request.timeout = AUTH_REQUEST_TIMEOUT_MS;
+    request.setRequestHeader('apikey', key);
+    request.setRequestHeader('Authorization', `Bearer ${key}`);
+    request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    request.setRequestHeader('x-client-info', 'sqi-auth-xhr-fallback');
+
+    request.onload = () => {
+      let payload: any = null;
+      try {
+        payload = request.responseText ? JSON.parse(request.responseText) : null;
+      } catch {
+        // Keep payload null and use a generic message below.
+      }
+
+      if (request.status >= 200 && request.status < 300 && payload?.access_token && payload?.user) {
+        resolve(payload as Session);
+        return;
+      }
+
+      reject(new Error(payload?.error_description || payload?.msg || payload?.message || payload?.error || 'Sign in failed.'));
+    };
+
+    request.onerror = () => reject(new Error('Network connection failed. Open the preview in a new tab if this continues.'));
+    request.ontimeout = () => reject(new Error('Sign in timed out. Please try again.'));
+    request.send(JSON.stringify({ email, password, gotrue_meta_security: {} }));
+  });
+}
+
+async function activateSession(session: Session) {
+  try {
+    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  } catch {
+    // Auth can still continue through in-memory cache.
+  }
+
+  try {
+    const { data } = await withTimeout(
+      supabase.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token }),
+      2000,
+      'Session activation timed out'
+    );
+    return data.session ?? session;
+  } catch {
+    return session;
+  }
 }
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
-  const [safetyDone, setSafetyDone] = useState(false);
+  // Safety: if the query never resolves, force isLoading false after 5s
+  const [safetyTimedOut, setSafetyTimedOut] = useState(false);
 
   useEffect(() => {
-    const t = window.setTimeout(() => setSafetyDone(true), 4000);
+    const t = window.setTimeout(() => setSafetyTimedOut(true), 5000);
     return () => window.clearTimeout(t);
   }, []);
 
   const { data: session, isLoading: queryLoading } = useQuery({
     queryKey: ['auth-user'],
     queryFn: getSession,
-    staleTime: 30 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,       // 30 minutes — no refetch churn
+    gcTime: 24 * 60 * 60 * 1000,     // cache for 24h so reloads restore instantly
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    // CRITICAL: must be 'always' — global 'offlineFirst' causes this query
+    // to hang indefinitely when there is no cached session on first load.
     networkMode: 'always',
   });
 
-  const isLoading = queryLoading && !safetyDone;
+  // isLoading is false once query resolves OR safety timeout fires
+  const isLoading = queryLoading && !safetyTimedOut;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (newSession) {
-        try { window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession)); } catch {}
-      }
+      // Directly update cache — no invalidate → no loading flash → no bounce to /auth
       queryClient.setQueryData(['auth-user'], newSession);
       window.setTimeout(() => void ensureUserProfile(newSession), 0);
     });
@@ -85,80 +191,64 @@ export const useAuth = () => {
 
   const user: User | null = session?.user ?? null;
 
-  const signIn = async (email: string, password: string) => {
-    // Single fast raw fetch — no SDK overhead, no retries, no service worker cache
-    try {
-      const controller = new AbortController();
-      const tid = window.setTimeout(() => controller.abort(), 8000);
-
-      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ email, password, gotrue_meta_security: {} }),
-      });
-
-      window.clearTimeout(tid);
-      const payload = await res.json();
-
-      if (!res.ok || !payload?.access_token) {
-        const msg = payload?.error_description || payload?.msg || payload?.message || payload?.error || 'Sign in failed.';
-        return { data: { session: null, user: null }, error: new Error(msg) };
-      }
-
-      const newSession = payload as Session;
-
-      // Persist to localStorage so readCachedSession() works instantly on next load
-      try { window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession)); } catch {}
-
-      // Tell SDK about the session (fire and forget — don't await)
-      void supabase.auth.setSession({
-        access_token: newSession.access_token,
-        refresh_token: newSession.refresh_token,
-      }).catch(() => {});
-
-      // Update React Query cache immediately
-      queryClient.setQueryData(['auth-user'], newSession);
-
-      // Ensure profile exists (fire and forget)
-      void ensureUserProfile(newSession);
-
-      return { data: { session: newSession, user: newSession.user }, error: null };
-    } catch (err: any) {
-      const msg = err?.name === 'AbortError'
-        ? 'Sign in timed out. Please try again.'
-        : 'Network error. Please check your connection and try again.';
-      return { data: { session: null, user: null }, error: new Error(msg) };
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    const { data, error } = await withTimeout(supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { full_name: fullName },
+      },
+    }), AUTH_REQUEST_TIMEOUT_MS, 'Sign up timed out. Please try again.');
+    // Immediately seed the cache so ProtectedRoute sees session before navigation
+    if (data.session) {
+      queryClient.setQueryData(['auth-user'], data.session);
+      window.setTimeout(() => void ensureUserProfile(data.session), 0);
     }
+    return { data, error };
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signIn = async (email: string, password: string) => {
+    let data: any = { session: null, user: null };
+    let error: any = null;
+
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: redirectUrl, data: { full_name: fullName } },
-      });
-      if (data?.session) {
-        try { window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.session)); } catch {}
-        queryClient.setQueryData(['auth-user'], data.session);
-        void ensureUserProfile(data.session);
-      }
-      return { data, error };
-    } catch (err: any) {
-      return { data: { session: null, user: null }, error: err };
+      const result = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        AUTH_REQUEST_TIMEOUT_MS,
+        'Sign in timed out. Please try again.'
+      );
+      data = result.data;
+      error = result.error;
+    } catch (err) {
+      error = err;
     }
+
+    if (isNetworkAuthFailure(error)) {
+      try {
+        const fallbackSession = await passwordSignInRequest(email, password);
+        const session = await activateSession(fallbackSession);
+        data = { session, user: session.user };
+        error = null;
+      } catch (fallbackError) {
+        error = fallbackError;
+      }
+    }
+
+    // Immediately seed the cache so ProtectedRoute sees session before navigation
+    if (data.session) {
+      queryClient.setQueryData(['auth-user'], data.session);
+      window.setTimeout(() => void ensureUserProfile(data.session), 0);
+    }
+    return { data, error };
   };
 
   const signOut = async () => {
-    try { window.localStorage.removeItem(AUTH_STORAGE_KEY); } catch {}
-    queryClient.setQueryData(['auth-user'], null);
-    const { error } = await supabase.auth.signOut().catch(() => ({ error: null }));
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      queryClient.setQueryData(['auth-user'], null);
+    }
     return { error };
   };
 
