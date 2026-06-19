@@ -517,7 +517,7 @@ export default function ShreemBrzeePerformance() {
         losses:      realLoss,  // carry over real losses
         started_at:  new Date().toISOString(),
         stopped_at:  null,
-        mode:        "paper",
+        mode:        liveMode ? "live" : "paper",
         updated_at:  new Date().toISOString(),
       }, { onConflict:"id" });
       if (error) throw new Error(error.message);
