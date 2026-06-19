@@ -420,6 +420,13 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // ── Manual Helius sync ────────────────────────────────────────────────────
+  if (req.method === "GET" && path.endsWith("/sync-helius")) {
+    await syncWallets();
+    const { data: rows } = await sb.from("tracked_whales").select("address,label");
+    return jsonResp({ ok: true, synced: rows?.length, wallets: rows?.map((r:any)=>r.label) });
+  }
+
   // ── Status — debug endpoint ──────────────────────────────────────────────
   if (req.method === "GET" && path.endsWith("/status")) {
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
