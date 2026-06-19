@@ -1,29 +1,38 @@
 -- ============================================================
--- SETUP SUPABASE CRON JOB — checks stop-loss + 48h cap every 5 min
--- Run in Supabase SQL Editor ONCE
+-- SETUP pg_cron FOR SHREEM BRZEE BOT
+-- Run this in Supabase SQL Editor
 -- ============================================================
 
--- Enable pg_cron extension (if not already enabled)
--- Do this in Supabase Dashboard → Database → Extensions → enable pg_cron
+-- Step 1: Enable pg_cron (may already be enabled in Lovable)
+-- If this fails, go to Supabase Dashboard → Database → Extensions → enable pg_cron
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Schedule the cron job
+-- Step 2: Remove any existing job
+SELECT cron.unschedule('shreem-brzee-cron') 
+WHERE EXISTS (
+  SELECT 1 FROM cron.job WHERE jobname = 'shreem-brzee-cron'
+);
+
+-- Step 3: Create the 5-minute cron job
 SELECT cron.schedule(
-  'shreem-brzee-cron',           -- job name
-  '*/5 * * * *',                  -- every 5 minutes
+  'shreem-brzee-cron',
+  '*/5 * * * *',
   $$
   SELECT net.http_get(
-    url := 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/cron'
+    url := 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/cron',
+    headers := '{"Content-Type": "application/json"}'::jsonb
   ) AS result;
   $$
 );
 
--- Verify it was created
-SELECT jobid, schedule, command, nodename, active
-FROM cron.job
+-- Step 4: Verify it was created
+SELECT 
+  jobname,
+  schedule,
+  active,
+  jobid
+FROM cron.job 
 WHERE jobname = 'shreem-brzee-cron';
 
--- To check cron job run history:
--- SELECT * FROM cron.job_run_details WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'shreem-brzee-cron') ORDER BY start_time DESC LIMIT 20;
-
--- To remove the cron job if needed:
--- SELECT cron.unschedule('shreem-brzee-cron');
+-- You should see: shreem-brzee-cron | */5 * * * * | true | <id>
