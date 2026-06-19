@@ -107,13 +107,9 @@ const Auth: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
-      toast({
-        title: t('auth.missingFields'),
-        description: t('auth.enterEmailPassword'),
-        variant: "destructive"
-      });
+      toast({ title: t('auth.missingFields'), description: t('auth.enterEmailPassword'), variant: "destructive" });
       return;
     }
 
@@ -121,148 +117,89 @@ const Auth: React.FC = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) {
-          toast({
-            title: t('auth.signInFailed'),
-            description: error.message,
-            variant: "destructive"
+        // ── FAST LOGIN: single raw fetch, 8s cap, no SDK chain ──────
+        const SUPA_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+        const ctrl = new AbortController();
+        const tid = window.setTimeout(() => ctrl.abort(), 8000);
+        let loginError: string | null = null;
+        let loginSession: any = null;
+
+        try {
+          const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+            method: 'POST',
+            signal: ctrl.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPA_KEY,
+              'Authorization': `Bearer ${SUPA_KEY}`,
+            },
+            body: JSON.stringify({ email, password, gotrue_meta_security: {} }),
           });
-        } else {
-          // Save email for next time
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('saved_email', email);
+          window.clearTimeout(tid);
+          const payload = await res.json();
+          if (res.ok && payload?.access_token) {
+            loginSession = payload;
+          } else {
+            loginError = payload?.error_description || payload?.msg || payload?.error || 'Invalid email or password.';
           }
-          toast({
-            title: t('auth.welcomeBackMessage'),
-            description: t('auth.welcomeBackMessage')
-          });
-          navigate('/dashboard');
+        } catch (fetchErr: any) {
+          window.clearTimeout(tid);
+          loginError = fetchErr?.name === 'AbortError' ? 'Login timed out. Please try again.' : 'Network error. Check your connection.';
         }
-      } else {
-        if (!name) {
-          toast({
-            title: t('auth.missingName'),
-            description: t('auth.enterName'),
-            variant: "destructive"
-          });
+
+        if (loginError) {
+          toast({ title: t('auth.signInFailed'), description: loginError, variant: "destructive" });
           setIsSubmitting(false);
           return;
         }
-        
+
+        // Persist session and tell SDK — fire and forget
+        try { localStorage.setItem('sqi-2050-auth-token', JSON.stringify(loginSession)); } catch {}
+        void supabase.auth.setSession({ access_token: loginSession.access_token, refresh_token: loginSession.refresh_token }).catch(() => {});
+        try { localStorage.setItem('saved_email', email); } catch {}
+
+        toast({ title: t('auth.welcomeBackMessage'), description: t('auth.welcomeBackMessage') });
+        navigate('/dashboard');
+
+      } else {
+        // ── SIGNUP ──────────────────────────────────────────────────
+        if (!name) {
+          toast({ title: t('auth.missingName'), description: t('auth.enterName'), variant: "destructive" });
+          setIsSubmitting(false);
+          return;
+        }
+
         const { data, error } = await signUp(email, password, name);
         if (error) {
-          toast({
-            title: t('auth.signUpFailed'),
-            description: error.message,
-            variant: "destructive"
-          });
-        } else {
-          // Process referral if there's a code
-          if (referralCode && data.user) {
-            try {
-              // Find the referrer by code
-              const { data: referrerProfile } = await supabase
-                .from('profiles')
-                .select('user_id')
-                .eq('referral_code', referralCode)
-                .single();
-
-              if (referrerProfile) {
-                // Update the new user's profile with referred_by
-                await supabase
-                  .from('profiles')
-                  .update({ referred_by: referrerProfile.user_id })
-                  .eq('user_id', data.user.id);
-
-                // Create referral signup record
-                await supabase.from('referral_signups').insert({
-                  referrer_user_id: referrerProfile.user_id,
-                  referred_user_id: data.user.id,
-                  referral_code: referralCode,
-                  signup_bonus_shc: 100,
-                  referred_bonus_shc: 50,
-                });
-
-                // Award bonus to referrer (100 SHC)
-                const { data: referrerBalance } = await supabase
-                  .from('user_balances')
-                  .select('balance, total_earned')
-                  .eq('user_id', referrerProfile.user_id)
-                  .single();
-
-                if (referrerBalance) {
-                  await supabase
-                    .from('user_balances')
-                    .update({
-                      balance: Number(referrerBalance.balance) + 100,
-                      total_earned: Number(referrerBalance.total_earned) + 100
-                    })
-                    .eq('user_id', referrerProfile.user_id);
-
-                  await supabase.from('shc_transactions').insert({
-                    user_id: referrerProfile.user_id,
-                    type: 'earned',
-                    amount: 100,
-                    description: 'Referral bonus - new user signup',
-                    status: 'completed'
-                  });
-                }
-
-                // Update referrer's total_referrals
-                await supabase
-                  .from('profiles')
-                  .update({ total_referrals: (referrerProfile as any).total_referrals ? (referrerProfile as any).total_referrals + 1 : 1 })
-                  .eq('user_id', referrerProfile.user_id);
-
-                toast({
-                  title: t('auth.welcomeBonus'),
-                  description: t('auth.welcomeReferral')
-                });
-              } else {
-                toast({
-                  title: t('auth.welcomeBonus'),
-                  description: t('auth.welcomeBonus')
-                });
-              }
-            } catch (refError) {
-              console.error('Referral processing error:', refError);
-              toast({
-                title: t('auth.welcomeBonus'),
-                description: t('auth.welcomeBonus')
-              });
-            }
-          } else {
-            toast({
-              title: t('auth.welcomeBonus'),
-              description: t('auth.welcomeBonus')
-            });
-          }
-
-          // Send welcome email (language chosen by edge function from IP geolocation; client language used as fallback)
-          try {
-            const { data: welcomeData, error: welcomeErr } = await supabase.functions.invoke('send-welcome-email', {
-              body: { email, name, language: i18n.language },
-            });
-            if (welcomeErr) {
-              console.error('[Auth] Welcome email invoke error:', welcomeErr);
-            }
-            if (welcomeData?.error) {
-              console.error('[Auth] Welcome email returned error:', welcomeData.error);
-            }
-          } catch (welcomeErr) {
-            console.error('[Auth] Welcome email exception:', welcomeErr);
-          }
-
-          navigate('/dashboard');
+          toast({ title: t('auth.signUpFailed'), description: error.message, variant: "destructive" });
+          setIsSubmitting(false);
+          return;
         }
+
+        toast({ title: t('auth.welcomeBonus'), description: t('auth.welcomeBonus') });
+
+        // Fire-and-forget: referral + welcome email run in background, never block navigation
+        void (async () => {
+          try {
+            if (referralCode && data.user) {
+              const { data: referrerProfile } = await supabase.from('profiles').select('user_id, total_referrals').eq('referral_code', referralCode).single();
+              if (referrerProfile) {
+                await Promise.allSettled([
+                  supabase.from('profiles').update({ referred_by: referrerProfile.user_id }).eq('user_id', data.user.id),
+                  supabase.from('referral_signups').insert({ referrer_user_id: referrerProfile.user_id, referred_user_id: data.user.id, referral_code: referralCode, signup_bonus_shc: 100, referred_bonus_shc: 50 }),
+                  supabase.from('profiles').update({ total_referrals: ((referrerProfile as any).total_referrals || 0) + 1 }).eq('user_id', referrerProfile.user_id),
+                ]);
+              }
+            }
+            await supabase.functions.invoke('send-welcome-email', { body: { email, name, language: i18n.language } }).catch(() => {});
+          } catch {}
+        })();
+
+        navigate('/dashboard');
       }
     } catch (err) {
-      toast({
-        title: t('auth.error'),
-        description: t('auth.somethingWrong'),
-        variant: "destructive"
-      });
+      toast({ title: t('auth.error'), description: t('auth.somethingWrong'), variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
