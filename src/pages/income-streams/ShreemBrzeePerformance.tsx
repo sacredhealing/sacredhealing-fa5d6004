@@ -258,9 +258,15 @@ export default function ShreemBrzeePerformance() {
 
   const fetchTrades   = useCallback(async () => {
     try {
-      const r = await fetch(`${EDGE_BASE}/trades`);
-      const data = r.ok ? await r.json() : [];
-      setTrades((data || []).filter((t: any) => {
+      // Fetch both paper and live trades
+      const [paperResp, liveResp] = await Promise.all([
+        fetch(`${EDGE_BASE}/trades`),
+        fetch(`${EDGE_BASE}/live-trades`),
+      ]);
+      const paperData = paperResp.ok ? await paperResp.json() : [];
+      const liveData  = liveResp.ok  ? await liveResp.json()  : [];
+      const combined  = [...(liveData || []).map((t: any) => ({...t, _live: true})), ...(paperData || [])];
+      setTrades(combined.filter((t: any) => {
         const sig = t.sig || "";
         const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_") || sig.startsWith("test-") || sig === "paper-bootstrap") && !t.entry_price && !t.amount_sol;
         return !isPureTest;
@@ -744,7 +750,7 @@ export default function ShreemBrzeePerformance() {
         {/* Stats grid */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${currentBalEur.toFixed(2)}`, l:"Balance", s:`${currentBalSol.toFixed(3)} SOL`, c:GOLD },
+            { i:"💰", v:`€${liveMode && botWallet ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : currentBalEur.toFixed(2)}`, l:"Balance", s:`${liveMode && botWallet ? botWallet.balance_sol.toFixed(4) : currentBalSol.toFixed(3)} SOL`, c:GOLD },
             { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
             { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
