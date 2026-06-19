@@ -6,6 +6,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
 import bs58 from "https://esm.sh/bs58@5.0.0";
+import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
+import { Connection, Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
