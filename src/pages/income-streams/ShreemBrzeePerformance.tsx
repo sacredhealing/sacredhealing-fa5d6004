@@ -247,6 +247,12 @@ export default function ShreemBrzeePerformance() {
       const r = await fetch(`${EDGE_BASE}/session`);
       const data = r.ok ? await r.json() : null;
       setSession(data);
+      // Sync liveMode state from DB — prevents reset on page reload
+      if (data?.mode === "live" && data?.started_at && !data?.stopped_at) {
+        setLiveMode(true);
+      } else if (data?.mode !== "live") {
+        setLiveMode(false);
+      }
     } catch {}
   }, []);
 
@@ -394,31 +400,19 @@ export default function ShreemBrzeePerformance() {
       .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_signals" },
         () => { fetchSignals(); fetchPeriod(); })
       .subscribe();
+    // Listen to BOTH tables — paper and live trades
     const chTrd5 = d.channel("sb_trd_v5")
       .on("postgres_changes", { event:"*", schema:"public", table:"shreem_brzee_paper_trades" },
         () => { fetchOpen(); fetchTrades(); fetchSession(); })
       .subscribe();
-    return () => { d.removeChannel(chSig); d.removeChannel(chTrd5); };
+    const chLive = d.channel("sb_live_trd")
+      .on("postgres_changes", { event:"*", schema:"public", table:"shreem_brzee_live_trades" },
+        () => { fetchOpen(); fetchTrades(); fetchSession(); })
+      .subscribe();
+    return () => { d.removeChannel(chSig); d.removeChannel(chTrd5); d.removeChannel(chLive); };
   }, [fetchSignals, fetchPeriod, fetchOpen, fetchTrades, fetchSession]);
 
-  // Realtime: signal feed + trade history
-  useEffect(() => {
-    const chSigs = d.channel("sb_sigs")
-      .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_signals" }, () => { fetchSignals(); fetchPeriod(); })
-      .subscribe();
-    const chTrd = d.channel("sb_trd")
-      .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_paper_trades" }, () => { fetchTrades(); fetchSession(); })
-      .subscribe();
-    return () => { d.removeChannel(chSigs); d.removeChannel(chTrd); };
-  }, [fetchSignals, fetchPeriod, fetchTrades, fetchSession]);
-
-  // Realtime: open positions
-  useEffect(() => {
-    const ch = d.channel("sb_open_trd")
-      .on("postgres_changes", { event:"*", schema:"public", table:"shreem_brzee_paper_trades" }, () => fetchOpen())
-      .subscribe();
-    return () => { d.removeChannel(ch); };
-  }, [fetchOpen]);
+  // Note: additional realtime subscriptions removed — consolidated above
 
 
   // ── Live mode toggle state ─────────────────────────────────────────────────
@@ -522,7 +516,7 @@ export default function ShreemBrzeePerformance() {
         losses:      realLoss,  // carry over real losses
         started_at:  new Date().toISOString(),
         stopped_at:  null,
-        mode:        liveMode ? "live" : "paper",
+        mode:        session?.mode === "live" ? "live" : "paper", // never overwrite live mode
         updated_at:  new Date().toISOString(),
       }, { onConflict:"id" });
       if (error) throw new Error(error.message);
