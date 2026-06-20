@@ -270,19 +270,27 @@ export default function ShreemBrzeePerformance() {
 
   const fetchTrades   = useCallback(async () => {
     try {
-      // Fetch both paper and live trades
-      const [paperResp, liveResp] = await Promise.all([
-        fetch(`${EDGE_BASE}/trades`),
-        fetch(`${EDGE_BASE}/live-trades`),
+      // Fetch all live trades (open + closed) + paper trades
+      const [allLiveResp, liveOpenResp] = await Promise.all([
+        fetch(`${EDGE_BASE}/trades`),   // returns live_trades when mode=live
+        fetch(`${EDGE_BASE}/live-trades`), // always returns open live trades
       ]);
-      const paperData = paperResp.ok ? await paperResp.json() : [];
-      const liveData  = liveResp.ok  ? await liveResp.json()  : [];
-      const combined  = [...(liveData || []).map((t: any) => ({...t, _live: true})), ...(paperData || [])];
-      setTrades(combined.filter((t: any) => {
+      const allLiveData = allLiveResp.ok ? await allLiveResp.json() : [];
+      const liveOpenData = liveOpenResp.ok ? await liveOpenResp.json() : [];
+      // Merge all live trades, de-dupe by id
+      const seenIds = new Set<string>();
+      const allLive = [...(liveOpenData || []), ...(allLiveData || [])].filter((t: any) => {
+        if (seenIds.has(t.id)) return false;
+        seenIds.add(t.id);
+        return true;
+      }).map((t: any) => ({ ...t, _live: true }));
+      // Filter out pure test signals with no real data
+      const filtered = allLive.filter((t: any) => {
         const sig = t.sig || "";
-        const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_") || sig.startsWith("test-") || sig === "paper-bootstrap") && !t.entry_price && !t.amount_sol;
+        const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_")) && !t.tx_sig;
         return !isPureTest;
-      }));
+      });
+      setTrades(filtered);
     } catch {}
   }, []);
 
@@ -308,9 +316,20 @@ export default function ShreemBrzeePerformance() {
 
   const fetchOpen     = useCallback(async () => {
     try {
-      const r = await fetch(`${EDGE_BASE}/open`);
-      const data = r.ok ? await r.json() : [];
-      setOpenPos(data || []);
+      // Fetch both /open (paper fallback) and /live-trades directly
+      const [openResp, liveResp] = await Promise.all([
+        fetch(`${EDGE_BASE}/open`),
+        fetch(`${EDGE_BASE}/live-trades`),
+      ]);
+      const openData = openResp.ok ? await openResp.json() : [];
+      const liveData = liveResp.ok ? await liveResp.json() : [];
+      // Merge: live trades take priority, de-dupe by id
+      const liveIds = new Set((liveData || []).map((t: any) => t.id));
+      const merged = [
+        ...(liveData || []),
+        ...(openData || []).filter((t: any) => !liveIds.has(t.id) && t._live !== true),
+      ];
+      setOpenPos(merged);
     } catch {}
   }, []);
 
@@ -978,8 +997,12 @@ export default function ShreemBrzeePerformance() {
         {/* Open Positions */}
         {/* Compounding Engine stats */}
         {(() => {
+          // Use real wallet balance for compounding engine when available
+          const compoundPortfolio = (botWallet && botWallet.balance_sol > 0)
+            ? botWallet.balance_sol
+            : (portfolio > 0 ? portfolio : 0);
           const sizing = calculatePositionSize(
-            portfolio,
+            compoundPortfolio,
             session?.wins  || 0,
             session?.losses|| 0,
             openPos,
