@@ -455,7 +455,7 @@ serve(async (req) => {
 
   if (req.method === "GET" && path.endsWith("/live-trades")) {
     const { data } = await sb.from("shreem_brzee_live_trades")
-      .select("*").order("opened_at", { ascending: false }).limit(100);
+      .select("*").eq("status", "open").order("opened_at", { ascending: false }).limit(100);
     return jsonResp(data || []);
   }
 
@@ -474,11 +474,14 @@ serve(async (req) => {
   }
 
   if (req.method === "GET" && path.endsWith("/open")) {
-    const { data: sessRow } = await sb.from("shreem_brzee_session").select("mode").eq("id","default").single();
-    const table = sessRow?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
-    const { data } = await sb.from(table)
+    // Always check live_trades first — if any open, return those
+    const { data: liveTrades } = await sb.from("shreem_brzee_live_trades")
       .select("*").eq("status","open").order("opened_at", { ascending: false });
-    return jsonResp(data || []);
+    if (liveTrades?.length) return jsonResp(liveTrades);
+    // Fall back to paper trades if no live positions
+    const { data: paperTrades } = await sb.from("shreem_brzee_paper_trades")
+      .select("*").eq("status","open").order("opened_at", { ascending: false });
+    return jsonResp(paperTrades || []);
   }
 
   if (req.method === "GET" && path.endsWith("/ping")) {
