@@ -6,7 +6,7 @@ const http  = require('http');
 const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // NEW Helius key 7de253c3 — replaces dead key 775d3d1f
-const HELIUS_KEY   = process.env.HELIUS_API_KEY || '7de253c3-49e2-42be-9672-23a761260f86';
+const HELIUS_KEY   = process.env.HELIUS_API_KEY || '';
 const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 // Jupiter v6 lite endpoint (quote-api.jup.ag/v6 is deprecated/dead)
 const JUP_QUOTE    = 'https://lite-api.jup.ag/swap/v1/quote';
