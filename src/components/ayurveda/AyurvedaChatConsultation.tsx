@@ -39,10 +39,10 @@ const renderInline = (text: string): React.ReactNode[] => {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter(Boolean);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) {
-      return <strong key={i} style={{ color: '#D4AF37', fontWeight: 800, textShadow: '0 0 14px rgba(212,175,55,0.35)' }}>{p.slice(2, -2)}</strong>;
+      return <strong key={i} style={{ color: '#D4AF37', fontWeight: 700, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", fontSize: '19px' }}>{p.slice(2, -2)}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.82)' }}>{p.slice(1, -1)}</em>;
+      return <em key={i} style={{ fontStyle: 'italic', color: '#D4AF37', fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", fontSize: '19px' }}>{p.slice(1, -1)}</em>;
     }
     if (p.startsWith('`') && p.endsWith('`')) {
       return <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: 4, fontSize: '0.92em', color: '#D4AF37' }}>{p.slice(1, -1)}</code>;
@@ -135,12 +135,12 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
               );
               // Bullets
               if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('· ')) return (
-                <li key={li} style={{ marginLeft: 18, listStyleType: 'disc', fontSize: 16, lineHeight: 1.8, color: body, marginBottom: 4 }}>
+                <li key={li} style={{ marginLeft: 18, listStyleType: 'disc', fontSize: 19, lineHeight: 1.85, color: 'rgba(225,210,185,0.95)', marginBottom: 6, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif" }}>
                   {renderInline(line.slice(2))}
                 </li>
               );
               if (/^\d+\.\s/.test(line)) return (
-                <li key={li} style={{ marginLeft: 18, listStyleType: 'decimal', fontSize: 16, lineHeight: 1.8, color: body, marginBottom: 4 }}>
+                <li key={li} style={{ marginLeft: 18, listStyleType: 'decimal', fontSize: 19, lineHeight: 1.85, color: 'rgba(225,210,185,0.95)', marginBottom: 6, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif" }}>
                   {renderInline(line.replace(/^\d+\.\s/, ''))}
                 </li>
               );
@@ -366,8 +366,8 @@ const STYLES = `
   .sqi-bbl.user {
     max-width: 76%; border-radius: 20px 20px 5px 20px;
     background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.22);
-    font-size: 16px; color: rgba(255,255,255,0.88); line-height: 1.75;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 19px; color: rgba(225,210,185,0.95); line-height: 1.85;
+    font-family: 'IM Fell English', 'Cormorant Garamond', Georgia, serif;
   }
   .sqi-bbl.agent {
     width: 100%; border-radius: 0;
@@ -376,8 +376,8 @@ const STYLES = `
     border-bottom: 1px solid rgba(255,255,255,0.05);
     border-left: none; border-right: none;
     padding: 20px 16px 14px;
-    font-family: 'IM Fell English', Georgia, serif;
-    font-size: 17px;
+    font-family: 'IM Fell English', 'Cormorant Garamond', Georgia, serif;
+    font-size: 19px;
     line-height: 1.9;
     color: rgba(225,210,185,0.92);
   }
@@ -780,7 +780,7 @@ ${m.content}`
                         <div key={msg.id ?? i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                           <button type="button" className={`sqi-hist-msg ${msg.role === 'user' ? 'user' : 'ai'}`}
                             onClick={() => setSelectedHistMsg(msg)}
-                            style={{ cursor: 'pointer', textAlign: 'left', width: msg.role === 'user' ? undefined : '94%', background: 'none', border: msg.role === 'user' ? '1px solid rgba(212,175,55,0.18)' : '1px solid rgba(212,175,55,0.09)', borderRadius: 13, padding: '11px 14px', fontFamily: msg.role === 'assistant' ? "'Cormorant Garamond', serif" : 'inherit', fontSize: msg.role === 'assistant' ? '15.5px' : '15px', color: msg.role === 'user' ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.65)', lineHeight: 1.7, transition: 'border-color 0.2s' }}>
+                            style={{ cursor: 'pointer', textAlign: 'left', width: msg.role === 'user' ? undefined : '94%', background: 'none', border: msg.role === 'user' ? '1px solid rgba(212,175,55,0.18)' : '1px solid rgba(212,175,55,0.09)', borderRadius: 13, padding: '11px 14px', fontFamily: msg.role === 'assistant' ? "'Cormorant Garamond', serif" : 'inherit', fontSize: '18px', color: msg.role === 'user' ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.65)', lineHeight: 1.8, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", transition: 'border-color 0.2s' }}>
                             <div className="sqi-hist-role">{msg.role === 'user' ? 'You' : '◈ Agastya Muni'}</div>
                             <div style={{ color: msg.role === 'user' ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.65)' }}>{msg.content.slice(0, 280)}{msg.content.length > 280 ? '…' : ''}</div>
                             {msg.content.length > 280 && (
@@ -1052,7 +1052,7 @@ ${m.content}`
                         <div key={msg.id ?? i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                           <button type="button" className={`sqi-hist-msg ${msg.role === 'user' ? 'user' : 'ai'}`}
                             onClick={() => setSelectedHistMsg(msg)}
-                            style={{ cursor: 'pointer', textAlign: 'left', width: msg.role === 'user' ? undefined : '94%', background: 'none', border: msg.role === 'user' ? '1px solid rgba(212,175,55,0.18)' : '1px solid rgba(212,175,55,0.09)', borderRadius: 13, padding: '11px 14px', fontFamily: msg.role === 'assistant' ? "'Cormorant Garamond', serif" : 'inherit', fontSize: msg.role === 'assistant' ? '15.5px' : '15px', color: msg.role === 'user' ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.65)', lineHeight: 1.7, transition: 'border-color 0.2s' }}>
+                            style={{ cursor: 'pointer', textAlign: 'left', width: msg.role === 'user' ? undefined : '94%', background: 'none', border: msg.role === 'user' ? '1px solid rgba(212,175,55,0.18)' : '1px solid rgba(212,175,55,0.09)', borderRadius: 13, padding: '11px 14px', fontFamily: msg.role === 'assistant' ? "'Cormorant Garamond', serif" : 'inherit', fontSize: '18px', color: msg.role === 'user' ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.65)', lineHeight: 1.8, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", transition: 'border-color 0.2s' }}>
                             <div className="sqi-hist-role">{msg.role === 'user' ? 'You' : '◈ Agastya Muni'}</div>
                             <div style={{ color: msg.role === 'user' ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.65)' }}>{msg.content.slice(0, 280)}{msg.content.length > 280 ? '…' : ''}</div>
                             {msg.content.length > 280 && (
