@@ -36,13 +36,15 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
       }
 
       let query;
+      // CRITICAL: load LATEST N messages (descending), then reverse to chronological.
+      // Previously ordered ascending+limit which pinned long-term users to their OLDEST messages.
       if (isAyurveda) {
         query = (supabase as any)
           .from(TABLE_AYURVEDA)
           .select('id, role, content, created_at')
           .eq('user_id', user.id)
           .eq('chat_context', 'ayurveda')
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(200);
       } else {
         query = (supabase as any)
@@ -50,13 +52,14 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
           .select('id, role, content, created_at')
           .eq('user_id', user.id)
           .eq('chat_context', context)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(500);
       }
 
       const { data, error } = await query;
       if (!cancelled && !error && data) {
-        setMessages(data as ChatMessage[]);
+        const chronological = [...(data as ChatMessage[])].reverse();
+        setMessages(chronological);
       }
       if (!cancelled) setLoading(false);
     }
