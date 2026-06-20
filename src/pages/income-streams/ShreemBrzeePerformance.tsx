@@ -838,11 +838,16 @@ export default function ShreemBrzeePerformance() {
               const entry   = Number(pos.entry_price) || 0;
               const size    = Number(pos.amount_sol) || 0;
               const price   = livePrices[pos.mint];
-              // If entry_price was 0 (failed at open), show current price but mark PNL as pending
+              // Real P&L: on-chain entry vs DexScreener current price. No fake values.
               const hasPriceData = entry > 0 && price && price > 0;
               const pnlPct  = hasPriceData ? (price - entry) / entry * 100 : null;
               const pnlSol  = pnlPct !== null ? size * (pnlPct / 100) : null;
               const pnlEur  = pnlSol !== null ? pnlSol * solUsd * solEur : null;
+              // No DexScreener price after first batch ⇒ no liquidity
+              const noLiquidity = pricesFetched && entry > 0 && (!price || price <= 0);
+              const pnlLabel = pnlPct !== null
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
+                : noLiquidity ? "no liquidity" : "—";
               const entryMissing = entry <= 0;
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
@@ -850,6 +855,8 @@ export default function ShreemBrzeePerformance() {
               const pnlColor= pnlPct === null ? "#64748b" : pnlPct >= 0 ? GREEN : RED;
               const sym     = pos.symbol || pos.mint?.slice(0,6) || "?";
               const expanded= expandedPos?.id === pos.id;
+              const isClosing = closingIds.has(pos.id);
+
               return (
                 <div key={pos.id} style={{ borderRadius:16, marginBottom:8, overflow:"hidden", border:`1px solid ${expanded?"rgba(212,175,55,.4)":"rgba(16,185,129,.2)"}`, background:expanded?"rgba(212,175,55,.04)":"rgba(16,185,129,.03)" }}>
                   <div onClick={() => setExpandedPos(expanded ? null : pos)} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", cursor:"pointer" }}>
