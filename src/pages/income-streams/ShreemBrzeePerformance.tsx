@@ -902,7 +902,7 @@ export default function ShreemBrzeePerformance() {
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"0 12px 12px" }}>
                         <a href={`https://dexscreener.com/solana/${pos.mint}`} target="_blank" rel="noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:10, borderRadius:12, border:"1px solid rgba(212,175,55,.3)", background:"rgba(212,175,55,.06)", color:GOLD, fontSize:10, fontWeight:800, textDecoration:"none" }}>📊 DEXSCREENER</a>
-                        <button onClick={() => { closePosition(pos,"manual"); setExpandedPos(null); }} style={{ padding:10, borderRadius:12, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:10, fontWeight:900, cursor:"pointer" }}>✕ CLOSE TRADE</button>
+                        <button onClick={() => { if (!isClosing) { closePosition(pos,"manual"); } }} disabled={isClosing} style={{ padding:10, borderRadius:12, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:10, fontWeight:900, cursor:isClosing?"wait":"pointer", opacity:isClosing?0.7:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>{isClosing ? (<><span style={{ display:"inline-block", width:10, height:10, border:"2px solid rgba(239,68,68,.3)", borderTopColor:RED, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />CLOSING…</>) : "✕ CLOSE TRADE"}</button>
                       </div>
                     </div>
                   )}
