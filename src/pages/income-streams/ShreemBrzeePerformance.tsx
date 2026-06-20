@@ -844,25 +844,30 @@ export default function ShreemBrzeePerformance() {
             </div>
           ) : (
             openPos.map((pos: any) => {
-              const entryPriceUsd = Number(pos.entry_price) || 0; // USD per token (fixed in executor)
-              const size    = Number(pos.amount_sol) || 0;
-              const tokensHeld = Number(pos.tokens_received) || 0; // human-readable (post-decimals)
-              const solUsdEntry = Number(pos.sol_usd_at_entry) || solUsd;
-              const investedUsd = size * solUsdEntry;
-              const currentPriceUsd = livePrices[pos.mint]; // USD per token from DexScreener
-              // P&L: compare invested USD vs current value in USD — correct apples-to-apples
-              const hasPriceData = entryPriceUsd > 0 && currentPriceUsd && currentPriceUsd > 0 && tokensHeld > 0;
-              const currentValueUsd = hasPriceData ? tokensHeld * currentPriceUsd : 0;
-              const pnlUsd  = hasPriceData ? currentValueUsd - investedUsd : null;
-              const pnlPct  = hasPriceData && investedUsd > 0 ? (pnlUsd! / investedUsd * 100) : null;
-              const pnlEur  = pnlUsd !== null ? pnlUsd * solEur : null; // pnlUsd already in USD, just convert
-              // No DexScreener price after first batch ⇒ no liquidity
-              const noLiquidity = pricesFetched && entryPriceUsd > 0 && (!currentPriceUsd || currentPriceUsd <= 0);
-              const pnlLabel = pnlPct !== null
+              // ── CORRECT P&L ── entry_price stored as SOL/token, DexScreener gives USD/token
+              // Convert to same unit before comparing
+              const entryPriceSol = Number(pos.entry_price) || 0; // SOL per token (as stored)
+              const size          = Number(pos.amount_sol)   || 0; // SOL invested
+              // Reconstruct tokens held: tokens = SOL_invested / entry_price_sol
+              // Works for both old trades (tokens_received was raw) and new (human-readable)
+              const tokensHeld    = entryPriceSol > 0 ? size / entryPriceSol : 0;
+              const currentPriceUsd = livePrices[pos.mint] || 0; // USD/token from DexScreener
+              // Convert current USD price to SOL for same-unit comparison
+              const currentPriceSol = solUsd > 0 ? currentPriceUsd / solUsd : 0;
+              // P&L in SOL — apples to apples
+              const hasPriceData  = entryPriceSol > 0 && currentPriceSol > 0;
+              const pnlPct        = hasPriceData ? (currentPriceSol - entryPriceSol) / entryPriceSol * 100 : null;
+              const pnlSol        = hasPriceData ? tokensHeld * (currentPriceSol - entryPriceSol) : null;
+              const pnlEur        = pnlSol !== null ? pnlSol * solUsd * solEur : null;
+              // Current total value
+              const currentValueEur = hasPriceData ? tokensHeld * currentPriceSol * solUsd * solEur : null;
+              const investedEur   = size * solUsd * solEur;
+              // No DexScreener price ⇒ no liquidity
+              const noLiquidity   = pricesFetched && entryPriceSol > 0 && (!currentPriceUsd || currentPriceUsd <= 0);
+              const pnlLabel      = pnlPct !== null
                 ? \`\${pnlPct >= 0 ? "+" : ""}\${pnlPct.toFixed(2)}%\`
                 : noLiquidity ? "no liquidity" : "—";
-              // Legacy fallback: if entry_price is old (SOL-based, very small), show — instead of garbage
-              const isLegacyEntry = entryPriceUsd > 0 && entryPriceUsd < 0.000001 && !pos.sol_usd_at_entry;
+              const isLegacyEntry = false; // all entries are SOL/token — always valid
               const entryMissing = entry <= 0;
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
@@ -885,7 +890,7 @@ export default function ShreemBrzeePerformance() {
                     <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
                       <div style={{ textAlign:"right" }}>
                         <div style={{ fontSize:noLiquidity?11:15, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
-                        <div style={{ fontSize:9, color:pnlColor }}>{pnlEur!==null&&!isLegacyEntry?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
+                        <div style={{ fontSize:9, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
                       </div>
                       <span style={{ color:GOLD, fontSize:14, transform:expanded?"rotate(90deg)":"rotate(0deg)", transition:"transform .2s" }}>›</span>
                     </div>
@@ -897,9 +902,9 @@ export default function ShreemBrzeePerformance() {
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, padding:"10px 12px 0" }}>
                         {[
-                          { l:"SIZE",  v:`${size.toFixed(4)}`, u:"SOL", s:`≈${(size*solUsdEntry*solEur).toFixed(2)}€` },
-                          { l:"ENTRY", v:entryPriceUsd>0&&!isLegacyEntry?`$${entryPriceUsd.toFixed(entryPriceUsd<.001?8:entryPriceUsd<.1?6:4)}`:"—", u:"", s:investedUsd>0&&!isLegacyEntry?`${(investedUsd*solEur).toFixed(2)}€ invested`:"recalc pending" },
-                          { l:"NOW",   v:currentPriceUsd&&currentPriceUsd>0?`$${currentPriceUsd.toFixed(currentPriceUsd<.001?8:currentPriceUsd<.1?6:4)}`:"fetching…", u:"", s:currentValueUsd>0?`${(currentValueUsd*solEur).toFixed(2)}€`:"" },
+                          { l:"SIZE",  v:`${size.toFixed(4)}`, u:"SOL", s:`≈${investedEur.toFixed(2)}€` },
+                          { l:"ENTRY", v:entryPriceSol>0?`$${(entryPriceSol*solUsd).toFixed(entryPriceSol*solUsd<.001?8:entryPriceSol*solUsd<.1?6:4)}`:"—", u:"", s:`${investedEur.toFixed(2)}€ invested` },
+                          { l:"NOW",   v:currentPriceUsd>0?`$${currentPriceUsd.toFixed(currentPriceUsd<.001?8:currentPriceUsd<.1?6:4)}`:"fetching…", u:"", s:currentValueEur!=null?`${currentValueEur.toFixed(2)}€`:"" },
                         ].map(cell => (
                           <div key={cell.l} style={{ background:"rgba(0,0,0,.3)", borderRadius:10, padding:"8px 10px", border:"1px solid rgba(255,255,255,.05)" }}>
                             <div style={{ fontSize:7, color:"#64748b", letterSpacing:".15em", marginBottom:3 }}>{cell.l}</div>
@@ -912,7 +917,7 @@ export default function ShreemBrzeePerformance() {
                         <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
                         <div style={{ display:"flex", gap:12, alignItems:"center" }}>
                           <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€ (${size.toFixed(4)} SOL in)`:""}</div>
                         </div>
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"0 12px 12px" }}>
