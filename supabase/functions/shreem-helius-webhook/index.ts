@@ -22,7 +22,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb           = createClient(SUPABASE_URL, SUPABASE_KEY);
 const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
-const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+// NOTE: The webhook itself NEVER makes Solana RPC calls. All on-chain reads
+// (getTokenAccountsByOwner, getBalance, etc.) happen only inside
+// shreem-live-executor when actually executing a trade. This keeps Helius
+// RPC credit usage bound to real trade actions, not incoming webhook volume.
 const SOL_MINT     = "So11111111111111111111111111111111111111112";
 const LAMPORTS     = 1_000_000_000;
 const WEBHOOK_DB_WRITES_ENABLED = Deno.env.get("SHREEM_WEBHOOK_DB_WRITES_ENABLED") === "true";
@@ -752,24 +755,37 @@ serve(async (req) => {
               console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
             } else if (swap.action === "SELL") {
-              // Mirror whale sell — call executor to swap tokens back to SOL
-              try {
-                const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${SUPABASE_KEY}`,
-                  },
-                  body: JSON.stringify({
-                    action: "close",
-                    mint:   swap.mint,
-                    reason: "whale_sell_mirror",
-                  }),
-                });
-                const execData = await execR.json().catch(() => ({}));
-                console.log(`[live-close] SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300));
-              } catch (execErr: any) {
-                console.error("[live-close ERROR]", execErr?.message ?? String(execErr));
+              // Mirror whale sell — but ONLY if we actually hold this mint.
+              // Without this gate, every whale SELL triggers executor RPC
+              // (getTokenAccountsByOwner) for nothing and burns Helius credits.
+              const { data: heldPos } = await sb
+                .from("shreem_brzee_live_trades")
+                .select("id")
+                .eq("status", "open")
+                .eq("mint", swap.mint)
+                .limit(1);
+
+              if (!heldPos?.length) {
+                console.log(`[live-close SKIP] SELL ${signal.symbol} — no open position, no RPC call`);
+              } else {
+                try {
+                  const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${SUPABASE_KEY}`,
+                    },
+                    body: JSON.stringify({
+                      action: "close",
+                      mint:   swap.mint,
+                      reason: "whale_sell_mirror",
+                    }),
+                  });
+                  const execData = await execR.json().catch(() => ({}));
+                  console.log(`[live-close] SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300));
+                } catch (execErr: any) {
+                  console.error("[live-close ERROR]", execErr?.message ?? String(execErr));
+                }
               }
             }
           } else {
