@@ -117,7 +117,10 @@ async function jupiterSwapTx(quote: unknown, wallet: string): Promise<string> {
 }
 
 // ── Sign and send transaction (Jupiter v6 VersionedTransaction) ───────────────
-const connection = new Connection(HELIUS_RPC, "confirmed");
+const connection = new Connection(
+  HELIUS_KEY ? HELIUS_RPC : "https://api.mainnet-beta.solana.com",
+  "confirmed"
+);
 
 async function signAndSendTx(txBase64: string, kp: SolanaKeypair): Promise<string> {
   // Decode Jupiter's swapTransaction (base64 VersionedTransaction)
