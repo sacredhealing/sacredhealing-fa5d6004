@@ -21,7 +21,7 @@ jobs:
 
       - name: Run backfill — fetch real SWAP history for 21 whales
         env:
-          HELIUS_KEY: 775d3d1f-6801-41de-a063-8aee4382d0f4
+          HELIUS_KEY: REMOVED_OLD_KEY
           SUPABASE_URL: https://ssygukfdbtehvtndandn.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
