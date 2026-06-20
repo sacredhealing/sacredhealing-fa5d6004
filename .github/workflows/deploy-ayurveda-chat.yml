@@ -17,9 +17,18 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy ayurveda-chat to Lovable Supabase (ssygukfd)
+      - name: Deploy ayurveda-chat to Lovable (ssygukfd) — primary token
+        env:
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+        run: |
+          supabase functions deploy ayurveda-chat --project-ref ssygukfdbtehvtndandn --no-verify-jwt
+          echo "✅ ayurveda-chat deployed at $(date)"
+        continue-on-error: false
+
+      - name: Fallback — try with SUPABASE_ACCESS_TOKEN secret
+        if: failure()
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           supabase functions deploy ayurveda-chat --project-ref ssygukfdbtehvtndandn --no-verify-jwt
-          echo "✅ ayurveda-chat deployed to Lovable at $(date)"
+          echo "✅ Fallback deploy done at $(date)"
