@@ -488,6 +488,31 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // Force-close all open live trades in DB — use when Phantom shows closed but UI doesn't
+  if (req.method === "POST" && path.endsWith("/force-close-all")) {
+    const { data: updated, error } = await sb
+      .from("shreem_brzee_live_trades")
+      .update({ status: "closed", closed_at: new Date().toISOString(), sell_reason: "manual_force" })
+      .eq("status", "open")
+      .select("id,symbol,mint");
+    if (error) return jsonResp({ ok: false, error: error.message }, 500);
+    return jsonResp({ ok: true, closed: updated?.length || 0, trades: updated });
+  }
+
+  // Force-close single trade by id
+  if (req.method === "POST" && path.endsWith("/force-close-one")) {
+    const body = await req.json().catch(() => ({}));
+    const { trade_id } = body;
+    if (!trade_id) return jsonResp({ ok: false, error: "trade_id required" }, 400);
+    const { data: updated, error } = await sb
+      .from("shreem_brzee_live_trades")
+      .update({ status: "closed", closed_at: new Date().toISOString(), sell_reason: "manual_force" })
+      .eq("id", trade_id)
+      .select("id,symbol");
+    if (error) return jsonResp({ ok: false, error: error.message }, 500);
+    return jsonResp({ ok: true, closed: updated?.length || 0, trade: updated?.[0] });
+  }
+
   // Force-close specific trade or all open trades in DB — no on-chain swap needed
   // Used when swap already happened in Phantom but DB still shows open
   if (req.method === "POST" && path.endsWith("/force-close")) {
