@@ -32,7 +32,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-agastya-chat; do
+          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-chat; do
             echo "Deploying $fn → new Supabase..."
             supabase functions deploy $fn --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "$fn deploy skipped"
           done
@@ -51,7 +51,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-agastya-chat; do
+          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-chat; do
             echo "Deploying $fn → Lovable Supabase..."
             supabase functions deploy $fn --project-ref ssygukfdbtehvtndandn --no-verify-jwt 2>&1 || echo "$fn deploy skipped"
           done
