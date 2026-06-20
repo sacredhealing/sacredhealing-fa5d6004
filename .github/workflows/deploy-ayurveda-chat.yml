@@ -1,4 +1,4 @@
-name: Deploy Ayurveda Chat Fix
+name: Deploy Ayurveda Chat — Lovable Only
 
 on:
   workflow_dispatch:
@@ -17,16 +17,9 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy ayurveda-chat to NEW Supabase
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          supabase functions deploy ayurveda-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
-          echo "ayurveda-chat deployed to new Supabase"
-
-      - name: Deploy ayurveda-chat to OLD Supabase (Lovable)
+      - name: Deploy ayurveda-chat to Lovable Supabase (ssygukfd)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           supabase functions deploy ayurveda-chat --project-ref ssygukfdbtehvtndandn --no-verify-jwt
-          echo "ayurveda-chat deployed to Lovable Supabase"
+          echo "✅ ayurveda-chat deployed to Lovable at $(date)"
