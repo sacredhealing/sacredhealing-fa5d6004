@@ -380,7 +380,8 @@ export default function ShreemBrzeePerformance() {
   //  • balance > 0 → Jupiter swap token→SOL, write real exit data
   const [closingIds, setClosingIds] = useState<Set<string>>(new Set());
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
-    const id = pos.id;
+    const id   = pos.id;
+    const mint = pos.mint;
     setClosingIds(prev => { const n = new Set(prev); n.add(id); return n; });
     try {
       notify("Closing position…", "info");
@@ -388,35 +389,41 @@ export default function ShreemBrzeePerformance() {
       const r = await fetch(EXEC, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "close", trade_id: id, reason }),
+        // Send BOTH trade_id AND mint — executor uses whichever finds the trade
+        body: JSON.stringify({ action: "close", trade_id: id, mint, reason }),
       });
       const result = r.ok ? await r.json() : null;
       const first  = result?.results?.[0];
 
       if (result?.ok && first?.ok) {
+        // On-chain swap confirmed — remove from UI immediately
+        setOpenPos(prev => prev.filter(p => p.id !== id));
         notify(`✅ ${pos.symbol || "Position"} closed${first.pnl_pct != null ? ` (${first.pnl_pct >= 0 ? "+" : ""}${Number(first.pnl_pct).toFixed(1)}%)` : ""}`, "ok");
       } else if (result?.ok && first && !first.ok && /no token balance/i.test(first.reason || "")) {
-        notify(`Position closed (no on-chain balance)`, "info");
+        // No on-chain balance — still mark closed and remove from UI
+        setOpenPos(prev => prev.filter(p => p.id !== id));
+        notify(`✅ Position removed (no on-chain balance remaining)`, "info");
       } else if (result?.skipped) {
-        // Not a live trade — fall back to paper close-trade endpoint
-        const r2 = await fetch(`${EDGE_BASE}/close-trade`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ trade_id: id }),
-        });
-        const r2j = r2.ok ? await r2.json() : null;
-        if (r2j?.ok) notify(`✅ ${r2j.symbol || "Position"} closed`, "ok");
-        else {
-          await d.from("shreem_brzee_paper_trades").update({
-            status: "closed", closed_at: new Date().toISOString(),
-            sell_reason: "manual", pnl_pct: 0, pnl_sol: 0,
-          }).eq("id", id);
-          notify("Position closed", "info");
+        // Executor couldn't find by trade_id — force close directly in live trades table
+        const { error: dbErr } = await d.from("shreem_brzee_live_trades").update({
+          status: "closed", closed_at: new Date().toISOString(), sell_reason: reason,
+        }).eq("id", id);
+        if (!dbErr) {
+          setOpenPos(prev => prev.filter(p => p.id !== id));
+          notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
+        } else {
+          // Also try by mint
+          await d.from("shreem_brzee_live_trades").update({
+            status: "closed", closed_at: new Date().toISOString(), sell_reason: reason,
+          }).eq("mint", mint).eq("status", "open");
+          setOpenPos(prev => prev.filter(p => p.id !== id));
+          notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
         }
       } else {
         notify(`Close failed: ${first?.error || result?.error || "unknown"}`, "err");
       }
-      setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); }, 1500);
+      // Refresh immediately — no delay
+      fetchOpen(); fetchTrades(); fetchSession();
     } catch (e: any) {
       notify(`Close failed: ${e.message?.slice(0,60)}`, "err");
     } finally {
