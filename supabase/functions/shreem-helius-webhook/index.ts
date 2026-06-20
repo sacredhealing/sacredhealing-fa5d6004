@@ -488,6 +488,44 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // Self-register Helius webhook with current key and wallets
+  if (req.method === "POST" && path.endsWith("/register-helius")) {
+    const SELF_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
+    const WALLETS = ["GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE", "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt", "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw", "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", "AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm", "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k", "9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm", "GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f", "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", "5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc", "2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv", "4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3", "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA"];
+    try {
+      // Delete existing webhooks
+      const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
+      const hooks = await listR.json().catch(()=>[]);
+      if (Array.isArray(hooks)) {
+        for (const h of hooks) {
+          await fetch(`https://api.helius.xyz/v0/webhooks/${h.webhookID}?api-key=${HELIUS_KEY}`, {method:"DELETE"});
+          console.log(`[register-helius] deleted ${h.webhookID}`);
+          await new Promise(r=>setTimeout(r,300));
+        }
+      }
+      // Register new webhook
+      const regR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          webhookURL: SELF_URL,
+          transactionTypes: ["SWAP"],
+          accountAddresses: WALLETS,
+          webhookType: "enhanced",
+          txnStatus: "success"
+        })
+      });
+      const reg = await regR.json();
+      if (reg?.webhookID) {
+        console.log(`[register-helius] ✅ registered ${reg.webhookID} with ${reg.accountAddresses?.length} wallets`);
+        return jsonResp({ ok: true, webhookID: reg.webhookID, wallets: reg.accountAddresses?.length });
+      }
+      return jsonResp({ ok: false, error: JSON.stringify(reg).slice(0,200) }, 500);
+    } catch(e: any) {
+      return jsonResp({ ok: false, error: e.message }, 500);
+    }
+  }
+
   // Force-close all open live trades in DB — use when Phantom shows closed but UI doesn't
   if (req.method === "POST" && path.endsWith("/force-close-all")) {
     const { data: updated, error } = await sb
