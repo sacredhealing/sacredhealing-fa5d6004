@@ -14,7 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
 import bs58 from "https://esm.sh/bs58@5.0.0";
 import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
-import { Connection, Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
+import { Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86";
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
