@@ -25,9 +25,9 @@ const LAMPORTS  = 1_000_000_000;
 // ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
 const MAX_POSITIONS   = 2;       // never more than 2 open at once
 const MIN_TRADE_SOL   = 0.03;    // minimum 0.03 SOL per trade
-const MIN_SIGNAL_SOL  = 0.5;     // ignore whale signals below 0.5 SOL (spam/dust)
+const MIN_SIGNAL_SOL  = 0.1;     // ignore whale signals below 0.1 SOL (spam/dust)
 const STOP_LOSS_PCT   = -25;     // close if down 25%
-const FIXED_TRADE_SOL = 0.05;    // fixed size per trade (not Kelly) — predictable
+const FIXED_TRADE_SOL = 0.02;    // fixed size per trade — small wallet friendly
 const SLIPPAGE_BPS    = 300;     // 3% slippage
 
 const CORS = {
