@@ -10,7 +10,7 @@ import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
 import { Connection, Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? ""; // Set HELIUS_API_KEY in Supabase secrets
+const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86"; // new key 7de253c3
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 const JUPITER    = "https://lite-api.jup.ag/swap/v1";
 const SOL_MINT   = "So11111111111111111111111111111111111111112";
