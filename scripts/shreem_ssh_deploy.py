@@ -8,56 +8,26 @@ client.connect("178.105.183.74", username="root", password=HP, timeout=30)
 
 def run(cmd):
     _, out, _ = client.exec_command(cmd, timeout=20)
-    return out.read().decode().strip()
+    o = out.read().decode().strip()
+    print(o)
+    return o
 
 eco = run("cat /root/shreem-ecosystem.config.js")
 m = re.search(r'SUPABASE_SERVICE_ROLE_KEY[^"\']*["\']([^"\']{20,})["\']', eco)
 sb_key = m.group(1) if m else ""
 SB = "https://ssygukfdbtehvtndandn.supabase.co"
-H_AUTH = f'apikey: {sb_key}'
 BOT = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA"
 
-print("=== SESSION ===")
-r = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_session?id=eq.default" -H "{H_AUTH}" -H "Authorization: Bearer {sb_key}"')
-try:
-    s = json.loads(r)[0]
-    print(f"mode={s.get('mode')} portfolio={s.get('portfolio')} wins={s.get('wins')} losses={s.get('losses')}")
-except: print(r[:200])
+print("\n\n=== LIVE TRADES ===")
+run(f'curl -sf "{SB}/rest/v1/shreem_brzee_live_trades?order=opened_at.desc&limit=20" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" | python3 -c "import sys,json; trades=json.load(sys.stdin); print(f\'Total: {{len(trades)}}\'); [print(f\'  [{{t.get(chr(115)+chr(116)+chr(97)+chr(116)+chr(117)+chr(115))}}] {{t.get(chr(115)+chr(121)+chr(109)+chr(98)+chr(111)+chr(108),chr(63))}} | {{t.get(chr(109)+chr(105)+chr(110)+chr(116),chr(32))[:14]}} | {{t.get(chr(97)+chr(109)+chr(111)+chr(117)+chr(110)+chr(116)+chr(95)+chr(115)+chr(111)+chr(108))}} SOL | tx={{str(t.get(chr(116)+chr(120)+chr(95)+chr(115)+chr(105)+chr(103),chr(32)))[:20]}} | {{str(t.get(chr(111)+chr(112)+chr(101)+chr(110)+chr(101)+chr(100)+chr(95)+chr(97)+chr(116),chr(32)))[:19]}}\') for t in trades]"')
 
-print("\n=== ALL LIVE TRADES ===")
-r2 = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_live_trades?order=opened_at.desc&limit=20" -H "{H_AUTH}" -H "Authorization: Bearer {sb_key}"')
-try:
-    trades = json.loads(r2)
-    print(f"Total: {len(trades)}")
-    for t in trades:
-        print(f"  [{t.get('status')}] {t.get('symbol','?')} | {t.get('mint','')[:14]} | {t.get('amount_sol')} SOL | tokens={t.get('tokens_received')} | decimals={t.get('token_decimals')} | tx={str(t.get('tx_sig',''))[:20]} | opened={str(t.get('opened_at',''))[:19]}")
-except: print(r2[:300])
+print("\n=== SESSION ===")
+run(f'curl -sf "{SB}/rest/v1/shreem_brzee_session?id=eq.default" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" | python3 -c "import sys,json; s=json.load(sys.stdin); print(s[0] if s else s)"')
 
-print("\n=== BOT WALLET ===")
-r3 = run(f"curl -sf 'https://api.mainnet-beta.solana.com' --max-time 10 -X POST -H 'Content-Type: application/json' -d '{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"{BOT}\"]}}'")
-try: print(f"SOL: {json.loads(r3).get('result',{}).get('value',0)/1e9}")
-except: print(r3[:100])
+print("\n=== BOT SOL BALANCE ===")
+run(f"curl -sf 'https://api.mainnet-beta.solana.com' --max-time 10 -X POST -H 'Content-Type: application/json' -d '{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"{BOT}\"]}}' | python3 -c \"import sys,json; print('SOL:', json.load(sys.stdin).get('result',{{}}).get('value',0)/1e9)\"")
 
-r4 = run(f"""curl -sf 'https://api.mainnet-beta.solana.com' --max-time 15 -X POST -H 'Content-Type: application/json' -d '{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenAccountsByOwner\",\"params\":[\"{BOT}\",{{\"programId\":\"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\"}},{{\"encoding\":\"jsonParsed\"}}]}}'""")
-try:
-    accts = json.loads(r4).get('result',{}).get('value',[])
-    non_zero = [(a.get('account',{}).get('data',{}).get('parsed',{}).get('info',{})) for a in accts]
-    non_zero = [i for i in non_zero if float(i.get('tokenAmount',{}).get('uiAmount') or 0) > 0]
-    print(f"Tokens with balance: {len(non_zero)}")
-    for i in non_zero:
-        ta = i.get('tokenAmount',{})
-        print(f"  {i.get('mint','')} | {ta.get('uiAmount')} tokens")
-except: print(r4[:200])
-
-print("\n=== RECENT SIGNALS (last 5) ===")
-r5 = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_signals?order=created_at.desc&limit=5" -H "{H_AUTH}" -H "Authorization: Bearer {sb_key}"')
-try:
-    for s in json.loads(r5):
-        print(f"  {s.get('action')} | {s.get('label')} | {s.get('symbol','?')} | processed={s.get('live_processed')} | {str(s.get('created_at',''))[:19]}")
-except: print(r5[:200])
-
-# Write summary to /tmp/sqi_state.txt on Hetzner
-run("cat /tmp/sqi_state.txt 2>/dev/null || true")
+print("\n=== BOT TOKENS ===")
+run(f"curl -sf 'https://api.mainnet-beta.solana.com' --max-time 15 -X POST -H 'Content-Type: application/json' -d '{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenAccountsByOwner\",\"params\":[\"{BOT}\",{{\"programId\":\"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\"}},{{\"encoding\":\"jsonParsed\"}}]}}' | python3 -c \"import sys,json; accts=json.load(sys.stdin).get('result',{{}}).get('value',[]); [print(f'  {{i.get(chr(109)+chr(105)+chr(110)+chr(116))}} amount={{i.get(chr(116)+chr(111)+chr(107)+chr(101)+chr(110)+chr(65)+chr(109)+chr(111)+chr(117)+chr(110)+chr(116),{{}}).get(chr(117)+chr(105)+chr(65)+chr(109)+chr(111)+chr(117)+chr(110)+chr(116),0)}}') for a in accts for i in [a.get('account',{{}}).get('data',{{}}).get('parsed',{{}}).get('info',{{}})] if float(i.get('tokenAmount',{{}}).get('uiAmount') or 0)>0]\"")
 
 client.close()
-print("\n=== DONE ===")
