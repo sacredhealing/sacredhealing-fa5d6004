@@ -568,13 +568,21 @@ serve(async (req) => {
       if (fetchErr || !pos) return jsonResp({ error: "trade not found or already closed" }, 404);
 
       if (sess?.mode === "live") {
-        // Close live trade — just update DB (no sell swap for now, manual close)
-        await sb.from("shreem_brzee_live_trades").update({
-          status: "closed",
-          sell_reason: "manual",
-          closed_at: new Date().toISOString(),
-          pnl_pct: 0, pnl_sol: 0,
-        }).eq("id", tradeId);
+        // Live mode — call executor to actually swap tokens back to SOL
+        try {
+          const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+            },
+            body: JSON.stringify({ action: "close", trade_id: tradeId, reason: "manual" }),
+          });
+          const execData = await execR.json().catch(() => ({}));
+          return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual", table, exec: execData });
+        } catch (execErr: any) {
+          return jsonResp({ ok: false, error: `executor unreachable: ${execErr?.message}` }, 500);
+        }
       } else {
         await closeTrade(pos, "manual");
       }
