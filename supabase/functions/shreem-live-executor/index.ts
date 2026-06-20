@@ -60,18 +60,18 @@ function loadKeypair(): SolanaKeypair | null {
 }
 
 // ── RPC with fallback ─────────────────────────────────────────────────────────
-// READ RPCs: free public only — NEVER burn Helius credits for reads
+// ALL RPCs: public only — Helius only as last resort for sendTransaction
 const READ_RPCS = [
   "https://api.mainnet-beta.solana.com",
   "https://rpc.ankr.com/solana",
   "https://solana-api.projectserum.com",
 ];
-// SEND RPC: Helius for speed on transaction submission only
-const SEND_RPC = HELIUS_RPC;
+// Send: public first, Helius LAST (only if public fails) — minimizes Helius credit usage
+const SEND_RPCS = [...READ_RPCS, HELIUS_RPC];
 
 async function rpc(method: string, params: unknown[]) {
-  // Only sendTransaction goes to Helius — everything else uses free public RPCs
-  const urls = (method === "sendTransaction") ? [SEND_RPC, ...READ_RPCS] : READ_RPCS;
+  // sendTransaction tries public RPCs first, Helius only as last resort
+  const urls = (method === "sendTransaction") ? SEND_RPCS : READ_RPCS;
   for (const url of urls) {
     try {
       const r = await fetch(url, {
@@ -122,10 +122,12 @@ async function signAndSend(txB64: string, kp: SolanaKeypair) {
   }]);
 }
 
-async function waitConfirm(sig: string, ms = 35000): Promise<boolean> {
+async function waitConfirm(sig: string, ms = 30000): Promise<boolean> {
   const deadline = Date.now() + ms;
+  // Wait 8s before first check — tx takes time to propagate
+  await new Promise(r => setTimeout(r, 8000));
   while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 6000)); // poll every 6s not 3s — halves getSignatureStatuses calls
     try {
       const res = await rpc("getSignatureStatuses", [[sig], { searchTransactionHistory: true }]);
       const s = res?.value?.[0];
