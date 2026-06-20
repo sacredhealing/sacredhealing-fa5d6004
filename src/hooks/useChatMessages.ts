@@ -146,10 +146,10 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
       .select('id, role, content, created_at')
       .eq('user_id', user.id)
       .eq('chat_context', 'ayurveda')
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(200);
     if (!error && data) {
-      setMessages(data as ChatMessage[]);
+      setMessages([...(data as ChatMessage[])].reverse());
     }
   }, [isAyurveda]);
 
