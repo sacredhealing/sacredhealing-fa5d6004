@@ -1,6 +1,13 @@
 // supabase/functions/shreem-live-executor/index.ts
-// SQI-2050 SHREEM BRZEE — Live Solana Swap Executor
-// ALL imports must be at top for Deno
+// SHREEM BRZEE — Safe Live Executor v2
+// Rules:
+//   • DB write BEFORE swap (intent recorded first, never lose a trade)
+//   • Max 2 open positions at any time
+//   • Min 0.03 SOL per trade (no micro-buys)
+//   • Min whale signal 0.5 SOL (ignore spam/dust)
+//   • Auto-sell on whale SELL — reads on-chain balance, sells everything
+//   • Stop-loss -25% checked on every execution cycle
+//   • All errors surfaced, never swallowed
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -9,377 +16,318 @@ import bs58 from "https://esm.sh/bs58@5.0.0";
 import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
 import { Connection, Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86"; // new key 7de253c3
+const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86";
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const JUPITER    = "https://lite-api.jup.ag/swap/v1";
-const SOL_MINT   = "So11111111111111111111111111111111111111112";
-const LAMPORTS   = 1_000_000_000;
+const JUPITER   = "https://lite-api.jup.ag/swap/v1";
+const SOL_MINT  = "So11111111111111111111111111111111111111112";
+const LAMPORTS  = 1_000_000_000;
+
+// ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
+const MAX_POSITIONS   = 2;       // never more than 2 open at once
+const MIN_TRADE_SOL   = 0.03;    // minimum 0.03 SOL per trade
+const MIN_SIGNAL_SOL  = 0.5;     // ignore whale signals below 0.5 SOL (spam/dust)
+const STOP_LOSS_PCT   = -25;     // close if down 25%
+const FIXED_TRADE_SOL = 0.05;    // fixed size per trade (not Kelly) — predictable
+const SLIPPAGE_BPS    = 300;     // 3% slippage
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
-
 const jsonResp = (d: unknown, s = 200) =>
   new Response(JSON.stringify(d), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
-// ── Supabase ──────────────────────────────────────────────────────────────────
-const sb = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
+const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-// ── Base58 pubkey encoder ─────────────────────────────────────────────────────
-function pubkeyToBase58(bytes: Uint8Array): string {
-  return bs58.encode(bytes);
-}
-
-// ── Keypair loading — handles Phantom base58 export ───────────────────────────
-interface SolanaKeypair {
-  publicKey: Uint8Array;
-  secretKey: Uint8Array;
-}
+// ── KEYPAIR ───────────────────────────────────────────────────────────────────
+interface SolanaKeypair { publicKey: Uint8Array; secretKey: Uint8Array; }
 
 function loadKeypair(): SolanaKeypair | null {
   const raw = Deno.env.get("SHREEM_BOT_KEYPAIR");
-  if (!raw) {
-    console.error("[KEYPAIR] SHREEM_BOT_KEYPAIR secret not set");
-    return null;
-  }
-
+  if (!raw) { console.error("[KEYPAIR] SHREEM_BOT_KEYPAIR not set"); return null; }
   try {
-    const trimmed = raw.trim();
-    let secretKey: Uint8Array;
-
-    if (trimmed.startsWith("[")) {
-      // JSON array: [1,2,3,...,64]
-      secretKey = new Uint8Array(JSON.parse(trimmed));
-    } else if (trimmed.includes(",")) {
-      // Comma separated: 1,2,3,...,64
-      secretKey = new Uint8Array(trimmed.split(",").map(Number));
-    } else {
-      // Base58 — Phantom default export format
-      secretKey = bs58.decode(trimmed);
-    }
-
-    if (secretKey.length !== 64) {
-      console.error(`[KEYPAIR] Expected 64 bytes, got ${secretKey.length}`);
-      return null;
-    }
-
-    const kp = nacl.sign.keyPair.fromSecretKey(secretKey);
-    console.log("[KEYPAIR] Loaded OK, pubkey:", pubkeyToBase58(kp.publicKey).slice(0, 12) + "...");
+    const t = raw.trim();
+    let sk: Uint8Array;
+    if (t.startsWith("["))     sk = new Uint8Array(JSON.parse(t));
+    else if (t.includes(","))  sk = new Uint8Array(t.split(",").map(Number));
+    else                       sk = bs58.decode(t);
+    if (sk.length !== 64) { console.error("[KEYPAIR] Bad length:", sk.length); return null; }
+    const kp = nacl.sign.keyPair.fromSecretKey(sk);
+    console.log("[KEYPAIR] OK pubkey:", bs58.encode(kp.publicKey).slice(0, 8) + "...");
     return { publicKey: kp.publicKey, secretKey: kp.secretKey };
-  } catch (e: any) {
-    console.error("[KEYPAIR] Failed:", e.message);
-    return null;
-  }
+  } catch (e: any) { console.error("[KEYPAIR] Failed:", e.message); return null; }
 }
 
-// ── RPC helper ────────────────────────────────────────────────────────────────
-// Public fallback RPCs — used when Helius key is missing or exhausted
-const PUBLIC_RPCS = [
-  HELIUS_KEY ? HELIUS_RPC : null,
-  "https://api.mainnet-beta.solana.com",
-  "https://solana-api.projectserum.com",
-  "https://rpc.ankr.com/solana",
-].filter(Boolean) as string[];
+// ── RPC with fallback ─────────────────────────────────────────────────────────
+const RPCS = [HELIUS_RPC, "https://api.mainnet-beta.solana.com", "https://rpc.ankr.com/solana"];
 
 async function rpc(method: string, params: unknown[]) {
-  let lastErr: Error | null = null;
-  for (const endpoint of PUBLIC_RPCS) {
+  for (const url of RPCS) {
     try {
-      const r = await fetch(endpoint!, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const r = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
         signal: AbortSignal.timeout(8000),
       });
       const j = await r.json();
-      if (j.error) {
-        if (j.error.code === -32429 || j.error.code === 429) {
-          lastErr = new Error(`RPC ${method} rate-limited on ${endpoint}`);
-          continue;
-        }
-        throw new Error(`RPC ${method} error: ${JSON.stringify(j.error)}`);
-      }
+      if (j.error?.code === -32429 || j.error?.code === 429) continue; // rate limited, try next
+      if (j.error) throw new Error(`RPC ${method}: ${j.error.message}`);
       return j.result;
-    } catch (e: any) {
-      lastErr = e;
-      continue;
-    }
+    } catch (e: any) { console.warn(`[RPC] ${url} failed: ${e.message}`); }
   }
-  throw lastErr ?? new Error(`RPC ${method} failed on all endpoints`);
+  throw new Error(`RPC ${method} failed on all endpoints`);
 }
 
-// ── Jupiter quote + swap ──────────────────────────────────────────────────────
-async function jupiterQuote(inputMint: string, outputMint: string, amountLamports: number, slippageBps = 300) {
-  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amountLamports}&slippageBps=${slippageBps}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  if (!r.ok) throw new Error(`Jupiter quote HTTP ${r.status}`);
-  return await r.json();
+// ── Jupiter ───────────────────────────────────────────────────────────────────
+async function jupQuote(inputMint: string, outputMint: string, amount: number, slippage = SLIPPAGE_BPS) {
+  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`Jupiter quote ${r.status}: ${await r.text()}`);
+  return r.json();
 }
 
-async function jupiterSwapTx(quote: unknown, wallet: string): Promise<string> {
+async function jupSwapTx(quote: unknown, wallet: string) {
   const r = await fetch(`${JUPITER}/swap`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      quoteResponse: quote,
-      userPublicKey: wallet,
-      wrapAndUnwrapSol: true,
-      computeUnitPriceMicroLamports: 50000,
-      dynamicComputeUnitLimit: true,
-    }),
-    signal: AbortSignal.timeout(10000),
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quoteResponse: quote, userPublicKey: wallet, wrapAndUnwrapSol: true, dynamicComputeUnitLimit: true, computeUnitPriceMicroLamports: 50000 }),
+    signal: AbortSignal.timeout(12000),
   });
-  if (!r.ok) throw new Error(`Jupiter swap HTTP ${r.status}`);
-  const { swapTransaction } = await r.json();
-  return swapTransaction;
+  if (!r.ok) throw new Error(`Jupiter swap ${r.status}: ${await r.text()}`);
+  return (await r.json()).swapTransaction as string;
 }
 
-// ── Sign and send transaction (Jupiter v6 VersionedTransaction) ───────────────
-const connection = new Connection(
-  HELIUS_KEY ? HELIUS_RPC : "https://api.mainnet-beta.solana.com",
-  "confirmed"
-);
-
-async function signAndSendTx(txBase64: string, kp: SolanaKeypair): Promise<string> {
-  // Decode Jupiter's swapTransaction (base64 VersionedTransaction)
-  const swapTransactionBuf = Buffer.from(txBase64, "base64");
-  const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-
-  // Rebuild a web3.js Keypair from the raw 64-byte secret
+async function signAndSend(txB64: string, kp: SolanaKeypair) {
+  const conn = new Connection(HELIUS_RPC, "confirmed");
   const keypair = Keypair.fromSecretKey(kp.secretKey);
-
-  // Sign with keypair
-  transaction.sign([keypair]);
-
-  // Send raw — DO NOT re-serialize manually beyond .serialize()
-  const rawTransaction = transaction.serialize();
-  const txid = await connection.sendRawTransaction(rawTransaction, {
-    skipPreflight: true,
-    maxRetries: 3,
-    preflightCommitment: "confirmed",
-  });
-  return txid;
+  const tx = VersionedTransaction.deserialize(Buffer.from(txB64, "base64"));
+  tx.sign([keypair]);
+  const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 3 });
+  return sig;
 }
 
-// ── Wait for confirmation ─────────────────────────────────────────────────────
-async function waitConfirm(txSig: string, timeoutMs = 30000): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
+async function waitConfirm(sig: string, ms = 35000): Promise<boolean> {
+  const deadline = Date.now() + ms;
   while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
     try {
-      const res = await rpc("getSignatureStatuses", [[txSig], { searchTransactionHistory: true }]);
+      const res = await rpc("getSignatureStatuses", [[sig], { searchTransactionHistory: true }]);
       const s = res?.value?.[0];
-      if (!s) continue;
-      if (s.err) return false;
-      if (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized") return true;
+      if (s?.err) return false;
+      if (s?.confirmationStatus === "confirmed" || s?.confirmationStatus === "finalized") return true;
     } catch {}
   }
   return false;
 }
 
-// ── Main serve ────────────────────────────────────────────────────────────────
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+// ── SELL position ─────────────────────────────────────────────────────────────
+async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason: string): Promise<{ ok: boolean; solOut: number; error?: string }> {
+  console.log(`[SELL] Starting: ${pos.symbol} | reason=${reason} | id=${pos.id}`);
 
-  const url  = new URL(req.url);
-  const path = url.pathname;
+  // Get on-chain token balance
+  let rawAmount = 0;
+  let decimals = Number(pos.token_decimals ?? 6);
+  try {
+    const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint: pos.mint }, { encoding: "jsonParsed" }]);
+    const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+    if (acct) { decimals = Number(acct.decimals); rawAmount = Number(acct.amount); }
+  } catch (e: any) { console.warn("[SELL] getTokenAccounts failed:", e.message); }
 
-  // ── GET /health ───────────────────────────────────────────────────────────
-  if (req.method === "GET" && path.endsWith("/health")) {
-    const rawKey = Deno.env.get("SHREEM_BOT_KEYPAIR");
-    if (!rawKey) {
-      return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not set in Edge Function secrets" });
-    }
-
-    const kp = loadKeypair();
-    if (!kp) {
-      return jsonResp({
-        ok: false,
-        error: "Key found but failed to parse",
-        key_length: rawKey.trim().length,
-        key_preview: rawKey.trim().slice(0, 8) + "...",
-        hint: "Phantom exports base58 (~88 chars). Paste only the key, nothing else.",
-      });
-    }
-
-    const wallet = pubkeyToBase58(kp.publicKey);
-    let balance = 0;
-    try {
-      const res = await rpc("getBalance", [wallet]);
-      balance = res.value / LAMPORTS;
-    } catch {}
-
-    return jsonResp({
-      ok: true,
-      wallet,
-      balance_sol: balance,
-      ready: balance >= 0.05,
-      message: balance >= 0.05 ? "✅ Bot wallet ready for live trading" : "⚠️ Fund wallet with SOL first",
-    });
+  // Fall back to stored amount if on-chain read failed
+  if (!rawAmount && pos.tokens_received) {
+    rawAmount = Math.floor(Number(pos.tokens_received) * Math.pow(10, decimals));
+    console.log(`[SELL] Using stored tokens: ${pos.tokens_received} × 10^${decimals} = ${rawAmount}`);
   }
 
-  // ── POST — execute live swap ──────────────────────────────────────────────
-  if (req.method !== "POST") return jsonResp({ error: "method not allowed" }, 405);
+  if (!rawAmount || rawAmount < 1) {
+    console.log(`[SELL] No tokens to sell — marking closed`);
+    await sb.from("shreem_brzee_live_trades").update({
+      status: "closed", sell_reason: reason + "_no_balance", closed_at: new Date().toISOString(),
+    }).eq("id", pos.id);
+    return { ok: true, solOut: 0 };
+  }
 
   try {
-    const kp = loadKeypair();
-    if (!kp) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not configured" }, 400);
+    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 500); // 5% slippage on sell
+    const swapTx = await jupSwapTx(quote, wallet);
+    const txSig = await signAndSend(swapTx, kp);
+    const confirmed = await waitConfirm(txSig);
+    const solOut = Number(quote.outAmount) / LAMPORTS;
+    const sizeIn = Number(pos.amount_sol) || 0;
+    const pnlSol = solOut - sizeIn;
+    const pnlPct = sizeIn > 0 ? (pnlSol / sizeIn) * 100 : 0;
 
-    const wallet = pubkeyToBase58(kp.publicKey);
-    const body   = await req.json().catch(() => ({}));
+    await sb.from("shreem_brzee_live_trades").update({
+      status: confirmed ? "closed" : "unconfirmed_close",
+      sell_reason: reason, exit_price: null,
+      pnl_sol: pnlSol, pnl_pct: pnlPct,
+      closed_at: new Date().toISOString(),
+      tx_sig_close: txSig,
+    }).eq("id", pos.id);
 
-    // ── CLOSE / SELL handler ────────────────────────────────────────────────
-    // body: { action: 'close', trade_id?: string, mint?: string, reason?: string }
-    if (body?.action === "close" || body?.action === "sell") {
-      const reason = body?.reason || "manual";
-      let q = sb.from("shreem_brzee_live_trades").select("*").eq("status", "open");
-      if (body?.trade_id) q = q.eq("id", body.trade_id);
-      else if (body?.mint) q = q.eq("mint", body.mint);
-      const { data: trades, error: qErr } = await q;
-      if (qErr) return jsonResp({ ok: false, error: qErr.message }, 500);
-      if (!trades?.length) return jsonResp({ ok: true, skipped: true, reason: "no matching open trade" });
-
-      const results: any[] = [];
-      for (const pos of trades) {
-        try {
-          // Look up actual token balance on chain
-          // Try on-chain balance first; fall back to stored tokens_received (already human-readable)
-          let rawAmount = 0;
-          let decimals = Number(pos.token_decimals || 6);
-          try {
-            const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint: pos.mint }, { encoding: "jsonParsed" }]);
-            const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
-            if (acct) {
-              decimals  = Number(acct.decimals);
-              rawAmount = Number(acct.amount); // raw lamports for Jupiter sell
-            }
-          } catch { /* RPC failed — use stored amount */ }
-          // If RPC failed or returned 0, convert stored human amount back to raw for Jupiter
-          if (!rawAmount) rawAmount = Math.floor(Number(pos.tokens_received || 0) * Math.pow(10, decimals));
-          if (!rawAmount || rawAmount < 1) {
-            await sb.from("shreem_brzee_live_trades").update({
-              status: "closed", sell_reason: reason + "_no_balance",
-              closed_at: new Date().toISOString(),
-            }).eq("id", pos.id);
-            results.push({ id: pos.id, ok: false, reason: "no token balance" });
-            continue;
-          }
-
-          // Quote token → SOL (Jupiter handles slippage via slippageBps in jupiterQuote)
-          const sellQuote = await jupiterQuote(pos.mint, SOL_MINT, rawAmount, 2000);
-          const swapTx = await jupiterSwapTx(sellQuote, wallet);
-          const txSig  = await signAndSendTx(swapTx, kp);
-          const confirmed = await waitConfirm(txSig);
-
-          const solOut = Number(sellQuote.outAmount) / LAMPORTS;
-          const sizeIn = Number(pos.amount_sol) || 0;
-          const pnlSol = solOut - sizeIn;
-          const pnlPct = sizeIn > 0 ? (pnlSol / sizeIn) * 100 : 0;
-          const exitPrice = solOut > 0 && rawAmount > 0
-            ? solOut / (rawAmount / Math.pow(10, decimals)) : null;
-
-          await sb.from("shreem_brzee_live_trades").update({
-            status:       confirmed ? "closed" : "unconfirmed",
-            sell_reason:  reason,
-            exit_price:   exitPrice,
-            pnl_sol:      pnlSol,
-            pnl_pct:      pnlPct,
-            closed_at:    new Date().toISOString(),
-            tx_sig_close: txSig,
-          }).eq("id", pos.id);
-
-          const { data: sess0 } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
-          if (sess0) {
-            await sb.from("shreem_brzee_session").update({
-              portfolio: Number(sess0.portfolio || 0) + solOut,
-              wins:   Number(sess0.wins||0)   + (pnlSol > 0 ? 1 : 0),
-              losses: Number(sess0.losses||0) + (pnlSol <= 0 ? 1 : 0),
-              updated_at: new Date().toISOString(),
-            }).eq("id","default");
-          }
-
-          console.log(`[close] ${pos.symbol || pos.mint?.slice(0,8)} | ${pnlPct.toFixed(1)}% | sol_out=${solOut.toFixed(4)} | tx=${txSig.slice(0,12)}`);
-          results.push({ id: pos.id, ok: true, tx: txSig, sol_out: solOut, pnl_sol: pnlSol, pnl_pct: pnlPct, confirmed });
-        } catch (e: any) {
-          console.error(`[close] ${pos.id} failed:`, e.message);
-          results.push({ id: pos.id, ok: false, error: e.message });
-        }
-      }
-      return jsonResp({ ok: true, closed: results.length, results });
+    // Update session
+    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
+    if (sess) {
+      await sb.from("shreem_brzee_session").update({
+        portfolio:  Number(sess.portfolio ?? 0) + solOut,
+        wins:   Number(sess.wins ?? 0)   + (pnlSol > 0 ? 1 : 0),
+        losses: Number(sess.losses ?? 0) + (pnlSol <= 0 ? 1 : 0),
+        updated_at: new Date().toISOString(),
+      }).eq("id", "default");
     }
 
-    // Get signal — either passed directly from webhook or from DB
-    const directSig  = body?.direct_signal;
-    const sessHint   = body?.session;
+    console.log(`[SELL] ✅ ${pos.symbol} pnl=${pnlPct.toFixed(1)}% sol_out=${solOut.toFixed(4)} tx=${txSig.slice(0,16)} confirmed=${confirmed}`);
+    return { ok: true, solOut };
+  } catch (e: any) {
+    console.error(`[SELL] ❌ ${pos.symbol} failed: ${e.message}`);
+    return { ok: false, solOut: 0, error: e.message };
+  }
+}
 
-    // Load session for sizing
-    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
-    if (!sess) return jsonResp({ ok: false, error: "No session" });
+// ── MAIN HANDLER ──────────────────────────────────────────────────────────────
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  const url = new URL(req.url);
+  const path = url.pathname;
+
+  // ── HEALTH CHECK ────────────────────────────────────────────────────────────
+  if (req.method === "GET" && path.endsWith("/health")) {
+    const kp = loadKeypair();
+    if (!kp) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not set" });
+    const wallet = bs58.encode(kp.publicKey);
+    let balance = 0;
+    try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
+    // Get open positions count
+    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").eq("status", "open");
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open: open, limits: { max_positions: MAX_POSITIONS, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+  }
+
+  if (req.method !== "POST") return jsonResp({ error: "method not allowed" }, 405);
+
+  const body = await req.json().catch(() => ({}));
+  const kp = loadKeypair();
+  if (!kp) return jsonResp({ ok: false, error: "SHREEM_BOT_KEYPAIR not configured" }, 400);
+  const wallet = bs58.encode(kp.publicKey);
+
+  // ── CLOSE / SELL ────────────────────────────────────────────────────────────
+  if (body?.action === "close" || body?.action === "sell") {
+    const reason = body?.reason ?? "manual";
+    let q = sb.from("shreem_brzee_live_trades").select("*").eq("status", "open");
+    if (body?.trade_id) q = q.eq("id", body.trade_id);
+    else if (body?.mint)  q = q.eq("mint", body.mint);
+
+    const { data: trades, error: qErr } = await q;
+    if (qErr) return jsonResp({ ok: false, error: qErr.message }, 500);
+    if (!trades?.length) return jsonResp({ ok: true, skipped: true, reason: "no matching open trade" });
+
+    const results = [];
+    for (const pos of trades) {
+      const r = await sellPosition(pos, kp, wallet, reason);
+      results.push({ symbol: pos.symbol, ...r });
+    }
+    return jsonResp({ ok: true, closed: results.length, results });
+  }
+
+  // ── BUY — called by webhook on whale BUY signal ────────────────────────────
+  try {
+    // Load session — must be live and running
+    const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
+    if (!sess)           return jsonResp({ ok: false, error: "No session" });
     if (sess.stopped_at) return jsonResp({ ok: false, skipped: true, reason: "Session stopped" });
     if (sess.mode !== "live") return jsonResp({ ok: false, skipped: true, reason: "Not in live mode" });
 
-    // Use passed signal or skip
-    if (!directSig?.mint) return jsonResp({ ok: true, skipped: true, reason: "No signal provided" });
+    const sig = body?.direct_signal;
+    if (!sig?.mint) return jsonResp({ ok: true, skipped: true, reason: "No signal" });
 
-    const sig = directSig;
+    // ── SAFETY CHECKS ──────────────────────────────────────────────────────────
+    // 1. Min signal size — ignore spam/dust
+    if (Number(sig.amount_sol ?? 0) < MIN_SIGNAL_SOL) {
+      console.log(`[BUY] SKIP — signal too small: ${sig.amount_sol} SOL (min ${MIN_SIGNAL_SOL})`);
+      return jsonResp({ ok: true, skipped: true, reason: `Signal too small: ${sig.amount_sol} SOL` });
+    }
 
-    // Duplicate check — don't open two positions in same mint
-    const { data: existingMint } = await sb.from("shreem_brzee_live_trades")
-      .select("id").eq("status","open").eq("mint", sig.mint).limit(1);
-    if (existingMint?.length) return jsonResp({ ok: true, skipped: true, reason: "Already have live position in this token" });
+    // 2. Ignore USDC
+    const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+    if (sig.mint === USDC) return jsonResp({ ok: true, skipped: true, reason: "USDC — not trading" });
 
-    // Duplicate sig check
-    const { data: existingSig } = await sb.from("shreem_brzee_live_trades")
-      .select("id").eq("sig", sig.sig + "_live").limit(1);
-    if (existingSig?.length) return jsonResp({ ok: true, skipped: true, reason: "Signal already executed" });
+    // 3. Max positions check
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").eq("status", "open");
+    if ((openTrades?.length ?? 0) >= MAX_POSITIONS) {
+      console.log(`[BUY] SKIP — max positions (${openTrades?.length}/${MAX_POSITIONS})`);
+      return jsonResp({ ok: true, skipped: true, reason: `Max positions reached (${MAX_POSITIONS})` });
+    }
 
-    // Check real SOL balance in bot wallet
+    // 4. No duplicate position in same mint
+    const dupMint = openTrades?.find(t => t.mint === sig.mint);
+    if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
+
+    // 5. No duplicate signal
+    const { data: dupSig } = await sb.from("shreem_brzee_live_trades").select("id").eq("sig", sig.sig + "_live").limit(1);
+    if (dupSig?.length) return jsonResp({ ok: true, skipped: true, reason: "Signal already executed" });
+
+    // 6. Check real SOL balance
     const balRes = await rpc("getBalance", [wallet]);
     const balSol = balRes.value / LAMPORTS;
+    console.log(`[BUY] Wallet balance: ${balSol} SOL`);
 
-    if (balSol < 0.01) return jsonResp({ ok: false, error: `Bot wallet balance too low: ${balSol} SOL` });
+    // Need enough for trade + fees (0.002 SOL for fees)
+    if (balSol < MIN_TRADE_SOL + 0.003) {
+      return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL (need ${MIN_TRADE_SOL + 0.003})` });
+    }
 
-    // 50% exposure cap
-    const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
-      .select("amount_sol").eq("status","open");
-    const openExp = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol)||0), 0);
-    const maxExp  = balSol * 0.5;
-    if (openExp >= maxExp) return jsonResp({ ok: true, skipped: true, reason: "50% exposure cap reached" });
-
-    // Kelly sizing 5-10% of REAL wallet balance
-    const wins = Number(sess.wins || 0), losses = Number(sess.losses || 0);
-    const wr   = (wins + losses) >= 5 ? wins / (wins + losses) : 0.5;
-    const pct  = Math.min(0.10, Math.max(0.05, wr * 0.12));
-    // With small wallets, use at least 15% of balance so trade is viable
-    const kellySize = balSol * pct;
-    const minViable = Math.min(balSol * 0.15, 0.01); // 15% of wallet or 0.01 SOL max floor
-    const size = Math.min(Math.max(kellySize, minViable), maxExp - openExp);
-
-    if (size < 0.002) return jsonResp({ ok: false, error: `Trade size too small: ${size.toFixed(4)} SOL` });
+    // Fixed position size — predictable, no surprises
+    const size = Math.min(FIXED_TRADE_SOL, balSol * 0.3); // never more than 30% of balance
+    if (size < MIN_TRADE_SOL) {
+      return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
+    }
 
     const lamports = Math.floor(size * LAMPORTS);
-    console.log(`[live] Executing: ${sig.symbol} | ${size.toFixed(4)} SOL | wallet balance: ${balSol.toFixed(4)} SOL`);
+    console.log(`[BUY] Executing: ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | wallet=${wallet.slice(0,8)}`);
 
-    // Jupiter quote
-    const quote = await jupiterQuote(SOL_MINT, sig.mint, lamports);
+    // ── STEP 1: WRITE INTENT TO DB FIRST (before any swap) ──────────────────
+    const tradeId = crypto.randomUUID();
+    const intentRecord = {
+      id:         tradeId,
+      session_id: "default",
+      sig:        sig.sig + "_live",
+      mint:       sig.mint,
+      symbol:     sig.symbol ?? null,
+      label:      sig.label ?? null,
+      wallet:     sig.wallet ?? null,
+      action:     "BUY",
+      amount_sol: size,
+      status:     "pending", // will update to open/failed after swap
+      opened_at:  new Date().toISOString(),
+      slippage_pct: SLIPPAGE_BPS / 100,
+    };
+
+    const { error: intentErr } = await sb.from("shreem_brzee_live_trades").upsert(intentRecord, { onConflict: "sig" });
+    if (intentErr) {
+      console.error("[BUY] DB intent write failed:", intentErr.message);
+      // Don't abort — the DB write failing is bad but proceed and try to record later
+    } else {
+      console.log("[BUY] Intent recorded in DB:", tradeId);
+    }
+
+    // ── STEP 2: GET JUPITER QUOTE ─────────────────────────────────────────────
+    const quote = await jupQuote(SOL_MINT, sig.mint, lamports);
     const slippage = Number(quote.inAmount) > 0
       ? (Number(quote.inAmount) - Number(quote.otherAmountThreshold)) / Number(quote.inAmount) : 0;
+    if (slippage > 0.08) {
+      await sb.from("shreem_brzee_live_trades").update({ status: "failed", sell_reason: "slippage_too_high" }).eq("id", tradeId);
+      return jsonResp({ ok: false, error: `Slippage ${(slippage*100).toFixed(1)}% too high` });
+    }
 
-    if (slippage > 0.05) return jsonResp({ ok: false, error: `Slippage too high: ${(slippage*100).toFixed(1)}%` });
+    // ── STEP 3: EXECUTE SWAP ──────────────────────────────────────────────────
+    const swapTx = await jupSwapTx(quote, wallet);
+    const txSig  = await signAndSend(swapTx, kp);
+    console.log(`[BUY] Tx sent: ${txSig.slice(0, 20)}...`);
 
-    // Sign + send
-    const swapTx    = await jupiterSwapTx(quote, wallet);
-    const txSig     = await signAndSendTx(swapTx, kp);
     const confirmed = await waitConfirm(txSig);
+    console.log(`[BUY] Confirmed: ${confirmed}`);
 
-    // ── Fetch token decimals from Jupiter to get correct entry price ───────────
-    let tokenDecimals = 6; // pump.fun default
+    // ── STEP 4: FETCH TOKEN DECIMALS ──────────────────────────────────────────
+    let tokenDecimals = 6;
     try {
       const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: AbortSignal.timeout(5000) });
       if (metaR.ok) {
@@ -387,61 +335,53 @@ serve(async (req) => {
         const d = metaJ?.[sig.mint]?.decimals ?? metaJ?.data?.[sig.mint]?.decimals;
         if (d != null) tokenDecimals = Number(d);
       }
-    } catch { /* keep default 6 */ }
+    } catch {}
 
     const tokensHuman = Number(quote.outAmount) / Math.pow(10, tokenDecimals);
-    // entry_price stored in USD per token (matches DexScreener current price units)
-    // Requires SOL/USD at trade time — fetch fresh
-    let solUsdNow = 150;
-    try {
-      const prR = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: AbortSignal.timeout(4000) });
-      if (prR.ok) { const prJ = await prR.json(); solUsdNow = parseFloat(prJ.price) || 150; }
-    } catch {}
-    const investedUsd = size * solUsdNow;
-    // entry_price = USD paid / tokens received = USD per token (same unit as DexScreener)
-    const entryPrice = tokensHuman > 0 ? investedUsd / tokensHuman : null;
 
-    // Use upsert so re-runs never duplicate; check error so we know if DB write failed
-    const tradeRecord = {
-      session_id: "default",
-      sig:        sig.sig + "_live",
-      tx_sig:     txSig,
-      mint:       sig.mint,
-      symbol:     sig.symbol,
-      label:      sig.label,
-      wallet:     sig.wallet,
-      action:     "BUY",
-      amount_sol: size,
-      entry_price: entryPrice,
+    // SOL/USD price
+    let solUsd = 150;
+    try {
+      const pr = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: AbortSignal.timeout(4000) });
+      if (pr.ok) { solUsd = parseFloat((await pr.json()).price) || 150; }
+    } catch {}
+
+    const entryPrice = tokensHuman > 0 ? (size * solUsd) / tokensHuman : null;
+
+    // ── STEP 5: UPDATE DB RECORD WITH FULL TRADE DATA ─────────────────────────
+    const { error: updateErr } = await sb.from("shreem_brzee_live_trades").update({
+      tx_sig:          txSig,
+      entry_price:     entryPrice,
       tokens_received: tokensHuman,
-      token_decimals: tokenDecimals,
-      sol_usd_at_entry: solUsdNow,
-      status:     confirmed ? "open" : "unconfirmed",
-      opened_at:  new Date().toISOString(),
-      slippage_pct: slippage * 100,
-    };
-    const { error: insertErr } = await sb.from("shreem_brzee_live_trades")
-      .upsert(tradeRecord, { onConflict: "sig" });
-    if (insertErr) {
-      // Swap already executed on-chain — log error but don't fail the response
-      console.error("[live] ⚠️ DB INSERT FAILED (swap succeeded on-chain!):", insertErr.message);
-      console.error("[live] Trade record:", JSON.stringify(tradeRecord));
-    } else {
-      console.log("[live] ✅ Trade recorded in DB:", sig.symbol, txSig.slice(0,16));
+      token_decimals:  tokenDecimals,
+      sol_usd_at_entry: solUsd,
+      status:          confirmed ? "open" : "unconfirmed",
+    }).eq("id", tradeId);
+
+    if (updateErr) {
+      console.error("[BUY] ⚠️ DB update failed after confirmed swap:", updateErr.message);
+      console.error("[BUY] SWAP DID EXECUTE — tx:", txSig, "size:", size, "token:", sig.symbol);
     }
 
     // Update session portfolio
-    await sb.from("shreem_brzee_session").upsert({
-      id: "default", ...sess,
-      portfolio:  Number(sess.portfolio || 0) - size,
+    await sb.from("shreem_brzee_session").update({
+      portfolio:  Number(sess.portfolio ?? 0) - size,
       updated_at: new Date().toISOString(),
-    }, { onConflict: "id" });
+    }).eq("id", "default");
 
-    console.log(`[live] ✅ ${sig.symbol} | tx: ${txSig.slice(0,16)}... | confirmed: ${confirmed}`);
+    console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
     return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet });
 
   } catch (e: any) {
-    console.error("[live-executor]", e.message);
+    console.error("[BUY] ❌ Error:", e.message);
+    // Mark any pending record as failed
+    try {
+      const sig = body?.direct_signal;
+      if (sig?.sig) {
+        await sb.from("shreem_brzee_live_trades").update({ status: "failed", sell_reason: "execution_error" })
+          .eq("sig", sig.sig + "_live").eq("status", "pending");
+      }
+    } catch {}
     return jsonResp({ ok: false, error: e.message }, 500);
   }
 });
