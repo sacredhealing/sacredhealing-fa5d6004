@@ -38,9 +38,9 @@ jobs:
       - name: Deploy ayurveda-chat
         run: |
           supabase functions deploy ayurveda-chat \
-            --project-ref fjdzhrdpioxdeyyfogep \
+            --project-ref ssygukfdbtehvtndandn \
             --no-verify-jwt
-          echo "ayurveda-chat deployed OK"
+          echo "ayurveda-chat deployed to Lovable OK"
 
   deploy-bhrigu:
     runs-on: ubuntu-latest
