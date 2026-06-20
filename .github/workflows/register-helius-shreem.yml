@@ -13,7 +13,7 @@ jobs:
         run: |
           node << 'JSEOF'
           const https = require('https');
-          const KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+          const KEY = 'REMOVED_OLD_KEY';
           // Real whale wallets from FomoCopyBot (Cupsey, Heyitsyolo, Remusofmars + 18 others)
           const WALLETS = [
             'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', // Cupsey
