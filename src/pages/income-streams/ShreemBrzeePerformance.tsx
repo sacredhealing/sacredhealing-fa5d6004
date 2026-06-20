@@ -361,34 +361,55 @@ export default function ShreemBrzeePerformance() {
   }, [updatePrices]);
 
   // ── Close a position ───────────────────────────────────────────────────────
-  // closePosition: only used for manual "CLOSE TRADE" button
-  // Calls edge function /signal to trigger server-side close
+  // Manual CLOSE TRADE. Calls shreem-live-executor with trade_id. Executor:
+  //  • zero on-chain token balance → mark closed in DB
+  //  • balance > 0 → Jupiter swap token→SOL, write real exit data
+  const [closingIds, setClosingIds] = useState<Set<string>>(new Set());
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
+    const id = pos.id;
+    setClosingIds(prev => { const n = new Set(prev); n.add(id); return n; });
     try {
       notify("Closing position…", "info");
-      // Call edge function /close-trade directly — server fetches price and closes
-      const r = await fetch(`${EDGE_BASE}/close-trade`, {
+      const EXEC = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor";
+      const r = await fetch(EXEC, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trade_id: pos.id }),
+        body: JSON.stringify({ action: "close", trade_id: id, reason }),
       });
       const result = r.ok ? await r.json() : null;
-      if (!r.ok || !result?.ok) {
-        // Fallback: write directly to DB if edge fn fails
-        await d.from("shreem_brzee_paper_trades").update({
-          status: "closed",
-          closed_at: new Date().toISOString(),
-          sell_reason: "manual",
-          pnl_pct: 0,
-          pnl_sol: 0,
-        }).eq("id", pos.id);
-        notify("Position closed (no price data)", "info");
+      const first  = result?.results?.[0];
+
+      if (result?.ok && first?.ok) {
+        notify(`✅ ${pos.symbol || "Position"} closed${first.pnl_pct != null ? ` (${first.pnl_pct >= 0 ? "+" : ""}${Number(first.pnl_pct).toFixed(1)}%)` : ""}`, "ok");
+      } else if (result?.ok && first && !first.ok && /no token balance/i.test(first.reason || "")) {
+        notify(`Position closed (no on-chain balance)`, "info");
+      } else if (result?.skipped) {
+        // Not a live trade — fall back to paper close-trade endpoint
+        const r2 = await fetch(`${EDGE_BASE}/close-trade`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trade_id: id }),
+        });
+        const r2j = r2.ok ? await r2.json() : null;
+        if (r2j?.ok) notify(`✅ ${r2j.symbol || "Position"} closed`, "ok");
+        else {
+          await d.from("shreem_brzee_paper_trades").update({
+            status: "closed", closed_at: new Date().toISOString(),
+            sell_reason: "manual", pnl_pct: 0, pnl_sol: 0,
+          }).eq("id", id);
+          notify("Position closed", "info");
+        }
       } else {
-        notify(`✅ ${result.symbol || "Position"} closed`, "ok");
+        notify(`Close failed: ${first?.error || result?.error || "unknown"}`, "err");
       }
       setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); }, 1500);
-    } catch (e: any) { notify(`Close failed: ${e.message?.slice(0,60)}`, "err"); }
+    } catch (e: any) {
+      notify(`Close failed: ${e.message?.slice(0,60)}`, "err");
+    } finally {
+      setClosingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+    }
   }, [fetchOpen, fetchTrades, fetchSession, notify]);
+
 
   // v5: ALL exit logic runs server-side in edge function:
   //   whale_sell_mirror — whale SELL signal detected → close immediately
