@@ -109,7 +109,7 @@ export default defineConfig(({ mode }) => {
             urlPattern: ({ request }) => request.destination === "document",
             handler: "NetworkFirst",
             options: {
-              cacheName: "html-shell-v4",
+              cacheName: "html-shell-v5",
               networkTimeoutSeconds: 2,
               expiration: { maxEntries: 8, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
@@ -121,7 +121,7 @@ export default defineConfig(({ mode }) => {
             handler: "CacheFirst",
             method: "GET",
             options: {
-              cacheName: "assets-immutable-v4",
+              cacheName: "assets-immutable-v5",
               expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [200] },
             },
@@ -143,7 +143,7 @@ export default defineConfig(({ mode }) => {
             urlPattern: ({ url }) => url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/"),
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "supabase-api-v4",
+              cacheName: "supabase-api-v5",
               expiration: { maxEntries: 50, maxAgeSeconds: 3 * 60 },
               cacheableResponse: { statuses: [200] },
             },
