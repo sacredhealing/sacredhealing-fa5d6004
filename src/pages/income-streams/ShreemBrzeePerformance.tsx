@@ -865,7 +865,7 @@ export default function ShreemBrzeePerformance() {
               // No DexScreener price ⇒ no liquidity
               const noLiquidity   = pricesFetched && entryPriceSol > 0 && (!currentPriceUsd || currentPriceUsd <= 0);
               const pnlLabel      = pnlPct !== null
-                ? \`\${pnlPct >= 0 ? "+" : ""}\${pnlPct.toFixed(2)}%\`
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
                 : noLiquidity ? "no liquidity" : "—";
               const isLegacyEntry = false; // all entries are SOL/token — always valid
               const entryMissing = entry <= 0;
