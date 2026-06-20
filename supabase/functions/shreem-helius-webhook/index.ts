@@ -290,7 +290,7 @@ async function syncWallets(): Promise<void> {
 // ── Update Helius webhook registration (only called explicitly via /sync-helius) ──
 async function syncHelius(): Promise<{ ok: boolean; message: string; count?: number }> {
   try {
-    const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
+    const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86";
     const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
     const addresses = Object.keys(WHALE_WALLETS);
 
@@ -396,7 +396,8 @@ async function autoRegisterHelius() {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  autoRegisterHelius().catch(()=>{});
+  // autoRegisterHelius disabled — webhook registered manually via Helius dashboard
+  // Calling it on every request burned 10M credits in one day
 
   const url  = new URL(req.url);
   const path = url.pathname;
