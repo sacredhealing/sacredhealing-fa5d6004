@@ -356,9 +356,12 @@ serve(async (req) => {
     const wins = Number(sess.wins || 0), losses = Number(sess.losses || 0);
     const wr   = (wins + losses) >= 5 ? wins / (wins + losses) : 0.5;
     const pct  = Math.min(0.10, Math.max(0.05, wr * 0.12));
-    const size = Math.min(balSol * pct, maxExp - openExp);
+    // With small wallets, use at least 15% of balance so trade is viable
+    const kellySize = balSol * pct;
+    const minViable = Math.min(balSol * 0.15, 0.01); // 15% of wallet or 0.01 SOL max floor
+    const size = Math.min(Math.max(kellySize, minViable), maxExp - openExp);
 
-    if (size < 0.005) return jsonResp({ ok: false, error: `Trade size too small: ${size.toFixed(4)} SOL` });
+    if (size < 0.002) return jsonResp({ ok: false, error: `Trade size too small: ${size.toFixed(4)} SOL` });
 
     const lamports = Math.floor(size * LAMPORTS);
     console.log(`[live] Executing: ${sig.symbol} | ${size.toFixed(4)} SOL | wallet balance: ${balSol.toFixed(4)} SOL`);
