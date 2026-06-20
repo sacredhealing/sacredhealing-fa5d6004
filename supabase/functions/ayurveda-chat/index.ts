@@ -1,5 +1,5 @@
 // supabase/functions/ayurveda-chat/index.ts
-// AGASTYA MUNI — SIDDHA BODY ORACLE v5.0
+// AGASTYA MUNI — SIDDHA BODY ORACLE v5.1 — Grounding Doctrine + Jyotish + Nityabodha Memory
 // SQI 2050 · Gemini 2.0 Flash · temperature 2.0 · Ayurveda + Tamil Siddha Vaidyam · Grounding Doctrine v6.0
 // Jyotish-Integrated · Grounding Doctrine · Transmission Protocol · 2026-06-18
 
