@@ -882,7 +882,7 @@ serve(async (req) => {
             // LIVE MODE: pass signal directly to executor — no flag polling needed
             if (swap.action === "BUY") {
               // SAFETY: ignore small signals (spam/dust/test buys)
-              const MIN_SIGNAL_SOL = 0.5;
+              const MIN_SIGNAL_SOL = 0.1;
               const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
               if (signal.mint === USDC_MINT) {
                 console.log(`[BUY-SKIP] USDC — not trading`);
