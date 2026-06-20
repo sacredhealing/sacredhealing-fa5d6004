@@ -103,7 +103,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       BOT_MODE: 'paper',
-      HELIUS_API_KEY: '775d3d1f-6801-41de-a063-8aee4382d0f4',
+      HELIUS_API_KEY: 'REMOVED_OLD_KEY',
       RISK_PCT: '0.05',
       MAX_SLIPPAGE_BPS: '300',
       JITO_TIP_LAMPORTS: '1000000',
