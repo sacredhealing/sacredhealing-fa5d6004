@@ -236,7 +236,7 @@ serve(async (req) => {
           }
 
           // Quote token → SOL (Jupiter handles slippage via slippageBps in jupiterQuote)
-          const sellQuote = await jupiterQuote(pos.mint, SOL_MINT, rawAmount, 1500);
+          const sellQuote = await jupiterQuote(pos.mint, SOL_MINT, rawAmount, 2000);
           const swapTx = await jupiterSwapTx(sellQuote, wallet);
           const txSig  = await signAndSendTx(swapTx, kp);
           const confirmed = await waitConfirm(txSig);
