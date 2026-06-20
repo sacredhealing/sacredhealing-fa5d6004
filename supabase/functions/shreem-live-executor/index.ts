@@ -60,10 +60,19 @@ function loadKeypair(): SolanaKeypair | null {
 }
 
 // ── RPC with fallback ─────────────────────────────────────────────────────────
-const RPCS = [HELIUS_RPC, "https://api.mainnet-beta.solana.com", "https://rpc.ankr.com/solana"];
+// READ RPCs: free public only — NEVER burn Helius credits for reads
+const READ_RPCS = [
+  "https://api.mainnet-beta.solana.com",
+  "https://rpc.ankr.com/solana",
+  "https://solana-api.projectserum.com",
+];
+// SEND RPC: Helius for speed on transaction submission only
+const SEND_RPC = HELIUS_RPC;
 
 async function rpc(method: string, params: unknown[]) {
-  for (const url of RPCS) {
+  // Only sendTransaction goes to Helius — everything else uses free public RPCs
+  const urls = (method === "sendTransaction") ? [SEND_RPC, ...READ_RPCS] : READ_RPCS;
+  for (const url of urls) {
     try {
       const r = await fetch(url, {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -71,7 +80,7 @@ async function rpc(method: string, params: unknown[]) {
         signal: AbortSignal.timeout(8000),
       });
       const j = await r.json();
-      if (j.error?.code === -32429 || j.error?.code === 429) continue; // rate limited, try next
+      if (j.error?.code === -32429 || j.error?.code === 429) { console.warn(`[RPC] ${url} rate-limited`); continue; }
       if (j.error) throw new Error(`RPC ${method}: ${j.error.message}`);
       return j.result;
     } catch (e: any) { console.warn(`[RPC] ${url} failed: ${e.message}`); }
