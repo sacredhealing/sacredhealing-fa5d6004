@@ -5,7 +5,8 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const EDGE_BASE = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-const HELIUS_RPC = "https://mainnet.helius-rpc.com/?api-key=775d3d1f-6801-41de-a063-8aee4382d0f4";
+// HELIUS_RPC removed — key expired. getWalletBalance uses public fallback RPCs only.
+const HELIUS_RPC = ""; // replaced by fallback array in getWalletBalance
 const GOLD = "#D4AF37";
 const GOLD20 = "rgba(212,175,55,0.2)";
 const GREEN = "#10b981";
@@ -110,11 +111,11 @@ async function getSolPrice(): Promise<{ usd: number; eur: number }> {
 }
 
 async function getWalletBalance(addr: string): Promise<number> {
-  // Try multiple RPCs — Helius key may be expired
+  // Public RPCs only — Helius key expired, removed from rotation
   const RPCS = [
-    HELIUS_RPC,
     "https://api.mainnet-beta.solana.com",
     "https://solana-api.projectserum.com",
+    "https://rpc.ankr.com/solana",
   ];
   for (const rpc of RPCS) {
     try {
@@ -463,15 +464,23 @@ export default function ShreemBrzeePerformance() {
   const liveIntervalRef                 = useRef<ReturnType<typeof setInterval>|null>(null);
 
   const checkBotWallet = useCallback(async () => {
-    // Bot wallet — SOL balance comes ONLY from on-chain RPC. No health-endpoint override, no caching.
     const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
     try {
       const bal = await getWalletBalance(BOT_WALLET);
-      setBotWallet({ wallet: BOT_WALLET, balance_sol: bal });
-      if (bal > 0) setBalInput(bal.toFixed(4));
-      console.log("[botWallet] RPC balance:", bal, "SOL");
+      // Only update if we got a real balance — never overwrite good data with 0 from failed RPC
+      if (bal > 0) {
+        setBotWallet({ wallet: BOT_WALLET, balance_sol: bal });
+        setBalInput(bal.toFixed(4));
+        console.log("[botWallet] ✅ balance:", bal, "SOL");
+      } else {
+        // RPC returned 0 — keep existing balance in state, just log warning
+        console.warn("[botWallet] ⚠️ RPC returned 0 — keeping last known balance");
+        setBotWallet(prev => prev ?? { wallet: BOT_WALLET, balance_sol: 0 });
+      }
     } catch (e: any) {
       console.warn("[botWallet] balance fetch failed:", e.message);
+      // Keep existing state — don't wipe balance on network error
+      setBotWallet(prev => prev ?? { wallet: BOT_WALLET, balance_sol: 0 });
     }
   }, []);
 
@@ -778,7 +787,7 @@ export default function ShreemBrzeePerformance() {
         {/* Stats grid */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${botWallet ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : currentBalEur.toFixed(2)}`, l:"Balance", s:`${botWallet ? botWallet.balance_sol.toFixed(4) : currentBalSol.toFixed(3)} SOL`, c:GOLD },
+            { i:"💰", v:`€${botWallet && botWallet.balance_sol > 0 ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : botWallet ? "…" : currentBalEur.toFixed(2)}`, l:"Balance", s:`${botWallet && botWallet.balance_sol > 0 ? botWallet.balance_sol.toFixed(4) : botWallet ? "loading…" : currentBalSol.toFixed(3)} SOL`, c:GOLD },
             { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
             { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
