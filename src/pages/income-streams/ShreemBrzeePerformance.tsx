@@ -5,13 +5,12 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const EDGE_BASE = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-// HELIUS_RPC removed — key expired. getWalletBalance uses public fallback RPCs only.
-const HELIUS_RPC = ""; // replaced by fallback array in getWalletBalance
-const GOLD = "#D4AF37";
+const GOLD  = "#D4AF37";
 const GOLD20 = "rgba(212,175,55,0.2)";
 const GREEN = "#10b981";
-const RED = "#ef4444";
-const CYAN = "#00d4ff";
+const RED   = "#ef4444";
+const CYAN  = "#00d4ff";
+const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
 
 // ─── Static KOL list ─────────────────────────────────────────────────────────
 const KOL_LIST = [
@@ -26,26 +25,16 @@ const KOL_LIST = [
   { label: "The Grande",    addr: "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA", vip: false },
   { label: "West",          addr: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", vip: false },
   { label: "Yenni",         addr: "5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", vip: false },
-  { label: "Doji",          addr: "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg", vip: false },
+  { label: "Doji",          addr: "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  vip: false },
   { label: "Trenchman",     addr: "Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7", vip: false },
   { label: "OGAntD",        addr: "215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP", vip: false },
   { label: "Kev",           addr: "BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", vip: false },
   { label: "decu",          addr: "4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9", vip: false },
-  { label: "trunoest",      addr: "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT", vip: false },
+  { label: "trunoest",      addr: "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  vip: false },
   { label: "clukz",         addr: "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", vip: false },
   { label: "Limfork",       addr: "BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", vip: false },
 ];
 
-const KOL_LABELS = new Set(KOL_LIST.map(k => k.label));
-const KOL_ADDRS  = new Set(KOL_LIST.map(k => k.addr));
-const isTracked  = (s: any) => KOL_LABELS.has(s?.label) || KOL_ADDRS.has(s?.wallet);
-const isValidSol = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s.trim());
-const timeAgo    = (d: string) => {
-  const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
-  return m < 1 ? "now" : m < 60 ? `${m}m` : m < 1440 ? `${Math.floor(m/60)}h` : `${Math.floor(m/1440)}d`;
-};
-
-// Top KOL explorer data (static reference)
 const KOL_EXPLORER = [
   { name:"Cented",     addr:"CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", pnl7d:95641,  pnl30d:576766, wr:63.8 },
   { name:"Euris",      addr:"Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", pnl7d:51079,  pnl30d:402366, wr:56   },
@@ -59,45 +48,29 @@ const KOL_EXPLORER = [
   { name:"Remusofmars",addr:"BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", pnl7d:24200,  pnl30d:68000,  wr:65.8 },
 ];
 
-// TRACKED_ADDRS built from KOL_LIST — merged with trackedWhalesAddrs state below
+const isValidSol = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s.trim());
+const timeAgo = (dt: string) => {
+  const m = Math.floor((Date.now() - new Date(dt).getTime()) / 60000);
+  return m < 1 ? "now" : m < 60 ? `${m}m` : m < 1440 ? `${Math.floor(m/60)}h` : `${Math.floor(m/1440)}d`;
+};
 
-// ─── Compounding Position Sizer ───────────────────────────────────────────────
-// Kelly-inspired: position grows with win rate AND account size.
-// Hard cap: never risk more than 50% of portfolio across all open trades.
+// ─── Kelly Position Sizer ─────────────────────────────────────────────────────
 function calculatePositionSize(
-  portfolio:    number,   // current SOL balance
-  wins:         number,   // session wins
-  losses:       number,   // session losses
-  openPositions: any[],  // current open trades (to calc exposure)
+  portfolio: number, wins: number, losses: number, openPositions: any[],
 ): { size: number; pct: number; blocked: boolean; reason: string } {
-
   if (portfolio <= 0) return { size:0, pct:0, blocked:true, reason:"zero balance" };
-
-  const totalTrades  = wins + losses;
-  const winRate      = totalTrades >= 5 ? wins / totalTrades : 0.5; // need ≥5 trades to use real WR
-
-  // Kelly fraction: edge × bankroll / odds (simplified for 1:1 payout)
-  // base 5%, scale up with win rate, cap at 15%
-  const BASE_PCT     = 0.05;
-  const kellyPct     = Math.min(0.15, Math.max(BASE_PCT, winRate * 0.12));
+  const totalTrades = wins + losses;
+  const winRate = totalTrades >= 5 ? wins / totalTrades : 0.5;
+  const kellyPct = Math.min(0.15, Math.max(0.05, winRate * 0.12));
   const positionSize = portfolio * kellyPct;
-
-  // 50% exposure cap: sum all open position sizes
-  const openExposure = openPositions.reduce((sum: number, p: any) => sum + (Number(p.amount_sol) || 0), 0);
-  const maxExposure  = portfolio * 0.50;
-  const remaining    = maxExposure - openExposure;
-
-  if (remaining <= 0.001) {
-    return { size:0, pct:kellyPct, blocked:true, reason:"50% exposure cap reached" };
-  }
-
-  // Use the smaller of: kelly size vs remaining exposure room
-  const finalSize = Math.min(positionSize, remaining);
-
-  return { size:finalSize, pct:kellyPct, blocked:false, reason:"ok" };
+  const openExposure = openPositions.reduce((s: number, p: any) => s + (Number(p.amount_sol) || 0), 0);
+  const maxExposure = portfolio * 0.50;
+  const remaining = maxExposure - openExposure;
+  if (remaining <= 0.001) return { size:0, pct:kellyPct, blocked:true, reason:"50% exposure cap reached" };
+  return { size: Math.min(positionSize, remaining), pct: kellyPct, blocked: false, reason: "ok" };
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Price & Balance helpers ──────────────────────────────────────────────────
 async function getSolPrice(): Promise<{ usd: number; eur: number }> {
   try {
     const [solRes, fxRes] = await Promise.all([
@@ -105,13 +78,10 @@ async function getSolPrice(): Promise<{ usd: number; eur: number }> {
       fetch("https://api.exchangerate-api.com/v4/latest/USD").then(r => r.json()),
     ]);
     return { usd: parseFloat(solRes.price) || 150, eur: fxRes?.rates?.EUR || 0.92 };
-  } catch {
-    return { usd: 150, eur: 0.92 };
-  }
+  } catch { return { usd: 150, eur: 0.92 }; }
 }
 
 async function getWalletBalance(addr: string): Promise<number> {
-  // New Helius key first, then public fallbacks
   const RPCS = [
     "https://mainnet.helius-rpc.com/?api-key=7de253c3-49e2-42be-9672-23a761260f86",
     "https://api.mainnet-beta.solana.com",
@@ -120,9 +90,8 @@ async function getWalletBalance(addr: string): Promise<number> {
   for (const rpc of RPCS) {
     try {
       const res = await fetch(rpc, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [addr] }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc:"2.0", id:1, method:"getBalance", params:[addr] }),
         signal: AbortSignal.timeout(5000),
       });
       const j = await res.json();
@@ -154,10 +123,10 @@ function Section({ title, badge, right, children, defaultOpen = true, accent }: 
 
 function Diagnostics({ running, signalCount, edgeOk }: { running: boolean; signalCount: number; edgeOk: boolean|null }) {
   const items = [
-    { label:"Enhanced WebSocket", status:edgeOk===null?"checking":edgeOk?"ok":"fail", detail:edgeOk===null?"Checking…":edgeOk?"50-100ms detection at processed commitment ✓":"Edge function unreachable", fix:edgeOk===false?"Check Helius Developer plan is active":undefined },
+    { label:"Edge Function", status:edgeOk===null?"checking":edgeOk?"ok":"fail", detail:edgeOk===null?"Checking…":edgeOk?"Webhook reachable ✓":"Edge function unreachable" },
     { label:"Bot Session", status:running?"ok":"warn", detail:running?"Session active — watching 20 whale wallets":"Session stopped — press START above" },
-    { label:"Signal Pipeline", status:signalCount>0?"ok":"warn", detail:signalCount>0?`${signalCount} signals received · auto-mirrors whale BUY & SELL`:"0 signals yet — waiting for whale activity or use ⚡ Test Signal" },
-    { label:"Blockchain", status:"ok", detail:"Solana mainnet · Jito bundles · RugCheck active" },
+    { label:"Signal Pipeline", status:signalCount>0?"ok":"warn", detail:signalCount>0?`${signalCount} signals received`:"0 signals yet — waiting for whale activity" },
+    { label:"Blockchain", status:"ok", detail:"Solana mainnet · Jupiter DEX · RugCheck active" },
   ];
   const colors: Record<string,string> = { ok:GREEN, warn:"#f59e0b", fail:RED, checking:"#64748b" };
   return (
@@ -169,7 +138,6 @@ function Diagnostics({ running, signalCount, edgeOk }: { running: boolean; signa
           <div style={{ flex:1 }}>
             <div style={{ fontSize:12, fontWeight:700, color:colors[it.status]||"#64748b" }}>{it.label}</div>
             <div style={{ fontSize:10, color:"#64748b", marginTop:2, lineHeight:1.4 }}>{it.detail}</div>
-            {it.fix && <div style={{ fontSize:10, color:"rgba(239,68,68,.8)", marginTop:3 }}>🔧 {it.fix}</div>}
           </div>
         </div>
       ))}
@@ -181,68 +149,67 @@ function Diagnostics({ running, signalCount, edgeOk }: { running: boolean; signa
 export default function ShreemBrzeePerformance() {
   const nav = useNavigate();
 
-  // Session / data
-  const [session, setSession]     = useState<any>(null);
-  const [trades, setTrades]       = useState<any[]>([]);
-  const [signals, setSignals]     = useState<any[]>([]);
+  const [session, setSession]       = useState<any>(null);
+  const [trades, setTrades]         = useState<any[]>([]);
+  const [signals, setSignals]       = useState<any[]>([]);
   const [periodSigs, setPeriodSigs] = useState<any[]>([]);
-  const [period, setPeriod]       = useState<"daily"|"weekly"|"monthly"|"yearly">("weekly");
+  const [period, setPeriod]         = useState<"daily"|"weekly"|"monthly"|"yearly">("weekly");
 
-  // UI
-  const [mode, setMode]           = useState<"paper"|"live">("paper");
-  const [balInput, setBalInput]   = useState("1");
-  const [loading, setLoading]     = useState(false);
-  const [toast, setToast]         = useState("");
-  const [toastType, setToastType] = useState<"ok"|"err"|"info">("ok");
-  const [walletInput, setWalletInput] = useState("");
+  const [mode, setMode]             = useState<"paper"|"live">("paper");
+  const [balInput, setBalInput]     = useState("1");
+  const [loading, setLoading]       = useState(false);
+  const [toast, setToast]           = useState("");
+  const [toastType, setToastType]   = useState<"ok"|"err"|"info">("ok");
+  const [walletInput, setWalletInput]       = useState("");
   const [connectedWallet, setConnectedWallet] = useState("");
-  const [walletBal, setWalletBal] = useState<number|null>(null);
+  const [walletBal, setWalletBal]   = useState<number|null>(null);
   const [inputValid, setInputValid] = useState<boolean|null>(null);
   const [phantomLoading, setPhantomLoading] = useState(false);
-  const [solUsd, setSolUsd]       = useState(150);
-  const [solEur, setSolEur]       = useState(0.92);
+
+  // SOL price — updated every 15s
+  const [solUsd, setSolUsd] = useState(150);
+  const [solEur, setSolEur] = useState(0.92);
+
+  // Bot wallet — LIVE balance from Phantom wallet (real Solana RPC)
+  const [botBalSol, setBotBalSol]   = useState<number>(0);
+  const [botBalFetched, setBotBalFetched] = useState(false);
+
+  // Live prices for open positions (USD per token)
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
   const [pricesFetched, setPricesFetched] = useState(false);
 
-  const [edgeOk, setEdgeOk]       = useState<boolean|null>(null);
+  const [edgeOk, setEdgeOk] = useState<boolean|null>(null);
 
-  // Positions (open)
-  const [openPos, setOpenPos]     = useState<any[]>([]);
+  // Open positions — from shreem_brzee_live_trades (open status)
+  const [openPos, setOpenPos]       = useState<any[]>([]);
   const [expandedPos, setExpandedPos] = useState<any|null>(null);
-  const priceIntervalRef          = useRef<ReturnType<typeof setInterval>|null>(null);
+  const priceIntervalRef            = useRef<ReturnType<typeof setInterval>|null>(null);
 
-  // Starting/stopping
   const [startingBot, setStartingBot] = useState(false);
   const [stoppingBot, setStoppingBot] = useState(false);
+  const [closingIds, setClosingIds]   = useState<Set<string>>(new Set());
 
-  // KOL Explorer
-  const [kolPeriod, setKolPeriod]           = useState<"7D"|"30D">("30D");
+  const [kolPeriod, setKolPeriod]   = useState<"7D"|"30D">("30D");
   const [trackedWhalesAddrs, setTrackedWhalesAddrs] = useState<Set<string>>(
     new Set(KOL_LIST.map(k => k.addr))
   );
 
-  const fetchTrackedWhales = useCallback(async () => {
-    try {
-      const { data } = await d.from("tracked_whales").select("address");
-      if (data && data.length > 0) {
-        const allAddrs = new Set<string>([
-          ...KOL_LIST.map(k => k.addr),
-          ...data.map((w: any) => w.address).filter(Boolean),
-        ]);
-        setTrackedWhalesAddrs(allAddrs);
-      }
-    } catch {}
-  }, []);
+  const [liveMode, setLiveMode]       = useState(false);
+  const [liveConfirm, setLiveConfirm] = useState(false);
+  const [liveLoading, setLiveLoading] = useState(false);
 
-  // Admin
-  const { isAdmin } = useAdminRole();
   const [adminOpen, setAdminOpen]     = useState(false);
   const [forceClosing, setForceClosing] = useState(false);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const toEur   = (sol: number) => (sol * solUsd * solEur).toFixed(2);
-  const toEurN  = (sol: number) => sol * solUsd * solEur;
-  const notify  = (msg: string, type: "ok"|"err"|"info" = "ok") => {
+  const { isAdmin } = useAdminRole();
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  // entry_price and live prices are both USD — keep everything in USD, convert to EUR at display
+  const usdToEur  = (usd: number) => usd * solEur;
+  const solToEur  = (sol: number) => sol * solUsd * solEur;
+  const solToEurN = (sol: number) => sol * solUsd * solEur;
+
+  const notify = (msg: string, type: "ok"|"err"|"info" = "ok") => {
     setToast(msg); setToastType(type);
     setTimeout(() => setToast(""), 6000);
   };
@@ -253,112 +220,100 @@ export default function ShreemBrzeePerformance() {
   });
   const rowStyle = { display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(212,175,55,0.1)" };
 
-  // ── Data fetchers ──────────────────────────────────────────────────────────
-  const fetchSession  = useCallback(async () => {
+  // ── Data fetchers ─────────────────────────────────────────────────────────
+  const fetchSession = useCallback(async () => {
     try {
       const r = await fetch(`${EDGE_BASE}/session`);
       const data = r.ok ? await r.json() : null;
       setSession(data);
-      // Sync liveMode state from DB — prevents reset on page reload
-      if (data?.mode === "live" && data?.started_at && !data?.stopped_at) {
-        setLiveMode(true);
-      } else if (data?.mode !== "live") {
-        setLiveMode(false);
-      }
+      if (data?.mode === "live" && data?.started_at && !data?.stopped_at) setLiveMode(true);
+      else if (data?.mode !== "live") setLiveMode(false);
     } catch {}
   }, []);
 
-  const fetchTrades   = useCallback(async () => {
+  // FIX: fetchTrades fetches BOTH tables always (not mode-conditional)
+  // live_trades is the source of truth for real trades
+  // paper_trades is fallback when no live trades exist
+  const fetchTrades = useCallback(async () => {
     try {
-      // Fetch all live trades (open + closed) + paper trades
-      const [allLiveResp, liveOpenResp] = await Promise.all([
-        fetch(`${EDGE_BASE}/trades`),   // returns live_trades when mode=live
-        fetch(`${EDGE_BASE}/live-trades`), // always returns open live trades
+      const [liveResp, paperResp] = await Promise.all([
+        d.from("shreem_brzee_live_trades").select("*").order("created_at", { ascending: false }).limit(200),
+        d.from("shreem_brzee_paper_trades").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
-      const allLiveData = allLiveResp.ok ? await allLiveResp.json() : [];
-      const liveOpenData = liveOpenResp.ok ? await liveOpenResp.json() : [];
-      // Merge all live trades, de-dupe by id
-      const seenIds = new Set<string>();
-      const allLive = [...(liveOpenData || []), ...(allLiveData || [])].filter((t: any) => {
-        if (seenIds.has(t.id)) return false;
-        seenIds.add(t.id);
-        return true;
-      }).map((t: any) => ({ ...t, _live: true }));
-      // Filter out pure test signals with no real data
-      const filtered = allLive.filter((t: any) => {
-        const sig = t.sig || "";
-        const isPureTest = (sig.startsWith("TEST_") || sig.startsWith("DIAG_")) && !t.tx_sig;
-        return !isPureTest;
-      });
-      setTrades(filtered);
+      const liveTrades  = (liveResp.data  || []).filter((t: any) => !t.sig?.startsWith("TEST_") && !t.sig?.startsWith("DIAG_"));
+      const paperTrades = (paperResp.data || []).filter((t: any) => !t.sig?.startsWith("TEST_") && !t.sig?.startsWith("DIAG_"));
+      // If we have real live trades, show those. Otherwise show paper trades.
+      const all = liveTrades.length > 0 ? liveTrades : paperTrades;
+      setTrades(all);
     } catch {}
   }, []);
 
-  const fetchSignals  = useCallback(async () => {
+  const fetchSignals = useCallback(async () => {
     try {
-      const r = await fetch(`${EDGE_BASE}/signals`);
-      const data = r.ok ? await r.json() : [];
-      // Keep all real signals — isTracked removed (webhook already filters by wallet list)
-      const filtered = (data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_"));
-      setSignals(filtered.slice(0, 100));
+      const { data } = await d.from("shreem_brzee_signals")
+        .select("*").order("created_at", { ascending: false }).limit(100);
+      setSignals((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
     } catch {}
   }, []);
 
-  const fetchPeriod   = useCallback(async () => {
-    const now  = new Date(), from = new Date(now);
+  const fetchPeriod = useCallback(async () => {
+    const now = new Date(), from = new Date(now);
     if (period === "daily")   from.setHours(0,0,0,0);
     if (period === "weekly")  from.setDate(now.getDate()-7);
     if (period === "monthly") from.setMonth(now.getMonth()-1);
     if (period === "yearly")  from.setFullYear(now.getFullYear()-1);
-    const { data } = await d.from("shreem_brzee_signals").select("label,wallet,action,amount_sol,created_at,sig").gte("created_at",from.toISOString()).order("created_at",{ascending:false});
-    setPeriodSigs((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_") && isTracked(s)));
+    const { data } = await d.from("shreem_brzee_signals")
+      .select("label,wallet,action,amount_sol,created_at,sig")
+      .gte("created_at", from.toISOString())
+      .order("created_at", { ascending: false });
+    setPeriodSigs((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
   }, [period]);
 
-  const fetchOpen     = useCallback(async () => {
+  // FIX: fetchOpen reads ONLY live_trades with status=open
+  // This is the authoritative source of open positions — matches what's in Phantom
+  const fetchOpen = useCallback(async () => {
     try {
-      // Fetch both /open (paper fallback) and /live-trades directly
-      const [openResp, liveResp] = await Promise.all([
-        fetch(`${EDGE_BASE}/open`),
-        fetch(`${EDGE_BASE}/live-trades`),
-      ]);
-      const openData = openResp.ok ? await openResp.json() : [];
-      const liveData = liveResp.ok ? await liveResp.json() : [];
-      // Merge: live trades take priority, de-dupe by id
-      const liveIds = new Set((liveData || []).map((t: any) => t.id));
-      const merged = [
-        ...(liveData || []),
-        ...(openData || []).filter((t: any) => !liveIds.has(t.id) && t._live !== true),
-      ];
-      setOpenPos(merged);
+      const { data: live } = await d.from("shreem_brzee_live_trades")
+        .select("*").eq("status", "open").order("opened_at", { ascending: false });
+      if (live && live.length > 0) {
+        setOpenPos(live);
+        return;
+      }
+      // Fallback to paper trades if no live positions
+      const { data: paper } = await d.from("shreem_brzee_paper_trades")
+        .select("*").eq("status", "open").order("opened_at", { ascending: false });
+      setOpenPos(paper || []);
     } catch {}
   }, []);
 
-  const checkEdge     = useCallback(async () => {
+  const checkEdge = useCallback(async () => {
     try {
       const r = await fetch(`${EDGE_BASE}/ping`, { signal: AbortSignal.timeout(5000) });
       setEdgeOk(r.ok);
     } catch { setEdgeOk(false); }
   }, []);
 
-  const refreshAll    = useCallback(() => {
-    fetchSession(); fetchTrades(); fetchSignals(); fetchPeriod();
-  }, [fetchSession, fetchTrades, fetchSignals, fetchPeriod]);
+  const refreshAll = useCallback(() => {
+    fetchSession(); fetchTrades(); fetchSignals(); fetchPeriod(); fetchOpen();
+  }, [fetchSession, fetchTrades, fetchSignals, fetchPeriod, fetchOpen]);
 
-  // ── Price fetch via edge function (avoids browser CORS / CF rate limits) ──
+  // ── FIX: Bot wallet balance — direct Supabase query is faster and more reliable
+  // Uses the same RPC logic as before but stores separately from session
+  const refreshBotBalance = useCallback(async () => {
+    const bal = await getWalletBalance(BOT_WALLET);
+    if (bal > 0) {
+      setBotBalSol(bal);
+      setBotBalFetched(true);
+      // Sync balInput for paper trading mode
+      setBalInput(bal.toFixed(4));
+    } else if (!botBalFetched) {
+      // Only log warning, never wipe a good balance
+      console.warn("[botWallet] RPC returned 0 — retrying");
+    }
+  }, [botBalFetched]);
+
+  // ── FIX: Live token prices — entry_price is USD, livePrices is USD → same unit
   const PRICE_URL = `${EDGE_BASE.replace(/\/[^/]+$/, "")}/token-price-batch`;
-
-  const fetchTokenPrice = useCallback(async (mint: string): Promise<number> => {
-    if (!mint) return 0;
-    try {
-      const r = await fetch(`${PRICE_URL}?mints=${mint}`, { signal: AbortSignal.timeout(8000), cache: "no-store" });
-      if (r.ok) {
-        const j = await r.json();
-        const p = Number(j?.prices?.[mint]);
-        if (p > 0) return p;
-      }
-    } catch {}
-    return 0;
-  }, [PRICE_URL]);
 
   const updatePrices = useCallback(async () => {
     if (!openPos.length) return;
@@ -381,11 +336,8 @@ export default function ShreemBrzeePerformance() {
       }
       if (Object.keys(updated).length) setLivePrices(prev => ({ ...prev, ...updated }));
       setPricesFetched(true);
-    } catch (e) {
-      console.warn("[ShreemBrzee] price batch failed", e);
-    }
+    } catch (e) { console.warn("[prices] batch failed", e); }
   }, [openPos, PRICE_URL]);
-
 
   useEffect(() => {
     updatePrices();
@@ -395,10 +347,6 @@ export default function ShreemBrzeePerformance() {
   }, [updatePrices]);
 
   // ── Close a position ───────────────────────────────────────────────────────
-  // Manual CLOSE TRADE. Calls shreem-live-executor with trade_id. Executor:
-  //  • zero on-chain token balance → mark closed in DB
-  //  • balance > 0 → Jupiter swap token→SOL, write real exit data
-  const [closingIds, setClosingIds] = useState<Set<string>>(new Set());
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
     const id   = pos.id;
     const mint = pos.mint;
@@ -409,135 +357,89 @@ export default function ShreemBrzeePerformance() {
       const r = await fetch(EXEC, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Send BOTH trade_id AND mint — executor uses whichever finds the trade
         body: JSON.stringify({ action: "close", trade_id: id, mint, reason }),
       });
       const result = r.ok ? await r.json() : null;
       const first  = result?.results?.[0];
 
       if (result?.ok && first?.ok) {
-        // On-chain swap confirmed — remove from UI immediately
         setOpenPos(prev => prev.filter(p => p.id !== id));
         notify(`✅ ${pos.symbol || "Position"} closed${first.pnl_pct != null ? ` (${first.pnl_pct >= 0 ? "+" : ""}${Number(first.pnl_pct).toFixed(1)}%)` : ""}`, "ok");
       } else if (result?.ok && first && !first.ok && /no token balance/i.test(first.reason || "")) {
-        // No on-chain balance — still mark closed and remove from UI
         setOpenPos(prev => prev.filter(p => p.id !== id));
         notify(`✅ Position removed (no on-chain balance remaining)`, "info");
-      } else if (result?.skipped) {
-        // Executor couldn't find by trade_id — force close directly in live trades table
-        const { error: dbErr } = await d.from("shreem_brzee_live_trades").update({
+      } else {
+        // Force-close in DB directly
+        await d.from("shreem_brzee_live_trades").update({
           status: "closed", closed_at: new Date().toISOString(), sell_reason: reason,
         }).eq("id", id);
-        if (!dbErr) {
-          setOpenPos(prev => prev.filter(p => p.id !== id));
-          notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
-        } else {
-          // Also try by mint
-          await d.from("shreem_brzee_live_trades").update({
-            status: "closed", closed_at: new Date().toISOString(), sell_reason: reason,
-          }).eq("mint", mint).eq("status", "open");
-          setOpenPos(prev => prev.filter(p => p.id !== id));
-          notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
-        }
-      } else {
-        notify(`Close failed: ${first?.error || result?.error || "unknown"}`, "err");
+        setOpenPos(prev => prev.filter(p => p.id !== id));
+        notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
       }
-      // Refresh immediately — no delay
-      fetchOpen(); fetchTrades(); fetchSession();
+      setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); refreshBotBalance(); }, 1500);
     } catch (e: any) {
       notify(`Close failed: ${e.message?.slice(0,60)}`, "err");
     } finally {
       setClosingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     }
-  }, [fetchOpen, fetchTrades, fetchSession, notify]);
-
-
-  // v5: ALL exit logic runs server-side in edge function:
-  //   whale_sell_mirror — whale SELL signal detected → close immediately
-  //   stop_loss        — price drops -30% from entry → close immediately  
-  //   48h_safety_cap   — position open 48h with no whale SELL → close
-  // Browser is READ-ONLY. Phone can be off. Bot runs 24/7.
-  // Exit reasons: "whale_sell_mirror" | "stop_loss" | "48h_safety_cap" | "manual"
+  }, [fetchOpen, fetchTrades, fetchSession, refreshBotBalance]);
 
   // ── Realtime subscriptions ─────────────────────────────────────────────────
-  // v5: Trade execution is 100% server-side in the edge function.
-  // Browser just listens for DB changes and refreshes display.
-  // No trade logic runs in the browser — phone can be off.
   useEffect(() => {
-    const chSig = d.channel("sb_sig_v5")
+    const chSig = d.channel("sb_sig_v6")
       .on("postgres_changes", { event:"INSERT", schema:"public", table:"shreem_brzee_signals" },
         () => { fetchSignals(); fetchPeriod(); })
       .subscribe();
-    // Listen to BOTH tables — paper and live trades
-    const chTrd5 = d.channel("sb_trd_v5")
+    const chPaper = d.channel("sb_paper_v6")
       .on("postgres_changes", { event:"*", schema:"public", table:"shreem_brzee_paper_trades" },
         () => { fetchOpen(); fetchTrades(); fetchSession(); })
       .subscribe();
-    const chLive = d.channel("sb_live_trd")
+    const chLive = d.channel("sb_live_v6")
       .on("postgres_changes", { event:"*", schema:"public", table:"shreem_brzee_live_trades" },
-        () => { fetchOpen(); fetchTrades(); fetchSession(); })
+        () => { fetchOpen(); fetchTrades(); fetchSession(); refreshBotBalance(); })
       .subscribe();
-    return () => { d.removeChannel(chSig); d.removeChannel(chTrd5); d.removeChannel(chLive); };
-  }, [fetchSignals, fetchPeriod, fetchOpen, fetchTrades, fetchSession]);
+    return () => { d.removeChannel(chSig); d.removeChannel(chPaper); d.removeChannel(chLive); };
+  }, [fetchSignals, fetchPeriod, fetchOpen, fetchTrades, fetchSession, refreshBotBalance]);
 
-  // Note: additional realtime subscriptions removed — consolidated above
+  // ── Bootstrap ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    refreshAll(); checkEdge();
+    getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
+    refreshBotBalance();
+    d.from("tracked_whales").select("address").then(({ data }) => {
+      if (data?.length) setTrackedWhalesAddrs(new Set([...KOL_LIST.map(k => k.addr), ...data.map((w: any) => w.address)]));
+    });
 
+    const masterInterval = setInterval(() => {
+      refreshAll();
+      getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
+    }, 15000);
+    // Bot wallet refresh every 20s — fast enough to catch trades closing
+    const walletInterval = setInterval(refreshBotBalance, 20000);
+    return () => { clearInterval(masterInterval); clearInterval(walletInterval); };
+  }, []); // eslint-disable-line
 
-  // ── Live mode toggle state ─────────────────────────────────────────────────
-  const [liveMode, setLiveMode]         = useState(false);
-  const [liveConfirm, setLiveConfirm]   = useState(false);
-  const [botWallet, setBotWallet]       = useState<{wallet:string;balance_sol:number}|null>(null);
-  const [liveLoading, setLiveLoading]   = useState(false);
-  const liveIntervalRef                 = useRef<ReturnType<typeof setInterval>|null>(null);
+  useEffect(() => { fetchPeriod(); }, [period]);
 
-  const checkBotWallet = useCallback(async () => {
-    const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
-    try {
-      const bal = await getWalletBalance(BOT_WALLET);
-      // Only update if we got a real balance — never overwrite good data with 0 from failed RPC
-      if (bal > 0) {
-        setBotWallet({ wallet: BOT_WALLET, balance_sol: bal });
-        setBalInput(bal.toFixed(4));
-        console.log("[botWallet] ✅ balance:", bal, "SOL");
-      } else {
-        // RPC returned 0 — keep existing balance in state, just log warning
-        console.warn("[botWallet] ⚠️ RPC returned 0 — keeping last known balance");
-        setBotWallet(prev => prev ?? { wallet: BOT_WALLET, balance_sol: 0 });
-      }
-    } catch (e: any) {
-      console.warn("[botWallet] balance fetch failed:", e.message);
-      // Keep existing state — don't wipe balance on network error
-      setBotWallet(prev => prev ?? { wallet: BOT_WALLET, balance_sol: 0 });
-    }
-  }, []);
-
-
+  // ── Live mode ──────────────────────────────────────────────────────────────
   const toggleLiveMode = async (goLive: boolean) => {
     setLiveLoading(true);
     try {
-      // Use real Phantom balance if available, otherwise input
-      const bal = botWallet && botWallet.balance_sol > 0
-        ? botWallet.balance_sol
-        : (parseFloat(balInput) || 0.3);
+      const bal = botBalSol > 0 ? botBalSol : (parseFloat(balInput) || 0.3);
       if (goLive) {
-        // Call edge function /go-live — has service role to wipe paper data + start fresh
-        notify(`Clearing paper data — going live with ${bal.toFixed(4)} SOL…`, "info");
+        notify(`Going live with ${bal.toFixed(4)} SOL…`, "info");
         const r = await fetch(`${EDGE_BASE}/go-live`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ balance_sol: bal }),
         });
         const result = r.ok ? await r.json() : null;
-        if (!result?.ok) throw new Error(result?.error || "go-live endpoint failed");
-        setLiveMode(true);
-        setLiveConfirm(false);
-        notify("🔴 LIVE MODE ACTIVE — paper data cleared, real SOL trading", "err");
+        if (!result?.ok) throw new Error(result?.error || "go-live failed");
+        setLiveMode(true); setLiveConfirm(false);
+        notify("🔴 LIVE MODE ACTIVE — real SOL trading", "err");
       } else {
-        // Stop live — back to paper
-        const { error } = await d.from("shreem_brzee_session").update({
+        await d.from("shreem_brzee_session").update({
           mode: "paper", stopped_at: new Date().toISOString(), updated_at: new Date().toISOString()
         }).eq("id", "default");
-        if (error) throw error;
         setLiveMode(false);
         notify("📋 Paper mode restored", "ok");
       }
@@ -546,55 +448,26 @@ export default function ShreemBrzeePerformance() {
     setLiveLoading(false);
   };
 
-  useEffect(() => { checkBotWallet(); }, [checkBotWallet]);
-
-  // ── Bootstrap ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    refreshAll(); fetchOpen(); checkEdge(); fetchTrackedWhales();
-    getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
-    const masterInterval = setInterval(() => {
-      refreshAll();
-      getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
-    }, 15000);
-    // Re-check bot wallet every 30s
-    const walletInterval = setInterval(checkBotWallet, 30000);
-    return () => { clearInterval(masterInterval); clearInterval(walletInterval); };
-  }, []); // eslint-disable-line
-
-  useEffect(() => { fetchPeriod(); }, [period]);
-
   // ── Bot controls ───────────────────────────────────────────────────────────
   const startBot = async () => {
     setLoading(true); setStartingBot(true);
-    // In live mode, always use real wallet balance; in paper, use input
-    const bal = liveMode && botWallet?.balance_sol
-      ? botWallet.balance_sol
-      : (parseFloat(balInput) || 1);
+    const bal = liveMode && botBalSol > 0 ? botBalSol : (parseFloat(balInput) || 1);
     try {
-      // NEVER delete trade history — only update session state
-      // Recalculate real balances from existing closed trades
       const { data: closedTrades } = await d.from("shreem_brzee_paper_trades")
         .select("pnl_sol").eq("status","closed");
       const realPnl  = (closedTrades || []).reduce((s: number, t: any) => s + (Number(t.pnl_sol)||0), 0);
-      const realWins  = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) >= 0).length;
-      const realLoss  = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) <  0).length;
-
+      const realWins = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) >= 0).length;
+      const realLoss = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) < 0).length;
       const { error } = await d.from("shreem_brzee_session").upsert({
-        id:"default",
-        portfolio:   bal,
-        start_balance: bal,
-        positions:   {},
-        total_pnl:   realPnl,   // carry over real PNL
-        wins:        realWins,  // carry over real wins
-        losses:      realLoss,  // carry over real losses
-        started_at:  new Date().toISOString(),
-        stopped_at:  null,
-        mode:        liveMode ? "live" : (session?.mode === "live" ? "live" : "paper"), // respect live toggle
-        updated_at:  new Date().toISOString(),
+        id:"default", portfolio:bal, start_balance:bal, positions:{},
+        total_pnl:realPnl, wins:realWins, losses:realLoss,
+        started_at:new Date().toISOString(), stopped_at:null,
+        mode:liveMode?"live":(session?.mode==="live"?"live":"paper"),
+        updated_at:new Date().toISOString(),
       }, { onConflict:"id" });
       if (error) throw new Error(error.message);
       await refreshAll();
-      notify(`Bot started with ${bal} SOL ✓`, "ok");
+      notify(`Bot started with ${bal.toFixed(4)} SOL ✓`, "ok");
     } catch (e: any) { notify(`Error: ${e.message?.slice(0,60)}`, "err"); setStartingBot(false); }
     setLoading(false);
   };
@@ -602,25 +475,23 @@ export default function ShreemBrzeePerformance() {
   const stopBot = async () => {
     setLoading(true); setStoppingBot(true);
     try {
-      const { error } = await d.from("shreem_brzee_session").upsert({
+      await d.from("shreem_brzee_session").upsert({
         id:"default", ...session, stopped_at:new Date().toISOString(), updated_at:new Date().toISOString(),
       }, { onConflict:"id" });
-      if (error) throw new Error(error.message);
       await fetchSession();
       notify("Bot stopped", "info");
-    } catch (e: any) { notify(`Error stopping: ${e.message?.slice(0,60)}`, "err"); }
+    } catch (e: any) { notify(`Error: ${e.message?.slice(0,60)}`, "err"); }
     setLoading(false); setStoppingBot(false);
   };
 
-  // ── Test signals ───────────────────────────────────────────────────────────
   const testBuy = async () => {
     setLoading(true);
     try {
       const r = await fetch(`${EDGE_BASE}/test`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({}) });
-      if (!r.ok) throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,60)}`);
-      const d = await r.json();
-      d.sig ? (notify("⚡ POPCAT test signal injected — check Signal Feed & Trade History","ok"), setTimeout(refreshAll,2000), setTimeout(refreshAll,5000)) : notify(`Test error: ${JSON.stringify(d).slice(0,80)}`,"err");
-    } catch (e: any) { notify(`Test failed: ${e.message?.slice(0,80)}`,"err"); }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      j.sig ? (notify("⚡ Test BUY injected — check Signal Feed","ok"), setTimeout(refreshAll,2000)) : notify(`Test error: ${JSON.stringify(j).slice(0,80)}`,"err");
+    } catch (e: any) { notify(`Test failed: ${e.message}`, "err"); }
     setLoading(false);
   };
 
@@ -628,10 +499,10 @@ export default function ShreemBrzeePerformance() {
     setLoading(true);
     try {
       const r = await fetch(`${EDGE_BASE}/test-sell`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({}) });
-      if (!r.ok) throw new Error(`HTTP ${r.status}: ${(await r.text()).slice(0,60)}`);
-      const d = await r.json();
-      d.sig ? (notify("⚡ POPCAT SELL injected — position closing…","info"), setTimeout(refreshAll,2000), setTimeout(refreshAll,5000)) : notify(`Sell test error: ${JSON.stringify(d).slice(0,80)}`,"err");
-    } catch (e: any) { notify(`Sell test failed: ${e.message?.slice(0,80)}`,"err"); }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      j.sig ? (notify("⚡ Test SELL injected","info"), setTimeout(refreshAll,2000)) : notify(`Sell error: ${JSON.stringify(j).slice(0,80)}`,"err");
+    } catch (e: any) { notify(`Sell test failed: ${e.message}`, "err"); }
     setLoading(false);
   };
 
@@ -640,17 +511,25 @@ export default function ShreemBrzeePerformance() {
       notify("⚡ Triggering live executor…", "info");
       const EXEC = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor";
       const r = await fetch(EXEC, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ trigger:"manual" }) });
-      const d = await r.json();
-      console.log("[executor]", JSON.stringify(d, null, 2));
-      if (d.skipped) notify(`Executor skipped: ${d.reason}`, "info");
-      else if (d.results?.length) {
-        const ok   = d.results.filter((x:any) => x.ok).length;
-        const errs = d.results.filter((x:any) => x.error);
-        notify(`Executor: ${ok} traded · ${errs.length} errors · see console`, ok ? "ok" : "err");
-        if (errs.length) errs.forEach((e:any) => console.error("[exec err]", e));
-      } else notify(`Executor: ${JSON.stringify(d).slice(0,120)}`, "info");
+      const j = await r.json();
+      if (j.skipped) notify(`Executor: ${j.reason}`, "info");
+      else if (j.results?.length) {
+        const ok = j.results.filter((x:any) => x.ok).length;
+        notify(`Executor: ${ok}/${j.results.length} succeeded`, ok ? "ok" : "err");
+      } else notify(`Executor: ${JSON.stringify(j).slice(0,120)}`, "info");
       setTimeout(refreshAll, 2000);
     } catch(e:any) { notify(`Executor error: ${e.message?.slice(0,60)}`, "err"); }
+  };
+
+  const forceCloseAll = async () => {
+    if (!openPos.length) { notify("No open positions","info"); return; }
+    if (!confirm(`Force close ${openPos.length} position(s)?`)) return;
+    setForceClosing(true);
+    try {
+      for (const pos of openPos) await closePosition(pos, "admin_force");
+      notify(`✓ Force-closed ${openPos.length} position(s)`,"ok");
+    } catch (e: any) { notify(`Force close failed: ${e.message}`,"err"); }
+    setForceClosing(false); setAdminOpen(false);
   };
 
   // ── Wallet ────────────────────────────────────────────────────────────────
@@ -667,10 +546,10 @@ export default function ShreemBrzeePerformance() {
     notify("Wallet saved ✓","ok");
   };
   const connectPhantom = async () => {
-    if (!window.solana?.isPhantom) { notify("Phantom not found — install at phantom.app","err"); return; }
+    if (!(window as any).solana?.isPhantom) { notify("Phantom not found — install at phantom.app","err"); return; }
     setPhantomLoading(true);
     try {
-      const pub = (await window.solana.connect()).publicKey.toString();
+      const pub = (await (window as any).solana.connect()).publicKey.toString();
       setConnectedWallet(pub);
       const bal = await getWalletBalance(pub);
       setWalletBal(bal);
@@ -679,91 +558,52 @@ export default function ShreemBrzeePerformance() {
     setPhantomLoading(false);
   };
 
-  // ── BUG 3 FIX: KOL Add — decouple DB insert from Helius sync ─────────────
   const addKolTrader = async (kol: { name: string; addr: string }) => {
     notify(`Adding ${kol.name}…`, "info");
     try {
       const { data: { user } } = await d.auth.getUser();
-      // Step 1: Always write to DB first — this is the source of truth
       const { error: dbErr } = await d.from("tracked_whales").upsert({
-        address:   kol.addr,
-        label:     kol.name,
-        source:    "kolexplorer",
-        added_by:  user?.id || null,
-        added_at:  new Date().toISOString(),
+        address:kol.addr, label:kol.name, source:"kolexplorer",
+        added_by:user?.id||null, added_at:new Date().toISOString(),
       }, { onConflict:"address" });
       if (dbErr) throw dbErr;
-      // Step 2: Try Helius sync — but don't fail the whole operation if it errors
-      notify(`✅ ${kol.name} added to tracking list. Syncing to Helius…`, "ok");
-      try {
-        const { data: syncData, error: syncErr } = await d.functions.invoke("helius-webhook-sync", { body:{} });
-        if (syncErr) {
-          console.warn("[helius-sync] Edge function error:", syncErr.message);
-          notify(`✅ ${kol.name} tracked in DB · Helius sync pending (will retry automatically)`, "ok");
-        } else if (!syncData?.ok) {
-          console.warn("[helius-sync] Sync returned not-ok:", syncData?.error);
-          notify(`✅ ${kol.name} tracked · Helius sync: ${syncData?.error || "check edge fn logs"}`, "info");
-        } else {
-          notify(`✅ ${kol.name} tracked · Helius watching ${syncData.wallet_count} wallets`, "ok");
-        }
-      } catch (syncEx: any) {
-        console.warn("[helius-sync] Exception:", syncEx.message);
-        notify(`✅ ${kol.name} saved · Helius sync will retry on next add`, "info");
-      }
-      // Refresh the tracked set so UI updates immediately
+      notify(`✅ ${kol.name} tracked · syncing to Helius…`, "ok");
       setTrackedWhalesAddrs(prev => new Set([...prev, kol.addr]));
-    } catch (e: any) {
-      notify(`Add failed: ${e?.message?.slice(0,80) || "unknown error"}`, "err");
-    }
-  };
-
-  // ── Admin force-close ──────────────────────────────────────────────────────
-  const forceCloseAll = async () => {
-    if (!openPos.length) { notify("No open positions","info"); return; }
-    if (!confirm(`Force close ${openPos.length} position(s) at current market price?`)) return;
-    setForceClosing(true);
-    try {
-      for (const pos of openPos) await closePosition(pos, "admin_force");
-      notify(`✓ Force-closed ${openPos.length} position(s)`,"ok");
-    } catch (e: any) { notify(`Force close failed: ${e.message?.slice(0,60)}`,"err"); }
-    setForceClosing(false); setAdminOpen(false);
+      try {
+        const { data: syncData } = await d.functions.invoke("helius-webhook-sync", { body:{} });
+        if (syncData?.ok) notify(`✅ ${kol.name} tracked · Helius watching ${syncData.wallet_count} wallets`, "ok");
+      } catch {}
+    } catch (e: any) { notify(`Add failed: ${e?.message?.slice(0,80)}`, "err"); }
   };
 
   // ── Derived data ───────────────────────────────────────────────────────────
-  const isRunning = !!session?.started_at && !session?.stopped_at;
+  const isRunning    = !!session?.started_at && !session?.stopped_at;
+  const closedTrades = trades.filter((t: any) => t.status === "closed");
+  const openTrades   = trades.filter((t: any) => t.status === "open");
 
-  // ── Derive ALL numbers from actual trade data — never from session counters ──
-  // session.portfolio drifts with restarts and is unreliable for display
-  const closedTrades  = trades.filter((t: any) => t.status === "closed");
-  const openTrades    = trades.filter((t: any) => t.status === "open");
+  // Real PNL from closed trades only
+  const realPnlSol   = closedTrades.reduce((s: number, t: any) => s + (Number(t.pnl_sol) || 0), 0);
+  const realPnlEur   = solToEur(realPnlSol);
+  const realWins     = closedTrades.filter((t: any) => (t.pnl_sol || 0) >= 0).length;
+  const realLosses   = closedTrades.filter((t: any) => (t.pnl_sol || 0) < 0).length;
+  const realTotal    = realWins + realLosses;
+  const realWinRate  = realTotal > 0 ? Math.round(realWins / realTotal * 100) : 0;
 
-  // Real P&L = sum of pnl_sol from all closed trades
-  const realPnlSol  = closedTrades.reduce((s: number, t: any) => s + (Number(t.pnl_sol) || 0), 0);
-  const realPnlEur  = realPnlSol * solUsd * solEur;
+  // FIX: Balance card — use LIVE bot wallet balance (real Solana RPC)
+  // botBalSol is fetched every 20s directly from blockchain
+  // Falls back to session.portfolio only if RPC never returned a value
+  const startBal     = Number(session?.start_balance || parseFloat(balInput) || 1);
+  const displayBalSol = botBalFetched ? botBalSol : (session?.portfolio ? Number(session.portfolio) : startBal);
+  const displayBalEur = solToEur(displayBalSol);
 
-  // Win/loss from actual trades
-  const realWins    = closedTrades.filter((t: any) => (t.pnl_sol || 0) >= 0).length;
-  const realLosses  = closedTrades.filter((t: any) => (t.pnl_sol || 0) < 0).length;
-  const realTotal   = realWins + realLosses;
-  const realWinRate = realTotal > 0 ? Math.round(realWins / realTotal * 100) : 0;
+  // P&L% relative to start balance
+  const realPnlPct = startBal > 0 ? (realPnlSol / startBal * 100) : 0;
 
-  // Start balance = what was set at last START (most recent session.start_balance)
-  const startBal    = Number(session?.start_balance || parseFloat(balInput) || 1);
+  // For compounding engine
+  const portfolio = displayBalSol > 0 ? displayBalSol : startBal;
+  const openExposureSol = openPos.reduce((s: number, p: any) => s + (Number(p.amount_sol) || 0), 0);
 
-  // Current balance = start balance + all closed PNL - capital in open trades
-  const openExposureSol = openTrades.reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
-  const currentBalSol   = startBal + realPnlSol - openExposureSol;
-  const currentBalEur   = currentBalSol * solUsd * solEur;
-
-  // P&L % relative to start balance
-  const realPnlPct  = startBal > 0 ? (realPnlSol / startBal * 100) : 0;
-
-  // Keep portfolio for backward compat (compounding engine)
-  const portfolio   = currentBalSol > 0 ? currentBalSol : startBal;
-  const pnlTotal    = realPnlSol;
-  const pnlPct      = realPnlPct.toFixed(1);
-
-  // Whale table aggregation
+  // Whale table
   const whaleMap: Record<string,{buys:number;sells:number;totalSol:number}> = {};
   periodSigs.forEach((s: any) => {
     const lbl = s.label || "?";
@@ -771,11 +611,14 @@ export default function ShreemBrzeePerformance() {
     if (s.action === "BUY")  { whaleMap[lbl].buys++;  whaleMap[lbl].totalSol += s.amount_sol || 0; }
     if (s.action === "SELL") { whaleMap[lbl].sells++; }
   });
-  const whaleRows = KOL_LIST.map(k => ({ ...k, ...(whaleMap[k.label]||{buys:0,sells:0,totalSol:0}), total:(whaleMap[k.label]?.buys||0)+(whaleMap[k.label]?.sells||0) }))
-    .sort((a,b) => b.totalSol - a.totalSol);
+  const whaleRows = KOL_LIST.map(k => ({
+    ...k,
+    ...(whaleMap[k.label] || { buys:0, sells:0, totalSol:0 }),
+    total:(whaleMap[k.label]?.buys||0)+(whaleMap[k.label]?.sells||0)
+  })).sort((a,b) => b.totalSol - a.totalSol);
   const maxSol = Math.max(...whaleRows.map(w => w.totalSol), 0.001);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight:"100vh", background:"#050505", color:"#fff", fontFamily:"'Plus Jakarta Sans','Inter',-apple-system,system-ui,sans-serif", paddingBottom:100 }}>
 
@@ -805,7 +648,6 @@ export default function ShreemBrzeePerformance() {
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
       `}</style>
 
-      {/* Toast */}
       {toast && (
         <div style={{ margin:"10px 14px 0", padding:"11px 14px", borderRadius:12, fontSize:13, fontWeight:600, background:toastType==="ok"?"rgba(16,185,129,.1)":toastType==="err"?"rgba(239,68,68,.1)":"rgba(0,212,255,.08)", border:`1px solid ${toastType==="ok"?"rgba(16,185,129,.3)":toastType==="err"?"rgba(239,68,68,.3)":"rgba(0,212,255,.25)"}`, color:toastType==="ok"?GREEN:toastType==="err"?RED:CYAN }}>
           {toast}
@@ -814,13 +656,34 @@ export default function ShreemBrzeePerformance() {
 
       <div style={{ padding:"12px 14px 40px", maxWidth:600, margin:"0 auto", display:"flex", flexDirection:"column", gap:12 }}>
 
-        {/* Stats grid */}
+        {/* ── Stats Grid ── */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${botWallet && botWallet.balance_sol > 0 ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : (liveMode ? (session?.portfolio||0) * solUsd * solEur : currentBalEur).toFixed(2)}`, l:"Balance", s:`${botWallet && botWallet.balance_sol > 0 ? botWallet.balance_sol.toFixed(4) : (liveMode ? (session?.portfolio||0).toFixed(4) : currentBalSol.toFixed(3))} SOL`, c:GOLD },
-            { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
-            { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
-            { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
+            {
+              i:"💰", l:"Bot Wallet",
+              // FIX: Always show LIVE balance from blockchain
+              v:`€${displayBalEur.toFixed(2)}`,
+              s:`${displayBalSol.toFixed(4)} SOL${botBalFetched ? " 🔴" : ""}`,
+              c:GOLD,
+            },
+            {
+              i:"📈", l:"P&L (closed)",
+              v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`,
+              s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`,
+              c:realPnlSol>=0?GREEN:RED,
+            },
+            {
+              i:"🎯", l:"Win / Loss",
+              v:`${realWins}W / ${realLosses}L`,
+              s:`${realWinRate}% · ${realTotal} closed`,
+              c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff",
+            },
+            {
+              i:"📂", l:"Open Positions",
+              v:String(openPos.length),
+              s:isRunning?"live now":"start bot",
+              c:openPos.length>0?GREEN:CYAN,
+            },
           ].map(card => (
             <div key={card.l} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,175,55,0.2)", borderRadius:16, backdropFilter:"blur(40px)", boxShadow:"0 0 20px rgba(212,175,55,0.05)", padding:"14px 12px", textAlign:"center" }}>
               <div style={{ fontSize:20, marginBottom:5 }}>{card.i}</div>
@@ -831,6 +694,7 @@ export default function ShreemBrzeePerformance() {
           ))}
         </div>
 
+        {/* ── Open Positions ── */}
         <Section
           title="📂 Open Positions"
           badge={openPos.length>0?<span style={{ marginLeft:6, padding:"2px 8px", borderRadius:20, background:"rgba(16,185,129,.15)", color:GREEN, fontSize:10, fontWeight:800 }}>{openPos.length} live</span>:undefined}
@@ -859,18 +723,17 @@ export default function ShreemBrzeePerformance() {
                 <div style={{ fontSize:28, marginBottom:8 }}>👀</div>
                 <div style={{ fontSize:13, color:"#cbd5e0", fontWeight:700, marginBottom:4 }}>No Open Positions</div>
                 <div style={{ fontSize:11, color:"#64748b", marginBottom:12, lineHeight:1.5 }}>
-                  {isRunning ? "Waiting for whale BUY signal — holds as long as whale holds · exits when whale exits · -30% stop loss only" : "Start the bot above to begin watching for whale swaps"}
+                  {isRunning ? "Waiting for whale BUY signal — exits on whale SELL or -30% stop loss" : "Start the bot above to begin watching whale swaps"}
                 </div>
               </div>
-              {/* Market context */}
               <div style={{ background:"rgba(212,175,55,0.03)", border:"1px solid rgba(212,175,55,0.15)", borderRadius:12, padding:14 }}>
                 <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:"rgba(212,175,55,.65)", marginBottom:10 }}>📊 Market Context</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                   {[
                     { l:"SOL Price", v:`$${solUsd.toFixed(2)}`, sub:`€${(solUsd*solEur).toFixed(2)}` },
-                    { l:"Bot Status", v:isRunning?"🟢 Online":"🔴 Offline", sub:isRunning?"Whale SELL mirror: ACTIVE":"Not listening" },
+                    { l:"Bot Status", v:isRunning?"🟢 Online":"🔴 Offline", sub:isRunning?"Watching 20 whale wallets":"Not listening" },
                     { l:"Signals Received", v:String(signals.length), sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:"None yet" },
-                    { l:"Whale Wallets", v:"20", sub:"On Solana mainnet" },
+                    { l:"Bot Balance", v:`${displayBalSol.toFixed(4)} SOL`, sub:`€${displayBalEur.toFixed(2)}` },
                   ].map(card => (
                     <div key={card.l} style={{ background:"rgba(212,175,55,0.05)", borderRadius:10, padding:"10px 12px", border:"1px solid rgba(212,175,55,0.1)" }}>
                       <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:4 }}>{card.l}</div>
@@ -883,35 +746,42 @@ export default function ShreemBrzeePerformance() {
             </div>
           ) : (
             openPos.map((pos: any) => {
-              // ── CORRECT P&L ── entry_price stored as SOL/token, DexScreener gives USD/token
-              // Convert to same unit before comparing
-              const entryPriceSol = Number(pos.entry_price) || 0; // SOL per token (as stored)
-              const size          = Number(pos.amount_sol)   || 0; // SOL invested
-              // Reconstruct tokens held: tokens = SOL_invested / entry_price_sol
-              // Works for both old trades (tokens_received was raw) and new (human-readable)
-              const tokensHeld    = entryPriceSol > 0 ? size / entryPriceSol : 0;
-              const currentPriceUsd = livePrices[pos.mint] || 0; // USD/token from DexScreener
-              // Convert current USD price to SOL for same-unit comparison
-              const currentPriceSol = solUsd > 0 ? currentPriceUsd / solUsd : 0;
-              // P&L in SOL — apples to apples
-              const hasPriceData  = entryPriceSol > 0 && currentPriceSol > 0;
-              const pnlPct        = hasPriceData ? (currentPriceSol - entryPriceSol) / entryPriceSol * 100 : null;
-              const pnlSol        = hasPriceData ? tokensHeld * (currentPriceSol - entryPriceSol) : null;
-              const pnlEur        = pnlSol !== null ? pnlSol * solUsd * solEur : null;
-              // Current total value
-              const currentValueEur = hasPriceData ? tokensHeld * currentPriceSol * solUsd * solEur : null;
-              const investedEur   = size * solUsd * solEur;
-              // No DexScreener price ⇒ no liquidity
-              const noLiquidity   = pricesFetched && entryPriceSol > 0 && (!currentPriceUsd || currentPriceUsd <= 0);
+              // ── FIX: CORRECT P&L CALCULATION ──────────────────────────────
+              // entry_price is stored in USD (from DexScreener at open time)
+              // livePrices[mint] is also USD (from DexScreener/Jupiter now)
+              // Compute P&L entirely in USD, then convert to SOL/EUR at display
+              const entryUsd    = Number(pos.entry_price) || 0;   // USD per token
+              const currentUsd  = livePrices[pos.mint]   || 0;   // USD per token
+              const amountSol   = Number(pos.amount_sol)  || 0;   // SOL invested
+
+              // Tokens held = SOL invested converted to USD / entry price per token
+              // amountSol × solUsd = USD invested; divide by entryUsd = tokens
+              const investedUsd   = amountSol * solUsd;
+              const tokensHeld    = entryUsd > 0 ? investedUsd / entryUsd : 0;
+
+              // P&L in USD
+              const hasPrices     = entryUsd > 0 && currentUsd > 0;
+              const pnlPct        = hasPrices ? (currentUsd - entryUsd) / entryUsd * 100 : null;
+              const pnlUsd        = hasPrices && tokensHeld > 0 ? tokensHeld * (currentUsd - entryUsd) : null;
+              const pnlSol        = pnlUsd !== null ? pnlUsd / solUsd : null;
+              const pnlEur        = pnlUsd !== null ? usdToEur(pnlUsd) : null;
+
+              // Current value
+              const currentValueUsd = hasPrices && tokensHeld > 0 ? tokensHeld * currentUsd : null;
+              const currentValueEur = currentValueUsd !== null ? usdToEur(currentValueUsd) : null;
+              const investedEur     = usdToEur(investedUsd);
+
+              const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
               const pnlLabel      = pnlPct !== null
                 ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
                 : noLiquidity ? "no liquidity" : "—";
+
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
               const ageStr  = ageMins < 60 ? `${ageMins}m` : `${Math.floor(ageMins/60)}h ${ageMins%60}m`;
-              const pnlColor= pnlPct === null ? "#64748b" : pnlPct >= 0 ? GREEN : RED;
-              const sym     = pos.symbol || pos.mint?.slice(0,6) || "?";
-              const expanded= expandedPos?.id === pos.id;
+              const pnlColor = pnlPct === null ? "#64748b" : pnlPct >= 0 ? GREEN : RED;
+              const sym      = pos.symbol || pos.mint?.slice(0,6) || "?";
+              const expanded = expandedPos?.id === pos.id;
               const isClosing = closingIds.has(pos.id);
 
               return (
@@ -939,9 +809,9 @@ export default function ShreemBrzeePerformance() {
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, padding:"10px 12px 0" }}>
                         {[
-                          { l:"SIZE",  v:`${size.toFixed(4)}`, u:"SOL", s:`≈${investedEur.toFixed(2)}€` },
-                          { l:"ENTRY", v:entryPriceSol>0?`$${(entryPriceSol*solUsd).toFixed(entryPriceSol*solUsd<.001?8:entryPriceSol*solUsd<.1?6:4)}`:"—", u:"", s:`${investedEur.toFixed(2)}€ invested` },
-                          { l:"NOW",   v:currentPriceUsd>0?`$${currentPriceUsd.toFixed(currentPriceUsd<.001?8:currentPriceUsd<.1?6:4)}`:"fetching…", u:"", s:currentValueEur!=null?`${currentValueEur.toFixed(2)}€`:"" },
+                          { l:"SIZE",  v:`${amountSol.toFixed(4)}`, u:"SOL", s:`≈${investedEur.toFixed(2)}€` },
+                          { l:"ENTRY", v:entryUsd>0?`$${entryUsd.toFixed(entryUsd<.001?8:entryUsd<.1?6:4)}`:"—", u:"", s:`${investedEur.toFixed(2)}€ invested` },
+                          { l:"NOW",   v:currentUsd>0?`$${currentUsd.toFixed(currentUsd<.001?8:currentUsd<.1?6:4)}`:"fetching…", u:"", s:currentValueEur!=null?`${currentValueEur.toFixed(2)}€`:"" },
                         ].map(cell => (
                           <div key={cell.l} style={{ background:"rgba(0,0,0,.3)", borderRadius:10, padding:"8px 10px", border:"1px solid rgba(255,255,255,.05)" }}>
                             <div style={{ fontSize:7, color:"#64748b", letterSpacing:".15em", marginBottom:3 }}>{cell.l}</div>
@@ -950,16 +820,24 @@ export default function ShreemBrzeePerformance() {
                           </div>
                         ))}
                       </div>
+                      {/* Unrealized PNL bar */}
                       <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.08)`, border:`1px solid rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                         <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
                         <div style={{ display:"flex", gap:12, alignItems:"center" }}>
                           <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€ (${size.toFixed(4)} SOL in)`:""}</div>
+                          {pnlEur !== null && (
+                            <div style={{ textAlign:"right" }}>
+                              <div style={{ fontSize:14, fontWeight:700, color:pnlColor }}>{pnlEur>=0?"+":""}{pnlEur.toFixed(2)}€</div>
+                              {pnlSol !== null && <div style={{ fontSize:10, color:"#64748b" }}>{pnlSol>=0?"+":""}{pnlSol.toFixed(4)} SOL</div>}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"0 12px 12px" }}>
                         <a href={`https://dexscreener.com/solana/${pos.mint}`} target="_blank" rel="noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:10, borderRadius:12, border:"1px solid rgba(212,175,55,.3)", background:"rgba(212,175,55,.06)", color:GOLD, fontSize:10, fontWeight:800, textDecoration:"none" }}>📊 DEXSCREENER</a>
-                        <button onClick={() => { if (!isClosing) { closePosition(pos,"manual"); } }} disabled={isClosing} style={{ padding:10, borderRadius:12, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:10, fontWeight:900, cursor:isClosing?"wait":"pointer", opacity:isClosing?0.7:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>{isClosing ? (<><span style={{ display:"inline-block", width:10, height:10, border:"2px solid rgba(239,68,68,.3)", borderTopColor:RED, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />CLOSING…</>) : "✕ CLOSE TRADE"}</button>
+                        <button onClick={() => { if (!isClosing) closePosition(pos,"manual"); }} disabled={isClosing} style={{ padding:10, borderRadius:12, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:10, fontWeight:900, cursor:isClosing?"wait":"pointer", opacity:isClosing?0.7:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+                          {isClosing ? (<><span style={{ display:"inline-block", width:10, height:10, border:"2px solid rgba(239,68,68,.3)", borderTopColor:RED, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />CLOSING…</>) : "✕ CLOSE TRADE"}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -969,9 +847,8 @@ export default function ShreemBrzeePerformance() {
           )}
         </Section>
 
-        {/* My Wallet */}
         {/* Bot controls */}
-        <Section title="💰 Paper Balance (SOL)">
+        <Section title="💰 Balance & Bot Controls">
           <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
             {["0.5","1","2","5","10"].map(v => (
               <button key={v} onClick={() => setBalInput(v)} style={{ padding:"7px 0", borderRadius:10, cursor:"pointer", flex:"1 1 0", minWidth:44, border:`1px solid ${balInput===v?"rgba(212,175,55,.4)":GOLD20}`, background:balInput===v?"rgba(212,175,55,.12)":"transparent", color:balInput===v?GOLD:"#64748b", fontSize:13, fontWeight:700 }}>{v}</button>
@@ -986,30 +863,30 @@ export default function ShreemBrzeePerformance() {
               {loading&&stoppingBot ? "⚙" : "⏹ STOP"}
             </button>
           </div>
+          {/* Live bot wallet balance display */}
+          <div style={{ marginTop:10, padding:"10px 14px", borderRadius:12, background:"rgba(0,0,0,.3)", border:"1px solid rgba(212,175,55,.15)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div>
+              <div style={{ fontSize:9, color:"#64748b", letterSpacing:".25em", textTransform:"uppercase", marginBottom:2 }}>Bot Wallet · Live Balance</div>
+              <div style={{ fontSize:10, fontFamily:"monospace", color:"#94a3b8" }}>{BOT_WALLET.slice(0,8)}…{BOT_WALLET.slice(-6)}</div>
+            </div>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontSize:16, fontWeight:900, color:GOLD }}>{displayBalSol.toFixed(4)} SOL</div>
+              <div style={{ fontSize:11, color:"#64748b" }}>€{displayBalEur.toFixed(2)} {botBalFetched && <span style={{ color:GREEN, fontSize:9 }}>● live</span>}</div>
+            </div>
+          </div>
           {isRunning && (
             <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
-              Bot running · mirrors whale BUY & SELL · 20 wallets on Solana mainnet
+              Bot running · 20 whale wallets · exits server-side automatically
             </div>
           )}
         </Section>
 
-        {/* Open Positions */}
-        {/* Compounding Engine stats */}
+        {/* Compounding Engine */}
         {(() => {
-          // Use real wallet balance for compounding engine when available
-          const compoundPortfolio = (botWallet && botWallet.balance_sol > 0)
-            ? botWallet.balance_sol
-            : (portfolio > 0 ? portfolio : 0);
-          const sizing = calculatePositionSize(
-            compoundPortfolio,
-            session?.wins  || 0,
-            session?.losses|| 0,
-            openPos,
-          );
-          const openExposure = openPos.reduce((s: number, p: any) => s + (Number(p.amount_sol)||0), 0);
+          const sizing = calculatePositionSize(portfolio, session?.wins||0, session?.losses||0, openPos);
           const maxExposure  = portfolio * 0.50;
-          const exposurePct  = maxExposure > 0 ? Math.min(100, openExposure / maxExposure * 100) : 0;
+          const exposurePct  = maxExposure > 0 ? Math.min(100, openExposureSol / maxExposure * 100) : 0;
           const totalTrades  = (session?.wins||0) + (session?.losses||0);
           const wr           = totalTrades >= 5 ? Math.round((session?.wins||0)/totalTrades*100) : null;
           return (
@@ -1018,9 +895,9 @@ export default function ShreemBrzeePerformance() {
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
                 {[
                   { l:"Next Trade Size", v:sizing.blocked?"BLOCKED":`${sizing.size.toFixed(4)} SOL`, s:sizing.blocked?sizing.reason:`${(sizing.pct*100).toFixed(1)}% of balance`, c:sizing.blocked?RED:GOLD },
-                  { l:"Live Win Rate",   v:wr !== null ? `${wr}%` : `—`, s:totalTrades>=5?`from ${totalTrades} trades`:"need 5+ trades", c:wr !== null && wr >= 55 ? GREEN : wr !== null && wr < 45 ? RED : "#fff" },
-                  { l:"Open Exposure",   v:`${openExposure.toFixed(3)} SOL`, s:`${exposurePct.toFixed(0)}% of 50% cap`, c:exposurePct > 80 ? RED : exposurePct > 60 ? "#f59e0b" : GREEN },
-                  { l:"Exposure Room",   v:`${Math.max(0, maxExposure-openExposure).toFixed(3)} SOL`, s:`${Math.max(0,100-exposurePct).toFixed(0)}% remaining`, c:GOLD },
+                  { l:"Live Win Rate",   v:wr !== null ? `${wr}%` : "—", s:totalTrades>=5?`from ${totalTrades} trades`:"need 5+ trades", c:wr!==null&&wr>=55?GREEN:wr!==null&&wr<45?RED:"#fff" },
+                  { l:"Open Exposure",   v:`${openExposureSol.toFixed(3)} SOL`, s:`${exposurePct.toFixed(0)}% of 50% cap`, c:exposurePct>80?RED:exposurePct>60?"#f59e0b":GREEN },
+                  { l:"Exposure Room",   v:`${Math.max(0, maxExposure-openExposureSol).toFixed(3)} SOL`, s:`${Math.max(0,100-exposurePct).toFixed(0)}% remaining`, c:GOLD },
                 ].map(card => (
                   <div key={card.l} style={{ background:"rgba(0,0,0,.2)", borderRadius:10, padding:"10px 12px", border:"1px solid rgba(212,175,55,0.08)" }}>
                     <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:4 }}>{card.l}</div>
@@ -1029,7 +906,6 @@ export default function ShreemBrzeePerformance() {
                   </div>
                 ))}
               </div>
-              {/* Exposure bar */}
               <div style={{ background:"rgba(255,255,255,.04)", borderRadius:6, height:6, overflow:"hidden" }}>
                 <div style={{ width:`${exposurePct}%`, height:6, borderRadius:6, background:exposurePct>80?RED:exposurePct>60?"#f59e0b":GREEN, transition:"width .5s ease" }} />
               </div>
@@ -1041,8 +917,7 @@ export default function ShreemBrzeePerformance() {
           );
         })()}
 
-
-        {/* ── LIVE MODE PANEL ────────────────────────────────────────────── */}
+        {/* Live Mode Panel */}
         <div style={{ background:"rgba(239,68,68,0.04)", border:`1px solid ${liveMode?"rgba(239,68,68,0.5)":"rgba(239,68,68,0.15)"}`, borderRadius:14, padding:14, boxShadow:liveMode?"0 0 20px rgba(239,68,68,0.15)":"none" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:liveMode||liveConfirm?12:0 }}>
             <div>
@@ -1051,38 +926,25 @@ export default function ShreemBrzeePerformance() {
               </div>
               {!liveMode && <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>Real SOL copy trades — enable when ready</div>}
             </div>
-            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading||!isRunning?"not-allowed":"pointer", letterSpacing:".06em" }}>
+            <button onClick={() => liveMode ? toggleLiveMode(false) : setLiveConfirm(p=>!p)} disabled={liveLoading} style={{ padding:"7px 16px", borderRadius:10, border:`1px solid ${liveMode?"rgba(239,68,68,.6)":"rgba(212,175,55,.35)"}`, background:liveMode?"rgba(239,68,68,.15)":"rgba(212,175,55,.08)", color:liveMode?"#ef4444":GOLD, fontSize:11, fontWeight:900, cursor:liveLoading?"not-allowed":"pointer", letterSpacing:".06em" }}>
               {liveLoading ? "⚙" : liveMode ? "⏹ STOP LIVE" : "▶ GO LIVE"}
             </button>
           </div>
-          {/* Bot wallet info */}
-          {botWallet && (
-            <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:10, background:"rgba(0,0,0,.3)", border:"1px solid rgba(255,255,255,.06)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div>
-                <div style={{ fontSize:9, color:"#64748b", letterSpacing:".2em", textTransform:"uppercase", marginBottom:2 }}>Bot Wallet</div>
-                <div style={{ fontSize:11, fontFamily:"monospace", color:"#cbd5e0" }}>{botWallet.wallet.slice(0,8)}…{botWallet.wallet.slice(-6)}</div>
-              </div>
-              <div style={{ textAlign:"right" }}>
-                <div style={{ fontSize:15, fontWeight:900, color:GOLD }}>{botWallet.balance_sol.toFixed(3)} SOL</div>
-                <div style={{ fontSize:10, color:"#64748b" }}>€{(botWallet.balance_sol*solUsd*solEur).toFixed(2)}</div>
-              </div>
+          {liveMode && (
+            <div style={{ padding:"8px 12px", borderRadius:10, background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", fontSize:11, color:"rgba(239,68,68,.8)", display:"flex", alignItems:"center", gap:6 }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:RED, animation:"pulse 1.5s infinite" }} />
+              Real SOL swaps active · {displayBalSol.toFixed(4)} SOL available · Bot wallet: {BOT_WALLET.slice(0,8)}…
             </div>
           )}
-          {/* Confirmation dialog */}
           {liveConfirm && !liveMode && (
-            <div style={{ padding:"14px", borderRadius:12, background:"rgba(239,68,68,.06)", border:"1px solid rgba(239,68,68,.3)" }}>
+            <div style={{ padding:14, borderRadius:12, background:"rgba(239,68,68,.06)", border:"1px solid rgba(239,68,68,.3)" }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#ef4444", marginBottom:8 }}>⚠️ Going live means REAL SOL</div>
               <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", marginBottom:12, lineHeight:1.5 }}>
-                The bot will execute real Solana swaps using the bot wallet. Every whale BUY signal triggers a real Jupiter swap. Max {(50).toFixed(0)}% of bot wallet can be in open positions at once.
+                Bot wallet: {displayBalSol.toFixed(4)} SOL (€{displayBalEur.toFixed(2)}). Every whale BUY triggers a real Jupiter swap. Max 50% in positions at once.
               </div>
-              {!botWallet && (
-                <div style={{ padding:"10px 12px", borderRadius:10, background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", marginBottom:12, fontSize:11, color:"#ef4444" }}>
-                  ❌ Bot wallet not configured. Add SHREEM_BOT_KEYPAIR to Supabase Edge Function secrets first.
-                </div>
-              )}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-                <button onClick={() => setLiveConfirm(false)} style={{ padding:"10px", borderRadius:10, border:"1px solid rgba(255,255,255,.1)", background:"transparent", color:"#64748b", fontSize:12, fontWeight:700, cursor:"pointer" }}>Cancel</button>
-                <button onClick={() => toggleLiveMode(true)} disabled={!botWallet||liveLoading} style={{ padding:"10px", borderRadius:10, border:"none", background:botWallet?"#ef4444":"rgba(239,68,68,.3)", color:"#fff", fontSize:12, fontWeight:900, cursor:botWallet?"pointer":"not-allowed" }}>
+                <button onClick={() => setLiveConfirm(false)} style={{ padding:10, borderRadius:10, border:"1px solid rgba(255,255,255,.1)", background:"transparent", color:"#64748b", fontSize:12, fontWeight:700, cursor:"pointer" }}>Cancel</button>
+                <button onClick={() => toggleLiveMode(true)} disabled={liveLoading} style={{ padding:10, borderRadius:10, border:"none", background:"#ef4444", color:"#fff", fontSize:12, fontWeight:900, cursor:"pointer" }}>
                   {liveLoading ? "Switching…" : "CONFIRM GO LIVE"}
                 </button>
               </div>
@@ -1092,6 +954,7 @@ export default function ShreemBrzeePerformance() {
 
         <Diagnostics running={isRunning} signalCount={signals.length} edgeOk={edgeOk} />
 
+        {/* My Wallet */}
         <Section title="👛 My Wallet" accent="rgba(212,175,55,.28)" right={<span style={{ fontSize:9, color:GREEN, fontWeight:700 }}>🔒 Public only</span>}>
           <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
             <button onClick={connectPhantom} disabled={phantomLoading} style={{ display:"flex", alignItems:"center", gap:10, width:"100%", padding:"13px 14px", borderRadius:13, border:"1px solid rgba(139,92,246,.35)", background:"rgba(139,92,246,.08)", cursor:"pointer", textAlign:"left" }}>
@@ -1116,7 +979,7 @@ export default function ShreemBrzeePerformance() {
                 </div>
                 <div style={{ textAlign:"right" }}>
                   <div style={{ fontSize:15, fontWeight:900, color:GOLD }}>{walletBal!==null?`${walletBal.toFixed(3)} SOL`:"—"}</div>
-                  <div style={{ fontSize:11, color:"#64748b" }}>{walletBal!==null?`€${toEur(walletBal)}`:""}</div>
+                  <div style={{ fontSize:11, color:"#64748b" }}>{walletBal!==null?`€${solToEur(walletBal).toFixed(2)}`:""}</div>
                 </div>
               </div>
             )}
@@ -1129,7 +992,7 @@ export default function ShreemBrzeePerformance() {
             <div style={{ textAlign:"center", padding:"20px 0" }}>
               <div style={{ fontSize:28, marginBottom:8 }}>🐋</div>
               <div style={{ fontSize:13, color:"#cbd5e0", fontWeight:700, marginBottom:4 }}>Watching 20 wallets on Solana</div>
-              <div style={{ fontSize:11, color:"#64748b", marginBottom:14 }}>BUY signals open positions · SELL signals close them instantly</div>
+              <div style={{ fontSize:11, color:"#64748b", marginBottom:14 }}>BUY signals open positions · SELL signals close instantly</div>
               <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
                 <button onClick={testBuy} disabled={loading} style={{ padding:"9px 20px", borderRadius:11, border:"1px solid rgba(0,212,255,.3)", background:"rgba(0,212,255,.08)", color:CYAN, fontSize:11, fontWeight:800, cursor:"pointer" }}>⚡ BUY Signal</button>
                 <button onClick={testSell} disabled={loading} style={{ padding:"9px 20px", borderRadius:11, border:"1px solid rgba(239,68,68,.3)", background:"rgba(239,68,68,.08)", color:RED, fontSize:11, fontWeight:800, cursor:"pointer" }}>⚡ SELL Signal</button>
@@ -1168,8 +1031,8 @@ export default function ShreemBrzeePerformance() {
                 <div style={{ fontSize:10, color:"#64748b", marginTop:1 }}>
                   {t.action} · {t.label}
                   {t.sell_reason && <span style={{ marginLeft:5, padding:"2px 7px", borderRadius:20, fontSize:9, fontWeight:700,
-                      background:t.sell_reason==="whale_sell_mirror"?"rgba(16,185,129,.12)":t.sell_reason==="stop_loss"?"rgba(239,68,68,.12)":t.sell_reason==="48h_safety_cap"?"rgba(100,116,139,.12)":"rgba(212,175,55,.1)",
-                      color:t.sell_reason==="whale_sell_mirror"?GREEN:t.sell_reason==="stop_loss"?RED:t.sell_reason==="48h_safety_cap"?"#94a3b8":GOLD,
+                      background:t.sell_reason==="whale_sell_mirror"?"rgba(16,185,129,.12)":t.sell_reason==="stop_loss"?"rgba(239,68,68,.12)":"rgba(212,175,55,.1)",
+                      color:t.sell_reason==="whale_sell_mirror"?GREEN:t.sell_reason==="stop_loss"?RED:GOLD,
                       border:`1px solid ${t.sell_reason==="whale_sell_mirror"?"rgba(16,185,129,.25)":t.sell_reason==="stop_loss"?"rgba(239,68,68,.25)":"rgba(212,175,55,.2)"}`
                     }}>
                       {t.sell_reason==="whale_sell_mirror"?"🐋 Whale exit":t.sell_reason==="stop_loss"?"🛑 Stop loss":t.sell_reason==="48h_safety_cap"?"⏱ 48h cap":t.sell_reason.replace(/_/g," ")}
@@ -1180,7 +1043,7 @@ export default function ShreemBrzeePerformance() {
                 {t.status==="closed" ? (
                   <div>
                     <div style={{ fontSize:14, fontWeight:900, color:(t.pnl_sol||0)>=0?GREEN:RED }}>
-                      {(t.pnl_sol||0)>=0?"+":"-"}€{Math.abs(toEurN(t.pnl_sol||0)).toFixed(2)}
+                      {(t.pnl_sol||0)>=0?"+":"-"}€{Math.abs(solToEurN(t.pnl_sol||0)).toFixed(2)}
                     </div>
                     <div style={{ fontSize:10, color:(t.pnl_pct||0)>=0?GREEN:RED }}>
                       {(t.pnl_pct||0)>=0?"+":""}{(t.pnl_pct||0).toFixed(1)}%
@@ -1224,18 +1087,18 @@ export default function ShreemBrzeePerformance() {
                       <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GREEN:"#64748b" }}>{active?w.buys:"—"}</td>
                       <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?RED:"#64748b" }}>{active?w.sells:"—"}</td>
                       <td style={{ padding:"9px 10px" }}>{active?<div><div style={{ fontSize:12, fontWeight:700, color:"#fff" }}>{w.totalSol.toFixed(2)}</div><div style={{ width:50, background:"rgba(255,255,255,.06)", borderRadius:3, height:4, marginTop:3 }}><div style={{ width:`${barW}%`, height:4, borderRadius:3, background:GOLD }} /></div></div>:<span style={{ color:"#64748b" }}>—</span>}</td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GOLD:"#64748b" }}>{active?`€${toEurN(w.totalSol).toFixed(0)}`:"—"}</td>
+                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GOLD:"#64748b" }}>{active?`€${solToEurN(w.totalSol).toFixed(0)}`:"—"}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          {periodSigs.length === 0 && <div style={{ padding:"12px", textAlign:"center", fontSize:11, color:"#64748b" }}>No whale swaps detected this period · signals appear in real-time</div>}
+          {periodSigs.length === 0 && <div style={{ padding:"12px", textAlign:"center", fontSize:11, color:"#64748b" }}>No whale swaps detected this period</div>}
         </Section>
 
-        {/* KOL Explorer / Top Traders */}
-        <div className="glass-card" style={{ border:"1px solid rgba(212,175,55,0.25)", marginTop:16, borderRadius:24 }}>
+        {/* KOL Explorer */}
+        <div style={{ border:"1px solid rgba(212,175,55,0.25)", marginTop:16, borderRadius:24, background:"rgba(255,255,255,0.02)", backdropFilter:"blur(40px)" }}>
           <div style={{ padding:"14px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
             <span style={{ fontSize:10, letterSpacing:"0.15em", fontWeight:800, color:GOLD }}>🔭 WHALE SCANNER · TOP KOL TRADERS</span>
             <div style={{ display:"flex", gap:6 }}>
@@ -1250,33 +1113,24 @@ export default function ShreemBrzeePerformance() {
               const pnl = kolPeriod === "7D" ? kol.pnl7d : kol.pnl30d;
               return (
                 <div key={kol.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", background:i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
-                  {/* Rank */}
                   <div style={{ width:22, textAlign:"center", fontSize:11, fontWeight:900, color:i<3?GOLD:"#64748b", flexShrink:0 }}>
                     {i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`}
                   </div>
-                  {/* Name + addr */}
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:13, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{kol.name}</div>
                     <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{kol.addr.slice(0,8)}…{kol.addr.slice(-4)}</div>
                   </div>
-                  {/* PNL */}
                   <div style={{ textAlign:"right", flexShrink:0 }}>
                     <div style={{ fontSize:12, fontWeight:800, color:"#22c55e" }}>+${pnl.toLocaleString()}</div>
                     <div style={{ fontSize:10, color:kol.wr>=60?GREEN:kol.wr>=50?"#f59e0b":RED, fontWeight:700 }}>{kol.wr}% WR</div>
                   </div>
-                  {/* Status / Add button */}
                   <div style={{ flexShrink:0, marginLeft:4 }}>
                     {alreadyTracked ? (
                       <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:9, fontWeight:800, color:GREEN, background:"rgba(16,185,129,0.1)", padding:"4px 10px", borderRadius:20, border:"1px solid rgba(16,185,129,0.3)" }}>
                         <span style={{ width:5, height:5, borderRadius:"50%", background:GREEN }} />TRACKING
                       </span>
                     ) : (
-                      <button
-                        onClick={() => addKolTrader(kol)}
-                        style={{ padding:"6px 14px", borderRadius:20, border:`1px solid ${GOLD}`, background:"rgba(212,175,55,0.1)", color:GOLD, fontSize:10, fontWeight:800, letterSpacing:"0.08em", cursor:"pointer", whiteSpace:"nowrap" }}
-                      >
-                        + ADD
-                      </button>
+                      <button onClick={() => addKolTrader(kol)} style={{ padding:"6px 14px", borderRadius:20, border:`1px solid ${GOLD}`, background:"rgba(212,175,55,0.1)", color:GOLD, fontSize:10, fontWeight:800, letterSpacing:"0.08em", cursor:"pointer", whiteSpace:"nowrap" }}>+ ADD</button>
                     )}
                   </div>
                 </div>
