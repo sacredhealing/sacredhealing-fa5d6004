@@ -16,33 +16,42 @@ m = re.search(r'SUPABASE_SERVICE_ROLE_KEY.{0,5}["\'](\S{20,})["\'\s]', eco)
 sb_key = m.group(1) if m else ""
 SB = "https://ssygukfdbtehvtndandn.supabase.co"
 
-# Count signals in last 30 minutes
-print("=== SIGNALS LAST 30 MIN ===")
-r = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_signals?select=action,label,created_at&order=created_at.desc&limit=500" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}"')
+# Get TOTAL signal count and last 10 min
+print("=== SIGNAL COUNT ===")
+r = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_signals?select=created_at&order=created_at.desc" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" -H "Range: 0-999" -H "Prefer: count=exact" -i')
+# Extract count from header
+lines = r.split("\n")
+for l in lines[:10]:
+    if 'content-range' in l.lower() or 'Content-Range' in l:
+        print("Total signals in DB:", l)
+
+# Get count for last 10 min  
+r2 = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_signals?select=created_at&order=created_at.desc&limit=200" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}"')
 try:
-    sigs = json.loads(r)
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
-    recent = [s for s in sigs if s.get('created_at','') > cutoff.isoformat()]
-    print(f"Signals in 30 min: {len(recent)}")
-    print(f"= {len(recent)*2}/hour = {len(recent)*2*24}/day = {len(recent)*2*24*30}/month credits JUST from webhook receive")
-    
-    by_whale = {}
-    for s in recent:
-        label = s.get('label','?')
-        by_whale[label] = by_whale.get(label,0) + 1
-    print("\nBy whale (last 30min):")
-    for k,v in sorted(by_whale.items(), key=lambda x:-x[1]):
-        print(f"  {k}: {v} signals")
+    sigs = json.loads(r2)
+    cutoff10 = datetime.now(timezone.utc) - timedelta(minutes=10)
+    cutoff30 = datetime.now(timezone.utc) - timedelta(minutes=30)
+    last10 = [s for s in sigs if s.get('created_at','') > cutoff10.isoformat()]
+    last30 = [s for s in sigs if s.get('created_at','') > cutoff30.isoformat()]
+    print(f"Signals last 10min: {len(last10)}")
+    print(f"Signals last 30min: {len(last30)}")
+    print(f"Rate: {len(last10)*6}/hour")
+    print(f"= {len(last10)*6*24}/day credits from webhook receives")
+    if len(last10) > 0:
+        print(f"\nMost recent: {sigs[0].get('created_at','')} from {sigs[0].get('label','?')}")
 except Exception as e:
     print(f"Error: {e}")
 
-# PM2 status
-print("\n=== PM2 ===")
-print(run("pm2 list --no-color 2>/dev/null | grep -v namespace | grep -v Applying | grep -v '──'"))
-
-# Check what processes are alive and making Helius calls
-print("\n=== HELIUS KEY USAGE IN RUNNING PROCESSES ===")
-print(run("ps aux | grep -E 'node|deno|shreem' | grep -v grep | head -10"))
-print(run("netstat -an 2>/dev/null | grep ESTABLISHED | grep -E ':443|:80' | wc -l"))
+# Check Helius webhook - is there more than 1 webhook registered?
+HELIUS = os.environ.get("HELIUS_KEY","7de253c3-49e2-42be-9672-23a761260f86")
+print("\n=== HELIUS WEBHOOKS ===")
+r3 = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
+try:
+    hooks = json.loads(r3)
+    print(f"Total webhooks registered: {len(hooks)}")
+    for h in hooks:
+        print(f"  ID: {h.get('webhookID')} | type: {h.get('webhookType')} | wallets: {len(h.get('accountAddresses',[]))} | txTypes: {h.get('transactionTypes')}")
+except Exception as e:
+    print(f"Error: {e} | {r3[:200]}")
 
 client.close()
