@@ -429,35 +429,18 @@ export default function ShreemBrzeePerformance() {
   const liveIntervalRef                 = useRef<ReturnType<typeof setInterval>|null>(null);
 
   const checkBotWallet = useCallback(async () => {
-    // Known bot wallet — always pull real on-chain SOL balance via Helius RPC
+    // Bot wallet — SOL balance comes ONLY from on-chain RPC. No health-endpoint override, no caching.
     const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
     try {
-      // 1) Direct RPC read — source of truth for balance
       const bal = await getWalletBalance(BOT_WALLET);
       setBotWallet({ wallet: BOT_WALLET, balance_sol: bal });
       if (bal > 0) setBalInput(bal.toFixed(4));
       console.log("[botWallet] RPC balance:", bal, "SOL");
-
-      // 2) Best-effort health check (non-blocking) — only update wallet address, NEVER overwrite balance from RPC
-      fetch(
-        "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health",
-        { signal: AbortSignal.timeout(8000) }
-      ).then(r => r.ok ? r.json() : null)
-       .then(data => {
-         if (data?.wallet) {
-           // Prefer health balance only if it's a positive number; otherwise keep RPC value
-           const healthBal = Number(data.balance_sol);
-           setBotWallet(prev => ({
-             wallet: data.wallet,
-             balance_sol: healthBal > 0 ? healthBal : (prev?.balance_sol ?? bal),
-           }));
-         }
-       })
-       .catch(() => {});
     } catch (e: any) {
       console.warn("[botWallet] balance fetch failed:", e.message);
     }
   }, []);
+
 
   const toggleLiveMode = async (goLive: boolean) => {
     setLiveLoading(true);
