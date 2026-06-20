@@ -290,7 +290,8 @@ export default function ShreemBrzeePerformance() {
     try {
       const r = await fetch(`${EDGE_BASE}/signals`);
       const data = r.ok ? await r.json() : [];
-      const filtered = (data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_") && isTracked(s));
+      // Keep all real signals — isTracked removed (webhook already filters by wallet list)
+      const filtered = (data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_"));
       setSignals(filtered.slice(0, 100));
     } catch {}
   }, []);
@@ -797,7 +798,7 @@ export default function ShreemBrzeePerformance() {
         {/* Stats grid */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${botWallet && botWallet.balance_sol > 0 ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : (botWallet?.balance_sol === 0 ? (0).toFixed(2) : currentBalEur.toFixed(2))}`, l:"Balance", s:`${botWallet && botWallet.balance_sol > 0 ? botWallet.balance_sol.toFixed(4) : (botWallet?.balance_sol === 0 ? "fetching…" : currentBalSol.toFixed(3))} SOL`, c:GOLD },
+            { i:"💰", v:`€${botWallet && botWallet.balance_sol > 0 ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : (liveMode ? (session?.portfolio||0) * solUsd * solEur : currentBalEur).toFixed(2)}`, l:"Balance", s:`${botWallet && botWallet.balance_sol > 0 ? botWallet.balance_sol.toFixed(4) : (liveMode ? (session?.portfolio||0).toFixed(4) : currentBalSol.toFixed(3))} SOL`, c:GOLD },
             { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
             { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
