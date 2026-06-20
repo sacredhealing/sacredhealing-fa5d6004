@@ -21,7 +21,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb           = createClient(SUPABASE_URL, SUPABASE_KEY);
-const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86"; // new key 7de253c3
+const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? ""; // set HELIUS_API_KEY in Supabase secrets
 if (!HELIUS_KEY) console.warn("[SHREEM] ⚠️ HELIUS_API_KEY not set — webhook registration and RPC will fail");
 // NOTE: The webhook itself NEVER makes Solana RPC calls. All on-chain reads
 // (getTokenAccountsByOwner, getBalance, etc.) happen only inside
@@ -290,7 +290,7 @@ async function syncWallets(): Promise<void> {
 // ── Update Helius webhook registration (only called explicitly via /sync-helius) ──
 async function syncHelius(): Promise<{ ok: boolean; message: string; count?: number }> {
   try {
-    const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "7de253c3-49e2-42be-9672-23a761260f86";
+    const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
     const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
     const addresses = Object.keys(WHALE_WALLETS);
 
