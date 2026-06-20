@@ -79,15 +79,39 @@ function loadKeypair(): SolanaKeypair | null {
 }
 
 // ── RPC helper ────────────────────────────────────────────────────────────────
+// Public fallback RPCs — used when Helius key is missing or exhausted
+const PUBLIC_RPCS = [
+  HELIUS_KEY ? HELIUS_RPC : null,
+  "https://api.mainnet-beta.solana.com",
+  "https://solana-api.projectserum.com",
+  "https://rpc.ankr.com/solana",
+].filter(Boolean) as string[];
+
 async function rpc(method: string, params: unknown[]) {
-  const r = await fetch(HELIUS_RPC, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-  });
-  const d = await r.json();
-  if (d.error) throw new Error(`RPC ${method}: ${d.error.message}`);
-  return d.result;
+  let lastErr: Error | null = null;
+  for (const endpoint of PUBLIC_RPCS) {
+    try {
+      const r = await fetch(endpoint!, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+        signal: AbortSignal.timeout(8000),
+      });
+      const j = await r.json();
+      if (j.error) {
+        if (j.error.code === -32429 || j.error.code === 429) {
+          lastErr = new Error(`RPC ${method} rate-limited on ${endpoint}`);
+          continue;
+        }
+        throw new Error(`RPC ${method} error: ${JSON.stringify(j.error)}`);
+      }
+      return j.result;
+    } catch (e: any) {
+      lastErr = e;
+      continue;
+    }
+  }
+  throw lastErr ?? new Error(`RPC ${method} failed on all endpoints`);
 }
 
 // ── Jupiter quote + swap ──────────────────────────────────────────────────────
