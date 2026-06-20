@@ -32,7 +32,7 @@ jobs:
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
         run: |
-          HELIUS_KEY=775d3d1f-6801-41de-a063-8aee4382d0f4 \
+          HELIUS_KEY=REMOVED_OLD_KEY \
           SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co \
           SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY \
           WALLET_START=0 WALLET_END=7 PAGES=3 DELAY=8000 \
