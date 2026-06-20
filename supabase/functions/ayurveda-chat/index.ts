@@ -263,11 +263,14 @@ function buildSystemPrompt(
 ══════════════════════════════════════════════════
 The message marked [CURRENT MESSAGE] is what the seeker is saying RIGHT NOW. Answer THAT. Only that.
 
-CRITICAL SEPARATION:
-- The SEEKER HISTORY block (timeline) = PAST sessions only. It is memory. Do NOT re-answer anything from it.
-- The live message thread = the CURRENT session happening right now. Answer the [CURRENT MESSAGE] freshly.
-- If the seeker asks about something from a past session (e.g. Guduchi): give a FRESH, CURRENT answer NOW. Do NOT copy or repeat the old answer verbatim. Receive their current state, then respond to what they are asking TODAY.
-- NEVER say "as I previously transmitted" or reference a timestamp to repeat old advice. Integrate the past but speak fresh.
+CRITICAL — HOW TO USE THE CONVERSATION HISTORY:
+- The full message thread below contains the seeker's ENTIRE journey with you — every question, every answer.
+- Use this as your memory. Know what you already prescribed. Know how they have progressed.
+- The [CURRENT MESSAGE] is what they are asking RIGHT NOW. This is your ONLY task: answer THIS question.
+- If they ask about something you already covered (e.g. Guduchi, fasting, an herb): acknowledge their progress BRIEFLY, then give a FRESH answer based on where they are TODAY — not a copy of your old answer.
+- NEVER repeat your previous answer word for word. They have read it. They want your response to their CURRENT state.
+- If they say "I am improving" or "I did the 7 days" — receive that as NEW information and respond to it directly.
+- Integrate past memory + current question = fresh transmission.
 
 - If the [CURRENT MESSAGE] says they are IMPROVING → receive it. Celebrate briefly. Ask what is still incomplete.
 - If the [CURRENT MESSAGE] mentions a NEW herb → answer about that herb. Now. Not last week's topic.
@@ -759,27 +762,12 @@ serve(async (req) => {
           .then(() => {}).catch(() => {});
       }
 
-      // Fetch past consultation timeline for cross-session memory
-      try {
-        const { data: pastMsgs } = await supabase
-          .from("user_sync_chat_messages")
-          .select("role, content, created_at")
-          .eq("user_id", userId)
-          .eq("chat_context", "ayurveda")
-          .order("created_at", { ascending: false })
-          .limit(60);
-        if (pastMsgs && pastMsgs.length > 0) {
-          // Exclude the very latest if it's from the current session (< 2 min ago)
-          const filtered = (pastMsgs as ConsultationRecord[]).filter(r => {
-            // Exclude last 2 hours — live session is in the messages array already. Timeline = PAST sessions only.
-            const age = now.getTime() - new Date(r.created_at).getTime();
-            return age > 2 * 60 * 60 * 1000;
-          });
-          if (filtered.length > 0) {
-            consultationTimeline = buildConsultationTimeline(filtered, now);
-          }
-        }
-      } catch { /* non-fatal */ }
+      // NOTE: consultationTimeline DB fetch disabled — the frontend sends full message history
+      // from the same DB table (user_sync_chat_messages). Loading it again here causes duplication:
+      // Gemini sees the same past answers in BOTH the messages array AND the timeline,
+      // causing it to treat repeated questions as already answered and loop old responses.
+      // Full journey context is carried in the messages array itself.
+      // consultationTimeline stays empty — Agastya reads the full thread directly.
     }
 
     // Seeker may use multiple names (legal name + spiritual name)
