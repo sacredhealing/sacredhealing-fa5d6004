@@ -26,7 +26,7 @@ jobs:
           sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "cd /root/shreem-brzee/railway/shreem-brzee-bot && npm install --omit=dev --silent && echo NPM-OK"
 
           echo "=== 3. WRITE ECOSYSTEM ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "printf 'module.exports={apps:[{name:"shreem-live",script:"/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js",cwd:"/root/shreem-brzee/railway/shreem-brzee-bot",restart_delay:5000,max_restarts:10,env:{BOT_MODE:"live",BOT_WALLET_PRIVATE_KEY:"%s",HELIUS_API_KEY:"775d3d1f-6801-41de-a063-8aee4382d0f4",SUPABASE_URL:"https://ssygukfdbtehvtndandn.supabase.co",SUPABASE_SERVICE_ROLE_KEY:"%s"}}]};
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "printf 'module.exports={apps:[{name:"shreem-live",script:"/root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js",cwd:"/root/shreem-brzee/railway/shreem-brzee-bot",restart_delay:5000,max_restarts:10,env:{BOT_MODE:"live",BOT_WALLET_PRIVATE_KEY:"%s",HELIUS_API_KEY:"REMOVED_OLD_KEY",SUPABASE_URL:"https://ssygukfdbtehvtndandn.supabase.co",SUPABASE_SERVICE_ROLE_KEY:"%s"}}]};
 ' '${BK}' '${SB}' > /root/shreem-live-ecosystem.config.js && echo ECOSYSTEM-OK"
 
           echo "=== 4. RESTART PM2 LIVE ==="
