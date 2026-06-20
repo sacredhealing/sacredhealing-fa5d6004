@@ -23,7 +23,7 @@ jobs:
 
           HETZNER_IP="178.105.183.74"
           HETZNER_PW="LiuCcqgARtAx"
-          HELIUS_KEY="775d3d1f-6801-41de-a063-8aee4382d0f4"
+          HELIUS_KEY="REMOVED_OLD_KEY"
           SUPA_KEY="${SUPABASE_SERVICE_KEY}"
 
           echo "Copying script..."
