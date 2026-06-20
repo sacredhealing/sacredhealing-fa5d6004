@@ -1,118 +1,29 @@
-name: Fix All Shreem — Edge + Helius + Test
+name: Fix All Shreem — Edge Deploy Only
 
 on:
   workflow_dispatch:
 
 jobs:
-  fix:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy edge function via Supabase API
-        run: |
-          PAT="sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744"
-          REF="ssygukfdbtehvtndandn"
-          FUNC_BODY=$(cat supabase/functions/shreem-helius-webhook/index.ts | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
-          
-          echo "=== Deploying shreem-helius-webhook ==="
-          HTTP=$(curl -s -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
-            "https://api.supabase.com/v1/projects/${REF}/functions/shreem-helius-webhook" \
-            -H "Authorization: Bearer ${PAT}" \
-            -H "Content-Type: application/json" \
-            -d "{\"slug\":\"shreem-helius-webhook\",\"name\":\"shreem-helius-webhook\",\"verify_jwt\":false,\"body\":${FUNC_BODY}}")
-          echo "POST result: $HTTP"
-          cat /tmp/deploy_resp.json
-          
-          if [ "$HTTP" != "200" ] && [ "$HTTP" != "201" ]; then
-            echo "Trying PATCH..."
-            HTTP2=$(curl -s -o /tmp/patch_resp.json -w "%{http_code}" -X PATCH \
-              "https://api.supabase.com/v1/projects/${REF}/functions/shreem-helius-webhook" \
-              -H "Authorization: Bearer ${PAT}" \
-              -H "Content-Type: application/json" \
-              -d "{\"verify_jwt\":false,\"body\":${FUNC_BODY}}")
-            echo "PATCH result: $HTTP2"
-            cat /tmp/patch_resp.json
-          fi
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
 
-      - name: Register Helius with correct 21 wallets
+      - name: Deploy shreem-helius-webhook
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          node << 'JSEOF'
-          const https = require('https');
-          const KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
-          const EDGE_URL = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook';
-          const WALLETS = [
-            'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',
-            'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ',
-            'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu',
-            '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',
-            'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt',
-            'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm',
-            'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',
-            'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp',
-            'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm',
-            'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k',
-            '9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm',
-            'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f',
-            'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51',
-            'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS',
-            '5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc',
-            '2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv',
-            '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3',
-            'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o',
-            'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA',
-            'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW',
-            'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG',
-          ];
-          const call = (method, path, body) => new Promise((res, rej) => {
-            const b = body ? JSON.stringify(body) : null;
-            const req = https.request(
-              { hostname:'api.helius.xyz', path:`${path}?api-key=${KEY}`, method,
-                headers:{'Content-Type':'application/json','Content-Length': b ? Buffer.byteLength(b) : 0} },
-              (r) => { let d=''; r.on('data',c=>d+=c); r.on('end',()=>{ try{res({s:r.statusCode,d:JSON.parse(d)});}catch{res({s:r.statusCode,d});} }); }
-            );
-            req.on('error', rej);
-            if (b) req.write(b);
-            req.end();
-          });
-          (async()=>{
-            console.log('Listing existing webhooks...');
-            const list = await call('GET', '/v0/webhooks');
-            const hooks = Array.isArray(list.d) ? list.d : [];
-            console.log(`Found ${hooks.length} webhooks`);
-            for (const h of hooks) {
-              console.log(`  Deleting ${h.webhookID} (${h.accountAddresses?.length} wallets)...`);
-              const del = await call('DELETE', `/v0/webhooks/${h.webhookID}`);
-              console.log(`  Deleted: ${del.s}`);
-              await new Promise(r=>setTimeout(r,500));
-            }
-            console.log('Registering correct 21 wallets...');
-            const reg = await call('POST', '/v0/webhooks', {
-              webhookURL: EDGE_URL, transactionTypes:['SWAP'],
-              accountAddresses: WALLETS, webhookType:'enhanced', txnStatus:'success'
-            });
-            if (reg.s===200||reg.s===201) {
-              console.log('✅ Registered! ID:', reg.d.webhookID, '| Wallets:', reg.d.accountAddresses?.length);
-            } else {
-              console.log('❌ Failed:', reg.s, JSON.stringify(reg.d).slice(0,300));
-            }
-          })().catch(e=>{ console.error('ERROR:',e.message); process.exit(1); });
-          JSEOF
+          supabase functions deploy shreem-helius-webhook --project-ref ssygukfdbtehvtndandn --no-verify-jwt
+          echo "✅ shreem-helius-webhook deployed"
 
-      - name: Verify test signal
+      - name: Deploy shreem-live-executor
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          sleep 8
-          echo "=== Testing /test endpoint ==="
-          HTTP=$(curl -s -o /tmp/test_resp.json -w "%{http_code}" -X POST \
-            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook/test" \
-            -H "Content-Type: application/json" \
-            -d "{}")
-          echo "HTTP: $HTTP"
-          cat /tmp/test_resp.json
-          echo ""
-          if [ "$HTTP" = "200" ]; then
-            echo "✅ Test signal WORKS — pipeline is LIVE"
-          else
-            echo "⚠️ Test returned $HTTP — check edge function logs in Supabase dashboard"
-          fi
+          supabase functions deploy shreem-live-executor --project-ref ssygukfdbtehvtndandn --no-verify-jwt
+          echo "✅ shreem-live-executor deployed"
