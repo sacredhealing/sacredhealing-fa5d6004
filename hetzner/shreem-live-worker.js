@@ -1,30 +1,51 @@
 // shreem-live-worker.js — Shreem Brzee Live Trade Executor on Hetzner
-// v6 — NEW Helius key + Jupiter lite-api + SELL signal auto-close
+// v7 — CREDIT OPTIMIZED: waitConfirm 2s→8s, health cached balance, public-only reads
 const https = require('https');
 const http  = require('http');
 
 const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-// NEW Helius key 7de253c3 — replaces dead key 775d3d1f
 const HELIUS_KEY   = process.env.HELIUS_API_KEY || '';
 const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-// Jupiter v6 lite endpoint (quote-api.jup.ag/v6 is deprecated/dead)
 const JUP_QUOTE    = 'https://lite-api.jup.ag/swap/v1/quote';
 const JUP_SWAP     = 'https://lite-api.jup.ag/swap/v1/swap';
 const SOL_MINT     = 'So11111111111111111111111111111111111111112';
 const LAMPORTS     = 1_000_000_000;
-const POLL_MS      = 15000;  // poll BUY signals every 15s (was 5s — saves DB credits)
-const SELL_POLL_MS = 20000;  // poll SELL signals every 20s (was 8s)
+
+// CREDIT FIX #1: Increase poll intervals — was 15s/20s
+const POLL_MS      = 20000;  // BUY signals every 20s
+const SELL_POLL_MS = 30000;  // SELL signals every 30s
 const PORT         = 3001;
 
-// READ RPCs: free public only — NEVER burn Helius credits for reads
-// Helius is only used for sendTransaction (needs speed/reliability)
+// READ RPCs: public only — NEVER Helius for reads
 const PUBLIC_RPCS = [
   'https://api.mainnet-beta.solana.com',
-  'https://solana-api.projectserum.com',
   'https://rpc.ankr.com/solana',
+  'https://solana-api.projectserum.com',
 ];
-const SEND_RPCS = [HELIUS_RPC, ...PUBLIC_RPCS]; // Helius first for tx send
+// Helius ONLY for sendTransaction — not getBalance, not getSignatureStatuses
+const SEND_RPCS = [...PUBLIC_RPCS, HELIUS_RPC]; // public first, Helius last resort
+
+// CREDIT FIX #2: Cache wallet balance — refresh only after confirmed trade or every 2min
+let _cachedBalance = null;
+let _balanceCachedAt = 0;
+const BALANCE_CACHE_MS = 120_000; // 2 minutes
+
+async function getWalletBalance(wallet) {
+  const now = Date.now();
+  if (_cachedBalance !== null && (now - _balanceCachedAt) < BALANCE_CACHE_MS) {
+    return _cachedBalance;
+  }
+  const res = await rpc('getBalance', [wallet]);
+  _cachedBalance = res.value / LAMPORTS;
+  _balanceCachedAt = now;
+  return _cachedBalance;
+}
+
+function invalidateBalanceCache() {
+  _cachedBalance = null;
+  _balanceCachedAt = 0;
+}
 
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function bs58Decode(str) {
@@ -35,7 +56,6 @@ function bs58Decode(str) {
 }
 
 function loadKeypair() {
-  // Accept SHREEM_BOT_KEYPAIR or BOT_WALLET_PRIVATE_KEY (set by shreem-go-live.yml)
   const raw = process.env.SHREEM_BOT_KEYPAIR || process.env.BOT_WALLET_PRIVATE_KEY;
   if (!raw) throw new Error('Neither SHREEM_BOT_KEYPAIR nor BOT_WALLET_PRIVATE_KEY is set');
   const t = raw.trim();
@@ -77,10 +97,10 @@ const sbGet   = (t, f) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', nu
 const sbPost  = (t, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}`, 'POST', b, { ...SB_HEADERS, Prefer: 'return=minimal' });
 const sbPatch = (t, f, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HEADERS);
 
-// RPC with fallback chain
-// READ ops (getBalance, getTokenAccounts, etc.) → public RPCs only, no Helius
-// WRITE ops (sendTransaction) → Helius first for speed, then public fallback
+// RPC with fallback chain — reads NEVER go to Helius
 async function rpc(method, params) {
+  // CRITICAL: getBalance, getSignatureStatuses, getTokenAccountsByOwner → public only
+  // Only sendTransaction may reach Helius (as last resort)
   const endpoints = method === 'sendTransaction' ? SEND_RPCS : PUBLIC_RPCS;
   let lastErr;
   for (const endpoint of endpoints) {
@@ -97,7 +117,6 @@ async function rpc(method, params) {
   throw lastErr ?? new Error(`RPC ${method} failed on all endpoints`);
 }
 
-// Jupiter quote — SOL -> token (BUY) or token -> SOL (SELL)
 async function jupiterQuote(inputMint, outputMint, amount, slippageBps = 300) {
   const url = `${JUP_QUOTE}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`;
   const r = await httpReq(url);
@@ -123,10 +142,13 @@ async function signAndSend(txBase64, secretKey) {
   return rpc('sendTransaction', [encoded, { encoding: 'base64', preflightCommitment: 'confirmed' }]);
 }
 
-async function waitConfirm(txSig, ms = 30000) {
+// CREDIT FIX #3: waitConfirm polls every 8s (was 2s = 4x fewer getSignatureStatuses calls)
+// Also waits 8s before first check — tx needs propagation time anyway
+async function waitConfirm(txSig, ms = 45000) {
   const dl = Date.now() + ms;
+  await new Promise(r => setTimeout(r, 8000)); // initial wait — tx needs propagation
   while (Date.now() < dl) {
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 8000)); // poll every 8s (was 2s)
     try {
       const res = await rpc('getSignatureStatuses', [[txSig], { searchTransactionHistory: true }]);
       const s = res?.value?.[0];
@@ -153,8 +175,6 @@ async function pollBuy() {
 
     for (const sig of signals) {
       if (sig.mint === USDC || sig.amount_sol < 0.01) continue;
-
-      // Mark processed immediately to avoid duplicate
       await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
 
       try {
@@ -163,11 +183,10 @@ async function pollBuy() {
         const kp = Keypair.fromSecretKey(sk);
         const wallet = kp.publicKey.toBase58();
 
-        const balRes = await rpc('getBalance', [wallet]);
-        const bal = balRes.value / LAMPORTS;
+        // CREDIT FIX: use cached balance — not a fresh RPC call every trade
+        const bal = await getWalletBalance(wallet);
         if (bal < 0.015) { console.log(`[BUY] Low balance: ${bal} SOL`); continue; }
 
-        // No duplicate open position in same mint
         const openMint = await sbGet('shreem_brzee_live_trades', `status=eq.open&mint=eq.${sig.mint}&limit=1`);
         if (openMint.length) { console.log(`[BUY] Already open: ${sig.symbol}`); continue; }
 
@@ -189,6 +208,9 @@ async function pollBuy() {
         const txSig = await signAndSend(swapTx, sk);
         const confirmed = await waitConfirm(txSig);
 
+        // Invalidate balance cache after trade completes
+        invalidateBalanceCache();
+
         const tokensReceived = Number(quote.outAmount);
         const entryPrice = (Number(quote.inAmount) > 0 && tokensReceived > 0)
           ? (Number(quote.inAmount) / LAMPORTS) / (tokensReceived / 1e6) : null;
@@ -209,7 +231,6 @@ async function pollBuy() {
         console.log(`[BUY] ✅ ${sig.symbol} | ${size.toFixed(4)} SOL | tx:${txSig?.slice(0,16)} | confirmed:${confirmed}`);
       } catch (e) {
         console.error(`[BUY] ERROR ${sig.sig}:`, e.message);
-        // Unmark so it retries next poll
         await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: false });
       }
     }
@@ -227,15 +248,12 @@ async function pollSell() {
     const sess = sessions[0];
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
-    // Get unprocessed SELL signals
     const sellSignals = await sbGet('shreem_brzee_signals',
       'action=eq.SELL&live_processed=eq.false&order=created_at.asc&limit=10');
 
     for (const sig of sellSignals) {
-      // Mark processed immediately
       await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
 
-      // Find matching open trade for this mint
       const openTrades = await sbGet('shreem_brzee_live_trades',
         `status=eq.open&mint=eq.${sig.mint}&select=*`);
 
@@ -244,7 +262,7 @@ async function pollSell() {
         continue;
       }
 
-      console.log(`[SELL] Whale ${sig.label} sold ${sig.symbol} — auto-closing our position`);
+      console.log(`[SELL] Whale ${sig.label} sold ${sig.symbol} — auto-closing`);
 
       for (const pos of openTrades) {
         try {
@@ -253,10 +271,10 @@ async function pollSell() {
           const kp = Keypair.fromSecretKey(sk);
           const wallet = kp.publicKey.toBase58();
 
-          // Get on-chain token balance
           let rawAmount = 0;
           let decimals = 6;
           try {
+            // getTokenAccountsByOwner goes to PUBLIC_RPCS only (not Helius)
             const taRes = await rpc('getTokenAccountsByOwner',
               [wallet, { mint: pos.mint }, { encoding: 'jsonParsed' }]);
             const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
@@ -268,8 +286,7 @@ async function pollSell() {
           }
 
           if (!rawAmount || rawAmount < 1) {
-            await sbPatch('shreem_brzee_live_trades',
-              `id=eq.${pos.id}`,
+            await sbPatch('shreem_brzee_live_trades', `id=eq.${pos.id}`,
               { status: 'closed', sell_reason: 'whale_sell_no_balance', closed_at: new Date().toISOString() });
             continue;
           }
@@ -278,6 +295,7 @@ async function pollSell() {
           const swapTx = await jupiterSwapTx(sellQuote, wallet);
           const txSig = await signAndSend(swapTx, sk);
           const confirmed = await waitConfirm(txSig);
+          invalidateBalanceCache(); // refresh after sell
 
           const solOut = Number(sellQuote.outAmount) / LAMPORTS;
           const sizeIn = Number(pos.amount_sol) || 0;
@@ -292,7 +310,6 @@ async function pollSell() {
             tx_sig_close: txSig,
           });
 
-          // Update session wins/losses
           const sessNow = await sbGet('shreem_brzee_session', 'id=eq.default&select=*');
           if (sessNow[0]) {
             await sbPatch('shreem_brzee_session', 'id=eq.default', {
@@ -311,9 +328,9 @@ async function pollSell() {
     }
 
     // ── Stop-loss: close any position down >30% ──────────────────────────────
+    // CREDIT FIX: Only fetch prices from DexScreener (free) — no RPC calls for stop-loss check
     const openAll = await sbGet('shreem_brzee_live_trades', 'status=eq.open&select=*');
     for (const pos of openAll) {
-      // Fetch current price from DexScreener
       let currentPrice = 0;
       try {
         const ds = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${pos.mint}`);
@@ -355,6 +372,7 @@ async function pollSell() {
           const swapTx = await jupiterSwapTx(sellQuote, wallet);
           const txSig = await signAndSend(swapTx, sk);
           const confirmed = await waitConfirm(txSig);
+          invalidateBalanceCache();
 
           const solOut = Number(sellQuote.outAmount) / LAMPORTS;
           const sizeIn = Number(pos.amount_sol) || 0;
@@ -380,29 +398,38 @@ async function pollSell() {
   finally { sellBusy = false; }
 }
 
-// ── Health check HTTP server ──────────────────────────────────────────────────
+// ── Health check HTTP server — CREDIT FIX: uses cached balance, not fresh RPC ─
+let _healthBalance = 0;
+let _healthBalanceAt = 0;
+
 http.createServer(async (req, res) => {
-  let balance = 0;
-  try {
-    const sk = loadKeypair();
-    const { Keypair } = require('@solana/web3.js');
-    const kp = Keypair.fromSecretKey(sk);
-    const balRes = await rpc('getBalance', [kp.publicKey.toBase58()]);
-    balance = balRes.value / LAMPORTS;
-  } catch {}
+  // Only refresh health balance every 3 minutes to avoid getBalance credit burn from monitoring tools
+  const now = Date.now();
+  if (now - _healthBalanceAt > 180_000) {
+    try {
+      const sk = loadKeypair();
+      const { Keypair } = require('@solana/web3.js');
+      const kp = Keypair.fromSecretKey(sk);
+      // Use cached balance if available, otherwise call PUBLIC RPC (not Helius)
+      const balRes = await rpc('getBalance', [kp.publicKey.toBase58()]);
+      _healthBalance = balRes.value / LAMPORTS;
+      _healthBalanceAt = now;
+    } catch {}
+  }
 
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
     status: 'running',
-    bot: 'Shreem Brzee Live Worker v6',
+    bot: 'Shreem Brzee Live Worker v7',
     helius_key_prefix: HELIUS_KEY.slice(0,8),
-    balance_sol: balance,
+    balance_sol: _healthBalance,
     uptime: Math.floor(process.uptime()),
     time: new Date().toISOString()
   }));
 }).listen(PORT, () => console.log(`[shreem] Health check on :${PORT}`));
 
-console.log('[shreem] v6 starting — BUY poll every 5s, SELL poll every 8s');
+console.log('[shreem] v7 CREDIT OPTIMIZED — BUY poll 20s, SELL poll 30s, waitConfirm 8s intervals');
+console.log('[shreem] Balance cached 2min, health balance cached 3min, reads = public RPCs only');
 console.log('[shreem] Helius key prefix:', HELIUS_KEY.slice(0,8));
 setInterval(pollBuy,  POLL_MS);
 setInterval(pollSell, SELL_POLL_MS);
