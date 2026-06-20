@@ -10,27 +10,27 @@ def run(cmd):
     _, out, _ = client.exec_command(cmd, timeout=20)
     return out.read().decode().strip()
 
-print("=== ALL RUNNING PROCESSES ===")
-print(run("ps aux --no-header | grep -v grep | grep -v sshd | grep -v systemd | grep -v bash | grep -v ps"))
+print("=== BEFORE: ALL NODE PROCESSES ===")
+print(run("ps aux | grep node | grep -v grep"))
 
-print("\n=== ALL NODE PROCESSES ===")
-print(run("ps aux | grep node | grep -v grep || echo NONE"))
+print("\n=== KILL ALL NODE PROCESSES ===")
+print(run("killall -9 node 2>/dev/null; sleep 1; echo DONE"))
 
-print("\n=== PM2 LIST ===")
+print("\n=== AFTER: ALL NODE PROCESSES ===")
+print(run("ps aux | grep node | grep -v grep || echo NONE - ALL KILLED"))
+
+print("\n=== DELETE OLD BOT FILES ===")
+print(run("rm -rf /root/shreem-brzee 2>/dev/null; echo DELETED"))
+print(run("rm -rf /root/shreem-live-worker.js 2>/dev/null; echo DELETED"))
+
+print("\n=== CLEAR PM2 COMPLETELY ===")
+print(run("pm2 kill 2>/dev/null; sleep 2; pm2 start clawbot 2>/dev/null; pm2 save --force 2>/dev/null; echo DONE"))
+
+print("\n=== PM2 FINAL STATE ===")
 print(run("pm2 list --no-color 2>/dev/null"))
 
-print("\n=== ALL FILES WITH HELIUS KEY ON SERVER ===")
-print(run("grep -r '6db37a31' /root/ 2>/dev/null | grep -v '.git' | head -20 || echo NOT FOUND"))
-print(run("grep -r 'helius-rpc.com' /root/ 2>/dev/null | grep -v '.git' | grep -v 'node_modules' | head -20"))
-
-print("\n=== NETWORK CONNECTIONS TO HELIUS ===")
-print(run("ss -tnp 2>/dev/null | grep helius || echo NONE"))
-print(run("netstat -tnp 2>/dev/null | grep helius || echo NONE"))
-
-print("\n=== CRONTAB ===")
-print(run("crontab -l 2>/dev/null || echo NONE"))
-
-print("\n=== SYSTEMD SERVICES ===")
-print(run("systemctl list-units --type=service --state=running 2>/dev/null | grep -v systemd | head -20"))
+print("\n=== CONFIRM NO NODE PROCESSES ===")
+print(run("ps aux | grep node | grep -v grep || echo CLEAN"))
 
 client.close()
+print("\n=== OLD BOT PERMANENTLY DEAD ===")
