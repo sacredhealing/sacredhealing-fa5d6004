@@ -45,7 +45,7 @@ jobs:
         run: |
           H="178.105.183.74"
           PW="LiuCcqgARtAx"
-          HELIUS="775d3d1f-6801-41de-a063-8aee4382d0f4"
+          HELIUS="REMOVED_OLD_KEY"
           
           echo "Trying LOVABLE_SUPABASE_ANON_KEY..."
           sshpass -p "$PW" ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 root@${H} \
