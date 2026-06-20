@@ -1,5 +1,5 @@
 === INJECT TEST SIGNAL ===
-{"ok":true,"sig":"TEST_1781975318645","mode":"live","exec":{"ok":false,"error":"Bot wallet balance too low: 0.00329854 SOL"},"version":"v5"}
+{"ok":true,"sig":"TEST_1781975454675","mode":"live","exec":{"ok":false,"error":"Bot wallet balance too low: 0.00329854 SOL"},"version":"v5"}
 === SIGNALS (last 5) ===
 
 === SESSION ===
