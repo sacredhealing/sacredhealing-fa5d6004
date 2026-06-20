@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os, paramiko, json, re
-from datetime import datetime, timezone, timedelta
 
 HP = os.environ["HP"]
 client = paramiko.SSHClient()
@@ -16,42 +15,34 @@ m = re.search(r'SUPABASE_SERVICE_ROLE_KEY.{0,5}["\'](\S{20,})["\'\s]', eco)
 sb_key = m.group(1) if m else ""
 SB = "https://ssygukfdbtehvtndandn.supabase.co"
 
-# Get TOTAL signal count and last 10 min
-print("=== SIGNAL COUNT ===")
-r = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_signals?select=created_at&order=created_at.desc" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" -H "Range: 0-999" -H "Prefer: count=exact" -i')
-# Extract count from header
-lines = r.split("\n")
-for l in lines[:10]:
-    if 'content-range' in l.lower() or 'Content-Range' in l:
-        print("Total signals in DB:", l)
+# STOP ALL PM2
+print("=== STOP ALL ===")
+print(run("pm2 stop all && pm2 delete all && pm2 save --force && echo DONE"))
 
-# Get count for last 10 min  
-r2 = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_signals?select=created_at&order=created_at.desc&limit=200" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}"')
-try:
-    sigs = json.loads(r2)
-    cutoff10 = datetime.now(timezone.utc) - timedelta(minutes=10)
-    cutoff30 = datetime.now(timezone.utc) - timedelta(minutes=30)
-    last10 = [s for s in sigs if s.get('created_at','') > cutoff10.isoformat()]
-    last30 = [s for s in sigs if s.get('created_at','') > cutoff30.isoformat()]
-    print(f"Signals last 10min: {len(last10)}")
-    print(f"Signals last 30min: {len(last30)}")
-    print(f"Rate: {len(last10)*6}/hour")
-    print(f"= {len(last10)*6*24}/day credits from webhook receives")
-    if len(last10) > 0:
-        print(f"\nMost recent: {sigs[0].get('created_at','')} from {sigs[0].get('label','?')}")
-except Exception as e:
-    print(f"Error: {e}")
+# Stop session in DB
+from datetime import datetime, timezone
+now = datetime.now(timezone.utc).isoformat()
+print("\n=== STOP SESSION ===")
+r = run(f'curl -sf -X PATCH "{SB}/rest/v1/shreem_brzee_session?id=eq.default" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" -H "Content-Type: application/json" -d "{{\"stopped_at\":\"{now}\",\"mode\":\"paper\"}}"')
+print(r[:200])
 
-# Check Helius webhook - is there more than 1 webhook registered?
-HELIUS = os.environ.get("HELIUS_KEY","7de253c3-49e2-42be-9672-23a761260f86")
-print("\n=== HELIUS WEBHOOKS ===")
-r3 = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
+# Delete ALL Helius webhooks
+HELIUS = os.environ.get("HELIUS_KEY", "7de253c3-49e2-42be-9672-23a761260f86")
+print("\n=== DELETE ALL HELIUS WEBHOOKS ===")
+r2 = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
 try:
-    hooks = json.loads(r3)
-    print(f"Total webhooks registered: {len(hooks)}")
+    hooks = json.loads(r2)
+    print(f"Found {len(hooks)} webhooks")
     for h in hooks:
-        print(f"  ID: {h.get('webhookID')} | type: {h.get('webhookType')} | wallets: {len(h.get('accountAddresses',[]))} | txTypes: {h.get('transactionTypes')}")
+        wid = h.get('webhookID','')
+        dr = run(f'curl -sf -X DELETE "https://api.helius.xyz/v0/webhooks/{wid}?api-key={HELIUS}"')
+        print(f"Deleted {wid}: {dr[:50]}")
 except Exception as e:
-    print(f"Error: {e} | {r3[:200]}")
+    print(f"Error: {e} | {r2[:200]}")
 
+# Verify
+r3 = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
+print(f"\nWebhooks remaining: {r3[:100]}")
+
+print("\n=== ALL STOPPED. Credits will stop draining now. ===")
 client.close()
