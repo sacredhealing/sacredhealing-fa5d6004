@@ -869,7 +869,7 @@ export default function ShreemBrzeePerformance() {
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
                       <div style={{ textAlign:"right" }}>
-                        <div style={{ fontSize:15, fontWeight:900, color:pnlColor }}>{pnlPct!==null?`${pnlPct>=0?"+":""}${pnlPct.toFixed(2)}%`:"—"}</div>
+                        <div style={{ fontSize:noLiquidity?11:15, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                         <div style={{ fontSize:9, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
                       </div>
                       <span style={{ color:GOLD, fontSize:14, transform:expanded?"rotate(90deg)":"rotate(0deg)", transition:"transform .2s" }}>›</span>
