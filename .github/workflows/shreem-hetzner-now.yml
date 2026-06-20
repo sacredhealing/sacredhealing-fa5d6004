@@ -22,68 +22,55 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          echo "=== 1. VERIFY SSH ==="
+          echo "SSH CHECK"
           sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "echo OK && node -v && pm2 -v"
 
-          echo "=== 2. PULL REPO ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            if [ ! -d /root/shreem-brzee/.git ]; then \
-              git clone https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git /root/shreem-brzee --depth=1 --quiet; \
-            else \
-              cd /root/shreem-brzee && \
-              git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git && \
-              git fetch origin main --quiet && \
-              git reset --hard origin/main --quiet; \
-            fi && echo REPO-OK"
+          echo "PULL REPO"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "
+            cd /root
+            if [ -d shreem-brzee/.git ]; then
+              cd shreem-brzee
+              git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git
+              git fetch origin main --quiet
+              git reset --hard origin/main --quiet
+            else
+              git clone https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git shreem-brzee --depth=1 --quiet
+            fi
+            echo REPO-OK
+          "
 
-          echo "=== 3. INSTALL DEPS ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            cd /root/shreem-brzee && \
-            npm install --omit=dev --silent 2>&1 | tail -3 && \
-            echo DEPS-OK"
+          echo "INSTALL DEPS"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "cd /root/shreem-brzee && npm install --omit=dev --silent 2>&1 | tail -3 && echo DEPS-OK"
 
-          echo "=== 4. COPY WORKER ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            cp /root/shreem-brzee/hetzner/shreem-live-worker.js /root/shreem-live-worker.js && \
-            head -3 /root/shreem-live-worker.js && \
-            echo COPIED"
+          echo "COPY WORKER"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "cp /root/shreem-brzee/hetzner/shreem-live-worker.js /root/shreem-live-worker.js && head -2 /root/shreem-live-worker.js && echo COPIED"
 
-          echo "=== 5. WRITE ECOSYSTEM (with HELIUS_API_KEY) ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            cat > /root/shreem-ecosystem.config.js << 'ECOEOF'
-module.exports = {
-  apps: [{
-    name: 'shreem-live',
-    script: '/root/shreem-live-worker.js',
-    cwd: '/root/shreem-brzee',
-    node_args: '--max-old-space-size=512',
-    restart_delay: 5000,
-    max_restarts: 10,
-    env: {
-      SUPABASE_SERVICE_ROLE_KEY: '${SB_KEY}',
-      HELIUS_API_KEY: '${HELIUS_KEY}',
-      NODE_ENV: 'production'
-    }
-  }]
-};
-ECOEOF
-            echo ECOSYSTEM-OK"
+          echo "WRITE ECOSYSTEM"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "
+            node -e "
+              var cfg = {apps:[{name:'shreem-live',script:'/root/shreem-live-worker.js',cwd:'/root/shreem-brzee',restart_delay:5000,max_restarts:10}]};
+              require('fs').writeFileSync('/root/shreem-ecosystem.config.js','module.exports='+JSON.stringify(cfg));
+              console.log('ECOSYSTEM-OK');
+            "
+          "
 
-          echo "=== 6. STOP OLD + START NEW ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            pm2 stop shreem-live 2>/dev/null || true; \
-            pm2 delete shreem-live 2>/dev/null || true; \
-            pm2 start /root/shreem-ecosystem.config.js && \
-            pm2 save --force && \
-            echo PM2-OK"
+          echo "WRITE ENV FILE"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "
+            echo SUPABASE_SERVICE_ROLE_KEY=${SB_KEY} > /root/.shreem-env
+            echo HELIUS_API_KEY=${HELIUS_KEY} >> /root/.shreem-env
+            echo NODE_ENV=production >> /root/.shreem-env
+            echo ENV-OK
+          "
 
-          echo "=== 7. VERIFY ==="
+          echo "RESTART PM2"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "
+            pm2 stop shreem-live 2>/dev/null || true
+            pm2 delete shreem-live 2>/dev/null || true
+            export \$(cat /root/.shreem-env | xargs)
+            pm2 start /root/shreem-ecosystem.config.js
+            pm2 save --force
+            echo PM2-OK
+          "
+
           sleep 6
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            pm2 list && \
-            echo '' && \
-            pm2 logs shreem-live --lines 20 --nostream 2>/dev/null || true"
-
-          echo "=== 8. HEALTH CHECK ==="
-          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "\
-            sleep 3 && curl -sf http://localhost:3001/ | python3 -m json.tool 2>/dev/null || echo 'HEALTH-STARTING'"
+          sshpass -p "${HP}" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 list && pm2 logs shreem-live --lines 20 --nostream 2>/dev/null; curl -sf http://localhost:3001/ || echo HEALTH-STARTING"
