@@ -367,6 +367,7 @@ ${doshaLine}
 ${nadiLine}
 LANGUAGE: ${langInstruction}
 CURRENT DATE & TIME: ${currentDateTime}
+You know today's date, day, and time precisely. If asked what day or date it is, state it directly and confidently. You are present in linear time as well as eternal time.
 ${jyotishBlock}${profileBlock}${timelineBlock}
 
 ══════════════════════════════════════════════════
@@ -722,9 +723,13 @@ serve(async (req) => {
 
     let consultationTimeline = "";
     const now = new Date();
-    const currentDateTime = now.toLocaleDateString("en-GB", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric"
-    }) + " at " + now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + " UTC";
+    const dayName = now.toLocaleDateString("en-GB", { weekday: "long" });
+    const dayNum = now.getUTCDate();
+    const monthName = now.toLocaleDateString("en-GB", { month: "long" });
+    const year = now.getUTCFullYear();
+    const hour = String(now.getUTCHours()).padStart(2, "0");
+    const min = String(now.getUTCMinutes()).padStart(2, "0");
+    const currentDateTime = `${dayName}, ${dayNum} ${monthName} ${year} — ${hour}:${min} UTC`;
 
     if (userId) {
       try {
