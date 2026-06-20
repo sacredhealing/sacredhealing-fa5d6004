@@ -438,14 +438,21 @@ export default function ShreemBrzeePerformance() {
       if (bal > 0) setBalInput(bal.toFixed(4));
       console.log("[botWallet] RPC balance:", bal, "SOL");
 
-      // 2) Best-effort health check (non-blocking) — only to confirm keypair is loaded
+      // 2) Best-effort health check (non-blocking) — only update wallet address, NEVER overwrite balance from RPC
       fetch(
         "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health",
         { signal: AbortSignal.timeout(8000) }
       ).then(r => r.ok ? r.json() : null)
-       .then(data => { if (data?.wallet && data?.balance_sol != null) {
-         setBotWallet({ wallet: data.wallet, balance_sol: data.balance_sol });
-       }})
+       .then(data => {
+         if (data?.wallet) {
+           // Prefer health balance only if it's a positive number; otherwise keep RPC value
+           const healthBal = Number(data.balance_sol);
+           setBotWallet(prev => ({
+             wallet: data.wallet,
+             balance_sol: healthBal > 0 ? healthBal : (prev?.balance_sol ?? bal),
+           }));
+         }
+       })
        .catch(() => {});
     } catch (e: any) {
       console.warn("[botWallet] balance fetch failed:", e.message);
