@@ -344,27 +344,93 @@ function findWhale(tx: any): string | null {
   return null;
 }
 
+// Handles BOTH raw and enhanced Helius webhook formats
 function parseSwap(tx: any, wallet: string) {
-  const tokenTx = (tx.tokenTransfers || []).find((t: any) =>
-    (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.mint !== SOL_MINT
-  );
-  if (!tokenTx) return null;
-  const acctData = (tx.accountData || []).find((a: any) => a.account === wallet);
-  let amountSol = acctData?.nativeBalanceChange ? Math.abs(acctData.nativeBalanceChange) / LAMPORTS : 0;
-  if (!amountSol || amountSol < 0.001) {
-    amountSol = (tx.nativeTransfers || [])
-      .filter((t: any) => (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.amount > 100_000)
-      .reduce((s: number, t: any) => s + t.amount, 0) / LAMPORTS;
+  // ── Enhanced format (has tokenTransfers array) ──────────────────────────
+  if (tx.tokenTransfers?.length) {
+    const tokenTx = tx.tokenTransfers.find((t: any) =>
+      (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.mint !== SOL_MINT
+    );
+    if (!tokenTx) return null;
+    const acctData = (tx.accountData || []).find((a: any) => a.account === wallet);
+    let amountSol = acctData?.nativeBalanceChange ? Math.abs(acctData.nativeBalanceChange) / LAMPORTS : 0;
+    if (!amountSol || amountSol < 0.001) {
+      amountSol = (tx.nativeTransfers || [])
+        .filter((t: any) => (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.amount > 100_000)
+        .reduce((s: number, t: any) => s + t.amount, 0) / LAMPORTS;
+    }
+    return {
+      action:     (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY"|"SELL",
+      mint:       tokenTx.mint as string,
+      symbol:     tokenTx.tokenName || tokenTx.symbol || null,
+      amountSol,
+      tokenAmount: tokenTx.tokenAmount || null,
+      isPumpFun:  (tx.source||"").toLowerCase().includes("pump") ||
+                  (tx.instructions||[]).some((ix: any) => ix.programId === "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"),
+    };
   }
-  return {
-    action:     (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY"|"SELL",
-    mint:       tokenTx.mint as string,
-    symbol:     tokenTx.tokenName || tokenTx.symbol || null,
-    amountSol,
-    tokenAmount: tokenTx.tokenAmount || null,
-    isPumpFun:  (tx.source||"").toLowerCase().includes("pump") ||
-                (tx.instructions||[]).some((ix: any) => ix.programId === "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"),
-  };
+
+  // ── Raw format (transaction.message + meta.pre/postTokenBalances) ────────
+  // Raw format: { transaction: { message: { accountKeys, instructions } }, meta: { preTokenBalances, postTokenBalances, preBalances, postBalances, logMessages } }
+  const meta = tx.meta;
+  const msg  = tx.transaction?.message;
+  if (!meta || !msg) return null;
+
+  const keys: string[] = (msg.accountKeys || []).map((k: any) =>
+    typeof k === "string" ? k : (k?.pubkey ?? "")
+  );
+  const walletIdx = keys.indexOf(wallet);
+  if (walletIdx < 0) return null;
+
+  // Detect swap: SOL balance changed + token balance changed for wallet
+  const preSol  = (meta.preBalances?.[walletIdx]  ?? 0) / LAMPORTS;
+  const postSol = (meta.postBalances?.[walletIdx] ?? 0) / LAMPORTS;
+  const solDiff = postSol - preSol; // negative = spent SOL (BUY), positive = received SOL (SELL)
+
+  // Find token balance changes for this wallet
+  const preTokens  = (meta.preTokenBalances  || []).filter((b: any) => keys[b.accountIndex] === wallet || b.owner === wallet);
+  const postTokens = (meta.postTokenBalances || []).filter((b: any) => keys[b.accountIndex] === wallet || b.owner === wallet);
+
+  // Find a non-SOL token that changed
+  let mint: string | null = null;
+  let tokenDiff = 0;
+
+  for (const post of postTokens) {
+    if (post.mint === SOL_MINT) continue;
+    const pre = preTokens.find((p: any) => p.mint === post.mint) ?? { uiTokenAmount: { uiAmount: 0 } };
+    const diff = (post.uiTokenAmount?.uiAmount ?? 0) - (pre.uiTokenAmount?.uiAmount ?? 0);
+    if (Math.abs(diff) > 0) { mint = post.mint; tokenDiff = diff; break; }
+  }
+  // Also check pre-tokens for tokens that disappeared (full sell)
+  if (!mint) {
+    for (const pre of preTokens) {
+      if (pre.mint === SOL_MINT) continue;
+      const post = postTokens.find((p: any) => p.mint === pre.mint);
+      if (!post || (post.uiTokenAmount?.uiAmount ?? 0) < (pre.uiTokenAmount?.uiAmount ?? 0)) {
+        mint = pre.mint;
+        tokenDiff = (post?.uiTokenAmount?.uiAmount ?? 0) - (pre.uiTokenAmount?.uiAmount ?? 0);
+        break;
+      }
+    }
+  }
+
+  if (!mint) return null;
+
+  const amountSol = Math.abs(solDiff);
+  if (amountSol < 0.001) return null;
+
+  // BUY = SOL went down (spent) + tokens went up | SELL = SOL went up + tokens went down
+  const action: "BUY"|"SELL" = (solDiff < 0 && tokenDiff > 0) ? "BUY" : "SELL";
+
+  // Detect pump.fun from log messages or program IDs
+  const logs = (meta.logMessages || []).join(" ");
+  const isPumpFun = logs.includes("pump") ||
+    (msg.instructions || []).some((ix: any) => {
+      const prog = typeof ix.programId === "string" ? ix.programId : keys[ix.programIdIndex ?? -1] ?? "";
+      return prog === "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
+    });
+
+  return { action, mint, symbol: null, amountSol, tokenAmount: Math.abs(tokenDiff) || null, isPumpFun };
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -402,16 +468,7 @@ serve(async (req) => {
   const url  = new URL(req.url);
   const path = url.pathname;
 
-  // ── Raw payload logging (debug: see every incoming request) ──
-  if (req.method === "POST") {
-    try {
-      const cloned = req.clone();
-      const rawBody = await cloned.text();
-      console.log(`[RAW-INCOMING] path=${path} bytes=${rawBody.length} body=${rawBody.slice(0, 4000)}`);
-    } catch (e: any) {
-      console.log(`[RAW-INCOMING] failed to clone/read: ${e?.message}`);
-    }
-  }
+  // Raw logging disabled — was cloning every request body unnecessarily
 
 
   // ── Cron endpoint — called every 5 min by Supabase cron ────────────────
@@ -786,7 +843,8 @@ serve(async (req) => {
     for (const tx of txs) {
       // Load FRESH session for each tx — reflects portfolio deductions from prior txs in same batch
       try {
-        const sig    = tx.signature;
+        // Support both raw (tx.transaction.signatures[0]) and enhanced (tx.signature)
+        const sig = tx.signature ?? tx.transaction?.signatures?.[0];
         if (!sig) { skipped++; continue; }
         const wallet = findWhale(tx);
         if (!wallet) { skipped++; continue; }
@@ -803,7 +861,7 @@ serve(async (req) => {
           amount_sol:   swap.amountSol,
           token_amount: swap.tokenAmount,
           is_pump_fun:  swap.isPumpFun,
-          block_time:   tx.timestamp || null,
+          block_time:   tx.timestamp ?? tx.blockTime ?? null,
           created_at:   new Date().toISOString(),
         };
 
