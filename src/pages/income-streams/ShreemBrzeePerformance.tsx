@@ -192,6 +192,8 @@ export default function ShreemBrzeePerformance() {
   const [solUsd, setSolUsd]       = useState(150);
   const [solEur, setSolEur]       = useState(0.92);
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
+  const [pricesFetched, setPricesFetched] = useState(false);
+
   const [edgeOk, setEdgeOk]       = useState<boolean|null>(null);
 
   // Positions (open)
@@ -348,10 +350,12 @@ export default function ShreemBrzeePerformance() {
         if (n > 0) updated[m] = n;
       }
       if (Object.keys(updated).length) setLivePrices(prev => ({ ...prev, ...updated }));
+      setPricesFetched(true);
     } catch (e) {
       console.warn("[ShreemBrzee] price batch failed", e);
     }
   }, [openPos, PRICE_URL]);
+
 
   useEffect(() => {
     updatePrices();
@@ -361,34 +365,55 @@ export default function ShreemBrzeePerformance() {
   }, [updatePrices]);
 
   // ── Close a position ───────────────────────────────────────────────────────
-  // closePosition: only used for manual "CLOSE TRADE" button
-  // Calls edge function /signal to trigger server-side close
+  // Manual CLOSE TRADE. Calls shreem-live-executor with trade_id. Executor:
+  //  • zero on-chain token balance → mark closed in DB
+  //  • balance > 0 → Jupiter swap token→SOL, write real exit data
+  const [closingIds, setClosingIds] = useState<Set<string>>(new Set());
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
+    const id = pos.id;
+    setClosingIds(prev => { const n = new Set(prev); n.add(id); return n; });
     try {
       notify("Closing position…", "info");
-      // Call edge function /close-trade directly — server fetches price and closes
-      const r = await fetch(`${EDGE_BASE}/close-trade`, {
+      const EXEC = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor";
+      const r = await fetch(EXEC, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trade_id: pos.id }),
+        body: JSON.stringify({ action: "close", trade_id: id, reason }),
       });
       const result = r.ok ? await r.json() : null;
-      if (!r.ok || !result?.ok) {
-        // Fallback: write directly to DB if edge fn fails
-        await d.from("shreem_brzee_paper_trades").update({
-          status: "closed",
-          closed_at: new Date().toISOString(),
-          sell_reason: "manual",
-          pnl_pct: 0,
-          pnl_sol: 0,
-        }).eq("id", pos.id);
-        notify("Position closed (no price data)", "info");
+      const first  = result?.results?.[0];
+
+      if (result?.ok && first?.ok) {
+        notify(`✅ ${pos.symbol || "Position"} closed${first.pnl_pct != null ? ` (${first.pnl_pct >= 0 ? "+" : ""}${Number(first.pnl_pct).toFixed(1)}%)` : ""}`, "ok");
+      } else if (result?.ok && first && !first.ok && /no token balance/i.test(first.reason || "")) {
+        notify(`Position closed (no on-chain balance)`, "info");
+      } else if (result?.skipped) {
+        // Not a live trade — fall back to paper close-trade endpoint
+        const r2 = await fetch(`${EDGE_BASE}/close-trade`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trade_id: id }),
+        });
+        const r2j = r2.ok ? await r2.json() : null;
+        if (r2j?.ok) notify(`✅ ${r2j.symbol || "Position"} closed`, "ok");
+        else {
+          await d.from("shreem_brzee_paper_trades").update({
+            status: "closed", closed_at: new Date().toISOString(),
+            sell_reason: "manual", pnl_pct: 0, pnl_sol: 0,
+          }).eq("id", id);
+          notify("Position closed", "info");
+        }
       } else {
-        notify(`✅ ${result.symbol || "Position"} closed`, "ok");
+        notify(`Close failed: ${first?.error || result?.error || "unknown"}`, "err");
       }
       setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); }, 1500);
-    } catch (e: any) { notify(`Close failed: ${e.message?.slice(0,60)}`, "err"); }
+    } catch (e: any) {
+      notify(`Close failed: ${e.message?.slice(0,60)}`, "err");
+    } finally {
+      setClosingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+    }
   }, [fetchOpen, fetchTrades, fetchSession, notify]);
+
 
   // v5: ALL exit logic runs server-side in edge function:
   //   whale_sell_mirror — whale SELL signal detected → close immediately
@@ -429,35 +454,18 @@ export default function ShreemBrzeePerformance() {
   const liveIntervalRef                 = useRef<ReturnType<typeof setInterval>|null>(null);
 
   const checkBotWallet = useCallback(async () => {
-    // Known bot wallet — always pull real on-chain SOL balance via Helius RPC
+    // Bot wallet — SOL balance comes ONLY from on-chain RPC. No health-endpoint override, no caching.
     const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
     try {
-      // 1) Direct RPC read — source of truth for balance
       const bal = await getWalletBalance(BOT_WALLET);
       setBotWallet({ wallet: BOT_WALLET, balance_sol: bal });
       if (bal > 0) setBalInput(bal.toFixed(4));
       console.log("[botWallet] RPC balance:", bal, "SOL");
-
-      // 2) Best-effort health check (non-blocking) — only update wallet address, NEVER overwrite balance from RPC
-      fetch(
-        "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health",
-        { signal: AbortSignal.timeout(8000) }
-      ).then(r => r.ok ? r.json() : null)
-       .then(data => {
-         if (data?.wallet) {
-           // Prefer health balance only if it's a positive number; otherwise keep RPC value
-           const healthBal = Number(data.balance_sol);
-           setBotWallet(prev => ({
-             wallet: data.wallet,
-             balance_sol: healthBal > 0 ? healthBal : (prev?.balance_sol ?? bal),
-           }));
-         }
-       })
-       .catch(() => {});
     } catch (e: any) {
       console.warn("[botWallet] balance fetch failed:", e.message);
     }
   }, []);
+
 
   const toggleLiveMode = async (goLive: boolean) => {
     setLiveLoading(true);
@@ -830,11 +838,16 @@ export default function ShreemBrzeePerformance() {
               const entry   = Number(pos.entry_price) || 0;
               const size    = Number(pos.amount_sol) || 0;
               const price   = livePrices[pos.mint];
-              // If entry_price was 0 (failed at open), show current price but mark PNL as pending
+              // Real P&L: on-chain entry vs DexScreener current price. No fake values.
               const hasPriceData = entry > 0 && price && price > 0;
               const pnlPct  = hasPriceData ? (price - entry) / entry * 100 : null;
               const pnlSol  = pnlPct !== null ? size * (pnlPct / 100) : null;
               const pnlEur  = pnlSol !== null ? pnlSol * solUsd * solEur : null;
+              // No DexScreener price after first batch ⇒ no liquidity
+              const noLiquidity = pricesFetched && entry > 0 && (!price || price <= 0);
+              const pnlLabel = pnlPct !== null
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
+                : noLiquidity ? "no liquidity" : "—";
               const entryMissing = entry <= 0;
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
@@ -842,6 +855,8 @@ export default function ShreemBrzeePerformance() {
               const pnlColor= pnlPct === null ? "#64748b" : pnlPct >= 0 ? GREEN : RED;
               const sym     = pos.symbol || pos.mint?.slice(0,6) || "?";
               const expanded= expandedPos?.id === pos.id;
+              const isClosing = closingIds.has(pos.id);
+
               return (
                 <div key={pos.id} style={{ borderRadius:16, marginBottom:8, overflow:"hidden", border:`1px solid ${expanded?"rgba(212,175,55,.4)":"rgba(16,185,129,.2)"}`, background:expanded?"rgba(212,175,55,.04)":"rgba(16,185,129,.03)" }}>
                   <div onClick={() => setExpandedPos(expanded ? null : pos)} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", cursor:"pointer" }}>
@@ -854,7 +869,7 @@ export default function ShreemBrzeePerformance() {
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
                       <div style={{ textAlign:"right" }}>
-                        <div style={{ fontSize:15, fontWeight:900, color:pnlColor }}>{pnlPct!==null?`${pnlPct>=0?"+":""}${pnlPct.toFixed(2)}%`:"—"}</div>
+                        <div style={{ fontSize:noLiquidity?11:15, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                         <div style={{ fontSize:9, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
                       </div>
                       <span style={{ color:GOLD, fontSize:14, transform:expanded?"rotate(90deg)":"rotate(0deg)", transition:"transform .2s" }}>›</span>
@@ -881,13 +896,13 @@ export default function ShreemBrzeePerformance() {
                       <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.08)`, border:`1px solid rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                         <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
                         <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-                          <div style={{ fontSize:18, fontWeight:900, color:pnlColor }}>{pnlPct!==null?`${pnlPct>=0?"+":""}${pnlPct.toFixed(2)}%`:"—"}</div>
+                          <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                           <div style={{ fontSize:13, fontWeight:700, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
                         </div>
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"0 12px 12px" }}>
                         <a href={`https://dexscreener.com/solana/${pos.mint}`} target="_blank" rel="noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:10, borderRadius:12, border:"1px solid rgba(212,175,55,.3)", background:"rgba(212,175,55,.06)", color:GOLD, fontSize:10, fontWeight:800, textDecoration:"none" }}>📊 DEXSCREENER</a>
-                        <button onClick={() => { closePosition(pos,"manual"); setExpandedPos(null); }} style={{ padding:10, borderRadius:12, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:10, fontWeight:900, cursor:"pointer" }}>✕ CLOSE TRADE</button>
+                        <button onClick={() => { if (!isClosing) { closePosition(pos,"manual"); } }} disabled={isClosing} style={{ padding:10, borderRadius:12, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:10, fontWeight:900, cursor:isClosing?"wait":"pointer", opacity:isClosing?0.7:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>{isClosing ? (<><span style={{ display:"inline-block", width:10, height:10, border:"2px solid rgba(239,68,68,.3)", borderTopColor:RED, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />CLOSING…</>) : "✕ CLOSE TRADE"}</button>
                       </div>
                     </div>
                   )}
