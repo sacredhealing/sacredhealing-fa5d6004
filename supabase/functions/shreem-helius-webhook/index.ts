@@ -368,8 +368,35 @@ function parseSwap(tx: any, wallet: string) {
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
+// Auto-register Helius on cold start using HELIUS_API_KEY secret
+let _registered = false;
+async function autoRegisterHelius() {
+  if (_registered || !HELIUS_KEY) return;
+  _registered = true;
+  try {
+    const SELF = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
+    const WH = ["GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE", "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt", "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw", "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", "AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm", "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k", "9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm", "GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f", "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", "5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc", "2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv", "4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3", "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA"];
+    const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
+    if (listR.ok) {
+      const hooks = await listR.json().catch(()=>[]);
+      for (const h of (Array.isArray(hooks)?hooks:[])) {
+        await fetch(`https://api.helius.xyz/v0/webhooks/${h.webhookID}?api-key=${HELIUS_KEY}`,{method:"DELETE"});
+        await new Promise(r=>setTimeout(r,200));
+      }
+    }
+    const r = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({webhookURL:SELF,transactionTypes:["SWAP"],accountAddresses:WH,webhookType:"enhanced",txnStatus:"success"})
+    });
+    const j = await r.json().catch(()=>({}));
+    console.log(j?.webhookID ? `[helius] ✅ registered ${j.webhookID} wallets=${j.accountAddresses?.length}` : `[helius] ❌ ${JSON.stringify(j).slice(0,100)}`);
+    if (!j?.webhookID) _registered = false;
+  } catch(e:any) { console.log("[helius] error:",e.message); _registered=false; }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  autoRegisterHelius().catch(()=>{});
 
   const url  = new URL(req.url);
   const path = url.pathname;
