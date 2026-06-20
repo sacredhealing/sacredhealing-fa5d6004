@@ -207,6 +207,77 @@ serve(async (req) => {
     const wallet = pubkeyToBase58(kp.publicKey);
     const body   = await req.json().catch(() => ({}));
 
+    // ── CLOSE / SELL handler ────────────────────────────────────────────────
+    // body: { action: 'close', trade_id?: string, mint?: string, reason?: string }
+    if (body?.action === "close" || body?.action === "sell") {
+      const reason = body?.reason || "manual";
+      let q = sb.from("shreem_brzee_live_trades").select("*").eq("status", "open");
+      if (body?.trade_id) q = q.eq("id", body.trade_id);
+      else if (body?.mint) q = q.eq("mint", body.mint);
+      const { data: trades, error: qErr } = await q;
+      if (qErr) return jsonResp({ ok: false, error: qErr.message }, 500);
+      if (!trades?.length) return jsonResp({ ok: true, skipped: true, reason: "no matching open trade" });
+
+      const results: any[] = [];
+      for (const pos of trades) {
+        try {
+          // Look up actual token balance on chain
+          const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint: pos.mint }, { encoding: "jsonParsed" }]);
+          const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+          const rawAmount = acct ? Number(acct.amount) : Number(pos.tokens_received || 0);
+          const decimals  = acct ? Number(acct.decimals) : 6;
+          if (!rawAmount || rawAmount < 1) {
+            await sb.from("shreem_brzee_live_trades").update({
+              status: "closed", sell_reason: reason + "_no_balance",
+              closed_at: new Date().toISOString(),
+            }).eq("id", pos.id);
+            results.push({ id: pos.id, ok: false, reason: "no token balance" });
+            continue;
+          }
+
+          // Quote token → SOL (Jupiter handles slippage via slippageBps in jupiterQuote)
+          const sellQuote = await jupiterQuote(pos.mint, SOL_MINT, rawAmount);
+          const swapTx = await jupiterSwapTx(sellQuote, wallet);
+          const txSig  = await signAndSendTx(swapTx, kp);
+          const confirmed = await waitConfirm(txSig);
+
+          const solOut = Number(sellQuote.outAmount) / LAMPORTS;
+          const sizeIn = Number(pos.amount_sol) || 0;
+          const pnlSol = solOut - sizeIn;
+          const pnlPct = sizeIn > 0 ? (pnlSol / sizeIn) * 100 : 0;
+          const exitPrice = solOut > 0 && rawAmount > 0
+            ? solOut / (rawAmount / Math.pow(10, decimals)) : null;
+
+          await sb.from("shreem_brzee_live_trades").update({
+            status:       confirmed ? "closed" : "unconfirmed",
+            sell_reason:  reason,
+            exit_price:   exitPrice,
+            pnl_sol:      pnlSol,
+            pnl_pct:      pnlPct,
+            closed_at:    new Date().toISOString(),
+            tx_sig_close: txSig,
+          }).eq("id", pos.id);
+
+          const { data: sess0 } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
+          if (sess0) {
+            await sb.from("shreem_brzee_session").update({
+              portfolio: Number(sess0.portfolio || 0) + solOut,
+              wins:   Number(sess0.wins||0)   + (pnlSol > 0 ? 1 : 0),
+              losses: Number(sess0.losses||0) + (pnlSol <= 0 ? 1 : 0),
+              updated_at: new Date().toISOString(),
+            }).eq("id","default");
+          }
+
+          console.log(`[close] ${pos.symbol || pos.mint?.slice(0,8)} | ${pnlPct.toFixed(1)}% | sol_out=${solOut.toFixed(4)} | tx=${txSig.slice(0,12)}`);
+          results.push({ id: pos.id, ok: true, tx: txSig, sol_out: solOut, pnl_sol: pnlSol, pnl_pct: pnlPct, confirmed });
+        } catch (e: any) {
+          console.error(`[close] ${pos.id} failed:`, e.message);
+          results.push({ id: pos.id, ok: false, error: e.message });
+        }
+      }
+      return jsonResp({ ok: true, closed: results.length, results });
+    }
+
     // Get signal — either passed directly from webhook or from DB
     const directSig  = body?.direct_signal;
     const sessHint   = body?.session;
