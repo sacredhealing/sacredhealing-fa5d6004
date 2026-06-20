@@ -867,8 +867,6 @@ export default function ShreemBrzeePerformance() {
               const pnlLabel      = pnlPct !== null
                 ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
                 : noLiquidity ? "no liquidity" : "—";
-              const isLegacyEntry = false; // all entries are SOL/token — always valid
-              const entryMissing = entry <= 0;
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
               const ageStr  = ageMins < 60 ? `${ageMins}m` : `${Math.floor(ageMins/60)}h ${ageMins%60}m`;
