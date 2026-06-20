@@ -263,7 +263,11 @@ function buildSystemPrompt(
 ══════════════════════════════════════════════════
 The message marked [CURRENT MESSAGE] is what the seeker is saying RIGHT NOW. Answer THAT. Only that.
 
-The full conversation history is there so you remember everything — every prescription, every date, every herb, every frequency you ever gave this seeker. Use it as memory. Do NOT use it as the current topic.
+CRITICAL SEPARATION:
+- The SEEKER HISTORY block (timeline) = PAST sessions only. It is memory. Do NOT re-answer anything from it.
+- The live message thread = the CURRENT session happening right now. Answer the [CURRENT MESSAGE] freshly.
+- If the seeker asks about something from a past session (e.g. Guduchi): give a FRESH, CURRENT answer NOW. Do NOT copy or repeat the old answer verbatim. Receive their current state, then respond to what they are asking TODAY.
+- NEVER say "as I previously transmitted" or reference a timestamp to repeat old advice. Integrate the past but speak fresh.
 
 - If the [CURRENT MESSAGE] says they are IMPROVING → receive it. Celebrate briefly. Ask what is still incomplete.
 - If the [CURRENT MESSAGE] mentions a NEW herb → answer about that herb. Now. Not last week's topic.
@@ -767,9 +771,9 @@ serve(async (req) => {
         if (pastMsgs && pastMsgs.length > 0) {
           // Exclude the very latest if it's from the current session (< 2 min ago)
           const filtered = (pastMsgs as ConsultationRecord[]).filter(r => {
-            // Only exclude messages from the last 3 seconds to avoid the exact response being streamed right now
+            // Exclude last 2 hours — live session is in the messages array already. Timeline = PAST sessions only.
             const age = now.getTime() - new Date(r.created_at).getTime();
-            return age > 3000;
+            return age > 2 * 60 * 60 * 1000;
           });
           if (filtered.length > 0) {
             consultationTimeline = buildConsultationTimeline(filtered, now);
