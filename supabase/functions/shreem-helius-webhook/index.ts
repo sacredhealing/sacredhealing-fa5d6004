@@ -723,21 +723,9 @@ serve(async (req) => {
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id","default").single();
 
     if (sess?.mode === "live") {
-      // LIVE MODE: filter out USDC dust and micro trades before calling executor
-      const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-      if (signal.mint === USDC_MINT) return jsonResp({ ok: true, sig, mode: "live", skipped: true, reason: "USDC — not a trade target" });
-      if (signal.amount_sol < 0.01) return jsonResp({ ok: true, sig, mode: "live", skipped: true, reason: `Trade too small: ${signal.amount_sol} SOL` });
-
-      const execResp = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
-        body: JSON.stringify({
-          direct_signal: { sig: signal.sig, mint: signal.mint, symbol: signal.symbol, label: signal.label, wallet: signal.wallet, amount_sol: signal.amount_sol },
-          session: { portfolio: sess.portfolio, wins: sess.wins, losses: sess.losses }
-        }),
-      });
-      const execResult = await execResp.json().catch(() => ({}));
-      return jsonResp({ ok: true, sig, mode: "live", exec: execResult, version: "v5" });
+      // SAFETY: /test NEVER calls live executor — it would burn real SOL
+      // In live mode, test just writes the signal to DB (for monitoring) but does NOT execute
+      return jsonResp({ ok: true, sig, mode: "live", skipped: true, reason: "Test signals never execute in live mode — use real whale signals" });
     } else {
       // PAPER MODE: open paper trade
       if (sess) await openTrade(signal, sess);
@@ -835,35 +823,40 @@ serve(async (req) => {
           if (sessNow.mode === "live") {
             // LIVE MODE: pass signal directly to executor — no flag polling needed
             if (swap.action === "BUY") {
-              try {
-                const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${SUPABASE_KEY}`,
-                  },
-                  body: JSON.stringify({
-                    direct_signal: {
-                      sig:        signal.sig,
-                      mint:       signal.mint,
-                      symbol:     signal.symbol,
-                      label:      signal.label,
-                      wallet:     signal.wallet,
-                      amount_sol: signal.amount_sol,
+              // SAFETY: ignore small signals (spam/dust/test buys)
+              const MIN_SIGNAL_SOL = 0.5;
+              const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+              if (signal.mint === USDC_MINT) {
+                console.log(`[BUY-SKIP] USDC — not trading`);
+              } else if (Number(signal.amount_sol ?? 0) < MIN_SIGNAL_SOL) {
+                console.log(`[BUY-SKIP] Signal too small: ${signal.amount_sol} SOL (min ${MIN_SIGNAL_SOL})`);
+              } else {
+                try {
+                  const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${SUPABASE_KEY}`,
                     },
-                    session: {
-                      portfolio: sessNow.portfolio,
-                      wins:      sessNow.wins,
-                      losses:    sessNow.losses,
-                    }
-                  }),
-                });
-                const execData = await execR.json().catch(() => ({}));
-                console.log("[live-exec RESULT]", JSON.stringify(execData));
-              } catch (execErr: any) {
-                console.error("[live-exec ERROR]", execErr?.message ?? String(execErr));
+                    body: JSON.stringify({
+                      direct_signal: {
+                        sig:        signal.sig,
+                        mint:       signal.mint,
+                        symbol:     signal.symbol,
+                        label:      signal.label,
+                        wallet:     signal.wallet,
+                        amount_sol: signal.amount_sol,
+                      },
+                    }),
+                    signal: AbortSignal.timeout(30000),
+                  });
+                  const execData = await execR.json().catch(() => ({}));
+                  console.log("[live-exec RESULT]", JSON.stringify(execData).slice(0, 200));
+                } catch (execErr: any) {
+                  console.error("[live-exec ERROR]", execErr?.message ?? String(execErr));
+                }
+                console.log(`[live-trigger] BUY ${signal.symbol ?? signal.mint.slice(0,8)} ${signal.amount_sol} SOL — executor called`);
               }
-              console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
             } else if (swap.action === "SELL") {
               // AWAITED — whale SELL must complete before we return 200 to Helius.
