@@ -14,7 +14,7 @@ jobs:
           node - << 'EOF'
           const https = require('https');
           const TOKEN = process.env.VERCEL_TOKEN;
-          const HELIUS_KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+          const HELIUS_KEY = 'REMOVED_OLD_KEY';
 
           function api(method, path, body) {
             return new Promise(resolve => {
