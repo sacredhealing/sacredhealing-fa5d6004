@@ -429,22 +429,26 @@ export default function ShreemBrzeePerformance() {
   const liveIntervalRef                 = useRef<ReturnType<typeof setInterval>|null>(null);
 
   const checkBotWallet = useCallback(async () => {
+    // Known bot wallet — always pull real on-chain SOL balance via Helius RPC
+    const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
     try {
-      const r = await fetch(
+      // 1) Direct RPC read — source of truth for balance
+      const bal = await getWalletBalance(BOT_WALLET);
+      setBotWallet({ wallet: BOT_WALLET, balance_sol: bal });
+      if (bal > 0) setBalInput(bal.toFixed(4));
+      console.log("[botWallet] RPC balance:", bal, "SOL");
+
+      // 2) Best-effort health check (non-blocking) — only to confirm keypair is loaded
+      fetch(
         "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health",
         { signal: AbortSignal.timeout(8000) }
-      );
-      const data = r.ok ? await r.json() : null;
-      if (data?.wallet) {
-        setBotWallet(data);
-        console.log("[botWallet] connected:", data.wallet, data.balance_sol, "SOL");
-        // Auto-populate balance input with real wallet balance
-        if (data.balance_sol > 0) setBalInput(data.balance_sol.toFixed(4));
-      } else {
-        console.warn("[botWallet] health check failed:", data);
-      }
+      ).then(r => r.ok ? r.json() : null)
+       .then(data => { if (data?.wallet && data?.balance_sol != null) {
+         setBotWallet({ wallet: data.wallet, balance_sol: data.balance_sol });
+       }})
+       .catch(() => {});
     } catch (e: any) {
-      console.warn("[botWallet] unreachable:", e.message);
+      console.warn("[botWallet] balance fetch failed:", e.message);
     }
   }, []);
 
@@ -750,7 +754,7 @@ export default function ShreemBrzeePerformance() {
         {/* Stats grid */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${liveMode && botWallet ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : currentBalEur.toFixed(2)}`, l:"Balance", s:`${liveMode && botWallet ? botWallet.balance_sol.toFixed(4) : currentBalSol.toFixed(3)} SOL`, c:GOLD },
+            { i:"💰", v:`€${botWallet ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : currentBalEur.toFixed(2)}`, l:"Balance", s:`${botWallet ? botWallet.balance_sol.toFixed(4) : currentBalSol.toFixed(3)} SOL`, c:GOLD },
             { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
             { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },

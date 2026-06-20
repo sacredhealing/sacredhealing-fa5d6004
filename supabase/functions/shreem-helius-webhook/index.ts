@@ -568,13 +568,21 @@ serve(async (req) => {
       if (fetchErr || !pos) return jsonResp({ error: "trade not found or already closed" }, 404);
 
       if (sess?.mode === "live") {
-        // Close live trade — just update DB (no sell swap for now, manual close)
-        await sb.from("shreem_brzee_live_trades").update({
-          status: "closed",
-          sell_reason: "manual",
-          closed_at: new Date().toISOString(),
-          pnl_pct: 0, pnl_sol: 0,
-        }).eq("id", tradeId);
+        // Live mode — call executor to actually swap tokens back to SOL
+        try {
+          const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+            },
+            body: JSON.stringify({ action: "close", trade_id: tradeId, reason: "manual" }),
+          });
+          const execData = await execR.json().catch(() => ({}));
+          return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual", table, exec: execData });
+        } catch (execErr: any) {
+          return jsonResp({ ok: false, error: `executor unreachable: ${execErr?.message}` }, 500);
+        }
       } else {
         await closeTrade(pos, "manual");
       }
@@ -744,17 +752,25 @@ serve(async (req) => {
               console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
             } else if (swap.action === "SELL") {
-              // Close live positions immediately in DB
-              const { data: openLive } = await sb.from("shreem_brzee_live_trades")
-                .select("*").eq("status","open").eq("mint", swap.mint);
-              for (const pos of (openLive || [])) {
-                await sb.from("shreem_brzee_live_trades").update({
-                  status:       "closed",
-                  sell_reason:  "whale_sell_mirror",
-                  closed_at:    new Date().toISOString(),
-                }).eq("id", pos.id);
+              // Mirror whale sell — call executor to swap tokens back to SOL
+              try {
+                const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${SUPABASE_KEY}`,
+                  },
+                  body: JSON.stringify({
+                    action: "close",
+                    mint:   swap.mint,
+                    reason: "whale_sell_mirror",
+                  }),
+                });
+                const execData = await execR.json().catch(() => ({}));
+                console.log(`[live-close] SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300));
+              } catch (execErr: any) {
+                console.error("[live-close ERROR]", execErr?.message ?? String(execErr));
               }
-              console.log(`[live-close] SELL ${signal.symbol} — closed ${(openLive||[]).length} positions`);
             }
           } else {
             // PAPER MODE: original behaviour
