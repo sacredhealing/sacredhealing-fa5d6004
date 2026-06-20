@@ -111,10 +111,10 @@ async function getSolPrice(): Promise<{ usd: number; eur: number }> {
 }
 
 async function getWalletBalance(addr: string): Promise<number> {
-  // Public RPCs only — Helius key expired, removed from rotation
+  // New Helius key first, then public fallbacks
   const RPCS = [
+    "https://mainnet.helius-rpc.com/?api-key=7de253c3-49e2-42be-9672-23a761260f86",
     "https://api.mainnet-beta.solana.com",
-    "https://solana-api.projectserum.com",
     "https://rpc.ankr.com/solana",
   ];
   for (const rpc of RPCS) {
@@ -495,10 +495,13 @@ export default function ShreemBrzeePerformance() {
   const toggleLiveMode = async (goLive: boolean) => {
     setLiveLoading(true);
     try {
-      const bal = parseFloat(balInput) || 0.3;
+      // Use real Phantom balance if available, otherwise input
+      const bal = botWallet && botWallet.balance_sol > 0
+        ? botWallet.balance_sol
+        : (parseFloat(balInput) || 0.3);
       if (goLive) {
         // Call edge function /go-live — has service role to wipe paper data + start fresh
-        notify("Clearing paper data and going live…", "info");
+        notify(`Clearing paper data — going live with ${bal.toFixed(4)} SOL…`, "info");
         const r = await fetch(`${EDGE_BASE}/go-live`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -566,7 +569,7 @@ export default function ShreemBrzeePerformance() {
         losses:      realLoss,  // carry over real losses
         started_at:  new Date().toISOString(),
         stopped_at:  null,
-        mode:        session?.mode === "live" ? "live" : "paper", // never overwrite live mode
+        mode:        liveMode ? "live" : (session?.mode === "live" ? "live" : "paper"), // respect live toggle
         updated_at:  new Date().toISOString(),
       }, { onConflict:"id" });
       if (error) throw new Error(error.message);
@@ -794,7 +797,7 @@ export default function ShreemBrzeePerformance() {
         {/* Stats grid */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {[
-            { i:"💰", v:`€${botWallet && botWallet.balance_sol > 0 ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : botWallet ? "…" : currentBalEur.toFixed(2)}`, l:"Balance", s:`${botWallet && botWallet.balance_sol > 0 ? botWallet.balance_sol.toFixed(4) : botWallet ? "loading…" : currentBalSol.toFixed(3)} SOL`, c:GOLD },
+            { i:"💰", v:`€${botWallet && botWallet.balance_sol > 0 ? (botWallet.balance_sol * solUsd * solEur).toFixed(2) : (botWallet?.balance_sol === 0 ? (0).toFixed(2) : currentBalEur.toFixed(2))}`, l:"Balance", s:`${botWallet && botWallet.balance_sol > 0 ? botWallet.balance_sol.toFixed(4) : (botWallet?.balance_sol === 0 ? "fetching…" : currentBalSol.toFixed(3))} SOL`, c:GOLD },
             { i:"📈", v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`, l:"P&L (closed)", s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`, c:realPnlSol>=0?GREEN:RED },
             { i:"🎯", v:`${realWins}W / ${realLosses}L`, l:"Win/Loss", s:`${realWinRate}% · ${realTotal} closed`, c:realWinRate>=55?GREEN:realWinRate<45&&realTotal>3?RED:"#fff" },
             { i:"📂", v:String(openPos.length), l:"Positions", s:isRunning?"live now":"start bot", c:openPos.length>0?GREEN:CYAN },
