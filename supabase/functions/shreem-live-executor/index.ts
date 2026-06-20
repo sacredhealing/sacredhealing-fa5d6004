@@ -91,8 +91,8 @@ async function rpc(method: string, params: unknown[]) {
 }
 
 // ── Jupiter quote + swap ──────────────────────────────────────────────────────
-async function jupiterQuote(inputMint: string, outputMint: string, amountLamports: number) {
-  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amountLamports}&slippageBps=300`;
+async function jupiterQuote(inputMint: string, outputMint: string, amountLamports: number, slippageBps = 300) {
+  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amountLamports}&slippageBps=${slippageBps}`;
   const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!r.ok) throw new Error(`Jupiter quote HTTP ${r.status}`);
   return await r.json();
