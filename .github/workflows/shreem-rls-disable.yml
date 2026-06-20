@@ -40,7 +40,7 @@ jobs:
           
           sshpass -p "LiuCcqgARtAx" ssh -o StrictHostKeyChecking=no \
             -o ServerAliveInterval=60 root@178.105.183.74 \
-            "HELIUS_KEY=775d3d1f-6801-41de-a063-8aee4382d0f4 SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co SUPABASE_SERVICE_KEY=${ANON_KEY} node /root/shreem_backfill.mjs 2>&1" \
+            "HELIUS_KEY=REMOVED_OLD_KEY SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co SUPABASE_SERVICE_KEY=${ANON_KEY} node /root/shreem_backfill.mjs 2>&1" \
             | tee _backfill_result.txt
           
           echo "=== SUMMARY ==="
