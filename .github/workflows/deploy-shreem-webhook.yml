@@ -42,7 +42,7 @@ jobs:
           node << 'JSEOF'
           const https = require('https');
 
-          const HELIUS_KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+          const HELIUS_KEY = 'REMOVED_OLD_KEY';
 
           // 21 verified elite Solana whale wallets (matches edge function)
           const WALLETS = [
@@ -106,7 +106,7 @@ jobs:
       - name: List Helius webhooks
         if: github.event.inputs.action == 'list-webhooks'
         run: |
-          curl -s "https://api.helius.xyz/v0/webhooks?api-key=775d3d1f-6801-41de-a063-8aee4382d0f4" \
+          curl -s "https://api.helius.xyz/v0/webhooks?api-key=REMOVED_OLD_KEY" \
             | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
