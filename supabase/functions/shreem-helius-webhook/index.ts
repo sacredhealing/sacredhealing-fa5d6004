@@ -755,39 +755,25 @@ serve(async (req) => {
               console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
             } else if (swap.action === "SELL") {
-              // Mirror whale sell — but ONLY if we actually hold this mint.
-              // Without this gate, every whale SELL triggers executor RPC
-              // (getTokenAccountsByOwner) for nothing and burns Helius credits.
-              const { data: heldPos } = await sb
-                .from("shreem_brzee_live_trades")
-                .select("id")
-                .eq("status", "open")
-                .eq("mint", swap.mint)
-                .limit(1);
-
-              if (!heldPos?.length) {
-                console.log(`[live-close SKIP] SELL ${signal.symbol} — no open position, no RPC call`);
-              } else {
-                try {
-                  const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${SUPABASE_KEY}`,
-                    },
-                    body: JSON.stringify({
-                      action: "close",
-                      mint:   swap.mint,
-                      reason: "whale_sell_mirror",
-                    }),
-                  });
-                  const execData = await execR.json().catch(() => ({}));
-                  console.log(`[live-close] SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300));
-                } catch (execErr: any) {
-                  console.error("[live-close ERROR]", execErr?.message ?? String(execErr));
-                }
-              }
+              // Fire immediately to executor — no DB check, no latency.
+              // Executor returns skipped: true if we don't hold the mint, which is cheap.
+              fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${SUPABASE_KEY}`,
+                },
+                body: JSON.stringify({
+                  action: "close",
+                  mint:   swap.mint,
+                  reason: "whale_sell_mirror",
+                }),
+              })
+                .then(r => r.json().catch(() => ({})))
+                .then(execData => console.log(`[live-close] SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300)))
+                .catch(execErr => console.error("[live-close ERROR]", execErr?.message ?? String(execErr)));
             }
+
           } else {
             // PAPER MODE: original behaviour
             if (swap.action === "BUY") {
