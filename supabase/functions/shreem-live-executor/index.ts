@@ -222,10 +222,19 @@ serve(async (req) => {
       for (const pos of trades) {
         try {
           // Look up actual token balance on chain
-          const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint: pos.mint }, { encoding: "jsonParsed" }]);
-          const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
-          const rawAmount = acct ? Number(acct.amount) : Number(pos.tokens_received || 0);
-          const decimals  = acct ? Number(acct.decimals) : 6;
+          // Try on-chain balance first; fall back to stored tokens_received (already human-readable)
+          let rawAmount = 0;
+          let decimals = Number(pos.token_decimals || 6);
+          try {
+            const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint: pos.mint }, { encoding: "jsonParsed" }]);
+            const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+            if (acct) {
+              decimals  = Number(acct.decimals);
+              rawAmount = Number(acct.amount); // raw lamports for Jupiter sell
+            }
+          } catch { /* RPC failed — use stored amount */ }
+          // If RPC failed or returned 0, convert stored human amount back to raw for Jupiter
+          if (!rawAmount) rawAmount = Math.floor(Number(pos.tokens_received || 0) * Math.pow(10, decimals));
           if (!rawAmount || rawAmount < 1) {
             await sb.from("shreem_brzee_live_trades").update({
               status: "closed", sell_reason: reason + "_no_balance",
@@ -339,8 +348,28 @@ serve(async (req) => {
     const txSig     = await signAndSendTx(swapTx, kp);
     const confirmed = await waitConfirm(txSig);
 
-    const entryPrice = Number(quote.inAmount) > 0 && Number(quote.outAmount) > 0
-      ? (Number(quote.inAmount) / LAMPORTS) / (Number(quote.outAmount) / 1e6) : null;
+    // ── Fetch token decimals from Jupiter to get correct entry price ───────────
+    let tokenDecimals = 6; // pump.fun default
+    try {
+      const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: AbortSignal.timeout(5000) });
+      if (metaR.ok) {
+        const metaJ = await metaR.json();
+        const d = metaJ?.[sig.mint]?.decimals ?? metaJ?.data?.[sig.mint]?.decimals;
+        if (d != null) tokenDecimals = Number(d);
+      }
+    } catch { /* keep default 6 */ }
+
+    const tokensHuman = Number(quote.outAmount) / Math.pow(10, tokenDecimals);
+    // entry_price stored in USD per token (matches DexScreener current price units)
+    // Requires SOL/USD at trade time — fetch fresh
+    let solUsdNow = 150;
+    try {
+      const prR = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: AbortSignal.timeout(4000) });
+      if (prR.ok) { const prJ = await prR.json(); solUsdNow = parseFloat(prJ.price) || 150; }
+    } catch {}
+    const investedUsd = size * solUsdNow;
+    // entry_price = USD paid / tokens received = USD per token (same unit as DexScreener)
+    const entryPrice = tokensHuman > 0 ? investedUsd / tokensHuman : null;
 
     await sb.from("shreem_brzee_live_trades").insert({
       session_id: "default",
@@ -353,7 +382,9 @@ serve(async (req) => {
       action:     "BUY",
       amount_sol: size,
       entry_price: entryPrice,
-      tokens_received: Number(quote.outAmount),
+      tokens_received: tokensHuman, // store as human-readable (already divided by decimals)
+      token_decimals: tokenDecimals,
+      sol_usd_at_entry: solUsdNow,
       status:     confirmed ? "open" : "unconfirmed",
       opened_at:  new Date().toISOString(),
       slippage_pct: slippage * 100,
