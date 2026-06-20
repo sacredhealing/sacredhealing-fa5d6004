@@ -1,5 +1,5 @@
 === INJECT TEST SIGNAL ===
-{"ok":true,"sig":"TEST_1781966838041","mode":"paper","action":"BUY","version":"v5"}
+{"ok":true,"sig":"TEST_1781974731782","mode":"live","exec":{"ok":true,"confirmed":true,"tx":"3VXBiixL8RZXSY6m7hSLW7PRY2kYMxcTDpqGJozBW5uHzRBRbYPb5N13A8aFh2dmX8BUrzjY9qg3airo7yoJMPqa","symbol":"POPCAT","amount_sol":0.02549127978,"wallet":"Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA"},"version":"v5"}
 === SIGNALS (last 5) ===
 
 === SESSION ===
