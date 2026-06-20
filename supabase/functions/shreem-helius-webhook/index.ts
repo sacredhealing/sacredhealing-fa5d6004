@@ -21,7 +21,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb           = createClient(SUPABASE_URL, SUPABASE_KEY);
-const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
+const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? ""; // Set HELIUS_API_KEY in Supabase secrets — old key is dead
+if (!HELIUS_KEY) console.warn("[SHREEM] ⚠️ HELIUS_API_KEY not set — webhook registration and RPC will fail");
 // NOTE: The webhook itself NEVER makes Solana RPC calls. All on-chain reads
 // (getTokenAccountsByOwner, getBalance, etc.) happen only inside
 // shreem-live-executor when actually executing a trade. This keeps Helius
@@ -755,23 +756,27 @@ serve(async (req) => {
               console.log(`[live-trigger] BUY ${signal.symbol} — executor called`);
 
             } else if (swap.action === "SELL") {
-              // Fire immediately to executor — no DB check, no latency.
-              // Executor returns skipped: true if we don't hold the mint, which is cheap.
-              fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${SUPABASE_KEY}`,
-                },
-                body: JSON.stringify({
-                  action: "close",
-                  mint:   swap.mint,
-                  reason: "whale_sell_mirror",
-                }),
-              })
-                .then(r => r.json().catch(() => ({})))
-                .then(execData => console.log(`[live-close] SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300)))
-                .catch(execErr => console.error("[live-close ERROR]", execErr?.message ?? String(execErr)));
+              // AWAITED — whale SELL must complete before we return 200 to Helius.
+              // Fire-and-forget was losing errors silently. Now we log + surface.
+              try {
+                const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${SUPABASE_KEY}`,
+                  },
+                  body: JSON.stringify({
+                    action: "close",
+                    mint:   swap.mint,
+                    reason: "whale_sell_mirror",
+                  }),
+                  signal: AbortSignal.timeout(25000), // 25s max — executor swap can take time
+                });
+                const execData = await execR.json().catch(() => ({}));
+                console.log(`[live-close] ✅ SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300));
+              } catch (sellErr: any) {
+                console.error(`[live-close] ❌ SELL ${signal.symbol} executor failed:`, sellErr?.message ?? String(sellErr));
+              }
             }
 
           } else {
