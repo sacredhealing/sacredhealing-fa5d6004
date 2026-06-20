@@ -488,6 +488,22 @@ serve(async (req) => {
     return jsonResp({ ok: true, version: "v5-server-side", ts: new Date().toISOString() });
   }
 
+  // Force-close specific trade or all open trades in DB — no on-chain swap needed
+  // Used when swap already happened in Phantom but DB still shows open
+  if (req.method === "POST" && path.endsWith("/force-close")) {
+    const body = await req.json().catch(() => ({}));
+    const now = new Date().toISOString();
+    let q = sb.from("shreem_brzee_live_trades").update({
+      status: "closed", closed_at: now, sell_reason: body.reason || "manual_phantom",
+    }).eq("status", "open");
+    if (body.trade_id) q = sb.from("shreem_brzee_live_trades").update({
+      status: "closed", closed_at: now, sell_reason: body.reason || "manual_phantom",
+    }).eq("id", body.trade_id).eq("status", "open");
+    const { data: updated, error } = await q.select("id,symbol");
+    if (error) return jsonResp({ ok: false, error: error.message }, 500);
+    return jsonResp({ ok: true, closed: updated?.length || 0, trades: updated });
+  }
+
   // ── Manual Helius sync ────────────────────────────────────────────────────
   if (req.method === "GET" && path.endsWith("/sync-helius")) {
     await syncWallets(); // sync DB first
