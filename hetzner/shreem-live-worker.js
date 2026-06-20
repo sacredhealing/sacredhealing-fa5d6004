@@ -13,17 +13,18 @@ const JUP_QUOTE    = 'https://lite-api.jup.ag/swap/v1/quote';
 const JUP_SWAP     = 'https://lite-api.jup.ag/swap/v1/swap';
 const SOL_MINT     = 'So11111111111111111111111111111111111111112';
 const LAMPORTS     = 1_000_000_000;
-const POLL_MS      = 5000;   // poll BUY signals every 5s
-const SELL_POLL_MS = 8000;   // poll SELL signals every 8s
+const POLL_MS      = 15000;  // poll BUY signals every 15s (was 5s — saves DB credits)
+const SELL_POLL_MS = 20000;  // poll SELL signals every 20s (was 8s)
 const PORT         = 3001;
 
-// Public fallback RPCs for getBalance (never burns Helius credits)
+// READ RPCs: free public only — NEVER burn Helius credits for reads
+// Helius is only used for sendTransaction (needs speed/reliability)
 const PUBLIC_RPCS = [
-  HELIUS_RPC,
   'https://api.mainnet-beta.solana.com',
   'https://solana-api.projectserum.com',
   'https://rpc.ankr.com/solana',
 ];
+const SEND_RPCS = [HELIUS_RPC, ...PUBLIC_RPCS]; // Helius first for tx send
 
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function bs58Decode(str) {
@@ -76,10 +77,13 @@ const sbGet   = (t, f) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', nu
 const sbPost  = (t, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}`, 'POST', b, { ...SB_HEADERS, Prefer: 'return=minimal' });
 const sbPatch = (t, f, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HEADERS);
 
-// RPC with fallback chain — never burns credits on read operations
+// RPC with fallback chain
+// READ ops (getBalance, getTokenAccounts, etc.) → public RPCs only, no Helius
+// WRITE ops (sendTransaction) → Helius first for speed, then public fallback
 async function rpc(method, params) {
+  const endpoints = method === 'sendTransaction' ? SEND_RPCS : PUBLIC_RPCS;
   let lastErr;
-  for (const endpoint of PUBLIC_RPCS) {
+  for (const endpoint of endpoints) {
     try {
       const r = await httpReq(endpoint, 'POST', { jsonrpc: '2.0', id: 1, method, params });
       if (r.data && r.data.error) {
