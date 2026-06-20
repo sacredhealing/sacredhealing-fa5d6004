@@ -1,97 +1,123 @@
 #!/usr/bin/env python3
-"""Read bot wallet token accounts and DB state, write to _shreem_state.txt"""
+"""
+Insert existing Phantom token positions as open live trades.
+Also read actual mint addresses from on-chain.
+"""
 import os, paramiko, json, re
 
 HP = os.environ["HP"]
-GH = os.environ["GH"]
-
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect("178.105.183.74", username="root", password=HP, timeout=30)
 
 def run(cmd):
-    _, out, _ = client.exec_command(cmd, timeout=20)
+    _, out, _ = client.exec_command(cmd, timeout=25)
     return out.read().decode().strip()
 
 eco = run("cat /root/shreem-ecosystem.config.js")
 m = re.search(r'SUPABASE_SERVICE_ROLE_KEY[^"\']*["\']([^"\']{20,})["\']', eco)
 sb_key = m.group(1) if m else ""
-
 SB = "https://ssygukfdbtehvtndandn.supabase.co"
 BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA"
+H = f'-H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" -H "Content-Type: application/json"'
 
-lines = ["=== SHREEM STATE REPORT ==="]
-
-# Session
-r = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_session?id=eq.default" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}"')
+print("=== 1. CURRENT DB STATE ===")
+r = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_live_trades?order=opened_at.desc" {H}')
 try:
-    sess = json.loads(r)
-    s = sess[0] if sess else {}
-    lines.append(f"\nSESSION: mode={s.get('mode')} portfolio={s.get('portfolio')} start={s.get('start_balance')} started={str(s.get('started_at',''))[:19]} stopped={s.get('stopped_at')} wins={s.get('wins')} losses={s.get('losses')}")
-except: lines.append(f"SESSION ERROR: {r[:200]}")
+    trades = json.loads(r)
+    print(f"Live trades in DB: {len(trades)}")
+    for t in trades: print(f"  [{t.get('status')}] {t.get('symbol')} {t.get('mint','')[:16]} {t.get('amount_sol')} SOL tx={str(t.get('tx_sig',''))[:20]}")
+except: print(f"Error: {r[:200]}")
 
-# Live trades
-r2 = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_live_trades?order=opened_at.desc" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}"')
+print("\n=== 2. ON-CHAIN TOKEN ACCOUNTS ===")
+rpc_r = run(f"""curl -sf 'https://api.mainnet-beta.solana.com' --max-time 15 -X POST -H 'Content-Type: application/json' -d '{{"jsonrpc":"2.0","id":1,"method":"getTokenAccountsByOwner","params":["{BOT_WALLET}",{{"programId":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}},{{"encoding":"jsonParsed"}}]}}'""")
+token_accounts = []
 try:
-    trades = json.loads(r2)
-    lines.append(f"\nLIVE TRADES ({len(trades)} total):")
-    for t in trades:
-        lines.append(f"  [{t.get('status')}] {t.get('symbol')} | {t.get('mint','')[:16]} | {t.get('amount_sol')} SOL | tokens={t.get('tokens_received')} | opened={str(t.get('opened_at',''))[:19]} | tx={str(t.get('tx_sig',''))[:20]}")
-except: lines.append(f"TRADES ERROR: {r2[:200]}")
-
-# Bot wallet token accounts (on-chain)
-r3 = run(f"""curl -sf 'https://api.mainnet-beta.solana.com' -X POST -H 'Content-Type: application/json' -d '{{"jsonrpc":"2.0","id":1,"method":"getTokenAccountsByOwner","params":["{BOT_WALLET}",{{"programId":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}},{{"encoding":"jsonParsed"}}]}}'""")
-try:
-    rpc = json.loads(r3)
-    accounts = rpc.get('result',{}).get('value',[])
-    lines.append(f"\nBOT WALLET TOKENS ({len(accounts)} accounts):")
+    rpc_data = json.loads(rpc_r)
+    accounts = rpc_data.get('result',{}).get('value',[])
+    print(f"Token accounts: {len(accounts)}")
     for a in accounts:
         info = a.get('account',{}).get('data',{}).get('parsed',{}).get('info',{})
         ta = info.get('tokenAmount',{})
-        lines.append(f"  mint={info.get('mint','')} amount={ta.get('uiAmount',0)} decimals={ta.get('decimals',6)} raw={ta.get('amount','0')}")
-except: lines.append(f"RPC ERROR: {r3[:200]}")
-
-# SOL balance
-r4 = run(f"""curl -sf 'https://api.mainnet-beta.solana.com' -X POST -H 'Content-Type: application/json' -d '{{"jsonrpc":"2.0","id":1,"method":"getBalance","params":["{BOT_WALLET}"]}}'""")
-try:
-    sol = json.loads(r4).get('result',{}).get('value',0) / 1e9
-    lines.append(f"\nBOT WALLET SOL: {sol}")
-except: lines.append(f"SOL ERROR: {r4[:100]}")
-
-# PM2 worker info
-lines.append(f"\nPM2:")
-lines.append(run("pm2 list --no-color 2>/dev/null | grep -v 'namespace\\|Applying\\|──'"))
-lines.append("\nRUNNING SCRIPT:")
-lines.append(run("pm2 describe shreem-brzee --no-color 2>/dev/null | grep 'script path'"))
-
-output = "\n".join(lines)
-print(output)
-
-# Write to _shreem_state.txt in repo
-import base64, urllib.request
-encoded = base64.b64encode(output.encode()).decode()
-
-# Get current SHA of _shreem_state.txt if exists
-try:
-    req = urllib.request.Request(
-        f"https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/contents/_shreem_state.txt",
-        headers={"Authorization": f"token {GH}", "Accept": "application/vnd.github.v3+json"}
-    )
-    with urllib.request.urlopen(req) as r:
-        old_sha = json.loads(r.read())['sha']
-    payload = {"message": "data: shreem state", "content": encoded, "sha": old_sha, "branch": "main"}
-except:
-    payload = {"message": "data: shreem state", "content": encoded, "branch": "main"}
-
-put_req = urllib.request.Request(
-    "https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/contents/_shreem_state.txt",
-    data=json.dumps(payload).encode(), method="PUT",
-    headers={"Authorization": f"token {GH}", "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json"}
-)
-try:
-    with urllib.request.urlopen(put_req) as r:
-        print("\n✅ Saved to _shreem_state.txt")
+        amt = float(ta.get('uiAmount') or 0)
+        dec = int(ta.get('decimals',6))
+        raw = ta.get('amount','0')
+        mint = info.get('mint','')
+        print(f"  {mint} | amount={amt} decimals={dec} raw={raw}")
+        if amt > 0:
+            token_accounts.append({'mint': mint, 'amount': amt, 'decimals': dec, 'raw': raw})
 except Exception as e:
-    print(f"\n❌ Save failed: {e}")
+    print(f"RPC error: {e} | {rpc_r[:200]}")
 
+print(f"\nTokens with balance: {len(token_accounts)}")
+
+print("\n=== 3. SESSION ===")
+r_sess = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_session?id=eq.default" {H}')
+try:
+    sess = json.loads(r_sess)
+    s = sess[0] if sess else {}
+    print(f"mode={s.get('mode')} portfolio={s.get('portfolio')} started={str(s.get('started_at',''))[:19]}")
+except: print(r_sess[:200])
+
+print("\n=== 4. INSERT MISSING POSITIONS ===")
+# For each token with balance, check if it's already in DB
+for tok in token_accounts:
+    mint = tok['mint']
+    # Check if already in DB
+    r_check = run(f'curl -sf "{SB}/rest/v1/shreem_brzee_live_trades?status=eq.open&mint=eq.{mint}" {H}')
+    try:
+        existing = json.loads(r_check)
+        if existing:
+            print(f"  {mint[:12]}: already in DB ({existing[0].get('symbol')})")
+            continue
+    except: pass
+    
+    # Get price from DexScreener
+    price_r = run(f"curl -sf 'https://api.dexscreener.com/latest/dex/tokens/{mint}' --max-time 8")
+    entry_price = None
+    symbol = None
+    try:
+        ds = json.loads(price_r)
+        pairs = [p for p in (ds.get('pairs') or []) if p.get('priceUsd')]
+        if pairs:
+            pairs.sort(key=lambda p: float(p.get('liquidity',{}).get('usd',0) or 0), reverse=True)
+            entry_price = float(pairs[0]['priceUsd'])
+            symbol = pairs[0].get('baseToken',{}).get('symbol','')
+            print(f"  {mint[:12]}: symbol={symbol} current_price=${entry_price}")
+    except: print(f"  {mint[:12]}: price fetch failed")
+    
+    # Insert as open position
+    # Use tokens_received as the raw amount (will be used for sell)
+    # amount_sol: estimate based on 0.479 SOL / num_tokens
+    num_tokens = len(token_accounts) if token_accounts else 1
+    est_sol = 0.479 / num_tokens
+    
+    trade_row = {
+        "session_id": "default",
+        "sig": f"phantom_recovery_{mint[:12]}",
+        "mint": mint,
+        "symbol": symbol or "UNKNOWN",
+        "label": "recovered",
+        "wallet": "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA",
+        "action": "BUY",
+        "amount_sol": round(est_sol, 6),
+        "entry_price": entry_price,
+        "tokens_received": tok['amount'],
+        "token_decimals": tok['decimals'],
+        "status": "open",
+        "opened_at": "2026-06-20T16:00:00+00:00",
+        "slippage_pct": 3.0
+    }
+    
+    row_json = json.dumps(trade_row).replace("'", '"')
+    ins_r = run(f"curl -sf '{SB}/rest/v1/shreem_brzee_live_trades' {H} -H 'Prefer: return=representation' -X POST -d '{row_json}'")
+    try:
+        result = json.loads(ins_r)
+        if isinstance(result, list) and result:
+            print(f"  ✅ Inserted: {symbol} mint={mint[:12]} id={result[0].get('id','')[:8]}")
+        else:
+            print(f"  Result: {ins_r[:200]}")
+    except: print(f"  Insert response: {ins_r[:200]}")
+
+print("\n=== DONE ===")
 client.close()
