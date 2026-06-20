@@ -192,6 +192,8 @@ export default function ShreemBrzeePerformance() {
   const [solUsd, setSolUsd]       = useState(150);
   const [solEur, setSolEur]       = useState(0.92);
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
+  const [pricesFetched, setPricesFetched] = useState(false);
+
   const [edgeOk, setEdgeOk]       = useState<boolean|null>(null);
 
   // Positions (open)
