@@ -22,7 +22,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb           = createClient(SUPABASE_URL, SUPABASE_KEY);
 const HELIUS_KEY   = Deno.env.get("HELIUS_API_KEY") ?? "775d3d1f-6801-41de-a063-8aee4382d0f4";
-const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+// NOTE: The webhook itself NEVER makes Solana RPC calls. All on-chain reads
+// (getTokenAccountsByOwner, getBalance, etc.) happen only inside
+// shreem-live-executor when actually executing a trade. This keeps Helius
+// RPC credit usage bound to real trade actions, not incoming webhook volume.
 const SOL_MINT     = "So11111111111111111111111111111111111111112";
 const LAMPORTS     = 1_000_000_000;
 const WEBHOOK_DB_WRITES_ENABLED = Deno.env.get("SHREEM_WEBHOOK_DB_WRITES_ENABLED") === "true";
