@@ -107,12 +107,19 @@ async function jupSwapTx(quote: unknown, wallet: string) {
 }
 
 async function signAndSend(txB64: string, kp: SolanaKeypair) {
-  const conn = new Connection(HELIUS_RPC, "confirmed");
+  // Sign locally — no RPC needed for signing
   const keypair = Keypair.fromSecretKey(kp.secretKey);
   const tx = VersionedTransaction.deserialize(Buffer.from(txB64, "base64"));
   tx.sign([keypair]);
-  const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 3 });
-  return sig;
+  // Send via our rpc() function which routes sendTransaction to Helius only
+  // Avoids Connection object making hidden getLatestBlockhash/getFeeForMessage calls to Helius
+  const serialized = Buffer.from(tx.serialize()).toString("base64");
+  return await rpc("sendTransaction", [serialized, {
+    encoding: "base64",
+    skipPreflight: true,
+    maxRetries: 3,
+    preflightCommitment: "confirmed",
+  }]);
 }
 
 async function waitConfirm(sig: string, ms = 35000): Promise<boolean> {
