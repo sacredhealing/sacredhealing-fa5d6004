@@ -1,16 +1,7 @@
 === INJECT TEST SIGNAL ===
-{"ok":true,"sig":"TEST_1781720362185","action":"BUY","version":"v3"}
+{"ok":true,"sig":"TEST_1781966838041","mode":"paper","action":"BUY","version":"v5"}
 === SIGNALS (last 5) ===
-sig=TEST_1781720362185 action=BUY label=Remusofmars time=18:19:22
-sig=TEST_1781720005335 action=BUY label=Remusofmars time=18:13:25
-sig=TEST_SELL_1781719921 action=SELL label=Remusofmars time=18:12:01
-sig=TEST_1781719911073 action=BUY label=Remusofmars time=18:11:51
-sig=TEST_1781719114974 action=BUY label=Remusofmars time=17:58:34
-TOTAL: 5 signals
 
 === SESSION ===
-started_at=2026-06-17T18:11:45+00:00 portfolio=2 mode=paper
 
 === PAPER TRADES (last 3) ===
-action=BUY sym=TEST pnl=0 time=16:16:04
-TOTAL: 1 trades
