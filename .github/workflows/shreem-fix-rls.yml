@@ -20,7 +20,7 @@ jobs:
         env:
           SUPA_PAT: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
           ANON_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
-          HELIUS_KEY: 775d3d1f-6801-41de-a063-8aee4382d0f4
+          HELIUS_KEY: REMOVED_OLD_KEY
         run: |
           SUPA_URL="https://ssygukfdbtehvtndandn.supabase.co"
           
