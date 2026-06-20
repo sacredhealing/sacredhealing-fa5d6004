@@ -10,39 +10,36 @@ def run(cmd):
     _, out, _ = client.exec_command(cmd, timeout=20)
     return out.read().decode().strip()
 
-eco = run("cat /root/shreem-ecosystem.config.js")
-m = re.search(r'SUPABASE_SERVICE_ROLE_KEY.{0,5}["\'](\S{20,})["\'\s]', eco)
-sb_key = m.group(1) if m else ""
-SB = "https://ssygukfdbtehvtndandn.supabase.co"
+HELIUS = "7de253c3-49e2-42be-9672-23a761260f86"
 
-# STOP ALL PM2
-print("=== STOP ALL ===")
-print(run("pm2 stop all && pm2 delete all && pm2 save --force && echo DONE"))
+# Check what's running
+print("=== PM2 ===")
+print(run("pm2 list --no-color 2>/dev/null | grep -v namespace | grep -v '──'"))
 
-# Stop session in DB
-from datetime import datetime, timezone
-now = datetime.now(timezone.utc).isoformat()
-print("\n=== STOP SESSION ===")
-r = run(f'curl -sf -X PATCH "{SB}/rest/v1/shreem_brzee_session?id=eq.default" -H "apikey: {sb_key}" -H "Authorization: Bearer {sb_key}" -H "Content-Type: application/json" -d "{{\"stopped_at\":\"{now}\",\"mode\":\"paper\"}}"')
-print(r[:200])
+# Check ALL processes making network calls to Helius
+print("\n=== PROCESSES CALLING HELIUS ===")
+print(run("grep -r 'helius-rpc.com' /root/ --include='*.js' --include='*.ts' -l 2>/dev/null | head -20"))
 
-# Delete ALL Helius webhooks
-HELIUS = os.environ.get("HELIUS_KEY", "7de253c3-49e2-42be-9672-23a761260f86")
-print("\n=== DELETE ALL HELIUS WEBHOOKS ===")
-r2 = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
-try:
-    hooks = json.loads(r2)
-    print(f"Found {len(hooks)} webhooks")
-    for h in hooks:
-        wid = h.get('webhookID','')
-        dr = run(f'curl -sf -X DELETE "https://api.helius.xyz/v0/webhooks/{wid}?api-key={HELIUS}"')
-        print(f"Deleted {wid}: {dr[:50]}")
-except Exception as e:
-    print(f"Error: {e} | {r2[:200]}")
+# Check if any process has an open connection to Helius right now
+print("\n=== LIVE CONNECTIONS TO HELIUS ===")
+print(run("ss -tnp 2>/dev/null | grep helius || netstat -tnp 2>/dev/null | grep helius || echo 'no live helius connections'"))
 
-# Verify
-r3 = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
-print(f"\nWebhooks remaining: {r3[:100]}")
+# Check for any cron jobs calling Helius
+print("\n=== CRON JOBS ===")
+print(run("crontab -l 2>/dev/null || echo 'no cron'"))
 
-print("\n=== ALL STOPPED. Credits will stop draining now. ===")
+# Check Helius webhooks - are they really gone?
+print("\n=== HELIUS WEBHOOKS ===")
+r = run(f'curl -sf "https://api.helius.xyz/v0/webhooks?api-key={HELIUS}"')
+print(f"Webhooks: {r[:300]}")
+
+# Check if old TS bot is REALLY gone
+print("\n=== SHREEM BOT FILES ===")
+print(run("ls /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js 2>/dev/null && echo EXISTS || echo MISSING"))
+print(run("cat /root/shreem-brzee/railway/shreem-brzee-bot/dist/index.js 2>/dev/null | grep -i helius | head -5"))
+
+# Check for any node processes
+print("\n=== ALL NODE PROCESSES ===")
+print(run("ps aux | grep node | grep -v grep"))
+
 client.close()
