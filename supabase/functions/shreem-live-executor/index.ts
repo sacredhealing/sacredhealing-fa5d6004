@@ -401,7 +401,8 @@ serve(async (req) => {
     // entry_price = USD paid / tokens received = USD per token (same unit as DexScreener)
     const entryPrice = tokensHuman > 0 ? investedUsd / tokensHuman : null;
 
-    await sb.from("shreem_brzee_live_trades").insert({
+    // Use upsert so re-runs never duplicate; check error so we know if DB write failed
+    const tradeRecord = {
       session_id: "default",
       sig:        sig.sig + "_live",
       tx_sig:     txSig,
@@ -412,13 +413,22 @@ serve(async (req) => {
       action:     "BUY",
       amount_sol: size,
       entry_price: entryPrice,
-      tokens_received: tokensHuman, // store as human-readable (already divided by decimals)
+      tokens_received: tokensHuman,
       token_decimals: tokenDecimals,
       sol_usd_at_entry: solUsdNow,
       status:     confirmed ? "open" : "unconfirmed",
       opened_at:  new Date().toISOString(),
       slippage_pct: slippage * 100,
-    });
+    };
+    const { error: insertErr } = await sb.from("shreem_brzee_live_trades")
+      .upsert(tradeRecord, { onConflict: "sig" });
+    if (insertErr) {
+      // Swap already executed on-chain — log error but don't fail the response
+      console.error("[live] ⚠️ DB INSERT FAILED (swap succeeded on-chain!):", insertErr.message);
+      console.error("[live] Trade record:", JSON.stringify(tradeRecord));
+    } else {
+      console.log("[live] ✅ Trade recorded in DB:", sig.symbol, txSig.slice(0,16));
+    }
 
     // Update session portfolio
     await sb.from("shreem_brzee_session").upsert({
