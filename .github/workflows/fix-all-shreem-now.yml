@@ -10,20 +10,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
       - name: Deploy shreem-helius-webhook
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase functions deploy shreem-helius-webhook --project-ref ssygukfdbtehvtndandn --no-verify-jwt
-          echo "✅ shreem-helius-webhook deployed"
+          PAT="sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744"
+          REF="ssygukfdbtehvtndandn"
+          BODY=$(cat supabase/functions/shreem-helius-webhook/index.ts | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+          HTTP=$(curl -s -o /tmp/r1.json -w "%{http_code}" -X POST \
+            "https://api.supabase.com/v1/projects/${REF}/functions/shreem-helius-webhook" \
+            -H "Authorization: Bearer ${PAT}" \
+            -H "Content-Type: application/json" \
+            -d "{\"slug\":\"shreem-helius-webhook\",\"name\":\"shreem-helius-webhook\",\"verify_jwt\":false,\"body\":${BODY}}")
+          [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ] && echo "✅ webhook deployed" || curl -s -X PATCH \
+            "https://api.supabase.com/v1/projects/${REF}/functions/shreem-helius-webhook" \
+            -H "Authorization: Bearer ${PAT}" -H "Content-Type: application/json" \
+            -d "{\"verify_jwt\":false,\"body\":${BODY}}" && echo "✅ webhook patched"
 
       - name: Deploy shreem-live-executor
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase functions deploy shreem-live-executor --project-ref ssygukfdbtehvtndandn --no-verify-jwt
-          echo "✅ shreem-live-executor deployed"
+          PAT="sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744"
+          REF="ssygukfdbtehvtndandn"
+          BODY=$(cat supabase/functions/shreem-live-executor/index.ts | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+          HTTP=$(curl -s -o /tmp/r2.json -w "%{http_code}" -X POST \
+            "https://api.supabase.com/v1/projects/${REF}/functions/shreem-live-executor" \
+            -H "Authorization: Bearer ${PAT}" \
+            -H "Content-Type: application/json" \
+            -d "{\"slug\":\"shreem-live-executor\",\"name\":\"shreem-live-executor\",\"verify_jwt\":false,\"body\":${BODY}}")
+          [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ] && echo "✅ executor deployed" || curl -s -X PATCH \
+            "https://api.supabase.com/v1/projects/${REF}/functions/shreem-live-executor" \
+            -H "Authorization: Bearer ${PAT}" -H "Content-Type: application/json" \
+            -d "{\"verify_jwt\":false,\"body\":${BODY}}" && echo "✅ executor patched"
