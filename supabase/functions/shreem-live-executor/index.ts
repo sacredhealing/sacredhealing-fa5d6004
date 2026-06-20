@@ -397,7 +397,7 @@ serve(async (req) => {
       const sig = body?.direct_signal;
       if (sig?.sig) {
         await sb.from("shreem_brzee_live_trades").update({ status: "failed", sell_reason: "execution_error" })
-          .eq("sig", sig.sig + "_live").eq("status", "pending");
+          .eq("sig", sig.sig + "_live").neq("status", "closed");
       }
     } catch {}
     return jsonResp({ ok: false, error: e.message }, 500);
