@@ -34,8 +34,9 @@ function bs58Decode(str) {
 }
 
 function loadKeypair() {
-  const raw = process.env.SHREEM_BOT_KEYPAIR;
-  if (!raw) throw new Error('SHREEM_BOT_KEYPAIR not set');
+  // Accept SHREEM_BOT_KEYPAIR or BOT_WALLET_PRIVATE_KEY (set by shreem-go-live.yml)
+  const raw = process.env.SHREEM_BOT_KEYPAIR || process.env.BOT_WALLET_PRIVATE_KEY;
+  if (!raw) throw new Error('Neither SHREEM_BOT_KEYPAIR nor BOT_WALLET_PRIVATE_KEY is set');
   const t = raw.trim();
   let sk;
   if (t.startsWith('[')) sk = Buffer.from(JSON.parse(t));
