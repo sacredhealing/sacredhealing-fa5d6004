@@ -350,10 +350,12 @@ export default function ShreemBrzeePerformance() {
         if (n > 0) updated[m] = n;
       }
       if (Object.keys(updated).length) setLivePrices(prev => ({ ...prev, ...updated }));
+      setPricesFetched(true);
     } catch (e) {
       console.warn("[ShreemBrzee] price batch failed", e);
     }
   }, [openPos, PRICE_URL]);
+
 
   useEffect(() => {
     updatePrices();
