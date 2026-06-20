@@ -609,7 +609,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     const userMsg: ChatMessage = { role: 'user', content: trimmed };
     // Send FULL history — Agastya must remember everything
     // Inject a session boundary marker so Gemini knows current message is NOW
-    const allMsgs = [...persistedMsgs, userMsg];
+    const allMsgs = [...persistedMsgs.slice(-12), userMsg]; // send last 12 msgs only — edge fn DB handles full history
     const apiMessages = allMsgs.map((m, i) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
       content: i === allMsgs.length - 1
