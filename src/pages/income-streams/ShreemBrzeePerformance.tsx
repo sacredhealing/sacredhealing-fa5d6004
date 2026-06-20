@@ -896,7 +896,7 @@ export default function ShreemBrzeePerformance() {
                       <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.08)`, border:`1px solid rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                         <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
                         <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-                          <div style={{ fontSize:18, fontWeight:900, color:pnlColor }}>{pnlPct!==null?`${pnlPct>=0?"+":""}${pnlPct.toFixed(2)}%`:"—"}</div>
+                          <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                           <div style={{ fontSize:13, fontWeight:700, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
                         </div>
                       </div>
