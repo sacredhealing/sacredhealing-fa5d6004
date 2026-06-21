@@ -370,12 +370,17 @@ export default function ShreemBrzeePerformance() {
         setOpenPos(prev => prev.filter(p => p.id !== id));
         notify(`✅ Position removed (no on-chain balance remaining)`, "info");
       } else {
-        // Force-close in DB directly
-        await d.from("shreem_brzee_live_trades").update({
+        // Force-close in DB directly (handles pending trades the executor skips)
+        const { error } = await d.from("shreem_brzee_live_trades").update({
           status: "closed", closed_at: new Date().toISOString(), sell_reason: reason,
+          pnl_sol: 0, pnl_pct: 0,
         }).eq("id", id);
-        setOpenPos(prev => prev.filter(p => p.id !== id));
-        notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
+        if (!error) {
+          setOpenPos(prev => prev.filter(p => p.id !== id));
+          notify(`✅ ${pos.symbol || "Position"} closed`, "ok");
+        } else {
+          notify(`Close failed: ${error.message}`, "err");
+        }
       }
       setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); refreshBotBalance(); }, 1500);
     } catch (e: any) {
