@@ -272,18 +272,24 @@ export default function ShreemBrzeePerformance() {
   // FIX: fetchOpen reads ONLY live_trades with status=open
   // This is the authoritative source of open positions — matches what's in Phantom
   const fetchOpen = useCallback(async () => {
+    const isTestSig = (s: any) => {
+      const v = String(s || "").toUpperCase();
+      return v.startsWith("REALTEST_") || v.startsWith("TEST_") || v.startsWith("DIAG_") || v.startsWith("VERIFY_") || v.startsWith("DEBUG_");
+    };
+    const isReal = (t: any) => !isTestSig(t?.tx_sig) && !isTestSig(t?.sig) && !isTestSig(t?.tx_sig_close);
     try {
       // Include both 'open' and 'pending' — executor writes as pending until on-chain confirm
       const { data: live } = await d.from("shreem_brzee_live_trades")
         .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
-      if (live && live.length > 0) {
-        setOpenPos(live);
+      const liveReal = (live || []).filter(isReal);
+      if (liveReal.length > 0) {
+        setOpenPos(liveReal);
         return;
       }
       // Fallback to paper trades if no live positions
       const { data: paper } = await d.from("shreem_brzee_paper_trades")
         .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
-      setOpenPos(paper || []);
+      setOpenPos((paper || []).filter(isReal));
     } catch {}
   }, []);
 
