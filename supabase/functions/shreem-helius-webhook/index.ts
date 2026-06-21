@@ -1,5 +1,5 @@
 // supabase/functions/shreem-helius-webhook/index.ts
-// SHREEM BRZEE v5 — 100% SERVER-SIDE. Phone off = bot still runs.
+// SHREEM BRZEE v5.1 — live_processed fix + take-profit. Phone off = bot still runs.
 //
 // ALL trading logic runs here — no browser needed:
 //   • Helius webhook → detect whale swap → write signal
@@ -897,15 +897,16 @@ serve(async (req) => {
         const signal = {
           sig,
           wallet,
-          label:        WHALE_WALLETS[wallet],
-          action:       swap.action,
-          mint:         swap.mint,
-          symbol:       swap.symbol,
-          amount_sol:   swap.amountSol,
-          token_amount: swap.tokenAmount,
-          is_pump_fun:  swap.isPumpFun,
-          block_time:   tx.timestamp ?? tx.blockTime ?? null,
-          created_at:   new Date().toISOString(),
+          label:          WHALE_WALLETS[wallet],
+          action:         swap.action,
+          mint:           swap.mint,
+          symbol:         swap.symbol,
+          amount_sol:     swap.amountSol,
+          token_amount:   swap.tokenAmount,
+          is_pump_fun:    swap.isPumpFun,
+          block_time:     tx.timestamp ?? tx.blockTime ?? null,
+          created_at:     new Date().toISOString(),
+          live_processed: false,  // v5.1: explicit false so Hetzner fallback finds it (NULL != false in pg)
         };
 
         const { error } = await sb.from("shreem_brzee_signals")
@@ -955,8 +956,17 @@ serve(async (req) => {
                   });
                   const execData = await execR.json().catch(() => ({}));
                   console.log("[live-exec RESULT]", JSON.stringify(execData).slice(0, 200));
+                  // v5.1: mark processed only if executor accepted it (not skipped/failed)
+                  // If execData.ok=true and not skipped → Hetzner won't double-execute
+                  // If execData.ok=false or skipped → leave live_processed=false for Hetzner retry
+                  if (execData?.ok && !execData?.skipped) {
+                    await sb.from("shreem_brzee_signals")
+                      .update({ live_processed: true })
+                      .eq("sig", signal.sig);
+                  }
                 } catch (execErr: any) {
                   console.error("[live-exec ERROR]", execErr?.message ?? String(execErr));
+                  // live_processed stays false → Hetzner picks up as fallback
                 }
                 console.log(`[live-trigger] BUY ${signal.symbol ?? signal.mint.slice(0,8)} ${signal.amount_sol} SOL — executor called`);
               }
@@ -1010,3 +1020,4 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e?.message ?? String(e) });
   }
 });
+
