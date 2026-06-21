@@ -1,5 +1,5 @@
 // shreem-live-worker.js — Shreem Brzee Live Trade Executor on Hetzner
-// v8 — AUDIT FIXES: status schema, tokens_received bug, 48h timeout, entry_price guard, balance floor
+// v9 — SELL MIRROR HARDENING: live_processed set AFTER success, retry logic, on-chain balance fallback
 const https = require('https');
 const http  = require('http');
 
@@ -13,9 +13,9 @@ const SOL_MINT     = 'So11111111111111111111111111111111111111112';
 const LAMPORTS     = 1_000_000_000;
 
 const POLL_MS      = 20000;   // BUY signals every 20s
-const SELL_POLL_MS = 30000;   // SELL signals every 30s
+const SELL_POLL_MS = 15000;   // v9: tightened to 15s for faster sell response
 const PORT         = 3001;
-const MAX_HOLD_MS  = 48 * 60 * 60 * 1000; // FIX #1: 48-hour max hold timeout
+const MAX_HOLD_MS  = 48 * 60 * 60 * 1000; // 48h max hold
 
 const PUBLIC_RPCS = [
   'https://api.mainnet-beta.solana.com',
@@ -30,19 +30,13 @@ const BALANCE_CACHE_MS = 120_000;
 
 async function getWalletBalance(wallet) {
   const now = Date.now();
-  if (_cachedBalance !== null && (now - _balanceCachedAt) < BALANCE_CACHE_MS) {
-    return _cachedBalance;
-  }
+  if (_cachedBalance !== null && (now - _balanceCachedAt) < BALANCE_CACHE_MS) return _cachedBalance;
   const res = await rpc('getBalance', [wallet]);
   _cachedBalance = res.value / LAMPORTS;
   _balanceCachedAt = now;
   return _cachedBalance;
 }
-
-function invalidateBalanceCache() {
-  _cachedBalance = null;
-  _balanceCachedAt = 0;
-}
+function invalidateBalanceCache() { _cachedBalance = null; _balanceCachedAt = 0; }
 
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function bs58Decode(str) {
@@ -152,30 +146,41 @@ async function waitConfirm(txSig, ms = 45000) {
   return false;
 }
 
-// FIX #2: Resolve actual raw token amount from wallet — clean logic, no double-multiplication
-// tokens_received in DB is stored as raw integer (lamport-equivalent) from Jupiter outAmount
-// Do NOT multiply tokens_received again — it's already in raw units
+// v9: resolveRawAmount — always tries on-chain first, falls back to stored,
+// THEN falls back to fresh on-chain re-read before giving up
 async function resolveRawAmount(wallet, mint, tokensReceivedRaw) {
   let rawAmount = 0;
   let decimals = 6;
-  try {
-    const taRes = await rpc('getTokenAccountsByOwner',
-      [wallet, { mint }, { encoding: 'jsonParsed' }]);
-    const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
-    if (acct) {
-      decimals = Number(acct.decimals);
-      rawAmount = Number(acct.amount); // already in raw units from chain
-    }
-  } catch {}
 
+  // Attempt 1: on-chain balance
+  try {
+    const taRes = await rpc('getTokenAccountsByOwner', [wallet, { mint }, { encoding: 'jsonParsed' }]);
+    const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+    if (acct) { decimals = Number(acct.decimals); rawAmount = Number(acct.amount); }
+  } catch (e) { console.warn(`[resolveRawAmount] on-chain read failed: ${e.message}`); }
+
+  // Attempt 2: stored DB value (tokens_received = raw units from Jupiter outAmount)
   if (!rawAmount && tokensReceivedRaw) {
-    // tokens_received was stored from quote.outAmount which IS raw (no decimals applied)
     rawAmount = Math.floor(Number(tokensReceivedRaw));
+    console.log(`[resolveRawAmount] Using stored tokens_received: ${rawAmount}`);
   }
+
+  // Attempt 3: retry on-chain after 3s (handles propagation delay)
+  if (!rawAmount) {
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const taRes2 = await rpc('getTokenAccountsByOwner', [wallet, { mint }, { encoding: 'jsonParsed' }]);
+      const acct2 = taRes2?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+      if (acct2) { decimals = Number(acct2.decimals); rawAmount = Number(acct2.amount); }
+      if (rawAmount) console.log(`[resolveRawAmount] Retry on-chain succeeded: ${rawAmount}`);
+    } catch {}
+  }
+
   return { rawAmount, decimals };
 }
 
-// Core sell execution — used by whale mirror, stop-loss, and 48h timeout
+// Core sell — v9: no longer sets live_processed=true before calling this
+// The caller (pollSell) sets it only after success
 async function executeSell(pos, reason) {
   const sk = loadKeypair();
   const { Keypair } = require('@solana/web3.js');
@@ -185,11 +190,10 @@ async function executeSell(pos, reason) {
   const { rawAmount } = await resolveRawAmount(wallet, pos.mint, pos.tokens_received);
 
   if (!rawAmount || rawAmount < 1) {
-    // FIX #2: Use valid status value — 'closed' not 'unconfirmed_close' (schema only allows: open/closed/unconfirmed/failed)
     await sbPatch('shreem_brzee_live_trades', `id=eq.${pos.id}`,
       { status: 'closed', sell_reason: `${reason}_no_balance`, closed_at: new Date().toISOString() });
-    console.log(`[SELL:${reason}] ${pos.symbol} — no token balance, marked closed`);
-    return;
+    console.log(`[SELL:${reason}] ${pos.symbol} — no token balance after 3 attempts, marked closed`);
+    return { ok: true, noBalance: true };
   }
 
   const sellQuote = await jupiterQuote(pos.mint, SOL_MINT, rawAmount, 2000);
@@ -203,7 +207,6 @@ async function executeSell(pos, reason) {
   const pnlSol = solOut - sizeIn;
   const pnlPct = sizeIn > 0 ? (pnlSol / sizeIn) * 100 : 0;
 
-  // FIX #2: 'confirmed' → 'closed', NOT confirmed → 'failed' (valid schema values only)
   await sbPatch('shreem_brzee_live_trades', `id=eq.${pos.id}`, {
     status: confirmed ? 'closed' : 'failed',
     sell_reason: reason,
@@ -223,6 +226,7 @@ async function executeSell(pos, reason) {
   }
 
   console.log(`[SELL:${reason}] ✅ ${pos.symbol} | pnl=${pnlPct.toFixed(1)}% | sol_out=${solOut.toFixed(4)} | confirmed:${confirmed} | tx:${txSig?.slice(0,16)}`);
+  return { ok: true, confirmed, solOut, txSig };
 }
 
 // ── BUY POLL ─────────────────────────────────────────────────────────────────
@@ -236,15 +240,17 @@ async function pollBuy() {
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
     const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    // Only pick up signals the edge function missed: older than 30s and still unprocessed
-    // This prevents double-execution with the webhook's immediate executor call
     const cutoff = new Date(Date.now() - 30000).toISOString();
     const signals = await sbGet('shreem_brzee_signals',
       `action=eq.BUY&live_processed=eq.false&created_at=lt.${cutoff}&order=created_at.asc&limit=5`);
 
     for (const sig of signals) {
-      // 0.05 SOL min — catches Cented nano-cap buys (avg 0.255 SOL, sometimes as low as 0.1)
-      if (sig.mint === USDC || sig.amount_sol < 0.05) continue;
+      // v9: allow amount_sol=0 if mint is valid (Cented/clukz WSOL trades)
+      // Only skip if BOTH too small AND no valid mint
+      if (sig.mint === USDC) continue;
+      if (Number(sig.amount_sol || 0) < 0.05 && !sig.mint) continue;
+
+      // Mark processed BEFORE execution (prevents double-buy from parallel polls)
       await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
 
       try {
@@ -254,8 +260,6 @@ async function pollBuy() {
         const wallet = kp.publicKey.toBase58();
 
         const bal = await getWalletBalance(wallet);
-
-        // FIX #5: Hard floor — never trade if balance < 0.05 SOL (covers gas + min trade)
         if (bal < 0.05) {
           console.log(`[BUY] FLOOR PROTECTION — balance too low: ${bal.toFixed(4)} SOL. Halting buys.`);
           break;
@@ -275,7 +279,7 @@ async function pollBuy() {
         const size = Math.min(bal * pct, maxExp - openExp);
         if (size < 0.005) { console.log(`[BUY] Size too small: ${size}`); continue; }
 
-        console.log(`[BUY] ${sig.label} → ${sig.symbol} | ${size.toFixed(4)} SOL | bal=${bal.toFixed(4)}`);
+        console.log(`[BUY] ${sig.label} → ${sig.symbol} | ${size.toFixed(4)} SOL | bal=${bal.toFixed(4)} | amount_sol=${sig.amount_sol}`);
         const lamports = Math.floor(size * LAMPORTS);
         const quote = await jupiterQuote(SOL_MINT, sig.mint, lamports);
         const swapTx = await jupiterSwapTx(quote, wallet);
@@ -283,18 +287,17 @@ async function pollBuy() {
         const confirmed = await waitConfirm(txSig);
         invalidateBalanceCache();
 
-        // FIX #3: Store entry_price only if both inAmount and outAmount are valid non-zero
-        const tokensReceived = Number(quote.outAmount); // raw units from Jupiter
+        const tokensReceived = Number(quote.outAmount);
         const inAmountSol = Number(quote.inAmount) / LAMPORTS;
         const entryPrice = (inAmountSol > 0 && tokensReceived > 0)
-          ? inAmountSol / (tokensReceived / 1e6) : null; // price in SOL per human-readable token
+          ? inAmountSol / (tokensReceived / 1e6) : null;
 
         await sbPost('shreem_brzee_live_trades', {
           session_id: 'default', sig: sig.sig + '_live', tx_sig: txSig,
           mint: sig.mint, symbol: sig.symbol, label: sig.label, wallet: sig.wallet,
           action: 'BUY', amount_sol: size, entry_price: entryPrice,
-          tokens_received: tokensReceived, // stored as raw integer (Jupiter outAmount)
-          status: confirmed ? 'open' : 'unconfirmed', // FIX #2: 'unconfirmed' is valid
+          tokens_received: tokensReceived,
+          status: confirmed ? 'open' : 'unconfirmed',
           opened_at: new Date().toISOString(), slippage_pct: 3.0,
         });
 
@@ -305,6 +308,7 @@ async function pollBuy() {
         console.log(`[BUY] ✅ ${sig.symbol} | ${size.toFixed(4)} SOL | entry_price=${entryPrice?.toFixed(8) ?? 'null'} | tx:${txSig?.slice(0,16)} | confirmed:${confirmed}`);
       } catch (e) {
         console.error(`[BUY] ERROR ${sig.sig}:`, e.message);
+        // v9: un-mark so it gets retried on next poll cycle
         await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: false });
       }
     }
@@ -312,7 +316,9 @@ async function pollBuy() {
   finally { buyBusy = false; }
 }
 
-// ── SELL POLL — whale mirror + stop-loss + 48h timeout ────────────────────
+// ── SELL POLL — v9 HARDENED ───────────────────────────────────────────────────
+// KEY FIX: live_processed=true ONLY after executeSell succeeds
+// Retry logic: if sell fails, signal stays unprocessed for next cycle
 let sellBusy = false;
 async function pollSell() {
   if (sellBusy) return;
@@ -322,51 +328,66 @@ async function pollSell() {
     const sess = sessions[0];
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
-    // ── 1. Whale SELL mirror ─────────────────────────────────────────────────
+    // ── 1. Whale SELL mirror — HARDENED v9 ─────────────────────────────────
     const sellSignals = await sbGet('shreem_brzee_signals',
       'action=eq.SELL&live_processed=eq.false&order=created_at.asc&limit=10');
 
     for (const sig of sellSignals) {
-      await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
       const openTrades = await sbGet('shreem_brzee_live_trades',
         `status=eq.open&mint=eq.${sig.mint}&select=*`);
 
       if (!openTrades.length) {
+        // No open position — safe to mark processed immediately
+        await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
         console.log(`[SELL:whale] No open position for ${sig.symbol} — skip`);
         continue;
       }
 
-      console.log(`[SELL:whale] ${sig.label} sold ${sig.symbol} — auto-closing ${openTrades.length} position(s)`);
+      console.log(`[SELL:whale] v9 ${sig.label} sold ${sig.symbol} — closing ${openTrades.length} position(s)`);
+      let allSuccess = true;
+
       for (const pos of openTrades) {
-        try { await executeSell(pos, 'whale_sell'); }
-        catch (e) { console.error(`[SELL:whale] ERROR ${pos.id}:`, e.message); }
+        try {
+          const result = await executeSell(pos, 'whale_sell');
+          if (!result?.ok) { allSuccess = false; console.error(`[SELL:whale] executeSell returned !ok for ${pos.id}`); }
+        } catch (e) {
+          allSuccess = false;
+          console.error(`[SELL:whale] ERROR ${pos.id}:`, e.message);
+        }
+      }
+
+      // v9 KEY FIX: only mark processed if ALL positions closed successfully
+      // If any failed, leave live_processed=false → retry on next cycle
+      if (allSuccess) {
+        await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
+        console.log(`[SELL:whale] ✅ ${sig.symbol} — all positions closed, signal marked processed`);
+      } else {
+        console.warn(`[SELL:whale] ⚠️ ${sig.symbol} — sell had errors, signal stays unprocessed for retry`);
       }
     }
 
-    // ── 2. Stop-loss: -30% via DexScreener ──────────────────────────────────
+    // ── 2. Stop-loss + 48h timeout ───────────────────────────────────────────
     const openAll = await sbGet('shreem_brzee_live_trades', 'status=eq.open&select=*');
     const now = Date.now();
 
     for (const pos of openAll) {
-      // FIX #1: 48h timeout — close any position open longer than MAX_HOLD_MS
+      // 48h timeout
       if (pos.opened_at) {
         const ageMs = now - new Date(pos.opened_at).getTime();
         if (ageMs > MAX_HOLD_MS) {
-          console.log(`[SELL:48h_timeout] ${pos.symbol} held ${(ageMs/3600000).toFixed(1)}h — force closing`);
+          console.log(`[SELL:48h] ${pos.symbol} held ${(ageMs/3600000).toFixed(1)}h — force closing`);
           try { await executeSell(pos, 'timeout_48h'); }
           catch (e) { console.error(`[SELL:48h] ERROR ${pos.id}:`, e.message); }
-          continue; // skip stop-loss check — already being closed
+          continue;
         }
       }
 
-      // FIX #3: Skip stop-loss if entry_price is null — log it for investigation
       if (!pos.entry_price) {
-        console.log(`[STOPLOSS] ${pos.symbol} — entry_price is null, cannot evaluate stop-loss`);
+        console.log(`[STOPLOSS] ${pos.symbol} — entry_price null, skipping`);
         continue;
       }
 
-      // Use Jupiter for real-time on-chain price — accurate for new nano-caps
-      // DexScreener lags 5-30min on new tokens — DO NOT USE for stop-loss
+      // Jupiter price check
       let currentPrice = 0;
       try {
         const jupR = await httpReq(`https://lite-api.jup.ag/price/v3?ids=${pos.mint}`);
@@ -377,7 +398,6 @@ async function pollSell() {
         }
       } catch {}
 
-      // Fallback to DexScreener only if Jupiter returns nothing
       if (!currentPrice) {
         try {
           const ds = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${pos.mint}`);
@@ -391,16 +411,13 @@ async function pollSell() {
 
       if (!currentPrice) continue;
 
-      // entry_price from executor = USD per token (set at buy time from Jupiter)
-      // currentPrice from Jupiter = USD per token
-      // Both in same units — direct comparison, no SOL conversion needed
       const entryUsd = Number(pos.entry_price);
       if (!entryUsd || entryUsd <= 0) continue;
 
       const changePct = ((currentPrice - entryUsd) / entryUsd) * 100;
 
       if (changePct <= -25) {
-        console.log(`[STOPLOSS] ${pos.symbol} down ${changePct.toFixed(1)}% — closing (entry $${entryUsd.toFixed(8)} now $${currentPrice.toFixed(8)})`);
+        console.log(`[STOPLOSS] ${pos.symbol} down ${changePct.toFixed(1)}% — closing`);
         try { await executeSell(pos, 'stoploss_25pct'); }
         catch(e) { console.error(`[STOPLOSS] ERROR ${pos.id}:`, e.message); }
       } else {
@@ -412,7 +429,7 @@ async function pollSell() {
   finally { sellBusy = false; }
 }
 
-// ── Health check HTTP server ─────────────────────────────────────────────────
+// ── Health check ─────────────────────────────────────────────────────────────
 let _healthBalance = 0;
 let _healthBalanceAt = 0;
 
@@ -428,12 +445,11 @@ http.createServer(async (req, res) => {
       _healthBalanceAt = now;
     } catch {}
   }
-
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
     status: 'running',
-    bot: 'Shreem Brzee Live Worker v8',
-    version: 'v8-audit-fixes',
+    bot: 'Shreem Brzee Live Worker v9',
+    version: 'v9-sell-hardened',
     helius_key_prefix: HELIUS_KEY.slice(0,8),
     balance_sol: _healthBalance,
     uptime: Math.floor(process.uptime()),
@@ -441,9 +457,10 @@ http.createServer(async (req, res) => {
   }));
 }).listen(PORT, () => console.log(`[shreem] Health check on :${PORT}`));
 
-console.log('[shreem] v8 AUDIT FIXES — status schema, tokens bug, 48h timeout, entry_price guard, balance floor');
-console.log('[shreem] Exit paths: whale_sell | stoploss_30pct | timeout_48h');
-console.log('[shreem] Balance floor: 0.05 SOL | Exposure cap: 50%');
+console.log('[shreem] v9 SELL HARDENED — live_processed=true AFTER success only, retry on failure');
+console.log('[shreem] resolveRawAmount: on-chain → stored → retry on-chain (3s delay)');
+console.log('[shreem] WSOL fix: amount_sol=0 with valid mint passes BUY filter (Cented/clukz)');
+console.log('[shreem] Sell poll: 15s interval (tightened from 30s)');
 console.log('[shreem] Helius key prefix:', HELIUS_KEY.slice(0,8));
 setInterval(pollBuy,  POLL_MS);
 setInterval(pollSell, SELL_POLL_MS);
