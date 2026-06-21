@@ -292,7 +292,15 @@ async function syncHelius(): Promise<{ ok: boolean; message: string; count?: num
   try {
     const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
     const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
-    const addresses = Object.keys(WHALE_WALLETS);
+    // CREDIT SAFETY: Hard-coded 5 wallets only — never auto-expand to all WHALE_WALLETS
+    // Adding more wallets = linear credit burn. Change manually via Helius dashboard only.
+    const addresses = [
+      "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
+      "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  // Doji
+      "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
+      "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  // trunoest
+      "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", // clukz
+    ];
 
     const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`, { signal: AbortSignal.timeout(8000) });
     if (!listR.ok) throw new Error(`Helius list failed: ${listR.status}`);
