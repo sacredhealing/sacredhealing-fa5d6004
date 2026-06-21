@@ -320,6 +320,12 @@ export default function ShreemBrzeePerformance() {
     if (!openPos.length) return;
     const mints = [...new Set(openPos.map((p: any) => p.mint).filter(Boolean))];
     if (!mints.length) return;
+    // Back-fill entry_price from live price when DB update failed after swap
+    for (const pos of openPos) {
+      if ((!pos.entry_price||Number(pos.entry_price)===0) && pos.mint && (livePrices[pos.mint]||0)>0) {
+        try { await d.from("shreem_brzee_live_trades").update({entry_price:livePrices[pos.mint]}).eq("id",pos.id); } catch {}
+      }
+    }
     try {
       const r = await fetch(PRICE_URL, {
         method: "POST",
@@ -777,7 +783,7 @@ export default function ShreemBrzeePerformance() {
               // entry_price is stored in USD (from DexScreener at open time)
               // livePrices[mint] is also USD (from DexScreener/Jupiter now)
               // Compute P&L entirely in USD, then convert to SOL/EUR at display
-              const entryUsd    = Number(pos.entry_price) || 0;   // USD per token
+              const entryUsd    = Number(pos.entry_price) > 0 ? Number(pos.entry_price) : (livePrices[pos.mint] || 0);
               const currentUsd  = livePrices[pos.mint]   || 0;   // USD per token
               const amountSol   = Number(pos.amount_sol)  || 0;   // SOL invested
 
@@ -801,7 +807,9 @@ export default function ShreemBrzeePerformance() {
               const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
               const pnlLabel      = pnlPct !== null
                 ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
-                : noLiquidity ? "no liquidity" : "—";
+                : noLiquidity ? "no liquidity"
+                : (!pos.entry_price || Number(pos.entry_price)===0) ? "syncing…"
+                : "—";
 
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
@@ -823,7 +831,7 @@ export default function ShreemBrzeePerformance() {
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
                       <div style={{ textAlign:"right" }}>
-                        <div style={{ fontSize:noLiquidity?11:15, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
+                        <div style={{ fontSize:noLiquidity?11:15, fontWeight:900, color:(noLiquidity||!pos.entry_price)?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                         <div style={{ fontSize:9, color:pnlColor }}>{pnlEur!==null?`${pnlEur>=0?"+":""}${pnlEur.toFixed(2)}€`:""}</div>
                       </div>
                       <span style={{ color:GOLD, fontSize:14, transform:expanded?"rotate(90deg)":"rotate(0deg)", transition:"transform .2s" }}>›</span>
@@ -848,10 +856,10 @@ export default function ShreemBrzeePerformance() {
                         ))}
                       </div>
                       {/* Unrealized PNL bar */}
-                      <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.08)`, border:`1px solid rgba(${pnlPct!==null&&pnlPct>=0?"34,197,94":"239,68,68"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null?(pnlPct>=0?"34,197,94":"239,68,68"):"100,116,139"},.08)`, border:`1px solid rgba(${pnlPct!==null?(pnlPct>=0?"34,197,94":"239,68,68"):"100,116,139"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                         <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
                         <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-                          <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:noLiquidity?"#94a3b8":pnlColor }}>{pnlLabel}</div>
+                          <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:(noLiquidity||!pos.entry_price)?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                           {pnlEur !== null && (
                             <div style={{ textAlign:"right" }}>
                               <div style={{ fontSize:14, fontWeight:700, color:pnlColor }}>{pnlEur>=0?"+":""}{pnlEur.toFixed(2)}€</div>
