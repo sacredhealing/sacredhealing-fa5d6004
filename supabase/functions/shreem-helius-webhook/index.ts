@@ -359,6 +359,25 @@ function parseSwap(tx: any, wallet: string) {
         .filter((t: any) => (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.amount > 100_000)
         .reduce((s: number, t: any) => s + t.amount, 0) / LAMPORTS;
     }
+    // Third path: events.swap (Helius enhanced format — most reliable for Jupiter/WSOL trades)
+    // Cented uses Jupiter which routes through WSOL, so nativeBalanceChange may be 0 or tiny
+    if (!amountSol || amountSol < 0.001) {
+      const swap = tx.events?.swap;
+      if (swap) {
+        const isIn  = swap.tokenInputs?.some((t: any) => t.userAccount === wallet);
+        const isOut = swap.tokenOutputs?.some((t: any) => t.userAccount === wallet);
+        if (swap.nativeInput  && isIn)  amountSol = Number(swap.nativeInput.amount)  / LAMPORTS;
+        if (swap.nativeOutput && isOut) amountSol = Number(swap.nativeOutput.amount) / LAMPORTS;
+      }
+    }
+    // Fourth path: any accountData nativeBalanceChange across all accounts involved
+    // (covers cases where Cented is a fee payer but SOL flows via sub-accounts)
+    if (!amountSol || amountSol < 0.001) {
+      const allChanges = (tx.accountData || [])
+        .filter((a: any) => a.nativeBalanceChange && Math.abs(a.nativeBalanceChange) > 50_000)
+        .map((a: any) => Math.abs(a.nativeBalanceChange) / LAMPORTS);
+      if (allChanges.length) amountSol = Math.max(...allChanges);
+    }
     return {
       action:     (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY"|"SELL",
       mint:       tokenTx.mint as string,
