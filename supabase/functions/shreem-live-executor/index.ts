@@ -1,5 +1,5 @@
 // supabase/functions/shreem-live-executor/index.ts
-// SHREEM BRZEE — Safe Live Executor v3
+// SHREEM BRZEE — Safe Live Executor v3.1
 // v3 changes:
 //   • SELL close: marks trade status='closing' before swap, then 'closed'/'failed' after
 //     → if executor crashes mid-swap, trade stays 'closing' not stuck 'open'
@@ -258,12 +258,23 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3.1", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
   // Called by Supabase cron every 5 min as server-side fallback
+  // Auth: CRON_SECRET env var — set in Supabase secrets, passed by pg_cron
+  // Falls back to service role key check if CRON_SECRET not set
   if (req.method === "GET" && path.endsWith("/cron-stoploss")) {
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const authHeader = req.headers.get("authorization") ?? req.headers.get("x-cron-secret") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const validSecret = CRON_SECRET ? token === CRON_SECRET : token === SERVICE_ROLE;
+    if (!validSecret) {
+      console.warn("[cron-stoploss] Unauthorized call — bad or missing secret");
+      return jsonResp({ ok: false, error: "unauthorized" }, 401);
+    }
     const kp = loadKeypair();
     if (!kp) return jsonResp({ ok: false, error: "no keypair" });
     const wallet = bs58.encode(kp.publicKey);
@@ -458,7 +469,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3.1" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
@@ -472,3 +483,4 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e.message }, 500);
   }
 });
+
