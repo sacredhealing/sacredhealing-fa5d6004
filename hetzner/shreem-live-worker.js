@@ -83,11 +83,13 @@ async function pollBuy() {
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
     const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    const cutoff = new Date(Date.now() - 30000).toISOString();
+    // STRICT AGE FILTER: only act on signals that arrived within the last 90 seconds
+    // If the bot wasn't alive when the whale bought, don't buy — memecoins move in seconds
+    const cutoff = new Date(Date.now() - 30000).toISOString();   // must be 30s old (webhook already tried)
+    const maxAge = new Date(Date.now() - 90000).toISOString();   // must not be older than 90 seconds
 
-    // Pick up signals not yet processed: false OR null (pre-v5.1 signals)
     const signals = await sbGet('shreem_brzee_signals',
-      `action=eq.BUY&or=(live_processed.eq.false,live_processed.is.null)&created_at=lt.${cutoff}&order=created_at.asc&limit=5`);
+      `action=eq.BUY&or=(live_processed.eq.false,live_processed.is.null)&created_at=lt.${cutoff}&created_at=gt.${maxAge}&order=created_at.asc&limit=5`);
 
     for (const sig of signals) {
       if (sig.mint === USDC) { await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true }); continue; }
@@ -236,3 +238,4 @@ setInterval(pollBuy,  POLL_MS);
 setInterval(pollSell, SELL_POLL_MS);
 pollBuy();
 pollSell();
+
