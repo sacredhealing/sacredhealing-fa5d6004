@@ -29,6 +29,12 @@ const MIN_SIGNAL_SOL  = 0.1;
 const STOP_LOSS_PCT   = -25;
 const SLIPPAGE_BPS    = 1000;  // 10% — meme coins move fast, 3% causes 0x1788 route failures
 
+function timeoutSignal(ms: number) {
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -73,7 +79,7 @@ async function rpc(method: string, params: unknown[]) {
       const r = await fetch(url, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-        signal: AbortSignal.timeout(8000),
+        signal: timeoutSignal(8000),
       });
       const j = await r.json();
       if (j.error?.code === -32429 || j.error?.code === 429) { console.warn(`[RPC] ${url} rate-limited`); continue; }
@@ -87,7 +93,7 @@ async function rpc(method: string, params: unknown[]) {
 // ── Jupiter ───────────────────────────────────────────────────────────────────
 async function jupQuote(inputMint: string, outputMint: string, amount: number, slippage = SLIPPAGE_BPS) {
   const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  const r = await fetch(url, { signal: timeoutSignal(10000) });
   if (!r.ok) throw new Error(`Jupiter quote ${r.status}: ${await r.text()}`);
   return r.json();
 }
@@ -95,8 +101,11 @@ async function jupQuote(inputMint: string, outputMint: string, amount: number, s
 async function jupSwapTx(quote: unknown, wallet: string) {
   const r = await fetch(`${JUPITER}/swap`, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ quoteResponse: quote, userPublicKey: wallet, wrapAndUnwrapSol: true, dynamicComputeUnitLimit: true, computeUnitPriceMicroLamports: 1000000  // higher priority fee = faster landing, fewer route failures }),
-    signal: AbortSignal.timeout(12000),
+    body: JSON.stringify({
+      quoteResponse: quote, userPublicKey: wallet, wrapAndUnwrapSol: true,
+      dynamicComputeUnitLimit: true, computeUnitPriceMicroLamports: 1000000,
+    }),
+    signal: timeoutSignal(12000),
   });
   if (!r.ok) throw new Error(`Jupiter swap ${r.status}: ${await r.text()}`);
   return (await r.json()).swapTransaction as string;
@@ -222,7 +231,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
 // ── Price fetch ───────────────────────────────────────────────────────────────
 async function fetchPriceUsd(mint: string): Promise<number> {
   try {
-    const r = await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`, { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`, { signal: timeoutSignal(5000) });
     if (r.ok) {
       const j = await r.json();
       const entry: any = Object.values(j || {})[0];
@@ -231,7 +240,7 @@ async function fetchPriceUsd(mint: string): Promise<number> {
     }
   } catch {}
   try {
-    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal: AbortSignal.timeout(6000) });
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal: timeoutSignal(6000) });
     if (r.ok) {
       const pairs = ((await r.json())?.pairs || []).filter((p: any) => p?.priceUsd && parseFloat(p.priceUsd) > 0);
       if (pairs.length) {
@@ -432,7 +441,7 @@ serve(async (req) => {
     // STEP 4: Fetch token decimals
     let tokenDecimals = 6;
     try {
-      const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: AbortSignal.timeout(5000) });
+      const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
       if (metaR.ok) {
         const metaJ = await metaR.json();
         const d = (Object.values(metaJ || {})[0] as any)?.decimals;
@@ -443,7 +452,7 @@ serve(async (req) => {
     const tokensHuman = Number(quote.outAmount) / Math.pow(10, tokenDecimals);
     let solUsd = 150;
     try {
-      const pr = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: AbortSignal.timeout(4000) });
+      const pr = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: timeoutSignal(4000) });
       if (pr.ok) { solUsd = parseFloat((await pr.json()).price) || 150; }
     } catch {}
 
