@@ -82,10 +82,16 @@ async function getSolPrice(): Promise<{ usd: number; eur: number }> {
 }
 
 async function getWalletBalance(addr: string): Promise<number> {
+  // Primary: executor health reads balance server-side (avoids browser RPC auth issues)
+  try {
+    const h = await fetch("https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-live-executor/health", { signal: AbortSignal.timeout(6000) });
+    if (h.ok) { const j = await h.json(); if (j?.balance_sol > 0) return j.balance_sol; }
+  } catch {}
+  // Fallback: direct RPC
   const RPCS = [
-    "https://mainnet.helius-rpc.com/?api-key=7de253c3-49e2-42be-9672-23a761260f86",
     "https://api.mainnet-beta.solana.com",
     "https://rpc.ankr.com/solana",
+    "https://mainnet.helius-rpc.com/?api-key=7de253c3-49e2-42be-9672-23a761260f86",
   ];
   for (const rpc of RPCS) {
     try {
@@ -320,12 +326,9 @@ export default function ShreemBrzeePerformance() {
     if (bal > 0) {
       setBotBalSol(bal);
       setBotBalFetched(true);
-      // Sync balInput for paper trading mode
       setBalInput(bal.toFixed(4));
-    } else if (!botBalFetched) {
-      // Only log warning, never wipe a good balance
-      console.warn("[botWallet] RPC returned 0 — retrying");
     }
+    // If bal=0, keep last known — but executor health always returns real value so this is rare
   }, [botBalFetched]);
 
   // ── FIX: Live token prices — entry_price is USD, livePrices is USD → same unit
