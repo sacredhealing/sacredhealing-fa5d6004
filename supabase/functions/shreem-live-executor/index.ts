@@ -29,6 +29,12 @@ const MIN_SIGNAL_SOL  = 0.1;
 const STOP_LOSS_PCT   = -25;
 const SLIPPAGE_BPS    = 1000;  // 10% — meme coins move fast, 3% causes 0x1788 route failures
 
+function timeoutSignal(ms: number) {
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
