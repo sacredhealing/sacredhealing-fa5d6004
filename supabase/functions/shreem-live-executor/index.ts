@@ -1,13 +1,13 @@
 // supabase/functions/shreem-live-executor/index.ts
-// SHREEM BRZEE — Safe Live Executor v2
-// Rules:
-//   • DB write BEFORE swap (intent recorded first, never lose a trade)
-//   • Max 2 open positions at any time
-//   • Min 0.03 SOL per trade (no micro-buys)
-//   • Min whale signal 0.5 SOL (ignore spam/dust)
-//   • Auto-sell on whale SELL — reads on-chain balance, sells everything
-//   • Stop-loss -25% checked on every execution cycle
-//   • All errors surfaced, never swallowed
+// SHREEM BRZEE — Safe Live Executor v3
+// v3 changes:
+//   • SELL close: marks trade status='closing' before swap, then 'closed'/'failed' after
+//     → if executor crashes mid-swap, trade stays 'closing' not stuck 'open'
+//   • resolveTokenAmount: on-chain first → stored fallback → retry on-chain after 3s
+//     → handles propagation delay and missing tokens_received
+//   • BUY filter: amount_sol=0 with valid mint ALWAYS passes (Cented/clukz WSOL trades)
+//   • Stop-loss cron endpoint for server-side checks without Hetzner
+//   • All safety limits unchanged
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -23,12 +23,11 @@ const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
 // ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
-const MAX_POSITIONS   = 20;      // no hard cap — 50% exposure rule controls
-const MIN_TRADE_SOL   = 0.01;    // minimum 0.01 SOL per trade
-const MIN_SIGNAL_SOL  = 0.1;     // ignore whale signals below 0.1 SOL (spam/dust)
-const STOP_LOSS_PCT   = -25;     // close if down 25%
-const FIXED_TRADE_SOL = 0.05;    // fallback only — dynamic sizing used
-const SLIPPAGE_BPS    = 300;     // 3% slippage
+const MAX_POSITIONS   = 20;
+const MIN_TRADE_SOL   = 0.01;
+const MIN_SIGNAL_SOL  = 0.1;
+const STOP_LOSS_PCT   = -25;
+const SLIPPAGE_BPS    = 300;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -59,18 +58,15 @@ function loadKeypair(): SolanaKeypair | null {
   } catch (e: any) { console.error("[KEYPAIR] Failed:", e.message); return null; }
 }
 
-// ── RPC with fallback ─────────────────────────────────────────────────────────
-// ALL RPCs: public only — Helius only as last resort for sendTransaction
+// ── RPC ───────────────────────────────────────────────────────────────────────
 const READ_RPCS = [
   "https://api.mainnet-beta.solana.com",
   "https://rpc.ankr.com/solana",
   "https://solana-api.projectserum.com",
 ];
-// Send: public first, Helius LAST (only if public fails) — minimizes Helius credit usage
 const SEND_RPCS = [...READ_RPCS, HELIUS_RPC];
 
 async function rpc(method: string, params: unknown[]) {
-  // sendTransaction tries public RPCs first, Helius only as last resort
   const urls = (method === "sendTransaction") ? SEND_RPCS : READ_RPCS;
   for (const url of urls) {
     try {
@@ -107,12 +103,9 @@ async function jupSwapTx(quote: unknown, wallet: string) {
 }
 
 async function signAndSend(txB64: string, kp: SolanaKeypair) {
-  // Sign locally — no RPC needed for signing
   const keypair = Keypair.fromSecretKey(kp.secretKey);
   const tx = VersionedTransaction.deserialize(Buffer.from(txB64, "base64"));
   tx.sign([keypair]);
-  // Send via our rpc() function which routes sendTransaction to Helius only
-  // Avoids Connection object making hidden getLatestBlockhash/getFeeForMessage calls to Helius
   const serialized = Buffer.from(tx.serialize()).toString("base64");
   return await rpc("sendTransaction", [serialized, {
     encoding: "base64",
@@ -124,10 +117,9 @@ async function signAndSend(txB64: string, kp: SolanaKeypair) {
 
 async function waitConfirm(sig: string, ms = 30000): Promise<boolean> {
   const deadline = Date.now() + ms;
-  // Wait 8s before first check — tx takes time to propagate
   await new Promise(r => setTimeout(r, 8000));
   while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 6000)); // poll every 6s not 3s — halves getSignatureStatuses calls
+    await new Promise(r => setTimeout(r, 6000));
     try {
       const res = await rpc("getSignatureStatuses", [[sig], { searchTransactionHistory: true }]);
       const s = res?.value?.[0];
@@ -138,27 +130,51 @@ async function waitConfirm(sig: string, ms = 30000): Promise<boolean> {
   return false;
 }
 
+// ── Resolve token amount for sell ─────────────────────────────────────────────
+// v3: on-chain → stored → retry on-chain (handles WSOL propagation delay)
+async function resolveTokenAmount(wallet: string, mint: string, tokensReceivedRaw: number | null): Promise<{ rawAmount: number; decimals: number }> {
+  let rawAmount = 0;
+  let decimals = 6;
+
+  // Attempt 1: on-chain
+  try {
+    const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint }, { encoding: "jsonParsed" }]);
+    const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+    if (acct) { decimals = Number(acct.decimals); rawAmount = Number(acct.amount); }
+  } catch (e: any) { console.warn("[resolveTokenAmount] on-chain read 1:", e.message); }
+
+  // Attempt 2: stored DB value
+  if (!rawAmount && tokensReceivedRaw) {
+    rawAmount = Math.floor(Number(tokensReceivedRaw));
+    console.log(`[resolveTokenAmount] Using stored tokens_received: ${rawAmount}`);
+  }
+
+  // Attempt 3: retry on-chain after delay (propagation lag)
+  if (!rawAmount) {
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const taRes2 = await rpc("getTokenAccountsByOwner", [wallet, { mint }, { encoding: "jsonParsed" }]);
+      const acct2 = taRes2?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
+      if (acct2) { decimals = Number(acct2.decimals); rawAmount = Number(acct2.amount); }
+      if (rawAmount) console.log(`[resolveTokenAmount] Retry on-chain: ${rawAmount}`);
+    } catch {}
+  }
+
+  return { rawAmount, decimals };
+}
+
 // ── SELL position ─────────────────────────────────────────────────────────────
+// v3: marks status='closing' before swap so no position gets stuck 'open' on crash
 async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason: string): Promise<{ ok: boolean; solOut: number; error?: string }> {
   console.log(`[SELL] Starting: ${pos.symbol} | reason=${reason} | id=${pos.id}`);
 
-  // Get on-chain token balance
-  let rawAmount = 0;
-  let decimals = Number(pos.token_decimals ?? 6);
-  try {
-    const taRes = await rpc("getTokenAccountsByOwner", [wallet, { mint: pos.mint }, { encoding: "jsonParsed" }]);
-    const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
-    if (acct) { decimals = Number(acct.decimals); rawAmount = Number(acct.amount); }
-  } catch (e: any) { console.warn("[SELL] getTokenAccounts failed:", e.message); }
+  // v3: mark 'closing' BEFORE swap — prevents stuck-open on crash
+  await sb.from("shreem_brzee_live_trades").update({ status: "closing" }).eq("id", pos.id);
 
-  // Fall back to stored amount if on-chain read failed
-  if (!rawAmount && pos.tokens_received) {
-    rawAmount = Math.floor(Number(pos.tokens_received) * Math.pow(10, decimals));
-    console.log(`[SELL] Using stored tokens: ${pos.tokens_received} × 10^${decimals} = ${rawAmount}`);
-  }
+  const { rawAmount, decimals } = await resolveTokenAmount(wallet, pos.mint, pos.tokens_received);
 
   if (!rawAmount || rawAmount < 1) {
-    console.log(`[SELL] No tokens to sell — marking closed`);
+    console.log(`[SELL] No tokens for ${pos.symbol} after 3 attempts — marking closed`);
     await sb.from("shreem_brzee_live_trades").update({
       status: "closed", sell_reason: reason + "_no_balance", closed_at: new Date().toISOString(),
     }).eq("id", pos.id);
@@ -183,7 +199,6 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
       tx_sig_close: txSig,
     }).eq("id", pos.id);
 
-    // Update session
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
     if (sess) {
       await sb.from("shreem_brzee_session").update({
@@ -198,8 +213,35 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
     return { ok: true, solOut };
   } catch (e: any) {
     console.error(`[SELL] ❌ ${pos.symbol} failed: ${e.message}`);
+    // v3: revert to 'open' if swap failed so next cron cycle can retry
+    await sb.from("shreem_brzee_live_trades").update({ status: "open" }).eq("id", pos.id).eq("status", "closing");
     return { ok: false, solOut: 0, error: e.message };
   }
+}
+
+// ── Price fetch ───────────────────────────────────────────────────────────────
+async function fetchPriceUsd(mint: string): Promise<number> {
+  try {
+    const r = await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const j = await r.json();
+      const entry: any = Object.values(j || {})[0];
+      const p = parseFloat(entry?.usdPrice || entry?.price || 0);
+      if (p > 0) return p;
+    }
+  } catch {}
+  try {
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const pairs = ((await r.json())?.pairs || []).filter((p: any) => p?.priceUsd && parseFloat(p.priceUsd) > 0);
+      if (pairs.length) {
+        pairs.sort((a: any, b: any) => parseFloat(b.liquidity?.usd || 0) - parseFloat(a.liquidity?.usd || 0));
+        const p = parseFloat(pairs[0].priceUsd);
+        if (p > 0) return p;
+      }
+    }
+  } catch {}
+  return 0;
 }
 
 // ── MAIN HANDLER ──────────────────────────────────────────────────────────────
@@ -215,9 +257,49 @@ serve(async (req) => {
     const wallet = bs58.encode(kp.publicKey);
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
-    // Get open positions count
-    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").in("status", ["open","pending","unconfirmed"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open: open, limits: { rule: "50pct_exposure", min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+  }
+
+  // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
+  // Called by Supabase cron every 5 min as server-side fallback
+  if (req.method === "GET" && path.endsWith("/cron-stoploss")) {
+    const kp = loadKeypair();
+    if (!kp) return jsonResp({ ok: false, error: "no keypair" });
+    const wallet = bs58.encode(kp.publicKey);
+
+    const { data: openPos } = await sb.from("shreem_brzee_live_trades")
+      .select("*").in("status", ["open","unconfirmed"]);
+
+    if (!openPos?.length) return jsonResp({ ok: true, checked: 0 });
+
+    let closed = 0;
+    const results: any[] = [];
+    const now = Date.now();
+
+    for (const pos of openPos) {
+      // 48h timeout
+      const ageH = (now - new Date(pos.opened_at || pos.created_at).getTime()) / 3_600_000;
+      if (ageH >= 48) {
+        const r = await sellPosition(pos, kp, wallet, "timeout_48h");
+        closed++; results.push({ id: pos.id, reason: "timeout_48h", ok: r.ok });
+        continue;
+      }
+
+      if (!pos.entry_price || !pos.mint) continue;
+
+      const currentPrice = await fetchPriceUsd(pos.mint);
+      if (!currentPrice) continue;
+
+      const changePct = ((currentPrice - Number(pos.entry_price)) / Number(pos.entry_price)) * 100;
+      if (changePct <= STOP_LOSS_PCT) {
+        console.log(`[cron-stoploss] ${pos.symbol} down ${changePct.toFixed(1)}% — closing`);
+        const r = await sellPosition(pos, kp, wallet, "stoploss_25pct");
+        closed++; results.push({ id: pos.id, reason: "stoploss", pnlPct: changePct.toFixed(1), ok: r.ok });
+      }
+    }
+
+    return jsonResp({ ok: true, checked: openPos.length, closed, results, ts: new Date().toISOString() });
   }
 
   if (req.method !== "POST") return jsonResp({ error: "method not allowed" }, 405);
@@ -230,7 +312,8 @@ serve(async (req) => {
   // ── CLOSE / SELL ────────────────────────────────────────────────────────────
   if (body?.action === "close" || body?.action === "sell") {
     const reason = body?.reason ?? "manual";
-    let q = sb.from("shreem_brzee_live_trades").select("*").in("status", ["open","pending","unconfirmed"]);
+    // v3: also look for 'closing' status trades (crash recovery)
+    let q = sb.from("shreem_brzee_live_trades").select("*").in("status", ["open","pending","unconfirmed","closing"]);
     if (body?.trade_id) q = q.eq("id", body.trade_id);
     else if (body?.mint)  q = q.eq("mint", body.mint);
 
@@ -248,7 +331,6 @@ serve(async (req) => {
 
   // ── BUY — called by webhook on whale BUY signal ────────────────────────────
   try {
-    // Load session — must be live and running
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
     if (!sess)           return jsonResp({ ok: false, error: "No session" });
     if (sess.stopped_at) return jsonResp({ ok: false, skipped: true, reason: "Session stopped" });
@@ -258,19 +340,17 @@ serve(async (req) => {
     if (!sig?.mint) return jsonResp({ ok: true, skipped: true, reason: "No signal" });
 
     // ── SAFETY CHECKS ──────────────────────────────────────────────────────────
-    // 1. Min signal size — ignore spam/dust
-    // Only skip if BOTH amount too small AND no mint — amount_sol=0 with valid mint = WSOL/Jupiter trade (Cented)
-    if (Number(sig.amount_sol ?? 0) < MIN_SIGNAL_SOL && !sig.mint) {
-      console.log(`[BUY] SKIP — no mint + too small: ${sig.amount_sol} SOL`);
-      return jsonResp({ ok: true, skipped: true, reason: `No mint and signal too small` });
+    // v3: amount_sol=0 WITH valid mint = WSOL/Jupiter trade (Cented, clukz) — ALWAYS execute
+    // Only skip if no mint AND amount too small (true spam with no token info)
+    if (!sig.mint && Number(sig.amount_sol ?? 0) < MIN_SIGNAL_SOL) {
+      console.log(`[BUY] SKIP — no mint and signal too small: ${sig.amount_sol} SOL`);
+      return jsonResp({ ok: true, skipped: true, reason: "No mint and signal too small" });
     }
 
-    // 2. Ignore USDC
     const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
     if (sig.mint === USDC) return jsonResp({ ok: true, skipped: true, reason: "USDC — not trading" });
 
-    // 3. 50% exposure rule — no hard cap, as many trades as balance allows
-    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending","unconfirmed"]);
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending","unconfirmed","closing"]);
     const openExposureSol = (openTrades ?? []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
     const balForCap = (await rpc("getBalance", [wallet])).value / LAMPORTS;
     const maxExposure = balForCap * 0.50;
@@ -279,26 +359,21 @@ serve(async (req) => {
       return jsonResp({ ok: true, skipped: true, reason: `50% cap (${openTrades?.length} open, ${openExposureSol.toFixed(3)} SOL)` });
     }
 
-    // 4. No duplicate position in same mint
     const dupMint = openTrades?.find(t => t.mint === sig.mint);
     if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
 
-    // 5. No duplicate signal
     const { data: dupSig } = await sb.from("shreem_brzee_live_trades").select("id").eq("sig", sig.sig + "_live").limit(1);
     if (dupSig?.length) return jsonResp({ ok: true, skipped: true, reason: "Signal already executed" });
 
-    // 6. Check real SOL balance
     const balRes = await rpc("getBalance", [wallet]);
     const balSol = balRes.value / LAMPORTS;
-    console.log(`[BUY] Wallet balance: ${balSol} SOL`);
+    console.log(`[BUY] Wallet balance: ${balSol} SOL | signal: ${sig.symbol ?? sig.mint.slice(0,8)} | amount_sol=${sig.amount_sol}`);
 
-    // Need enough for trade + fees (0.002 SOL for fees)
     if (balSol < MIN_TRADE_SOL + 0.003) {
-      return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL (need ${MIN_TRADE_SOL + 0.003})` });
+      return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL` });
     }
 
-    // Fixed position size — predictable, no surprises
-    const size = Math.min(0.1, Math.max(0.01, balSol * 0.05)); // 5% of balance, 0.01–0.1 SOL
+    const size = Math.min(0.1, Math.max(0.01, balSol * 0.05));
     if (size < MIN_TRADE_SOL) {
       return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
     }
@@ -306,7 +381,7 @@ serve(async (req) => {
     const lamports = Math.floor(size * LAMPORTS);
     console.log(`[BUY] Executing: ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | wallet=${wallet.slice(0,8)}`);
 
-    // ── STEP 1: WRITE INTENT TO DB FIRST (before any swap) ──────────────────
+    // STEP 1: Write intent
     const tradeId = crypto.randomUUID();
     const intentRecord = {
       id:         tradeId,
@@ -318,20 +393,16 @@ serve(async (req) => {
       wallet:     sig.wallet ?? null,
       action:     "BUY",
       amount_sol: size,
-      status:     "open",    // open immediately so sell queries find it
+      status:     "open",
       opened_at:  new Date().toISOString(),
       slippage_pct: SLIPPAGE_BPS / 100,
     };
 
     const { error: intentErr } = await sb.from("shreem_brzee_live_trades").upsert(intentRecord, { onConflict: "sig" });
-    if (intentErr) {
-      console.error("[BUY] DB intent write failed:", intentErr.message);
-      // Don't abort — the DB write failing is bad but proceed and try to record later
-    } else {
-      console.log("[BUY] Intent recorded in DB:", tradeId);
-    }
+    if (intentErr) console.error("[BUY] DB intent write failed:", intentErr.message);
+    else console.log("[BUY] Intent recorded:", tradeId);
 
-    // ── STEP 2: GET JUPITER QUOTE ─────────────────────────────────────────────
+    // STEP 2: Quote
     const quote = await jupQuote(SOL_MINT, sig.mint, lamports);
     const slippage = Number(quote.inAmount) > 0
       ? (Number(quote.inAmount) - Number(quote.otherAmountThreshold)) / Number(quote.inAmount) : 0;
@@ -340,28 +411,24 @@ serve(async (req) => {
       return jsonResp({ ok: false, error: `Slippage ${(slippage*100).toFixed(1)}% too high` });
     }
 
-    // ── STEP 3: EXECUTE SWAP ──────────────────────────────────────────────────
+    // STEP 3: Execute
     const swapTx = await jupSwapTx(quote, wallet);
     const txSig  = await signAndSend(swapTx, kp);
     console.log(`[BUY] Tx sent: ${txSig.slice(0, 20)}...`);
-
     const confirmed = await waitConfirm(txSig);
-    console.log(`[BUY] Confirmed: ${confirmed}`);
 
-    // ── STEP 4: FETCH TOKEN DECIMALS ──────────────────────────────────────────
+    // STEP 4: Fetch token decimals
     let tokenDecimals = 6;
     try {
       const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: AbortSignal.timeout(5000) });
       if (metaR.ok) {
         const metaJ = await metaR.json();
-        const d = metaJ?.[sig.mint]?.decimals ?? metaJ?.data?.[sig.mint]?.decimals;
+        const d = (Object.values(metaJ || {})[0] as any)?.decimals;
         if (d != null) tokenDecimals = Number(d);
       }
     } catch {}
 
     const tokensHuman = Number(quote.outAmount) / Math.pow(10, tokenDecimals);
-
-    // SOL/USD price
     let solUsd = 150;
     try {
       const pr = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: AbortSignal.timeout(4000) });
@@ -370,38 +437,36 @@ serve(async (req) => {
 
     const entryPrice = tokensHuman > 0 ? (size * solUsd) / tokensHuman : null;
 
-    // ── STEP 5: UPDATE DB RECORD WITH FULL TRADE DATA ─────────────────────────
+    // STEP 5: Update DB
     const { error: updateErr } = await sb.from("shreem_brzee_live_trades").update({
       tx_sig:          txSig,
       entry_price:     entryPrice,
-      tokens_received: tokensHuman,
+      tokens_received: Number(quote.outAmount), // raw units from Jupiter
       token_decimals:  tokenDecimals,
       sol_usd_at_entry: solUsd,
-      status:          "open", // always open — sell query handles confirmed/unconfirmed
+      status:          "open",
     }).eq("id", tradeId);
 
     if (updateErr) {
-      console.error("[BUY] ⚠️ DB update failed after confirmed swap:", updateErr.message);
-      console.error("[BUY] SWAP DID EXECUTE — tx:", txSig, "size:", size, "token:", sig.symbol);
+      console.error("[BUY] ⚠️ DB update failed after swap:", updateErr.message);
+      console.error("[BUY] SWAP EXECUTED — tx:", txSig, "size:", size, "token:", sig.symbol);
     }
 
-    // Update session portfolio
     await sb.from("shreem_brzee_session").update({
       portfolio:  Number(sess.portfolio ?? 0) - size,
       updated_at: new Date().toISOString(),
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
-    // Mark any pending record as failed
     try {
       const sig = body?.direct_signal;
       if (sig?.sig) {
         await sb.from("shreem_brzee_live_trades").update({ status: "failed", sell_reason: "execution_error" })
-          .eq("sig", sig.sig + "_live").neq("status", "closed");
+          .eq("sig", sig.sig + "_live").not("status", "eq", "closed");
       }
     } catch {}
     return jsonResp({ ok: false, error: e.message }, 500);
