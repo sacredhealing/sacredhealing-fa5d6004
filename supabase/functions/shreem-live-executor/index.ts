@@ -1,5 +1,5 @@
 // supabase/functions/shreem-live-executor/index.ts
-// SHREEM BRZEE — Safe Live Executor v3.3
+// SHREEM BRZEE — Safe Live Executor v3.4
 // v3 changes:
 //   • SELL close: marks trade status='closing' before swap, then 'closed'/'failed' after
 //     → if executor crashes mid-swap, trade stays 'closing' not stuck 'open'
@@ -267,7 +267,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3.3", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3.4", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -316,12 +316,8 @@ serve(async (req) => {
         console.log(`[cron-stoploss] ${pos.symbol} down ${changePct.toFixed(1)}% — stop-loss`);
         const r = await sellPosition(pos, kp, wallet, "stoploss_25pct");
         closed++; results.push({ id: pos.id, reason: "stoploss", pnlPct: changePct.toFixed(1), ok: r.ok });
-      } else if (changePct >= 50) {
-        // Take-profit: exit at +50% even if whale is still holding
-        console.log(`[cron-stoploss] ${pos.symbol} up ${changePct.toFixed(1)}% — take-profit`);
-        const r = await sellPosition(pos, kp, wallet, "takeprofit_50pct");
-        closed++; results.push({ id: pos.id, reason: "takeprofit", pnlPct: changePct.toFixed(1), ok: r.ok });
       }
+      // No take-profit — follow whale SELL mirror only. They know when to exit.
     }
 
     return jsonResp({ ok: true, checked: openPos.length, closed, results, ts: new Date().toISOString() });
@@ -479,7 +475,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3.3" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3.4" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
@@ -493,5 +489,6 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e.message }, 500);
   }
 });
+
 
 
