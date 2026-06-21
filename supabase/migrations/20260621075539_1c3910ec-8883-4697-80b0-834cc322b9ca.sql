@@ -1,0 +1,11 @@
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS tokens_received NUMERIC;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS token_decimals INTEGER DEFAULT 6;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS sol_usd_at_entry NUMERIC;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS tx_sig TEXT;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS tx_sig_close TEXT;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS sell_reason TEXT;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS wallet TEXT;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS slippage_pct NUMERIC;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS pnl_sol NUMERIC DEFAULT 0;
+ALTER TABLE shreem_brzee_live_trades ADD COLUMN IF NOT EXISTS pnl_pct NUMERIC DEFAULT 0;
