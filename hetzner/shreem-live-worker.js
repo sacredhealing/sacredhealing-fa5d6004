@@ -201,10 +201,8 @@ async function pollSell() {
       if (changePct <= -25) {
         console.log(`[stoploss] ${pos.symbol} down ${changePct.toFixed(1)}% — executor close`);
         try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'stoploss_25pct' }); } catch {}
-      } else if (changePct >= 50) {
-        console.log(`[takeprofit] ${pos.symbol} up ${changePct.toFixed(1)}% — executor close`);
-        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'takeprofit_50pct' }); } catch {}
       }
+      // No take-profit — whale SELL mirror drives all exits
     }
 
   } catch (e) { console.error('[pollSell] error:', e.message); }
@@ -226,7 +224,7 @@ http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
     status:    'running',
-    version:   'v10-keyless',
+    version:   'v10.1-no-takeprofit',
     uptime:    Math.floor(process.uptime()),
     sb_key_ok: !!SUPABASE_KEY,
     executor:  execHealth,
