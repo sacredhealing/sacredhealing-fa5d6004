@@ -8,7 +8,7 @@ const cors = {
 
 // In-memory cache per isolate (best-effort)
 const cache = new Map<string, { price: number; ts: number }>();
-const TTL = 15_000;
+const TTL = 8_000;
 
 async function fetchDex(addresses: string[]): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
@@ -82,11 +82,13 @@ serve(async (req) => {
     }
 
     if (need.length) {
-      const dex = await fetchDex(need);
-      const missing = need.filter((m) => !dex[m]);
-      const jup = missing.length ? await fetchJupFallback(missing) : {};
+      // Jupiter FIRST — real-time on-chain prices, accurate for new nano-caps
+      // DexScreener FALLBACK — lags on new/illiquid tokens
+      const jup = await fetchJupFallback(need);
+      const missingJup = need.filter((m) => !jup[m]);
+      const dex = missingJup.length ? await fetchDex(missingJup) : {};
       for (const m of need) {
-        const p = dex[m] ?? jup[m];
+        const p = jup[m] ?? dex[m];
         if (p && p > 0) {
           prices[m] = p;
           cache.set(m, { price: p, ts: now });
