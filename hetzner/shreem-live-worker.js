@@ -1,5 +1,5 @@
 // shreem-live-worker.js — Shreem Brzee Live Trade Executor on Hetzner
-// v9 — SELL MIRROR HARDENING: live_processed set AFTER success, retry logic, on-chain balance fallback
+// v9.1 — SELL MIRROR HARDENING + take-profit +50% + live_processed NULL fix: live_processed set AFTER success, retry logic, on-chain balance fallback
 const https = require('https');
 const http  = require('http');
 
@@ -241,8 +241,10 @@ async function pollBuy() {
 
     const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
     const cutoff = new Date(Date.now() - 30000).toISOString();
+    // v9.1: include NULL live_processed (signals inserted before v5.1 fix)
+    // Using Supabase OR filter syntax
     const signals = await sbGet('shreem_brzee_signals',
-      `action=eq.BUY&live_processed=eq.false&created_at=lt.${cutoff}&order=created_at.asc&limit=5`);
+      `action=eq.BUY&or=(live_processed.eq.false,live_processed.is.null)&created_at=lt.${cutoff}&order=created_at.asc&limit=5`);
 
     for (const sig of signals) {
       // v9: allow amount_sol=0 if mint is valid (Cented/clukz WSOL trades)
@@ -329,8 +331,9 @@ async function pollSell() {
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
     // ── 1. Whale SELL mirror — HARDENED v9 ─────────────────────────────────
+    // v9.1: include NULL live_processed
     const sellSignals = await sbGet('shreem_brzee_signals',
-      'action=eq.SELL&live_processed=eq.false&order=created_at.asc&limit=10');
+      'action=eq.SELL&or=(live_processed.eq.false,live_processed.is.null)&order=created_at.asc&limit=10');
 
     for (const sig of sellSignals) {
       const openTrades = await sbGet('shreem_brzee_live_trades',
@@ -420,8 +423,14 @@ async function pollSell() {
         console.log(`[STOPLOSS] ${pos.symbol} down ${changePct.toFixed(1)}% — closing`);
         try { await executeSell(pos, 'stoploss_25pct'); }
         catch(e) { console.error(`[STOPLOSS] ERROR ${pos.id}:`, e.message); }
+      } else if (changePct >= 50) {
+        // TAKE-PROFIT: lock in gains when up 50% — don't wait for whale to sell
+        // trunoest and others often hold through +100% then dump. Exit at +50%.
+        console.log(`[TAKEPROFIT] ${pos.symbol} up ${changePct.toFixed(1)}% — closing for profit`);
+        try { await executeSell(pos, 'takeprofit_50pct'); }
+        catch(e) { console.error(`[TAKEPROFIT] ERROR ${pos.id}:`, e.message); }
       } else {
-        console.log(`[STOPLOSS] ${pos.symbol} at ${changePct.toFixed(1)}% — holding`);
+        console.log(`[PNL] ${pos.symbol} at ${changePct.toFixed(1)}% — holding`);
       }
     }
 
@@ -448,8 +457,8 @@ http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
     status: 'running',
-    bot: 'Shreem Brzee Live Worker v9',
-    version: 'v9-sell-hardened',
+    bot: 'Shreem Brzee Live Worker v9.1',
+    version: 'v9.1-takeprofit',
     helius_key_prefix: HELIUS_KEY.slice(0,8),
     balance_sol: _healthBalance,
     uptime: Math.floor(process.uptime()),
@@ -457,7 +466,7 @@ http.createServer(async (req, res) => {
   }));
 }).listen(PORT, () => console.log(`[shreem] Health check on :${PORT}`));
 
-console.log('[shreem] v9 SELL HARDENED — live_processed=true AFTER success only, retry on failure');
+console.log('[shreem] v9.1 SELL HARDENED + TAKE-PROFIT +50% — live_processed=true AFTER success only, retry on failure');
 console.log('[shreem] resolveRawAmount: on-chain → stored → retry on-chain (3s delay)');
 console.log('[shreem] WSOL fix: amount_sol=0 with valid mint passes BUY filter (Cented/clukz)');
 console.log('[shreem] Sell poll: 15s interval (tightened from 30s)');
