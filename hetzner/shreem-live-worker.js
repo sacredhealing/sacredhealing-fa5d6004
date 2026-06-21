@@ -71,10 +71,12 @@ async function callExecutor(body) {
   return r.data;
 }
 
-// ── BUY POLL ─────────────────────────────────────────────────────────────────
-// Catches any signals the webhook's direct executor call missed (fallback path)
+// ── BUY POLL DISABLED ────────────────────────────────────────────────────────
+// BUY execution is webhook→executor only. No delayed buys ever.
+// Cented/trunoest snipe in seconds — 1s late = buying the top.
 let buyBusy = false;
 async function pollBuy() {
+  return; // DISABLED
   if (buyBusy) return;
   buyBusy = true;
   try {
@@ -226,7 +228,7 @@ http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
     status:    'running',
-    version:   'v10.1-no-takeprofit',
+    version:   'v10.3-no-delayed-buys',
     uptime:    Math.floor(process.uptime()),
     sb_key_ok: !!SUPABASE_KEY,
     executor:  execHealth,
@@ -234,8 +236,9 @@ http.createServer(async (req, res) => {
   }));
 }).listen(PORT, () => console.log(`[shreem] Health on :${PORT}`));
 
-setInterval(pollBuy,  POLL_MS);
+// pollBuy intentionally removed — BUY execution is webhook→executor only (instant)
+// Delayed buys on memecoins = buying the top. Miss the trade, don't buy late.
 setInterval(pollSell, SELL_POLL_MS);
-pollBuy();
 pollSell();
+
 
