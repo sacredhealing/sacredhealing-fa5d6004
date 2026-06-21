@@ -269,27 +269,36 @@ export default function ShreemBrzeePerformance() {
     setPeriodSigs((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
   }, [period]);
 
-  // FIX: fetchOpen reads ONLY live_trades with status=open
-  // This is the authoritative source of open positions — matches what's in Phantom
   const fetchOpen = useCallback(async () => {
-    const isTestSig = (s: any) => {
-      const v = String(s || "").toUpperCase();
-      return v.startsWith("REALTEST_") || v.startsWith("TEST_") || v.startsWith("DIAG_") || v.startsWith("VERIFY_") || v.startsWith("DEBUG_");
-    };
-    const isReal = (t: any) => !isTestSig(t?.tx_sig) && !isTestSig(t?.sig) && !isTestSig(t?.tx_sig_close);
+    const skipSig = (s: any) => ["REALTEST_","TEST_","DIAG_","VERIFY_","DEBUG_","COLTEST_","DIAGFULL_","DIAGTEST_","NEWCODE_","FINALCHECK_"].some(p => String(s||"").toUpperCase().startsWith(p));
+    const isReal = (t: any) => !skipSig(t?.sig) && !skipSig(t?.tx_sig);
     try {
-      // Include both 'open' and 'pending' — executor writes as pending until on-chain confirm
       const { data: live } = await d.from("shreem_brzee_live_trades")
-        .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
-      const liveReal = (live || []).filter(isReal);
-      if (liveReal.length > 0) {
-        setOpenPos(liveReal);
-        return;
+        .select("*").in("status", ["open","pending"]).order("opened_at", { ascending: false });
+      const real = (live||[]).filter(isReal);
+
+      // Verify each position is real: if tx_sig exists but no tokens_received and opened > 2min ago, it's a ghost
+      const now = Date.now();
+      const verified = real.filter((t: any) => {
+        const age = now - new Date(t.opened_at || t.created_at).getTime();
+        // If older than 3 minutes and still no tokens_received — likely failed tx
+        if (age > 180000 && !t.tokens_received && !t.entry_price) return false;
+        return true;
+      });
+
+      // Auto-close any that were filtered as ghosts
+      const ghosts = real.filter((t: any) => !verified.find((v: any) => v.id === t.id));
+      for (const g of ghosts) {
+        await d.from("shreem_brzee_live_trades").update({
+          status: "closed", sell_reason: "auto_ghost_cleanup", closed_at: new Date().toISOString(), pnl_sol: 0, pnl_pct: 0,
+        }).eq("id", g.id);
       }
-      // Fallback to paper trades if no live positions
+
+      if (verified.length > 0) { setOpenPos(verified); return; }
+
       const { data: paper } = await d.from("shreem_brzee_paper_trades")
-        .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
-      setOpenPos((paper || []).filter(isReal));
+        .select("*").in("status", ["open","pending"]).order("opened_at", { ascending: false });
+      setOpenPos((paper||[]).filter(isReal));
     } catch {}
   }, []);
 
