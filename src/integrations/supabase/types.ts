@@ -6686,13 +6686,17 @@ export type Database = {
           opened_at: string | null
           pnl_pct: number | null
           pnl_sol: number | null
+          sell_reason: string | null
           session_id: string
           sig: string | null
           slippage_pct: number | null
+          sol_usd_at_entry: number | null
           status: string | null
           symbol: string | null
+          token_decimals: number | null
           tokens_received: number | null
           tx_sig: string | null
+          tx_sig_close: string | null
           updated_at: string | null
           wallet: string | null
         }
@@ -6712,13 +6716,17 @@ export type Database = {
           opened_at?: string | null
           pnl_pct?: number | null
           pnl_sol?: number | null
+          sell_reason?: string | null
           session_id?: string
           sig?: string | null
           slippage_pct?: number | null
+          sol_usd_at_entry?: number | null
           status?: string | null
           symbol?: string | null
+          token_decimals?: number | null
           tokens_received?: number | null
           tx_sig?: string | null
+          tx_sig_close?: string | null
           updated_at?: string | null
           wallet?: string | null
         }
@@ -6738,13 +6746,17 @@ export type Database = {
           opened_at?: string | null
           pnl_pct?: number | null
           pnl_sol?: number | null
+          sell_reason?: string | null
           session_id?: string
           sig?: string | null
           slippage_pct?: number | null
+          sol_usd_at_entry?: number | null
           status?: string | null
           symbol?: string | null
+          token_decimals?: number | null
           tokens_received?: number | null
           tx_sig?: string | null
+          tx_sig_close?: string | null
           updated_at?: string | null
           wallet?: string | null
         }
