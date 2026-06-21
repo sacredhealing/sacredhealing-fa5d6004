@@ -236,10 +236,15 @@ async function pollBuy() {
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
     const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    const signals = await sbGet('shreem_brzee_signals', 'action=eq.BUY&live_processed=eq.false&order=created_at.asc&limit=5');
+    // Only pick up signals the edge function missed: older than 30s and still unprocessed
+    // This prevents double-execution with the webhook's immediate executor call
+    const cutoff = new Date(Date.now() - 30000).toISOString();
+    const signals = await sbGet('shreem_brzee_signals',
+      `action=eq.BUY&live_processed=eq.false&created_at=lt.${cutoff}&order=created_at.asc&limit=5`);
 
     for (const sig of signals) {
-      if (sig.mint === USDC || sig.amount_sol < 0.01) continue;
+      // 0.05 SOL min — catches Cented nano-cap buys (avg 0.255 SOL, sometimes as low as 0.1)
+      if (sig.mint === USDC || sig.amount_sol < 0.05) continue;
       await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
 
       try {
