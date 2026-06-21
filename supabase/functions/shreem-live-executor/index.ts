@@ -23,11 +23,11 @@ const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
 // ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
-const MAX_POSITIONS   = 2;       // never more than 2 open at once
+const MAX_POSITIONS   = 20;      // no hard cap — 50% exposure rule controls
 const MIN_TRADE_SOL   = 0.03;    // minimum 0.03 SOL per trade
 const MIN_SIGNAL_SOL  = 0.1;     // ignore whale signals below 0.1 SOL (spam/dust)
 const STOP_LOSS_PCT   = -25;     // close if down 25%
-const FIXED_TRADE_SOL = 0.02;    // fixed size per trade — small wallet friendly
+const FIXED_TRADE_SOL = 0.05;    // fallback only — dynamic sizing used
 const SLIPPAGE_BPS    = 300;     // 3% slippage
 
 const CORS = {
@@ -217,7 +217,7 @@ serve(async (req) => {
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     // Get open positions count
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").in("status", ["open","pending"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open: open, limits: { max_positions: MAX_POSITIONS, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open: open, limits: { rule: "50pct_exposure", min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   if (req.method !== "POST") return jsonResp({ error: "method not allowed" }, 405);
@@ -268,11 +268,14 @@ serve(async (req) => {
     const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
     if (sig.mint === USDC) return jsonResp({ ok: true, skipped: true, reason: "USDC — not trading" });
 
-    // 3. Max positions check
+    // 3. 50% exposure rule — no hard cap, as many trades as balance allows
     const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending"]);
-    if ((openTrades?.length ?? 0) >= MAX_POSITIONS) {
-      console.log(`[BUY] SKIP — max positions (${openTrades?.length}/${MAX_POSITIONS})`);
-      return jsonResp({ ok: true, skipped: true, reason: `Max positions reached (${MAX_POSITIONS})` });
+    const openExposureSol = (openTrades ?? []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+    const balForCap = (await rpc("getBalance", [wallet])).value / LAMPORTS;
+    const maxExposure = balForCap * 0.50;
+    if (openExposureSol >= maxExposure) {
+      console.log(`[BUY] SKIP — 50% cap: ${openExposureSol.toFixed(4)}/${maxExposure.toFixed(4)} SOL in ${openTrades?.length} trades`);
+      return jsonResp({ ok: true, skipped: true, reason: `50% cap (${openTrades?.length} open, ${openExposureSol.toFixed(3)} SOL)` });
     }
 
     // 4. No duplicate position in same mint
@@ -294,7 +297,7 @@ serve(async (req) => {
     }
 
     // Fixed position size — predictable, no surprises
-    const size = Math.min(FIXED_TRADE_SOL, balSol * 0.3); // never more than 30% of balance
+    const size = Math.min(0.1, Math.max(0.01, balSol * 0.05)); // 5% of balance, 0.01–0.1 SOL
     if (size < MIN_TRADE_SOL) {
       return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
     }
