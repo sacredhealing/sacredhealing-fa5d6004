@@ -789,6 +789,7 @@ export default function ShreemBrzeePerformance() {
               // entry_price is stored in USD (from DexScreener at open time)
               // livePrices[mint] is also USD (from DexScreener/Jupiter now)
               // Compute P&L entirely in USD, then convert to SOL/EUR at display
+              const amountSol       = Number(pos.amount_sol ?? pos.size_sol ?? pos.sol_amount ?? 0);
               const entryUsd        = Number(pos.entry_price) || 0; // USD per token at buy
               const currentUsd  = livePrices[pos.mint]   || 0;   // USD per token
 
