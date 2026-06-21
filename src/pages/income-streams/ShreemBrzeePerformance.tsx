@@ -280,7 +280,7 @@ export default function ShreemBrzeePerformance() {
     const isReal = (t: any) => !skipSig(t?.sig) && !skipSig(t?.tx_sig);
     try {
       const { data: live } = await d.from("shreem_brzee_live_trades")
-        .select("*").in("status", ["open","pending"]).order("opened_at", { ascending: false });
+        .select("*").in("status", ["open","pending","unconfirmed"]).order("opened_at", { ascending: false });
       const real = (live||[]).filter(isReal);
 
       // Verify each position is real: if tx_sig exists but no tokens_received and opened > 2min ago, it's a ghost
@@ -303,7 +303,7 @@ export default function ShreemBrzeePerformance() {
       if (verified.length > 0) { setOpenPos(verified); return; }
 
       const { data: paper } = await d.from("shreem_brzee_paper_trades")
-        .select("*").in("status", ["open","pending"]).order("opened_at", { ascending: false });
+        .select("*").in("status", ["open","pending","unconfirmed"]).order("opened_at", { ascending: false });
       setOpenPos((paper||[]).filter(isReal));
     } catch {}
   }, []);
