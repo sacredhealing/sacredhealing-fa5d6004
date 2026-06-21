@@ -365,34 +365,46 @@ async function pollSell() {
         continue;
       }
 
+      // Use Jupiter for real-time on-chain price — accurate for new nano-caps
+      // DexScreener lags 5-30min on new tokens — DO NOT USE for stop-loss
       let currentPrice = 0;
       try {
-        const ds = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${pos.mint}`);
-        if (ds.data?.pairs?.length) {
-          const best = ds.data.pairs.sort((a, b) =>
-            parseFloat(b.liquidity?.usd || 0) - parseFloat(a.liquidity?.usd || 0))[0];
-          currentPrice = parseFloat(best.priceUsd || 0);
+        const jupR = await httpReq(`https://lite-api.jup.ag/price/v3?ids=${pos.mint}`);
+        const jupData = jupR.data;
+        if (jupData && typeof jupData === 'object') {
+          const entry = Object.values(jupData)[0];
+          currentPrice = parseFloat(entry?.usdPrice || entry?.price || 0);
         }
       } catch {}
 
+      // Fallback to DexScreener only if Jupiter returns nothing
+      if (!currentPrice) {
+        try {
+          const ds = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${pos.mint}`);
+          if (ds.data?.pairs?.length) {
+            const best = ds.data.pairs.sort((a, b) =>
+              parseFloat(b.liquidity?.usd || 0) - parseFloat(a.liquidity?.usd || 0))[0];
+            currentPrice = parseFloat(best.priceUsd || 0);
+          }
+        } catch {}
+      }
+
       if (!currentPrice) continue;
 
-      // entry_price is in SOL/token, DexScreener returns USD — need consistent units
-      // Use pct change relative to entry via USD price only if we stored a USD entry equiv
-      // SAFER: skip cross-currency comparison — only fire stop-loss if we have USD entry
-      // If entry_price was stored in SOL, skip (DexScreener returns USD — apples/oranges)
-      // TODO: store entry_price_usd separately at BUY time for accurate stop-loss
-      // For now: estimate using SOL price ~$150 to get rough USD entry
-      const SOL_USD_ESTIMATE = 150;
-      const entryUsd = Number(pos.entry_price) * SOL_USD_ESTIMATE;
-      if (!entryUsd) continue;
+      // entry_price from executor = USD per token (set at buy time from Jupiter)
+      // currentPrice from Jupiter = USD per token
+      // Both in same units — direct comparison, no SOL conversion needed
+      const entryUsd = Number(pos.entry_price);
+      if (!entryUsd || entryUsd <= 0) continue;
 
       const changePct = ((currentPrice - entryUsd) / entryUsd) * 100;
 
-      if (changePct <= -30) {
-        console.log(`[STOPLOSS] ${pos.symbol} down ${changePct.toFixed(1)}% — closing`);
-        try { await executeSell(pos, 'stoploss_30pct'); }
+      if (changePct <= -25) {
+        console.log(`[STOPLOSS] ${pos.symbol} down ${changePct.toFixed(1)}% — closing (entry $${entryUsd.toFixed(8)} now $${currentPrice.toFixed(8)})`);
+        try { await executeSell(pos, 'stoploss_25pct'); }
         catch(e) { console.error(`[STOPLOSS] ERROR ${pos.id}:`, e.message); }
+      } else {
+        console.log(`[STOPLOSS] ${pos.symbol} at ${changePct.toFixed(1)}% — holding`);
       }
     }
 
