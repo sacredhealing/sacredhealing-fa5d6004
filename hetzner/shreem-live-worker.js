@@ -1,64 +1,34 @@
-// shreem-live-worker.js — Shreem Brzee Live Trade Executor on Hetzner
-// v9.1 — SELL MIRROR HARDENING + take-profit +50% + live_processed NULL fix: live_processed set AFTER success, retry logic, on-chain balance fallback
+// shreem-live-worker.js — Shreem Brzee Signal Poller v10
+// v10 — KEYLESS ARCHITECTURE: worker only polls signals and calls executor edge function
+// The executor (Supabase) holds the keypair and signs all transactions
+// Worker needs ONLY: SUPABASE_SERVICE_ROLE_KEY (already in PM2 ecosystem)
+// No BOT_KEYPAIR needed here. One place signs = no key sprawl.
+
 const https = require('https');
 const http  = require('http');
 
 const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const HELIUS_KEY   = process.env.HELIUS_API_KEY || '';
-const HELIUS_RPC   = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const JUP_QUOTE    = 'https://lite-api.jup.ag/swap/v1/quote';
-const JUP_SWAP     = 'https://lite-api.jup.ag/swap/v1/swap';
-const SOL_MINT     = 'So11111111111111111111111111111111111111112';
-const LAMPORTS     = 1_000_000_000;
-
-const POLL_MS      = 20000;   // BUY signals every 20s
-const SELL_POLL_MS = 15000;   // v9: tightened to 15s for faster sell response
 const PORT         = 3001;
-const MAX_HOLD_MS  = 48 * 60 * 60 * 1000; // 48h max hold
+const POLL_MS      = 20000;  // Check unprocessed BUY signals every 20s
+const SELL_POLL_MS = 15000;  // Check unprocessed SELL signals every 15s
 
-const PUBLIC_RPCS = [
-  'https://api.mainnet-beta.solana.com',
-  'https://rpc.ankr.com/solana',
-  'https://solana-api.projectserum.com',
-];
-const SEND_RPCS = [...PUBLIC_RPCS, HELIUS_RPC];
-
-let _cachedBalance = null;
-let _balanceCachedAt = 0;
-const BALANCE_CACHE_MS = 120_000;
-
-async function getWalletBalance(wallet) {
-  const now = Date.now();
-  if (_cachedBalance !== null && (now - _balanceCachedAt) < BALANCE_CACHE_MS) return _cachedBalance;
-  const res = await rpc('getBalance', [wallet]);
-  _cachedBalance = res.value / LAMPORTS;
-  _balanceCachedAt = now;
-  return _cachedBalance;
-}
-function invalidateBalanceCache() { _cachedBalance = null; _balanceCachedAt = 0; }
-
-const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-function bs58Decode(str) {
-  let n = BigInt(0);
-  for (const c of str) { const i = ALPHABET.indexOf(c); if (i < 0) throw new Error('bad b58'); n = n * BigInt(58) + BigInt(i); }
-  const hex = n.toString(16).padStart(128, '0');
-  return Buffer.from(hex, 'hex');
+if (!SUPABASE_KEY) {
+  console.error('[shreem] FATAL: SUPABASE_SERVICE_ROLE_KEY not set. Exiting.');
+  process.exit(1);
 }
 
-function loadKeypair() {
-  const raw = process.env.SHREEM_BOT_KEYPAIR || process.env.BOT_WALLET_PRIVATE_KEY;
-  if (!raw) throw new Error('Neither SHREEM_BOT_KEYPAIR nor BOT_WALLET_PRIVATE_KEY is set');
-  const t = raw.trim();
-  let sk;
-  if (t.startsWith('[')) sk = Buffer.from(JSON.parse(t));
-  else if (t.includes(',')) sk = Buffer.from(t.split(',').map(Number));
-  else sk = bs58Decode(t);
-  if (sk.length !== 64) throw new Error(`Bad key length: ${sk.length}`);
-  return sk;
-}
+console.log('[shreem] v10 KEYLESS — delegates all signing to executor edge function');
+console.log('[shreem] SUPABASE_KEY prefix:', SUPABASE_KEY.slice(0, 20) + '...');
 
-function httpReq(url, method = 'GET', body = null, extraHeaders = {}) {
+const SB_HEADERS = {
+  apikey: SUPABASE_KEY,
+  Authorization: `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+};
+
+// ── HTTP helpers ──────────────────────────────────────────────────────────────
+function httpReq(url, method = 'GET', body = null, headers = {}) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     const opts = {
@@ -66,7 +36,7 @@ function httpReq(url, method = 'GET', body = null, extraHeaders = {}) {
       port: u.port || (u.protocol === 'https:' ? 443 : 80),
       path: u.pathname + u.search,
       method,
-      headers: { 'Content-Type': 'application/json', ...extraHeaders },
+      headers: { 'Content-Type': 'application/json', ...headers },
     };
     const lib = u.protocol === 'https:' ? https : http;
     const req = lib.request(opts, (res) => {
@@ -78,359 +48,162 @@ function httpReq(url, method = 'GET', body = null, extraHeaders = {}) {
       });
     });
     req.on('error', reject);
+    req.setTimeout(30000, () => { req.destroy(); reject(new Error('timeout')); });
     if (body) req.write(JSON.stringify(body));
     req.end();
   });
 }
 
-const SB_HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
-const sbGet   = (t, f) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', null, SB_HEADERS).then(r => r.data);
-const sbPost  = (t, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}`, 'POST', b, { ...SB_HEADERS, Prefer: 'return=minimal' });
-const sbPatch = (t, f, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HEADERS);
+const sbGet = (table, filter) =>
+  httpReq(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, 'GET', null, SB_HEADERS).then(r => r.data);
 
-async function rpc(method, params) {
-  const endpoints = method === 'sendTransaction' ? SEND_RPCS : PUBLIC_RPCS;
-  let lastErr;
-  for (const endpoint of endpoints) {
-    try {
-      const r = await httpReq(endpoint, 'POST', { jsonrpc: '2.0', id: 1, method, params });
-      if (r.data && r.data.error) {
-        const code = r.data.error.code;
-        if (code === -32429 || code === 429) { lastErr = new Error(`rate-limited on ${endpoint}`); continue; }
-        throw new Error(`RPC ${method}: ${r.data.error.message}`);
-      }
-      return r.data.result;
-    } catch(e) { lastErr = e; }
-  }
-  throw lastErr ?? new Error(`RPC ${method} failed on all endpoints`);
-}
+const sbPatch = (table, filter, body) =>
+  httpReq(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, 'PATCH', body, SB_HEADERS);
 
-async function jupiterQuote(inputMint, outputMint, amount, slippageBps = 300) {
-  const url = `${JUP_QUOTE}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`;
-  const r = await httpReq(url);
-  if (r.status !== 200) throw new Error(`Jupiter quote ${r.status}: ${JSON.stringify(r.data).slice(0,120)}`);
+// ── Call executor edge function ───────────────────────────────────────────────
+async function callExecutor(body) {
+  const r = await httpReq(
+    `${SUPABASE_URL}/functions/v1/shreem-live-executor`,
+    'POST',
+    body,
+    { ...SB_HEADERS, Authorization: `Bearer ${SUPABASE_KEY}` }
+  );
   return r.data;
 }
 
-async function jupiterSwapTx(quote, walletPubkey) {
-  const r = await httpReq(JUP_SWAP, 'POST', {
-    quoteResponse: quote, userPublicKey: walletPubkey,
-    wrapAndUnwrapSol: true, computeUnitPriceMicroLamports: 50000, dynamicComputeUnitLimit: true,
-  });
-  if (r.status !== 200) throw new Error(`Jupiter swap ${r.status}: ${JSON.stringify(r.data).slice(0,120)}`);
-  return r.data.swapTransaction;
-}
-
-async function signAndSend(txBase64, secretKey) {
-  const { VersionedTransaction, Keypair } = require('@solana/web3.js');
-  const kp = Keypair.fromSecretKey(secretKey);
-  const vTx = VersionedTransaction.deserialize(Buffer.from(txBase64, 'base64'));
-  vTx.sign([kp]);
-  const encoded = Buffer.from(vTx.serialize()).toString('base64');
-  return rpc('sendTransaction', [encoded, { encoding: 'base64', preflightCommitment: 'confirmed' }]);
-}
-
-async function waitConfirm(txSig, ms = 45000) {
-  const dl = Date.now() + ms;
-  await new Promise(r => setTimeout(r, 8000));
-  while (Date.now() < dl) {
-    await new Promise(r => setTimeout(r, 8000));
-    try {
-      const res = await rpc('getSignatureStatuses', [[txSig], { searchTransactionHistory: true }]);
-      const s = res?.value?.[0];
-      if (!s) continue;
-      if (s.err) return false;
-      if (s.confirmationStatus === 'confirmed' || s.confirmationStatus === 'finalized') return true;
-    } catch {}
-  }
-  return false;
-}
-
-// v9: resolveRawAmount — always tries on-chain first, falls back to stored,
-// THEN falls back to fresh on-chain re-read before giving up
-async function resolveRawAmount(wallet, mint, tokensReceivedRaw) {
-  let rawAmount = 0;
-  let decimals = 6;
-
-  // Attempt 1: on-chain balance
-  try {
-    const taRes = await rpc('getTokenAccountsByOwner', [wallet, { mint }, { encoding: 'jsonParsed' }]);
-    const acct = taRes?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
-    if (acct) { decimals = Number(acct.decimals); rawAmount = Number(acct.amount); }
-  } catch (e) { console.warn(`[resolveRawAmount] on-chain read failed: ${e.message}`); }
-
-  // Attempt 2: stored DB value (tokens_received = raw units from Jupiter outAmount)
-  if (!rawAmount && tokensReceivedRaw) {
-    rawAmount = Math.floor(Number(tokensReceivedRaw));
-    console.log(`[resolveRawAmount] Using stored tokens_received: ${rawAmount}`);
-  }
-
-  // Attempt 3: retry on-chain after 3s (handles propagation delay)
-  if (!rawAmount) {
-    await new Promise(r => setTimeout(r, 3000));
-    try {
-      const taRes2 = await rpc('getTokenAccountsByOwner', [wallet, { mint }, { encoding: 'jsonParsed' }]);
-      const acct2 = taRes2?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount;
-      if (acct2) { decimals = Number(acct2.decimals); rawAmount = Number(acct2.amount); }
-      if (rawAmount) console.log(`[resolveRawAmount] Retry on-chain succeeded: ${rawAmount}`);
-    } catch {}
-  }
-
-  return { rawAmount, decimals };
-}
-
-// Core sell — v9: no longer sets live_processed=true before calling this
-// The caller (pollSell) sets it only after success
-async function executeSell(pos, reason) {
-  const sk = loadKeypair();
-  const { Keypair } = require('@solana/web3.js');
-  const kp = Keypair.fromSecretKey(sk);
-  const wallet = kp.publicKey.toBase58();
-
-  const { rawAmount } = await resolveRawAmount(wallet, pos.mint, pos.tokens_received);
-
-  if (!rawAmount || rawAmount < 1) {
-    await sbPatch('shreem_brzee_live_trades', `id=eq.${pos.id}`,
-      { status: 'closed', sell_reason: `${reason}_no_balance`, closed_at: new Date().toISOString() });
-    console.log(`[SELL:${reason}] ${pos.symbol} — no token balance after 3 attempts, marked closed`);
-    return { ok: true, noBalance: true };
-  }
-
-  const sellQuote = await jupiterQuote(pos.mint, SOL_MINT, rawAmount, 2000);
-  const swapTx = await jupiterSwapTx(sellQuote, wallet);
-  const txSig = await signAndSend(swapTx, sk);
-  const confirmed = await waitConfirm(txSig);
-  invalidateBalanceCache();
-
-  const solOut = Number(sellQuote.outAmount) / LAMPORTS;
-  const sizeIn = Number(pos.amount_sol) || 0;
-  const pnlSol = solOut - sizeIn;
-  const pnlPct = sizeIn > 0 ? (pnlSol / sizeIn) * 100 : 0;
-
-  await sbPatch('shreem_brzee_live_trades', `id=eq.${pos.id}`, {
-    status: confirmed ? 'closed' : 'failed',
-    sell_reason: reason,
-    pnl_sol: pnlSol, pnl_pct: pnlPct,
-    closed_at: new Date().toISOString(),
-    tx_sig_close: txSig,
-  });
-
-  const sessNow = await sbGet('shreem_brzee_session', 'id=eq.default&select=*');
-  if (sessNow[0]) {
-    await sbPatch('shreem_brzee_session', 'id=eq.default', {
-      portfolio: Number(sessNow[0].portfolio || 0) + solOut,
-      wins:   Number(sessNow[0].wins||0)   + (pnlSol > 0 ? 1 : 0),
-      losses: Number(sessNow[0].losses||0) + (pnlSol <= 0 ? 1 : 0),
-      updated_at: new Date().toISOString(),
-    });
-  }
-
-  console.log(`[SELL:${reason}] ✅ ${pos.symbol} | pnl=${pnlPct.toFixed(1)}% | sol_out=${solOut.toFixed(4)} | confirmed:${confirmed} | tx:${txSig?.slice(0,16)}`);
-  return { ok: true, confirmed, solOut, txSig };
-}
-
 // ── BUY POLL ─────────────────────────────────────────────────────────────────
+// Catches any signals the webhook's direct executor call missed (fallback path)
 let buyBusy = false;
 async function pollBuy() {
   if (buyBusy) return;
   buyBusy = true;
   try {
-    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=*');
+    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=mode,started_at,stopped_at');
     const sess = sessions[0];
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
     const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
     const cutoff = new Date(Date.now() - 30000).toISOString();
-    // v9.1: include NULL live_processed (signals inserted before v5.1 fix)
-    // Using Supabase OR filter syntax
+
+    // Pick up signals not yet processed: false OR null (pre-v5.1 signals)
     const signals = await sbGet('shreem_brzee_signals',
       `action=eq.BUY&or=(live_processed.eq.false,live_processed.is.null)&created_at=lt.${cutoff}&order=created_at.asc&limit=5`);
 
     for (const sig of signals) {
-      // v9: allow amount_sol=0 if mint is valid (Cented/clukz WSOL trades)
-      // Only skip if BOTH too small AND no valid mint
-      if (sig.mint === USDC) continue;
-      if (Number(sig.amount_sol || 0) < 0.05 && !sig.mint) continue;
+      if (sig.mint === USDC) { await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true }); continue; }
+      if (!sig.mint) { await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true }); continue; }
 
-      // Mark processed BEFORE execution (prevents double-buy from parallel polls)
-      await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
+      // Mark processing (prevent double-pick) — will revert if executor fails
+      await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true });
+
+      console.log(`[pollBuy] Sending to executor: ${sig.label} → ${sig.symbol || sig.mint.slice(0,8)} | ${sig.amount_sol} SOL`);
 
       try {
-        const sk = loadKeypair();
-        const { Keypair } = require('@solana/web3.js');
-        const kp = Keypair.fromSecretKey(sk);
-        const wallet = kp.publicKey.toBase58();
+        const result = await callExecutor({
+          direct_signal: {
+            sig:        sig.sig,
+            mint:       sig.mint,
+            symbol:     sig.symbol,
+            label:      sig.label,
+            wallet:     sig.wallet,
+            amount_sol: sig.amount_sol,
+          }
+        });
 
-        const bal = await getWalletBalance(wallet);
-        if (bal < 0.05) {
-          console.log(`[BUY] FLOOR PROTECTION — balance too low: ${bal.toFixed(4)} SOL. Halting buys.`);
-          break;
+        if (result?.ok && !result?.skipped) {
+          console.log(`[pollBuy] ✅ ${sig.symbol || sig.mint.slice(0,8)} executed by executor | tx:${result.tx?.slice(0,16)}`);
+        } else if (result?.skipped) {
+          console.log(`[pollBuy] skipped: ${result.reason}`);
+        } else {
+          // Executor failed — revert so next cycle retries
+          console.error(`[pollBuy] ❌ executor error: ${result?.error} — reverting live_processed`);
+          await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: false });
         }
-
-        const openMint = await sbGet('shreem_brzee_live_trades', `status=eq.open&mint=eq.${sig.mint}&limit=1`);
-        if (openMint.length) { console.log(`[BUY] Already open: ${sig.symbol}`); continue; }
-
-        const openTrades = await sbGet('shreem_brzee_live_trades', 'status=eq.open&select=amount_sol');
-        const openExp = openTrades.reduce((s, t) => s + (Number(t.amount_sol) || 0), 0);
-        const maxExp = bal * 0.5;
-        if (openExp >= maxExp) { console.log('[BUY] 50% exposure cap reached'); continue; }
-
-        const wins = Number(sess.wins || 0), losses = Number(sess.losses || 0);
-        const wr = (wins + losses) >= 5 ? wins / (wins + losses) : 0.5;
-        const pct = Math.min(0.10, Math.max(0.05, wr * 0.12));
-        const size = Math.min(bal * pct, maxExp - openExp);
-        if (size < 0.005) { console.log(`[BUY] Size too small: ${size}`); continue; }
-
-        console.log(`[BUY] ${sig.label} → ${sig.symbol} | ${size.toFixed(4)} SOL | bal=${bal.toFixed(4)} | amount_sol=${sig.amount_sol}`);
-        const lamports = Math.floor(size * LAMPORTS);
-        const quote = await jupiterQuote(SOL_MINT, sig.mint, lamports);
-        const swapTx = await jupiterSwapTx(quote, wallet);
-        const txSig = await signAndSend(swapTx, sk);
-        const confirmed = await waitConfirm(txSig);
-        invalidateBalanceCache();
-
-        const tokensReceived = Number(quote.outAmount);
-        const inAmountSol = Number(quote.inAmount) / LAMPORTS;
-        const entryPrice = (inAmountSol > 0 && tokensReceived > 0)
-          ? inAmountSol / (tokensReceived / 1e6) : null;
-
-        await sbPost('shreem_brzee_live_trades', {
-          session_id: 'default', sig: sig.sig + '_live', tx_sig: txSig,
-          mint: sig.mint, symbol: sig.symbol, label: sig.label, wallet: sig.wallet,
-          action: 'BUY', amount_sol: size, entry_price: entryPrice,
-          tokens_received: tokensReceived,
-          status: confirmed ? 'open' : 'unconfirmed',
-          opened_at: new Date().toISOString(), slippage_pct: 3.0,
-        });
-
-        await sbPatch('shreem_brzee_session', 'id=eq.default', {
-          portfolio: Number(sess.portfolio || 0) - size, updated_at: new Date().toISOString(),
-        });
-
-        console.log(`[BUY] ✅ ${sig.symbol} | ${size.toFixed(4)} SOL | entry_price=${entryPrice?.toFixed(8) ?? 'null'} | tx:${txSig?.slice(0,16)} | confirmed:${confirmed}`);
       } catch (e) {
-        console.error(`[BUY] ERROR ${sig.sig}:`, e.message);
-        // v9: un-mark so it gets retried on next poll cycle
-        await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: false });
+        console.error(`[pollBuy] ❌ executor call failed: ${e.message} — reverting`);
+        await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: false });
       }
     }
   } catch (e) { console.error('[pollBuy] error:', e.message); }
   finally { buyBusy = false; }
 }
 
-// ── SELL POLL — v9 HARDENED ───────────────────────────────────────────────────
-// KEY FIX: live_processed=true ONLY after executeSell succeeds
-// Retry logic: if sell fails, signal stays unprocessed for next cycle
+// ── SELL POLL ─────────────────────────────────────────────────────────────────
+// Whale SELL mirror + stop-loss via executor
 let sellBusy = false;
 async function pollSell() {
   if (sellBusy) return;
   sellBusy = true;
   try {
-    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=*');
+    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=mode,started_at,stopped_at');
     const sess = sessions[0];
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
-    // ── 1. Whale SELL mirror — HARDENED v9 ─────────────────────────────────
-    // v9.1: include NULL live_processed
+    // ── 1. Whale SELL mirror ─────────────────────────────────────────────────
     const sellSignals = await sbGet('shreem_brzee_signals',
       'action=eq.SELL&or=(live_processed.eq.false,live_processed.is.null)&order=created_at.asc&limit=10');
 
     for (const sig of sellSignals) {
       const openTrades = await sbGet('shreem_brzee_live_trades',
-        `status=eq.open&mint=eq.${sig.mint}&select=*`);
+        `status=eq.open&mint=eq.${sig.mint}&select=id,symbol`);
 
       if (!openTrades.length) {
-        // No open position — safe to mark processed immediately
-        await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
-        console.log(`[SELL:whale] No open position for ${sig.symbol} — skip`);
+        await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true });
         continue;
       }
 
-      console.log(`[SELL:whale] v9 ${sig.label} sold ${sig.symbol} — closing ${openTrades.length} position(s)`);
-      let allSuccess = true;
+      console.log(`[pollSell] ${sig.label} SELL ${sig.symbol || sig.mint.slice(0,8)} — calling executor to close`);
 
-      for (const pos of openTrades) {
-        try {
-          const result = await executeSell(pos, 'whale_sell');
-          if (!result?.ok) { allSuccess = false; console.error(`[SELL:whale] executeSell returned !ok for ${pos.id}`); }
-        } catch (e) {
-          allSuccess = false;
-          console.error(`[SELL:whale] ERROR ${pos.id}:`, e.message);
+      try {
+        const result = await callExecutor({ action: 'close', mint: sig.mint, reason: 'whale_sell_mirror' });
+
+        if (result?.ok) {
+          await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true });
+          console.log(`[pollSell] ✅ closed ${sig.symbol || sig.mint.slice(0,8)}`);
+        } else {
+          console.warn(`[pollSell] ⚠️ executor returned !ok — leaving unprocessed for retry`);
         }
-      }
-
-      // v9 KEY FIX: only mark processed if ALL positions closed successfully
-      // If any failed, leave live_processed=false → retry on next cycle
-      if (allSuccess) {
-        await sbPatch('shreem_brzee_signals', `sig=eq.${sig.sig}`, { live_processed: true });
-        console.log(`[SELL:whale] ✅ ${sig.symbol} — all positions closed, signal marked processed`);
-      } else {
-        console.warn(`[SELL:whale] ⚠️ ${sig.symbol} — sell had errors, signal stays unprocessed for retry`);
+      } catch (e) {
+        console.error(`[pollSell] ❌ executor call failed: ${e.message}`);
       }
     }
 
-    // ── 2. Stop-loss + 48h timeout ───────────────────────────────────────────
-    const openAll = await sbGet('shreem_brzee_live_trades', 'status=eq.open&select=*');
+    // ── 2. Stop-loss + take-profit via executor cron ─────────────────────────
+    // The executor's /cron-stoploss handles this server-side every 5 min
+    // Worker just does a quick price check as supplementary coverage
+    const openAll = await sbGet('shreem_brzee_live_trades', 'status=eq.open&select=id,mint,symbol,entry_price,opened_at,amount_sol');
     const now = Date.now();
 
     for (const pos of openAll) {
       // 48h timeout
-      if (pos.opened_at) {
-        const ageMs = now - new Date(pos.opened_at).getTime();
-        if (ageMs > MAX_HOLD_MS) {
-          console.log(`[SELL:48h] ${pos.symbol} held ${(ageMs/3600000).toFixed(1)}h — force closing`);
-          try { await executeSell(pos, 'timeout_48h'); }
-          catch (e) { console.error(`[SELL:48h] ERROR ${pos.id}:`, e.message); }
-          continue;
-        }
-      }
-
-      if (!pos.entry_price) {
-        console.log(`[STOPLOSS] ${pos.symbol} — entry_price null, skipping`);
+      if (pos.opened_at && (now - new Date(pos.opened_at).getTime()) > 48 * 3600000) {
+        console.log(`[timeout] ${pos.symbol} held 48h — calling executor to close`);
+        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'timeout_48h' }); } catch {}
         continue;
       }
 
-      // Jupiter price check
-      let currentPrice = 0;
+      if (!pos.entry_price || !pos.mint) continue;
+
+      // Price check
+      let price = 0;
       try {
-        const jupR = await httpReq(`https://lite-api.jup.ag/price/v3?ids=${pos.mint}`);
-        const jupData = jupR.data;
-        if (jupData && typeof jupData === 'object') {
-          const entry = Object.values(jupData)[0];
-          currentPrice = parseFloat(entry?.usdPrice || entry?.price || 0);
+        const r = await httpReq(`https://lite-api.jup.ag/price/v3?ids=${pos.mint}`);
+        if (r.data && typeof r.data === 'object') {
+          const entry = Object.values(r.data)[0];
+          price = parseFloat(entry?.usdPrice || entry?.price || 0);
         }
       } catch {}
 
-      if (!currentPrice) {
-        try {
-          const ds = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${pos.mint}`);
-          if (ds.data?.pairs?.length) {
-            const best = ds.data.pairs.sort((a, b) =>
-              parseFloat(b.liquidity?.usd || 0) - parseFloat(a.liquidity?.usd || 0))[0];
-            currentPrice = parseFloat(best.priceUsd || 0);
-          }
-        } catch {}
-      }
+      if (!price) continue;
 
-      if (!currentPrice) continue;
-
-      const entryUsd = Number(pos.entry_price);
-      if (!entryUsd || entryUsd <= 0) continue;
-
-      const changePct = ((currentPrice - entryUsd) / entryUsd) * 100;
+      const changePct = ((price - Number(pos.entry_price)) / Number(pos.entry_price)) * 100;
 
       if (changePct <= -25) {
-        console.log(`[STOPLOSS] ${pos.symbol} down ${changePct.toFixed(1)}% — closing`);
-        try { await executeSell(pos, 'stoploss_25pct'); }
-        catch(e) { console.error(`[STOPLOSS] ERROR ${pos.id}:`, e.message); }
+        console.log(`[stoploss] ${pos.symbol} down ${changePct.toFixed(1)}% — executor close`);
+        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'stoploss_25pct' }); } catch {}
       } else if (changePct >= 50) {
-        // TAKE-PROFIT: lock in gains when up 50% — don't wait for whale to sell
-        // trunoest and others often hold through +100% then dump. Exit at +50%.
-        console.log(`[TAKEPROFIT] ${pos.symbol} up ${changePct.toFixed(1)}% — closing for profit`);
-        try { await executeSell(pos, 'takeprofit_50pct'); }
-        catch(e) { console.error(`[TAKEPROFIT] ERROR ${pos.id}:`, e.message); }
-      } else {
-        console.log(`[PNL] ${pos.symbol} at ${changePct.toFixed(1)}% — holding`);
+        console.log(`[takeprofit] ${pos.symbol} up ${changePct.toFixed(1)}% — executor close`);
+        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'takeprofit_50pct' }); } catch {}
       }
     }
 
@@ -439,38 +212,28 @@ async function pollSell() {
 }
 
 // ── Health check ─────────────────────────────────────────────────────────────
-let _healthBalance = 0;
-let _healthBalanceAt = 0;
-
 http.createServer(async (req, res) => {
-  const now = Date.now();
-  if (now - _healthBalanceAt > 180_000) {
-    try {
-      const sk = loadKeypair();
-      const { Keypair } = require('@solana/web3.js');
-      const kp = Keypair.fromSecretKey(sk);
-      const balRes = await rpc('getBalance', [kp.publicKey.toBase58()]);
-      _healthBalance = balRes.value / LAMPORTS;
-      _healthBalanceAt = now;
-    } catch {}
-  }
+  let execHealth = {};
+  try {
+    const r = await httpReq(
+      `${SUPABASE_URL}/functions/v1/shreem-live-executor/health`,
+      'GET', null,
+      { ...SB_HEADERS, Authorization: `Bearer ${SUPABASE_KEY}` }
+    );
+    execHealth = r.data;
+  } catch {}
+
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    status: 'running',
-    bot: 'Shreem Brzee Live Worker v9.1',
-    version: 'v9.1-takeprofit',
-    helius_key_prefix: HELIUS_KEY.slice(0,8),
-    balance_sol: _healthBalance,
-    uptime: Math.floor(process.uptime()),
-    time: new Date().toISOString()
+    status:    'running',
+    version:   'v10-keyless',
+    uptime:    Math.floor(process.uptime()),
+    sb_key_ok: !!SUPABASE_KEY,
+    executor:  execHealth,
+    time:      new Date().toISOString(),
   }));
-}).listen(PORT, () => console.log(`[shreem] Health check on :${PORT}`));
+}).listen(PORT, () => console.log(`[shreem] Health on :${PORT}`));
 
-console.log('[shreem] v9.1 SELL HARDENED + TAKE-PROFIT +50% — live_processed=true AFTER success only, retry on failure');
-console.log('[shreem] resolveRawAmount: on-chain → stored → retry on-chain (3s delay)');
-console.log('[shreem] WSOL fix: amount_sol=0 with valid mint passes BUY filter (Cented/clukz)');
-console.log('[shreem] Sell poll: 15s interval (tightened from 30s)');
-console.log('[shreem] Helius key prefix:', HELIUS_KEY.slice(0,8));
 setInterval(pollBuy,  POLL_MS);
 setInterval(pollSell, SELL_POLL_MS);
 pollBuy();
