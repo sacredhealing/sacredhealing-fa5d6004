@@ -24,7 +24,7 @@ const LAMPORTS  = 1_000_000_000;
 
 // ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
 const MAX_POSITIONS   = 20;      // no hard cap — 50% exposure rule controls
-const MIN_TRADE_SOL   = 0.03;    // minimum 0.03 SOL per trade
+const MIN_TRADE_SOL   = 0.01;    // minimum 0.01 SOL per trade
 const MIN_SIGNAL_SOL  = 0.1;     // ignore whale signals below 0.1 SOL (spam/dust)
 const STOP_LOSS_PCT   = -25;     // close if down 25%
 const FIXED_TRADE_SOL = 0.05;    // fallback only — dynamic sizing used
