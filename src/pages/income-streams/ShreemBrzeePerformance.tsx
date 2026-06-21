@@ -504,11 +504,15 @@ export default function ShreemBrzeePerformance() {
     setLoading(true); setStartingBot(true);
     const bal = liveMode && botBalSol > 0 ? botBalSol : (parseFloat(balInput) || 1);
     try {
-      const { data: closedTrades } = await d.from("shreem_brzee_paper_trades")
-        .select("pnl_sol").eq("status","closed");
+      // BUG FIX: read wins/losses from LIVE trades (not paper) — real trades go to live table
+      const { data: closedLive } = await d.from("shreem_brzee_live_trades")
+        .select("pnl_sol").in("status", ["closed","unconfirmed_close"]);
+      const closedPaper = closedLive?.length ? [] : 
+        (await d.from("shreem_brzee_paper_trades").select("pnl_sol").eq("status","closed")).data || [];
+      const closedTrades = closedLive?.length ? closedLive : closedPaper;
       const realPnl  = (closedTrades || []).reduce((s: number, t: any) => s + (Number(t.pnl_sol)||0), 0);
-      const realWins = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) >= 0).length;
-      const realLoss = (closedTrades || []).filter((t: any) => (t.pnl_sol||0) < 0).length;
+      const realWins = (closedTrades || []).filter((t: any) => (Number(t.pnl_sol)||0) > 0).length;
+      const realLoss = (closedTrades || []).filter((t: any) => (Number(t.pnl_sol)||0) <= 0).length;
       const { error } = await d.from("shreem_brzee_session").upsert({
         id:"default", portfolio:bal, start_balance:bal, positions:{},
         total_pnl:realPnl, wins:realWins, losses:realLoss,
@@ -629,14 +633,14 @@ export default function ShreemBrzeePerformance() {
 
   // ── Derived data ───────────────────────────────────────────────────────────
   const isRunning    = !!session?.started_at && !session?.stopped_at;
-  const closedTrades = trades.filter((t: any) => t.status === "closed");
+  const closedTrades = trades.filter((t: any) => t.status === "closed" || t.status === "unconfirmed_close");
   const openTrades   = trades.filter((t: any) => t.status === "open");
 
-  // Real PNL from closed trades only
+  // Real PNL from closed trades only — pnl_sol is SOL profit/loss written by executor/worker
   const realPnlSol   = closedTrades.reduce((s: number, t: any) => s + (Number(t.pnl_sol) || 0), 0);
   const realPnlEur   = solToEur(realPnlSol);
-  const realWins     = closedTrades.filter((t: any) => (t.pnl_sol || 0) >= 0).length;
-  const realLosses   = closedTrades.filter((t: any) => (t.pnl_sol || 0) < 0).length;
+  const realWins     = closedTrades.filter((t: any) => (Number(t.pnl_sol) || 0) > 0).length;
+  const realLosses   = closedTrades.filter((t: any) => (Number(t.pnl_sol) || 0) <= 0 && t.pnl_sol !== null && t.pnl_sol !== undefined).length;
   const realTotal    = realWins + realLosses;
   const realWinRate  = realTotal > 0 ? Math.round(realWins / realTotal * 100) : 0;
 
@@ -809,10 +813,19 @@ export default function ShreemBrzeePerformance() {
               // Phantom: (tokens_held × current_price - invested_usd) / invested_usd
               const investedUsd     = amountSol * solUsd;
               const investedEur     = usdToEur(investedUsd);
-              const tokensReceived  = Number(pos.tokens_received) || 0;
-              const tokensHeld      = tokensReceived > 0
-                ? tokensReceived
-                : (entryUsd > 0 ? investedUsd / entryUsd : 0);
+              // tokens_received: Hetzner stores RAW units (Jupiter outAmount integer)
+              //                  Executor stores HUMAN units (outAmount / 10^decimals)
+              // entry_price is always USD per human token in both cases
+              // PRIMARY path: use entry_price to derive tokensHeld (always correct unit)
+              // FALLBACK: raw tokens_received if entry_price missing (normalize if > 1B → raw)
+              const rawTokens       = Number(pos.tokens_received) || 0;
+              const isRawUnits      = rawTokens > 1_000_000_000; // >1B = definitely raw
+              const tokensNorm      = isRawUnits ? rawTokens / 1e6 : rawTokens; // assume 6 decimals for raw
+              const tokensFromEntry = entryUsd > 0 ? investedUsd / entryUsd : 0;
+              // Always prefer entry_price-derived tokens — more reliable across executor and Hetzner
+              const tokensHeld      = tokensFromEntry > 0
+                ? tokensFromEntry
+                : tokensNorm > 0 ? tokensNorm : 0;
               const hasPrices       = tokensHeld > 0 && currentUsd > 0 && investedUsd > 0;
               const currentValueUsd = hasPrices ? tokensHeld * currentUsd : null;
               const currentValueEur = currentValueUsd !== null ? usdToEur(currentValueUsd) : null;
