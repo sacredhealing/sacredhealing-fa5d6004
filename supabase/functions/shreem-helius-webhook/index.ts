@@ -723,6 +723,58 @@ serve(async (req) => {
   }
 
   // ── Go Live — wipe paper data, start fresh live session ──────────────────
+  // ── Resume session — restores execution without wiping trade history ────────
+  // POST /resume-session — clears stopped_at, syncs portfolio to current wallet balance
+  // Use this when the bot stopped taking trades but history should be preserved
+  if (req.method === "POST" && path.endsWith("/resume-session")) {
+    try {
+      const body = await req.json().catch(() => ({}));
+      const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
+      if (!sess) return jsonResp({ ok: false, error: "No session found" }, 404);
+
+      // Read actual wallet balance from RPC to sync portfolio
+      let walletBal = Number(body?.balance_sol || 0);
+      if (!walletBal && SUPABASE_URL) {
+        // Try to get balance from executor health endpoint
+        try {
+          const hr = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor/health`, {
+            headers: { "Authorization": `Bearer ${SUPABASE_KEY}` },
+            signal: AbortSignal.timeout(8000),
+          });
+          if (hr.ok) { const hj = await hr.json(); walletBal = hj?.balance_sol || 0; }
+        } catch {}
+      }
+
+      // Count open positions to know real exposure
+      const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
+        .select("amount_sol").in("status", ["open", "unconfirmed"]);
+      const openExposure = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+
+      // Set portfolio = wallet balance - open exposure (what's actually free to trade)
+      const freeBalance = walletBal > 0 ? Math.max(0, walletBal - openExposure) : Number(sess.portfolio || 0);
+
+      await sb.from("shreem_brzee_session").update({
+        stopped_at:  null,
+        started_at:  sess.started_at || new Date().toISOString(),
+        portfolio:   freeBalance,
+        mode:        "live",
+        updated_at:  new Date().toISOString(),
+      }).eq("id", "default");
+
+      console.log(`[resume] ✅ Session resumed | portfolio=${freeBalance.toFixed(4)} SOL | openExposure=${openExposure.toFixed(4)} SOL`);
+      return jsonResp({
+        ok: true,
+        message: "Session resumed — bot will take next signals",
+        portfolio: freeBalance,
+        open_exposure: openExposure,
+        wallet_balance: walletBal,
+        mode: "live",
+      });
+    } catch (e: any) {
+      return jsonResp({ ok: false, error: e.message }, 500);
+    }
+  }
+
   if (req.method === "POST" && path.endsWith("/go-live")) {
     try {
       const body = await req.json().catch(() => ({}));
@@ -1020,4 +1072,5 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e?.message ?? String(e) });
   }
 });
+
 
