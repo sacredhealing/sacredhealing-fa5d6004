@@ -335,7 +335,29 @@ export default function ShreemBrzeePerformance() {
         const n = Number(p);
         if (n > 0) updated[m] = n;
       }
-      if (Object.keys(updated).length) setLivePrices(prev => ({ ...prev, ...updated }));
+      if (Object.keys(updated).length) {
+        setLivePrices(prev => ({ ...prev, ...updated }));
+        // Backfill entry_price for positions that opened without one (pending fills)
+        // so P&L can start tracking from the first known price.
+        const toBackfill = openPos.filter(
+          (p: any) => p?.mint && updated[p.mint] && (!p.entry_price || Number(p.entry_price) <= 0)
+        );
+        if (toBackfill.length) {
+          for (const p of toBackfill) {
+            try {
+              await d.from("shreem_brzee_live_trades")
+                .update({ entry_price: updated[p.mint] })
+                .eq("id", p.id)
+                .or("entry_price.is.null,entry_price.eq.0");
+            } catch {}
+          }
+          setOpenPos(prev => prev.map((p: any) =>
+            updated[p.mint] && (!p.entry_price || Number(p.entry_price) <= 0)
+              ? { ...p, entry_price: updated[p.mint] }
+              : p
+          ));
+        }
+      }
       setPricesFetched(true);
     } catch (e) { console.warn("[prices] batch failed", e); }
   }, [openPos, PRICE_URL]);
