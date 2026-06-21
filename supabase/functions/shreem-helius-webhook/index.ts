@@ -441,7 +441,8 @@ async function autoRegisterHelius() {
   _registered = true;
   try {
     const SELF = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-    const WH = ["GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE", "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt", "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw", "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", "AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm", "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k", "9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm", "GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f", "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", "5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc", "2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv", "4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3", "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA"];
+    // Always use WHALE_WALLETS as single source of truth — never a stale hardcoded list
+    const WH = Object.keys(WHALE_WALLETS);
     const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
     if (listR.ok) {
       const hooks = await listR.json().catch(()=>[]);
@@ -576,7 +577,8 @@ serve(async (req) => {
   // Self-register Helius webhook with current key and wallets
   if (req.method === "POST" && path.endsWith("/register-helius")) {
     const SELF_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-    const WALLETS = ["GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE", "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", "HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt", "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", "gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw", "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", "AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm", "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k", "9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm", "GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f", "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", "5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc", "2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv", "4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3", "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA"];
+    // Always derived from WHALE_WALLETS — single source of truth, never stale
+    const WALLETS = Object.keys(WHALE_WALLETS);
     try {
       // Delete existing webhooks
       const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
