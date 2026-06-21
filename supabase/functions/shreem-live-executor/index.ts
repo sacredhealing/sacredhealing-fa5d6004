@@ -216,7 +216,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     // Get open positions count
-    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").in("status", ["open","pending"]);
+    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").in("status", ["open","pending","unconfirmed"]);
     return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open: open, limits: { rule: "50pct_exposure", min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
@@ -230,7 +230,7 @@ serve(async (req) => {
   // ── CLOSE / SELL ────────────────────────────────────────────────────────────
   if (body?.action === "close" || body?.action === "sell") {
     const reason = body?.reason ?? "manual";
-    let q = sb.from("shreem_brzee_live_trades").select("*").in("status", ["open","pending"]);
+    let q = sb.from("shreem_brzee_live_trades").select("*").in("status", ["open","pending","unconfirmed"]);
     if (body?.trade_id) q = q.eq("id", body.trade_id);
     else if (body?.mint)  q = q.eq("mint", body.mint);
 
@@ -269,7 +269,7 @@ serve(async (req) => {
     if (sig.mint === USDC) return jsonResp({ ok: true, skipped: true, reason: "USDC — not trading" });
 
     // 3. 50% exposure rule — no hard cap, as many trades as balance allows
-    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending"]);
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending","unconfirmed"]);
     const openExposureSol = (openTrades ?? []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
     const balForCap = (await rpc("getBalance", [wallet])).value / LAMPORTS;
     const maxExposure = balForCap * 0.50;
@@ -376,7 +376,7 @@ serve(async (req) => {
       tokens_received: tokensHuman,
       token_decimals:  tokenDecimals,
       sol_usd_at_entry: solUsd,
-      status:          confirmed ? "open" : "unconfirmed",
+      status:          "open", // always open — sell query handles confirmed/unconfirmed
     }).eq("id", tradeId);
 
     if (updateErr) {
