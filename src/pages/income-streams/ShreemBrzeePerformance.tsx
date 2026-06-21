@@ -272,18 +272,24 @@ export default function ShreemBrzeePerformance() {
   // FIX: fetchOpen reads ONLY live_trades with status=open
   // This is the authoritative source of open positions — matches what's in Phantom
   const fetchOpen = useCallback(async () => {
+    const isTestSig = (s: any) => {
+      const v = String(s || "").toUpperCase();
+      return v.startsWith("REALTEST_") || v.startsWith("TEST_") || v.startsWith("DIAG_") || v.startsWith("VERIFY_") || v.startsWith("DEBUG_");
+    };
+    const isReal = (t: any) => !isTestSig(t?.tx_sig) && !isTestSig(t?.sig) && !isTestSig(t?.tx_sig_close);
     try {
       // Include both 'open' and 'pending' — executor writes as pending until on-chain confirm
       const { data: live } = await d.from("shreem_brzee_live_trades")
         .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
-      if (live && live.length > 0) {
-        setOpenPos(live);
+      const liveReal = (live || []).filter(isReal);
+      if (liveReal.length > 0) {
+        setOpenPos(liveReal);
         return;
       }
       // Fallback to paper trades if no live positions
       const { data: paper } = await d.from("shreem_brzee_paper_trades")
         .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
-      setOpenPos(paper || []);
+      setOpenPos((paper || []).filter(isReal));
     } catch {}
   }, []);
 
@@ -701,8 +707,8 @@ export default function ShreemBrzeePerformance() {
             },
             {
               i:"📈", l:"P&L (closed)",
-              v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`,
-              s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`,
+              v:`${realPnlSol>=0?"+":""}$${(realPnlSol*solUsd).toFixed(2)}`,
+              s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · €${realPnlEur.toFixed(2)} · ${closedTrades.length} trades`,
               c:realPnlSol>=0?GREEN:RED,
             },
             {
@@ -783,6 +789,7 @@ export default function ShreemBrzeePerformance() {
               // entry_price is stored in USD (from DexScreener at open time)
               // livePrices[mint] is also USD (from DexScreener/Jupiter now)
               // Compute P&L entirely in USD, then convert to SOL/EUR at display
+              const amountSol       = Number(pos.amount_sol ?? pos.size_sol ?? pos.sol_amount ?? 0);
               const entryUsd        = Number(pos.entry_price) || 0; // USD per token at buy
               const currentUsd  = livePrices[pos.mint]   || 0;   // USD per token
 
