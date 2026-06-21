@@ -216,7 +216,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     // Get open positions count
-    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").eq("status", "open");
+    const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol").in("status", ["open","pending"]);
     return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open: open, limits: { max_positions: MAX_POSITIONS, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
@@ -230,7 +230,7 @@ serve(async (req) => {
   // ── CLOSE / SELL ────────────────────────────────────────────────────────────
   if (body?.action === "close" || body?.action === "sell") {
     const reason = body?.reason ?? "manual";
-    let q = sb.from("shreem_brzee_live_trades").select("*").eq("status", "open");
+    let q = sb.from("shreem_brzee_live_trades").select("*").in("status", ["open","pending"]);
     if (body?.trade_id) q = q.eq("id", body.trade_id);
     else if (body?.mint)  q = q.eq("mint", body.mint);
 
@@ -269,7 +269,7 @@ serve(async (req) => {
     if (sig.mint === USDC) return jsonResp({ ok: true, skipped: true, reason: "USDC — not trading" });
 
     // 3. Max positions check
-    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").eq("status", "open");
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending"]);
     if ((openTrades?.length ?? 0) >= MAX_POSITIONS) {
       console.log(`[BUY] SKIP — max positions (${openTrades?.length}/${MAX_POSITIONS})`);
       return jsonResp({ ok: true, skipped: true, reason: `Max positions reached (${MAX_POSITIONS})` });
@@ -314,7 +314,7 @@ serve(async (req) => {
       wallet:     sig.wallet ?? null,
       action:     "BUY",
       amount_sol: size,
-      status:     "pending", // will update to open/failed after swap
+      status:     "open",    // open immediately so sell queries find it
       opened_at:  new Date().toISOString(),
       slippage_pct: SLIPPAGE_BPS / 100,
     };
