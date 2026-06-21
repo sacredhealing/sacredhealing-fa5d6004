@@ -921,8 +921,10 @@ serve(async (req) => {
               const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
               if (signal.mint === USDC_MINT) {
                 console.log(`[BUY-SKIP] USDC — not trading`);
-              } else if (Number(signal.amount_sol ?? 0) < MIN_SIGNAL_SOL) {
-                console.log(`[BUY-SKIP] Signal too small: ${signal.amount_sol} SOL (min ${MIN_SIGNAL_SOL})`);
+              } else if (Number(signal.amount_sol ?? 0) < MIN_SIGNAL_SOL && !signal.mint) {
+                // Only skip if BOTH amount is too small AND no mint (true spam)
+                // amount_sol=0 with valid mint = WSOL trade we couldn't parse amount from — still execute
+                console.log(`[BUY-SKIP] Signal too small and no mint: ${signal.amount_sol} SOL`);
               } else {
                 try {
                   const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
