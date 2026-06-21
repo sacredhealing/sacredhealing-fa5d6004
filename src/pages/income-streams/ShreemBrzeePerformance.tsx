@@ -273,15 +273,16 @@ export default function ShreemBrzeePerformance() {
   // This is the authoritative source of open positions — matches what's in Phantom
   const fetchOpen = useCallback(async () => {
     try {
+      // Include both 'open' and 'pending' — executor writes as pending until on-chain confirm
       const { data: live } = await d.from("shreem_brzee_live_trades")
-        .select("*").eq("status", "open").order("opened_at", { ascending: false });
+        .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
       if (live && live.length > 0) {
         setOpenPos(live);
         return;
       }
       // Fallback to paper trades if no live positions
       const { data: paper } = await d.from("shreem_brzee_paper_trades")
-        .select("*").eq("status", "open").order("opened_at", { ascending: false });
+        .select("*").in("status", ["open", "pending"]).order("opened_at", { ascending: false });
       setOpenPos(paper || []);
     } catch {}
   }, []);
