@@ -259,9 +259,10 @@ serve(async (req) => {
 
     // ── SAFETY CHECKS ──────────────────────────────────────────────────────────
     // 1. Min signal size — ignore spam/dust
-    if (Number(sig.amount_sol ?? 0) < MIN_SIGNAL_SOL) {
-      console.log(`[BUY] SKIP — signal too small: ${sig.amount_sol} SOL (min ${MIN_SIGNAL_SOL})`);
-      return jsonResp({ ok: true, skipped: true, reason: `Signal too small: ${sig.amount_sol} SOL` });
+    // Only skip if BOTH amount too small AND no mint — amount_sol=0 with valid mint = WSOL/Jupiter trade (Cented)
+    if (Number(sig.amount_sol ?? 0) < MIN_SIGNAL_SOL && !sig.mint) {
+      console.log(`[BUY] SKIP — no mint + too small: ${sig.amount_sol} SOL`);
+      return jsonResp({ ok: true, skipped: true, reason: `No mint and signal too small` });
     }
 
     // 2. Ignore USDC
