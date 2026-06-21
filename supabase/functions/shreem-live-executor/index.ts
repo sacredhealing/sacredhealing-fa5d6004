@@ -101,7 +101,10 @@ async function jupQuote(inputMint: string, outputMint: string, amount: number, s
 async function jupSwapTx(quote: unknown, wallet: string) {
   const r = await fetch(`${JUPITER}/swap`, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ quoteResponse: quote, userPublicKey: wallet, wrapAndUnwrapSol: true, dynamicComputeUnitLimit: true, computeUnitPriceMicroLamports: 1000000  // higher priority fee = faster landing, fewer route failures }),
+    body: JSON.stringify({
+      quoteResponse: quote, userPublicKey: wallet, wrapAndUnwrapSol: true,
+      dynamicComputeUnitLimit: true, computeUnitPriceMicroLamports: 1000000,
+    }),
     signal: timeoutSignal(12000),
   });
   if (!r.ok) throw new Error(`Jupiter swap ${r.status}: ${await r.text()}`);
