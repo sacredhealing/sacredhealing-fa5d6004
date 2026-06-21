@@ -783,26 +783,24 @@ export default function ShreemBrzeePerformance() {
               // entry_price is stored in USD (from DexScreener at open time)
               // livePrices[mint] is also USD (from DexScreener/Jupiter now)
               // Compute P&L entirely in USD, then convert to SOL/EUR at display
-              const entryUsd    = Number(pos.entry_price) > 0 ? Number(pos.entry_price) : (livePrices[pos.mint] || 0);
+              const entryUsd        = Number(pos.entry_price) || 0; // USD per token at buy
               const currentUsd  = livePrices[pos.mint]   || 0;   // USD per token
-              const amountSol   = Number(pos.amount_sol)  || 0;   // SOL invested
 
-              // Tokens held = SOL invested converted to USD / entry price per token
-              // amountSol × solUsd = USD invested; divide by entryUsd = tokens
-              const investedUsd   = amountSol * solUsd;
-              const tokensHeld    = entryUsd > 0 ? investedUsd / entryUsd : 0;
-
-              // P&L in USD
-              const hasPrices     = entryUsd > 0 && currentUsd > 0;
-              const pnlPct        = hasPrices ? (currentUsd - entryUsd) / entryUsd * 100 : null;
-              const pnlUsd        = hasPrices && tokensHeld > 0 ? tokensHeld * (currentUsd - entryUsd) : null;
-              const pnlSol        = pnlUsd !== null ? pnlUsd / solUsd : null;
-              const pnlEur        = pnlUsd !== null ? usdToEur(pnlUsd) : null;
-
-              // Current value
-              const currentValueUsd = hasPrices && tokensHeld > 0 ? tokensHeld * currentUsd : null;
-              const currentValueEur = currentValueUsd !== null ? usdToEur(currentValueUsd) : null;
+              // ── CORRECT P&L — matches Phantom exactly ─────────────────────
+              // Phantom: (tokens_held × current_price - invested_usd) / invested_usd
+              const investedUsd     = amountSol * solUsd;
               const investedEur     = usdToEur(investedUsd);
+              const tokensReceived  = Number(pos.tokens_received) || 0;
+              const tokensHeld      = tokensReceived > 0
+                ? tokensReceived
+                : (entryUsd > 0 ? investedUsd / entryUsd : 0);
+              const hasPrices       = tokensHeld > 0 && currentUsd > 0 && investedUsd > 0;
+              const currentValueUsd = hasPrices ? tokensHeld * currentUsd : null;
+              const currentValueEur = currentValueUsd !== null ? usdToEur(currentValueUsd) : null;
+              const pnlUsd = hasPrices && currentValueUsd !== null ? currentValueUsd - investedUsd : null;
+              const pnlPct = hasPrices && pnlUsd !== null ? (pnlUsd / investedUsd) * 100 : null;
+              const pnlSol = pnlUsd !== null ? pnlUsd / solUsd : null;
+              const pnlEur = pnlUsd !== null ? usdToEur(pnlUsd) : null;
 
               const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
               const pnlLabel      = pnlPct !== null
