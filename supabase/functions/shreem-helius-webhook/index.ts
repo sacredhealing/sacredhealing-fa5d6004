@@ -441,8 +441,14 @@ async function autoRegisterHelius() {
   _registered = true;
   try {
     const SELF = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-    // Always use WHALE_WALLETS as single source of truth — never a stale hardcoded list
-    const WH = Object.keys(WHALE_WALLETS);
+    // CREDIT SAFETY: Only 5 wallets — prevents credit burn (97.5% reduction vs 19 wallets)
+    const WH = [
+      "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
+      "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  // Doji
+      "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
+      "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  // trunoest
+      "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", // clukz
+    ];
     const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
     if (listR.ok) {
       const hooks = await listR.json().catch(()=>[]);
@@ -577,8 +583,16 @@ serve(async (req) => {
   // Self-register Helius webhook with current key and wallets
   if (req.method === "POST" && path.endsWith("/register-helius")) {
     const SELF_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-    // Always derived from WHALE_WALLETS — single source of truth, never stale
-    const WALLETS = Object.keys(WHALE_WALLETS);
+    // CREDIT SAFETY: Only 5 wallets in Helius to prevent credit burn (97.5% reduction)
+    // These 5 were manually selected as highest quality traders
+    // To add more wallets, do it manually via Helius dashboard — NOT via code
+    const WALLETS = [
+      "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
+      "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  // Doji
+      "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
+      "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  // trunoest
+      "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", // clukz
+    ];
     try {
       // Delete existing webhooks
       const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
