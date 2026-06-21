@@ -24,6 +24,7 @@ import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
 import BooksV2DashboardWidget from '@/components/books/BooksV2DashboardWidget';
+import { EkadashiOracleCard } from '@/components/dashboard/EkadashiOracleCard';
 import SacredBooksWidget from '@/components/books/SacredBooksWidget';
 
 
@@ -866,6 +867,12 @@ const Dashboard: React.FC = () => {
                 })}
               </div>
             )}
+          </div>
+
+          {/* ══ ZONE 7.5: EKADASHI ORACLE ══ */}
+          <SectionLabel label="Sacred Fasting" delay="0.35s" />
+          <div style={{ animation: 'sqFadeUp 0.5s 0.35s ease both' }}>
+            <EkadashiOracleCard />
           </div>
 
           {/* ══ ZONE 9: UPGRADE BANNER ══ */}
