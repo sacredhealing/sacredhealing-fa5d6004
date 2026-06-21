@@ -707,8 +707,8 @@ export default function ShreemBrzeePerformance() {
             },
             {
               i:"📈", l:"P&L (closed)",
-              v:`${realPnlSol>=0?"+":""}€${realPnlEur.toFixed(2)}`,
-              s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · ${closedTrades.length} trades`,
+              v:`${realPnlSol>=0?"+":""}$${(realPnlSol*solUsd).toFixed(2)}`,
+              s:`${realPnlSol>=0?"+":""}${realPnlPct.toFixed(1)}% · €${realPnlEur.toFixed(2)} · ${closedTrades.length} trades`,
               c:realPnlSol>=0?GREEN:RED,
             },
             {
