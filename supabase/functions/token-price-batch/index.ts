@@ -75,34 +75,39 @@ serve(async (req) => {
 
     const now = Date.now();
     const prices: Record<string, number> = {};
+    const liquidity: Record<string, number> = {};
     const need: string[] = [];
     for (const m of mints) {
       const c = cache.get(m);
-      if (c && now - c.ts < TTL) prices[m] = c.price;
-      else need.push(m);
+      if (c && now - c.ts < TTL) {
+        prices[m] = c.price;
+        liquidity[m] = c.liquidity;
+      } else need.push(m);
     }
 
     if (need.length) {
-      // Jupiter FIRST — real-time on-chain prices, accurate for new nano-caps
-      // DexScreener FALLBACK — lags on new/illiquid tokens
+      // Jupiter FIRST — real-time on-chain prices (no liquidity info)
+      // DexScreener provides liquidity → fetch for ALL needed mints to know depth
       const jup = await fetchJupFallback(need);
-      const missingJup = need.filter((m) => !jup[m]);
-      const dex = missingJup.length ? await fetchDex(missingJup) : {};
+      const dex = await fetchDex(need);
       for (const m of need) {
-        const p = jup[m] ?? dex[m];
+        const dexEntry = dex[m];
+        const p = jup[m] ?? dexEntry?.price;
+        const liq = dexEntry?.liquidity ?? 0;
         if (p && p > 0) {
           prices[m] = p;
-          cache.set(m, { price: p, ts: now });
+          liquidity[m] = liq;
+          cache.set(m, { price: p, liquidity: liq, ts: now });
         }
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, prices, ts: now }), {
+    return new Response(JSON.stringify({ ok: true, prices, liquidity, ts: now }), {
       status: 200,
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: String(e), prices: {} }), {
+    return new Response(JSON.stringify({ ok: false, error: String(e), prices: {}, liquidity: {} }), {
       status: 200,
       headers: { ...cors, "Content-Type": "application/json" },
     });
