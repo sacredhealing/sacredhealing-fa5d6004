@@ -83,7 +83,7 @@ async function fetchPrice(mint: string): Promise<number> {
   } catch {}
   // Fallback: Jupiter
   try {
-    const r = await fetch(`https://price.jup.ag/v6/price?ids=${mint}`, { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(`https://api.jup.ag/price/v2?ids=${mint}`, { signal: AbortSignal.timeout(5000) });
     if (r.ok) { const p = parseFloat((await r.json())?.data?.[mint]?.price); if (p > 0) return p; }
   } catch {}
   return 0;
