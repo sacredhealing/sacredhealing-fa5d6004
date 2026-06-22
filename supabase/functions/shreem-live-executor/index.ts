@@ -25,7 +25,7 @@ const LAMPORTS  = 1_000_000_000;
 // ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
 const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
-const MIN_SIGNAL_SOL  = 0.1;
+const MIN_SIGNAL_SOL  = 0;
 const STOP_LOSS_PCT   = -25;
 const SLIPPAGE_BPS    = 2000;  // 20% — optimal for pump.fun copy trading at 0.03 SOL position size
 
