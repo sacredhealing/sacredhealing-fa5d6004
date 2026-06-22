@@ -1151,105 +1151,60 @@ serve(async (req) => {
           is_pump_fun:    swap.isPumpFun,
           block_time:     tx.timestamp ?? tx.blockTime ?? null,
           created_at:     new Date().toISOString(),
-          live_processed: false,  // v5.1: explicit false so Hetzner fallback finds it (NULL != false in pg)
+          live_processed: false,
         };
 
+        // Load session FIRST — needed to decide whether to swap inline
+        const { data: sessNow } = await sb.from("shreem_brzee_session")
+          .select("*").eq("id","default").single();
+
+        const isRunning = !!(sessNow?.started_at && !sessNow?.stopped_at);
+        const isLive    = sessNow?.mode === "live";
+
+        // ── LIVE BUY → INLINE SWAP (no executor round-trip, no DB write first) ──
+        if (isRunning && isLive && swap.action === "BUY") {
+          inserted++;
+          console.log(`⚡ INLINE BUY ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
+          // Fire-and-forget the swap; do NOT block the webhook response on it.
+          // executeBuyInline writes signal + trade + session AFTER the swap is sent.
+          executeBuyInline(signal, sessNow)
+            .then((r) => console.log(`[INLINE-BUY RESULT]`, JSON.stringify(r).slice(0, 200)))
+            .catch((e) => console.error(`[INLINE-BUY ERROR]`, e?.message ?? String(e)));
+          continue;
+        }
+
+        // ── All other paths: write signal first (legacy behaviour) ──────────
         const { error } = await sb.from("shreem_brzee_signals")
           .upsert(signal, { onConflict: "sig" });
-
         if (error) { console.error("[signal]", error.message); skipped++; continue; }
         inserted++;
         console.log(`✅ ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
 
-        // ── SERVER-SIDE TRADE EXECUTION (phone can be off) ──────────────
-        // Load fresh session each time to get latest portfolio balance
-        const { data: sessNow } = await sb.from("shreem_brzee_session")
-          .select("*").eq("id","default").single();
+        if (!isRunning) continue;
 
-        if (sessNow?.started_at && !sessNow?.stopped_at) {
-          if (sessNow.mode === "live") {
-            // LIVE MODE: pass signal directly to executor — no flag polling needed
-            if (swap.action === "BUY") {
-              // SAFETY: ignore small signals (spam/dust/test buys)
-              const MIN_SIGNAL_SOL = 0.1;
-              const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-              if (signal.mint === USDC_MINT) {
-                console.log(`[BUY-SKIP] USDC — not trading`);
-              } else if (Number(signal.amount_sol ?? 0) < MIN_SIGNAL_SOL && !signal.mint) {
-                // Only skip if BOTH amount is too small AND no mint (true spam)
-                // amount_sol=0 with valid mint = WSOL trade we couldn't parse amount from — still execute
-                console.log(`[BUY-SKIP] Signal too small and no mint: ${signal.amount_sol} SOL`);
-              } else {
-                try {
-                  const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${SUPABASE_KEY}`,
-                    },
-                    body: JSON.stringify({
-                      direct_signal: {
-                        sig:        signal.sig,
-                        mint:       signal.mint,
-                        symbol:     signal.symbol,
-                        label:      signal.label,
-                        wallet:     signal.wallet,
-                        amount_sol: signal.amount_sol,
-                      },
-                    }),
-                    signal: AbortSignal.timeout(30000),
-                  });
-                  const execData = await execR.json().catch(() => ({}));
-                  console.log("[live-exec RESULT]", JSON.stringify(execData).slice(0, 200));
-                  // v5.1: mark processed only if executor accepted it (not skipped/failed)
-                  // If execData.ok=true and not skipped → Hetzner won't double-execute
-                  // If execData.ok=false or skipped → leave live_processed=false for Hetzner retry
-                  if (execData?.ok && !execData?.skipped) {
-                    await sb.from("shreem_brzee_signals")
-                      .update({ live_processed: true })
-                      .eq("sig", signal.sig);
-                  }
-                } catch (execErr: any) {
-                  console.error("[live-exec ERROR]", execErr?.message ?? String(execErr));
-                  // live_processed stays false → Hetzner picks up as fallback
-                }
-                console.log(`[live-trigger] BUY ${signal.symbol ?? signal.mint.slice(0,8)} ${signal.amount_sol} SOL — executor called`);
-              }
-
-            } else if (swap.action === "SELL") {
-              // AWAITED — whale SELL must complete before we return 200 to Helius.
-              // Fire-and-forget was losing errors silently. Now we log + surface.
-              try {
-                const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${SUPABASE_KEY}`,
-                  },
-                  body: JSON.stringify({
-                    action: "close",
-                    mint:   swap.mint,
-                    reason: "whale_sell_mirror",
-                  }),
-                  signal: AbortSignal.timeout(25000), // 25s max — executor swap can take time
-                });
-                const execData = await execR.json().catch(() => ({}));
-                console.log(`[live-close] ✅ SELL ${signal.symbol} → executor:`, JSON.stringify(execData).slice(0, 300));
-              } catch (sellErr: any) {
-                console.error(`[live-close] ❌ SELL ${signal.symbol} executor failed:`, sellErr?.message ?? String(sellErr));
-              }
-            }
-
-          } else {
-            // PAPER MODE: original behaviour
-            if (swap.action === "BUY") {
-              await openTrade(signal, sessNow);
-            } else if (swap.action === "SELL") {
-              const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
-                .select("*").eq("status","open").eq("mint", swap.mint);
-              for (const pos of (openPos || [])) {
-                await closeTrade(pos, "whale_sell_mirror");
-              }
+        if (isLive && swap.action === "SELL") {
+          // Whale SELL mirror — keep delegating to executor (close path).
+          try {
+            const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+              body: JSON.stringify({ action: "close", mint: swap.mint, reason: "whale_sell_mirror" }),
+              signal: AbortSignal.timeout(25000),
+            });
+            const execData = await execR.json().catch(() => ({}));
+            console.log(`[live-close] SELL ${signal.symbol} →`, JSON.stringify(execData).slice(0, 300));
+          } catch (sellErr: any) {
+            console.error(`[live-close] ❌ SELL ${signal.symbol}:`, sellErr?.message ?? String(sellErr));
+          }
+        } else if (!isLive) {
+          // PAPER MODE: original behaviour
+          if (swap.action === "BUY") {
+            await openTrade(signal, sessNow);
+          } else if (swap.action === "SELL") {
+            const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
+              .select("*").eq("status","open").eq("mint", swap.mint);
+            for (const pos of (openPos || [])) {
+              await closeTrade(pos, "whale_sell_mirror");
             }
           }
         }
