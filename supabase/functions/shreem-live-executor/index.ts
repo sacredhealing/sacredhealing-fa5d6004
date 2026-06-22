@@ -367,14 +367,21 @@ serve(async (req) => {
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
   // Called by Supabase cron every 5 min as server-side fallback
-  // Auth: CRON_SECRET env var — set in Supabase secrets, passed by pg_cron
-  // Falls back to service role key check if CRON_SECRET not set
+  // Auth: token is validated against vault-stored SHREEM_CRON_SECRET via RPC.
+  // Falls back to env CRON_SECRET or service-role key.
   if (req.method === "GET" && path.endsWith("/cron-stoploss")) {
-    const CRON_SECRET = Deno.env.get("CRON_SECRET");
-    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const authHeader = req.headers.get("authorization") ?? req.headers.get("x-cron-secret") ?? "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
-    const validSecret = CRON_SECRET ? token === CRON_SECRET : token === SERVICE_ROLE;
+    let validSecret = false;
+    try {
+      const { data: ok } = await sb.rpc("verify_shreem_cron_secret", { _token: token });
+      validSecret = ok === true;
+    } catch (_) { /* fall through */ }
+    if (!validSecret) {
+      const CRON_SECRET = Deno.env.get("CRON_SECRET");
+      const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      validSecret = !!((CRON_SECRET && token === CRON_SECRET) || (SERVICE_ROLE && token === SERVICE_ROLE));
+    }
     if (!validSecret) {
       console.warn("[cron-stoploss] Unauthorized call — bad or missing secret");
       return jsonResp({ ok: false, error: "unauthorized" }, 401);
