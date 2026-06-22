@@ -9395,6 +9395,7 @@ export type Database = {
       }
       tier_name_to_level: { Args: { tier_name: string }; Returns: number }
       update_mantra_admin: { Args: { data: Json }; Returns: Json }
+      verify_shreem_cron_secret: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
