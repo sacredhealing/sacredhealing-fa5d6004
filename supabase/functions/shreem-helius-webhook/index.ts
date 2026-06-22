@@ -36,7 +36,6 @@ const MAX_WEBHOOK_TXS_PER_BATCH = 10;
 const WHALE_WALLETS: Record<string, string> = {
   "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o": "Cented",
   "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu": "Remusofmars",
-  "Bi4rd5FH5bYEN8scZ7wevxNZyNmKHdaBcvewdPFxYdLt": "Theo",
   "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC": "clukz",
   "8MaVa9kdt3NW4Q5HyNAm1X5LbR8PQRVDc1W8NMVK88D5": "Daumen",
   "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg": "Doji",
@@ -280,12 +279,11 @@ async function syncHelius(): Promise<{ ok: boolean; message: string; count?: num
   try {
     const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
     const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
-    // CREDIT SAFETY: Hard-coded 6 wallets only — never auto-expand to all WHALE_WALLETS
+    // CREDIT SAFETY: Hard-coded 5 wallets only — never auto-expand to all WHALE_WALLETS
     // Adding more wallets = linear credit burn. Change manually via Helius dashboard only.
     const addresses = [
       "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
       "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
-      "Bi4rd5FH5bYEN8scZ7wevxNZyNmKHdaBcvewdPFxYdLt", // Theo
       "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", // clukz
       "8MaVa9kdt3NW4Q5HyNAm1X5LbR8PQRVDc1W8NMVK88D5", // Daumen
       "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg", // Doji

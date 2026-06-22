@@ -1,0 +1,1 @@
+DELETE FROM public.tracked_whales WHERE address='Bi4rd5FH5bYEN8scZ7wevxNZyNmKHdaBcvewdPFxYdLt';
