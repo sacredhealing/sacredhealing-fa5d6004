@@ -182,6 +182,9 @@ export default function ShreemBrzeePerformance() {
 
   // Live prices for open positions (USD per token)
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
+  const [liveLiquidity, setLiveLiquidity] = useState<Record<string,number>>({});
+  // Below this USD liquidity, the price feed is unreliable and P&L is flagged "estimated"
+  const LOW_LIQ_USD = 10_000;
   const [pricesFetched, setPricesFetched] = useState(false);
 
   const [edgeOk, setEdgeOk] = useState<boolean|null>(null);
@@ -359,6 +362,12 @@ export default function ShreemBrzeePerformance() {
         const n = Number(p);
         if (n > 0) updated[m] = n;
       }
+      const updatedLiq: Record<string, number> = {};
+      for (const [m, l] of Object.entries<any>(j?.liquidity || {})) {
+        const n = Number(l);
+        if (!Number.isNaN(n) && n >= 0) updatedLiq[m] = n;
+      }
+      if (Object.keys(updatedLiq).length) setLiveLiquidity(prev => ({ ...prev, ...updatedLiq }));
       if (Object.keys(updated).length) {
         setLivePrices(prev => ({ ...prev, ...updated }));
         // Backfill entry_price for positions that opened without one (pending fills)
@@ -835,8 +844,13 @@ export default function ShreemBrzeePerformance() {
               const pnlEur = pnlUsd !== null ? usdToEur(pnlUsd) : null;
 
               const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
+              // Liquidity-aware "estimated" flag: low depth → price feed unreliable, real exit P&L
+              // will only be known after the Jupiter sell quote confirms on-chain.
+              const liqUsd        = liveLiquidity[pos.mint];
+              const liqKnown      = liqUsd !== undefined;
+              const isEstimated   = pnlPct !== null && (!liqKnown || liqUsd < LOW_LIQ_USD);
               const pnlLabel      = pnlPct !== null
-                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%${isEstimated ? "*" : ""}`
                 : noLiquidity ? "no liquidity"
                 : (!pos.entry_price || Number(pos.entry_price)===0) ? "syncing…"
                 : "—";
@@ -876,18 +890,25 @@ export default function ShreemBrzeePerformance() {
                         {[
                           { l:"SIZE",  v:`${amountSol.toFixed(4)}`, u:"SOL", s:`≈${investedEur.toFixed(2)}€` },
                           { l:"ENTRY", v:entryUsd>0?`$${entryUsd.toFixed(entryUsd<.001?8:entryUsd<.1?6:4)}`:"—", u:"", s:`${investedEur.toFixed(2)}€ invested` },
-                          { l:"NOW",   v:currentUsd>0?`$${currentUsd.toFixed(currentUsd<.001?8:currentUsd<.1?6:4)}`:"fetching…", u:"", s:currentValueEur!=null?`${currentValueEur.toFixed(2)}€`:"" },
+                          { l:"NOW",   v:currentUsd>0?`$${currentUsd.toFixed(currentUsd<.001?8:currentUsd<.1?6:4)}`:"fetching…", u:"", s: liqKnown ? `liq $${liqUsd>=1000?(liqUsd/1000).toFixed(1)+"k":liqUsd.toFixed(0)}${isEstimated?" · low":""}` : (currentValueEur!=null?`${currentValueEur.toFixed(2)}€`:"") },
                         ].map(cell => (
                           <div key={cell.l} style={{ background:"rgba(0,0,0,.3)", borderRadius:10, padding:"8px 10px", border:"1px solid rgba(255,255,255,.05)" }}>
                             <div style={{ fontSize:7, color:"#64748b", letterSpacing:".15em", marginBottom:3 }}>{cell.l}</div>
                             <div style={{ fontSize:11, fontWeight:800, color:"#fff" }}>{cell.v} <span style={{ fontSize:8, color:"#64748b" }}>{cell.u}</span></div>
-                            <div style={{ fontSize:8, color:"#64748b", marginTop:1 }}>{cell.s}</div>
+                            <div style={{ fontSize:8, color:cell.l==="NOW"&&isEstimated?"#f59e0b":"#64748b", marginTop:1 }}>{cell.s}</div>
                           </div>
                         ))}
                       </div>
-                      {/* Unrealized PNL bar */}
-                      <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null?(pnlPct>=0?"34,197,94":"239,68,68"):"100,116,139"},.08)`, border:`1px solid rgba(${pnlPct!==null?(pnlPct>=0?"34,197,94":"239,68,68"):"100,116,139"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                        <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
+                      {/* Unrealized PNL bar — confirmed only on actual Jupiter sell with on-chain SOL received */}
+                      <div style={{ margin:"8px 12px", padding:"10px 14px", borderRadius:12, background:`rgba(${pnlPct!==null?(pnlPct>=0?"34,197,94":"239,68,68"):"100,116,139"},.08)`, border:`1px solid rgba(${pnlPct!==null?(pnlPct>=0?"34,197,94":"239,68,68"):"100,116,139"},.2)`, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:6 }}>
+                        <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                          <div style={{ fontSize:9, color:"#64748b", letterSpacing:".1em" }}>UNREALIZED PNL</div>
+                          {isEstimated && (
+                            <div style={{ fontSize:8, color:"#f59e0b", fontWeight:700, letterSpacing:".06em" }}>
+                              ⚠ ESTIMATED · LOW LIQUIDITY · CONFIRMED ON SELL
+                            </div>
+                          )}
+                        </div>
                         <div style={{ display:"flex", gap:12, alignItems:"center" }}>
                           <div style={{ fontSize:noLiquidity?13:18, fontWeight:900, color:(noLiquidity||!pos.entry_price)?"#94a3b8":pnlColor }}>{pnlLabel}</div>
                           {pnlEur !== null && (
