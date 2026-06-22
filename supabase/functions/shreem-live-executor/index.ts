@@ -22,12 +22,14 @@ const JUPITER   = "https://lite-api.jup.ag/swap/v1";
 const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
-// ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
+// ── SAFETY LIMITS ── HARD-LOCKED, DO NOT OVERRIDE ─────────────────────────────
 const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
 const MIN_SIGNAL_SOL  = 0.1;
-const STOP_LOSS_PCT   = -25;
-const SLIPPAGE_BPS    = 2000;  // 20% — optimal for pump.fun copy trading at 0.03 SOL position size
+const STOP_LOSS_PCT   = -25;       // 🔒 FIXED 25% stop loss — never overridden
+const MAX_EXPOSURE_PCT = 0.50;     // 🔒 FIXED 50% capital cap — never overridden
+const SLIPPAGE_BPS    = 2000;
+
 
 function timeoutSignal(ms: number) {
   const ctrl = new AbortController();
@@ -466,55 +468,27 @@ serve(async (req) => {
     const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
     if (sig.mint === USDC) return jsonResp({ ok: true, skipped: true, reason: "USDC — not trading" });
 
-    const { data: openTrades } = await sb.from("shreem_brzee_live_trades").select("id,mint,amount_sol,symbol").in("status", ["open","pending","unconfirmed","closing"]);
+    const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
+      .select("id,mint,amount_sol,symbol")
+      .in("status", ["open","pending","unconfirmed","closing"]);
     const openExposureSol = (openTrades ?? []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
-    const balForCap = (await rpc("getBalance", [wallet])).value / LAMPORTS;
-    const maxExposure = balForCap * 0.50;
+    const balRes = await rpc("getBalance", [wallet]);
+    const balSol = balRes.value / LAMPORTS;
 
-    // HARDCODED CAP — atomic check via session table
-    // Read session portfolio as single source of truth for available capital
-    // This prevents race conditions where 2 buys land simultaneously
-    const { data: sessCheck } = await sb.from("shreem_brzee_session")
-      .select("portfolio")
-      .eq("id", "default")
-      .single();
+    // 🔒 HARD 50% CAP — never overridden. Total capital = current balance + open exposure.
+    const totalCapital = balSol + openExposureSol;
+    const hardCap = totalCapital * MAX_EXPOSURE_PCT;
+    const remainingRoom = hardCap - openExposureSol;
 
-    const availableCapital = Number(sessCheck?.portfolio || 0);
-    const hardCap = balForCap * 0.50;
-
-    if (openExposureSol >= hardCap) {
-      console.log(`[BUY] HARDCAP — exposure ${openExposureSol.toFixed(4)} SOL >= 50% cap ${hardCap.toFixed(4)} SOL`);
-      return jsonResp({ ok: true, skipped: true, reason: `HARDCAP: ${openExposureSol.toFixed(3)} SOL open >= 50% of ${balForCap.toFixed(3)} SOL` });
+    if (remainingRoom <= 0) {
+      console.log(`[BUY] 🔒 HARDCAP — exposure ${openExposureSol.toFixed(4)} SOL >= 50% cap ${hardCap.toFixed(4)} SOL — NO TRADES until one closes`);
+      return jsonResp({ ok: true, skipped: true, reason: `HARDCAP locked: ${openExposureSol.toFixed(3)}/${hardCap.toFixed(3)} SOL (50% reached) — waiting for a position to close` });
     }
-
-    // Atomic session deduction BEFORE executing swap
-    // This prevents race: deduct first, then swap. If swap fails, restore.
-    const tradeSize = Math.min(balForCap * 0.05, hardCap - openExposureSol);
-    if (tradeSize < MIN_TRADE_SOL) {
-      return jsonResp({ ok: true, skipped: true, reason: `Trade size ${tradeSize.toFixed(4)} SOL too small` });
-    }
-
-    // Atomically reserve capital — simultaneous calls will see updated portfolio
-    const { error: reserveErr } = await sb.from("shreem_brzee_session")
-      .update({ 
-        portfolio: availableCapital - tradeSize,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", "default")
-      .gte("portfolio", tradeSize); // Only succeeds if enough capital available
-
-    if (reserveErr) {
-      console.log("[BUY] SKIP — capital reservation failed (race condition caught)");
-      return jsonResp({ ok: true, skipped: true, reason: "Capital already reserved by concurrent buy" });
-    }
-
-    console.log(`[BUY] Capital reserved: ${tradeSize.toFixed(4)} SOL | exposure ${openExposureSol.toFixed(4)}/${hardCap.toFixed(4)} SOL`);
 
     const dupMint = openTrades?.find(t => t.mint === sig.mint);
     if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
 
-    // Also check signals table — if another whale bought this mint in last 5 min
-    // and it was processed, we already bought it (race condition protection)
+    // Cross-whale dedup: same mint bought via another whale in last 5 min
     const fiveMinAgo = new Date(Date.now() - 300000).toISOString();
     const { data: recentMintSignal } = await sb.from("shreem_brzee_signals")
       .select("id,label")
@@ -522,7 +496,7 @@ serve(async (req) => {
       .eq("action", "BUY")
       .eq("live_processed", true)
       .gte("created_at", fiveMinAgo)
-      .neq("wallet", sig.wallet)  // different whale, same token
+      .neq("wallet", sig.wallet)
       .limit(1);
     if (recentMintSignal?.length) {
       console.log(`[BUY] SKIP — ${sig.mint.slice(0,8)} already bought via ${recentMintSignal[0].label} in last 5min`);
@@ -532,21 +506,24 @@ serve(async (req) => {
     const { data: dupSig } = await sb.from("shreem_brzee_live_trades").select("id").eq("sig", sig.sig + "_live").limit(1);
     if (dupSig?.length) return jsonResp({ ok: true, skipped: true, reason: "Signal already executed" });
 
-    const balRes = await rpc("getBalance", [wallet]);
-    const balSol = balRes.value / LAMPORTS;
-    console.log(`[BUY] Wallet balance: ${balSol} SOL | signal: ${sig.symbol ?? sig.mint.slice(0,8)} | amount_sol=${sig.amount_sol}`);
+    console.log(`[BUY] Wallet balance: ${balSol} SOL | signal: ${sig.symbol ?? sig.mint.slice(0,8)} | exposure ${openExposureSol.toFixed(4)}/${hardCap.toFixed(4)} (cap 50%)`);
 
     if (balSol < MIN_TRADE_SOL + 0.003) {
       return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL` });
     }
 
-    const size = Math.min(0.1, Math.max(0.01, balSol * 0.05));
+    // Size = 5% of total capital, but never exceed remaining room under 50% cap
+    const desiredSize = totalCapital * 0.05;
+    const size = Math.min(desiredSize, remainingRoom, 0.1);
+
     if (size < MIN_TRADE_SOL) {
-      return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
+      console.log(`[BUY] 🔒 SKIP — remaining room ${remainingRoom.toFixed(4)} SOL under 50% cap is below minimum ${MIN_TRADE_SOL} — waiting for a close`);
+      return jsonResp({ ok: true, skipped: true, reason: `Cap room ${remainingRoom.toFixed(4)} SOL below minimum trade size — waiting for a close` });
     }
 
     const lamports = Math.floor(size * LAMPORTS);
-    console.log(`[BUY] Executing: ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | wallet=${wallet.slice(0,8)}`);
+    console.log(`[BUY] Executing: ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | new exposure ${(openExposureSol+size).toFixed(4)}/${hardCap.toFixed(4)} | wallet=${wallet.slice(0,8)}`);
+
 
     // STEP 1: Write intent
     const tradeId = crypto.randomUUID();
