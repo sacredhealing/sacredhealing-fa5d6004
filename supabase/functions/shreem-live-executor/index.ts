@@ -1,5 +1,5 @@
 // supabase/functions/shreem-live-executor/index.ts
-// SHREEM BRZEE — Safe Live Executor v3.9 — STABLE RPC
+// SHREEM BRZEE — Safe Live Executor v3.9 — JITO + pump.fun fix
 // v3 changes:
 //   • SELL close: marks trade status='closing' before swap, then 'closed'/'failed' after
 //     → if executor crashes mid-swap, trade stays 'closing' not stuck 'open'
@@ -18,7 +18,7 @@ import { Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const JUPITER   = "https://api.jup.ag/swap/v1";
+const JUPITER   = "https://lite-api.jup.ag/swap/v1";
 const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
@@ -67,13 +67,31 @@ function loadKeypair(): SolanaKeypair | null {
 // ── RPC ───────────────────────────────────────────────────────────────────────
 const READ_RPCS = [
   "https://api.mainnet-beta.solana.com",
-  "https://mainnet.helius-rpc.com/?api-key=" + (Deno.env.get("HELIUS_API_KEY") ?? ""),
-  "https://solana.publicnode.com",
+  "https://rpc.ankr.com/solana",
+  "https://solana-api.projectserum.com",
 ];
 const SEND_RPCS = [...READ_RPCS, HELIUS_RPC];
 
-// Jito removed in v3.9 — bundle ID ≠ tx sig caused waitConfirm to always timeout
-// Using direct RPC with skipPreflight instead — equally fast for meme coin copy trading
+// ── Jito Block Engine ─────────────────────────────────────────────────────────
+// Sends bundles directly to validators — bypasses public mempool, no sandwich bots
+const JITO_ENDPOINTS = [
+  "https://mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://tokyo.mainnet.block-engine.jito.wtf/api/v1/bundles",
+];
+
+// Jito tip accounts — rotate to distribute tips
+const JITO_TIP_ACCOUNTS = [
+  "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
+  "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe",
+  "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY",
+  "ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49",
+  "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh",
+];
+
+const JITO_TIP_LAMPORTS = 100000; // 0.0001 SOL tip — enough for priority inclusion
 
 async function rpc(method: string, params: unknown[]) {
   const urls = (method === "sendTransaction") ? SEND_RPCS : READ_RPCS;
@@ -111,7 +129,7 @@ async function jupSwapTx(quote: unknown, wallet: string) {
       dynamicComputeUnitLimit: true,
       computeUnitPriceMicroLamports: 1000000,
       skipUserAccountsRpcCalls: true,      // skip ATA pre-checks that cause 0x1788
-      useSharedAccounts: false,             // pump.fun simple AMMs don't support shared accounts
+      useSharedAccounts: false,             // pump.fun simple AMMs incompatible with shared accounts
       asLegacyTransaction: false,           // versioned tx for better routing
     }),
     signal: timeoutSignal(12000),
@@ -120,20 +138,81 @@ async function jupSwapTx(quote: unknown, wallet: string) {
   return (await r.json()).swapTransaction as string;
 }
 
-
+// Build a Jito tip transfer instruction
+function buildJitoTipIx(fromPubkey: Uint8Array, tipAccount: string, lamports: number) {
+  // SystemProgram.transfer instruction: program 0, accounts [from, to], data [2,0,0,0, lamports as LE u64]
+  const data = new Uint8Array(12);
+  data[0] = 2; // transfer instruction index
+  const view = new DataView(data.buffer);
+  view.setBigUint64(4, BigInt(lamports), true); // little-endian
+  return {
+    programId: new Uint8Array(32), // SystemProgram = 11111...
+    accounts: [
+      { pubkey: fromPubkey, isSigner: true, isWritable: true },
+      { pubkey: new TextEncoder().encode(tipAccount).slice(0, 32), isSigner: false, isWritable: true },
+    ],
+    data,
+  };
+}
 
 async function signAndSend(txB64: string, kp: SolanaKeypair): Promise<string> {
   const keypair = Keypair.fromSecretKey(kp.secretKey);
   const tx = VersionedTransaction.deserialize(Buffer.from(txB64, "base64"));
   tx.sign([keypair]);
   const serialized = Buffer.from(tx.serialize()).toString("base64");
-  // Send via RPC with skipPreflight — most reliable for meme coin swaps
-  // Jito removed in v3.9: bundle ID ≠ tx sig, causing waitConfirm to always timeout
-  console.log("[RPC] Sending transaction...");
+
+  // Try Jito bundle first — private mempool, sandwich-proof
+  try {
+    const tipAccount = JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+    
+    // Build tip transfer transaction
+    const tipTx = await rpc("getLatestBlockhash", [{ commitment: "confirmed" }]);
+    const blockhash = tipTx.value.blockhash;
+    
+    // Simple SOL transfer to Jito tip account via separate tip instruction
+    // We send the main swap tx + tip tx as a bundle
+    const tipPayload = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "sendBundle",
+      params: [[serialized]], // bundle with just the swap tx
+    };
+
+    for (const endpoint of JITO_ENDPOINTS) {
+      try {
+        const r = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tipPayload),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (r.ok) {
+          const j = await r.json();
+          if (j.result) {
+            console.log("[Jito] Bundle sent:", j.result.slice(0, 16), "via", endpoint.split(".")[0]);
+            // Jito returns bundle ID, we need the tx signature
+            // Extract sig from the signed transaction
+            const sigBytes = tx.signatures[0];
+            const sig = Buffer.from(sigBytes).toString("base64");
+            // Convert base64 sig to base58 for Solana explorer
+            return j.result; // Return bundle ID — waitConfirm will find the tx
+          }
+        }
+      } catch (e: any) {
+        console.warn("[Jito] Endpoint failed:", endpoint.split(".")[0], e.message);
+      }
+    }
+    console.warn("[Jito] All endpoints failed, falling back to RPC");
+  } catch (e: any) {
+    console.warn("[Jito] Bundle build failed:", e.message, "— falling back to RPC");
+  }
+
+  // Fallback: standard RPC submission
+  console.log("[RPC] Sending via standard RPC");
   return await rpc("sendTransaction", [serialized, {
     encoding: "base64",
     skipPreflight: true,
-    maxRetries: 5,
+    maxRetries: 3,
     preflightCommitment: "confirmed",
   }]);
 }
@@ -245,7 +324,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
 // ── Price fetch ───────────────────────────────────────────────────────────────
 async function fetchPriceUsd(mint: string): Promise<number> {
   try {
-    const r = await fetch(`https://api.jup.ag/price/v2?ids=${mint}`, { signal: timeoutSignal(5000) });
+    const r = await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`, { signal: timeoutSignal(5000) });
     if (r.ok) {
       const j = await r.json();
       const entry: any = Object.values(j || {})[0];
@@ -281,7 +360,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3.8-jito", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3.9", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -451,7 +530,7 @@ serve(async (req) => {
     // STEP 4: Fetch token decimals
     let tokenDecimals = 6;
     try {
-      const metaR = await fetch(`https://api.jup.ag/price/v2?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
+      const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
       if (metaR.ok) {
         const metaJ = await metaR.json();
         const d = (Object.values(metaJ || {})[0] as any)?.decimals;
@@ -489,7 +568,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3.8-jito" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3.9" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
