@@ -3,13 +3,10 @@ import urllib.request, json
 HELIUS_KEY = "6db37a31-beea-4c43-924d-87f4867fa5f0"
 WEBHOOK_ID = "65fbcfbb-9c9f-46e3-bae8-b1f964dd9d0b"
 
-# Only the top 5 whales
+# Only Cented and Remusofmars
 WALLETS = [
     "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o",  # Cented
-    "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",   # Doji
     "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu",  # Remusofmars
-    "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",   # trunoest
-    "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC",  # clukz
 ]
 
 WEBHOOK_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook"
