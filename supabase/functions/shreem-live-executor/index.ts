@@ -128,11 +128,11 @@ async function jupSwapTx(quote: unknown, wallet: string) {
       userPublicKey: wallet,
       wrapAndUnwrapSol: true,
       dynamicComputeUnitLimit: true,
-      computeUnitPriceMicroLamports: 1000000,
+      computeUnitPriceMicroLamports: 2500000,
       skipUserAccountsRpcCalls: true,
       useSharedAccounts: false,
       asLegacyTransaction: false,
-      dynamicSlippage: { maxBps: 3000 }
+      dynamicSlippage: { maxBps: 5000 }
     }),
     signal: timeoutSignal(12000),
   });
