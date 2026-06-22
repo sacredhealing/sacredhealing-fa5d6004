@@ -844,8 +844,13 @@ export default function ShreemBrzeePerformance() {
               const pnlEur = pnlUsd !== null ? usdToEur(pnlUsd) : null;
 
               const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
+              // Liquidity-aware "estimated" flag: low depth → price feed unreliable, real exit P&L
+              // will only be known after the Jupiter sell quote confirms on-chain.
+              const liqUsd        = liveLiquidity[pos.mint];
+              const liqKnown      = liqUsd !== undefined;
+              const isEstimated   = pnlPct !== null && (!liqKnown || liqUsd < LOW_LIQ_USD);
               const pnlLabel      = pnlPct !== null
-                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%${isEstimated ? "*" : ""}`
                 : noLiquidity ? "no liquidity"
                 : (!pos.entry_price || Number(pos.entry_price)===0) ? "syncing…"
                 : "—";
