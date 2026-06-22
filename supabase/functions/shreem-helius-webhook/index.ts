@@ -225,20 +225,51 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   const portfolio = Number(sess.portfolio || 0);
   if (portfolio <= MIN_TRADE_SOL) return { ok: true, skipped: "no_portfolio" };
 
-  // 50% exposure cap (computed from start_balance to avoid drift from realized PnL)
+  // Load keypair early — needed for both live balance fetch and swap
+  const kp = loadKeypair();
+  if (!kp) return { ok: false, error: "no_keypair" };
+  const walletPub = bs58.encode(kp.publicKey);
+
+  // 50% exposure cap — base = LIVE on-chain wallet balance (fresh RPC getBalance),
+  // not start_balance (drifts as PnL accumulates and ignores deposits/withdrawals).
+  let liveBalSol = 0;
+  try {
+    const bres: any = await rpcCall("getBalance", [walletPub]);
+    const lamps = Number(bres?.value ?? bres ?? 0);
+    if (lamps > 0) liveBalSol = lamps / LAMPORTS;
+  } catch (e: any) {
+    console.warn(`[INLINE-BUY] getBalance failed: ${e.message} — falling back to portfolio`);
+  }
+  if (liveBalSol <= 0) liveBalSol = portfolio; // safety fallback when RPC is down
+
   const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
     .select("amount_sol").in("status", ["open","pending","unconfirmed","closing"]);
   const exposure = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
-  const startBal = Number(sess.start_balance || (portfolio + exposure)) || (portfolio + exposure);
-  const cap = startBal * 0.50;
-  if (exposure >= cap) return { ok: true, skipped: `cap_50pct(${exposure.toFixed(3)}>=${cap.toFixed(3)})` };
+  const cap = liveBalSol * 0.50;
+  if (exposure >= cap) return { ok: true, skipped: `cap_50pct(exp=${exposure.toFixed(3)}>=cap=${cap.toFixed(3)}@bal=${liveBalSol.toFixed(3)})` };
 
   const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, portfolio * 0.05), cap - exposure);
   if (size < MIN_TRADE_SOL) return { ok: true, skipped: "size_too_small" };
 
-  const kp = loadKeypair();
-  if (!kp) return { ok: false, error: "no_keypair" };
-  const walletPub = bs58.encode(kp.publicKey);
+  // ── ATOMIC RESERVATION ────────────────────────────────────────────────────
+  // Decrement portfolio in a single conditional UPDATE so two concurrent signals
+  // can't both pass the cap check and both fire. Postgres row-locks the matched
+  // row; only one update wins, the other sees portfolio < size and returns 0 rows.
+  const { data: reserved, error: reserveErr } = await sb
+    .from("shreem_brzee_session")
+    .update({ portfolio: portfolio - size, updated_at: new Date().toISOString() })
+    .eq("id", "default")
+    .eq("portfolio", portfolio)        // optimistic concurrency: row must be unchanged
+    .gte("portfolio", size)             // and must still cover the trade size
+    .select("id");
+  if (reserveErr) {
+    console.error(`[INLINE-BUY] reserve error: ${reserveErr.message}`);
+    return { ok: false, error: "reserve_failed" };
+  }
+  if (!reserved || reserved.length === 0) {
+    return { ok: true, skipped: "reserve_lost_race" };
+  }
+
   const lamports = Math.floor(size * LAMPORTS);
 
   // Jupiter quote → swap → send (no waitConfirm — that's what cron reconciles)
@@ -250,13 +281,23 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
     txSig = await signAndSend(swapTx, kp);
   } catch (e: any) {
     console.error(`[INLINE-BUY] ❌ ${signal.symbol ?? signal.mint.slice(0,8)} swap failed: ${e.message}`);
+    // Refund the reservation so the next signal can use the SOL
+    await sb.rpc as any; // no-op typing guard
+    try {
+      const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
+      const curPort = Number(cur?.portfolio || 0);
+      await sb.from("shreem_brzee_session").update({
+        portfolio: curPort + size,
+        updated_at: new Date().toISOString(),
+      }).eq("id", "default");
+    } catch {}
     return { ok: false, error: e.message };
   }
 
   const swapMs = Date.now() - t0;
-  console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms`);
+  console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms | bal=${liveBalSol.toFixed(3)} cap=${cap.toFixed(3)} exp=${exposure.toFixed(3)}`);
 
-  // ── DB writes AFTER swap, in parallel ─────────────────────────────────────
+  // ── DB writes AFTER swap, in parallel (portfolio already reserved) ────────
   const tradeId  = crypto.randomUUID();
   const openedAt = new Date(t0).toISOString();
   const tradeRow = {
@@ -282,10 +323,6 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   await Promise.all([
     sb.from("shreem_brzee_live_trades").upsert(tradeRow, { onConflict: "sig" }),
     sb.from("shreem_brzee_signals").upsert(signalRow, { onConflict: "sig" }),
-    sb.from("shreem_brzee_session").update({
-      portfolio: portfolio - size,
-      updated_at: new Date().toISOString(),
-    }).eq("id", "default"),
   ]).catch((e: any) => console.error("[INLINE-BUY] post-swap DB write:", e?.message));
 
   return { ok: true, tx: txSig, size_sol: size, latency_ms: swapMs };
