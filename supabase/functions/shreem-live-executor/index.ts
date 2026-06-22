@@ -111,7 +111,7 @@ async function jupSwapTx(quote: unknown, wallet: string) {
       dynamicComputeUnitLimit: true,
       computeUnitPriceMicroLamports: 1000000,
       skipUserAccountsRpcCalls: true,      // skip ATA pre-checks that cause 0x1788
-      useSharedAccounts: true,              // use Jupiter shared accounts, avoids ATA creation failures
+      useSharedAccounts: false,             // pump.fun simple AMMs don't support shared accounts
       asLegacyTransaction: false,           // versioned tx for better routing
     }),
     signal: timeoutSignal(12000),
