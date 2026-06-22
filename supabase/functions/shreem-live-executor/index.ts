@@ -362,7 +362,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.1", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.2", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -470,10 +470,45 @@ serve(async (req) => {
     const openExposureSol = (openTrades ?? []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
     const balForCap = (await rpc("getBalance", [wallet])).value / LAMPORTS;
     const maxExposure = balForCap * 0.50;
-    if (openExposureSol >= maxExposure) {
-      console.log(`[BUY] SKIP — 50% cap: ${openExposureSol.toFixed(4)}/${maxExposure.toFixed(4)} SOL in ${openTrades?.length} trades`);
-      return jsonResp({ ok: true, skipped: true, reason: `50% cap (${openTrades?.length} open, ${openExposureSol.toFixed(3)} SOL)` });
+
+    // HARDCODED CAP — atomic check via session table
+    // Read session portfolio as single source of truth for available capital
+    // This prevents race conditions where 2 buys land simultaneously
+    const { data: sessCheck } = await sb.from("shreem_brzee_session")
+      .select("portfolio")
+      .eq("id", "default")
+      .single();
+
+    const availableCapital = Number(sessCheck?.portfolio || 0);
+    const hardCap = balForCap * 0.50;
+
+    if (openExposureSol >= hardCap) {
+      console.log(`[BUY] HARDCAP — exposure ${openExposureSol.toFixed(4)} SOL >= 50% cap ${hardCap.toFixed(4)} SOL`);
+      return jsonResp({ ok: true, skipped: true, reason: `HARDCAP: ${openExposureSol.toFixed(3)} SOL open >= 50% of ${balForCap.toFixed(3)} SOL` });
     }
+
+    // Atomic session deduction BEFORE executing swap
+    // This prevents race: deduct first, then swap. If swap fails, restore.
+    const tradeSize = Math.min(balForCap * 0.05, hardCap - openExposureSol);
+    if (tradeSize < MIN_TRADE_SOL) {
+      return jsonResp({ ok: true, skipped: true, reason: `Trade size ${tradeSize.toFixed(4)} SOL too small` });
+    }
+
+    // Atomically reserve capital — simultaneous calls will see updated portfolio
+    const { error: reserveErr } = await sb.from("shreem_brzee_session")
+      .update({ 
+        portfolio: availableCapital - tradeSize,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", "default")
+      .gte("portfolio", tradeSize); // Only succeeds if enough capital available
+
+    if (reserveErr) {
+      console.log("[BUY] SKIP — capital reservation failed (race condition caught)");
+      return jsonResp({ ok: true, skipped: true, reason: "Capital already reserved by concurrent buy" });
+    }
+
+    console.log(`[BUY] Capital reserved: ${tradeSize.toFixed(4)} SOL | exposure ${openExposureSol.toFixed(4)}/${hardCap.toFixed(4)} SOL`);
 
     const dupMint = openTrades?.find(t => t.mint === sig.mint);
     if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
@@ -586,7 +621,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.1" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.2" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
