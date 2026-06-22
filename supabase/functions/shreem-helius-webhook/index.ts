@@ -282,7 +282,6 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   } catch (e: any) {
     console.error(`[INLINE-BUY] ❌ ${signal.symbol ?? signal.mint.slice(0,8)} swap failed: ${e.message}`);
     // Refund the reservation so the next signal can use the SOL
-    await sb.rpc as any; // no-op typing guard
     try {
       const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
       const curPort = Number(cur?.portfolio || 0);
