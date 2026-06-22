@@ -182,6 +182,9 @@ export default function ShreemBrzeePerformance() {
 
   // Live prices for open positions (USD per token)
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
+  const [liveLiquidity, setLiveLiquidity] = useState<Record<string,number>>({});
+  // Below this USD liquidity, the price feed is unreliable and P&L is flagged "estimated"
+  const LOW_LIQ_USD = 10_000;
   const [pricesFetched, setPricesFetched] = useState(false);
 
   const [edgeOk, setEdgeOk] = useState<boolean|null>(null);
