@@ -470,14 +470,10 @@ async function autoRegisterHelius() {
   _registered = true;
   try {
     const SELF = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-    // CREDIT SAFETY: Only 5 wallets — prevents credit burn (97.5% reduction vs 19 wallets)
-    const WH = [
-      "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
-      "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  // Doji
-      "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
-      "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  // trunoest
-      "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", // clukz
-    ];
+    // Watch ALL whales, ALL tx types. Helius enhanced classifies pump.fun bonding-curve
+    // trades as UNKNOWN (not SWAP), so filtering on "SWAP" silently drops most whales.
+    // Using "Any" captures both Jupiter swaps and raw pump.fun buys/sells.
+    const WH = Object.keys(WHALE_WALLETS);
     const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
     if (listR.ok) {
       const hooks = await listR.json().catch(()=>[]);
@@ -488,7 +484,7 @@ async function autoRegisterHelius() {
     }
     const r = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({webhookURL:SELF,transactionTypes:["SWAP"],accountAddresses:WH,webhookType:"enhanced",txnStatus:"success"})
+      body:JSON.stringify({webhookURL:SELF,transactionTypes:["Any"],accountAddresses:WH,webhookType:"enhanced",txnStatus:"success"})
     });
     const j = await r.json().catch(()=>({}));
     console.log(j?.webhookID ? `[helius] ✅ registered ${j.webhookID} wallets=${j.accountAddresses?.length}` : `[helius] ❌ ${JSON.stringify(j).slice(0,100)}`);
