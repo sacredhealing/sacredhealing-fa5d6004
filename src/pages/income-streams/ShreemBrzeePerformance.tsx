@@ -362,6 +362,12 @@ export default function ShreemBrzeePerformance() {
         const n = Number(p);
         if (n > 0) updated[m] = n;
       }
+      const updatedLiq: Record<string, number> = {};
+      for (const [m, l] of Object.entries<any>(j?.liquidity || {})) {
+        const n = Number(l);
+        if (!Number.isNaN(n) && n >= 0) updatedLiq[m] = n;
+      }
+      if (Object.keys(updatedLiq).length) setLiveLiquidity(prev => ({ ...prev, ...updatedLiq }));
       if (Object.keys(updated).length) {
         setLivePrices(prev => ({ ...prev, ...updated }));
         // Backfill entry_price for positions that opened without one (pending fills)
