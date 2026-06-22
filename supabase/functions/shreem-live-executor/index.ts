@@ -18,7 +18,7 @@ import { Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const JUPITER   = "https://lite-api.jup.ag/swap/v1";
+const JUPITER   = "https://api.jup.ag/swap/v1";
 const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
@@ -324,7 +324,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
 // ── Price fetch ───────────────────────────────────────────────────────────────
 async function fetchPriceUsd(mint: string): Promise<number> {
   try {
-    const r = await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`, { signal: timeoutSignal(5000) });
+    const r = await fetch(`https://api.jup.ag/price/v2?ids=${mint}`, { signal: timeoutSignal(5000) });
     if (r.ok) {
       const j = await r.json();
       const entry: any = Object.values(j || {})[0];
@@ -530,7 +530,7 @@ serve(async (req) => {
     // STEP 4: Fetch token decimals
     let tokenDecimals = 6;
     try {
-      const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
+      const metaR = await fetch(`https://api.jup.ag/price/v2?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
       if (metaR.ok) {
         const metaJ = await metaR.json();
         const d = (Object.values(metaJ || {})[0] as any)?.decimals;
