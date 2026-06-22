@@ -491,24 +491,44 @@ async function runCron(): Promise<object> {
       continue;
     }
 
-    // Stop-loss: need current price
+    // Stop-loss + trailing stop: need current price
     if (entry > 0 && pos.mint) {
       const price = await fetchPrice(pos.mint);
       if (price > 0) {
         const pnlPct = (price - entry) / entry * 100;
+
+        // Track peak price (highest observed since entry)
+        const prevPeak = Number(pos.peak_price) || entry;
+        const peak     = Math.max(prevPeak, price);
+        const peakPct  = (peak - entry) / entry * 100;
+
+        // Hard stop-loss: -30% from entry
         if (pnlPct <= -30) {
           await closeTrade(pos, "stop_loss", price);
           closed++; results.push({ id: pos.id, reason: "stop_loss", pnlPct: pnlPct.toFixed(1) });
           continue;
         }
-        // Update live PNL in DB so frontend always sees current value even without browser
+
+        // Trailing stop: once peak gain >= 30%, lock in 50% of peak gain
+        if (peakPct >= 30) {
+          const trailFloorPct = peakPct * 0.5;
+          if (pnlPct <= trailFloorPct) {
+            await closeTrade(pos, "trailing_stop", price);
+            closed++; results.push({ id: pos.id, reason: "trailing_stop", pnlPct: pnlPct.toFixed(1), peakPct: peakPct.toFixed(1), floorPct: trailFloorPct.toFixed(1) });
+            continue;
+          }
+        }
+
+        // Update live PNL + peak in DB so frontend always sees current value even without browser
         await sb.from("shreem_brzee_paper_trades").update({
           exit_price: price, // store current price as "exit_price" for display
+          peak_price: peak,
           pnl_pct:    pnlPct,
           pnl_sol:    Number(pos.amount_sol || 0) * (pnlPct / 100),
         }).eq("id", pos.id).eq("status", "open"); // only updates if still open
       }
     }
+
   }
 
   return { checked: openPos.length, closed, results };

@@ -6782,6 +6782,7 @@ export type Database = {
           mult_source: string | null
           net_sol: number | null
           opened_at: string | null
+          peak_price: number | null
           pnl_pct: number | null
           pnl_sol: number | null
           portfolio_after: number | null
@@ -6812,6 +6813,7 @@ export type Database = {
           mult_source?: string | null
           net_sol?: number | null
           opened_at?: string | null
+          peak_price?: number | null
           pnl_pct?: number | null
           pnl_sol?: number | null
           portfolio_after?: number | null
@@ -6842,6 +6844,7 @@ export type Database = {
           mult_source?: string | null
           net_sol?: number | null
           opened_at?: string | null
+          peak_price?: number | null
           pnl_pct?: number | null
           pnl_sol?: number | null
           portfolio_after?: number | null
