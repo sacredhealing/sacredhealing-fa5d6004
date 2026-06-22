@@ -22,12 +22,14 @@ const JUPITER   = "https://lite-api.jup.ag/swap/v1";
 const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
-// ── SAFETY LIMITS ─────────────────────────────────────────────────────────────
+// ── SAFETY LIMITS ── HARD-LOCKED, DO NOT OVERRIDE ─────────────────────────────
 const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
 const MIN_SIGNAL_SOL  = 0.1;
-const STOP_LOSS_PCT   = -25;
-const SLIPPAGE_BPS    = 2000;  // 20% — optimal for pump.fun copy trading at 0.03 SOL position size
+const STOP_LOSS_PCT   = -25;       // 🔒 FIXED 25% stop loss — never overridden
+const MAX_EXPOSURE_PCT = 0.50;     // 🔒 FIXED 50% capital cap — never overridden
+const SLIPPAGE_BPS    = 2000;
+
 
 function timeoutSignal(ms: number) {
   const ctrl = new AbortController();
