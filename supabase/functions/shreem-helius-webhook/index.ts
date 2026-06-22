@@ -628,7 +628,7 @@ serve(async (req) => {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           webhookURL: SELF_URL,
-          transactionTypes: ["SWAP"],
+          transactionTypes: ["Any"],
           accountAddresses: WALLETS,
           webhookType: "enhanced",
           txnStatus: "success"
