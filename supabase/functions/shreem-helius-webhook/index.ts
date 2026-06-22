@@ -16,6 +16,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import nacl from "https://esm.sh/tweetnacl@1.0.3";
+import bs58 from "https://esm.sh/bs58@5.0.0";
+import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
+import { Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -72,6 +76,219 @@ async function fetchPrice(mint: string): Promise<number> {
     if (r.ok) { const p = parseFloat((await r.json())?.data?.[mint]?.price); if (p > 0) return p; }
   } catch {}
   return 0;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// INLINE EXECUTION — Jupiter swap directly in webhook handler (sub-5s target)
+// ═════════════════════════════════════════════════════════════════════════════
+const JUPITER       = "https://lite-api.jup.ag/swap/v1";
+const SLIPPAGE_BPS  = 2000;
+const MIN_TRADE_SOL = 0.01;
+const MAX_TRADE_SOL = 0.1;
+const HELIUS_RPC    = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const READ_RPCS     = [
+  "https://api.mainnet-beta.solana.com",
+  "https://rpc.ankr.com/solana",
+  HELIUS_RPC,
+];
+const JITO_ENDPOINTS = [
+  "https://mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/bundles",
+];
+
+function timeoutSignal(ms: number) {
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
+
+interface KP { publicKey: Uint8Array; secretKey: Uint8Array }
+let _kpCache: KP | null = null;
+function loadKeypair(): KP | null {
+  if (_kpCache) return _kpCache;
+  const raw = Deno.env.get("SHREEM_BOT_KEYPAIR");
+  if (!raw) { console.error("[KEYPAIR] SHREEM_BOT_KEYPAIR not set"); return null; }
+  try {
+    const t = raw.trim();
+    let sk: Uint8Array;
+    if (t.startsWith("["))    sk = new Uint8Array(JSON.parse(t));
+    else if (t.includes(",")) sk = new Uint8Array(t.split(",").map(Number));
+    else                      sk = bs58.decode(t);
+    if (sk.length !== 64) { console.error("[KEYPAIR] Bad length:", sk.length); return null; }
+    const kp = nacl.sign.keyPair.fromSecretKey(sk);
+    _kpCache = { publicKey: kp.publicKey, secretKey: kp.secretKey };
+    console.log("[KEYPAIR] OK pubkey:", bs58.encode(kp.publicKey).slice(0, 8) + "...");
+    return _kpCache;
+  } catch (e: any) { console.error("[KEYPAIR] Failed:", e.message); return null; }
+}
+
+async function rpcCall(method: string, params: unknown[]) {
+  for (const url of READ_RPCS) {
+    try {
+      const r = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+        signal: timeoutSignal(6000),
+      });
+      const j = await r.json();
+      if (j.error?.code === -32429 || j.error?.code === 429) continue;
+      if (j.error) throw new Error(`RPC ${method}: ${j.error.message}`);
+      return j.result;
+    } catch (e: any) { console.warn(`[RPC] ${url}: ${e.message}`); }
+  }
+  throw new Error(`RPC ${method} failed on all endpoints`);
+}
+
+async function jupQuote(input: string, output: string, amount: number) {
+  const url = `${JUPITER}/quote?inputMint=${input}&outputMint=${output}&amount=${amount}&slippageBps=${SLIPPAGE_BPS}&dynamicSlippage=true`;
+  const r = await fetch(url, { signal: timeoutSignal(8000) });
+  if (!r.ok) throw new Error(`Jupiter quote ${r.status}`);
+  return r.json();
+}
+
+async function jupSwapTx(quote: unknown, wallet: string): Promise<string> {
+  const r = await fetch(`${JUPITER}/swap`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      quoteResponse: quote,
+      userPublicKey: wallet,
+      wrapAndUnwrapSol: true,
+      dynamicComputeUnitLimit: true,
+      computeUnitPriceMicroLamports: 1000000,
+      skipUserAccountsRpcCalls: true,
+      useSharedAccounts: false,
+      asLegacyTransaction: false,
+      dynamicSlippage: { maxBps: 3000 },
+    }),
+    signal: timeoutSignal(8000),
+  });
+  if (!r.ok) throw new Error(`Jupiter swap ${r.status}`);
+  return (await r.json()).swapTransaction as string;
+}
+
+async function signAndSend(txB64: string, kp: KP): Promise<string> {
+  const keypair = Keypair.fromSecretKey(kp.secretKey);
+  const tx = VersionedTransaction.deserialize(Buffer.from(txB64, "base64"));
+  tx.sign([keypair]);
+  const serialized = Buffer.from(tx.serialize()).toString("base64");
+
+  // Jito first — race endpoints in parallel for lowest latency
+  const jitoBody = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "sendBundle", params: [[serialized]] });
+  const jitoPromises = JITO_ENDPOINTS.map((ep) =>
+    fetch(ep, { method: "POST", headers: { "Content-Type": "application/json" }, body: jitoBody, signal: timeoutSignal(5000) })
+      .then((r) => r.json().then((j) => ({ ep, j })))
+      .catch((e) => ({ ep, j: { error: e.message } }))
+  );
+  try {
+    const winners = await Promise.allSettled(jitoPromises);
+    for (const w of winners) {
+      if (w.status === "fulfilled" && (w.value as any).j?.result) {
+        // Derive Solana tx signature from the signed transaction (base58 of first signature)
+        const sigBytes = tx.signatures[0];
+        const txSig = bs58.encode(sigBytes);
+        console.log(`[Jito] Bundle accepted via ${(w.value as any).ep.split(".")[0].split("//")[1]} — tx=${txSig.slice(0,16)}`);
+        return txSig;
+      }
+    }
+  } catch {}
+
+  // Fallback: standard RPC
+  console.log("[RPC-FALLBACK] Sending via standard RPC");
+  return await rpcCall("sendTransaction", [serialized, {
+    encoding: "base64", skipPreflight: true, maxRetries: 3, preflightCommitment: "confirmed",
+  }]);
+}
+
+// ── Inline BUY execution: swap first, DB writes after ──────────────────────
+// Returns immediately after Jito accepts the bundle — no waitConfirm.
+// Stop-loss cron reconciles 'unconfirmed' status later.
+async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; skipped?: string; tx?: string; size_sol?: number; latency_ms?: number; error?: string }> {
+  const t0 = Date.now();
+  const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+
+  if (!signal?.mint)            return { ok: true, skipped: "no_mint" };
+  if (signal.mint === USDC)     return { ok: true, skipped: "USDC" };
+  if (signal.mint === SOL_MINT) return { ok: true, skipped: "SOL_MINT" };
+
+  // Duplicate mint check — don't double-position
+  const { data: existing } = await sb.from("shreem_brzee_live_trades")
+    .select("id").eq("mint", signal.mint)
+    .in("status", ["open","pending","unconfirmed","closing"]).limit(1);
+  if (existing?.length) return { ok: true, skipped: "duplicate_mint" };
+
+  // Duplicate signature check
+  const { data: dupSig } = await sb.from("shreem_brzee_live_trades")
+    .select("id").eq("sig", signal.sig + "_live").limit(1);
+  if (dupSig?.length) return { ok: true, skipped: "duplicate_sig" };
+
+  const portfolio = Number(sess.portfolio || 0);
+  if (portfolio <= MIN_TRADE_SOL) return { ok: true, skipped: "no_portfolio" };
+
+  // 50% exposure cap (computed from start_balance to avoid drift from realized PnL)
+  const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
+    .select("amount_sol").in("status", ["open","pending","unconfirmed","closing"]);
+  const exposure = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+  const startBal = Number(sess.start_balance || (portfolio + exposure)) || (portfolio + exposure);
+  const cap = startBal * 0.50;
+  if (exposure >= cap) return { ok: true, skipped: `cap_50pct(${exposure.toFixed(3)}>=${cap.toFixed(3)})` };
+
+  const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, portfolio * 0.05), cap - exposure);
+  if (size < MIN_TRADE_SOL) return { ok: true, skipped: "size_too_small" };
+
+  const kp = loadKeypair();
+  if (!kp) return { ok: false, error: "no_keypair" };
+  const walletPub = bs58.encode(kp.publicKey);
+  const lamports = Math.floor(size * LAMPORTS);
+
+  // Jupiter quote → swap → send (no waitConfirm — that's what cron reconciles)
+  let txSig = "";
+  let quote: any;
+  try {
+    quote = await jupQuote(SOL_MINT, signal.mint, lamports);
+    const swapTx = await jupSwapTx(quote, walletPub);
+    txSig = await signAndSend(swapTx, kp);
+  } catch (e: any) {
+    console.error(`[INLINE-BUY] ❌ ${signal.symbol ?? signal.mint.slice(0,8)} swap failed: ${e.message}`);
+    return { ok: false, error: e.message };
+  }
+
+  const swapMs = Date.now() - t0;
+  console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms`);
+
+  // ── DB writes AFTER swap, in parallel ─────────────────────────────────────
+  const tradeId  = crypto.randomUUID();
+  const openedAt = new Date(t0).toISOString();
+  const tradeRow = {
+    id: tradeId, session_id: "default",
+    sig: signal.sig + "_live",
+    mint: signal.mint, symbol: signal.symbol, label: signal.label, wallet: signal.wallet,
+    action: "BUY",
+    amount_sol: size, gross_sol: size, net_sol: size,
+    status: "unconfirmed",   // cron-stoploss reconciles to 'open' / 'failed'
+    opened_at: openedAt, created_at: openedAt,
+    tx_sig: txSig,
+    tokens_received: Number(quote?.outAmount || 0),
+    slippage_pct: SLIPPAGE_BPS / 100,
+  };
+  const signalRow = {
+    sig: signal.sig, wallet: signal.wallet, label: signal.label,
+    action: "BUY", mint: signal.mint, symbol: signal.symbol,
+    amount_sol: signal.amount_sol, token_amount: signal.token_amount,
+    is_pump_fun: signal.is_pump_fun, block_time: signal.block_time,
+    created_at: signal.created_at, live_processed: true,
+  };
+
+  await Promise.all([
+    sb.from("shreem_brzee_live_trades").upsert(tradeRow, { onConflict: "sig" }),
+    sb.from("shreem_brzee_signals").upsert(signalRow, { onConflict: "sig" }),
+    sb.from("shreem_brzee_session").update({
+      portfolio: portfolio - size,
+      updated_at: new Date().toISOString(),
+    }).eq("id", "default"),
+  ]).catch((e: any) => console.error("[INLINE-BUY] post-swap DB write:", e?.message));
+
+  return { ok: true, tx: txSig, size_sol: size, latency_ms: swapMs };
 }
 
 // ── Kelly position sizing ─────────────────────────────────────────────────────
