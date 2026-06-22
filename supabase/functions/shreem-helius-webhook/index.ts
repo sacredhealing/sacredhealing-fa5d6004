@@ -608,16 +608,9 @@ serve(async (req) => {
   // Self-register Helius webhook with current key and wallets
   if (req.method === "POST" && path.endsWith("/register-helius")) {
     const SELF_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-helius-webhook";
-    // CREDIT SAFETY: Only 5 wallets in Helius to prevent credit burn (97.5% reduction)
-    // These 5 were manually selected as highest quality traders
-    // To add more wallets, do it manually via Helius dashboard — NOT via code
-    const WALLETS = [
-      "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
-      "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  // Doji
-      "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
-      "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  // trunoest
-      "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", // clukz
-    ];
+    // All tracked whales. Helius enhanced webhook bills per *delivered* event,
+    // and most whales fire <5 SWAPs/hour, so adding 21 wallets is fine.
+    const WALLETS = Object.keys(WHALE_WALLETS);
     try {
       // Delete existing webhooks
       const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`);
