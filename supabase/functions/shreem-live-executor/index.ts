@@ -27,7 +27,7 @@ const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
 const MIN_SIGNAL_SOL  = 0.1;
 const STOP_LOSS_PCT   = -25;
-const SLIPPAGE_BPS    = 3500;  // 35% base — pump.fun memes move 20-40% in the 1-2s between quote & land
+const SLIPPAGE_BPS    = 2000;  // 20% — optimal for pump.fun copy trading at 0.03 SOL position size
 
 function timeoutSignal(ms: number) {
   const ctrl = new AbortController();
@@ -128,11 +128,11 @@ async function jupSwapTx(quote: unknown, wallet: string) {
       userPublicKey: wallet,
       wrapAndUnwrapSol: true,
       dynamicComputeUnitLimit: true,
-      computeUnitPriceMicroLamports: 2500000,
+      computeUnitPriceMicroLamports: 1000000,
       skipUserAccountsRpcCalls: true,
       useSharedAccounts: false,
       asLegacyTransaction: false,
-      dynamicSlippage: { maxBps: 5000 }
+      dynamicSlippage: { maxBps: 3000 }
     }),
     signal: timeoutSignal(12000),
   });
@@ -362,7 +362,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.0", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.1", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -478,6 +478,22 @@ serve(async (req) => {
     const dupMint = openTrades?.find(t => t.mint === sig.mint);
     if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
 
+    // Also check signals table — if another whale bought this mint in last 5 min
+    // and it was processed, we already bought it (race condition protection)
+    const fiveMinAgo = new Date(Date.now() - 300000).toISOString();
+    const { data: recentMintSignal } = await sb.from("shreem_brzee_signals")
+      .select("id,label")
+      .eq("mint", sig.mint)
+      .eq("action", "BUY")
+      .eq("live_processed", true)
+      .gte("created_at", fiveMinAgo)
+      .neq("wallet", sig.wallet)  // different whale, same token
+      .limit(1);
+    if (recentMintSignal?.length) {
+      console.log(`[BUY] SKIP — ${sig.mint.slice(0,8)} already bought via ${recentMintSignal[0].label} in last 5min`);
+      return jsonResp({ ok: true, skipped: true, reason: `Token already bought via ${recentMintSignal[0].label}` });
+    }
+
     const { data: dupSig } = await sb.from("shreem_brzee_live_trades").select("id").eq("sig", sig.sig + "_live").limit(1);
     if (dupSig?.length) return jsonResp({ ok: true, skipped: true, reason: "Signal already executed" });
 
@@ -570,7 +586,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.0" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.1" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
