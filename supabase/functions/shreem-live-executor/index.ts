@@ -1,5 +1,5 @@
 // supabase/functions/shreem-live-executor/index.ts
-// SHREEM BRZEE — Safe Live Executor v3.9 — JITO + pump.fun fix
+// SHREEM BRZEE — Safe Live Executor v4.0 — dynamic slippage
 // v3 changes:
 //   • SELL close: marks trade status='closing' before swap, then 'closed'/'failed' after
 //     → if executor crashes mid-swap, trade stays 'closing' not stuck 'open'
@@ -113,7 +113,8 @@ async function rpc(method: string, params: unknown[]) {
 
 // ── Jupiter ───────────────────────────────────────────────────────────────────
 async function jupQuote(inputMint: string, outputMint: string, amount: number, slippage = SLIPPAGE_BPS) {
-  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}`;
+  // Use dynamic slippage for pump.fun tokens — Jupiter calculates optimal per-token
+  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}&dynamicSlippage=true`;
   const r = await fetch(url, { signal: timeoutSignal(10000) });
   if (!r.ok) throw new Error(`Jupiter quote ${r.status}: ${await r.text()}`);
   return r.json();
@@ -128,9 +129,10 @@ async function jupSwapTx(quote: unknown, wallet: string) {
       wrapAndUnwrapSol: true,
       dynamicComputeUnitLimit: true,
       computeUnitPriceMicroLamports: 1000000,
-      skipUserAccountsRpcCalls: true,      // skip ATA pre-checks that cause 0x1788
-      useSharedAccounts: false,             // pump.fun simple AMMs incompatible with shared accounts
-      asLegacyTransaction: false,           // versioned tx for better routing
+      skipUserAccountsRpcCalls: true,
+      useSharedAccounts: false,
+      asLegacyTransaction: false,
+      dynamicSlippage: { maxBps: 3000 }
     }),
     signal: timeoutSignal(12000),
   });
@@ -360,7 +362,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v3.9", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.0", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -568,7 +570,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v3.9" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.0" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
