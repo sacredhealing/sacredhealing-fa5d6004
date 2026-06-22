@@ -7,12 +7,11 @@ const cors = {
 };
 
 // In-memory cache per isolate (best-effort)
-const cache = new Map<string, { price: number; ts: number }>();
+const cache = new Map<string, { price: number; liquidity: number; ts: number }>();
 const TTL = 8_000;
 
-async function fetchDex(addresses: string[]): Promise<Record<string, number>> {
-  const out: Record<string, number> = {};
-  // dexscreener accepts up to 30 comma-separated
+async function fetchDex(addresses: string[]): Promise<Record<string, { price: number; liquidity: number }>> {
+  const out: Record<string, { price: number; liquidity: number }> = {};
   for (let i = 0; i < addresses.length; i += 30) {
     const chunk = addresses.slice(i, i + 30);
     try {
@@ -22,7 +21,6 @@ async function fetchDex(addresses: string[]): Promise<Record<string, number>> {
       if (!r.ok) continue;
       const j = await r.json();
       const pairs: any[] = j?.pairs || [];
-      // group by baseToken.address, pick most liquid
       const byMint: Record<string, any[]> = {};
       for (const p of pairs) {
         const addr = p?.baseToken?.address;
@@ -33,7 +31,10 @@ async function fetchDex(addresses: string[]): Promise<Record<string, number>> {
       }
       for (const [addr, arr] of Object.entries(byMint)) {
         arr.sort((a, b) => parseFloat(b?.liquidity?.usd || 0) - parseFloat(a?.liquidity?.usd || 0));
-        out[addr] = parseFloat(arr[0].priceUsd);
+        out[addr] = {
+          price: parseFloat(arr[0].priceUsd),
+          liquidity: parseFloat(arr[0]?.liquidity?.usd || 0) || 0,
+        };
       }
     } catch (e) {
       console.error("[token-price-batch] dex chunk error:", e);
