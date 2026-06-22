@@ -1,0 +1,1 @@
+ALTER TABLE public.shreem_brzee_paper_trades ADD COLUMN IF NOT EXISTS peak_price numeric;
