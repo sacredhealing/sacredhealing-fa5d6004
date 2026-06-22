@@ -27,7 +27,7 @@ const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
 const MIN_SIGNAL_SOL  = 0.1;
 const STOP_LOSS_PCT   = -25;
-const SLIPPAGE_BPS    = 2000;  // 20% — optimal for pump.fun copy trading at 0.03 SOL position size
+const SLIPPAGE_BPS    = 3500;  // 35% base — pump.fun memes move 20-40% in the 1-2s between quote & land
 
 function timeoutSignal(ms: number) {
   const ctrl = new AbortController();
@@ -128,11 +128,11 @@ async function jupSwapTx(quote: unknown, wallet: string) {
       userPublicKey: wallet,
       wrapAndUnwrapSol: true,
       dynamicComputeUnitLimit: true,
-      computeUnitPriceMicroLamports: 1000000,
+      computeUnitPriceMicroLamports: 2500000,
       skipUserAccountsRpcCalls: true,
       useSharedAccounts: false,
       asLegacyTransaction: false,
-      dynamicSlippage: { maxBps: 3000 }
+      dynamicSlippage: { maxBps: 5000 }
     }),
     signal: timeoutSignal(12000),
   });
