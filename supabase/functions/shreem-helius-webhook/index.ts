@@ -214,6 +214,16 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   if (signal.mint === SOL_MINT)                       return { ok: true, skipped: "SOL_MINT" };
   if (signal.action && signal.action !== "BUY")       return { ok: true, skipped: "not_a_buy" };
 
+  // STALE SIGNAL CHECK: skip if signal is older than 60 seconds
+  // Entering a trade that already moved significantly = buying the top
+  if (signal.block_time) {
+    const signalAgeMs = Date.now() - (Number(signal.block_time) * 1000);
+    if (signalAgeMs > 60000) {
+      console.log(`[INLINE-BUY] ⏭ ${signal.mint.slice(0,8)} — signal ${(signalAgeMs/1000).toFixed(0)}s old, skipping`);
+      return { ok: true, skipped: `stale_signal_${(signalAgeMs/1000).toFixed(0)}s` };
+    }
+  }
+
   // Load keypair first (sync, fast) — we need walletPub for the parallel batch.
   const kp = loadKeypair();
   if (!kp) return { ok: false, error: "no_keypair" };
@@ -515,8 +525,10 @@ async function runCron(): Promise<object> {
   const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
   if (!sess?.started_at || sess?.stopped_at) return { skipped: "session not running" };
 
-  const { data: openPos } = await sb.from("shreem_brzee_paper_trades")
-    .select("*").eq("status", "open");
+  // CRITICAL FIX: use live_trades table in live mode, paper_trades in paper mode
+  const tradeTable = sess?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
+  const { data: openPos } = await sb.from(tradeTable)
+    .select("*").in("status", ["open", "unconfirmed"]);
 
   if (!openPos?.length) return { checked: 0 };
 
@@ -547,7 +559,20 @@ async function runCron(): Promise<object> {
 
         // Hard stop-loss: -30% from entry
         if (pnlPct <= -30) {
-          await closeTrade(pos, "stop_loss", price);
+          // In live mode: call executor to do the actual on-chain sell
+        if (sess?.mode === "live") {
+          try {
+            await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+              body: JSON.stringify({ action: "close", trade_id: pos.id, reason: "stop_loss" }),
+              signal: AbortSignal.timeout(25000),
+            });
+          } catch {}
+          closed++; results.push({ id: pos.id, reason: "stop_loss", pnlPct: pnlPct.toFixed(1) });
+          continue;
+        }
+        await closeTrade(pos, "stop_loss", price);
           closed++; results.push({ id: pos.id, reason: "stop_loss", pnlPct: pnlPct.toFixed(1) });
           continue;
         }
@@ -555,20 +580,32 @@ async function runCron(): Promise<object> {
         // Trailing stop: once peak gain >= 30%, lock in 50% of peak gain
         if (peakPct >= 30) {
           const trailFloorPct = peakPct * 0.5;
+          // In live mode: call executor to do actual on-chain sell
           if (pnlPct <= trailFloorPct) {
-            await closeTrade(pos, "trailing_stop", price);
+            if (sess?.mode === "live") {
+              try {
+                await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+                  body: JSON.stringify({ action: "close", trade_id: pos.id, reason: "trailing_stop" }),
+                  signal: AbortSignal.timeout(25000),
+                });
+              } catch {}
+            } else {
+              await closeTrade(pos, "trailing_stop", price);
+            }
             closed++; results.push({ id: pos.id, reason: "trailing_stop", pnlPct: pnlPct.toFixed(1), peakPct: peakPct.toFixed(1), floorPct: trailFloorPct.toFixed(1) });
             continue;
           }
         }
 
-        // Update live PNL + peak in DB so frontend always sees current value even without browser
-        await sb.from("shreem_brzee_paper_trades").update({
-          exit_price: price, // store current price as "exit_price" for display
+        // Update peak price in DB
+        await sb.from(tradeTable).update({
+          exit_price: price,
           peak_price: peak,
           pnl_pct:    pnlPct,
           pnl_sol:    Number(pos.amount_sol || 0) * (pnlPct / 100),
-        }).eq("id", pos.id).eq("status", "open"); // only updates if still open
+        }).eq("id", pos.id).eq("status", "open");
       }
     }
 
@@ -1366,6 +1403,7 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e?.message ?? String(e) });
   }
 });
+
 
 
 
