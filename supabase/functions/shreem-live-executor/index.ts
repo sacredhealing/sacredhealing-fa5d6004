@@ -386,6 +386,19 @@ serve(async (req) => {
       console.warn("[cron-stoploss] Unauthorized call — bad or missing secret");
       return jsonResp({ ok: false, error: "unauthorized" }, 401);
     }
+    // Cleanup: mark unconfirmed trades older than 5 minutes as failed/closed
+    // so they stop blocking new buys and don't show as ghost open positions.
+    const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString();
+    const { data: stale, error: staleErr } = await sb
+      .from("shreem_brzee_live_trades")
+      .update({ status: "closed", sell_reason: "unconfirmed_timeout", closed_at: new Date().toISOString() })
+      .eq("status", "unconfirmed")
+      .lt("opened_at", fiveMinAgo)
+      .select("id");
+    const staleClosed = stale?.length ?? 0;
+    if (staleErr) console.warn("[cron-stoploss] unconfirmed cleanup error:", staleErr.message);
+    else if (staleClosed) console.log(`[cron-stoploss] cleaned ${staleClosed} stale unconfirmed trades`);
+
     const kp = loadKeypair();
     if (!kp) return jsonResp({ ok: false, error: "no keypair" });
     const wallet = bs58.encode(kp.publicKey);
@@ -393,7 +406,8 @@ serve(async (req) => {
     const { data: openPos } = await sb.from("shreem_brzee_live_trades")
       .select("*").in("status", ["open","unconfirmed"]);
 
-    if (!openPos?.length) return jsonResp({ ok: true, checked: 0 });
+    if (!openPos?.length) return jsonResp({ ok: true, checked: 0, staleClosed });
+
 
     let closed = 0;
     const results: any[] = [];
