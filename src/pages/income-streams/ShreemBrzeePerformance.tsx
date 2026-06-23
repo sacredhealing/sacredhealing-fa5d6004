@@ -150,11 +150,13 @@ export default function ShreemBrzeePerformance() {
   const [botBalSol, setBotBalSol]   = useState<number>(0);
   const [botBalFetched, setBotBalFetched] = useState(false);
 
-  // Live prices for open positions (USD per token)
+  // Live prices for open positions (USD per token) — derived from real on-chain
+  // Jupiter quote of held tokens → SOL. Matches Phantom exactly (real depth, real
+  // held amount). NO DexScreener/price-batch polling.
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
-  const [liveLiquidity, setLiveLiquidity] = useState<Record<string,number>>({});
-  // Below this USD liquidity, the price feed is unreliable and P&L is flagged "estimated"
-  const LOW_LIQ_USD = 10_000;
+  // Exact on-chain token balance per mint (uiAmount), fetched once at open via
+  // getTokenAccountsByOwner. Drives the Jupiter quote-out sizing.
+  const [heldTokens, setHeldTokens] = useState<Record<string,number>>({});
   const [pricesFetched, setPricesFetched] = useState(false);
 
   const [edgeOk, setEdgeOk] = useState<boolean|null>(null);
@@ -169,9 +171,6 @@ export default function ShreemBrzeePerformance() {
   const [closingIds, setClosingIds]   = useState<Set<string>>(new Set());
 
   const [kolPeriod, setKolPeriod]   = useState<"7D"|"30D">("30D");
-  const [trackedWhalesAddrs, setTrackedWhalesAddrs] = useState<Set<string>>(
-    new Set(KOL_LIST.map(k => k.addr))
-  );
 
   const [liveMode, setLiveMode]       = useState(false);
   const [liveConfirm, setLiveConfirm] = useState(false);
