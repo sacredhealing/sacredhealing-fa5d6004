@@ -303,73 +303,75 @@ export default function ShreemBrzeePerformance() {
     // If bal=0, keep last known — but executor health always returns real value so this is rare
   }, [botBalFetched]);
 
-  // ── FIX: Live token prices — entry_price is USD, livePrices is USD → same unit
-  const PRICE_URL = `${EDGE_BASE.replace(/\/[^/]+$/, "")}/token-price-batch`;
+  // ── On-chain P&L — matches Phantom exactly ─────────────────────────────────
+  // 1. Once per position: getTokenAccountsByOwner via Helius → exact held amount.
+  // 2. Every 5s per position: Jupiter /quote held_tokens → SOL (real depth).
+  //    USD price per token = (outSol / heldTokens) * solUsd.
+  // NO DexScreener calls. NO token-price-batch. Zero stale price feeds.
+  const TOKEN_BAL_URL = `${EDGE_BASE.replace(/\/[^/]+$/, "")}/shreem-token-balance`;
+  const BOT_WALLET_REF = useRef<string>(BOT_WALLET);
+
+  const fetchHeldAmount = useCallback(async (mint: string) => {
+    try {
+      const r = await fetch(TOKEN_BAL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner: BOT_WALLET_REF.current, mint }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const j = await r.json();
+      const ui = Number(j?.uiAmount || 0);
+      const raw = Number(j?.amount || 0);
+      const dec = Number(j?.decimals || 0);
+      if (ui > 0) setHeldTokens(prev => ({ ...prev, [mint]: ui }));
+      return { ui, raw, dec };
+    } catch { return { ui: 0, raw: 0, dec: 0 }; }
+  }, [TOKEN_BAL_URL]);
+
+  const quoteTokenToSol = useCallback(async (mint: string, rawAmount: number) => {
+    if (!rawAmount || rawAmount <= 0) return 0;
+    try {
+      const url = `https://lite-api.jup.ag/swap/v1/quote?inputMint=${mint}&outputMint=So11111111111111111111111111111111111111112&amount=${Math.floor(rawAmount)}&slippageBps=300`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      if (!r.ok) return 0;
+      const j = await r.json();
+      const outLamports = Number(j?.outAmount || 0);
+      return outLamports / 1e9; // SOL
+    } catch { return 0; }
+  }, []);
 
   const updatePrices = useCallback(async () => {
     if (!openPos.length) return;
     const mints = [...new Set(openPos.map((p: any) => p.mint).filter(Boolean))];
     if (!mints.length) return;
-    // Back-fill entry_price from live price when DB update failed after swap
-    for (const pos of openPos) {
-      if ((!pos.entry_price||Number(pos.entry_price)===0) && pos.mint && (livePrices[pos.mint]||0)>0) {
-        try { await d.from("shreem_brzee_live_trades").update({entry_price:livePrices[pos.mint]}).eq("id",pos.id); } catch {}
+
+    // Ensure we have on-chain held amounts for every open position (one-time fetch per mint)
+    const missing = mints.filter(m => !heldTokens[m]);
+    const fetched: Record<string, { ui: number; raw: number; dec: number }> = {};
+    await Promise.all(missing.map(async (m) => { fetched[m] = await fetchHeldAmount(m); }));
+
+    // Quote each held token → SOL using Jupiter (real on-chain pool depth)
+    await Promise.all(mints.map(async (m) => {
+      const ui = heldTokens[m] ?? fetched[m]?.ui ?? 0;
+      const dec = fetched[m]?.dec ?? 6;
+      if (ui <= 0) return;
+      const raw = ui * Math.pow(10, dec);
+      const outSol = await quoteTokenToSol(m, raw);
+      if (outSol > 0) {
+        const usdPerToken = (outSol / ui) * solUsd;
+        setLivePrices(prev => ({ ...prev, [m]: usdPerToken }));
       }
-    }
-    try {
-      const r = await fetch(PRICE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mints }),
-        signal: AbortSignal.timeout(15000),
-        cache: "no-store",
-      });
-      if (!r.ok) return;
-      const j = await r.json();
-      const updated: Record<string, number> = {};
-      for (const [m, p] of Object.entries<any>(j?.prices || {})) {
-        const n = Number(p);
-        if (n > 0) updated[m] = n;
-      }
-      const updatedLiq: Record<string, number> = {};
-      for (const [m, l] of Object.entries<any>(j?.liquidity || {})) {
-        const n = Number(l);
-        if (!Number.isNaN(n) && n >= 0) updatedLiq[m] = n;
-      }
-      if (Object.keys(updatedLiq).length) setLiveLiquidity(prev => ({ ...prev, ...updatedLiq }));
-      if (Object.keys(updated).length) {
-        setLivePrices(prev => ({ ...prev, ...updated }));
-        // Backfill entry_price for positions that opened without one (pending fills)
-        // so P&L can start tracking from the first known price.
-        const toBackfill = openPos.filter(
-          (p: any) => p?.mint && updated[p.mint] && (!p.entry_price || Number(p.entry_price) <= 0)
-        );
-        if (toBackfill.length) {
-          for (const p of toBackfill) {
-            try {
-              await d.from("shreem_brzee_live_trades")
-                .update({ entry_price: updated[p.mint] })
-                .eq("id", p.id)
-                .or("entry_price.is.null,entry_price.eq.0");
-            } catch {}
-          }
-          setOpenPos(prev => prev.map((p: any) =>
-            updated[p.mint] && (!p.entry_price || Number(p.entry_price) <= 0)
-              ? { ...p, entry_price: updated[p.mint] }
-              : p
-          ));
-        }
-      }
-      setPricesFetched(true);
-    } catch (e) { console.warn("[prices] batch failed", e); }
-  }, [openPos, PRICE_URL]);
+    }));
+    setPricesFetched(true);
+  }, [openPos, heldTokens, fetchHeldAmount, quoteTokenToSol, solUsd]);
 
   useEffect(() => {
     updatePrices();
     if (priceIntervalRef.current) clearInterval(priceIntervalRef.current);
-    priceIntervalRef.current = setInterval(updatePrices, 8000);
+    priceIntervalRef.current = setInterval(updatePrices, 5000);
     return () => { if (priceIntervalRef.current) clearInterval(priceIntervalRef.current); };
   }, [updatePrices]);
+
 
   // ── Close a position ───────────────────────────────────────────────────────
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
