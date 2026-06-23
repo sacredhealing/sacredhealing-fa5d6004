@@ -628,46 +628,87 @@ function findWhale(tx: any): string | null {
   return null;
 }
 
+// Stablecoins to EXCLUDE as the "target" mint — they're intermediate hops
+// inside a Jupiter route. The real meme/token the whale is buying/selling
+// is always the non-SOL, non-stablecoin leg. Without this filter we record
+// USDC as the BUY/SELL mint, then the executor swaps SOL→USDC and loses.
+const STABLES = new Set<string>([
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+  "Es9vMFrzaCERmJfrF4H2FYD4KConKzMNFNcZb3yNpFP1", // USDT
+  "USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX",  // USDH
+  "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs", // UXD
+]);
+const IGNORE_AS_TARGET = new Set<string>([SOL_MINT, ...STABLES]);
+
 // Handles BOTH raw and enhanced Helius webhook formats
 function parseSwap(tx: any, wallet: string) {
-  // ── Enhanced format (has tokenTransfers array) ──────────────────────────
-  if (tx.tokenTransfers?.length) {
-    const tokenTx = tx.tokenTransfers.find((t: any) =>
-      (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.mint !== SOL_MINT
-    );
-    if (!tokenTx) return null;
-    const acctData = (tx.accountData || []).find((a: any) => a.account === wallet);
-    let amountSol = acctData?.nativeBalanceChange ? Math.abs(acctData.nativeBalanceChange) / LAMPORTS : 0;
+  // ── Enhanced format ──────────────────────────────────────────────────────
+  // Prefer events.swap when present: cleanest BUY/SELL view of the whole
+  // route. Fall back to tokenTransfers but always exclude stablecoin legs.
+  if (tx.tokenTransfers?.length || tx.events?.swap) {
+    const swap = tx.events?.swap;
+    let action: "BUY" | "SELL" | null = null;
+    let mint: string | null = null;
+    let symbol: string | null = null;
+    let tokenAmount: number | null = null;
+    let amountSol = 0;
+
+    if (swap) {
+      const out = (swap.tokenOutputs || []).find((t: any) => t.userAccount === wallet && !IGNORE_AS_TARGET.has(t.mint));
+      const inp = (swap.tokenInputs  || []).find((t: any) => t.userAccount === wallet && !IGNORE_AS_TARGET.has(t.mint));
+      if (out) {
+        action = "BUY";
+        mint = out.mint;
+        tokenAmount = Number(out.rawTokenAmount?.tokenAmount ?? out.tokenAmount ?? 0) || null;
+        if (swap.nativeInput) amountSol = Number(swap.nativeInput.amount) / LAMPORTS;
+      } else if (inp) {
+        action = "SELL";
+        mint = inp.mint;
+        tokenAmount = Number(inp.rawTokenAmount?.tokenAmount ?? inp.tokenAmount ?? 0) || null;
+        if (swap.nativeOutput) amountSol = Number(swap.nativeOutput.amount) / LAMPORTS;
+      }
+    }
+
+    // Fallback: pick the LARGEST non-stable, non-SOL tokenTransfer involving
+    // the wallet — that's the real meme leg.
+    if (!mint) {
+      const candidates = (tx.tokenTransfers || []).filter((t: any) =>
+        (t.fromUserAccount === wallet || t.toUserAccount === wallet) &&
+        !IGNORE_AS_TARGET.has(t.mint)
+      );
+      if (!candidates.length) return null; // pure stable/SOL shuffle — ignore
+      candidates.sort((a: any, b: any) => Number(b.tokenAmount || 0) - Number(a.tokenAmount || 0));
+      const tokenTx = candidates[0];
+      mint        = tokenTx.mint;
+      symbol      = tokenTx.tokenName || tokenTx.symbol || null;
+      tokenAmount = Number(tokenTx.tokenAmount || 0) || null;
+      action      = tokenTx.toUserAccount === wallet ? "BUY" : "SELL";
+    }
+
+    if (!mint || IGNORE_AS_TARGET.has(mint)) return null;
+
+    if (!amountSol) {
+      const acctData = (tx.accountData || []).find((a: any) => a.account === wallet);
+      amountSol = acctData?.nativeBalanceChange ? Math.abs(acctData.nativeBalanceChange) / LAMPORTS : 0;
+    }
     if (!amountSol || amountSol < 0.001) {
       amountSol = (tx.nativeTransfers || [])
         .filter((t: any) => (t.fromUserAccount === wallet || t.toUserAccount === wallet) && t.amount > 100_000)
         .reduce((s: number, t: any) => s + t.amount, 0) / LAMPORTS;
     }
-    // Third path: events.swap (Helius enhanced format — most reliable for Jupiter/WSOL trades)
-    // Cented uses Jupiter which routes through WSOL, so nativeBalanceChange may be 0 or tiny
-    if (!amountSol || amountSol < 0.001) {
-      const swap = tx.events?.swap;
-      if (swap) {
-        const isIn  = swap.tokenInputs?.some((t: any) => t.userAccount === wallet);
-        const isOut = swap.tokenOutputs?.some((t: any) => t.userAccount === wallet);
-        if (swap.nativeInput  && isIn)  amountSol = Number(swap.nativeInput.amount)  / LAMPORTS;
-        if (swap.nativeOutput && isOut) amountSol = Number(swap.nativeOutput.amount) / LAMPORTS;
-      }
-    }
-    // Fourth path: any accountData nativeBalanceChange across all accounts involved
-    // (covers cases where Cented is a fee payer but SOL flows via sub-accounts)
     if (!amountSol || amountSol < 0.001) {
       const allChanges = (tx.accountData || [])
         .filter((a: any) => a.nativeBalanceChange && Math.abs(a.nativeBalanceChange) > 50_000)
         .map((a: any) => Math.abs(a.nativeBalanceChange) / LAMPORTS);
       if (allChanges.length) amountSol = Math.max(...allChanges);
     }
+
     return {
-      action:     (tokenTx.toUserAccount === wallet ? "BUY" : "SELL") as "BUY"|"SELL",
-      mint:       tokenTx.mint as string,
-      symbol:     tokenTx.tokenName || tokenTx.symbol || null,
+      action: action!,
+      mint,
+      symbol,
       amountSol,
-      tokenAmount: tokenTx.tokenAmount || null,
+      tokenAmount,
       isPumpFun:  (tx.source||"").toLowerCase().includes("pump") ||
                   (tx.instructions||[]).some((ix: any) => ix.programId === "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"),
     };
