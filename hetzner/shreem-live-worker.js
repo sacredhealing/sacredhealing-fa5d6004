@@ -9,8 +9,8 @@ const http   = require('http');
 const WS     = require('ws'); // pre-installed on Hetzner
 
 const SUPABASE_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const HELIUS_KEY    = process.env.HELIUS_API_KEY;
+const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
+const HELIUS_KEY    = process.env.HELIUS_API_KEY || '7de253c3-49e2-42be-9672-23a761260f86';
 const WEBHOOK_URL   = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
 const PORT          = 3001;
 const SELL_POLL_MS  = 10000; // Check SELL signals every 10s
