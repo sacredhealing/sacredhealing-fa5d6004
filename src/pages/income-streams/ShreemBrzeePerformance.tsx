@@ -100,7 +100,7 @@ function Section({ title, badge, right, children, defaultOpen = true, accent }: 
 function Diagnostics({ running, signalCount, edgeOk }: { running: boolean; signalCount: number; edgeOk: boolean|null }) {
   const items = [
     { label:"Edge Function", status:edgeOk===null?"checking":edgeOk?"ok":"fail", detail:edgeOk===null?"Checking…":edgeOk?"Webhook reachable ✓":"Edge function unreachable" },
-    { label:"Bot Session", status:running?"ok":"warn", detail:running?"Session active — watching 20 whale wallets":"Session stopped — press START above" },
+    { label:"Bot Session", status:running?"ok":"warn", detail:running?"Session active — watching 2 whale wallets":"Session stopped — press START above" },
     { label:"Signal Pipeline", status:signalCount>0?"ok":"warn", detail:signalCount>0?`${signalCount} signals received`:"0 signals yet — waiting for whale activity" },
     { label:"Blockchain", status:"ok", detail:"Solana mainnet · Jupiter DEX · RugCheck active" },
   ];
@@ -748,7 +748,7 @@ export default function ShreemBrzeePerformance() {
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                   {[
                     { l:"SOL Price", v:`$${solUsd.toFixed(2)}`, sub:`€${(solUsd*solEur).toFixed(2)}` },
-                    { l:"Bot Status", v:isRunning?"🟢 Online":"🔴 Offline", sub:isRunning?"Watching 20 whale wallets":"Not listening" },
+                    { l:"Bot Status", v:isRunning?"🟢 Online":"🔴 Offline", sub:isRunning?"Watching 2 whale wallets":"Not listening" },
                     { l:"Signals Received", v:String(signals.length), sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:"None yet" },
                     { l:"Bot Balance", v:`${displayBalSol.toFixed(4)} SOL`, sub:`€${displayBalEur.toFixed(2)}` },
                   ].map(card => (
@@ -917,7 +917,7 @@ export default function ShreemBrzeePerformance() {
           {isRunning && (
             <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
-              Bot running · 20 whale wallets · exits server-side automatically
+              Bot running · 2 whale wallets · exits server-side automatically
             </div>
           )}
         </Section>
