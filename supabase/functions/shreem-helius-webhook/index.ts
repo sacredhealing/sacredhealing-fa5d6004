@@ -550,7 +550,7 @@ async function syncHelius(): Promise<{ ok: boolean; message: string; count?: num
 
     const payload = {
       webhookURL:       WEBHOOK_URL,
-      transactionTypes: ["SWAP"],
+      transactionTypes: ["Any"],
       accountAddresses: addresses,
       webhookType:      "enhanced",
       txnStatus:        "success",
@@ -568,7 +568,7 @@ async function syncHelius(): Promise<{ ok: boolean; message: string; count?: num
     }
 
     const result = await r.json().catch(() => ({}));
-    const msg = `${ours ? "Updated" : "Created"} Helius webhook watching ${addresses.length} wallets`;
+    const msg = `${ours ? "Updated" : "Created"} Helius webhook watching ${addresses.length} wallets for Any transactions`;
     console.log(`[helius-sync] ${msg}, status: ${r.status}`);
     return { ok: r.ok, message: msg, count: addresses.length };
   } catch (e: any) {

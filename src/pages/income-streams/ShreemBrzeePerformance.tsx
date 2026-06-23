@@ -229,8 +229,8 @@ export default function ShreemBrzeePerformance() {
 
   const fetchSignals = useCallback(async () => {
     try {
-      const { data } = await d.from("shreem_brzee_signals")
-        .select("*").order("created_at", { ascending: false }).limit(100);
+      const r = await fetch(`${EDGE_BASE}/signals`, { signal: AbortSignal.timeout(5000) });
+      const data = r.ok ? await r.json() : [];
       setSignals((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
     } catch {}
   }, []);
@@ -241,11 +241,13 @@ export default function ShreemBrzeePerformance() {
     if (period === "weekly")  from.setDate(now.getDate()-7);
     if (period === "monthly") from.setMonth(now.getMonth()-1);
     if (period === "yearly")  from.setFullYear(now.getFullYear()-1);
-    const { data } = await d.from("shreem_brzee_signals")
-      .select("label,wallet,action,amount_sol,created_at,sig")
-      .gte("created_at", from.toISOString())
-      .order("created_at", { ascending: false });
-    setPeriodSigs((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
+    try {
+      const r = await fetch(`${EDGE_BASE}/signals`, { signal: AbortSignal.timeout(5000) });
+      const data = r.ok ? await r.json() : [];
+      setPeriodSigs((data || [])
+        .filter((s: any) => new Date(s.created_at).getTime() >= from.getTime())
+        .filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
+    } catch {}
   }, [period]);
 
   const fetchOpen = useCallback(async () => {
@@ -1026,7 +1028,7 @@ export default function ShreemBrzeePerformance() {
           {signals.length === 0 ? (
             <div style={{ textAlign:"center", padding:"20px 0" }}>
               <div style={{ fontSize:28, marginBottom:8 }}>🐋</div>
-              <div style={{ fontSize:13, color:"#cbd5e0", fontWeight:700, marginBottom:4 }}>Watching 20 wallets on Solana</div>
+              <div style={{ fontSize:13, color:"#cbd5e0", fontWeight:700, marginBottom:4 }}>Watching Cented, Remusofmars, and gake on Solana</div>
               <div style={{ fontSize:11, color:"#64748b", marginBottom:14 }}>BUY signals open positions · SELL signals close instantly</div>
               <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
                 <button onClick={testBuy} disabled={loading} style={{ padding:"9px 20px", borderRadius:11, border:"1px solid rgba(0,212,255,.3)", background:"rgba(0,212,255,.08)", color:CYAN, fontSize:11, fontWeight:800, cursor:"pointer" }}>⚡ BUY Signal</button>
