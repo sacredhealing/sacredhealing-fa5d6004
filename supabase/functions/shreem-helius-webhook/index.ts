@@ -206,10 +206,12 @@ async function signAndSend(txB64: string, kp: KP): Promise<string> {
 async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; skipped?: string; tx?: string; size_sol?: number; latency_ms?: number; error?: string }> {
   const t0 = Date.now();
   const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+  const USDT = "Es9vMFrzaCERmJfrF4H2FYD4KConKzMNFNcZb3yNpFP1";
 
-  if (!signal?.mint)            return { ok: true, skipped: "no_mint" };
-  if (signal.mint === USDC)     return { ok: true, skipped: "USDC" };
-  if (signal.mint === SOL_MINT) return { ok: true, skipped: "SOL_MINT" };
+  if (!signal?.mint)                                  return { ok: true, skipped: "no_mint" };
+  if (signal.mint === USDC || signal.mint === USDT)   return { ok: true, skipped: "stablecoin" };
+  if (signal.mint === SOL_MINT)                       return { ok: true, skipped: "SOL_MINT" };
+  if (signal.action && signal.action !== "BUY")       return { ok: true, skipped: "not_a_buy" };
 
   // Load keypair first (sync, fast) — we need walletPub for the parallel batch.
   const kp = loadKeypair();
