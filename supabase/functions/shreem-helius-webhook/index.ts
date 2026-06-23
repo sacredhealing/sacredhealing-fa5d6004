@@ -828,60 +828,6 @@ function parseSwap(tx: any, wallet: string) {
   return { action, mint, symbol: null, amountSol, tokenAmount: Math.abs(tokenDiff) || null, isPumpFun };
 }
 
-// ── Liquidation Bundle Parser — catches "Sell All" multi-token exits ─────────
-// Elite traders use terminal tools (GTokenTool, PandaTool) that flush multiple
-// tokens in one atomic tx. Top-level program is a custom contract, not Jupiter.
-// We scan tokenTransfers for multiple outbound transfers from the whale wallet.
-function parseLiquidationBundle(tx: any, wallet: string): Array<{mint:string; amount:number}> | null {
-  const transfers = (tx.tokenTransfers || []).filter((t: any) =>
-    t.fromUserAccount === wallet &&
-    t.mint !== SOL_MINT &&
-    !STABLES.has(t.mint) &&
-    Number(t.tokenAmount || 0) > 0
-  );
-  if (transfers.length > 1) {
-    console.warn(`🚨 MULTI-ASSET LIQUIDATION: ${wallet.slice(0,8)} selling ${transfers.length} tokens in one tx`);
-    return transfers.map((t: any) => ({ mint: t.mint, amount: Number(t.tokenAmount || 0) }));
-  }
-  return null;
-}
-
-// ── CloseAccount detector — catches ATA closure as emergency sell signal ──────
-// When a whale does "Sell All", their terminal appends CloseAccount instructions
-// to reclaim SOL rent (~0.002 SOL) from token accounts they just emptied.
-// If we hold that mint → treat closure as absolute exit signal.
-function parseCloseAccountMints(tx: any, wallet: string): string[] {
-  const closed: string[] = [];
-  // Check inner instructions for CloseAccount
-  const innerIxs = tx.meta?.innerInstructions || [];
-  for (const group of innerIxs) {
-    for (const ix of (group.instructions || [])) {
-      if (ix.parsed?.type === "closeAccount" && ix.parsed?.info?.account) {
-        // Find which mint this token account belongs to via pre/post balances
-        const acct = ix.parsed.info.account;
-        const pre = (tx.meta?.preTokenBalances || []).find((b: any) =>
-          (tx.transaction?.message?.accountKeys?.[b.accountIndex] === acct || b.owner === wallet) &&
-          b.owner === wallet
-        );
-        if (pre?.mint && !STABLES.has(pre.mint)) closed.push(pre.mint);
-      }
-    }
-  }
-  // Also check enhanced format accountData for zero-balance token accounts
-  for (const acct of (tx.accountData || [])) {
-    if (acct.account === wallet) continue;
-    const tokenChanges = (acct.tokenBalanceChanges || []).filter((c: any) =>
-      c.userAccount === wallet &&
-      Number(c.rawTokenAmount?.tokenAmount || 0) === 0 &&
-      c.mint && !STABLES.has(c.mint)
-    );
-    for (const c of tokenChanges) {
-      if (!closed.includes(c.mint)) closed.push(c.mint);
-    }
-  }
-  return closed;
-}
-
 // ── Main handler ──────────────────────────────────────────────────────────────
 // Auto-register Helius on cold start using HELIUS_API_KEY secret
 let _registered = false;
@@ -1354,74 +1300,7 @@ serve(async (req) => {
         if (!sig) { skipped++; continue; }
         const wallet = findWhale(tx);
         if (!wallet) { skipped++; continue; }
-        let swap   = parseSwap(tx, wallet);
-
-        // ── Fallback 1: Multi-asset liquidation bundle ("Sell All") ──────────
-        if (!swap) {
-          const bundle = parseLiquidationBundle(tx, wallet);
-          if (bundle && bundle.length > 0) {
-            // Mirror exit for each token we hold from this bundle
-            for (const { mint } of bundle) {
-              const { data: matchPos } = await sb
-                .from("shreem_brzee_live_trades")
-                .select("id,mint,symbol,label,amount_sol")
-                .in("status", ["open","unconfirmed"])
-                .eq("mint", mint)
-                .limit(1);
-              if (matchPos?.[0]) {
-                const pos = matchPos[0];
-                console.log(`[bundle-exit] 🚨 Closing ${pos.symbol||mint.slice(0,8)} — whale liquidation`);
-                await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
-                  body: JSON.stringify({ action: "close", trade_id: pos.id, mint: pos.mint, reason: "whale_sell_all" }),
-                  signal: AbortSignal.timeout(25000),
-                }).catch(() => {});
-                inserted++;
-              }
-            }
-            // Also write a SELL signal for each bundle mint
-            for (const { mint } of bundle) {
-              await sb.from("shreem_brzee_signals").upsert({
-                sig: sig + "_bundle_" + mint.slice(0,8),
-                wallet, label: WHALE_WALLETS[wallet],
-                action: "SELL", mint,
-                block_time: tx.timestamp ?? tx.blockTime ?? null,
-                created_at: new Date().toISOString(),
-                live_processed: true,
-              }, { onConflict: "sig" }).catch(() => {});
-            }
-            continue;
-          }
-        }
-
-        // ── Fallback 2: CloseAccount = emergency exit signal ─────────────────
-        if (!swap) {
-          const closedMints = parseCloseAccountMints(tx, wallet);
-          if (closedMints.length > 0) {
-            for (const mint of closedMints) {
-              const { data: matchPos } = await sb
-                .from("shreem_brzee_live_trades")
-                .select("id,mint,symbol,amount_sol")
-                .in("status", ["open","unconfirmed"])
-                .eq("mint", mint)
-                .limit(1);
-              if (matchPos?.[0]) {
-                const pos = matchPos[0];
-                console.log(`[close-acct] 🚨 ATA closed for ${pos.symbol||mint.slice(0,8)} — emergency exit`);
-                await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
-                  body: JSON.stringify({ action: "close", trade_id: pos.id, mint: pos.mint, reason: "whale_close_account" }),
-                  signal: AbortSignal.timeout(25000),
-                }).catch(() => {});
-                inserted++;
-              }
-            }
-            if (closedMints.length > 0) continue;
-          }
-        }
-
+        const swap   = parseSwap(tx, wallet);
         if (!swap) { skipped++; continue; }
 
 
@@ -1479,40 +1358,18 @@ serve(async (req) => {
         if (!isRunning) continue;
 
         if (isLive && swap.action === "SELL") {
-          // Whale SELL mirror — find our open position and close it
+          // Whale SELL mirror — keep delegating to executor (close path).
           try {
-            // First: find the open position by mint
-            const { data: matchByMint } = await sb
-              .from("shreem_brzee_live_trades")
-              .select("id,mint,symbol,label")
-              .in("status", ["open","unconfirmed"])
-              .eq("mint", swap.mint)
-              .limit(1);
-
-            // Fallback: find by label (same whale, any open position)
-            const { data: matchByLabel } = !matchByMint?.length ? await sb
-              .from("shreem_brzee_live_trades")
-              .select("id,mint,symbol,label")
-              .in("status", ["open","unconfirmed"])
-              .eq("label", WHALE_WALLETS[wallet])
-              .limit(1) : { data: null };
-
-            const match = matchByMint?.[0] || matchByLabel?.[0];
-            if (!match) {
-              console.log(`[live-close] No open position for SELL ${swap.mint?.slice(0,8)} from ${WHALE_WALLETS[wallet]}`);
-            } else {
-              console.log(`[live-close] Closing ${match.symbol||match.mint?.slice(0,8)} (matched by ${matchByMint?.length ? 'mint' : 'label'})`);
-              const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
-                body: JSON.stringify({ action: "close", trade_id: match.id, mint: match.mint, reason: "whale_sell_mirror" }),
-                signal: AbortSignal.timeout(25000),
-              });
-              const execData = await execR.json().catch(() => ({}));
-              console.log(`[live-close] ✅ SELL ${match.symbol} →`, JSON.stringify(execData).slice(0, 200));
-            }
+            const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+              body: JSON.stringify({ action: "close", mint: swap.mint, reason: "whale_sell_mirror" }),
+              signal: AbortSignal.timeout(25000),
+            });
+            const execData = await execR.json().catch(() => ({}));
+            console.log(`[live-close] SELL ${signal.symbol} →`, JSON.stringify(execData).slice(0, 300));
           } catch (sellErr: any) {
-            console.error(`[live-close] ❌ SELL error:`, sellErr?.message ?? String(sellErr));
+            console.error(`[live-close] ❌ SELL ${signal.symbol}:`, sellErr?.message ?? String(sellErr));
           }
         } else if (!isLive) {
           // PAPER MODE: original behaviour
