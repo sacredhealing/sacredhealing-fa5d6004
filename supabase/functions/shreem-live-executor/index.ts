@@ -436,7 +436,7 @@ serve(async (req) => {
       // No take-profit — follow whale SELL mirror only. They know when to exit.
     }
 
-    return jsonResp({ ok: true, checked: openPos.length, closed, results, ts: new Date().toISOString() });
+    return jsonResp({ ok: true, checked: openPos.length, closed, staleClosed, results, ts: new Date().toISOString() });
   }
 
   if (req.method !== "POST") return jsonResp({ error: "method not allowed" }, 405);
