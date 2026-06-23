@@ -1285,7 +1285,9 @@ serve(async (req) => {
       if (fetchErr || !pos) return jsonResp({ error: "trade not found or already closed" }, 404);
 
       if (sess?.mode === "live") {
-        // Live mode — call executor to actually swap tokens back to SOL
+        // Live mode — try executor first to swap tokens back to SOL
+        let execData: any = {};
+        let execOk = false;
         try {
           const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
             method: "POST",
@@ -1295,16 +1297,22 @@ serve(async (req) => {
             },
             body: JSON.stringify({ action: "close", trade_id: tradeId, reason: "manual" }),
           });
-          const execData = await execR.json().catch(() => ({}));
+          execData = await execR.json().catch(() => ({}));
           const failedSell = Array.isArray(execData?.results) && execData.results.some((r: any) => r?.ok === false);
-          if (!execR.ok || execData?.ok === false || execData?.code === "BOOT_ERROR" || failedSell) {
-            const detail = execData?.results?.find?.((r: any) => r?.ok === false)?.error;
-            return jsonResp({ ok: false, error: detail || execData?.error || execData?.message || "executor close failed", exec: execData }, 500);
-          }
-          return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual", table, exec: execData });
+          execOk = execR.ok && execData?.ok !== false && execData?.code !== "BOOT_ERROR" && !failedSell;
         } catch (execErr: any) {
-          return jsonResp({ ok: false, error: `executor unreachable: ${execErr?.message}` }, 500);
+          execData = { error: `executor unreachable: ${execErr?.message}` };
         }
+
+        // Force-close in DB regardless: ghost trades (already closed in Phantom) must disappear from UI.
+        // Executor already marks closed if it succeeded; this is the safety net.
+        await sb.from("shreem_brzee_live_trades").update({
+          status: "closed",
+          closed_at: new Date().toISOString(),
+          sell_reason: execOk ? "manual" : "manual_force_ui",
+        }).eq("id", tradeId).neq("status", "closed");
+
+        return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: execOk ? "manual" : "manual_force_ui", table, exec: execData });
       } else {
         await closeTrade(pos, "manual");
       }
