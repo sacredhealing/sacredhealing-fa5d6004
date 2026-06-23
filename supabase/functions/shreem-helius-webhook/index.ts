@@ -218,19 +218,14 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   if (!kp) return { ok: false, error: "no_keypair" };
   const walletPub = bs58.encode(kp.publicKey);
 
-  // ── Hot-path: run ALL pre-swap I/O in parallel ────────────────────────────
-  // Previously: 5 sequential awaits (dup-mint → dup-sig → getBalance → openTrades → reserve)
-  // Now: 4 in parallel, then a single conditional reservation update.
+  // ── Hot-path pre-swap reads in parallel ───────────────────────────────────
   const livesig = signal.sig + "_live";
-  const [dupMintRes, dupSigRes, balRes, openTradesRes] = await Promise.all([
-    sb.from("shreem_brzee_live_trades").select("id").eq("mint", signal.mint)
-      .in("status", ["open","pending","unconfirmed","closing"]).limit(1),
+  const [dupSigRes, balRes, openTradesRes] = await Promise.all([
     sb.from("shreem_brzee_live_trades").select("id").eq("sig", livesig).limit(1),
     rpcCall("getBalance", [walletPub]).catch(() => null),
     sb.from("shreem_brzee_live_trades").select("amount_sol")
       .in("status", ["open","pending","unconfirmed","closing"]),
   ]);
-  if (dupMintRes.data?.length) return { ok: true, skipped: "duplicate_mint" };
   if (dupSigRes.data?.length)  return { ok: true, skipped: "duplicate_sig" };
 
   const portfolio = Number(sess.portfolio || 0);
@@ -245,7 +240,35 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, portfolio * 0.05), cap - exposure);
   if (size < MIN_TRADE_SOL) return { ok: true, skipped: "size_too_small" };
 
-  // Atomic reservation — single conditional update; race-safe.
+  // ── ATOMIC MINT CLAIM ─────────────────────────────────────────────────────
+  // Insert a 'pending' row FIRST. A partial unique index
+  // (uniq_live_trades_active_mint) on mint where status is active guarantees
+  // only ONE active row per mint can exist. If another concurrent buy already
+  // claimed this mint, the insert fails with 23505 and we skip immediately.
+  // This makes "buy same token while holding" impossible at the DB level.
+  const tradeId  = crypto.randomUUID();
+  const openedAt = new Date(t0).toISOString();
+  const claimRow = {
+    id: tradeId, session_id: "default",
+    sig: livesig,
+    mint: signal.mint, symbol: signal.symbol, label: signal.label, wallet: signal.wallet,
+    action: "BUY",
+    amount_sol: size, gross_sol: size, net_sol: size,
+    status: "pending",
+    opened_at: openedAt, created_at: openedAt,
+    slippage_pct: SLIPPAGE_BPS / 100,
+  };
+  const claimRes = await sb.from("shreem_brzee_live_trades").insert(claimRow);
+  if (claimRes.error) {
+    const msg = String(claimRes.error.message || "");
+    const code = (claimRes.error as any).code;
+    if (code === "23505" || msg.includes("uniq_live_trades_active_mint") || msg.includes("duplicate key")) {
+      return { ok: true, skipped: "duplicate_mint_atomic" };
+    }
+    return { ok: false, error: `claim_failed:${msg}` };
+  }
+
+  // Atomic SOL reservation — single conditional update; race-safe.
   const { data: reserved, error: reserveErr } = await sb
     .from("shreem_brzee_session")
     .update({ portfolio: portfolio - size, updated_at: new Date().toISOString() })
@@ -253,8 +276,12 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
     .eq("portfolio", portfolio)
     .gte("portfolio", size)
     .select("id");
-  if (reserveErr) return { ok: false, error: "reserve_failed" };
-  if (!reserved || reserved.length === 0) return { ok: true, skipped: "reserve_lost_race" };
+  if (reserveErr || !reserved || reserved.length === 0) {
+    // Release the mint claim
+    await sb.from("shreem_brzee_live_trades").delete().eq("id", tradeId);
+    if (reserveErr) return { ok: false, error: "reserve_failed" };
+    return { ok: true, skipped: "reserve_lost_race" };
+  }
 
 
   const lamports = Math.floor(size * LAMPORTS);
@@ -268,7 +295,8 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
     txSig = await signAndSend(swapTx, kp);
   } catch (e: any) {
     console.error(`[INLINE-BUY] ❌ ${signal.symbol ?? signal.mint.slice(0,8)} swap failed: ${e.message}`);
-    // Refund the reservation so the next signal can use the SOL
+    // Release mint claim + refund the reservation so the next signal can use the SOL
+    await sb.from("shreem_brzee_live_trades").delete().eq("id", tradeId).catch(() => {});
     try {
       const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
       const curPort = Number(cur?.portfolio || 0);
@@ -283,12 +311,11 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   const swapMs = Date.now() - t0;
   console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms | bal=${liveBalSol.toFixed(3)} cap=${cap.toFixed(3)} exp=${exposure.toFixed(3)}`);
 
-  // ── Confirmation check — poll for 8s before writing to DB ────────────────
-  // This prevents ghost positions from Jito bundles that don't land on-chain
+  // ── Confirmation check — poll for 8s before promoting to 'open' ──────────
   let confirmed = false;
   try {
     const confirmDeadline = Date.now() + 8000;
-    await new Promise(r => setTimeout(r, 2000)); // wait 2s for propagation
+    await new Promise(r => setTimeout(r, 2000));
     while (Date.now() < confirmDeadline) {
       const statusRes = await rpcCall("getSignatureStatuses", [[txSig], { searchTransactionHistory: true }]).catch(() => null);
       const s = (statusRes as any)?.value?.[0];
@@ -296,13 +323,15 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
         confirmed = true;
         break;
       }
-      if (s?.err) break; // transaction failed on-chain
+      if (s?.err) break;
       await new Promise(r => setTimeout(r, 2000));
     }
   } catch {}
 
   if (!confirmed) {
-    console.warn(`[INLINE-BUY] ⚠️ tx ${txSig.slice(0,16)} not confirmed in 8s — refunding reservation`);
+    console.warn(`[INLINE-BUY] ⚠️ tx ${txSig.slice(0,16)} not confirmed in 8s — releasing claim + refunding`);
+    // Delete the pending claim so the mint is free again, and refund SOL
+    await sb.from("shreem_brzee_live_trades").delete().eq("id", tradeId).catch(() => {});
     try {
       const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
       await sb.from("shreem_brzee_session").update({
@@ -316,21 +345,7 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   const confirmMs = Date.now() - t0;
   console.log(`[INLINE-BUY] ✅ confirmed in ${confirmMs}ms`);
 
-  // ── DB writes AFTER confirmation ──────────────────────────────────────────
-  const tradeId  = crypto.randomUUID();
-  const openedAt = new Date(t0).toISOString();
-  const tradeRow = {
-    id: tradeId, session_id: "default",
-    sig: signal.sig + "_live",
-    mint: signal.mint, symbol: signal.symbol, label: signal.label, wallet: signal.wallet,
-    action: "BUY",
-    amount_sol: size, gross_sol: size, net_sol: size,
-    status: "open",   // confirmed on-chain — real position
-    opened_at: openedAt, created_at: openedAt,
-    tx_sig: txSig,
-    tokens_received: Number(quote?.outAmount || 0),
-    slippage_pct: SLIPPAGE_BPS / 100,
-  };
+  // ── Promote pending → open with tx details ────────────────────────────────
   const signalRow = {
     sig: signal.sig, wallet: signal.wallet, label: signal.label,
     action: "BUY", mint: signal.mint, symbol: signal.symbol,
@@ -340,7 +355,11 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   };
 
   await Promise.all([
-    sb.from("shreem_brzee_live_trades").upsert(tradeRow, { onConflict: "sig" }),
+    sb.from("shreem_brzee_live_trades").update({
+      status: "open",
+      tx_sig: txSig,
+      tokens_received: Number(quote?.outAmount || 0),
+    }).eq("id", tradeId),
     sb.from("shreem_brzee_signals").upsert(signalRow, { onConflict: "sig" }),
   ]).catch((e: any) => console.error("[INLINE-BUY] post-swap DB write:", e?.message));
 
