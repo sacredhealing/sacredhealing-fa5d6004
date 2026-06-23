@@ -1254,6 +1254,18 @@ serve(async (req) => {
         const swap   = parseSwap(tx, wallet);
         if (!swap) { skipped++; continue; }
 
+
+        // Filter out stablecoins and SOL from signal feed — only real meme coins
+        const SKIP_FEED_MINTS = new Set([
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+          "Es9vMFrzaCERmJfrF4H2FYD4KConKzMNFNcZb3yNpFP1", // USDT
+          "So11111111111111111111111111111111111111112",    // SOL
+          "7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj", // stSOL
+          "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",  // mSOL
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+        ]);
+        if (!swap.mint || SKIP_FEED_MINTS.has(swap.mint)) { skipped++; continue; }
+
         const signal = {
           sig,
           wallet,
@@ -1334,6 +1346,7 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e?.message ?? String(e) });
   }
 });
+
 
 
 
