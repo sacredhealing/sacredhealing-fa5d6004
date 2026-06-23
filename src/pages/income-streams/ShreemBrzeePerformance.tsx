@@ -628,12 +628,6 @@ export default function ShreemBrzeePerformance() {
     if (s.action === "BUY")  { whaleMap[lbl].buys++;  whaleMap[lbl].totalSol += s.amount_sol || 0; }
     if (s.action === "SELL") { whaleMap[lbl].sells++; }
   });
-  const whaleRows = KOL_LIST.map(k => ({
-    ...k,
-    ...(whaleMap[k.label] || { buys:0, sells:0, totalSol:0 }),
-    total:(whaleMap[k.label]?.buys||0)+(whaleMap[k.label]?.sells||0)
-  })).sort((a,b) => b.totalSol - a.totalSol);
-  const maxSol = Math.max(...whaleRows.map(w => w.totalSol), 0.001);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
