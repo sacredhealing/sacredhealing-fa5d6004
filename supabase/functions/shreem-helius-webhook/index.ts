@@ -320,15 +320,39 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   }
 
   const swapMs = Date.now() - t0;
-  console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms | bal=${liveBalSol.toFixed(3)} cap=${cap.toFixed(3)} exp=${exposure.toFixed(3)}`);
+  console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms`);
 
-  // Fire-and-forget — promote pending → open immediately after tx submitted.
-  // Cron reconciles any truly failed txs via unconfirmed_timeout after 5min.
-  // Waiting 8s here caused false negatives on congested network (Cented tokens).
-  const confirmMs = Date.now() - t0;
-  console.log(`[INLINE-BUY] ⚡ tx submitted in ${confirmMs}ms — promoting to open`);
+  // ── Quick 4s confirmation check ───────────────────────────────────────────
+  // Checks if tx landed on-chain. If confirmed → open (real trade, tokens received).
+  // If not confirmed in 4s → mark 'unconfirmed', cron will verify every 5min.
+  // Cron: tx succeeded late → promote to open. tx failed → delete + refund SOL.
+  // This prevents ghost trades where swap fails on-chain (0x1771 slippage etc).
+  let txConfirmed = false;
+  try {
+    await new Promise(r => setTimeout(r, 2000)); // wait 2s for tx to propagate
+    const statusRes = await rpcCall("getSignatureStatuses", [[txSig], { searchTransactionHistory: true }]).catch(() => null);
+    const s = (statusRes as any)?.value?.[0];
+    if (s && !s.err && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) {
+      txConfirmed = true;
+    } else if (s?.err) {
+      // tx failed on-chain — refund immediately, no ghost
+      console.warn(`[INLINE-BUY] ❌ tx FAILED on-chain: ${JSON.stringify(s.err)} — refunding ${size.toFixed(4)} SOL`);
+      await sb.from("shreem_brzee_live_trades").delete().eq("id", tradeId).catch(() => {});
+      try {
+        const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
+        await sb.from("shreem_brzee_session").update({
+          portfolio: Number(cur?.portfolio || 0) + size,
+          updated_at: new Date().toISOString(),
+        }).eq("id", "default");
+      } catch {}
+      return { ok: false, error: `tx_failed_onchain: ${JSON.stringify(s.err)}` };
+    }
+    // s is null or unconfirmed — leave as unconfirmed, cron handles it
+  } catch {}
 
-  // ── Promote pending → open with tx details ────────────────────────────────
+  console.log(`[INLINE-BUY] ${txConfirmed ? "✅ confirmed" : "⏳ unconfirmed — cron will verify"} in ${Date.now()-t0}ms`);
+
+  // ── Promote pending → open (confirmed) or unconfirmed (pending cron check) ──
   const signalRow = {
     sig: signal.sig, wallet: signal.wallet, label: signal.label,
     action: "BUY", mint: signal.mint, symbol: signal.symbol,
@@ -339,9 +363,9 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
 
   await Promise.all([
     sb.from("shreem_brzee_live_trades").update({
-      status: "open",
+      status: txConfirmed ? "open" : "unconfirmed",
       tx_sig: txSig,
-      tokens_received: Number(quote?.outAmount || 0),
+      tokens_received: txConfirmed ? Number(quote?.outAmount || 0) : null,
     }).eq("id", tradeId),
     sb.from("shreem_brzee_signals").upsert(signalRow, { onConflict: "sig" }),
   ]).catch((e: any) => console.error("[INLINE-BUY] post-swap DB write:", e?.message));
