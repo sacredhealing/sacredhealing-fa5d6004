@@ -18,7 +18,7 @@ import { Keypair, VersionedTransaction } from "npm:@solana/web3.js@1.95.3";
 
 const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const JUPITER   = "https://lite-api.jup.ag/swap/v1";
+const JUPITER   = "https://api.jup.ag/swap/v1";
 const SOL_MINT  = "So11111111111111111111111111111111111111112";
 const LAMPORTS  = 1_000_000_000;
 
@@ -68,7 +68,7 @@ function loadKeypair(): SolanaKeypair | null {
 const READ_RPCS = [
   "https://api.mainnet-beta.solana.com",
   "https://rpc.ankr.com/solana",
-  "https://solana-api.projectserum.com",
+  "https://solana.publicnode.com",
 ];
 const SEND_RPCS = [...READ_RPCS, HELIUS_RPC];
 
@@ -197,7 +197,11 @@ async function signAndSend(txB64: string, kp: SolanaKeypair): Promise<string> {
             const sigBytes = tx.signatures[0];
             const sig = Buffer.from(sigBytes).toString("base64");
             // Convert base64 sig to base58 for Solana explorer
-            return j.result; // Return bundle ID — waitConfirm will find the tx
+            // Extract real tx sig from the signed transaction (NOT bundle ID)
+            const sigBytes = tx.signatures[0];
+            const txSig = bs58.encode(sigBytes);
+            console.log(`[Jito] bundle accepted, txSig=${txSig.slice(0,16)}`);
+            return txSig;
           }
         }
       } catch (e: any) {
@@ -326,7 +330,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
 // ── Price fetch ───────────────────────────────────────────────────────────────
 async function fetchPriceUsd(mint: string): Promise<number> {
   try {
-    const r = await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`, { signal: timeoutSignal(5000) });
+    const r = await fetch(`https://api.jup.ag/price/v2?ids=${mint}`, { signal: timeoutSignal(5000) });
     if (r.ok) {
       const j = await r.json();
       const entry: any = Object.values(j || {})[0];
@@ -624,7 +628,7 @@ serve(async (req) => {
     // STEP 4: Fetch token decimals
     let tokenDecimals = 6;
     try {
-      const metaR = await fetch(`https://lite-api.jup.ag/price/v3?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
+      const metaR = await fetch(`https://api.jup.ag/price/v2?ids=${sig.mint}`, { signal: timeoutSignal(5000) });
       if (metaR.ok) {
         const metaJ = await metaR.json();
         const d = (Object.values(metaJ || {})[0] as any)?.decimals;
@@ -676,6 +680,7 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e.message }, 500);
   }
 });
+
 
 
 
