@@ -92,7 +92,15 @@ function connectHeliusWS() {
   if (!HELIUS_KEY) return;
   if (wsConn) { try { wsConn.terminate(); } catch {} }
 
-  const wsUrl = 'wss://rpc.ankr.com/solana/ws'; // Ankr free reliable WS
+  // Multiple WSS endpoints — tries each until one connects
+const WSS_ENDPOINTS = [
+  'wss://solana-mainnet.core.chainstack.com/ws',
+  'wss://go.getblock.io/solana/ws',  
+  'wss://api.mainnet-beta.solana.com',
+  'wss://solana.public.blastapi.io',
+];
+let wsEndpointIdx = 0;
+const wsUrl = WSS_ENDPOINTS[wsEndpointIdx];
   console.log('[ws] Connecting to Helius websocket...');
 
   wsConn = new WS(wsUrl);
@@ -176,9 +184,15 @@ function connectHeliusWS() {
 
   wsConn.on('close', (code) => {
     wsAlive = false;
-    console.log(`[ws] disconnected (${code}) — reconnecting in 5s`);
+    // Try next endpoint on failure
+    if (code === 1006 || code === 401 || code === 403) {
+      wsEndpointIdx = (wsEndpointIdx + 1) % WSS_ENDPOINTS.length;
+      console.log(`[ws] disconnected (${code}) — trying endpoint ${wsEndpointIdx}: ${WSS_ENDPOINTS[wsEndpointIdx]}`);
+    } else {
+      console.log(`[ws] disconnected (${code}) — reconnecting in 5s`);
+    }
     if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
-    wsReconnectTimer = setTimeout(connectHeliusWS, 5000);
+    wsReconnectTimer = setTimeout(connectHeliusWS, 3000);
   });
 }
 
