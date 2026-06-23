@@ -38,7 +38,7 @@ const MAX_WEBHOOK_TXS_PER_BATCH = 10;
 
 // ── Whale wallet list ─────────────────────────────────────────────────────────
 const WHALE_WALLETS: Record<string, string> = {
-  "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o": "Cented",
+  // Cented REMOVED — too fast, causes ghost trades every session
   "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu": "Remusofmars",
   "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT":  "trunoest",
   "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm": "gake",
