@@ -279,7 +279,40 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   const swapMs = Date.now() - t0;
   console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms | bal=${liveBalSol.toFixed(3)} cap=${cap.toFixed(3)} exp=${exposure.toFixed(3)}`);
 
-  // ── DB writes AFTER swap, in parallel (portfolio already reserved) ────────
+  // ── Confirmation check — poll for 8s before writing to DB ────────────────
+  // This prevents ghost positions from Jito bundles that don't land on-chain
+  let confirmed = false;
+  try {
+    const confirmDeadline = Date.now() + 8000;
+    await new Promise(r => setTimeout(r, 2000)); // wait 2s for propagation
+    while (Date.now() < confirmDeadline) {
+      const statusRes = await rpcCall("getSignatureStatuses", [[txSig], { searchTransactionHistory: true }]).catch(() => null);
+      const s = (statusRes as any)?.value?.[0];
+      if (s && !s.err && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) {
+        confirmed = true;
+        break;
+      }
+      if (s?.err) break; // transaction failed on-chain
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  } catch {}
+
+  if (!confirmed) {
+    console.warn(`[INLINE-BUY] ⚠️ tx ${txSig.slice(0,16)} not confirmed in 8s — refunding reservation`);
+    try {
+      const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
+      await sb.from("shreem_brzee_session").update({
+        portfolio: Number(cur?.portfolio || 0) + size,
+        updated_at: new Date().toISOString(),
+      }).eq("id", "default");
+    } catch {}
+    return { ok: false, error: "tx_unconfirmed_timeout" };
+  }
+
+  const confirmMs = Date.now() - t0;
+  console.log(`[INLINE-BUY] ✅ confirmed in ${confirmMs}ms`);
+
+  // ── DB writes AFTER confirmation ──────────────────────────────────────────
   const tradeId  = crypto.randomUUID();
   const openedAt = new Date(t0).toISOString();
   const tradeRow = {
@@ -288,7 +321,7 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
     mint: signal.mint, symbol: signal.symbol, label: signal.label, wallet: signal.wallet,
     action: "BUY",
     amount_sol: size, gross_sol: size, net_sol: size,
-    status: "unconfirmed",   // cron-stoploss reconciles to 'open' / 'failed'
+    status: "open",   // confirmed on-chain — real position
     opened_at: openedAt, created_at: openedAt,
     tx_sig: txSig,
     tokens_received: Number(quote?.outAmount || 0),
@@ -1256,6 +1289,7 @@ serve(async (req) => {
     return jsonResp({ ok: false, error: e?.message ?? String(e) });
   }
 });
+
 
 
 
