@@ -16,6 +16,7 @@ const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
 const KOL_LIST = [
   { label: "Cented",      addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: true },
   { label: "Remusofmars", addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
+  { label: "gake",        addr: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", vip: true, winRate: "64.28%", pnl7d: "+$47K" },
 ];
 
 const isValidSol = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s.trim());
@@ -1105,6 +1106,7 @@ export default function ShreemBrzeePerformance() {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:13, fontWeight:800, color:"#fff" }}>{w.label}{w.vip && <span style={{ color:GOLD, marginLeft:4 }}>⭐</span>}</div>
                     <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{w.addr.slice(0,8)}…{w.addr.slice(-4)}</div>
+                    {"winRate" in w && <div style={{ fontSize:9, color:GOLD, marginTop:2 }}>{w.winRate} WR · {w.pnl7d} 7D</div>}
                   </div>
                   <div style={{ textAlign:"right", flexShrink:0, fontSize:11, color:"#94a3b8" }}>
                     <div><span style={{ color:GREEN }}>{buys}B</span> · <span style={{ color:RED }}>{sells}S</span></div>

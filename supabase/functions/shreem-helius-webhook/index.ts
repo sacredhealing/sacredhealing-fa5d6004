@@ -40,6 +40,7 @@ const MAX_WEBHOOK_TXS_PER_BATCH = 10;
 const WHALE_WALLETS: Record<string, string> = {
   "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o": "Cented",
   "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu": "Remusofmars",
+  "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm": "gake",
 };
 
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
@@ -534,11 +535,12 @@ async function syncHelius(): Promise<{ ok: boolean; message: string; count?: num
   try {
     const HELIUS_KEY = Deno.env.get("HELIUS_API_KEY") ?? "";
     const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
-    // CREDIT SAFETY: Hard-coded 2 wallets only — never auto-expand to all WHALE_WALLETS
+    // CREDIT SAFETY: Hard-coded approved wallets only — never auto-expand to all WHALE_WALLETS
     // Adding more wallets = linear credit burn. Change manually via Helius dashboard only.
     const addresses = [
       "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", // Cented
       "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", // Remusofmars
+      "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", // gake
     ];
 
     const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${HELIUS_KEY}`, { signal: AbortSignal.timeout(8000) });
