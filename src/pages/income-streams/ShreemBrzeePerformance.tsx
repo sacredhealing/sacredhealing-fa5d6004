@@ -68,6 +68,7 @@ export default function ShreemBrzeePerformance() {
   const [liveConfirm, setLiveConfirm] = useState(false);
   const [closingIds, setClosingIds]   = useState<Set<string>>(new Set());
   const [livePrices, setLivePrices]   = useState<Record<string,number>>({});
+  const [liveSymbols, setLiveSymbols] = useState<Record<string,string>>({});
   const [showSignals, setShowSignals] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const priceRef = useRef<any>(null);
@@ -132,15 +133,21 @@ export default function ShreemBrzeePerformance() {
     if (!openPos.length) return;
     const mints = [...new Set(openPos.map((p:any) => p.mint).filter(Boolean))];
     await Promise.all(mints.map(async (m) => {
-      // DexScreener first — indexes new meme coins immediately
+      // DexScreener first — indexes new meme coins immediately + gets symbol
       try {
         const ds = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${m}`, { signal: AbortSignal.timeout(6000) });
         if (ds.ok) {
           const pairs = ((await ds.json())?.pairs||[]).filter((p:any) => p?.priceUsd && parseFloat(p.priceUsd)>0);
           if (pairs.length) {
             pairs.sort((a:any,b:any) => parseFloat(b.liquidity?.usd||0)-parseFloat(a.liquidity?.usd||0));
-            const p = parseFloat(pairs[0].priceUsd);
-            if (p > 0) { setLivePrices(prev => ({...prev, [m]: p})); return; }
+            const best = pairs[0];
+            const p = parseFloat(best.priceUsd);
+            const sym = best.baseToken?.symbol || best.quoteToken?.symbol || null;
+            if (p > 0) {
+              setLivePrices(prev => ({...prev, [m]: p}));
+              if (sym) setLiveSymbols(prev => ({...prev, [m]: sym}));
+              return;
+            }
           }
         }
       } catch {}
@@ -342,7 +349,7 @@ export default function ShreemBrzeePerformance() {
               <div key={pos.id} style={{ padding:"12px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:10 }}>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:14, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{pos.symbol||pos.mint?.slice(0,8)}</div>
+                    <div style={{ fontSize:14, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{liveSymbols[pos.mint] || pos.symbol || (pos.mint ? pos.mint.slice(0,6)+"…"+pos.mint.slice(-4) : "?")}</div>
                     <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{pos.label} · {ageMin}m ago · {amtSol.toFixed(3)} SOL</div>
                   </div>
                   <div style={{ textAlign:"right", flexShrink:0 }}>
@@ -352,9 +359,9 @@ export default function ShreemBrzeePerformance() {
                         <div style={{ fontSize:10, color:pnlP>=0?GREEN:RED }}>{pnlU!=null&&pnlU>=0?"+":""}{pnlU!=null?(pnlU/solUsd).toFixed(4):""} SOL</div>
                       </>
                     ) : (
-                      <div>
-                      <div style={{ fontSize:13, fontWeight:700, color:"#94a3b8" }}>{amtSol.toFixed(4)} SOL</div>
-                      <div style={{ fontSize:10, color:"#64748b" }}>loading price…</div>
+                      <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:"#94a3b8" }}>{amtSol.toFixed(4)} SOL in</div>
+                      <div style={{ fontSize:10, color:"#f59e0b" }}>⏳ pricing…</div>
                     </div>
                     )}
                   </div>
