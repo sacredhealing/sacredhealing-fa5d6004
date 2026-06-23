@@ -12,40 +12,10 @@ const RED   = "#ef4444";
 const CYAN  = "#00d4ff";
 const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
 
-// ─── Static KOL list ─────────────────────────────────────────────────────────
+// ─── Active tracked wallets (manual list — add new ones here, no DB management) ─
 const KOL_LIST = [
-  { label: "Euris",         addr: "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", vip: true },
-  { label: "Heyitsyolo",    addr: "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", vip: true },
-  { label: "Remusofmars",   addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
-  { label: "Lenion",        addr: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", vip: false },
-  { label: "Hades",         addr: "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", vip: false },
-  { label: "Fireball",      addr: "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", vip: false },
-  { label: "Hachjdn",       addr: "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", vip: false },
-  { label: "Cented",        addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: false },
-  { label: "The Grande",    addr: "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA", vip: false },
-  { label: "West",          addr: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", vip: false },
-  { label: "Yenni",         addr: "5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", vip: false },
-  { label: "Doji",          addr: "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  vip: false },
-  { label: "Trenchman",     addr: "Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7", vip: false },
-  { label: "OGAntD",        addr: "215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP", vip: false },
-  { label: "Kev",           addr: "BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", vip: false },
-  { label: "decu",          addr: "4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9", vip: false },
-  { label: "trunoest",      addr: "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  vip: false },
-  { label: "clukz",         addr: "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", vip: false },
-  { label: "Limfork",       addr: "BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", vip: false },
-];
-
-const KOL_EXPLORER = [
-  { name:"Cented",     addr:"CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", pnl7d:95641,  pnl30d:576766, wr:63.8 },
-  { name:"Euris",      addr:"Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", pnl7d:51079,  pnl30d:402366, wr:56   },
-  { name:"Trunoest",   addr:"ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  pnl7d:24975,  pnl30d:77853,  wr:65.8 },
-  { name:"Kev",        addr:"BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", pnl7d:22717,  pnl30d:122059, wr:52.3 },
-  { name:"clukz",      addr:"G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", pnl7d:18856,  pnl30d:92000,  wr:62.6 },
-  { name:"Heyitsyolo", addr:"Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", pnl7d:10746,  pnl30d:88376,  wr:54.6 },
-  { name:"West",       addr:"JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", pnl7d:16382,  pnl30d:83971,  wr:51.4 },
-  { name:"Limfork",    addr:"BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", pnl7d:6793,   pnl30d:72393,  wr:52.4 },
-  { name:"Yenni",      addr:"5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", pnl7d:10386,  pnl30d:76602,  wr:47.3 },
-  { name:"Remusofmars",addr:"BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", pnl7d:24200,  pnl30d:68000,  wr:65.8 },
+  { label: "Cented",      addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: true },
+  { label: "Remusofmars", addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
 ];
 
 const isValidSol = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s.trim());
