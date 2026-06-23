@@ -92,7 +92,7 @@ function connectHeliusWS() {
   if (!HELIUS_KEY) return;
   if (wsConn) { try { wsConn.terminate(); } catch {} }
 
-  const wsUrl = `wss://rpc.helius.xyz/?api-key=${HELIUS_KEY}`;
+  const wsUrl = `wss://api.mainnet-beta.solana.com`; // Standard Solana WS — free
   console.log('[ws] Connecting to Helius websocket...');
 
   wsConn = new WS(wsUrl);
@@ -103,25 +103,21 @@ function connectHeliusWS() {
 
     // Subscribe to all whale wallet account updates
     const wallets = Object.keys(WHALE_WALLETS);
-    const subMsg = {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'transactionSubscribe',
-      params: [
-        {
-          accountInclude: wallets,
-          failed: false,
-        },
-        {
-          commitment: 'confirmed',
-          encoding: 'jsonParsed',
-          transactionDetails: 'full',
-          maxSupportedTransactionVersion: 0,
-        }
-      ]
-    };
-    wsConn.send(JSON.stringify(subMsg));
-    console.log(`[ws] Subscribed to ${wallets.length} whale wallets`);
+    // Subscribe to each whale wallet via logsSubscribe (free on all plans)
+    // Fires whenever a wallet is mentioned in transaction logs
+    for (const wallet of wallets) {
+      const subMsg = {
+        jsonrpc: '2.0',
+        id: wallets.indexOf(wallet) + 1,
+        method: 'logsSubscribe',
+        params: [
+          { mentions: [wallet] },
+          { commitment: 'confirmed' }
+        ]
+      };
+      wsConn.send(JSON.stringify(subMsg));
+    }
+    console.log(`[ws] Subscribed to ${wallets.length} whale wallets via logsSubscribe`);
   });
 
   wsConn.on('message', async (raw) => {
@@ -134,33 +130,37 @@ function connectHeliusWS() {
         return;
       }
 
-      // Transaction notification
-      if (msg.method === 'transactionNotification') {
-        const tx = msg.params?.result?.transaction;
-        const sig = msg.params?.result?.signature;
-        if (!tx || !sig) return;
+      // logsSubscribe notification — fires when whale wallet is in logs
+      if (msg.method === 'logsNotification') {
+        const logs = msg.params?.result?.value?.logs || [];
+        const sig  = msg.params?.result?.value?.signature;
+        if (!sig) return;
 
-        // Find which whale triggered this
-        const acctKeys = tx.transaction?.message?.accountKeys?.map(k =>
-          typeof k === 'string' ? k : k?.pubkey
-        ) || [];
-
-        const whale = acctKeys.find(k => WHALE_WALLETS[k]);
+        // Find which whale triggered this from subscription ID
+        const subId = msg.params?.subscription;
+        const wallets = Object.keys(WHALE_WALLETS);
+        // Match subscription to wallet by index
+        const whale = wallets[subId - 1] || wallets.find(w =>
+          logs.some((l) => l.includes(w))
+        );
         if (!whale) return;
 
-        console.log(`[ws] 🔱 ${WHALE_WALLETS[whale]} tx detected: ${sig.slice(0,16)} — forwarding instantly`);
+        console.log(`[ws] 🔱 ${WHALE_WALLETS[whale]} tx detected: ${sig.slice(0,16)} — fetching via Helius`);
 
-        // Forward immediately to webhook for execution
-        // Webhook has all parsing logic — no duplication needed here
-        const txPayload = {
-          ...tx,
-          signature: sig,
-          feePayer: whale,
-          timestamp: Math.floor(Date.now() / 1000),
-        };
-
-        // Fire and forget — don't await, need to process next tx immediately
-        forwardToWebhook(txPayload);
+        // Fetch full tx details from Helius enhanced API then forward
+        (async () => {
+          try {
+            const r = await fetch(
+              `https://api.helius.xyz/v0/transactions/?api-key=${HELIUS_KEY}`,
+              { method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ transactions: [sig] }),
+                signal: AbortSignal.timeout(8000) }
+            );
+            if (!r.ok) return;
+            const txs = await r.json();
+            if (txs?.[0]) await forwardToWebhook(txs[0]);
+          } catch(e) { console.error('[ws] fetch tx failed:', e.message); }
+        })();
       }
     } catch (e) {
       console.error('[ws] message parse error:', e.message);
