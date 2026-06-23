@@ -338,7 +338,10 @@ export default function ShreemBrzeePerformance() {
             const currentUsd  = livePrices[pos.mint]||0;
             const amtSol      = Number(pos.amount_sol)||0;
             const investedUsd = amtSol * solUsd;
-            const tokensHeld  = entryUsd>0 ? investedUsd/entryUsd : 0;
+            const tokenRaw    = Number(pos.tokens_received)||0;
+            const decimals    = Number.isFinite(Number(pos.token_decimals)) ? Number(pos.token_decimals) : 6;
+            const storedHeld  = tokenRaw>0 ? tokenRaw / Math.pow(10, decimals) : 0;
+            const tokensHeld  = storedHeld>0 ? storedHeld : (entryUsd>0 ? investedUsd/entryUsd : 0);
             const currentVal  = tokensHeld>0 && currentUsd>0 ? tokensHeld*currentUsd : null;
             const dbPct       = pos.pnl_pct != null ? Number(pos.pnl_pct) : null;
             const dbSol       = pos.pnl_sol != null ? Number(pos.pnl_sol) : null;
