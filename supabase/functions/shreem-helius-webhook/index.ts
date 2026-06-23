@@ -1358,18 +1358,40 @@ serve(async (req) => {
         if (!isRunning) continue;
 
         if (isLive && swap.action === "SELL") {
-          // Whale SELL mirror — keep delegating to executor (close path).
+          // Whale SELL mirror — find our open position and close it
           try {
-            const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
-              body: JSON.stringify({ action: "close", mint: swap.mint, reason: "whale_sell_mirror" }),
-              signal: AbortSignal.timeout(25000),
-            });
-            const execData = await execR.json().catch(() => ({}));
-            console.log(`[live-close] SELL ${signal.symbol} →`, JSON.stringify(execData).slice(0, 300));
+            // First: find the open position by mint
+            const { data: matchByMint } = await sb
+              .from("shreem_brzee_live_trades")
+              .select("id,mint,symbol,label")
+              .in("status", ["open","unconfirmed"])
+              .eq("mint", swap.mint)
+              .limit(1);
+
+            // Fallback: find by label (same whale, any open position)
+            const { data: matchByLabel } = !matchByMint?.length ? await sb
+              .from("shreem_brzee_live_trades")
+              .select("id,mint,symbol,label")
+              .in("status", ["open","unconfirmed"])
+              .eq("label", WHALE_WALLETS[wallet])
+              .limit(1) : { data: null };
+
+            const match = matchByMint?.[0] || matchByLabel?.[0];
+            if (!match) {
+              console.log(`[live-close] No open position for SELL ${swap.mint?.slice(0,8)} from ${WHALE_WALLETS[wallet]}`);
+            } else {
+              console.log(`[live-close] Closing ${match.symbol||match.mint?.slice(0,8)} (matched by ${matchByMint?.length ? 'mint' : 'label'})`);
+              const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+                body: JSON.stringify({ action: "close", trade_id: match.id, mint: match.mint, reason: "whale_sell_mirror" }),
+                signal: AbortSignal.timeout(25000),
+              });
+              const execData = await execR.json().catch(() => ({}));
+              console.log(`[live-close] ✅ SELL ${match.symbol} →`, JSON.stringify(execData).slice(0, 200));
+            }
           } catch (sellErr: any) {
-            console.error(`[live-close] ❌ SELL ${signal.symbol}:`, sellErr?.message ?? String(sellErr));
+            console.error(`[live-close] ❌ SELL error:`, sellErr?.message ?? String(sellErr));
           }
         } else if (!isLive) {
           // PAPER MODE: original behaviour
