@@ -192,11 +192,6 @@ async function signAndSend(txB64: string, kp: SolanaKeypair): Promise<string> {
           const j = await r.json();
           if (j.result) {
             console.log("[Jito] Bundle sent:", j.result.slice(0, 16), "via", endpoint.split(".")[0]);
-            // Jito returns bundle ID, we need the tx signature
-            // Extract sig from the signed transaction
-            const sigBytes = tx.signatures[0];
-            const sig = Buffer.from(sigBytes).toString("base64");
-            // Convert base64 sig to base58 for Solana explorer
             // Extract real tx sig from the signed transaction (NOT bundle ID)
             const sigBytes = tx.signatures[0];
             const txSig = bs58.encode(sigBytes);
