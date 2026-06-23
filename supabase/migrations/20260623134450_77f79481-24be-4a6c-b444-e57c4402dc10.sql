@@ -1,0 +1,2 @@
+UPDATE shreem_brzee_live_trades SET status = 'closed', sell_reason = 'emergency_stop', closed_at = NOW() WHERE status IN ('open','unconfirmed','pending','closing');
+UPDATE shreem_brzee_signals SET live_processed = true WHERE live_processed = false OR live_processed IS NULL;
