@@ -61,7 +61,7 @@ export default function ShreemBrzeePerformance() {
   const [openPos, setOpenPos]   = useState<any[]>([]);
   const [solUsd, setSolUsd]     = useState(150);
   const [solEur, setSolEur]     = useState(0.92);
-  const [botBal, setBotBal]     = useState(0);
+  const [botBal, setBotBal]     = useState<number | null>(null);
   const [toast, setToast]       = useState("");
   const [toastType, setToastType] = useState<"ok"|"err"|"info">("ok");
   const [loading, setLoading]   = useState(false);
@@ -121,7 +121,7 @@ export default function ShreemBrzeePerformance() {
 
   const refreshBal = useCallback(async () => {
     const b = await getWalletBalance(BOT_WALLET);
-    if (b > 0) setBotBal(b);
+    setBotBal(b);
   }, []);
 
   const refreshAll = useCallback(() => {
@@ -189,7 +189,7 @@ export default function ShreemBrzeePerformance() {
   const goLive = async () => {
     setLoading(true);
     try {
-      const bal = botBal > 0 ? botBal : 0.3;
+      const bal = botBal !== null && botBal > 0 ? botBal : 0.3;
       const r = await fetch(`${EDGE_BASE}/go-live`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({balance_sol: bal}) });
       const j = r.ok ? await r.json() : null;
       if (!j?.ok) throw new Error(j?.error||"failed");
@@ -211,24 +211,16 @@ export default function ShreemBrzeePerformance() {
   const closePosition = useCallback(async (pos: any) => {
     setClosingIds(prev => { const n = new Set(prev); n.add(pos.id); return n; });
     try {
-      // Try executor for real on-chain sell (timeout 12s)
-      try {
-        const r = await fetch(EXEC_BASE, { method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({action:"close",trade_id:pos.id,mint:pos.mint,reason:"manual"}),
-          signal: AbortSignal.timeout(12000) });
-      } catch {}
-      // Always force-close in DB — button always works
-      await d.from("shreem_brzee_live_trades").update({
-        status:"closed", closed_at:new Date().toISOString(),
-        sell_reason:"manual", pnl_sol:0, pnl_pct:0,
-        updated_at:new Date().toISOString(),
-      }).eq("id", pos.id);
+      const r = await fetch(`${EDGE_BASE}/close-trade`, { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({trade_id:pos.id}),
+        signal: AbortSignal.timeout(30000) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j?.ok === false) throw new Error(j?.error || "Close failed");
       setOpenPos(prev => prev.filter(p => p.id !== pos.id));
-      notify("✦ Position closed", "ok");
+      notify("✦ Position closed on-chain", "ok");
       setTimeout(() => { fetchOpen(); fetchTrades(); fetchSession(); refreshBal(); }, 1500);
     } catch(e:any) {
-      setOpenPos(prev => prev.filter(p => p.id !== pos.id));
-      notify("✦ Removed", "info");
+      notify(e.message || "Close failed", "err");
     }
     setClosingIds(prev => { const n = new Set(prev); n.delete(pos.id); return n; });
   }, [fetchOpen, fetchTrades, fetchSession, refreshBal]);
@@ -240,7 +232,7 @@ export default function ShreemBrzeePerformance() {
   const losses      = closed.filter((t:any) => (Number(t.pnl_sol)||0)<=0 && t.pnl_sol!=null).length;
   const winRate     = (wins+losses)>0 ? Math.round(wins/(wins+losses)*100) : 0;
   const startBal    = Number(session?.start_balance)||0.3;
-  const displayBal  = botBal > 0 ? botBal : (Number(session?.portfolio)||startBal);
+  const displayBal  = botBal !== null ? botBal : (Number(session?.portfolio)||startBal);
   const pnlPct      = startBal > 0 ? (pnlSol/startBal*100) : 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -346,14 +338,20 @@ export default function ShreemBrzeePerformance() {
             const currentUsd  = livePrices[pos.mint]||0;
             const amtSol      = Number(pos.amount_sol)||0;
             const investedUsd = amtSol * solUsd;
-            const tokensHeld  = entryUsd>0 ? investedUsd/entryUsd : 0;
+            const tokenRaw    = Number(pos.tokens_received)||0;
+            const decimals    = Number.isFinite(Number(pos.token_decimals)) ? Number(pos.token_decimals) : 6;
+            const storedHeld  = tokenRaw>0 ? tokenRaw / Math.pow(10, decimals) : 0;
+            const tokensHeld  = storedHeld>0 ? storedHeld : (entryUsd>0 ? investedUsd/entryUsd : 0);
             const currentVal  = tokensHeld>0 && currentUsd>0 ? tokensHeld*currentUsd : null;
-            const pnlU        = currentVal!=null ? currentVal-investedUsd : null;
-            const pnlP        = pnlU!=null && investedUsd>0 ? (pnlU/investedUsd)*100 : null;
+            const dbPct       = pos.pnl_pct != null ? Number(pos.pnl_pct) : null;
+            const dbSol       = pos.pnl_sol != null ? Number(pos.pnl_sol) : null;
+            const pnlU        = dbSol != null ? dbSol * solUsd : (currentVal!=null ? currentVal-investedUsd : null);
+            const pnlP        = dbPct != null ? dbPct : (pnlU!=null && investedUsd>0 ? (pnlU/investedUsd)*100 : null);
             const isClosing   = closingIds.has(pos.id);
             const ageMin      = Math.floor((Date.now()-new Date(pos.opened_at||pos.created_at).getTime())/60000);
             return (
-              <div key={pos.id} style={{ padding:"12px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+              <div key={pos.id} role="button" tabIndex={0} onClick={() => !isClosing && closePosition(pos)} onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !isClosing) closePosition(pos); }}
+                style={{ padding:"12px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", cursor:isClosing?"wait":"pointer", opacity:isClosing?0.72:1 }}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:10 }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:14, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{liveSymbols[pos.mint] || pos.symbol || (pos.mint ? pos.mint.slice(0,6)+"…"+pos.mint.slice(-4) : "?")}</div>
@@ -373,7 +371,7 @@ export default function ShreemBrzeePerformance() {
                     )}
                   </div>
                 </div>
-                <button onClick={() => closePosition(pos)} disabled={isClosing}
+                <button onClick={(e) => { e.stopPropagation(); closePosition(pos); }} disabled={isClosing}
                   style={{ marginTop:8, width:"100%", padding:"8px 0", borderRadius:10, border:"1px solid rgba(239,68,68,.3)", background:"rgba(239,68,68,.07)", color:RED, fontSize:11, fontWeight:800, cursor:isClosing?"not-allowed":"pointer", opacity:isClosing?0.5:1 }}>
                   {isClosing?"Closing…":"Close Position"}
                 </button>

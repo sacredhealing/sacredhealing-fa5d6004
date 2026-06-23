@@ -192,11 +192,6 @@ async function signAndSend(txB64: string, kp: SolanaKeypair): Promise<string> {
           const j = await r.json();
           if (j.result) {
             console.log("[Jito] Bundle sent:", j.result.slice(0, 16), "via", endpoint.split(".")[0]);
-            // Jito returns bundle ID, we need the tx signature
-            // Extract sig from the signed transaction
-            const sigBytes = tx.signatures[0];
-            const sig = Buffer.from(sigBytes).toString("base64");
-            // Convert base64 sig to base58 for Solana explorer
             // Extract real tx sig from the signed transaction (NOT bundle ID)
             const sigBytes = tx.signatures[0];
             const txSig = bs58.encode(sigBytes);
@@ -390,14 +385,14 @@ serve(async (req) => {
       console.warn("[cron-stoploss] Unauthorized call — bad or missing secret");
       return jsonResp({ ok: false, error: "unauthorized" }, 401);
     }
-    // Cleanup: mark unconfirmed trades older than 5 minutes as failed/closed
+    // Cleanup: mark unconfirmed/pending trades older than 5 minutes as closed
     // so they stop blocking new buys and don't show as ghost open positions.
     // Also refund their reserved amount_sol back to session.portfolio.
     const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString();
     const { data: staleRows } = await sb
       .from("shreem_brzee_live_trades")
       .select("id, amount_sol")
-      .eq("status", "unconfirmed")
+        .in("status", ["unconfirmed", "pending"])
       .lt("opened_at", fiveMinAgo);
     const staleIds = (staleRows ?? []).map((r: any) => r.id);
     const refundSol = (staleRows ?? []).reduce((s: number, r: any) => s + Number(r.amount_sol || 0), 0);
@@ -431,7 +426,7 @@ serve(async (req) => {
     const wallet = bs58.encode(kp.publicKey);
 
     const { data: openPos } = await sb.from("shreem_brzee_live_trades")
-      .select("*").in("status", ["open","unconfirmed"]);
+      .select("*").in("status", ["open","pending","unconfirmed"]);
 
     if (!openPos?.length) return jsonResp({ ok: true, checked: 0, staleClosed });
 

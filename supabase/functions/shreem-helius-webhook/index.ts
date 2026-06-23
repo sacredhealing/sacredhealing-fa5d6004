@@ -141,6 +141,34 @@ async function rpcCall(method: string, params: unknown[]) {
   throw new Error(`RPC ${method} failed on all endpoints`);
 }
 
+async function getTokenRawBalance(wallet: string, mint: string): Promise<number> {
+  const taRes = await rpcCall("getTokenAccountsByOwner", [wallet, { mint }, { encoding: "jsonParsed" }]);
+  const accounts = taRes?.value || [];
+  return accounts.reduce((sum: number, item: any) => {
+    const amount = Number(item?.account?.data?.parsed?.info?.tokenAmount?.amount || 0);
+    return sum + amount;
+  }, 0);
+}
+
+async function getMintDecimals(mint: string): Promise<number> {
+  try {
+    const supply = await rpcCall("getTokenSupply", [mint]);
+    const decimals = Number(supply?.value?.decimals);
+    if (Number.isFinite(decimals) && decimals >= 0) return decimals;
+  } catch (e: any) {
+    console.warn(`[mint-decimals] ${mint.slice(0, 8)}: ${e?.message ?? e}`);
+  }
+  return 6;
+}
+
+async function getSolUsd(): Promise<number> {
+  try {
+    const pr = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", { signal: timeoutSignal(4000) });
+    if (pr.ok) return parseFloat((await pr.json()).price) || 150;
+  } catch {}
+  return 150;
+}
+
 async function jupQuote(input: string, output: string, amount: number) {
   const url = `${JUPITER}/quote?inputMint=${input}&outputMint=${output}&amount=${amount}&slippageBps=${SLIPPAGE_BPS}&dynamicSlippage=true`;
   const r = await fetch(url, { signal: timeoutSignal(8000) });
@@ -239,16 +267,17 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   ]);
   if (dupSigRes.data?.length)  return { ok: true, skipped: "duplicate_sig" };
 
-  const portfolio = Number(sess.portfolio || 0);
-  if (portfolio <= MIN_TRADE_SOL) return { ok: true, skipped: "no_portfolio" };
-
   const lamps = Number((balRes as any)?.value ?? balRes ?? 0);
-  const liveBalSol = lamps > 0 ? lamps / LAMPORTS : portfolio;
+  const savedPortfolio = Number(sess.portfolio || 0);
+  const liveBalSol = lamps > 0 ? lamps / LAMPORTS : savedPortfolio;
   const exposure = (openTradesRes.data || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+  const freeBalance = Math.max(0, liveBalSol - 0.003);
+  if (freeBalance <= MIN_TRADE_SOL) return { ok: true, skipped: `no_phantom_balance(${liveBalSol.toFixed(4)} SOL)` };
+
   const cap = liveBalSol * 0.50;
   if (exposure >= cap) return { ok: true, skipped: `cap_50pct(exp=${exposure.toFixed(3)}>=cap=${cap.toFixed(3)}@bal=${liveBalSol.toFixed(3)})` };
 
-  const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, portfolio * 0.05), cap - exposure);
+  const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, freeBalance * 0.05), cap - exposure, freeBalance);
   if (size < MIN_TRADE_SOL) return { ok: true, skipped: "size_too_small" };
 
   // ── ATOMIC MINT CLAIM ─────────────────────────────────────────────────────
@@ -282,10 +311,8 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   // Atomic SOL reservation — single conditional update; race-safe.
   const { data: reserved, error: reserveErr } = await sb
     .from("shreem_brzee_session")
-    .update({ portfolio: portfolio - size, updated_at: new Date().toISOString() })
+    .update({ portfolio: Math.max(0, freeBalance - size), updated_at: new Date().toISOString() })
     .eq("id", "default")
-    .eq("portfolio", portfolio)
-    .gte("portfolio", size)
     .select("id");
   if (reserveErr || !reserved || reserved.length === 0) {
     // Release the mint claim
@@ -300,10 +327,16 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   // Jupiter quote → swap → send (no waitConfirm — that's what cron reconciles)
   let txSig = "";
   let quote: any;
+  let tokenDecimals = 6;
+  let solUsd = 150;
   try {
     quote = await jupQuote(SOL_MINT, signal.mint, lamports);
     const swapTx = await jupSwapTx(quote, walletPub);
     txSig = await signAndSend(swapTx, kp);
+    [tokenDecimals, solUsd] = await Promise.all([
+      getMintDecimals(signal.mint),
+      getSolUsd(),
+    ]);
   } catch (e: any) {
     console.error(`[INLINE-BUY] ❌ ${signal.symbol ?? signal.mint.slice(0,8)} swap failed: ${e.message}`);
     // Release mint claim + refund the reservation so the next signal can use the SOL
@@ -321,6 +354,10 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
 
   const swapMs = Date.now() - t0;
   console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms`);
+
+  const rawTokens = Number(quote?.outAmount || 0);
+  const tokensHuman = rawTokens > 0 ? rawTokens / Math.pow(10, tokenDecimals) : 0;
+  const entryPrice = tokensHuman > 0 ? (size * solUsd) / tokensHuman : null;
 
   // ── Quick 4s confirmation check ───────────────────────────────────────────
   // Checks if tx landed on-chain. If confirmed → open (real trade, tokens received).
@@ -365,7 +402,10 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
     sb.from("shreem_brzee_live_trades").update({
       status: txConfirmed ? "open" : "unconfirmed",
       tx_sig: txSig,
-      tokens_received: txConfirmed ? Number(quote?.outAmount || 0) : null,
+      tokens_received: rawTokens || null,
+      token_decimals: tokenDecimals,
+      sol_usd_at_entry: solUsd,
+      entry_price: entryPrice,
     }).eq("id", tradeId),
     sb.from("shreem_brzee_signals").upsert(signalRow, { onConflict: "sig" }),
   ]).catch((e: any) => console.error("[INLINE-BUY] post-swap DB write:", e?.message));
@@ -522,22 +562,69 @@ async function runCron(): Promise<object> {
   if (!sess?.started_at || sess?.stopped_at) return { skipped: "session not running" };
 
   // CRITICAL FIX: use live_trades table in live mode, paper_trades in paper mode
+  const isLiveMode = sess?.mode === "live";
   const tradeTable = sess?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
   const { data: openPos } = await sb.from(tradeTable)
-    .select("*").in("status", ["open", "unconfirmed"]);
+    .select("*").in("status", ["open", "pending", "unconfirmed"]);
 
   if (!openPos?.length) return { checked: 0 };
 
   let closed = 0;
+  let walletClosed = 0;
   const results: any[] = [];
+  const liveKp = isLiveMode ? loadKeypair() : null;
+  const liveWallet = liveKp ? bs58.encode(liveKp.publicKey) : null;
+  let liveWalletBalSol: number | null = null;
+  if (liveWallet) {
+    try {
+      const bal = await rpcCall("getBalance", [liveWallet]);
+      liveWalletBalSol = Number(bal?.value || 0) / LAMPORTS;
+    } catch {}
+  }
 
   for (const pos of openPos) {
     const entry  = Number(pos.entry_price) || 0;
     const ageH   = (Date.now() - new Date(pos.opened_at || pos.created_at).getTime()) / 3_600_000;
+    const ageMin = ageH * 60;
+
+    // Live reconciliation: if Phantom/on-chain balance is already zero, close UI too.
+    // Avoid false-closing very fresh unconfirmed swaps while token accounts propagate.
+    if (isLiveMode && liveWallet && pos.mint && (pos.status === "open" || ageMin >= 5)) {
+      try {
+        const rawBalance = await getTokenRawBalance(liveWallet, pos.mint);
+        if (!rawBalance || rawBalance < 1) {
+          await sb.from("shreem_brzee_live_trades").update({
+            status: "closed",
+            sell_reason: "closed_in_wallet",
+            closed_at: new Date().toISOString(),
+            pnl_pct: Number(pos.pnl_pct || 0),
+            pnl_sol: Number(pos.pnl_sol || 0),
+            updated_at: new Date().toISOString(),
+          }).eq("id", pos.id);
+          closed++;
+          walletClosed++;
+          results.push({ id: pos.id, reason: "closed_in_wallet" });
+          continue;
+        }
+      } catch (e: any) {
+        console.warn(`[cron] wallet reconcile failed ${pos.mint.slice(0,8)}: ${e?.message ?? e}`);
+      }
+    }
 
     // 48h safety cap (no browser needed — runs server-side every 5min)
     if (ageH >= 48) {
-      await closeTrade(pos, "48h_safety_cap");
+      if (isLiveMode) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
+            body: JSON.stringify({ action: "close", trade_id: pos.id, reason: "48h_safety_cap" }),
+            signal: AbortSignal.timeout(25000),
+          });
+        } catch {}
+      } else {
+        await closeTrade(pos, "48h_safety_cap");
+      }
       closed++; results.push({ id: pos.id, reason: "48h_safety_cap", ageH: ageH.toFixed(1) });
       continue;
     }
@@ -607,7 +694,14 @@ async function runCron(): Promise<object> {
 
   }
 
-  return { checked: openPos.length, closed, results };
+  if (isLiveMode && liveWalletBalSol !== null) {
+    await sb.from("shreem_brzee_session").update({
+      portfolio: liveWalletBalSol,
+      updated_at: new Date().toISOString(),
+    }).eq("id", "default");
+  }
+
+  return { checked: openPos.length, closed, walletClosed, wallet_balance_sol: liveWalletBalSol, results };
 }
 
 // ── Sync wallets to tracked_whales (DB only — fast, runs on every request) ────
@@ -1185,7 +1279,7 @@ serve(async (req) => {
         .from(table)
         .select("*")
         .eq("id", tradeId)
-        .eq("status", "open")
+        .in("status", ["open", "pending", "unconfirmed", "closing"])
         .single();
 
       if (fetchErr || !pos) return jsonResp({ error: "trade not found or already closed" }, 404);
@@ -1202,6 +1296,11 @@ serve(async (req) => {
             body: JSON.stringify({ action: "close", trade_id: tradeId, reason: "manual" }),
           });
           const execData = await execR.json().catch(() => ({}));
+          const failedSell = Array.isArray(execData?.results) && execData.results.some((r: any) => r?.ok === false);
+          if (!execR.ok || execData?.ok === false || execData?.code === "BOOT_ERROR" || failedSell) {
+            const detail = execData?.results?.find?.((r: any) => r?.ok === false)?.error;
+            return jsonResp({ ok: false, error: detail || execData?.error || execData?.message || "executor close failed", exec: execData }, 500);
+          }
           return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual", table, exec: execData });
         } catch (execErr: any) {
           return jsonResp({ ok: false, error: `executor unreachable: ${execErr?.message}` }, 500);
@@ -1342,8 +1441,11 @@ serve(async (req) => {
         // [INLINE-BUY] timing line on success. Errors are caught silently — the
         // stop-loss cron reconciles any unconfirmed state.
         if (isRunning && isLive && swap.action === "BUY") {
+          const buyResult = await executeBuyInline(signal, sessNow);
+          if (!buyResult.ok) {
+            console.error(`[live-buy] ❌ ${signal.symbol || signal.mint.slice(0,8)} → ${buyResult.error || buyResult.skipped || "failed"}`);
+          }
           inserted++;
-          executeBuyInline(signal, sessNow).catch(() => {});
           continue;
         }
 
