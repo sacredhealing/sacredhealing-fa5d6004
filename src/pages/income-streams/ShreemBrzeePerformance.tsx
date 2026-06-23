@@ -229,8 +229,8 @@ export default function ShreemBrzeePerformance() {
 
   const fetchSignals = useCallback(async () => {
     try {
-      const { data } = await d.from("shreem_brzee_signals")
-        .select("*").order("created_at", { ascending: false }).limit(100);
+      const r = await fetch(`${EDGE_BASE}/signals`, { signal: AbortSignal.timeout(5000) });
+      const data = r.ok ? await r.json() : [];
       setSignals((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
     } catch {}
   }, []);
@@ -241,11 +241,13 @@ export default function ShreemBrzeePerformance() {
     if (period === "weekly")  from.setDate(now.getDate()-7);
     if (period === "monthly") from.setMonth(now.getMonth()-1);
     if (period === "yearly")  from.setFullYear(now.getFullYear()-1);
-    const { data } = await d.from("shreem_brzee_signals")
-      .select("label,wallet,action,amount_sol,created_at,sig")
-      .gte("created_at", from.toISOString())
-      .order("created_at", { ascending: false });
-    setPeriodSigs((data || []).filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
+    try {
+      const r = await fetch(`${EDGE_BASE}/signals`, { signal: AbortSignal.timeout(5000) });
+      const data = r.ok ? await r.json() : [];
+      setPeriodSigs((data || [])
+        .filter((s: any) => new Date(s.created_at).getTime() >= from.getTime())
+        .filter((s: any) => !s.sig?.startsWith("TEST_") && !s.sig?.startsWith("DIAG_")));
+    } catch {}
   }, [period]);
 
   const fetchOpen = useCallback(async () => {
