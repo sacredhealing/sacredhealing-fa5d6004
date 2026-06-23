@@ -189,7 +189,7 @@ export default function ShreemBrzeePerformance() {
   const goLive = async () => {
     setLoading(true);
     try {
-      const bal = botBal > 0 ? botBal : 0.3;
+      const bal = botBal !== null && botBal > 0 ? botBal : 0.3;
       const r = await fetch(`${EDGE_BASE}/go-live`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({balance_sol: bal}) });
       const j = r.ok ? await r.json() : null;
       if (!j?.ok) throw new Error(j?.error||"failed");
