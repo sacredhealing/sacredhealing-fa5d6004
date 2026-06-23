@@ -1,51 +1,47 @@
-## Goal
 
-Fix the Monday newsletter so it (a) clearly comes from **Adam & Laila** (not "Shiva · SQI"), (b) the "What's New in the Nexus" section automatically lists every new thing users can actually use across the app from the last 7 days (audio, courses, mantras, meditations, tools, announcements, etc.), and (c) it sends automatically every Monday to all users — no manual trigger.
+## 1. UI cleanup — `src/pages/income-streams/ShreemBrzeePerformance.tsx`
 
-Tone/visual style of the existing mystical email is kept as-is per your selection (only the sender name and the "What's New" content source change).
+**Wallet lists**
+- Reduce `KOL_LIST` to the 2 active wallets: Cented + Remusofmars.
+- Delete `KOL_EXPLORER` entirely and the leaderboard/explorer block that renders it.
+- Remove the "Add custom whale" input + `tracked_whales` upsert flow (UI section + handler at line 629). Manual DB inserts only going forward.
+- Update copy strings: "watching 20 whale wallets" → "watching 2 whale wallets" (lines 133, 798, 966).
+- Drop the whale leaderboard table rendered from `whaleRows` (around line 1163). Keep `whaleMap`/`whaleRows` only if still used by the per-position attribution badge; otherwise delete.
 
-## Changes
+**Price polling → on-chain WebSocket**
+- Delete `PRICE_URL`, `updatePrices`, `priceIntervalRef`, `liveLiquidity`, and the `setInterval(updatePrices, 8000)` effect (lines 337-403).
+- Replace with a single `useEffect` that, for each open position, opens a Helius WebSocket (`wss://atlas-mainnet.helius-rpc.com/?api-key=...` via a new `shreem-helius-ws-token` edge function or directly from the client using the publishable Helius key surfaced via a tiny `get-helius-ws-url` edge function — Helius key stays server-side; the edge function returns a short-lived signed WS URL).
+- For each open position:
+  1. On open: call new edge function `shreem-position-pool-info` → returns `{ poolAddress, baseVault, quoteVault, decimals }` for the mint (Raydium/Pump.fun pool lookup via Jupiter `/v6/quote` or DexScreener — one-shot, cached).
+  2. Subscribe via `accountSubscribe` to `baseVault` + `quoteVault`. On each notification, recompute `price = quoteReserve / baseReserve` and update `livePrices[mint]`.
+  3. On close/unmount: `accountUnsubscribe` + close WS when no positions remain.
+- Held-amount accuracy: on position open, fetch the bot wallet's actual token balance via a single `getTokenAccountsByOwner` RPC call (new edge function `shreem-token-balance`), store as `pos.token_amount`. P&L = `token_amount * livePrice - amount_sol_usd`. This matches Phantom because it uses the real on-chain amount, not an inferred share size.
 
-### 1. `supabase/functions/weekly-digest/index.ts`
+**Keep**: dexscreener iframe + link (cosmetic, not on the hot path).
 
-- **From header** — change `Shiva · SQI <noreply@siddhaquantumnexus.com>` to `Adam & Laila <noreply@siddhaquantumnexus.com>`.
-- **Footer signature** — add a small "— With love, Adam & Laila" line above the existing footer so the personal source is obvious even when "From" gets truncated in inboxes.
-- **"What's New" source** — replace the current `content_changelog`-only query with an aggregated 7-day scan across every table that represents something a user can use:
-  - `mantras` (new + `is_active`)
-  - `meditations`
-  - `healing_audio`
-  - `music_tracks` / `music_albums`
-  - `courses` + new `lessons`
-  - `ambient_sounds` / `sound_library`
-  - `creative_tools`
-  - `transformation_programs` / `transformation_variations`
-  - `divine_transmissions`
-  - `announcements`
-  - `live_events`
-  - `content_changelog` (kept as manual override / catch-all)
-  
-  Each row is normalized into `{ type, title, description, created_at }`, sorted newest-first, capped at ~20 items, grouped by type in the email (New Audio, New Meditations, New Mantras, New Courses, New Tools, Announcements, etc.).
-- Empty-state stays the same wording.
+## 2. Edge function inline-buy cleanup — `supabase/functions/shreem-helius-webhook/index.ts`
 
-### 2. Automatic Monday delivery
+Audit the inline-buy path (from webhook arrival → swap dispatch) and remove:
+- Any string normalization / regex parsing of webhook payload fields that isn't required to extract `signature`, `wallet`, `mint`, `action`, `amount_sol`.
+- `console.log` calls inside the hot path (keep `[INLINE-BUY]` timing line only).
+- Pre-swap DB reads that can be deferred (signal insert, audit logging) → move them to a `setTimeout(..., 0)` or fire-and-forget after the swap dispatch promise is created.
+- Any `JSON.stringify`/pretty-printing of the payload before the swap call.
 
-A pg_cron job is scheduled to POST to `weekly-digest` every Monday at 09:00 UTC, using the project's `CRON_SECRET` via `X-Cron-Secret` (the function already accepts this). If `CRON_SECRET` isn't set yet, we set it as a Supabase secret first.
+Goal: minimize work between webhook bytes-on-wire and `fetch(JUPITER_SWAP_URL)`.
 
-```text
-Schedule: 0 9 * * 1  (every Monday 09:00 UTC)
-Endpoint: /functions/v1/weekly-digest
-Auth:     X-Cron-Secret header
-Audience: every auth user with an email (current behavior preserved)
-```
+## 3. New edge functions
 
-Existing `sqi-weekly-digest` schedule is unscheduled first if present, to avoid duplicates.
+- `shreem-helius-ws-url` (GET): returns `{ url: "wss://atlas-mainnet.helius-rpc.com/?api-key=..." }` — keeps the Helius key server-side. Frontend calls once per session.
+- `shreem-pool-info` (POST `{ mint }`): one-shot lookup of pool address + vault accounts + decimals. Cached in `ai_response_cache` for 24h per mint.
+- `shreem-token-balance` (POST `{ owner, mint }`): single `getTokenAccountsByOwner` RPC → exact uiAmount. Called once per position open.
 
-### 3. Deploy
+## 4. Out of scope (explicit)
 
-After the function edits, `weekly-digest` is redeployed so the new sender + grouped "What's New" go live immediately. A one-off test send to your admin email confirms the new layout before the first scheduled Monday run.
+- `token-price-batch` edge function stays deployed (other pages may use it) but `ShreemBrzeePerformance.tsx` no longer calls it.
+- No change to swap execution, stop-loss cron, or trailing-stop logic.
 
-## Out of scope (not changed)
+## Technical notes
 
-- Visual design, colors, mystical copy ("Monday Transmission", Personal Transmission block, Gemini-generated paragraph) — kept exactly as it is.
-- Other weekly functions (`weekly-motivational-email`, `weekly-alignment-email`) — untouched.
-- Unsubscribe / suppression flow — unchanged (current behavior: sends to all auth users).
+- WS connection budget: 1 WS, N `accountSubscribe` calls (2 per position). Helius free tier supports 100 concurrent subs.
+- Price formula for Raydium AMM pools: `price_usd = (quoteVaultUiAmount / baseVaultUiAmount) * solPriceUsd` (when quote is SOL). For Pump.fun bonding curves, formula differs — pool-info function returns `poolType` and frontend branches.
+- Fallback: if WS drops or pool-info fails for a mint, that position shows "—" for live P&L rather than falling back to a polling API. User has explicitly accepted this trade-off.

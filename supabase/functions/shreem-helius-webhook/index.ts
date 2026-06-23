@@ -208,64 +208,49 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   if (signal.mint === USDC)     return { ok: true, skipped: "USDC" };
   if (signal.mint === SOL_MINT) return { ok: true, skipped: "SOL_MINT" };
 
-  // Duplicate mint check — don't double-position
-  const { data: existing } = await sb.from("shreem_brzee_live_trades")
-    .select("id").eq("mint", signal.mint)
-    .in("status", ["open","pending","unconfirmed","closing"]).limit(1);
-  if (existing?.length) return { ok: true, skipped: "duplicate_mint" };
-
-  // Duplicate signature check
-  const { data: dupSig } = await sb.from("shreem_brzee_live_trades")
-    .select("id").eq("sig", signal.sig + "_live").limit(1);
-  if (dupSig?.length) return { ok: true, skipped: "duplicate_sig" };
-
-  const portfolio = Number(sess.portfolio || 0);
-  if (portfolio <= MIN_TRADE_SOL) return { ok: true, skipped: "no_portfolio" };
-
-  // Load keypair early — needed for both live balance fetch and swap
+  // Load keypair first (sync, fast) — we need walletPub for the parallel batch.
   const kp = loadKeypair();
   if (!kp) return { ok: false, error: "no_keypair" };
   const walletPub = bs58.encode(kp.publicKey);
 
-  // 50% exposure cap — base = LIVE on-chain wallet balance (fresh RPC getBalance),
-  // not start_balance (drifts as PnL accumulates and ignores deposits/withdrawals).
-  let liveBalSol = 0;
-  try {
-    const bres: any = await rpcCall("getBalance", [walletPub]);
-    const lamps = Number(bres?.value ?? bres ?? 0);
-    if (lamps > 0) liveBalSol = lamps / LAMPORTS;
-  } catch (e: any) {
-    console.warn(`[INLINE-BUY] getBalance failed: ${e.message} — falling back to portfolio`);
-  }
-  if (liveBalSol <= 0) liveBalSol = portfolio; // safety fallback when RPC is down
+  // ── Hot-path: run ALL pre-swap I/O in parallel ────────────────────────────
+  // Previously: 5 sequential awaits (dup-mint → dup-sig → getBalance → openTrades → reserve)
+  // Now: 4 in parallel, then a single conditional reservation update.
+  const livesig = signal.sig + "_live";
+  const [dupMintRes, dupSigRes, balRes, openTradesRes] = await Promise.all([
+    sb.from("shreem_brzee_live_trades").select("id").eq("mint", signal.mint)
+      .in("status", ["open","pending","unconfirmed","closing"]).limit(1),
+    sb.from("shreem_brzee_live_trades").select("id").eq("sig", livesig).limit(1),
+    rpcCall("getBalance", [walletPub]).catch(() => null),
+    sb.from("shreem_brzee_live_trades").select("amount_sol")
+      .in("status", ["open","pending","unconfirmed","closing"]),
+  ]);
+  if (dupMintRes.data?.length) return { ok: true, skipped: "duplicate_mint" };
+  if (dupSigRes.data?.length)  return { ok: true, skipped: "duplicate_sig" };
 
-  const { data: openTrades } = await sb.from("shreem_brzee_live_trades")
-    .select("amount_sol").in("status", ["open","pending","unconfirmed","closing"]);
-  const exposure = (openTrades || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+  const portfolio = Number(sess.portfolio || 0);
+  if (portfolio <= MIN_TRADE_SOL) return { ok: true, skipped: "no_portfolio" };
+
+  const lamps = Number((balRes as any)?.value ?? balRes ?? 0);
+  const liveBalSol = lamps > 0 ? lamps / LAMPORTS : portfolio;
+  const exposure = (openTradesRes.data || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
   const cap = liveBalSol * 0.50;
   if (exposure >= cap) return { ok: true, skipped: `cap_50pct(exp=${exposure.toFixed(3)}>=cap=${cap.toFixed(3)}@bal=${liveBalSol.toFixed(3)})` };
 
   const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, portfolio * 0.05), cap - exposure);
   if (size < MIN_TRADE_SOL) return { ok: true, skipped: "size_too_small" };
 
-  // ── ATOMIC RESERVATION ────────────────────────────────────────────────────
-  // Decrement portfolio in a single conditional UPDATE so two concurrent signals
-  // can't both pass the cap check and both fire. Postgres row-locks the matched
-  // row; only one update wins, the other sees portfolio < size and returns 0 rows.
+  // Atomic reservation — single conditional update; race-safe.
   const { data: reserved, error: reserveErr } = await sb
     .from("shreem_brzee_session")
     .update({ portfolio: portfolio - size, updated_at: new Date().toISOString() })
     .eq("id", "default")
-    .eq("portfolio", portfolio)        // optimistic concurrency: row must be unchanged
-    .gte("portfolio", size)             // and must still cover the trade size
+    .eq("portfolio", portfolio)
+    .gte("portfolio", size)
     .select("id");
-  if (reserveErr) {
-    console.error(`[INLINE-BUY] reserve error: ${reserveErr.message}`);
-    return { ok: false, error: "reserve_failed" };
-  }
-  if (!reserved || reserved.length === 0) {
-    return { ok: true, skipped: "reserve_lost_race" };
-  }
+  if (reserveErr) return { ok: false, error: "reserve_failed" };
+  if (!reserved || reserved.length === 0) return { ok: true, skipped: "reserve_lost_race" };
+
 
   const lamports = Math.floor(size * LAMPORTS);
 
@@ -1212,16 +1197,15 @@ serve(async (req) => {
         const isLive    = sessNow?.mode === "live";
 
         // ── LIVE BUY → INLINE SWAP (no executor round-trip, no DB write first) ──
+        // Hot path: zero logging, zero stringify. executeBuyInline emits the single
+        // [INLINE-BUY] timing line on success. Errors are caught silently — the
+        // stop-loss cron reconciles any unconfirmed state.
         if (isRunning && isLive && swap.action === "BUY") {
           inserted++;
-          console.log(`⚡ INLINE BUY ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
-          // Fire-and-forget the swap; do NOT block the webhook response on it.
-          // executeBuyInline writes signal + trade + session AFTER the swap is sent.
-          executeBuyInline(signal, sessNow)
-            .then((r) => console.log(`[INLINE-BUY RESULT]`, JSON.stringify(r).slice(0, 200)))
-            .catch((e) => console.error(`[INLINE-BUY ERROR]`, e?.message ?? String(e)));
+          executeBuyInline(signal, sessNow).catch(() => {});
           continue;
         }
+
 
         // ── All other paths: write signal first (legacy behaviour) ──────────
         const { error } = await sb.from("shreem_brzee_signals")

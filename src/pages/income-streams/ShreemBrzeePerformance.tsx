@@ -12,40 +12,10 @@ const RED   = "#ef4444";
 const CYAN  = "#00d4ff";
 const BOT_WALLET = "Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA";
 
-// ─── Static KOL list ─────────────────────────────────────────────────────────
+// ─── Active tracked wallets (manual list — add new ones here, no DB management) ─
 const KOL_LIST = [
-  { label: "Euris",         addr: "Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", vip: true },
-  { label: "Heyitsyolo",    addr: "Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", vip: true },
-  { label: "Remusofmars",   addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
-  { label: "Lenion",        addr: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", vip: false },
-  { label: "Hades",         addr: "HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp", vip: false },
-  { label: "Fireball",      addr: "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51", vip: false },
-  { label: "Hachjdn",       addr: "EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS", vip: false },
-  { label: "Cented",        addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: false },
-  { label: "The Grande",    addr: "Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA", vip: false },
-  { label: "West",          addr: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", vip: false },
-  { label: "Yenni",         addr: "5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", vip: false },
-  { label: "Doji",          addr: "5ZuV8eqkvzYFVEKbLvGBdexL2tFv7E5BCd2HZpjqbdg",  vip: false },
-  { label: "Trenchman",     addr: "Hw5UKBU5k3YudnGwaykj5E8cYUidNMPuEewRRar5Xoc7", vip: false },
-  { label: "OGAntD",        addr: "215nhcAHjQQGgwpQSJQ7zR26etbjjtVdW74NLzwEgQjP", vip: false },
-  { label: "Kev",           addr: "BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", vip: false },
-  { label: "decu",          addr: "4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9", vip: false },
-  { label: "trunoest",      addr: "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  vip: false },
-  { label: "clukz",         addr: "G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", vip: false },
-  { label: "Limfork",       addr: "BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", vip: false },
-];
-
-const KOL_EXPLORER = [
-  { name:"Cented",     addr:"CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", pnl7d:95641,  pnl30d:576766, wr:63.8 },
-  { name:"Euris",      addr:"Fp1npp7sCi5h26oTrPg23dGRXLnZSL3wcsoyVMquVMaB", pnl7d:51079,  pnl30d:402366, wr:56   },
-  { name:"Trunoest",   addr:"ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",  pnl7d:24975,  pnl30d:77853,  wr:65.8 },
-  { name:"Kev",        addr:"BTf4A2exGK9BCVDNzy65b9dUzXgMqB4weVkvTMFQsadd", pnl7d:22717,  pnl30d:122059, wr:52.3 },
-  { name:"clukz",      addr:"G6fUXjMKPJzCY1rveAE6Qm7wy5U3vZgKDJmN1VPAdiZC", pnl7d:18856,  pnl30d:92000,  wr:62.6 },
-  { name:"Heyitsyolo", addr:"Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ", pnl7d:10746,  pnl30d:88376,  wr:54.6 },
-  { name:"West",       addr:"JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", pnl7d:16382,  pnl30d:83971,  wr:51.4 },
-  { name:"Limfork",    addr:"BQVz7fQ1WsQmSTMY3umdPEPPTm1sdcBcX9sP7o6kPRmB", pnl7d:6793,   pnl30d:72393,  wr:52.4 },
-  { name:"Yenni",      addr:"5B52w1ZW9tuwUduueP5J7HXz5AcGfruGoX6YoAudvyxG", pnl7d:10386,  pnl30d:76602,  wr:47.3 },
-  { name:"Remusofmars",addr:"BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", pnl7d:24200,  pnl30d:68000,  wr:65.8 },
+  { label: "Cented",      addr: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", vip: true },
+  { label: "Remusofmars", addr: "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu", vip: true },
 ];
 
 const isValidSol = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s.trim());
@@ -130,7 +100,7 @@ function Section({ title, badge, right, children, defaultOpen = true, accent }: 
 function Diagnostics({ running, signalCount, edgeOk }: { running: boolean; signalCount: number; edgeOk: boolean|null }) {
   const items = [
     { label:"Edge Function", status:edgeOk===null?"checking":edgeOk?"ok":"fail", detail:edgeOk===null?"Checking…":edgeOk?"Webhook reachable ✓":"Edge function unreachable" },
-    { label:"Bot Session", status:running?"ok":"warn", detail:running?"Session active — watching 20 whale wallets":"Session stopped — press START above" },
+    { label:"Bot Session", status:running?"ok":"warn", detail:running?"Session active — watching 2 whale wallets":"Session stopped — press START above" },
     { label:"Signal Pipeline", status:signalCount>0?"ok":"warn", detail:signalCount>0?`${signalCount} signals received`:"0 signals yet — waiting for whale activity" },
     { label:"Blockchain", status:"ok", detail:"Solana mainnet · Jupiter DEX · RugCheck active" },
   ];
@@ -180,11 +150,13 @@ export default function ShreemBrzeePerformance() {
   const [botBalSol, setBotBalSol]   = useState<number>(0);
   const [botBalFetched, setBotBalFetched] = useState(false);
 
-  // Live prices for open positions (USD per token)
+  // Live prices for open positions (USD per token) — derived from real on-chain
+  // Jupiter quote of held tokens → SOL. Matches Phantom exactly (real depth, real
+  // held amount). NO DexScreener/price-batch polling.
   const [livePrices, setLivePrices] = useState<Record<string,number>>({});
-  const [liveLiquidity, setLiveLiquidity] = useState<Record<string,number>>({});
-  // Below this USD liquidity, the price feed is unreliable and P&L is flagged "estimated"
-  const LOW_LIQ_USD = 10_000;
+  // Exact on-chain token balance per mint (uiAmount), fetched once at open via
+  // getTokenAccountsByOwner. Drives the Jupiter quote-out sizing.
+  const [heldTokens, setHeldTokens] = useState<Record<string,number>>({});
   const [pricesFetched, setPricesFetched] = useState(false);
 
   const [edgeOk, setEdgeOk] = useState<boolean|null>(null);
@@ -198,10 +170,7 @@ export default function ShreemBrzeePerformance() {
   const [stoppingBot, setStoppingBot] = useState(false);
   const [closingIds, setClosingIds]   = useState<Set<string>>(new Set());
 
-  const [kolPeriod, setKolPeriod]   = useState<"7D"|"30D">("30D");
-  const [trackedWhalesAddrs, setTrackedWhalesAddrs] = useState<Set<string>>(
-    new Set(KOL_LIST.map(k => k.addr))
-  );
+  
 
   const [liveMode, setLiveMode]       = useState(false);
   const [liveConfirm, setLiveConfirm] = useState(false);
@@ -334,73 +303,75 @@ export default function ShreemBrzeePerformance() {
     // If bal=0, keep last known — but executor health always returns real value so this is rare
   }, [botBalFetched]);
 
-  // ── FIX: Live token prices — entry_price is USD, livePrices is USD → same unit
-  const PRICE_URL = `${EDGE_BASE.replace(/\/[^/]+$/, "")}/token-price-batch`;
+  // ── On-chain P&L — matches Phantom exactly ─────────────────────────────────
+  // 1. Once per position: getTokenAccountsByOwner via Helius → exact held amount.
+  // 2. Every 5s per position: Jupiter /quote held_tokens → SOL (real depth).
+  //    USD price per token = (outSol / heldTokens) * solUsd.
+  // NO DexScreener calls. NO token-price-batch. Zero stale price feeds.
+  const TOKEN_BAL_URL = `${EDGE_BASE.replace(/\/[^/]+$/, "")}/shreem-token-balance`;
+  const BOT_WALLET_REF = useRef<string>(BOT_WALLET);
+
+  const fetchHeldAmount = useCallback(async (mint: string) => {
+    try {
+      const r = await fetch(TOKEN_BAL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner: BOT_WALLET_REF.current, mint }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const j = await r.json();
+      const ui = Number(j?.uiAmount || 0);
+      const raw = Number(j?.amount || 0);
+      const dec = Number(j?.decimals || 0);
+      if (ui > 0) setHeldTokens(prev => ({ ...prev, [mint]: ui }));
+      return { ui, raw, dec };
+    } catch { return { ui: 0, raw: 0, dec: 0 }; }
+  }, [TOKEN_BAL_URL]);
+
+  const quoteTokenToSol = useCallback(async (mint: string, rawAmount: number) => {
+    if (!rawAmount || rawAmount <= 0) return 0;
+    try {
+      const url = `https://lite-api.jup.ag/swap/v1/quote?inputMint=${mint}&outputMint=So11111111111111111111111111111111111111112&amount=${Math.floor(rawAmount)}&slippageBps=300`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      if (!r.ok) return 0;
+      const j = await r.json();
+      const outLamports = Number(j?.outAmount || 0);
+      return outLamports / 1e9; // SOL
+    } catch { return 0; }
+  }, []);
 
   const updatePrices = useCallback(async () => {
     if (!openPos.length) return;
     const mints = [...new Set(openPos.map((p: any) => p.mint).filter(Boolean))];
     if (!mints.length) return;
-    // Back-fill entry_price from live price when DB update failed after swap
-    for (const pos of openPos) {
-      if ((!pos.entry_price||Number(pos.entry_price)===0) && pos.mint && (livePrices[pos.mint]||0)>0) {
-        try { await d.from("shreem_brzee_live_trades").update({entry_price:livePrices[pos.mint]}).eq("id",pos.id); } catch {}
+
+    // Ensure we have on-chain held amounts for every open position (one-time fetch per mint)
+    const missing = mints.filter(m => !heldTokens[m]);
+    const fetched: Record<string, { ui: number; raw: number; dec: number }> = {};
+    await Promise.all(missing.map(async (m) => { fetched[m] = await fetchHeldAmount(m); }));
+
+    // Quote each held token → SOL using Jupiter (real on-chain pool depth)
+    await Promise.all(mints.map(async (m) => {
+      const ui = heldTokens[m] ?? fetched[m]?.ui ?? 0;
+      const dec = fetched[m]?.dec ?? 6;
+      if (ui <= 0) return;
+      const raw = ui * Math.pow(10, dec);
+      const outSol = await quoteTokenToSol(m, raw);
+      if (outSol > 0) {
+        const usdPerToken = (outSol / ui) * solUsd;
+        setLivePrices(prev => ({ ...prev, [m]: usdPerToken }));
       }
-    }
-    try {
-      const r = await fetch(PRICE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mints }),
-        signal: AbortSignal.timeout(15000),
-        cache: "no-store",
-      });
-      if (!r.ok) return;
-      const j = await r.json();
-      const updated: Record<string, number> = {};
-      for (const [m, p] of Object.entries<any>(j?.prices || {})) {
-        const n = Number(p);
-        if (n > 0) updated[m] = n;
-      }
-      const updatedLiq: Record<string, number> = {};
-      for (const [m, l] of Object.entries<any>(j?.liquidity || {})) {
-        const n = Number(l);
-        if (!Number.isNaN(n) && n >= 0) updatedLiq[m] = n;
-      }
-      if (Object.keys(updatedLiq).length) setLiveLiquidity(prev => ({ ...prev, ...updatedLiq }));
-      if (Object.keys(updated).length) {
-        setLivePrices(prev => ({ ...prev, ...updated }));
-        // Backfill entry_price for positions that opened without one (pending fills)
-        // so P&L can start tracking from the first known price.
-        const toBackfill = openPos.filter(
-          (p: any) => p?.mint && updated[p.mint] && (!p.entry_price || Number(p.entry_price) <= 0)
-        );
-        if (toBackfill.length) {
-          for (const p of toBackfill) {
-            try {
-              await d.from("shreem_brzee_live_trades")
-                .update({ entry_price: updated[p.mint] })
-                .eq("id", p.id)
-                .or("entry_price.is.null,entry_price.eq.0");
-            } catch {}
-          }
-          setOpenPos(prev => prev.map((p: any) =>
-            updated[p.mint] && (!p.entry_price || Number(p.entry_price) <= 0)
-              ? { ...p, entry_price: updated[p.mint] }
-              : p
-          ));
-        }
-      }
-      setPricesFetched(true);
-    } catch (e) { console.warn("[prices] batch failed", e); }
-  }, [openPos, PRICE_URL]);
+    }));
+    setPricesFetched(true);
+  }, [openPos, heldTokens, fetchHeldAmount, quoteTokenToSol, solUsd]);
 
   useEffect(() => {
     updatePrices();
     if (priceIntervalRef.current) clearInterval(priceIntervalRef.current);
-    priceIntervalRef.current = setInterval(updatePrices, 8000);
+    priceIntervalRef.current = setInterval(updatePrices, 5000);
     return () => { if (priceIntervalRef.current) clearInterval(priceIntervalRef.current); };
   }, [updatePrices]);
+
 
   // ── Close a position ───────────────────────────────────────────────────────
   const closePosition = useCallback(async (pos: any, reason = "manual") => {
@@ -466,9 +437,6 @@ export default function ShreemBrzeePerformance() {
     refreshAll(); checkEdge();
     getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
     refreshBotBalance();
-    d.from("tracked_whales").select("address").then(({ data }) => {
-      if (data?.length) setTrackedWhalesAddrs(new Set([...KOL_LIST.map(k => k.addr), ...data.map((w: any) => w.address)]));
-    });
 
     const masterInterval = setInterval(() => {
       refreshAll();
@@ -622,23 +590,8 @@ export default function ShreemBrzeePerformance() {
     setPhantomLoading(false);
   };
 
-  const addKolTrader = async (kol: { name: string; addr: string }) => {
-    notify(`Adding ${kol.name}…`, "info");
-    try {
-      const { data: { user } } = await d.auth.getUser();
-      const { error: dbErr } = await d.from("tracked_whales").upsert({
-        address:kol.addr, label:kol.name, source:"kolexplorer",
-        added_by:user?.id||null, added_at:new Date().toISOString(),
-      }, { onConflict:"address" });
-      if (dbErr) throw dbErr;
-      notify(`✅ ${kol.name} tracked · syncing to Helius…`, "ok");
-      setTrackedWhalesAddrs(prev => new Set([...prev, kol.addr]));
-      try {
-        const { data: syncData } = await d.functions.invoke("helius-webhook-sync", { body:{} });
-        if (syncData?.ok) notify(`✅ ${kol.name} tracked · Helius watching ${syncData.wallet_count} wallets`, "ok");
-      } catch {}
-    } catch (e: any) { notify(`Add failed: ${e?.message?.slice(0,80)}`, "err"); }
-  };
+
+
 
   // ── Derived data ───────────────────────────────────────────────────────────
   const isRunning    = !!session?.started_at && !session?.stopped_at;
@@ -675,12 +628,6 @@ export default function ShreemBrzeePerformance() {
     if (s.action === "BUY")  { whaleMap[lbl].buys++;  whaleMap[lbl].totalSol += s.amount_sol || 0; }
     if (s.action === "SELL") { whaleMap[lbl].sells++; }
   });
-  const whaleRows = KOL_LIST.map(k => ({
-    ...k,
-    ...(whaleMap[k.label] || { buys:0, sells:0, totalSol:0 }),
-    total:(whaleMap[k.label]?.buys||0)+(whaleMap[k.label]?.sells||0)
-  })).sort((a,b) => b.totalSol - a.totalSol);
-  const maxSol = Math.max(...whaleRows.map(w => w.totalSol), 0.001);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -795,7 +742,7 @@ export default function ShreemBrzeePerformance() {
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                   {[
                     { l:"SOL Price", v:`$${solUsd.toFixed(2)}`, sub:`€${(solUsd*solEur).toFixed(2)}` },
-                    { l:"Bot Status", v:isRunning?"🟢 Online":"🔴 Offline", sub:isRunning?"Watching 20 whale wallets":"Not listening" },
+                    { l:"Bot Status", v:isRunning?"🟢 Online":"🔴 Offline", sub:isRunning?"Watching 2 whale wallets":"Not listening" },
                     { l:"Signals Received", v:String(signals.length), sub:signals.length>0?`Last: ${timeAgo(signals[0]?.created_at)}`:"None yet" },
                     { l:"Bot Balance", v:`${displayBalSol.toFixed(4)} SOL`, sub:`€${displayBalEur.toFixed(2)}` },
                   ].map(card => (
@@ -844,16 +791,17 @@ export default function ShreemBrzeePerformance() {
               const pnlEur = pnlUsd !== null ? usdToEur(pnlUsd) : null;
 
               const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
-              // Liquidity-aware "estimated" flag: low depth → price feed unreliable, real exit P&L
-              // will only be known after the Jupiter sell quote confirms on-chain.
-              const liqUsd        = liveLiquidity[pos.mint];
-              const liqKnown      = liqUsd !== undefined;
-              const isEstimated   = pnlPct !== null && (!liqKnown || liqUsd < LOW_LIQ_USD);
+              // Jupiter quote of held tokens → SOL already factors in real depth, so no
+              // separate "estimated" flag is needed — the displayed % IS the executable exit.
+              const liqKnown      = false;
+              const liqUsd        = 0;
+              const isEstimated   = false;
               const pnlLabel      = pnlPct !== null
-                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%${isEstimated ? "*" : ""}`
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
                 : noLiquidity ? "no liquidity"
                 : (!pos.entry_price || Number(pos.entry_price)===0) ? "syncing…"
                 : "—";
+
 
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
@@ -963,7 +911,7 @@ export default function ShreemBrzeePerformance() {
           {isRunning && (
             <div style={{ marginTop:10, padding:"9px 12px", borderRadius:10, background:"rgba(16,185,129,.06)", border:"1px solid rgba(16,185,129,.2)", fontSize:11, color:"rgba(16,185,129,.8)", textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ width:6, height:6, borderRadius:"50%", background:GREEN, animation:"pulse 1.5s infinite" }} />
-              Bot running · 20 whale wallets · exits server-side automatically
+              Bot running · 2 whale wallets · exits server-side automatically
             </div>
           )}
         </Section>
@@ -1144,87 +1092,30 @@ export default function ShreemBrzeePerformance() {
           ))}
         </Section>
 
-        {/* Whale Performance */}
-        <Section title={`🐋 Whale Performance · ${period.toUpperCase()}`} right={
-          <div style={{ display:"flex", gap:4 }}>
-            {(["daily","weekly","monthly","yearly"] as const).map(p => (
-              <button key={p} onClick={e => { e.stopPropagation(); setPeriod(p); setTimeout(fetchPeriod,0); }} style={{ padding:"4px 9px", borderRadius:20, cursor:"pointer", border:`1px solid ${period===p?"rgba(212,175,55,.4)":GOLD20}`, background:period===p?"rgba(212,175,55,.12)":"transparent", color:period===p?GOLD:"#64748b", fontSize:9, fontWeight:800, textTransform:"uppercase" }}>
-                {p==="daily"?"D":p==="weekly"?"W":p==="monthly"?"M":"Y"}
-              </button>
-            ))}
-          </div>
-        } defaultOpen={false}>
-          <div style={{ overflowX:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", minWidth:320, tableLayout:"fixed" }}>
-              <thead>
-                <tr>{["#","Whale","Buys","Sells","Vol SOL","Vol €"].map(h => <th key={h} style={{ padding:"8px 10px", textAlign:"left", fontSize:9, fontWeight:800, letterSpacing:".3em", textTransform:"uppercase", color:"rgba(212,175,55,0.5)", borderBottom:"1px solid rgba(212,175,55,0.15)" }}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {whaleRows.map((w, i) => {
-                  const active = w.total > 0;
-                  const barW   = Math.min(100, w.totalSol / maxSol * 100);
-                  return (
-                    <tr key={w.addr} style={{ background:i%2===0?"transparent":"rgba(255,255,255,.012)" }}>
-                      <td style={{ padding:"9px 10px", fontSize:12, color:"#64748b", fontWeight:700 }}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td>
-                      <td style={{ padding:"9px 10px" }}>
-                        <div style={{ fontSize:12, fontWeight:800, color:"#fff" }}>{w.label}{w.vip&&<span style={{ color:GOLD, marginLeft:3 }}>⭐</span>}</div>
-                        <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{w.addr.slice(0,6)}…{w.addr.slice(-4)}</div>
-                      </td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GREEN:"#64748b" }}>{active?w.buys:"—"}</td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?RED:"#64748b" }}>{active?w.sells:"—"}</td>
-                      <td style={{ padding:"9px 10px" }}>{active?<div><div style={{ fontSize:12, fontWeight:700, color:"#fff" }}>{w.totalSol.toFixed(2)}</div><div style={{ width:50, background:"rgba(255,255,255,.06)", borderRadius:3, height:4, marginTop:3 }}><div style={{ width:`${barW}%`, height:4, borderRadius:3, background:GOLD }} /></div></div>:<span style={{ color:"#64748b" }}>—</span>}</td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GOLD:"#64748b" }}>{active?`€${solToEurN(w.totalSol).toFixed(0)}`:"—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {periodSigs.length === 0 && <div style={{ padding:"12px", textAlign:"center", fontSize:11, color:"#64748b" }}>No whale swaps detected this period</div>}
-        </Section>
-
-        {/* KOL Explorer */}
-        <div style={{ border:"1px solid rgba(212,175,55,0.25)", marginTop:16, borderRadius:24, background:"rgba(255,255,255,0.02)", backdropFilter:"blur(40px)" }}>
-          <div style={{ padding:"14px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
-            <span style={{ fontSize:10, letterSpacing:"0.15em", fontWeight:800, color:GOLD }}>🔭 WHALE SCANNER · TOP KOL TRADERS</span>
-            <div style={{ display:"flex", gap:6 }}>
-              {(["7D","30D"] as const).map(p => (
-                <button key={p} onClick={() => setKolPeriod(p)} style={{ padding:"3px 10px", borderRadius:20, border:`1px solid ${kolPeriod===p?"#D4AF37":"rgba(255,255,255,0.1)"}`, background:kolPeriod===p?"rgba(212,175,55,0.15)":"transparent", color:kolPeriod===p?GOLD:"#64748b", fontSize:9, fontWeight:800, cursor:"pointer" }}>{p}</button>
-              ))}
-            </div>
-          </div>
+        {/* Active wallets (read-only, manual list — see KOL_LIST at top of file) */}
+        <Section title={`🐋 Tracked Wallets · ${KOL_LIST.length}`} defaultOpen={false}>
           <div style={{ padding:"0 0 4px" }}>
-            {KOL_EXPLORER.map((kol, i) => {
-              const alreadyTracked = trackedWhalesAddrs.has(kol.addr);
-              const pnl = kolPeriod === "7D" ? kol.pnl7d : kol.pnl30d;
+            {KOL_LIST.map((w) => {
+              const stats = whaleMap[w.label];
+              const buys = stats?.buys || 0;
+              const sells = stats?.sells || 0;
+              const vol = stats?.totalSol || 0;
               return (
-                <div key={kol.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", background:i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
-                  <div style={{ width:22, textAlign:"center", fontSize:11, fontWeight:900, color:i<3?GOLD:"#64748b", flexShrink:0 }}>
-                    {i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`}
-                  </div>
+                <div key={w.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{kol.name}</div>
-                    <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{kol.addr.slice(0,8)}…{kol.addr.slice(-4)}</div>
+                    <div style={{ fontSize:13, fontWeight:800, color:"#fff" }}>{w.label}{w.vip && <span style={{ color:GOLD, marginLeft:4 }}>⭐</span>}</div>
+                    <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{w.addr.slice(0,8)}…{w.addr.slice(-4)}</div>
                   </div>
-                  <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:12, fontWeight:800, color:"#22c55e" }}>+${pnl.toLocaleString()}</div>
-                    <div style={{ fontSize:10, color:kol.wr>=60?GREEN:kol.wr>=50?"#f59e0b":RED, fontWeight:700 }}>{kol.wr}% WR</div>
-                  </div>
-                  <div style={{ flexShrink:0, marginLeft:4 }}>
-                    {alreadyTracked ? (
-                      <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:9, fontWeight:800, color:GREEN, background:"rgba(16,185,129,0.1)", padding:"4px 10px", borderRadius:20, border:"1px solid rgba(16,185,129,0.3)" }}>
-                        <span style={{ width:5, height:5, borderRadius:"50%", background:GREEN }} />TRACKING
-                      </span>
-                    ) : (
-                      <button onClick={() => addKolTrader(kol)} style={{ padding:"6px 14px", borderRadius:20, border:`1px solid ${GOLD}`, background:"rgba(212,175,55,0.1)", color:GOLD, fontSize:10, fontWeight:800, letterSpacing:"0.08em", cursor:"pointer", whiteSpace:"nowrap" }}>+ ADD</button>
-                    )}
+                  <div style={{ textAlign:"right", flexShrink:0, fontSize:11, color:"#94a3b8" }}>
+                    <div><span style={{ color:GREEN }}>{buys}B</span> · <span style={{ color:RED }}>{sells}S</span></div>
+                    <div style={{ fontSize:9, color:"#64748b" }}>{vol.toFixed(2)} SOL ({period})</div>
                   </div>
                 </div>
               );
             })}
           </div>
-          <div style={{ padding:"10px 16px", borderTop:"1px solid rgba(255,255,255,0.05)", fontSize:9, color:"#64748b", textAlign:"center" }}>Live data from KOLExplorer.com · 30D top Solana meme traders by realized PNL</div>
-        </div>
+        </Section>
+
 
       </div>
     </div>
