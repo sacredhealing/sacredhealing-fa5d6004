@@ -1197,16 +1197,15 @@ serve(async (req) => {
         const isLive    = sessNow?.mode === "live";
 
         // ── LIVE BUY → INLINE SWAP (no executor round-trip, no DB write first) ──
+        // Hot path: zero logging, zero stringify. executeBuyInline emits the single
+        // [INLINE-BUY] timing line on success. Errors are caught silently — the
+        // stop-loss cron reconciles any unconfirmed state.
         if (isRunning && isLive && swap.action === "BUY") {
           inserted++;
-          console.log(`⚡ INLINE BUY ${swap.symbol || swap.mint.slice(0,8)} — ${WHALE_WALLETS[wallet]}`);
-          // Fire-and-forget the swap; do NOT block the webhook response on it.
-          // executeBuyInline writes signal + trade + session AFTER the swap is sent.
-          executeBuyInline(signal, sessNow)
-            .then((r) => console.log(`[INLINE-BUY RESULT]`, JSON.stringify(r).slice(0, 200)))
-            .catch((e) => console.error(`[INLINE-BUY ERROR]`, e?.message ?? String(e)));
+          executeBuyInline(signal, sessNow).catch(() => {});
           continue;
         }
+
 
         // ── All other paths: write signal first (legacy behaviour) ──────────
         const { error } = await sb.from("shreem_brzee_signals")
