@@ -388,16 +388,39 @@ serve(async (req) => {
     }
     // Cleanup: mark unconfirmed trades older than 5 minutes as failed/closed
     // so they stop blocking new buys and don't show as ghost open positions.
+    // Also refund their reserved amount_sol back to session.portfolio.
     const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString();
-    const { data: stale, error: staleErr } = await sb
+    const { data: staleRows } = await sb
       .from("shreem_brzee_live_trades")
-      .update({ status: "closed", sell_reason: "unconfirmed_timeout", closed_at: new Date().toISOString() })
+      .select("id, amount_sol")
       .eq("status", "unconfirmed")
-      .lt("opened_at", fiveMinAgo)
-      .select("id");
-    const staleClosed = stale?.length ?? 0;
-    if (staleErr) console.warn("[cron-stoploss] unconfirmed cleanup error:", staleErr.message);
-    else if (staleClosed) console.log(`[cron-stoploss] cleaned ${staleClosed} stale unconfirmed trades`);
+      .lt("opened_at", fiveMinAgo);
+    const staleIds = (staleRows ?? []).map((r: any) => r.id);
+    const refundSol = (staleRows ?? []).reduce((s: number, r: any) => s + Number(r.amount_sol || 0), 0);
+    let staleClosed = 0;
+    if (staleIds.length) {
+      const { error: staleErr } = await sb
+        .from("shreem_brzee_live_trades")
+        .update({ status: "closed", sell_reason: "unconfirmed_timeout", closed_at: new Date().toISOString() })
+        .in("id", staleIds);
+      if (staleErr) console.warn("[cron-stoploss] unconfirmed cleanup error:", staleErr.message);
+      else {
+        staleClosed = staleIds.length;
+        if (refundSol > 0) {
+          const { data: sess } = await sb.from("shreem_brzee_session").select("portfolio").eq("id", "default").maybeSingle();
+          const current = Number(sess?.portfolio ?? 0);
+          const { error: refundErr } = await sb
+            .from("shreem_brzee_session")
+            .update({ portfolio: current + refundSol, updated_at: new Date().toISOString() })
+            .eq("id", "default");
+          if (refundErr) console.warn("[cron-stoploss] portfolio refund error:", refundErr.message);
+          else console.log(`[cron-stoploss] cleaned ${staleClosed} stale unconfirmed trades, refunded ${refundSol.toFixed(6)} SOL`);
+        } else {
+          console.log(`[cron-stoploss] cleaned ${staleClosed} stale unconfirmed trades (no refund)`);
+        }
+      }
+    }
+
 
     const kp = loadKeypair();
     if (!kp) return jsonResp({ ok: false, error: "no keypair" });
