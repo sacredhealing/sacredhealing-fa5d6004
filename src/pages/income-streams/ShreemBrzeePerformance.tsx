@@ -208,7 +208,7 @@ export default function ShreemBrzeePerformance() {
     } catch(e:any) { notify(e.message,"err"); }
   };
 
-  cons  const closePosition = useCallback(async (pos: any) => {
+  const closePosition = useCallback(async (pos: any) => {
     setClosingIds(prev => { const n = new Set(prev); n.add(pos.id); return n; });
     try {
       // Try executor for real on-chain sell (timeout 12s)
