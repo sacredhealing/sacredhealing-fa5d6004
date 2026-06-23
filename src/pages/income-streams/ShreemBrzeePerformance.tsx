@@ -590,23 +590,8 @@ export default function ShreemBrzeePerformance() {
     setPhantomLoading(false);
   };
 
-  const addKolTrader = async (kol: { name: string; addr: string }) => {
-    notify(`Adding ${kol.name}…`, "info");
-    try {
-      const { data: { user } } = await d.auth.getUser();
-      const { error: dbErr } = await d.from("tracked_whales").upsert({
-        address:kol.addr, label:kol.name, source:"kolexplorer",
-        added_by:user?.id||null, added_at:new Date().toISOString(),
-      }, { onConflict:"address" });
-      if (dbErr) throw dbErr;
-      notify(`✅ ${kol.name} tracked · syncing to Helius…`, "ok");
-      setTrackedWhalesAddrs(prev => new Set([...prev, kol.addr]));
-      try {
-        const { data: syncData } = await d.functions.invoke("helius-webhook-sync", { body:{} });
-        if (syncData?.ok) notify(`✅ ${kol.name} tracked · Helius watching ${syncData.wallet_count} wallets`, "ok");
-      } catch {}
-    } catch (e: any) { notify(`Add failed: ${e?.message?.slice(0,80)}`, "err"); }
-  };
+
+
 
   // ── Derived data ───────────────────────────────────────────────────────────
   const isRunning    = !!session?.started_at && !session?.stopped_at;
