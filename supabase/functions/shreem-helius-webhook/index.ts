@@ -1439,8 +1439,11 @@ serve(async (req) => {
         // [INLINE-BUY] timing line on success. Errors are caught silently — the
         // stop-loss cron reconciles any unconfirmed state.
         if (isRunning && isLive && swap.action === "BUY") {
+          const buyResult = await executeBuyInline(signal, sessNow);
+          if (!buyResult.ok) {
+            console.error(`[live-buy] ❌ ${signal.symbol || signal.mint.slice(0,8)} → ${buyResult.error || buyResult.skipped || "failed"}`);
+          }
           inserted++;
-          executeBuyInline(signal, sessNow).catch(() => {});
           continue;
         }
 
