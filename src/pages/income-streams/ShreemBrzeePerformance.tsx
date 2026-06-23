@@ -797,16 +797,17 @@ export default function ShreemBrzeePerformance() {
               const pnlEur = pnlUsd !== null ? usdToEur(pnlUsd) : null;
 
               const noLiquidity   = pricesFetched && entryUsd > 0 && (!currentUsd || currentUsd <= 0);
-              // Liquidity-aware "estimated" flag: low depth → price feed unreliable, real exit P&L
-              // will only be known after the Jupiter sell quote confirms on-chain.
-              const liqUsd        = liveLiquidity[pos.mint];
-              const liqKnown      = liqUsd !== undefined;
-              const isEstimated   = pnlPct !== null && (!liqKnown || liqUsd < LOW_LIQ_USD);
+              // Jupiter quote of held tokens → SOL already factors in real depth, so no
+              // separate "estimated" flag is needed — the displayed % IS the executable exit.
+              const liqKnown      = false;
+              const liqUsd        = 0;
+              const isEstimated   = false;
               const pnlLabel      = pnlPct !== null
-                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%${isEstimated ? "*" : ""}`
+                ? `${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`
                 : noLiquidity ? "no liquidity"
                 : (!pos.entry_price || Number(pos.entry_price)===0) ? "syncing…"
                 : "—";
+
 
               const ageMs   = Date.now() - new Date(pos.opened_at || pos.created_at).getTime();
               const ageMins = Math.max(0, Math.floor(ageMs / 60000));
