@@ -170,7 +170,7 @@ export default function ShreemBrzeePerformance() {
   const [stoppingBot, setStoppingBot] = useState(false);
   const [closingIds, setClosingIds]   = useState<Set<string>>(new Set());
 
-  const [kolPeriod, setKolPeriod]   = useState<"7D"|"30D">("30D");
+  
 
   const [liveMode, setLiveMode]       = useState(false);
   const [liveConfirm, setLiveConfirm] = useState(false);
