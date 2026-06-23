@@ -92,7 +92,7 @@ function connectHeliusWS() {
   if (!HELIUS_KEY) return;
   if (wsConn) { try { wsConn.terminate(); } catch {} }
 
-  const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${HELIUS_KEY}`;
+  const wsUrl = `wss://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
   console.log('[ws] Connecting to Helius websocket...');
 
   wsConn = new WS(wsUrl);
