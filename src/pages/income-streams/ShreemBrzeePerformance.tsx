@@ -437,9 +437,6 @@ export default function ShreemBrzeePerformance() {
     refreshAll(); checkEdge();
     getSolPrice().then(({ usd, eur }) => { setSolUsd(usd); setSolEur(eur); });
     refreshBotBalance();
-    d.from("tracked_whales").select("address").then(({ data }) => {
-      if (data?.length) setTrackedWhalesAddrs(new Set([...KOL_LIST.map(k => k.addr), ...data.map((w: any) => w.address)]));
-    });
 
     const masterInterval = setInterval(() => {
       refreshAll();
