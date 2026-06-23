@@ -79,7 +79,7 @@ async function fetchPrice(mint: string): Promise<number> {
 // ═════════════════════════════════════════════════════════════════════════════
 // INLINE EXECUTION — Jupiter swap directly in webhook handler (sub-5s target)
 // ═════════════════════════════════════════════════════════════════════════════
-const JUPITER       = "https://lite-api.jup.ag/swap/v1";
+const JUPITER       = "https://api.jup.ag/swap/v1";  // more reliable than lite-api for pump.fun
 const SLIPPAGE_BPS  = 2000;
 const MIN_TRADE_SOL = 0.01;
 const MAX_TRADE_SOL = 0.1;
@@ -93,6 +93,8 @@ const JITO_ENDPOINTS = [
   "https://mainnet.block-engine.jito.wtf/api/v1/bundles",
   "https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles",
   "https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
+  "https://tokyo.mainnet.block-engine.jito.wtf/api/v1/bundles",
 ];
 
 function timeoutSignal(ms: number) {
@@ -153,7 +155,7 @@ async function jupSwapTx(quote: unknown, wallet: string): Promise<string> {
       userPublicKey: wallet,
       wrapAndUnwrapSol: true,
       dynamicComputeUnitLimit: true,
-      computeUnitPriceMicroLamports: 1000000,
+      computeUnitPriceMicroLamports: 2000000,  // higher priority = better landing rate
       skipUserAccountsRpcCalls: true,
       useSharedAccounts: false,
       asLegacyTransaction: false,
