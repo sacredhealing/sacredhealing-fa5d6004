@@ -440,7 +440,28 @@ serve(async (req) => {
     const results: any[] = [];
     const now = Date.now();
 
+    let walletClosed = 0;
     for (const pos of openPos) {
+      // ── Phantom-side reconciliation ──
+      // If user manually sold this token in Phantom (or any other wallet action emptied it),
+      // the on-chain balance will be 0. Mark the position closed so the UI matches reality.
+      if (pos.mint) {
+        try {
+          const { rawAmount } = await resolveTokenAmount(wallet, pos.mint, null);
+          if (!rawAmount || rawAmount < 1) {
+            await sb.from("shreem_brzee_live_trades").update({
+              status: "closed",
+              sell_reason: "closed_in_wallet",
+              closed_at: new Date().toISOString(),
+              pnl_sol: 0, pnl_pct: 0,
+            }).eq("id", pos.id);
+            walletClosed++;
+            results.push({ id: pos.id, reason: "closed_in_wallet", ok: true });
+            continue;
+          }
+        } catch (_) { /* keep going — fall through to other checks */ }
+      }
+
       // 48h timeout
       const ageH = (now - new Date(pos.opened_at || pos.created_at).getTime()) / 3_600_000;
       if (ageH >= 48) {
