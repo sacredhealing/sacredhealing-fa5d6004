@@ -81,7 +81,7 @@ async function fetchPrice(mint: string): Promise<number> {
 // INLINE EXECUTION — Jupiter swap directly in webhook handler (sub-5s target)
 // ═════════════════════════════════════════════════════════════════════════════
 const JUPITER       = "https://api.jup.ag/swap/v1";  // more reliable than lite-api for pump.fun
-const SLIPPAGE_BPS  = 2000;
+const SLIPPAGE_BPS  = 5000;  // 50% — meme coins move fast, prevents 0x1771 failures
 const MIN_TRADE_SOL = 0.01;
 const MAX_TRADE_SOL = 0.1;
 const HELIUS_RPC    = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
@@ -160,7 +160,7 @@ async function jupSwapTx(quote: unknown, wallet: string): Promise<string> {
       skipUserAccountsRpcCalls: true,
       useSharedAccounts: false,
       asLegacyTransaction: false,
-      dynamicSlippage: { maxBps: 3000 },
+      dynamicSlippage: { maxBps: 5000 },
     }),
     signal: timeoutSignal(8000),
   });
