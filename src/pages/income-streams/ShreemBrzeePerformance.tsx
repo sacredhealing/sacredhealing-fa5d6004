@@ -1098,87 +1098,30 @@ export default function ShreemBrzeePerformance() {
           ))}
         </Section>
 
-        {/* Whale Performance */}
-        <Section title={`🐋 Whale Performance · ${period.toUpperCase()}`} right={
-          <div style={{ display:"flex", gap:4 }}>
-            {(["daily","weekly","monthly","yearly"] as const).map(p => (
-              <button key={p} onClick={e => { e.stopPropagation(); setPeriod(p); setTimeout(fetchPeriod,0); }} style={{ padding:"4px 9px", borderRadius:20, cursor:"pointer", border:`1px solid ${period===p?"rgba(212,175,55,.4)":GOLD20}`, background:period===p?"rgba(212,175,55,.12)":"transparent", color:period===p?GOLD:"#64748b", fontSize:9, fontWeight:800, textTransform:"uppercase" }}>
-                {p==="daily"?"D":p==="weekly"?"W":p==="monthly"?"M":"Y"}
-              </button>
-            ))}
-          </div>
-        } defaultOpen={false}>
-          <div style={{ overflowX:"auto" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse", minWidth:320, tableLayout:"fixed" }}>
-              <thead>
-                <tr>{["#","Whale","Buys","Sells","Vol SOL","Vol €"].map(h => <th key={h} style={{ padding:"8px 10px", textAlign:"left", fontSize:9, fontWeight:800, letterSpacing:".3em", textTransform:"uppercase", color:"rgba(212,175,55,0.5)", borderBottom:"1px solid rgba(212,175,55,0.15)" }}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {whaleRows.map((w, i) => {
-                  const active = w.total > 0;
-                  const barW   = Math.min(100, w.totalSol / maxSol * 100);
-                  return (
-                    <tr key={w.addr} style={{ background:i%2===0?"transparent":"rgba(255,255,255,.012)" }}>
-                      <td style={{ padding:"9px 10px", fontSize:12, color:"#64748b", fontWeight:700 }}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td>
-                      <td style={{ padding:"9px 10px" }}>
-                        <div style={{ fontSize:12, fontWeight:800, color:"#fff" }}>{w.label}{w.vip&&<span style={{ color:GOLD, marginLeft:3 }}>⭐</span>}</div>
-                        <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{w.addr.slice(0,6)}…{w.addr.slice(-4)}</div>
-                      </td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GREEN:"#64748b" }}>{active?w.buys:"—"}</td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?RED:"#64748b" }}>{active?w.sells:"—"}</td>
-                      <td style={{ padding:"9px 10px" }}>{active?<div><div style={{ fontSize:12, fontWeight:700, color:"#fff" }}>{w.totalSol.toFixed(2)}</div><div style={{ width:50, background:"rgba(255,255,255,.06)", borderRadius:3, height:4, marginTop:3 }}><div style={{ width:`${barW}%`, height:4, borderRadius:3, background:GOLD }} /></div></div>:<span style={{ color:"#64748b" }}>—</span>}</td>
-                      <td style={{ padding:"9px 10px", fontSize:12, fontWeight:700, color:active?GOLD:"#64748b" }}>{active?`€${solToEurN(w.totalSol).toFixed(0)}`:"—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {periodSigs.length === 0 && <div style={{ padding:"12px", textAlign:"center", fontSize:11, color:"#64748b" }}>No whale swaps detected this period</div>}
-        </Section>
-
-        {/* KOL Explorer */}
-        <div style={{ border:"1px solid rgba(212,175,55,0.25)", marginTop:16, borderRadius:24, background:"rgba(255,255,255,0.02)", backdropFilter:"blur(40px)" }}>
-          <div style={{ padding:"14px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
-            <span style={{ fontSize:10, letterSpacing:"0.15em", fontWeight:800, color:GOLD }}>🔭 WHALE SCANNER · TOP KOL TRADERS</span>
-            <div style={{ display:"flex", gap:6 }}>
-              {(["7D","30D"] as const).map(p => (
-                <button key={p} onClick={() => setKolPeriod(p)} style={{ padding:"3px 10px", borderRadius:20, border:`1px solid ${kolPeriod===p?"#D4AF37":"rgba(255,255,255,0.1)"}`, background:kolPeriod===p?"rgba(212,175,55,0.15)":"transparent", color:kolPeriod===p?GOLD:"#64748b", fontSize:9, fontWeight:800, cursor:"pointer" }}>{p}</button>
-              ))}
-            </div>
-          </div>
+        {/* Active wallets (read-only, manual list — see KOL_LIST at top of file) */}
+        <Section title={`🐋 Tracked Wallets · ${KOL_LIST.length}`} defaultOpen={false}>
           <div style={{ padding:"0 0 4px" }}>
-            {KOL_EXPLORER.map((kol, i) => {
-              const alreadyTracked = trackedWhalesAddrs.has(kol.addr);
-              const pnl = kolPeriod === "7D" ? kol.pnl7d : kol.pnl30d;
+            {KOL_LIST.map((w) => {
+              const stats = whaleMap[w.label];
+              const buys = stats?.buys || 0;
+              const sells = stats?.sells || 0;
+              const vol = stats?.totalSol || 0;
               return (
-                <div key={kol.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", background:i%2===0?"rgba(255,255,255,0.01)":"transparent" }}>
-                  <div style={{ width:22, textAlign:"center", fontSize:11, fontWeight:900, color:i<3?GOLD:"#64748b", flexShrink:0 }}>
-                    {i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`}
-                  </div>
+                <div key={w.addr} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:800, color:"#fff", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{kol.name}</div>
-                    <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{kol.addr.slice(0,8)}…{kol.addr.slice(-4)}</div>
+                    <div style={{ fontSize:13, fontWeight:800, color:"#fff" }}>{w.label}{w.vip && <span style={{ color:GOLD, marginLeft:4 }}>⭐</span>}</div>
+                    <div style={{ fontSize:9, color:"#64748b", fontFamily:"monospace", marginTop:1 }}>{w.addr.slice(0,8)}…{w.addr.slice(-4)}</div>
                   </div>
-                  <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:12, fontWeight:800, color:"#22c55e" }}>+${pnl.toLocaleString()}</div>
-                    <div style={{ fontSize:10, color:kol.wr>=60?GREEN:kol.wr>=50?"#f59e0b":RED, fontWeight:700 }}>{kol.wr}% WR</div>
-                  </div>
-                  <div style={{ flexShrink:0, marginLeft:4 }}>
-                    {alreadyTracked ? (
-                      <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:9, fontWeight:800, color:GREEN, background:"rgba(16,185,129,0.1)", padding:"4px 10px", borderRadius:20, border:"1px solid rgba(16,185,129,0.3)" }}>
-                        <span style={{ width:5, height:5, borderRadius:"50%", background:GREEN }} />TRACKING
-                      </span>
-                    ) : (
-                      <button onClick={() => addKolTrader(kol)} style={{ padding:"6px 14px", borderRadius:20, border:`1px solid ${GOLD}`, background:"rgba(212,175,55,0.1)", color:GOLD, fontSize:10, fontWeight:800, letterSpacing:"0.08em", cursor:"pointer", whiteSpace:"nowrap" }}>+ ADD</button>
-                    )}
+                  <div style={{ textAlign:"right", flexShrink:0, fontSize:11, color:"#94a3b8" }}>
+                    <div><span style={{ color:GREEN }}>{buys}B</span> · <span style={{ color:RED }}>{sells}S</span></div>
+                    <div style={{ fontSize:9, color:"#64748b" }}>{vol.toFixed(2)} SOL ({period})</div>
                   </div>
                 </div>
               );
             })}
           </div>
-          <div style={{ padding:"10px 16px", borderTop:"1px solid rgba(255,255,255,0.05)", fontSize:9, color:"#64748b", textAlign:"center" }}>Live data from KOLExplorer.com · 30D top Solana meme traders by realized PNL</div>
-        </div>
+        </Section>
+
 
       </div>
     </div>
