@@ -267,16 +267,17 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   ]);
   if (dupSigRes.data?.length)  return { ok: true, skipped: "duplicate_sig" };
 
-  const portfolio = Number(sess.portfolio || 0);
-  if (portfolio <= MIN_TRADE_SOL) return { ok: true, skipped: "no_portfolio" };
-
   const lamps = Number((balRes as any)?.value ?? balRes ?? 0);
-  const liveBalSol = lamps > 0 ? lamps / LAMPORTS : portfolio;
+  const savedPortfolio = Number(sess.portfolio || 0);
+  const liveBalSol = lamps > 0 ? lamps / LAMPORTS : savedPortfolio;
   const exposure = (openTradesRes.data || []).reduce((s: number, t: any) => s + (Number(t.amount_sol) || 0), 0);
+  const freeBalance = Math.max(0, liveBalSol - 0.003);
+  if (freeBalance <= MIN_TRADE_SOL) return { ok: true, skipped: `no_phantom_balance(${liveBalSol.toFixed(4)} SOL)` };
+
   const cap = liveBalSol * 0.50;
   if (exposure >= cap) return { ok: true, skipped: `cap_50pct(exp=${exposure.toFixed(3)}>=cap=${cap.toFixed(3)}@bal=${liveBalSol.toFixed(3)})` };
 
-  const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, portfolio * 0.05), cap - exposure);
+  const size = Math.min(MAX_TRADE_SOL, Math.max(MIN_TRADE_SOL, freeBalance * 0.05), cap - exposure, freeBalance);
   if (size < MIN_TRADE_SOL) return { ok: true, skipped: "size_too_small" };
 
   // ── ATOMIC MINT CLAIM ─────────────────────────────────────────────────────
@@ -310,10 +311,8 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   // Atomic SOL reservation — single conditional update; race-safe.
   const { data: reserved, error: reserveErr } = await sb
     .from("shreem_brzee_session")
-    .update({ portfolio: portfolio - size, updated_at: new Date().toISOString() })
+    .update({ portfolio: Math.max(0, freeBalance - size), updated_at: new Date().toISOString() })
     .eq("id", "default")
-    .eq("portfolio", portfolio)
-    .gte("portfolio", size)
     .select("id");
   if (reserveErr || !reserved || reserved.length === 0) {
     // Release the mint claim
@@ -566,7 +565,7 @@ async function runCron(): Promise<object> {
   const isLiveMode = sess?.mode === "live";
   const tradeTable = sess?.mode === "live" ? "shreem_brzee_live_trades" : "shreem_brzee_paper_trades";
   const { data: openPos } = await sb.from(tradeTable)
-    .select("*").in("status", ["open", "unconfirmed"]);
+    .select("*").in("status", ["open", "pending", "unconfirmed"]);
 
   if (!openPos?.length) return { checked: 0 };
 
@@ -575,6 +574,13 @@ async function runCron(): Promise<object> {
   const results: any[] = [];
   const liveKp = isLiveMode ? loadKeypair() : null;
   const liveWallet = liveKp ? bs58.encode(liveKp.publicKey) : null;
+  let liveWalletBalSol: number | null = null;
+  if (liveWallet) {
+    try {
+      const bal = await rpcCall("getBalance", [liveWallet]);
+      liveWalletBalSol = Number(bal?.value || 0) / LAMPORTS;
+    } catch {}
+  }
 
   for (const pos of openPos) {
     const entry  = Number(pos.entry_price) || 0;
@@ -688,7 +694,14 @@ async function runCron(): Promise<object> {
 
   }
 
-  return { checked: openPos.length, closed, walletClosed, results };
+  if (isLiveMode && liveWalletBalSol !== null) {
+    await sb.from("shreem_brzee_session").update({
+      portfolio: liveWalletBalSol,
+      updated_at: new Date().toISOString(),
+    }).eq("id", "default");
+  }
+
+  return { checked: openPos.length, closed, walletClosed, wallet_balance_sol: liveWalletBalSol, results };
 }
 
 // ── Sync wallets to tracked_whales (DB only — fast, runs on every request) ────
