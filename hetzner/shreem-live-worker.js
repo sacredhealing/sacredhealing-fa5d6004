@@ -92,7 +92,7 @@ function connectHeliusWS() {
   if (!HELIUS_KEY) return;
   if (wsConn) { try { wsConn.terminate(); } catch {} }
 
-  const wsUrl = `wss://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`; // Helius standard WS
+  const wsUrl = 'wss://rpc.ankr.com/solana/ws'; // Ankr free reliable WS
   console.log('[ws] Connecting to Helius websocket...');
 
   wsConn = new WS(wsUrl);
