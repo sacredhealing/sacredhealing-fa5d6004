@@ -38,7 +38,7 @@ const MAX_WEBHOOK_TXS_PER_BATCH = 10;
 
 // ── Whale wallet list ─────────────────────────────────────────────────────────
 const WHALE_WALLETS: Record<string, string> = {
-  // Cented REMOVED — too fast, causes ghost trades every session
+  "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o": "Cented",
   "BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu": "Remusofmars",
   "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT":  "trunoest",
   "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm": "gake",
@@ -322,39 +322,11 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   const swapMs = Date.now() - t0;
   console.log(`[INLINE-BUY] ⚡ ${signal.symbol ?? signal.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx=${txSig.slice(0,16)} | ${swapMs}ms | bal=${liveBalSol.toFixed(3)} cap=${cap.toFixed(3)} exp=${exposure.toFixed(3)}`);
 
-  // ── Confirmation check — poll for 8s before promoting to 'open' ──────────
-  let confirmed = false;
-  try {
-    const confirmDeadline = Date.now() + 8000;
-    await new Promise(r => setTimeout(r, 2000));
-    while (Date.now() < confirmDeadline) {
-      const statusRes = await rpcCall("getSignatureStatuses", [[txSig], { searchTransactionHistory: true }]).catch(() => null);
-      const s = (statusRes as any)?.value?.[0];
-      if (s && !s.err && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) {
-        confirmed = true;
-        break;
-      }
-      if (s?.err) break;
-      await new Promise(r => setTimeout(r, 2000));
-    }
-  } catch {}
-
-  if (!confirmed) {
-    console.warn(`[INLINE-BUY] ⚠️ tx ${txSig.slice(0,16)} not confirmed in 8s — releasing claim + refunding`);
-    // Delete the pending claim so the mint is free again, and refund SOL
-    await sb.from("shreem_brzee_live_trades").delete().eq("id", tradeId).catch(() => {});
-    try {
-      const { data: cur } = await sb.from("shreem_brzee_session").select("portfolio").eq("id","default").maybeSingle();
-      await sb.from("shreem_brzee_session").update({
-        portfolio: Number(cur?.portfolio || 0) + size,
-        updated_at: new Date().toISOString(),
-      }).eq("id", "default");
-    } catch {}
-    return { ok: false, error: "tx_unconfirmed_timeout" };
-  }
-
+  // Fire-and-forget — promote pending → open immediately after tx submitted.
+  // Cron reconciles any truly failed txs via unconfirmed_timeout after 5min.
+  // Waiting 8s here caused false negatives on congested network (Cented tokens).
   const confirmMs = Date.now() - t0;
-  console.log(`[INLINE-BUY] ✅ confirmed in ${confirmMs}ms`);
+  console.log(`[INLINE-BUY] ⚡ tx submitted in ${confirmMs}ms — promoting to open`);
 
   // ── Promote pending → open with tx details ────────────────────────────────
   const signalRow = {
