@@ -1296,8 +1296,10 @@ serve(async (req) => {
             body: JSON.stringify({ action: "close", trade_id: tradeId, reason: "manual" }),
           });
           const execData = await execR.json().catch(() => ({}));
-          if (!execR.ok || execData?.ok === false || execData?.code === "BOOT_ERROR") {
-            return jsonResp({ ok: false, error: execData?.error || execData?.message || "executor close failed", exec: execData }, 500);
+          const failedSell = Array.isArray(execData?.results) && execData.results.some((r: any) => r?.ok === false);
+          if (!execR.ok || execData?.ok === false || execData?.code === "BOOT_ERROR" || failedSell) {
+            const detail = execData?.results?.find?.((r: any) => r?.ok === false)?.error;
+            return jsonResp({ ok: false, error: detail || execData?.error || execData?.message || "executor close failed", exec: execData }, 500);
           }
           return jsonResp({ ok: true, trade_id: tradeId, symbol: pos.symbol, reason: "manual", table, exec: execData });
         } catch (execErr: any) {
