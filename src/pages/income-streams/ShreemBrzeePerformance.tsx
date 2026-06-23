@@ -132,6 +132,19 @@ export default function ShreemBrzeePerformance() {
     if (!openPos.length) return;
     const mints = [...new Set(openPos.map((p:any) => p.mint).filter(Boolean))];
     await Promise.all(mints.map(async (m) => {
+      // DexScreener first — indexes new meme coins immediately
+      try {
+        const ds = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${m}`, { signal: AbortSignal.timeout(6000) });
+        if (ds.ok) {
+          const pairs = ((await ds.json())?.pairs||[]).filter((p:any) => p?.priceUsd && parseFloat(p.priceUsd)>0);
+          if (pairs.length) {
+            pairs.sort((a:any,b:any) => parseFloat(b.liquidity?.usd||0)-parseFloat(a.liquidity?.usd||0));
+            const p = parseFloat(pairs[0].priceUsd);
+            if (p > 0) { setLivePrices(prev => ({...prev, [m]: p})); return; }
+          }
+        }
+      } catch {}
+      // Jupiter fallback
       try {
         const r = await fetch(`https://api.jup.ag/price/v2?ids=${m}`, { signal: AbortSignal.timeout(5000) });
         if (r.ok) {
@@ -339,7 +352,10 @@ export default function ShreemBrzeePerformance() {
                         <div style={{ fontSize:10, color:pnlP>=0?GREEN:RED }}>{pnlU!=null&&pnlU>=0?"+":""}{pnlU!=null?(pnlU/solUsd).toFixed(4):""} SOL</div>
                       </>
                     ) : (
-                      <div style={{ fontSize:11, color:"#64748b" }}>Fetching…</div>
+                      <div>
+                      <div style={{ fontSize:13, fontWeight:700, color:"#94a3b8" }}>{amtSol.toFixed(4)} SOL</div>
+                      <div style={{ fontSize:10, color:"#64748b" }}>loading price…</div>
+                    </div>
                     )}
                   </div>
                 </div>
