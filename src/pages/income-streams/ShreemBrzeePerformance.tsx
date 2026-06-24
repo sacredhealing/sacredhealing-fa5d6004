@@ -81,6 +81,7 @@ export default function ShreemBrzeePerformance() {
   const [closingIds, setClosingIds]   = useState<Set<string>>(new Set());
   const [livePrices, setLivePrices]   = useState<Record<string,number>>({});
   const [liveSymbols, setLiveSymbols] = useState<Record<string,string>>({});
+  const [showWhales, setShowWhales] = useState(false);
   const [showSignals, setShowSignals] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const priceRef = useRef<any>(null);
@@ -383,14 +384,22 @@ export default function ShreemBrzeePerformance() {
               })}
             </div>
 
-            {/* Tracked Whales */}
-            <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:"12px 14px" }}>
-              <div style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:"rgba(212,175,55,.6)", marginBottom:10 }}>Tracked Whales</div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                {KOL_LIST.map(w => (
-                  <div key={w.addr} style={{ padding:"5px 10px", borderRadius:20, background:"rgba(212,175,55,0.06)", border:"1px solid rgba(212,175,55,0.2)", fontSize:11, fontWeight:700, color:GOLD }}>{w.label}</div>
-                ))}
-              </div>
+            {/* Tracked Whales — collapsible */}
+            <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, overflow:"hidden" }}>
+              <button onClick={() => setShowWhales(p=>!p)} style={{ width:"100%", padding:"12px 14px", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <span style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:"rgba(212,175,55,.6)" }}>Tracked Whales</span>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:10, fontWeight:700, color:GOLD }}>{KOL_LIST.length}</span>
+                  <span style={{ color:"#64748b", fontSize:13 }}>{showWhales?"▾":"▸"}</span>
+                </div>
+              </button>
+              {showWhales && (
+                <div style={{ borderTop:"1px solid rgba(255,255,255,0.05)", padding:"10px 14px", display:"flex", flexWrap:"wrap", gap:6 }}>
+                  {KOL_LIST.map(w => (
+                    <div key={w.addr} style={{ padding:"5px 10px", borderRadius:20, background:"rgba(212,175,55,0.06)", border:"1px solid rgba(212,175,55,0.2)", fontSize:11, fontWeight:700, color:GOLD }}>{w.label}</div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Signal Feed */}
