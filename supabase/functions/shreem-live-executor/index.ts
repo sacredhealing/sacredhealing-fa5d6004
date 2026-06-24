@@ -27,7 +27,7 @@ const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
 const MIN_SIGNAL_SOL  = 0;
 const STOP_LOSS_PCT   = -25;
-const SLIPPAGE_BPS    = 8000;  // 80% — pump.fun meme coins require high slippage
+const SLIPPAGE_BPS    = 2500;  // 25% — balanced: avoids bad fills while still executing on volatile coins
 
 function timeoutSignal(ms: number) {
   const ctrl = new AbortController();
@@ -285,7 +285,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
   }
 
   try {
-    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 8000); // 80% slippage on sell — pump.fun needs this
+    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 5000); // 50% slippage on sell — higher than buy to always exit
     const swapTx = await jupSwapTx(quote, wallet);
     const txSig = await signAndSend(swapTx, kp);
     const confirmed = await waitConfirm(txSig);
@@ -381,7 +381,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.5", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.6", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -645,7 +645,7 @@ serve(async (req) => {
       return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL` });
     }
 
-    const size = Math.min(0.1, Math.max(0.01, balSol * 0.05));
+    const size = Math.min(0.1, Math.max(0.05, balSol * 0.07)); // min 0.05 SOL — below this fees eat all profit
     if (size < MIN_TRADE_SOL) {
       return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
     }
@@ -745,7 +745,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.5" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.6" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
