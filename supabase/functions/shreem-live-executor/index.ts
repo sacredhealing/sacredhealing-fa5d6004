@@ -285,7 +285,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
   }
 
   try {
-    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 500); // 5% slippage on sell
+    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 8000); // 80% slippage on sell — meme coins move fast
     const swapTx = await jupSwapTx(quote, wallet);
     const txSig = await signAndSend(swapTx, kp);
     const confirmed = await waitConfirm(txSig);
