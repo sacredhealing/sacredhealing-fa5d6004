@@ -381,7 +381,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.3", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.4", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -574,6 +574,12 @@ serve(async (req) => {
     // DUPLICATE CHECKS BEFORE capital reservation — prevents capital drain on skipped signals
     const dupMint = openTrades?.find(t => t.mint === sig.mint);
     if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
+
+    // MAX 4 concurrent positions
+    if ((openTrades ?? []).length >= 4) {
+      console.log(`[BUY] SKIP — already at max 4 open positions`);
+      return jsonResp({ ok: true, skipped: true, reason: "Max 4 concurrent positions reached" });
+    }
 
     const fiveMinAgo = new Date(Date.now() - 300000).toISOString();
     const { data: recentMintSignal } = await sb.from("shreem_brzee_signals")
