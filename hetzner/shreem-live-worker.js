@@ -1,33 +1,23 @@
-// shreem-live-worker.js — Shreem Brzee v11
-// v11 — HELIUS WEBSOCKET: persistent connection streams whale txs in real time
-// BUY detection: Helius WS → parse swap inline → call webhook to execute
-// SELL detection: poll signals every 10s + Helius WS SELL detection
-// Latency: ~100-300ms from whale buy to our buy (vs 2-5min before)
+// shreem-live-worker.js — Shreem Brzee v12
+// v12 — CLEAN: no websocket (Helius free plan blocks transactionSubscribe)
+// BUY: handled by Helius webhook → Supabase edge function (inline, ~180ms)
+// SELL mirror: poll every 10s for whale SELL signals
+// Stop-loss: poll every 30s, -30% hard stop, trailing stop (peak>=30%, floor=50% of peak)
+// Trailing stop also runs via Supabase pg_cron /cron endpoint every 5min as backup
 
-const https  = require('https');
-const http   = require('http');
-const WS     = require('ws'); // pre-installed on Hetzner
+const https = require('https');
+const http  = require('http');
 
-const SUPABASE_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
-const HELIUS_KEY    = process.env.HELIUS_API_KEY || '7de253c3-49e2-42be-9672-23a761260f86';
-const WEBHOOK_URL   = `${SUPABASE_URL}/functions/v1/shreem-helius-webhook`;
-const PORT          = 3001;
-const SELL_POLL_MS  = 10000; // Check SELL signals every 10s
-
-const WHALE_WALLETS = {
-  'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
-  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
-  'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':  'trunoest',
-  'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm': 'gake',
-};
+const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
+const PORT         = 3001;
+const SELL_POLL_MS = 10000; // 10s — whale SELL mirror
+const STOP_POLL_MS = 30000; // 30s — stop-loss + trailing stop
 
 if (!SUPABASE_KEY) { console.error('[shreem] FATAL: SUPABASE_SERVICE_ROLE_KEY not set'); process.exit(1); }
-if (!HELIUS_KEY)   { console.warn('[shreem] WARNING: HELIUS_API_KEY not set — websocket disabled'); }
 
-console.log('[shreem] v11 WEBSOCKET — real-time whale detection');
+console.log('[shreem] v12 CLEAN — sell poll + stop-loss, no websocket');
 console.log('[shreem] SUPABASE_KEY prefix:', SUPABASE_KEY.slice(0,20) + '...');
-console.log('[shreem] HELIUS_KEY prefix:', (HELIUS_KEY||'').slice(0,8) + '...');
 
 const SB_HEADERS = {
   apikey: SUPABASE_KEY,
@@ -35,7 +25,7 @@ const SB_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-// ── HTTP helpers ──────────────────────────────────────────────────────────────
+// ── HTTP helper ───────────────────────────────────────────────────────────────
 function httpReq(url, method = 'GET', body = null, headers = {}) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
@@ -56,14 +46,15 @@ function httpReq(url, method = 'GET', body = null, headers = {}) {
       });
     });
     req.on('error', reject);
-    req.setTimeout(30000, () => { req.destroy(); reject(new Error('timeout')); });
+    req.setTimeout(20000, () => { req.destroy(); reject(new Error('timeout')); });
     if (body) req.write(JSON.stringify(body));
     req.end();
   });
 }
 
-const sbGet   = (t, f) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', null, SB_HEADERS).then(r => r.data);
+const sbGet   = (t, f)    => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', null, SB_HEADERS).then(r => Array.isArray(r.data) ? r.data : []);
 const sbPatch = (t, f, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HEADERS);
+const sbUpdate = (t, f, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HEADERS);
 
 async function callExecutor(body) {
   const r = await httpReq(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, 'POST', body,
@@ -71,139 +62,29 @@ async function callExecutor(body) {
   return r.data;
 }
 
-// ── Forward tx to webhook for processing ─────────────────────────────────────
-// The webhook has all the parsing logic — we just forward the raw tx
-async function forwardToWebhook(txData) {
+// Price fetch — Jupiter v2 with DexScreener fallback
+async function fetchPrice(mint) {
+  // Try Jupiter first
   try {
-    const r = await httpReq(WEBHOOK_URL, 'POST', [txData],
-      { ...SB_HEADERS, Authorization: `Bearer ${SUPABASE_KEY}` });
-    console.log(`[ws→webhook] forwarded tx → ${JSON.stringify(r.data).slice(0,80)}`);
-  } catch (e) {
-    console.error('[ws→webhook] failed:', e.message);
-  }
+    const r = await httpReq(`https://api.jup.ag/price/v2?ids=${mint}`);
+    const price = parseFloat(Object.values(r.data?.data || {})[0]?.price || 0);
+    if (price > 0) return price;
+  } catch {}
+
+  // DexScreener fallback
+  try {
+    const r = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+    const pairs = r.data?.pairs;
+    if (pairs?.length) {
+      const price = parseFloat(pairs[0].priceUsd || 0);
+      if (price > 0) return price;
+    }
+  } catch {}
+
+  return 0;
 }
 
-// ── Helius Websocket ──────────────────────────────────────────────────────────
-let wsConn = null;
-let wsReconnectTimer = null;
-let wsAlive = false;
-
-function connectHeliusWS() {
-  if (!HELIUS_KEY) return;
-  if (wsConn) { try { wsConn.terminate(); } catch {} }
-
-  // Multiple WSS endpoints — tries each until one connects
-const WSS_ENDPOINTS = [
-  'wss://solana-mainnet.core.chainstack.com/ws',
-  'wss://go.getblock.io/solana/ws',  
-  'wss://api.mainnet-beta.solana.com',
-  'wss://solana.public.blastapi.io',
-];
-let wsEndpointIdx = 0;
-const wsUrl = WSS_ENDPOINTS[wsEndpointIdx];
-  console.log('[ws] Connecting to Helius websocket...');
-
-  wsConn = new WS(wsUrl);
-
-  wsConn.on('open', () => {
-    wsAlive = true;
-    console.log('[ws] ✅ Connected to Helius');
-
-    // Subscribe to all whale wallet account updates
-    const wallets = Object.keys(WHALE_WALLETS);
-    // Subscribe to each whale wallet via logsSubscribe (free on all plans)
-    // Fires whenever a wallet is mentioned in transaction logs
-    for (const wallet of wallets) {
-      const subMsg = {
-        jsonrpc: '2.0',
-        id: wallets.indexOf(wallet) + 1,
-        method: 'logsSubscribe',
-        params: [
-          { mentions: [wallet] },
-          { commitment: 'confirmed' }
-        ]
-      };
-      wsConn.send(JSON.stringify(subMsg));
-    }
-    console.log(`[ws] Subscribed to ${wallets.length} whale wallets via logsSubscribe`);
-  });
-
-  wsConn.on('message', async (raw) => {
-    try {
-      const msg = JSON.parse(raw.toString());
-
-      // Subscription confirmation
-      if (msg.result !== undefined && msg.id === 1) {
-        console.log(`[ws] Subscription confirmed: ${msg.result}`);
-        return;
-      }
-
-      // logsSubscribe notification — fires when whale wallet is in logs
-      if (msg.method === 'logsNotification') {
-        const logs = msg.params?.result?.value?.logs || [];
-        const sig  = msg.params?.result?.value?.signature;
-        if (!sig) return;
-
-        // Find which whale triggered this from subscription ID
-        const subId = msg.params?.subscription;
-        const wallets = Object.keys(WHALE_WALLETS);
-        // Match subscription to wallet by index
-        const whale = wallets[subId - 1] || wallets.find(w =>
-          logs.some((l) => l.includes(w))
-        );
-        if (!whale) return;
-
-        console.log(`[ws] 🔱 ${WHALE_WALLETS[whale]} tx detected: ${sig.slice(0,16)} — fetching via Helius`);
-
-        // Fetch full tx details from Helius enhanced API then forward
-        (async () => {
-          try {
-            const r = await fetch(
-              `https://api.helius.xyz/v0/transactions/?api-key=${HELIUS_KEY}`,
-              { method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ transactions: [sig] }),
-                signal: AbortSignal.timeout(8000) }
-            );
-            if (!r.ok) return;
-            const txs = await r.json();
-            if (txs?.[0]) await forwardToWebhook(txs[0]);
-          } catch(e) { console.error('[ws] fetch tx failed:', e.message); }
-        })();
-      }
-    } catch (e) {
-      console.error('[ws] message parse error:', e.message);
-    }
-  });
-
-  wsConn.on('ping', () => wsConn.pong());
-
-  wsConn.on('error', (e) => {
-    console.error('[ws] error:', e.message);
-    wsAlive = false;
-  });
-
-  wsConn.on('close', (code) => {
-    wsAlive = false;
-    // Try next endpoint on failure
-    if (code === 1006 || code === 401 || code === 403) {
-      wsEndpointIdx = (wsEndpointIdx + 1) % WSS_ENDPOINTS.length;
-      console.log(`[ws] disconnected (${code}) — trying endpoint ${wsEndpointIdx}: ${WSS_ENDPOINTS[wsEndpointIdx]}`);
-    } else {
-      console.log(`[ws] disconnected (${code}) — reconnecting in 5s`);
-    }
-    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
-    wsReconnectTimer = setTimeout(connectHeliusWS, 3000);
-  });
-}
-
-// Keep websocket alive with ping every 30s
-setInterval(() => {
-  if (wsConn && wsConn.readyState === WS.OPEN) {
-    wsConn.ping();
-  }
-}, 30000);
-
-// ── SELL POLL ─────────────────────────────────────────────────────────────────
+// ── SELL MIRROR POLL (every 10s) ──────────────────────────────────────────────
 let sellBusy = false;
 async function pollSell() {
   if (sellBusy) return;
@@ -213,7 +94,6 @@ async function pollSell() {
     const sess = sessions[0];
     if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
-    // Whale SELL mirror
     const sellSignals = await sbGet('shreem_brzee_signals',
       'action=eq.SELL&or=(live_processed.eq.false,live_processed.is.null)&order=created_at.asc&limit=10');
 
@@ -226,72 +106,111 @@ async function pollSell() {
         continue;
       }
 
-      console.log(`[pollSell] ${sig.label} SELL ${sig.symbol||sig.mint.slice(0,8)} — closing`);
+      console.log(`[pollSell] ${sig.label} SELL ${sig.symbol || sig.mint.slice(0,8)} — mirroring`);
       try {
         const result = await callExecutor({ action: 'close', trade_id: openTrades[0].id, mint: sig.mint, reason: 'whale_sell_mirror' });
         if (result?.ok) {
           await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true });
-          console.log(`[pollSell] ✅ closed ${sig.symbol||sig.mint.slice(0,8)}`);
+          console.log(`[pollSell] ✅ closed ${sig.symbol || sig.mint.slice(0,8)}`);
+        } else {
+          console.warn(`[pollSell] executor returned not-ok:`, JSON.stringify(result).slice(0,120));
         }
-      } catch (e) { console.error('[pollSell] executor failed:', e.message); }
+      } catch (e) { console.error('[pollSell] executor error:', e.message); }
     }
-
-    // Stop-loss check
-    const openAll = await sbGet('shreem_brzee_live_trades',
-      'status=eq.open&select=id,mint,symbol,entry_price,opened_at,amount_sol');
-
-    for (const pos of openAll) {
-      // 48h timeout
-      if (pos.opened_at && (Date.now() - new Date(pos.opened_at).getTime()) > 48*3600000) {
-        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'timeout_48h' }); } catch {}
-        continue;
-      }
-      if (!pos.entry_price || !pos.mint) continue;
-
-      // Price check — use DexScreener (not dead lite-api)
-      let price = 0;
-      try {
-        const r = await httpReq(`https://api.jup.ag/price/v2?ids=${pos.mint}`);
-        if (r.data?.data) price = parseFloat(Object.values(r.data.data)[0]?.price||0);
-      } catch {}
-
-      if (!price) continue;
-      const changePct = ((price - Number(pos.entry_price)) / Number(pos.entry_price)) * 100;
-      if (changePct <= -30) {
-        console.log(`[stoploss] ${pos.symbol} down ${changePct.toFixed(1)}% — closing`);
-        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'stoploss_30pct' }); } catch {}
-      }
-    }
-
   } catch (e) { console.error('[pollSell] error:', e.message); }
   finally { sellBusy = false; }
 }
 
-// ── Health check ──────────────────────────────────────────────────────────────
-http.createServer(async (req, res) => {
-  let execHealth = {};
+// ── STOP-LOSS + TRAILING STOP POLL (every 30s) ────────────────────────────────
+// Hard stop: -30% from entry
+// Trailing stop: once peak gain >= 30%, floor = 50% of peak gain
+//   e.g. peak = +100% → floor = +50% — if price drops to +50%, we sell
+//   e.g. peak = +60%  → floor = +30% — if price drops to +30%, we sell
+let stopBusy = false;
+async function pollStopLoss() {
+  if (stopBusy) return;
+  stopBusy = true;
   try {
-    const r = await httpReq(`${SUPABASE_URL}/functions/v1/shreem-live-executor/health`,
-      'GET', null, { ...SB_HEADERS, Authorization: `Bearer ${SUPABASE_KEY}` });
-    execHealth = r.data;
-  } catch {}
+    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=mode,started_at,stopped_at');
+    const sess = sessions[0];
+    if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
 
+    const openPos = await sbGet('shreem_brzee_live_trades',
+      'status=eq.open&select=id,mint,symbol,entry_price,peak_price,opened_at,amount_sol');
+
+    for (const pos of openPos) {
+      if (!pos.entry_price || !pos.mint) continue;
+      const entry = Number(pos.entry_price);
+      if (entry <= 0) continue;
+
+      // 48h safety cap
+      if (pos.opened_at && (Date.now() - new Date(pos.opened_at).getTime()) > 48 * 3600000) {
+        console.log(`[stopLoss] ${pos.symbol} 48h timeout — closing`);
+        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'timeout_48h' }); } catch {}
+        continue;
+      }
+
+      const price = await fetchPrice(pos.mint);
+      if (!price) {
+        console.warn(`[stopLoss] ${pos.symbol || pos.mint.slice(0,8)} — no price, skipping`);
+        continue;
+      }
+
+      const pnlPct  = (price - entry) / entry * 100;
+      const prevPeak = Number(pos.peak_price) || entry;
+      const peak     = Math.max(prevPeak, price);
+      const peakPct  = (peak - entry) / entry * 100;
+
+      // Always update peak + current pnl in DB
+      await sbUpdate('shreem_brzee_live_trades', `id=eq.${pos.id}`, {
+        exit_price: price,
+        peak_price: peak,
+        pnl_pct:   pnlPct,
+        pnl_sol:   Number(pos.amount_sol || 0) * (pnlPct / 100),
+      });
+
+      // Hard stop-loss: -30%
+      if (pnlPct <= -30) {
+        console.log(`[stopLoss] 🛑 ${pos.symbol || pos.mint.slice(0,8)} hard stop — ${pnlPct.toFixed(1)}% — closing`);
+        try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'stop_loss_30pct' }); } catch (e) {
+          console.error('[stopLoss] executor error:', e.message);
+        }
+        continue;
+      }
+
+      // Trailing stop: peak >= 30%, floor = 50% of peak
+      if (peakPct >= 30) {
+        const trailFloor = peakPct * 0.5;
+        if (pnlPct <= trailFloor) {
+          console.log(`[trailStop] 🔒 ${pos.symbol || pos.mint.slice(0,8)} trail fired — peak ${peakPct.toFixed(1)}% → floor ${trailFloor.toFixed(1)}% — now ${pnlPct.toFixed(1)}% — closing`);
+          try { await callExecutor({ action: 'close', trade_id: pos.id, reason: 'trailing_stop' }); } catch (e) {
+            console.error('[trailStop] executor error:', e.message);
+          }
+          continue;
+        } else {
+          console.log(`[trailStop] ${pos.symbol || pos.mint.slice(0,8)} peak=${peakPct.toFixed(1)}% floor=${trailFloor.toFixed(1)}% now=${pnlPct.toFixed(1)}% — holding`);
+        }
+      }
+    }
+  } catch (e) { console.error('[pollStopLoss] error:', e.message); }
+  finally { stopBusy = false; }
+}
+
+// ── Health endpoint ───────────────────────────────────────────────────────────
+http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    status:    'running',
-    version:   'v11-websocket',
-    uptime:    Math.floor(process.uptime()),
-    sb_key_ok: !!SUPABASE_KEY,
-    helius_key_ok: !!HELIUS_KEY,
-    ws_connected: wsAlive,
-    executor:  execHealth,
-    time:      new Date().toISOString(),
+    status:  'running',
+    version: 'v12-clean',
+    uptime:  Math.floor(process.uptime()),
+    time:    new Date().toISOString(),
   }));
 }).listen(PORT, () => console.log(`[shreem] Health on :${PORT}`));
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-connectHeliusWS();
 setInterval(pollSell, SELL_POLL_MS);
+setInterval(pollStopLoss, STOP_POLL_MS);
 pollSell();
+setTimeout(pollStopLoss, 5000); // stagger start by 5s
 
-console.log('[shreem] v11 running — websocket + sell poll active');
+console.log('[shreem] v12 running — sell poll every 10s, stop-loss every 30s');
