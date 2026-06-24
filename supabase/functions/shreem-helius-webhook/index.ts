@@ -1436,13 +1436,20 @@ serve(async (req) => {
             const mint = outTransfers[0].mint;
             const { data: held } = await sb
               .from("shreem_brzee_live_trades")
-              .select("id,mint,symbol")
+              .select("id,mint,symbol,tx_sig")
               .in("status", ["open","unconfirmed"])
               .eq("mint", mint)
               .limit(1);
             if (held?.[0]) {
-              console.log(`[transfer-exit] ${WHALE_WALLETS[wallet]} transferred out ${mint.slice(0,8)} — SELL`);
-              swap = { action: "SELL" as const, mint, amount_sol: 0, symbol: held[0].symbol };
+              // Skip if this is the same tx that opened the position
+              // Prevents false SELL when buy tx also contains a transfer instruction
+              const openTxSig = (held[0].tx_sig || "").replace("_live","");
+              if (openTxSig && openTxSig === sig) {
+                console.log(`[transfer-exit] SKIP — same tx as buy: ${sig.slice(0,16)}`);
+              } else {
+                console.log(`[transfer-exit] ${WHALE_WALLETS[wallet]} transferred out ${mint.slice(0,8)} — SELL`);
+                swap = { action: "SELL" as const, mint, amount_sol: 0, symbol: held[0].symbol };
+              }
             }
           }
         }
