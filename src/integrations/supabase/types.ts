@@ -6672,33 +6672,45 @@ export type Database = {
       shreem_bot_members: {
         Row: {
           admin_cut_pct: number
+          affiliate_code_used: string | null
           created_at: string
           id: string
+          is_active: boolean
+          paper_mode: boolean
           sol_balance: number
           tier: string
           total_earned_sol: number
+          total_paid_sol: number
           updated_at: string
           user_id: string
           wallet_address: string | null
         }
         Insert: {
           admin_cut_pct?: number
+          affiliate_code_used?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean
+          paper_mode?: boolean
           sol_balance?: number
           tier?: string
           total_earned_sol?: number
+          total_paid_sol?: number
           updated_at?: string
           user_id: string
           wallet_address?: string | null
         }
         Update: {
           admin_cut_pct?: number
+          affiliate_code_used?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean
+          paper_mode?: boolean
           sol_balance?: number
           tier?: string
           total_earned_sol?: number
+          total_paid_sol?: number
           updated_at?: string
           user_id?: string
           wallet_address?: string | null
@@ -6991,6 +7003,7 @@ export type Database = {
           paid: number
           pending: number
           total_earned: number
+          total_paid: number
           updated_at: string
           user_id: string
           wallet_address: string | null
@@ -7001,6 +7014,7 @@ export type Database = {
           paid?: number
           pending?: number
           total_earned?: number
+          total_paid?: number
           updated_at?: string
           user_id: string
           wallet_address?: string | null
@@ -7011,6 +7025,7 @@ export type Database = {
           paid?: number
           pending?: number
           total_earned?: number
+          total_paid?: number
           updated_at?: string
           user_id?: string
           wallet_address?: string | null
@@ -7075,14 +7090,19 @@ export type Database = {
           gross_pnl_sol: number
           id: string
           l1_sol: number | null
+          l1_tx_sig: string | null
           l1_wallet: string | null
           l2_sol: number | null
+          l2_tx_sig: string | null
           l2_wallet: string | null
           l3_sol: number | null
+          l3_tx_sig: string | null
           l3_wallet: string | null
           l4_sol: number | null
+          l4_tx_sig: string | null
           l4_wallet: string | null
           l5_sol: number | null
+          l5_tx_sig: string | null
           l5_wallet: string | null
           status: string
           trade_id: number | null
@@ -7095,14 +7115,19 @@ export type Database = {
           gross_pnl_sol: number
           id?: string
           l1_sol?: number | null
+          l1_tx_sig?: string | null
           l1_wallet?: string | null
           l2_sol?: number | null
+          l2_tx_sig?: string | null
           l2_wallet?: string | null
           l3_sol?: number | null
+          l3_tx_sig?: string | null
           l3_wallet?: string | null
           l4_sol?: number | null
+          l4_tx_sig?: string | null
           l4_wallet?: string | null
           l5_sol?: number | null
+          l5_tx_sig?: string | null
           l5_wallet?: string | null
           status?: string
           trade_id?: number | null
@@ -7115,14 +7140,19 @@ export type Database = {
           gross_pnl_sol?: number
           id?: string
           l1_sol?: number | null
+          l1_tx_sig?: string | null
           l1_wallet?: string | null
           l2_sol?: number | null
+          l2_tx_sig?: string | null
           l2_wallet?: string | null
           l3_sol?: number | null
+          l3_tx_sig?: string | null
           l3_wallet?: string | null
           l4_sol?: number | null
+          l4_tx_sig?: string | null
           l4_wallet?: string | null
           l5_sol?: number | null
+          l5_tx_sig?: string | null
           l5_wallet?: string | null
           status?: string
           trade_id?: number | null
