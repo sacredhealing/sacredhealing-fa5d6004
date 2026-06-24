@@ -1,3 +1,4 @@
+// deployed: 2026-06-24T18:51:28.203373
 // supabase/functions/shreem-live-executor/index.ts
 // SHREEM BRZEE — Safe Live Executor v4.0 — dynamic slippage
 // v3 changes:
@@ -582,7 +583,7 @@ serve(async (req) => {
       .single();
 
     const availableCapital = Number(sessCheck?.portfolio || 0);
-    const hardCap = balForCap * 0.50; // max 50% of wallet in open trades at once
+    const hardCap = balForCap * 0.50;
 
     if (openExposureSol >= hardCap) {
       console.log(`[BUY] HARDCAP — exposure ${openExposureSol.toFixed(4)} SOL >= 50% cap ${hardCap.toFixed(4)} SOL`);
@@ -645,7 +646,7 @@ serve(async (req) => {
       return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL` });
     }
 
-    const size = Math.max(0.05, balSol * 0.05); // 5% of wallet balance — grows with profits, min 0.05 SOL
+    const size = Math.max(0.05, balSol * 0.05); // 5% of wallet balance
     if (size < MIN_TRADE_SOL) {
       return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
     }
