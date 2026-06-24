@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "live trades readable by authenticated" ON public.shreem_brzee_live_trades;
+CREATE POLICY "Admins can read live trades" ON public.shreem_brzee_live_trades FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'::app_role));
