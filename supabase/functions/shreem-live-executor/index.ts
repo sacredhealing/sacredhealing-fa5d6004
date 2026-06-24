@@ -313,20 +313,6 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
     }
 
     console.log(`[SELL] ✅ ${pos.symbol} pnl=${pnlPct.toFixed(1)}% sol_out=${solOut.toFixed(4)} tx=${txSig.slice(0,16)} confirmed=${confirmed}`);
-
-    // ── MLM profit distribution (fire-and-forget, never blocks close) ─────────
-    if (pnlSol > 0) {
-      const ADMIN_USER_ID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17"; // Adam's admin UUID
-      fetch(`${SUPA_URL}/functions/v1/shreem-mlm-distributor`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPA_KEY}` },
-        body: JSON.stringify({ trade_id: pos.id, user_id: ADMIN_USER_ID, gross_pnl_sol: pnlSol }),
-        signal: AbortSignal.timeout(10000),
-      }).then(r => r.json()).then(d => {
-        console.log(`[MLM] distributed trade=${pos.id} pnl=${pnlSol.toFixed(6)} SOL | ok=${d.ok} levels=${d.levels_paid ?? 0}`);
-      }).catch(e => console.warn("[MLM] distribution fire-and-forget failed:", e.message));
-    }
-
     return { ok: true, solOut };
   } catch (e: any) {
     console.error(`[SELL] ❌ ${pos.symbol} failed: ${e.message}`);
