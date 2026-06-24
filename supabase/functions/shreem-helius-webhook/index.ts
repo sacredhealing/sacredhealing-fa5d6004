@@ -1424,6 +1424,29 @@ serve(async (req) => {
         const wallet = findWhale(tx);
         if (!wallet) { skipped++; continue; }
         const swap   = parseSwap(tx, wallet);
+
+        // ── Direct token transfer out = SELL (catches trunoest-style exits) ───
+        if (!swap) {
+          const outTransfers = (tx.tokenTransfers || []).filter((t: any) =>
+            t.fromUserAccount === wallet &&
+            !IGNORE_AS_TARGET.has(t.mint) &&
+            Number(t.tokenAmount || 0) > 0
+          );
+          if (outTransfers.length > 0) {
+            const mint = outTransfers[0].mint;
+            const { data: held } = await sb
+              .from("shreem_brzee_live_trades")
+              .select("id,mint,symbol")
+              .in("status", ["open","unconfirmed"])
+              .eq("mint", mint)
+              .limit(1);
+            if (held?.[0]) {
+              console.log(`[transfer-exit] ${WHALE_WALLETS[wallet]} transferred out ${mint.slice(0,8)} — SELL`);
+              swap = { action: "SELL" as const, mint, amount_sol: 0, symbol: held[0].symbol };
+            }
+          }
+        }
+
         if (!swap) { skipped++; continue; }
 
 
