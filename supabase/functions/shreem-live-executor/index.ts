@@ -27,7 +27,7 @@ const MAX_POSITIONS   = 20;
 const MIN_TRADE_SOL   = 0.01;
 const MIN_SIGNAL_SOL  = 0;
 const STOP_LOSS_PCT   = -25;
-const SLIPPAGE_BPS    = 2000;  // 20% — optimal for pump.fun copy trading at 0.03 SOL position size
+const SLIPPAGE_BPS    = 8000;  // 80% — pump.fun meme coins require high slippage
 
 function timeoutSignal(ms: number) {
   const ctrl = new AbortController();
@@ -285,7 +285,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
   }
 
   try {
-    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 8000); // 80% slippage on sell — meme coins move fast
+    const quote = await jupQuote(pos.mint, SOL_MINT, rawAmount, 8000); // 80% slippage on sell — pump.fun needs this
     const swapTx = await jupSwapTx(quote, wallet);
     const txSig = await signAndSend(swapTx, kp);
     const confirmed = await waitConfirm(txSig);
