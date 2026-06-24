@@ -1,3 +1,4 @@
+// deployed: 2026-06-24T18:51:28.203373
 // supabase/functions/shreem-live-executor/index.ts
 // SHREEM BRZEE — Safe Live Executor v4.0 — dynamic slippage
 // v3 changes:
