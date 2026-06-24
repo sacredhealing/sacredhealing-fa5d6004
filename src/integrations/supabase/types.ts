@@ -6669,6 +6669,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shreem_bot_members: {
+        Row: {
+          admin_cut_pct: number
+          created_at: string
+          id: string
+          sol_balance: number
+          tier: string
+          total_earned_sol: number
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          admin_cut_pct?: number
+          created_at?: string
+          id?: string
+          sol_balance?: number
+          tier?: string
+          total_earned_sol?: number
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          admin_cut_pct?: number
+          created_at?: string
+          id?: string
+          sol_balance?: number
+          tier?: string
+          total_earned_sol?: number
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       shreem_brzee_live_trades: {
         Row: {
           action: string | null
@@ -6945,6 +6981,153 @@ export type Database = {
           symbol?: string | null
           token_amount?: number | null
           wallet?: string
+        }
+        Relationships: []
+      }
+      shreem_mlm_earnings: {
+        Row: {
+          created_at: string
+          id: string
+          paid: number
+          pending: number
+          total_earned: number
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paid?: number
+          pending?: number
+          total_earned?: number
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paid?: number
+          pending?: number
+          total_earned?: number
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      shreem_mlm_tree: {
+        Row: {
+          created_at: string
+          id: string
+          level1_user_id: string | null
+          level1_wallet: string | null
+          level2_user_id: string | null
+          level2_wallet: string | null
+          level3_user_id: string | null
+          level3_wallet: string | null
+          level4_user_id: string | null
+          level4_wallet: string | null
+          level5_user_id: string | null
+          level5_wallet: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level1_user_id?: string | null
+          level1_wallet?: string | null
+          level2_user_id?: string | null
+          level2_wallet?: string | null
+          level3_user_id?: string | null
+          level3_wallet?: string | null
+          level4_user_id?: string | null
+          level4_wallet?: string | null
+          level5_user_id?: string | null
+          level5_wallet?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level1_user_id?: string | null
+          level1_wallet?: string | null
+          level2_user_id?: string | null
+          level2_wallet?: string | null
+          level3_user_id?: string | null
+          level3_wallet?: string | null
+          level4_user_id?: string | null
+          level4_wallet?: string | null
+          level5_user_id?: string | null
+          level5_wallet?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shreem_profit_distributions: {
+        Row: {
+          admin_cut_sol: number
+          created_at: string
+          gross_pnl_sol: number
+          id: string
+          l1_sol: number | null
+          l1_wallet: string | null
+          l2_sol: number | null
+          l2_wallet: string | null
+          l3_sol: number | null
+          l3_wallet: string | null
+          l4_sol: number | null
+          l4_wallet: string | null
+          l5_sol: number | null
+          l5_wallet: string | null
+          status: string
+          trade_id: number | null
+          user_cut_sol: number
+          user_id: string
+        }
+        Insert: {
+          admin_cut_sol?: number
+          created_at?: string
+          gross_pnl_sol: number
+          id?: string
+          l1_sol?: number | null
+          l1_wallet?: string | null
+          l2_sol?: number | null
+          l2_wallet?: string | null
+          l3_sol?: number | null
+          l3_wallet?: string | null
+          l4_sol?: number | null
+          l4_wallet?: string | null
+          l5_sol?: number | null
+          l5_wallet?: string | null
+          status?: string
+          trade_id?: number | null
+          user_cut_sol?: number
+          user_id: string
+        }
+        Update: {
+          admin_cut_sol?: number
+          created_at?: string
+          gross_pnl_sol?: number
+          id?: string
+          l1_sol?: number | null
+          l1_wallet?: string | null
+          l2_sol?: number | null
+          l2_wallet?: string | null
+          l3_sol?: number | null
+          l3_wallet?: string | null
+          l4_sol?: number | null
+          l4_wallet?: string | null
+          l5_sol?: number | null
+          l5_wallet?: string | null
+          status?: string
+          trade_id?: number | null
+          user_cut_sol?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -9354,6 +9537,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_bot_balance: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: undefined
+      }
+      increment_mlm_earnings: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: undefined
       }
       insert_mantra_admin: { Args: { data: Json }; Returns: Json }
       is_admin_v3: { Args: never; Returns: boolean }
