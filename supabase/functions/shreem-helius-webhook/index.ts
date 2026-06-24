@@ -1436,13 +1436,21 @@ serve(async (req) => {
             const mint = outTransfers[0].mint;
             const { data: held } = await sb
               .from("shreem_brzee_live_trades")
-              .select("id,mint,symbol")
+              .select("id,mint,symbol,opened_at")
               .in("status", ["open","unconfirmed"])
               .eq("mint", mint)
               .limit(1);
             if (held?.[0]) {
-              console.log(`[transfer-exit] ${WHALE_WALLETS[wallet]} transferred out ${mint.slice(0,8)} — SELL`);
-              swap = { action: "SELL" as const, mint, amount_sol: 0, symbol: held[0].symbol };
+              // Only fire transfer-exit SELL if position has been open > 60s
+              // Prevents false SELL firing immediately after a BUY on same tx
+              const openedAt = new Date(held[0].opened_at || 0).getTime();
+              const ageMs = Date.now() - openedAt;
+              if (ageMs < 60000) {
+                console.log(`[transfer-exit] SKIP — position only ${(ageMs/1000).toFixed(0)}s old, ignoring transfer`);
+              } else {
+                console.log(`[transfer-exit] ${WHALE_WALLETS[wallet]} transferred out ${mint.slice(0,8)} — SELL`);
+                swap = { action: "SELL" as const, mint, amount_sol: 0, symbol: held[0].symbol };
+              }
             }
           }
         }
