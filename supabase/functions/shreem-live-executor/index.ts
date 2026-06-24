@@ -1,4 +1,3 @@
-// deployed: 2026-06-24T18:51:28.203373
 // supabase/functions/shreem-live-executor/index.ts
 // SHREEM BRZEE — Safe Live Executor v4.0 — dynamic slippage
 // v3 changes:
@@ -382,7 +381,7 @@ serve(async (req) => {
     let balance = 0;
     try { const r = await rpc("getBalance", [wallet]); balance = r.value / LAMPORTS; } catch {}
     const { data: open } = await sb.from("shreem_brzee_live_trades").select("id,symbol,amount_sol,status").in("status", ["open","pending","unconfirmed","closing"]);
-    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.7", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
+    return jsonResp({ ok: true, wallet, balance_sol: balance, open_positions: open?.length ?? 0, open, version: "v4.8", limits: { min_signal_sol: MIN_SIGNAL_SOL, min_trade_sol: MIN_TRADE_SOL, stop_loss_pct: STOP_LOSS_PCT } });
   }
 
   // ── CRON — stop-loss check without Hetzner ──────────────────────────────────
@@ -583,7 +582,7 @@ serve(async (req) => {
       .single();
 
     const availableCapital = Number(sessCheck?.portfolio || 0);
-    const hardCap = balForCap * 0.50;
+    const hardCap = balForCap * 0.50; // max 50% of wallet in open trades at once
 
     if (openExposureSol >= hardCap) {
       console.log(`[BUY] HARDCAP — exposure ${openExposureSol.toFixed(4)} SOL >= 50% cap ${hardCap.toFixed(4)} SOL`);
@@ -646,7 +645,7 @@ serve(async (req) => {
       return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL` });
     }
 
-    const size = Math.max(0.05, balSol * 0.05); // 5% of wallet balance
+    const size = Math.max(0.05, balSol * 0.05); // 5% of wallet balance — grows with profits, min 0.05 SOL
     if (size < MIN_TRADE_SOL) {
       return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
     }
@@ -677,8 +676,22 @@ serve(async (req) => {
 
     // STEP 2: Quote
     const quote = await jupQuote(SOL_MINT, sig.mint, lamports);
-    // Slippage guard removed — with 10% SLIPPAGE_BPS, this check is never needed
-    // and was causing valid meme coin trades to be rejected
+    
+    // PRICE GUARD: if signal has amount_sol and token_amount, check if price moved too much
+    // If current price is >20% above Cented's entry price, skip — we'd be buying his exit
+    if (sig.amount_sol && sig.token_amount && Number(sig.amount_sol) > 0 && Number(sig.token_amount) > 0) {
+      const centedEntryPrice = Number(sig.amount_sol) / Number(sig.token_amount); // SOL per token
+      const ourPrice = lamports / Number(quote.outAmount); // SOL per token from our quote
+      const priceMovePct = ((ourPrice - centedEntryPrice) / centedEntryPrice) * 100;
+      if (priceMovePct > 20) {
+        console.log(`[BUY] SKIP — price moved +${priceMovePct.toFixed(1)}% since Cented's entry — buying his exit`);
+        // Refund reserved capital
+        await sb.from("shreem_brzee_session").update({ portfolio: availableCapital, updated_at: new Date().toISOString() }).eq("id", "default");
+        await sb.from("shreem_brzee_live_trades").update({ status: "closed", sell_reason: "price_moved_too_far", closed_at: new Date().toISOString(), pnl_sol: 0 }).eq("id", tradeId);
+        return jsonResp({ ok: true, skipped: true, reason: `Price moved +${priceMovePct.toFixed(1)}% — too late to enter` });
+      }
+      console.log(`[BUY] Price check OK — moved ${priceMovePct.toFixed(1)}% since Cented's entry`);
+    }
 
     // STEP 3: Execute
     const swapTx = await jupSwapTx(quote, wallet);
@@ -746,7 +759,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.7" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.8" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
