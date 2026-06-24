@@ -81,7 +81,7 @@ async function fetchPrice(mint: string): Promise<number> {
 // INLINE EXECUTION — Jupiter swap directly in webhook handler (sub-5s target)
 // ═════════════════════════════════════════════════════════════════════════════
 const JUPITER       = "https://api.jup.ag/swap/v1";  // more reliable than lite-api for pump.fun
-const SLIPPAGE_BPS  = 5000;  // 50% — meme coins move fast, prevents 0x1771 failures
+const SLIPPAGE_BPS  = 8000;  // 80% — meme coins move fast, prevents 0x1771/0x1788 failures
 const MIN_TRADE_SOL = 0.01;
 const MAX_TRADE_SOL = 0.1;
 const HELIUS_RPC    = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
@@ -176,7 +176,23 @@ async function jupQuote(input: string, output: string, amount: number) {
   return r.json();
 }
 
+async function getNetworkPriorityFee(): Promise<number> {
+  // Get recent priority fees to set competitive fee dynamically
+  try {
+    const r = await rpcCall("getRecentPrioritizationFees", [[]]);
+    const fees = (r as any[]).map((f: any) => f.prioritizationFee).filter(Boolean);
+    if (fees.length > 0) {
+      const p75 = fees.sort((a: number,b: number) => a-b)[Math.floor(fees.length*0.75)];
+      // Use 1.5x p75 to land quickly, cap at 5M microlamports
+      return Math.min(Math.max(p75 * 1.5, 500000), 5000000);
+    }
+  } catch {}
+  return 2000000; // default 2M microlamports
+}
+
 async function jupSwapTx(quote: unknown, wallet: string): Promise<string> {
+  const priorityFee = await getNetworkPriorityFee();
+  console.log(`[swap] dynamic priority fee: ${priorityFee} microlamports`);
   const r = await fetch(`${JUPITER}/swap`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -184,11 +200,11 @@ async function jupSwapTx(quote: unknown, wallet: string): Promise<string> {
       userPublicKey: wallet,
       wrapAndUnwrapSol: true,
       dynamicComputeUnitLimit: true,
-      computeUnitPriceMicroLamports: 2000000,  // higher priority = better landing rate
+      computeUnitPriceMicroLamports: priorityFee,
       skipUserAccountsRpcCalls: true,
       useSharedAccounts: false,
       asLegacyTransaction: false,
-      dynamicSlippage: { maxBps: 5000 },
+      dynamicSlippage: { maxBps: 8000 }, // increased to 80% for fast meme coins
     }),
     signal: timeoutSignal(8000),
   });
