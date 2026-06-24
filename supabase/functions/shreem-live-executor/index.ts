@@ -294,13 +294,19 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
     const pnlSol = solOut - sizeIn;
     const pnlPct = sizeIn > 0 ? (pnlSol / sizeIn) * 100 : 0;
 
-    await sb.from("shreem_brzee_live_trades").update({
-      status: confirmed ? "closed" : "unconfirmed_close",
-      sell_reason: reason, exit_price: null,
-      pnl_sol: pnlSol, pnl_pct: pnlPct,
-      closed_at: new Date().toISOString(),
-      tx_sig_close: txSig,
-    }).eq("id", pos.id);
+    // Retry DB update 3x — prevents sell appearing to fail when swap succeeded
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const { error: sellUpdateErr } = await sb.from("shreem_brzee_live_trades").update({
+        status: confirmed ? "closed" : "unconfirmed_close",
+        sell_reason: reason, exit_price: null,
+        pnl_sol: pnlSol, pnl_pct: pnlPct,
+        closed_at: new Date().toISOString(),
+        tx_sig_close: txSig,
+      }).eq("id", pos.id);
+      if (!sellUpdateErr) break;
+      console.warn(`[SELL] DB update attempt ${attempt} failed: ${sellUpdateErr.message}`);
+      await new Promise(r => setTimeout(r, 500 * attempt));
+    }
 
     const { data: sess } = await sb.from("shreem_brzee_session").select("*").eq("id", "default").single();
     if (sess) {
@@ -675,19 +681,38 @@ serve(async (req) => {
 
     const entryPrice = tokensHuman > 0 ? (size * solUsd) / tokensHuman : null;
 
-    // STEP 5: Update DB
-    const { error: updateErr } = await sb.from("shreem_brzee_live_trades").update({
-      tx_sig:          txSig,
-      entry_price:     entryPrice,
-      tokens_received: Number(quote.outAmount), // raw units from Jupiter
-      token_decimals:  tokenDecimals,
-      sol_usd_at_entry: solUsd,
-      status:          "open",
-    }).eq("id", tradeId);
+    // STEP 5: If tx failed on-chain — mark closed immediately, refund SOL, no ghost trade
+    if (confirmed === false) {
+      console.error(`[BUY] ❌ tx FAILED on-chain: ${txSig.slice(0,16)} — marking closed, refunding ${size.toFixed(4)} SOL`);
+      await sb.from("shreem_brzee_live_trades").update({
+        status: "closed", sell_reason: "buy_failed_onchain", closed_at: new Date().toISOString(), tx_sig: txSig,
+      }).eq("id", tradeId);
+      await sb.from("shreem_brzee_session").update({
+        portfolio: availableCapital, updated_at: new Date().toISOString(),
+      }).eq("id", "default");
+      return jsonResp({ ok: false, error: "tx failed on-chain", tx: txSig });
+    }
+
+    // STEP 6: Update DB with swap results — retry 3x to prevent "in Phantom not in UI"
+    let updateErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const { error } = await sb.from("shreem_brzee_live_trades").update({
+        tx_sig:           txSig,
+        entry_price:      entryPrice,
+        tokens_received:  Number(quote.outAmount),
+        token_decimals:   tokenDecimals,
+        sol_usd_at_entry: solUsd,
+        status:           "open",
+      }).eq("id", tradeId);
+      if (!error) { updateErr = null; break; }
+      updateErr = error;
+      console.warn(`[BUY] DB update attempt ${attempt} failed: ${error.message} — retrying...`);
+      await new Promise(r => setTimeout(r, 1000 * attempt));
+    }
 
     if (updateErr) {
-      console.error("[BUY] ⚠️ DB update failed after swap:", updateErr.message);
-      console.error("[BUY] SWAP EXECUTED — tx:", txSig, "size:", size, "token:", sig.symbol);
+      console.error("[BUY] ⚠️ DB update failed after 3 attempts:", updateErr.message);
+      console.error("[BUY] SWAP CONFIRMED ON-CHAIN — tx:", txSig, "token:", sig.symbol, "— trade may not show in UI");
     }
 
     await sb.from("shreem_brzee_session").update({
@@ -696,7 +721,7 @@ serve(async (req) => {
     }).eq("id", "default");
 
     console.log(`[BUY] ✅ ${sig.symbol ?? sig.mint.slice(0,8)} | ${size.toFixed(4)} SOL | tx: ${txSig.slice(0,16)} | confirmed: ${confirmed}`);
-    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.3" });
+    return jsonResp({ ok: true, confirmed, tx: txSig, symbol: sig.symbol, amount_sol: size, wallet, version: "v4.4" });
 
   } catch (e: any) {
     console.error("[BUY] ❌ Error:", e.message);
