@@ -479,7 +479,7 @@ export default function ShreemBrzeePerformance() {
 
             {/* Main PnL */}
             <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:20 }}>
-              <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", letterSpacing:".3em", textTransform:"uppercase", marginBottom:8 }}>Realized PnL</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", letterSpacing:".3em", textTransform:"uppercase", marginBottom:8 }}>Realized PnL (DB)</div>
               <div style={{ fontSize:36, fontWeight:900, color:periodPnl>=0?GREEN:RED, letterSpacing:"-.04em" }}>
                 {periodPnl>=0?"+":""}{periodPnl.toFixed(4)} SOL
               </div>
@@ -488,6 +488,14 @@ export default function ShreemBrzeePerformance() {
               </div>
               <div style={{ fontSize:11, color:"rgba(255,255,255,0.3)", marginTop:8 }}>
                 {periodTrades.length} closed trades · 1 SOL = €{solToEur(1).toFixed(2)}
+              </div>
+              {periodStuck > 0 && (
+                <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(239,68,68,0.1)", borderRadius:8, fontSize:11, color:RED }}>
+                  ⚠ {periodStuck} stuck trades not included — real loss is higher. Check Phantom for unsold tokens.
+                </div>
+              )}
+              <div style={{ marginTop:10, padding:"8px 12px", background:"rgba(255,255,255,0.04)", borderRadius:8, fontSize:11, color:"rgba(255,255,255,0.5)" }}>
+                💡 True P&L = Current wallet balance minus what you started with. DB P&L only counts trades that fully closed on-chain.
               </div>
             </div>
 
