@@ -575,10 +575,10 @@ serve(async (req) => {
     const dupMint = openTrades?.find(t => t.mint === sig.mint);
     if (dupMint) return jsonResp({ ok: true, skipped: true, reason: "Already have position in this token" });
 
-    // MAX 2 concurrent positions — prevents capital dilution and duplicate losses
-    if ((openTrades ?? []).length >= 2) {
-      console.log(`[BUY] SKIP — already at max 2 open positions`);
-      return jsonResp({ ok: true, skipped: true, reason: "Max 2 concurrent positions reached" });
+    // MAX 4 concurrent positions
+    if ((openTrades ?? []).length >= 4) {
+      console.log(`[BUY] SKIP — already at max 4 open positions`);
+      return jsonResp({ ok: true, skipped: true, reason: "Max 4 concurrent positions reached" });
     }
 
     const fiveMinAgo = new Date(Date.now() - 300000).toISOString();
