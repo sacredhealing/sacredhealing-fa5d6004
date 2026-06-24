@@ -11,8 +11,8 @@ const http  = require('http');
 const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
 const PORT         = 3001;
-const SELL_POLL_MS = 10000; // 10s — whale SELL mirror
-const STOP_POLL_MS = 30000; // 30s — stop-loss + trailing stop
+const SELL_POLL_MS = 7000;  // 7s — whale SELL mirror (tightened)
+const STOP_POLL_MS = 15000; // 15s — stop-loss + trailing stop (tightened for fast meme coins)
 
 if (!SUPABASE_KEY) { console.error('[shreem] FATAL: SUPABASE_SERVICE_ROLE_KEY not set'); process.exit(1); }
 
