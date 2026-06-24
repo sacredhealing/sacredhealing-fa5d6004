@@ -646,7 +646,7 @@ serve(async (req) => {
       return jsonResp({ ok: false, error: `Insufficient balance: ${balSol.toFixed(4)} SOL` });
     }
 
-    const size = Math.min(0.1, Math.max(0.05, balSol * 0.07)); // min 0.05 SOL — below this fees eat all profit
+    const size = Math.max(0.05, balSol * 0.05); // 5% of wallet balance
     if (size < MIN_TRADE_SOL) {
       return jsonResp({ ok: false, error: `Trade size ${size.toFixed(4)} below minimum ${MIN_TRADE_SOL}` });
     }
