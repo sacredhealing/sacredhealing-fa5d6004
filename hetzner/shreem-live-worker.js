@@ -45,7 +45,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15.7 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.8 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -313,24 +313,16 @@ function connect() {
     reconnDelay = 2000;
     console.log('[ws] ✅ Connected — LaserStream active');
 
-    // transactionSubscribe for each whale — fires on every tx involving their wallet
+    // logsSubscribe with mentions — works on all Helius plans including Developer
+    // Fires on every transaction mentioning the whale wallet
     let id = 1;
     for (const [addr, name] of Object.entries(WHALES)) {
       wsConn.send(JSON.stringify({
         jsonrpc: '2.0', id: id++,
-        method: 'transactionSubscribe',
+        method: 'logsSubscribe',
         params: [
-          {
-            accountInclude: [addr],
-            failed: false,
-            vote: false,
-          },
-          {
-            commitment: 'processed',
-            encoding: 'jsonParsed',
-            transactionDetails: 'full',
-            maxSupportedTransactionVersion: 0,
-          }
+          { mentions: [addr] },
+          { commitment: 'processed' }
         ]
       }));
       console.log(`[ws] 📡 Subscribed ${name}`);
@@ -360,30 +352,45 @@ function connect() {
         return;
       }
 
-      // Transaction notification
-      if (msg.method === 'transactionNotification') {
-        const tx  = msg.params?.result?.transaction;
-        const sig = msg.params?.result?.signature;
-        if (!tx || !sig || seenTxs.has(sig)) return;
+      // logsNotification — fires on every tx mentioning whale wallet
+      if (msg.method === 'logsNotification') {
+        const value = msg.params?.result?.value;
+        if (!value) return;
+        const sig  = value.signature;
+        const logs = value.logs || [];
+        if (!sig || seenTxs.has(sig)) return;
 
-        // Find which whale this belongs to
-        const subId    = msg.params?.result?.subscription ?? msg.params?.subscription;
+        // Quick filter — only process swap transactions
+        const isSwap = logs.some(l =>
+          l.includes('Program JUP6') ||
+          l.includes('Instruction: Swap') ||
+          l.includes('ray_log') ||
+          l.includes('pump') ||
+          l.includes('Instruction: Buy') ||
+          l.includes('Instruction: Sell')
+        );
+        if (!isSwap) return;
+
+        // Find which whale subscription triggered this
+        const subId     = msg.params?.result?.subscription ?? msg.params?.subscription;
         const whaleAddr = Object.entries(subIds).find(([, id]) => id === subId)?.[0];
-        if (!whaleAddr) {
-          // Fallback: check all whales
-          for (const [addr, name] of Object.entries(WHALES)) {
-            const parsed = parseTx(tx, addr);
-            if (parsed) {
-              await onSignal(name, addr, parsed.action, parsed.mint, parsed.amountSol, parsed.tokenAmount, sig);
-              break;
-            }
-          }
-          return;
-        }
+        if (!whaleAddr) return;
+        const name = WHALES[whaleAddr];
 
-        const name   = WHALES[whaleAddr];
-        const parsed = parseTx(tx, whaleAddr);
-        if (parsed) await onSignal(name, whaleAddr, parsed.action, parsed.mint, parsed.amountSol, parsed.tokenAmount, sig);
+        console.log(`[ws] 📨 ${name} tx detected: ${sig.slice(0,12)}...`);
+
+        // Fetch full tx to parse token changes
+        try {
+          const txRes = await req(HELIUS_RPC, 'POST', {
+            jsonrpc: '2.0', id: 1,
+            method: 'getTransaction',
+            params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
+          });
+          const tx = txRes.data?.result;
+          if (!tx) return;
+          const parsed = parseTx(tx, whaleAddr);
+          if (parsed) await onSignal(name, whaleAddr, parsed.action, parsed.mint, parsed.amountSol, parsed.tokenAmount, sig);
+        } catch(e) { console.error('[ws] getTransaction error:', e.message); }
       }
     } catch(e) { console.error('[ws] msg error:', e.message); }
   });
@@ -480,7 +487,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15.7-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.8-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -494,4 +501,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15.7 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.8 ready — LaserStream transactionSubscribe active');
