@@ -35,7 +35,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15.1 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.2 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -153,17 +153,18 @@ function parseTx(tx, walletAddr) {
     const changes = [];
     for (const post of postTokens) {
       if (post.owner !== walletAddr || SKIP_MINTS.has(post.mint)) continue;
-      const pre    = preTokens.find(p => p.mint === post.mint && p.owner === walletAddr);
-      const preAmt = Number(pre?.uiTokenAmount?.amount || 0);
-      const postAmt= Number(post.uiTokenAmount?.amount || 0);
-      const diff   = postAmt - preAmt;
+      const pre     = preTokens.find(p => p.mint === post.mint && p.owner === walletAddr);
+      // Use uiAmount (human readable) not raw amount for price guard accuracy
+      const preAmt  = Number(pre?.uiTokenAmount?.uiAmount  || 0);
+      const postAmt = Number(post.uiTokenAmount?.uiAmount  || 0);
+      const diff    = postAmt - preAmt;
       if (Math.abs(diff) > 0) changes.push({ mint: post.mint, diff, preAmt, postAmt });
     }
     for (const pre of preTokens) {
       if (pre.owner !== walletAddr || SKIP_MINTS.has(pre.mint)) continue;
       const post = postTokens.find(p => p.mint === pre.mint && p.owner === walletAddr);
-      if (!post || Number(post.uiTokenAmount?.amount||0) === 0) {
-        const preAmt = Number(pre.uiTokenAmount?.amount||0);
+      if (!post || Number(post.uiTokenAmount?.uiAmount||0) === 0) {
+        const preAmt = Number(pre.uiTokenAmount?.uiAmount||0);
         if (preAmt > 0 && !changes.find(c => c.mint === pre.mint)) {
           changes.push({ mint: pre.mint, diff: -preAmt, preAmt, postAmt: 0 });
         }
@@ -171,6 +172,7 @@ function parseTx(tx, walletAddr) {
     }
 
     for (const c of changes) {
+      // tokenAmount in UI units — price guard uses amount_sol/token_amount = SOL per token
       if (c.diff > 0 && solDiff < -0.005) return { action: 'BUY',  mint: c.mint, tokenAmount: c.diff,          amountSol: Math.abs(solDiff) };
       if (c.diff < 0 && solDiff > 0.001)  return { action: 'SELL', mint: c.mint, tokenAmount: Math.abs(c.diff), amountSol: solDiff };
     }
@@ -407,7 +409,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15.1-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.2-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -421,4 +423,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15.1 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.2 ready — LaserStream transactionSubscribe active');
