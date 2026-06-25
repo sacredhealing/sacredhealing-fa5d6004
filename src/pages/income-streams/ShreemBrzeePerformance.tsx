@@ -595,7 +595,118 @@ export default function ShreemBrzeePerformance() {
             })}
           </>
         )}
+
+        {isAdmin && <BotKeypairSettings />}
       </div>
+    </div>
+  );
+}
+
+function BotKeypairSettings() {
+  const [val, setVal] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  useEffect(() => {
+    d.from("bot_secrets")
+      .select("updated_at")
+      .eq("name", "SHREEM_BOT_KEYPAIR")
+      .maybeSingle()
+      .then(({ data }) => { if (data?.updated_at) setLastUpdated(data.updated_at); });
+  }, []);
+
+  const save = async () => {
+    setMsg(null);
+    const trimmed = val.trim();
+    if (trimmed.length < 32) {
+      setMsg({ ok: false, text: "Key looks too short — paste the full base58 or JSON array secret key." });
+      return;
+    }
+    setSaving(true);
+    const { data: u } = await d.auth.getUser();
+    const { error } = await d.from("bot_secrets").upsert({
+      name: "SHREEM_BOT_KEYPAIR",
+      value: trimmed,
+      updated_at: new Date().toISOString(),
+      updated_by: u?.user?.id ?? null,
+    }, { onConflict: "name" });
+    setSaving(false);
+    if (error) {
+      setMsg({ ok: false, text: error.message });
+    } else {
+      setMsg({ ok: true, text: "Saved securely. Bot can now sign transactions." });
+      setVal("");
+      setLastUpdated(new Date().toISOString());
+    }
+  };
+
+  return (
+    <div style={{
+      marginTop: 24,
+      background: "rgba(212,175,55,0.04)",
+      border: "1px solid rgba(212,175,55,0.25)",
+      borderRadius: 12,
+      padding: 20,
+    }}>
+      <div style={{ fontSize: 11, letterSpacing: ".25em", color: GOLD, textTransform: "uppercase", marginBottom: 6 }}>
+        Admin · Bot Wallet Keypair
+      </div>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 14, lineHeight: 1.5 }}>
+        Paste the private key for bot wallet <code style={{ color: GOLD }}>{BOT_WALLET}</code>.
+        Stored encrypted, admin-only. Used by the executor to sign trades.
+        {lastUpdated && (
+          <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+            Last updated: {new Date(lastUpdated).toLocaleString()}
+          </div>
+        )}
+      </div>
+      <input
+        type="password"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        placeholder="Base58 private key or [1,2,3,...] JSON array"
+        autoComplete="off"
+        spellCheck={false}
+        style={{
+          width: "100%",
+          padding: "12px 14px",
+          background: "rgba(0,0,0,0.5)",
+          border: "1px solid rgba(212,175,55,0.3)",
+          borderRadius: 8,
+          color: "#fff",
+          fontSize: 13,
+          fontFamily: "monospace",
+          marginBottom: 12,
+          outline: "none",
+        }}
+      />
+      <button
+        onClick={save}
+        disabled={saving || !val.trim()}
+        style={{
+          background: saving ? "rgba(212,175,55,0.3)" : GOLD,
+          color: "#000",
+          border: "none",
+          borderRadius: 8,
+          padding: "10px 20px",
+          fontWeight: 800,
+          fontSize: 13,
+          cursor: saving || !val.trim() ? "not-allowed" : "pointer",
+          opacity: !val.trim() ? 0.5 : 1,
+        }}
+      >
+        {saving ? "Saving…" : "Save Keypair"}
+      </button>
+      {msg && (
+        <div style={{
+          marginTop: 12,
+          fontSize: 12,
+          color: msg.ok ? GREEN : RED,
+        }}>
+          {msg.text}
+        </div>
+      )}
     </div>
   );
 }
