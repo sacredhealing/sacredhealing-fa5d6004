@@ -284,16 +284,16 @@ function connectWebSocket() {
     reconnectDelay = 2000;
     console.log('[ws] ✅ Connected to Helius');
 
-    // Subscribe to each whale wallet using accountSubscribe (free plan compatible)
+    // logsSubscribe with mentions is FREE on all Helius plans
     let subId = 1;
     for (const [addr, name] of Object.entries(WHALE_WALLETS)) {
       const msg = {
         jsonrpc: '2.0',
         id: subId++,
-        method: 'accountSubscribe',
+        method: 'logsSubscribe',
         params: [
-          addr,
-          { encoding: 'jsonParsed', commitment: 'processed' }
+          { mentions: [addr] },
+          { commitment: 'processed' }
         ]
       };
       wsConn.send(JSON.stringify(msg));
@@ -307,52 +307,57 @@ function connectWebSocket() {
       
 
 
-      // accountNotification — fires when wallet SOL balance changes (on every tx)
-      if (msg.method === 'accountNotification') {
-        const subId = msg.params?.subscription;
-        if (!subId) return;
-
-        // Find which whale this subscription belongs to
-        const whaleEntry = Object.entries(subIds).find(([addr, id]) => id === subId);
-        if (!whaleEntry) return;
-        const [addr, name] = [whaleEntry[0], WHALE_WALLETS[whaleEntry[0]]];
-
-        // Account changed — fetch their recent transactions
-        console.log(`[ws] 👁 ${name} account changed — fetching recent tx`);
-        try {
-          const sigRes = await httpReq('https://mainnet.helius-rpc.com/?api-key=' + HELIUS_KEY, 'POST', {
-            jsonrpc: '2.0', id: 1,
-            method: 'getSignaturesForAddress',
-            params: [addr, { limit: 3 }]
-          });
-          const sigs = sigRes.data?.result || [];
-          for (const sigInfo of sigs) {
-            if (recentTxs.has(sigInfo.signature)) continue;
-            const txRes = await httpReq('https://mainnet.helius-rpc.com/?api-key=' + HELIUS_KEY, 'POST', {
-              jsonrpc: '2.0', id: 1,
-              method: 'getTransaction',
-              params: [sigInfo.signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
-            });
-            const tx = txRes.data?.result;
-            if (!tx) continue;
-            const parsed = parseWhaleAction(tx, addr);
-            if (parsed) {
-              await handleWhaleSignal(name, addr, parsed.action, parsed.mint,
-                parsed.amountSol, parsed.tokenAmount, parsed.sig || sigInfo.signature);
-            }
-          }
-        } catch(e) { console.error('[ws] account fetch error:', e.message); }
-      }
-      
-      // Store subscription IDs when confirmed
+      // Store subscription IDs
       if (msg.result && typeof msg.result === 'number' && msg.id) {
-        // Find which addr this id belongs to — map by order
         const addrs = Object.keys(WHALE_WALLETS);
         const idx = msg.id - 1;
         if (idx >= 0 && idx < addrs.length) {
           subIds[addrs[idx]] = msg.result;
           console.log(`[ws] ✅ Sub ${msg.result} → ${WHALE_WALLETS[addrs[idx]]}`);
         }
+        return;
+      }
+
+      // logsNotification — fires on every tx mentioning whale wallet
+      if (msg.method === 'logsNotification') {
+        const value = msg.params?.result?.value;
+        if (!value) return;
+        const sig  = value.signature;
+        const logs = value.logs || [];
+        if (!sig || recentTxs.has(sig)) return;
+
+        // Quick filter — only process swap transactions
+        const isSwap = logs.some(l =>
+          l.includes('Program JUP') ||
+          l.includes('Instruction: Swap') ||
+          l.includes('ray_log') ||
+          l.includes('Instruction: Buy') ||
+          l.includes('Instruction: Sell') ||
+          l.includes('pump')
+        );
+        if (!isSwap) return;
+
+        // Find which whale triggered this
+        const subId = msg.params?.result?.subscription;
+        const whaleAddr = Object.entries(subIds).find(([, id]) => id === subId)?.[0];
+        if (!whaleAddr) return;
+        const whaleName = WHALE_WALLETS[whaleAddr];
+
+        // Fetch full tx to parse token changes
+        try {
+          const txRes = await httpReq('https://mainnet.helius-rpc.com/?api-key=' + HELIUS_KEY, 'POST', {
+            jsonrpc: '2.0', id: 1,
+            method: 'getTransaction',
+            params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
+          });
+          const tx = txRes.data?.result;
+          if (!tx) return;
+          const parsed = parseWhaleAction(tx, whaleAddr);
+          if (parsed) {
+            await handleWhaleSignal(whaleName, whaleAddr, parsed.action, parsed.mint,
+              parsed.amountSol, parsed.tokenAmount, parsed.sig || sig);
+          }
+        } catch(e) { console.error('[ws] getTransaction error:', e.message); }
       }
     } catch(e) { console.error('[ws] parse error:', e.message); }
   });
