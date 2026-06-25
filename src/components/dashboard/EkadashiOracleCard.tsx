@@ -2,40 +2,33 @@ import React, { useState } from 'react';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 
-// ── Verified 2026–2027 Ekadashi dates (IST, Drik Panchang) ─────────────────
+// ── Verified 2026–2027 Ekadashi dates (Drik Panchang, IST) ─────────────────
 const EKADASHIS: { date: string; name: string; paksha: 'Shukla' | 'Krishna' }[] = [
-  { date: '2026-06-21', name: 'Yogini Ekadashi',       paksha: 'Krishna' },
-  { date: '2026-07-05', name: 'Devshayani Ekadashi',   paksha: 'Shukla'  },
-  { date: '2026-07-20', name: 'Kamika Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-08-04', name: 'Putrada Ekadashi',       paksha: 'Shukla'  },
-  { date: '2026-08-19', name: 'Aja Ekadashi',           paksha: 'Krishna' },
-  { date: '2026-09-02', name: 'Parsva Ekadashi',        paksha: 'Shukla'  },
-  { date: '2026-09-17', name: 'Indira Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-10-01', name: 'Papankusha Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-10-16', name: 'Rama Ekadashi',          paksha: 'Krishna' },
-  { date: '2026-10-31', name: 'Devutthana Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-11-15', name: 'Utpanna Ekadashi',       paksha: 'Krishna' },
-  { date: '2026-11-29', name: 'Mokshada Ekadashi',      paksha: 'Shukla'  },
-  { date: '2026-12-14', name: 'Saphala Ekadashi',       paksha: 'Krishna' },
-  { date: '2026-12-29', name: 'Putrada Ekadashi',       paksha: 'Shukla'  },
-  { date: '2027-01-13', name: 'Shattila Ekadashi',      paksha: 'Krishna' },
-  { date: '2027-01-27', name: 'Jaya Ekadashi',          paksha: 'Shukla'  },
+  { date: '2026-06-25', name: 'Nirjala Ekadashi',      paksha: 'Shukla'  },
+  { date: '2026-07-10', name: 'Yogini Ekadashi',        paksha: 'Krishna' },
+  { date: '2026-07-25', name: 'Devshayani Ekadashi',    paksha: 'Shukla'  },
+  { date: '2026-08-08', name: 'Kamika Ekadashi',        paksha: 'Krishna' },
+  { date: '2026-08-23', name: 'Shravana Putrada Ekadashi', paksha: 'Shukla' },
+  { date: '2026-09-07', name: 'Aja Ekadashi',           paksha: 'Krishna' },
+  { date: '2026-09-21', name: 'Parsva Ekadashi',        paksha: 'Shukla'  },
+  { date: '2026-10-06', name: 'Indira Ekadashi',        paksha: 'Krishna' },
+  { date: '2026-10-21', name: 'Papankusha Ekadashi',    paksha: 'Shukla'  },
+  { date: '2026-11-05', name: 'Rama Ekadashi',          paksha: 'Krishna' },
+  { date: '2026-11-19', name: 'Devutthana Ekadashi',    paksha: 'Shukla'  },
+  { date: '2026-12-05', name: 'Utpanna Ekadashi',       paksha: 'Krishna' },
+  { date: '2026-12-19', name: 'Mokshada Ekadashi',      paksha: 'Shukla'  },
+  { date: '2027-01-03', name: 'Saphala Ekadashi',       paksha: 'Krishna' },
+  { date: '2027-01-17', name: 'Putrada Ekadashi',       paksha: 'Shukla'  },
 ];
 
 function daysFromNow(dateStr: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(dateStr);
-  d.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
-
 function fmtDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
 function doshaGuidance(dosha?: string): string {
   const d = (dosha || '').toLowerCase();
   if (d.includes('vata'))
@@ -52,48 +45,37 @@ export const EkadashiOracleCard: React.FC = () => {
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
 
-  // Find relevant window: today-1, today, today+1, else next upcoming
-  const today = new Date(); today.setHours(0,0,0,0);
   const upcoming = EKADASHIS.filter(e => daysFromNow(e.date) >= -1);
   const next = upcoming[0];
   const daysAway = next ? daysFromNow(next.date) : null;
 
-  const pillText =
-    daysAway === -1 ? `Eve of ${next?.name} — tomorrow` :
-    daysAway ===  0 ? `TODAY · ${next?.name} 🙏` :
-    daysAway ===  1 ? `Break fast today — Dwadashi` :
-    next            ? `${next.name} · in ${daysAway} days` : '—';
+  const isToday  = daysAway === 0;
+  const isEve    = daysAway === -1;
+  const isAfter  = daysAway === 1;
 
-  const isToday   = daysAway === 0;
-  const isAfter   = daysAway === 1;
-  const pillBg    = isToday ? 'rgba(212,175,55,0.22)' : isAfter ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.08)';
-  const pillBdr   = isToday ? 'rgba(212,175,55,0.6)'  : isAfter ? 'rgba(34,211,238,0.3)' : 'rgba(212,175,55,0.22)';
-  const pillColor = isAfter ? '#22D3EE' : '#D4AF37';
+  const pillText =
+    isEve   ? `Tomorrow — ${next?.name}` :
+    isToday ? `TODAY · ${next?.name} 🙏` :
+    isAfter ? `Break fast today · Dwadashi` :
+    next    ? `${next.name} · in ${daysAway} days` : '—';
+
+  const pillBg  = isToday ? 'rgba(212,175,55,0.22)' : isAfter ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.08)';
+  const pillBdr = isToday ? 'rgba(212,175,55,0.6)'  : isAfter ? 'rgba(34,211,238,0.3)' : 'rgba(212,175,55,0.22)';
+  const pillClr = isAfter ? '#22D3EE' : '#D4AF37';
 
   const dosha    = doshaProfile?.primary || jyotish.primaryDosha || undefined;
   const moonSign = jyotish.moonSign || undefined;
 
   const s: Record<string, React.CSSProperties> = {
-    card: {
-      margin: '0 16px',
-      background: 'rgba(255,255,255,0.02)',
-      border: `1px solid ${open ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.06)'}`,
-      borderRadius: 24, overflow: 'hidden',
-      position: 'relative', cursor: 'pointer',
-      transition: 'border-color 0.25s',
-    },
-    topBar: { height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37 40%,#D4AF37 60%,transparent)' },
-    scanLine: {
-      position: 'absolute', left: 0, right: 0, height: 1, top: 0, zIndex: 2, pointerEvents: 'none',
-      background: 'linear-gradient(90deg,transparent,rgba(34,211,238,0.3),transparent)',
-      animation: 'ekScan 5s linear infinite',
-    },
+    card:       { margin: '0 16px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${open ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 24, overflow: 'hidden', position: 'relative', cursor: 'pointer', transition: 'border-color 0.25s' },
+    topBar:     { height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37 40%,#D4AF37 60%,transparent)' },
+    scanLine:   { position: 'absolute', left: 0, right: 0, height: 1, top: 0, zIndex: 2, pointerEvents: 'none', background: 'linear-gradient(90deg,transparent,rgba(34,211,238,0.3),transparent)', animation: 'ekScan 5s linear infinite' },
     inner:      { padding: '14px 16px' },
     headerRow:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     titleGroup: { flex: 1, minWidth: 0 },
     eyebrow:    { fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.45)', marginBottom: 2 },
     title:      { fontFamily: 'Montserrat,sans-serif', fontSize: 15, fontWeight: 900, letterSpacing: '-0.04em', color: '#D4AF37' },
-    pill:       { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 11px', borderRadius: 99, marginTop: 7, fontSize: 10, fontWeight: 700, background: pillBg, border: `1px solid ${pillBdr}`, color: pillColor },
+    pill:       { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 11px', borderRadius: 99, marginTop: 7, fontSize: 10, fontWeight: 700, background: pillBg, border: `1px solid ${pillBdr}`, color: pillClr },
     dot:        { width: 6, height: 6, borderRadius: '50%', background: 'currentColor', animation: 'ekBlink 1.4s ease-in-out infinite' },
     moonOrb:    { width: 42, height: 42, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%,#D4AF37 0%,rgba(212,175,55,0.2) 55%,transparent 75%)', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, animation: 'ekMoon 3s ease-in-out infinite' },
     chevron:    { fontSize: 10, fontWeight: 800, color: 'rgba(212,175,55,0.35)', transition: 'transform 0.3s', transform: open ? 'rotate(180deg)' : 'none', userSelect: 'none' as const },
@@ -142,38 +124,27 @@ export const EkadashiOracleCard: React.FC = () => {
         @keyframes ekBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @keyframes ekMoon  { 0%,100%{box-shadow:0 0 10px rgba(212,175,55,0.18)} 50%{box-shadow:0 0 24px rgba(212,175,55,0.42)} }
       `}</style>
-
       <div style={s.card} onClick={() => setOpen(o => !o)}>
         <div style={s.topBar} />
         {open && <div style={s.scanLine} />}
         <div style={s.inner}>
-
-          {/* ── COLLAPSED HEADER (always visible) ── */}
           <div style={s.headerRow}>
             <div style={s.titleGroup}>
               <div style={s.eyebrow}>Lunar Fasting Oracle</div>
               <div style={s.title}>Ekadashi</div>
-              <div style={s.pill}>
-                <span style={s.dot} />
-                {pillText}
-              </div>
+              <div style={s.pill}><span style={s.dot} />{pillText}</div>
             </div>
             <div style={s.moonOrb}>🌙</div>
             <div style={s.chevron}>▼</div>
           </div>
 
-          {/* ── EXPANDED CONTENT ── */}
           {open && (
             <div onClick={e => e.stopPropagation()}>
               <div style={s.divider} />
-
-              {/* Countdown */}
               {next && (
                 <>
                   <div style={s.lbl}>
-                    {daysAway === 0 ? 'Today is Ekadashi — Fast Now' :
-                     daysAway === 1 ? 'Break Fast Today · Dwadashi' :
-                     `Next · ${next.name}`}
+                    {isToday ? 'Today is Ekadashi — Fast Now' : isAfter ? 'Break Fast Today · Dwadashi' : `Next · ${next.name}`}
                   </div>
                   <div style={s.countRow}>
                     {[
@@ -190,8 +161,6 @@ export const EkadashiOracleCard: React.FC = () => {
                   </div>
                 </>
               )}
-
-              {/* Upcoming 3 */}
               <div style={s.lbl}>Upcoming</div>
               <div style={s.list}>
                 {upcoming.slice(0, 3).map((e, i) => (
@@ -204,10 +173,7 @@ export const EkadashiOracleCard: React.FC = () => {
                   </div>
                 ))}
               </div>
-
               <div style={s.divider} />
-
-              {/* Personal profile */}
               <div style={s.lbl}>Your Profile</div>
               <div style={s.chipRow}>
                 <div style={s.chip}>
@@ -233,14 +199,10 @@ export const EkadashiOracleCard: React.FC = () => {
                   <div style={{ ...s.chipSub, color: '#22D3EE', cursor: 'pointer' }}>+ Link cycle</div>
                 </div>
               </div>
-
-              {/* Ayurvedic guidance */}
               <div style={s.reco}>
                 <div style={s.recoLbl}>Siddha Guidance · {next?.name || 'Ekadashi'}</div>
                 <div style={s.recoBody}>{doshaGuidance(dosha)}</div>
               </div>
-
-              {/* Shakti panel */}
               <div style={s.shakti}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 13 }}>🌸</span>
@@ -252,8 +214,6 @@ export const EkadashiOracleCard: React.FC = () => {
                   {' '}— the body is already in deep cleansing. Rest and light fruits are honoured as the fast itself.
                 </div>
               </div>
-
-              {/* Notification toggle */}
               <div style={s.notif}>
                 <div>
                   <div style={s.notifTitle}>Ekadashi Reminders</div>
@@ -263,8 +223,6 @@ export const EkadashiOracleCard: React.FC = () => {
                   <div style={{ position: 'absolute', top: 3, left: 21, width: 16, height: 16, background: '#fff', borderRadius: '50%' }} />
                 </div>
               </div>
-
-              {/* What is Ekadashi */}
               <div style={s.learnBox}>
                 <div style={s.learnTitle}>🌑 What is Ekadashi?</div>
                 <div style={s.learnBody}>
