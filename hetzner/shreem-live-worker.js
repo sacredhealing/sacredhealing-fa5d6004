@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v16 LaserStream
+// shreem-live-worker.js — Shreem Brzee v16.1 LaserStream
 // Architecture: Helius WebSocket → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase is LOGGING ONLY — never in the execution path
 // Signing: tweetnacl + bs58 (no @solana/web3.js dependency issues)
@@ -394,7 +394,7 @@ function connect() {
         method:'transactionSubscribe',
         params:[
           { accountInclude:[addr] },
-          { commitment:'confirmed', encoding:'jsonParsed', transactionDetails:'full', showRewards:false, maxSupportedTransactionVersion:0 },
+          { commitment:'processed', encoding:'base64', transactionDetails:'signatures', showRewards:false, maxSupportedTransactionVersion:0 },
         ],
       }));
       console.log(`[ws] 📡 Subscribed ${name}`);
@@ -406,11 +406,21 @@ function connect() {
   ws.on('message', async (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
-      if (msg.result!==undefined&&msg.id!==undefined) return; // subscription confirm
-      if (!msg.params?.result?.transaction) return;
-      const tx       = msg.params.result.transaction;
-      const accounts = (tx.transaction?.message?.accountKeys||tx.message?.accountKeys||[]).map(k=>typeof k==='string'?k:k?.pubkey||'');
-      const whaleAddr = accounts.find(a=>WHALE_ADDRS.has(a));
+      // Subscription confirmation
+      if (msg.result!==undefined&&msg.id!==undefined) return;
+      // Signatures-only payload: { params: { result: { signature, ... } } }
+      const sig = msg.params?.result?.signature || msg.params?.result?.transaction?.signatures?.[0];
+      if (!sig) return;
+      // Fetch full transaction details — 1-10 credits vs hundreds for full stream
+      const txRes = await httpJSON(HELIUS_RPC, 'POST', {
+        jsonrpc:'2.0', id:1, method:'getTransaction',
+        params:[sig, { encoding:'jsonParsed', commitment:'confirmed', maxSupportedTransactionVersion:0 }]
+      });
+      const tx = txRes?.result;
+      if (!tx) return;
+      // Find which whale triggered this
+      const keys = (tx.transaction?.message?.accountKeys||[]).map(k=>typeof k==='string'?k:k?.pubkey||'');
+      const whaleAddr = keys.find(a=>WHALE_ADDRS.has(a));
       if (!whaleAddr) return;
       const swap = parseWhaleSwap(tx, whaleAddr);
       if (!swap) return;
@@ -478,7 +488,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, ()=>console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16 LaserStream booting — Helius WSS, local execution, Supabase logging only');
+console.log('[shreem] v16.1 LaserStream booting — Helius WSS, local execution, Supabase logging only');
 console.log('[shreem] Whales:', Object.values(WHALE_WALLETS).join(', '));
 (async()=>{
   await syncSession();
