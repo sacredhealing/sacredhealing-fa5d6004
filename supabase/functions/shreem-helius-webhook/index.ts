@@ -258,6 +258,39 @@ async function executeBuyInline(signal: any, sess: any): Promise<{ ok: boolean; 
   if (signal.mint === SOL_MINT)                       return { ok: true, skipped: "SOL_MINT" };
   if (signal.action && signal.action !== "BUY")       return { ok: true, skipped: "not_a_buy" };
 
+  // ── QUALITY FILTERS ───────────────────────────────────────────────────────
+  // Filter 1: Min whale position size — skip dust/test trades
+  const whaleAmtSol = Number(signal.amount_sol || 0);
+  if (whaleAmtSol > 0 && whaleAmtSol < 0.15) {
+    console.log(`[INLINE-BUY] ⏭ ${signal.mint.slice(0,8)} — whale only spent ${whaleAmtSol.toFixed(4)} SOL (min 0.15)`);
+    return { ok: true, skipped: `whale_too_small_${whaleAmtSol.toFixed(4)}sol` };
+  }
+
+  // Filter 2: Pool liquidity + market cap via DexScreener
+  try {
+    const dsRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${signal.mint}`, { signal: AbortSignal.timeout(3000) });
+    if (dsRes.ok) {
+      const dsData = await dsRes.json();
+      const pairs = (dsData?.pairs || []).filter((p: any) => parseFloat(p?.priceUsd) > 0);
+      if (pairs.length > 0) {
+        pairs.sort((a: any, b: any) => parseFloat(b.liquidity?.usd||0) - parseFloat(a.liquidity?.usd||0));
+        const best    = pairs[0];
+        const poolLiq = parseFloat(best.liquidity?.usd || 0);
+        const mcap    = parseFloat(best.fdv || best.marketCap || 0);
+        if (poolLiq > 0 && poolLiq < 10000) {
+          console.log(`[INLINE-BUY] ⏭ ${best.baseToken?.symbol||signal.mint.slice(0,8)} — pool $${poolLiq.toFixed(0)} < $10K`);
+          return { ok: true, skipped: `low_liquidity_${poolLiq.toFixed(0)}` };
+        }
+        if (mcap > 0 && mcap < 50000) {
+          console.log(`[INLINE-BUY] ⏭ ${best.baseToken?.symbol||signal.mint.slice(0,8)} — mcap $${mcap.toFixed(0)} < $50K`);
+          return { ok: true, skipped: `low_mcap_${mcap.toFixed(0)}` };
+        }
+        console.log(`[INLINE-BUY] ✅ ${best.baseToken?.symbol||signal.mint.slice(0,8)} — pool $${poolLiq.toFixed(0)} mcap $${mcap.toFixed(0)}`);
+      }
+    }
+  } catch (_) { /* skip filter on timeout — proceed with trade */ }
+  // ─────────────────────────────────────────────────────────────────────────
+
   // STALE SIGNAL CHECK: skip if signal is older than 60 seconds
   // Entering a trade that already moved significantly = buying the top
   if (signal.block_time) {
