@@ -1,49 +1,34 @@
-// shreem-live-worker.js — v16 POLLING
-// Architecture: Poll getSignaturesForAddress every 2s per whale — reliable, simple
-// Entry: <3s | Exit: <3s | Stop loss: 3s in-memory
-// No WebSocket dependency — pure HTTP polling, always works
+// shreem-live-worker.js — Shreem Brzee v13
+// v13 — PROFESSIONAL: In-memory position cache + real-time price via DexScreener
+// Stop loss checks every 3s against in-memory cache — no DB polling for prices
+// Sell mirror: polls DB every 7s for whale SELL signals
+// Auto-recover: any position open > 30min with no price update gets force-checked
 
-const https   = require('https');
-const http    = require('http');
+const https = require('https');
+const http  = require('http');
 
-const SUPABASE_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
-const HELIUS_KEY    = '4319d817-88e2-4332-926f-84d98f0f5155';
-const HELIUS_RPC    = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const EXECUTOR_URL  = `${SUPABASE_URL}/functions/v1/shreem-live-executor`;
-const PORT          = 3001;
-const POLL_MS       = 2000;  // Poll every 2s per whale
-const STOP_POLL_MS  = 3000;
-const PRICE_TTL_MS  = 4000;
+const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
+const PORT         = 3001;
+const SELL_POLL_MS = 7000;   // 7s — whale SELL mirror
+const STOP_POLL_MS = 3000;   // 3s — stop loss check (was 15s, now 3s)
+const PRICE_TTL_MS = 4000;   // Price cache TTL — refresh every 4s
 
-const WHALES = {
-  'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
-  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
-  'Bi4rd5FH5bYEN8scZ7wevxNZyNmKHdaBcvewdPFxYdLt': 'theo',
-  '4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9': 'decu',
-  'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':  'trunoest',
-};
+if (!SUPABASE_KEY) { console.error('[shreem] FATAL: no key'); process.exit(1); }
 
-const SOL_MINT  = 'So11111111111111111111111111111111111111112';
-const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-const SKIP_MINTS = new Set([SOL_MINT, USDC_MINT]);
+console.log('[shreem] v13 PROFESSIONAL — 3s stop loss, in-memory cache');
 
-const MIN_WHALE_SOL = 0.15;
-const MIN_POOL_USD  = 10000;
-const MIN_MCAP_USD  = 50000;
-
-const SB_HDR = {
+const SB_HEADERS = {
   apikey: SUPABASE_KEY,
   Authorization: `Bearer ${SUPABASE_KEY}`,
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v16.1 POLLING — getSignaturesForAddress every 2s, reliable');
-
-function req(url, method = 'GET', body = null, headers = {}) {
+// ── HTTP helper ───────────────────────────────────────────────────────────────
+function httpReq(url, method = 'GET', body = null, headers = {}) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
-    const o = {
+    const opts = {
       hostname: u.hostname,
       port: u.port || (u.protocol === 'https:' ? 443 : 80),
       path: u.pathname + u.search,
@@ -51,7 +36,7 @@ function req(url, method = 'GET', body = null, headers = {}) {
       headers: { 'Content-Type': 'application/json', ...headers },
     };
     const lib = u.protocol === 'https:' ? https : http;
-    const r = lib.request(o, res => {
+    const req = lib.request(opts, (res) => {
       let d = '';
       res.on('data', c => d += c);
       res.on('end', () => {
@@ -59,287 +44,247 @@ function req(url, method = 'GET', body = null, headers = {}) {
         catch { resolve({ status: res.statusCode, data: d }); }
       });
     });
-    r.on('error', reject);
-    r.setTimeout(15000, () => { r.destroy(); reject(new Error('timeout')); });
-    if (body) r.write(JSON.stringify(body));
-    r.end();
+    req.on('error', reject);
+    req.setTimeout(15000, () => { req.destroy(); reject(new Error('timeout')); });
+    if (body) req.write(JSON.stringify(body));
+    req.end();
   });
 }
 
-const sbGet = (t, f) => req(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', null, SB_HDR).then(r => Array.isArray(r.data) ? r.data : []);
-const sbPatch = (t, f, b) => req(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HDR).catch(() => {});
-const helius = (method, params) => req(HELIUS_RPC, 'POST', { jsonrpc: '2.0', id: 1, method, params });
-const callExecutor = body => req(EXECUTOR_URL, 'POST', body, { ...SB_HDR, Authorization: `Bearer ${SUPABASE_KEY}` }).then(r => r.data);
+const sbGet   = (t, f) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'GET', null, SB_HEADERS).then(r => Array.isArray(r.data) ? r.data : []);
+const sbPatch = (t, f, b) => httpReq(`${SUPABASE_URL}/rest/v1/${t}?${f}`, 'PATCH', b, SB_HEADERS);
 
-// State
-const positions  = new Map();
-const prices     = new Map();
-const closing    = new Set();
-const seenSigs   = new Set(); // processed tx signatures
-const lastSigs   = {};        // addr → last seen signature
-let   solUsd     = 150;
-let   botLive    = false;
-
-async function checkLive() {
-  try {
-    const s = await sbGet('shreem_brzee_session', 'id=eq.default&select=mode,started_at,stopped_at');
-    botLive = !!(s[0]?.mode === 'live' && s[0]?.started_at && !s[0]?.stopped_at);
-  } catch { botLive = false; }
+async function callExecutor(body) {
+  const r = await httpReq(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, 'POST', body,
+    { ...SB_HEADERS, Authorization: `Bearer ${SUPABASE_KEY}` });
+  return r.data;
 }
 
-async function getPrice(mint) {
-  const c = prices.get(mint);
-  if (c && Date.now() - c.ts < PRICE_TTL_MS) return c.price;
+// ── IN-MEMORY POSITION CACHE ──────────────────────────────────────────────────
+// Key: trade id → { mint, symbol, entry_price, peak_price, amount_sol, opened_at, label }
+const positionCache = new Map();
+// Key: mint → { price, usd, updatedAt }
+const priceCache    = new Map();
+// Track which positions are currently being closed to prevent double-sells
+const closingSet    = new Set();
+
+// Sync positions from DB into memory every 15s
+async function syncPositions() {
   try {
-    const r = await req(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+    const positions = await sbGet('shreem_brzee_live_trades',
+      'status=eq.open&select=id,mint,symbol,entry_price,peak_price,amount_sol,opened_at,label');
+    
+    // Update cache
+    const dbIds = new Set(positions.map(p => p.id));
+    
+    // Remove closed positions from cache
+    for (const [id] of positionCache) {
+      if (!dbIds.has(id)) positionCache.delete(id);
+    }
+    
+    // Add/update open positions
+    for (const pos of positions) {
+      const existing = positionCache.get(pos.id);
+      positionCache.set(pos.id, {
+        ...pos,
+        peak_price: existing?.peak_price || Number(pos.peak_price) || Number(pos.entry_price) || 0,
+      });
+    }
+    
+    if (positions.length > 0) {
+      console.log(`[cache] ${positions.length} open positions synced`);
+    }
+  } catch(e) { console.error('[cache] sync failed:', e.message); }
+}
+
+// ── PRICE FETCHER — parallel, cached ─────────────────────────────────────────
+async function fetchPrice(mint) {
+  const cached = priceCache.get(mint);
+  if (cached && Date.now() - cached.updatedAt < PRICE_TTL_MS) return cached.price;
+
+  // Try DexScreener first (better for new pump.fun tokens)
+  try {
+    const r = await httpReq(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
     const pairs = (r.data?.pairs || []).filter(p => parseFloat(p?.priceUsd) > 0);
     if (pairs.length) {
       pairs.sort((a, b) => parseFloat(b.liquidity?.usd||0) - parseFloat(a.liquidity?.usd||0));
       const price = parseFloat(pairs[0].priceUsd);
-      if (price > 0) { prices.set(mint, { price, ts: Date.now() }); return price; }
+      if (price > 0) {
+        priceCache.set(mint, { price, updatedAt: Date.now() });
+        return price;
+      }
     }
   } catch {}
+
+  // Jupiter fallback
   try {
-    const r = await req(`https://api.jup.ag/price/v2?ids=${mint}`);
-    const price = parseFloat(Object.values(r.data?.data||{})[0]?.price||0);
-    if (price > 0) { prices.set(mint, { price, ts: Date.now() }); return price; }
+    const r = await httpReq(`https://api.jup.ag/price/v2?ids=${mint}`);
+    const price = parseFloat(Object.values(r.data?.data || {})[0]?.price || 0);
+    if (price > 0) {
+      priceCache.set(mint, { price, updatedAt: Date.now() });
+      return price;
+    }
   } catch {}
+
   return 0;
 }
 
-async function syncPositions() {
+// Get SOL/USD rate
+let solUsd = 68;
+async function refreshSolPrice() {
   try {
-    const rows = await sbGet('shreem_brzee_live_trades', 'status=eq.open&select=id,mint,symbol,entry_price,peak_price,amount_sol,opened_at,label');
-    const ids = new Set(rows.map(r => r.id));
-    for (const [id] of positions) { if (!ids.has(id)) positions.delete(id); }
-    for (const p of rows) {
-      const ex = positions.get(p.id);
-      positions.set(p.id, { ...p, peak_price: ex?.peak_price || Number(p.peak_price) || Number(p.entry_price) || 0 });
-    }
-  } catch(e) { console.error('[sync]', e.message); }
+    const r = await httpReq('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');
+    if (r.data?.price) solUsd = parseFloat(r.data.price);
+  } catch {}
 }
 
-function parseTx(tx, walletAddr) {
+// ── SELL MIRROR POLL (every 7s) ───────────────────────────────────────────────
+let sellBusy = false;
+async function pollSell() {
+  if (sellBusy) return;
+  sellBusy = true;
   try {
-    const meta = tx?.meta;
-    const msg  = tx?.transaction?.message;
-    if (!meta || !msg || meta.err) return null;
-    const accounts = (msg.accountKeys || []).map(a => typeof a === 'string' ? a : a.pubkey);
-    const walletIdx = accounts.indexOf(walletAddr);
-    if (walletIdx === -1) return null;
-    const preSol  = (meta.preBalances  || [])[walletIdx] || 0;
-    const postSol = (meta.postBalances || [])[walletIdx] || 0;
-    const solDiff = (postSol - preSol) / 1e9;
-    const preTokens  = meta.preTokenBalances  || [];
-    const postTokens = meta.postTokenBalances || [];
-    const changes = [];
-    for (const post of postTokens) {
-      if (post.owner !== walletAddr || SKIP_MINTS.has(post.mint)) continue;
-      const pre     = preTokens.find(p => p.mint === post.mint && p.owner === walletAddr);
-      const preAmt  = Number(pre?.uiTokenAmount?.uiAmount  || 0);
-      const postAmt = Number(post.uiTokenAmount?.uiAmount  || 0);
-      const diff    = postAmt - preAmt;
-      if (Math.abs(diff) > 0) changes.push({ mint: post.mint, diff, preAmt, postAmt });
-    }
-    for (const pre of preTokens) {
-      if (pre.owner !== walletAddr || SKIP_MINTS.has(pre.mint)) continue;
-      const post = postTokens.find(p => p.mint === pre.mint && p.owner === walletAddr);
-      if (!post || Number(post.uiTokenAmount?.uiAmount||0) === 0) {
-        const preAmt = Number(pre.uiTokenAmount?.uiAmount||0);
-        if (preAmt > 0 && !changes.find(c => c.mint === pre.mint))
-          changes.push({ mint: pre.mint, diff: -preAmt, preAmt, postAmt: 0 });
+    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=mode,started_at,stopped_at');
+    const sess = sessions[0];
+    if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
+
+    const sellSignals = await sbGet('shreem_brzee_signals',
+      'action=eq.SELL&or=(live_processed.eq.false,live_processed.is.null)&order=created_at.asc&limit=10');
+
+    for (const sig of sellSignals) {
+      const openTrades = await sbGet('shreem_brzee_live_trades',
+        `or=(status.eq.open,status.eq.unconfirmed)&mint=eq.${sig.mint}&select=id,symbol`);
+
+      if (!openTrades.length) {
+        await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true });
+        continue;
       }
-    }
-    for (const c of changes) {
-      if (c.diff > 0 && solDiff < -0.005) return { action:'BUY',  mint:c.mint, tokenAmount:c.diff,          amountSol:Math.abs(solDiff) };
-      if (c.diff < 0 && solDiff > 0.001)  return { action:'SELL', mint:c.mint, tokenAmount:Math.abs(c.diff), amountSol:solDiff };
-    }
-    return null;
-  } catch { return null; }
-}
 
-async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
-  if (!botLive) return;
-  const ts = Date.now();
-  console.log(`[poll] ⚡ ${name} ${action} ${mint.slice(0,8)} ${amountSol.toFixed(4)} SOL`);
+      if (closingSet.has(openTrades[0].id)) continue;
+      closingSet.add(openTrades[0].id);
 
-  if (action === 'BUY') {
-    // Filter 1: min whale position
-    if (amountSol < MIN_WHALE_SOL) {
-      console.log(`[filter] ⏭ SKIP ${mint.slice(0,8)} — only ${amountSol.toFixed(4)} SOL (min ${MIN_WHALE_SOL})`);
-      return;
-    }
-    // Filter 2: pool liquidity + mcap
-    try {
-      const ds = await req(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
-      const pairs = (ds.data?.pairs||[]).filter(p => parseFloat(p?.priceUsd) > 0);
-      if (pairs.length) {
-        pairs.sort((a,b) => parseFloat(b.liquidity?.usd||0) - parseFloat(a.liquidity?.usd||0));
-        const best    = pairs[0];
-        const poolLiq = parseFloat(best.liquidity?.usd||0);
-        const mcap    = parseFloat(best.fdv||best.marketCap||0);
-        if (poolLiq > 0 && poolLiq < MIN_POOL_USD) {
-          console.log(`[filter] ⏭ SKIP ${best.baseToken?.symbol||mint.slice(0,8)} — pool $${poolLiq.toFixed(0)}`);
-          return;
-        }
-        if (mcap > 0 && mcap < MIN_MCAP_USD) {
-          console.log(`[filter] ⏭ SKIP ${best.baseToken?.symbol||mint.slice(0,8)} — mcap $${mcap.toFixed(0)}`);
-          return;
-        }
-        console.log(`[filter] ✅ PASS ${best.baseToken?.symbol||mint.slice(0,8)} pool $${poolLiq.toFixed(0)} mcap $${mcap.toFixed(0)}`);
-      }
-    } catch(fe) { console.log(`[filter] pool check skipped: ${fe.message}`); }
-
-    callExecutor({ action:'buy', mint, label:name, whale_address:addr,
-      amount_sol:amountSol, token_amount:tokenAmount, sig, source:'polling' })
-      .then(r => console.log(r?.ok ? `[poll] ✅ BUY ${mint.slice(0,8)} — ${Date.now()-ts}ms` : `[poll] ⏭ ${r?.reason||'?'}`))
-      .catch(e => console.error('[poll] BUY error:', e.message));
-  }
-
-  if (action === 'SELL') {
-    try {
-      const open = await sbGet('shreem_brzee_live_trades',
-        `or=(status.eq.open,status.eq.unconfirmed)&mint=eq.${mint}&select=id,symbol`);
-      if (!open.length) return;
-      const trade = open[0];
-      if (closing.has(trade.id)) return;
-      closing.add(trade.id);
-      console.log(`[poll] 🔴 ${name} SELL — closing ${trade.symbol||mint.slice(0,8)}`);
-      const r = await callExecutor({ action:'close', trade_id:trade.id, mint, reason:'whale_sell_mirror' });
-      if (r?.ok) { positions.delete(trade.id); console.log(`[poll] ✅ SELL ${trade.symbol||mint.slice(0,8)} — ${Date.now()-ts}ms`); }
-    } catch(e) { console.error('[poll] SELL error:', e.message); }
-    finally { closing.delete(mint); }
-  }
-}
-
-// Poll each whale every 2s
-const pollBusy = {};
-async function pollWhale(addr, name) {
-  if (pollBusy[addr]) return;
-  pollBusy[addr] = true;
-  try {
-    const r = await helius('getSignaturesForAddress', [addr, { limit: 5, commitment: 'confirmed' }]);
-    const sigs = r.data?.result || [];
-    if (!sigs.length) return;
-
-    // First run — just set baseline, don't process old txs
-    if (!lastSigs[addr]) {
-      lastSigs[addr] = sigs[0].signature;
-      console.log(`[poll] 📍 ${name} baseline: ${sigs[0].signature.slice(0,12)}...`);
-      return;
-    }
-
-    // Find new signatures since last check
-    const newSigs = [];
-    for (const s of sigs) {
-      if (s.signature === lastSigs[addr]) break;
-      if (!seenSigs.has(s.signature)) newSigs.push(s);
-    }
-
-    if (newSigs.length > 0) {
-      lastSigs[addr] = sigs[0].signature; // update BEFORE processing
-      console.log(`[poll] 🆕 ${name} — ${newSigs.length} new tx(s)`);
-    } else {
-      return; // no new txs — skip
-    }
-
-    // Process each new tx
-    for (const sigInfo of newSigs.reverse()) {
-      seenSigs.add(sigInfo.signature);
-      setTimeout(() => seenSigs.delete(sigInfo.signature), 300000);
+      console.log(`[pollSell] ${sig.label} SELL ${sig.symbol||sig.mint.slice(0,8)} — mirroring`);
       try {
-        const txRes = await helius('getTransaction', [sigInfo.signature, { encoding:'jsonParsed', maxSupportedTransactionVersion:0 }]);
-        const tx = txRes.data?.result;
-        if (!tx) continue;
-        const parsed = parseTx(tx, addr);
-        if (parsed) {
-          await onSignal(name, addr, parsed.action, parsed.mint, parsed.amountSol, parsed.tokenAmount, sigInfo.signature);
-        } else {
-          // Log what token changes we found for debugging
-          const meta = tx?.meta;
-          const preT = meta?.preTokenBalances || [];
-          const postT = meta?.postTokenBalances || [];
-          if (preT.length || postT.length) {
-            console.log(`[parse] ${name} tx has ${preT.length} pre/${postT.length} post token balances but no swap detected`);
-          }
+        const result = await callExecutor({ action: 'close', trade_id: openTrades[0].id, mint: sig.mint, reason: 'whale_sell_mirror' });
+        if (result?.ok) {
+          await sbPatch('shreem_brzee_signals', `sig=eq.${encodeURIComponent(sig.sig)}`, { live_processed: true });
+          positionCache.delete(openTrades[0].id);
+          console.log(`[pollSell] ✅ closed ${sig.symbol||sig.mint.slice(0,8)}`);
         }
-      } catch(e) { console.error(`[poll] tx fetch error:`, e.message); }
+      } catch(e) { console.error('[pollSell] executor error:', e.message); }
+      finally { closingSet.delete(openTrades[0].id); }
     }
-  } catch(e) { console.error(`[poll] ${name} error:`, e.message); }
-  finally { pollBusy[addr] = false; }
+  } catch(e) { console.error('[pollSell] error:', e.message); }
+  finally { sellBusy = false; }
 }
 
-// Stop loss 3s in-memory
-let slBusy = false;
-async function stopLoss() {
-  if (slBusy || positions.size === 0 || !botLive) return;
-  slBusy = true;
+// ── STOP LOSS + TRAILING STOP (every 3s, in-memory) ──────────────────────────
+let stopBusy = false;
+async function pollStopLoss() {
+  if (stopBusy) return;
+  if (positionCache.size === 0) return;
+  stopBusy = true;
+
   try {
-    const mints = [...new Set([...positions.values()].map(p => p.mint).filter(Boolean))];
-    await Promise.all(mints.map(getPrice));
-    for (const [id, pos] of positions) {
-      if (closing.has(id) || !pos.entry_price || !pos.mint) continue;
+    const sessions = await sbGet('shreem_brzee_session', 'id=eq.default&select=mode,started_at,stopped_at');
+    const sess = sessions[0];
+    if (!sess || sess.mode !== 'live' || !sess.started_at || sess.stopped_at) return;
+
+    // Fetch all prices in parallel
+    const mints = [...new Set([...positionCache.values()].map(p => p.mint).filter(Boolean))];
+    await Promise.all(mints.map(fetchPrice));
+
+    for (const [id, pos] of positionCache) {
+      if (closingSet.has(id)) continue;
+      if (!pos.entry_price || !pos.mint) continue;
+
       const entry = Number(pos.entry_price);
       if (entry <= 0) continue;
-      if (pos.opened_at && Date.now() - new Date(pos.opened_at).getTime() > 172800000) {
-        closing.add(id); positions.delete(id);
-        callExecutor({ action:'close', trade_id:id, reason:'timeout_48h' }).catch(() => {});
-        closing.delete(id); continue;
+
+      // 48h timeout
+      if (pos.opened_at && (Date.now() - new Date(pos.opened_at).getTime()) > 48 * 3600000) {
+        console.log(`[stopLoss] ${pos.symbol} 48h timeout`);
+        closingSet.add(id);
+        try { await callExecutor({ action: 'close', trade_id: id, reason: 'timeout_48h' }); } catch {}
+        positionCache.delete(id);
+        closingSet.delete(id);
+        continue;
       }
-      const cached = prices.get(pos.mint);
-      if (!cached || Date.now() - cached.ts > 30000) continue;
-      const price  = cached.price;
-      if (!price) continue;
-      const pnlPct  = (price - entry) / entry * 100;
-      const peak    = Math.max(pos.peak_price || entry, price);
-      const peakPct = (peak - entry) / entry * 100;
-      pos.peak_price = peak;
+
+      // Get price from cache (already fetched above)
+      const cached = priceCache.get(pos.mint);
+      if (!cached || Date.now() - cached.updatedAt > 30000) continue; // skip if price too stale
+      const price = cached.price;
+      if (!price || price <= 0) continue;
+
+      // Convert token USD price to PnL
+      // entry_price is in USD per token, price is current USD per token
+      const pnlPct = (price - entry) / entry * 100;
+
+      // Update peak in memory
+      const prevPeak = pos.peak_price || entry;
+      const peak     = Math.max(prevPeak, price);
+      const peakPct  = (peak - entry) / entry * 100;
+      pos.peak_price = peak; // update in-memory
+
+      // Update DB peak periodically (every 10s worth of cycles ~30 cycles at 3s)
+      // We do it inline here but non-blocking
       sbPatch('shreem_brzee_live_trades', `id=eq.${id}`, {
-        exit_price:price, peak_price:peak, pnl_pct:pnlPct,
-        pnl_sol:Number(pos.amount_sol||0)*pnlPct/100,
-      });
-      if (pnlPct <= -20) {
-        console.log(`[sl] 🛑 ${pos.symbol||pos.mint.slice(0,8)} ${pnlPct.toFixed(1)}%`);
-        closing.add(id); positions.delete(id);
-        callExecutor({ action:'close', trade_id:id, reason:'stop_loss_20pct' }).catch(() => {});
-        closing.delete(id); continue;
+        exit_price: price,
+        peak_price: peak,
+        pnl_pct: pnlPct,
+        pnl_sol: Number(pos.amount_sol || 0) * (pnlPct / 100),
+      }).catch(() => {});
+
+      // Hard stop loss: -25%
+      if (pnlPct <= -25) {
+        console.log(`[stopLoss] 🛑 ${pos.symbol||pos.mint.slice(0,8)} hard stop ${pnlPct.toFixed(1)}%`);
+        closingSet.add(id);
+        positionCache.delete(id);
+        try { await callExecutor({ action: 'close', trade_id: id, reason: 'stop_loss_25pct' }); }
+        catch(e) { console.error('[stopLoss] executor error:', e.message); }
+        closingSet.delete(id);
+        continue;
       }
-      if (peakPct >= 30 && pnlPct <= peakPct * 0.5) {
-        console.log(`[sl] 🔒 trail ${pos.symbol||pos.mint.slice(0,8)} peak=${peakPct.toFixed(1)}% now=${pnlPct.toFixed(1)}%`);
-        closing.add(id); positions.delete(id);
-        callExecutor({ action:'close', trade_id:id, reason:'trailing_stop' }).catch(() => {});
-        closing.delete(id); continue;
+
+      // Trailing stop: peak >= 30%, floor = 50% of peak
+      if (peakPct >= 30) {
+        const trailFloor = peakPct * 0.5;
+        if (pnlPct <= trailFloor) {
+          console.log(`[trailStop] 🔒 ${pos.symbol||pos.mint.slice(0,8)} peak=${peakPct.toFixed(1)}% floor=${trailFloor.toFixed(1)}% now=${pnlPct.toFixed(1)}%`);
+          closingSet.add(id);
+          positionCache.delete(id);
+          try { await callExecutor({ action: 'close', trade_id: id, reason: 'trailing_stop' }); }
+          catch(e) { console.error('[trailStop] executor error:', e.message); }
+          closingSet.delete(id);
+          continue;
+        }
       }
     }
-  } catch(e) { console.error('[sl]', e.message); }
-  finally { slBusy = false; }
+  } catch(e) { console.error('[pollStopLoss] error:', e.message); }
+  finally { stopBusy = false; }
 }
 
-// Health server
-http.createServer((_, res) => {
+// ── Health endpoint ───────────────────────────────────────────────────────────
+http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version:'v16.1-polling', positions:positions.size, live:botLive, sol:solUsd, whales:Object.keys(WHALES).length }));
-}).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
+  res.end(JSON.stringify({
+    status:    'running',
+    version:   'v13',
+    uptime:    Math.floor(process.uptime()),
+    positions: positionCache.size,
+    sol_usd:   solUsd,
+    time:      new Date().toISOString(),
+  }));
+}).listen(PORT, () => console.log(`[shreem] Health on :${PORT}`));
 
-// Start polling each whale independently with offset
-syncPositions();
-setInterval(syncPositions, 15000);
-setInterval(stopLoss, STOP_POLL_MS);
-setInterval(checkLive, 10000);
-setInterval(() => {
-  req('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT')
-    .then(r => { if (r.data?.price) solUsd = parseFloat(r.data.price); }).catch(() => {});
-}, 30000);
-checkLive();
+// ── Start ─────────────────────────────────────────────────────────────────────
+syncPositions(); // initial sync
+setInterval(syncPositions, 15000);    // sync DB every 15s
+setInterval(pollSell, SELL_POLL_MS);  // sell mirror every 7s
+setInterval(pollStopLoss, STOP_POLL_MS); // stop loss every 3s
+setInterval(refreshSolPrice, 30000);  // SOL price every 30s
+setTimeout(pollSell, 2000);
+setTimeout(pollStopLoss, 5000);
 
-// Start each whale poll with staggered timing to avoid rate limits
-let offset = 0;
-for (const [addr, name] of Object.entries(WHALES)) {
-  setTimeout(() => {
-    setInterval(() => pollWhale(addr, name), POLL_MS);
-    console.log(`[poll] 📡 Polling ${name} every ${POLL_MS}ms`);
-  }, offset);
-  offset += 400; // stagger by 400ms
-}
-
-console.log('[shreem] v16.1 ready — polling all whales every 2s');
+console.log('[shreem] v13 running — 3s stop loss, 7s sell mirror, in-memory cache');
