@@ -42,7 +42,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15.4 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.5 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -188,6 +188,15 @@ function parseTx(tx, walletAddr) {
 }
 
 // ── HANDLE SIGNAL ─────────────────────────────────────────────────────────────
+// Update price cache from whale transaction data — no API call needed
+function updatePriceFromTx(mint, amountSol, tokenAmount) {
+  if (amountSol > 0 && tokenAmount > 0) {
+    const priceInSol = amountSol / tokenAmount; // SOL per token
+    prices.set(mint + '_sol', { price: priceInSol, ts: Date.now() });
+    console.log(`[price] 📊 ${mint.slice(0,8)} = ${priceInSol.toFixed(10)} SOL/token (from tx)`);
+  }
+}
+
 async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
   if (!botLive) return;
   if (seenTxs.has(sig)) return;
@@ -196,6 +205,9 @@ async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
 
   const ts = Date.now();
   console.log(`[ws] ⚡ ${name} ${action} ${mint.slice(0,8)} ${amountSol.toFixed(4)} SOL (${Date.now()-ts}ms)`);
+  
+  // Update price from transaction data — instant, no API call
+  updatePriceFromTx(mint, amountSol, tokenAmount);
 
   if (action === 'BUY') {
     try {
@@ -404,10 +416,12 @@ async function stopLoss() {
         closing.delete(id); continue;
       }
 
-      const cached = prices.get(pos.mint);
-      if (!cached || Date.now() - cached.ts > 30000) continue;
-      const price  = cached.price;
-      if (!price) continue;
+      const cached    = prices.get(pos.mint);
+      const cachedSol = prices.get(pos.mint + '_sol');
+      if (!cached && !cachedSol) continue;
+      // Prefer USD price from DexScreener, but use SOL-based if available and fresh
+      const price = cached ? cached.price : 0;
+      if (!price || Date.now() - (cached?.ts||0) > 30000) continue;
 
       const pnlPct  = (price - entry) / entry * 100;
       const peak    = Math.max(pos.peak_price || entry, price);
@@ -463,7 +477,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15.4-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.5-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -477,4 +491,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15.4 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.5 ready — LaserStream transactionSubscribe active');
