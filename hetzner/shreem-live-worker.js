@@ -38,7 +38,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v16 POLLING — getSignaturesForAddress every 2s, reliable');
+console.log('[shreem] v16.1 POLLING — getSignaturesForAddress every 2s, reliable');
 
 function req(url, method = 'GET', body = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -237,8 +237,10 @@ async function pollWhale(addr, name) {
     }
 
     if (newSigs.length > 0) {
-      lastSigs[addr] = sigs[0].signature;
+      lastSigs[addr] = sigs[0].signature; // update BEFORE processing
       console.log(`[poll] 🆕 ${name} — ${newSigs.length} new tx(s)`);
+    } else {
+      return; // no new txs — skip
     }
 
     // Process each new tx
@@ -250,7 +252,17 @@ async function pollWhale(addr, name) {
         const tx = txRes.data?.result;
         if (!tx) continue;
         const parsed = parseTx(tx, addr);
-        if (parsed) await onSignal(name, addr, parsed.action, parsed.mint, parsed.amountSol, parsed.tokenAmount, sigInfo.signature);
+        if (parsed) {
+          await onSignal(name, addr, parsed.action, parsed.mint, parsed.amountSol, parsed.tokenAmount, sigInfo.signature);
+        } else {
+          // Log what token changes we found for debugging
+          const meta = tx?.meta;
+          const preT = meta?.preTokenBalances || [];
+          const postT = meta?.postTokenBalances || [];
+          if (preT.length || postT.length) {
+            console.log(`[parse] ${name} tx has ${preT.length} pre/${postT.length} post token balances but no swap detected`);
+          }
+        }
       } catch(e) { console.error(`[poll] tx fetch error:`, e.message); }
     }
   } catch(e) { console.error(`[poll] ${name} error:`, e.message); }
@@ -306,7 +318,7 @@ async function stopLoss() {
 // Health server
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version:'v16-polling', positions:positions.size, live:botLive, sol:solUsd, whales:Object.keys(WHALES).length }));
+  res.end(JSON.stringify({ version:'v16.1-polling', positions:positions.size, live:botLive, sol:solUsd, whales:Object.keys(WHALES).length }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // Start polling each whale independently with offset
@@ -330,4 +342,4 @@ for (const [addr, name] of Object.entries(WHALES)) {
   offset += 400; // stagger by 400ms
 }
 
-console.log('[shreem] v16 ready — polling all whales every 2s');
+console.log('[shreem] v16.1 ready — polling all whales every 2s');
