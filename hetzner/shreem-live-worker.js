@@ -11,7 +11,7 @@ const { execSync } = require('child_process');
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const SUPABASE_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
-const HELIUS_KEY    = '7de253c3-49e2-42be-9672-23a761260f86';
+const HELIUS_KEY    = '4319d817-88e2-4332-926f-84d98f0f5155';
 const HELIUS_WS     = `wss://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 const HELIUS_RPC    = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 const EXECUTOR_URL  = `${SUPABASE_URL}/functions/v1/shreem-live-executor`;
