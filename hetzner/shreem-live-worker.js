@@ -30,6 +30,8 @@ const RAYDIUM_PROGRAM  = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
 const WHALES = {
   'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
   'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
+  'Bi4rd5FH5bYEN8scZ7wevxNZyNmKHdaBcvewdPFxYdLt': 'theo',
+  '4vw54BmAogeRV3vPKWyFet5yf8DTLcREzdSzx4rw9Ud9': 'decu',
 };
 
 const SOL_MINT  = 'So11111111111111111111111111111111111111112';
@@ -42,7 +44,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15.5 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.6 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -477,7 +479,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15.5-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.6-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -491,4 +493,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15.5 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.6 ready — LaserStream transactionSubscribe active');
