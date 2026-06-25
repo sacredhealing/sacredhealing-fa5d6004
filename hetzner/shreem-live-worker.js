@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v16.2 LaserStream
+// shreem-live-worker.js — Shreem Brzee v16.3 LaserStream
 // Architecture: Helius WebSocket → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase is LOGGING ONLY — never in the execution path
 // Signing: tweetnacl + bs58 (no @solana/web3.js dependency issues)
@@ -73,13 +73,23 @@ async function loadKeypairFromSupabase() {
     const k = parseKeypair(RAW_KEYPAIR);
     if (k) { kp = k; return; }
   }
-  // Fetch from Supabase bot_secrets table (set via UI)
+  // Fetch from Supabase bot_secrets using service role (bypasses RLS)
   try {
-    const rows = await sbGet('bot_secrets', 'name=eq.SHREEM_BOT_KEYPAIR&select=value&limit=1');
-    const val = rows[0]?.value;
-    if (val) {
-      const k = parseKeypair(val);
+    const res = await httpJSON(
+      `${SUPABASE_URL}/rest/v1/bot_secrets?name=eq.SHREEM_BOT_KEYPAIR&select=value&limit=1`,
+      'GET', null,
+      {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Accept': 'application/json',
+      }
+    );
+    const val = Array.isArray(res) ? res[0]?.value : res?.value;
+    if (val && val.trim()) {
+      const k = parseKeypair(val.trim());
       if (k) { kp = k; console.log('[keypair] ✅ loaded from Supabase bot_secrets'); return; }
+    } else {
+      console.error('[keypair] bot_secrets row empty or missing. Rows returned:', JSON.stringify(res));
     }
   } catch(e) { console.error('[keypair] Supabase fetch failed:', e.message); }
   console.error('[keypair] ❌ SHREEM_BOT_KEYPAIR not found in env or Supabase — trades will not execute');
@@ -506,7 +516,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, ()=>console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.2 LaserStream booting — Helius WSS, local execution, Supabase logging only');
+console.log('[shreem] v16.3 LaserStream booting — Helius WSS, local execution, Supabase logging only');
 console.log('[shreem] Whales:', Object.values(WHALE_WALLETS).join(', '));
 (async()=>{
   await loadKeypairFromSupabase();
