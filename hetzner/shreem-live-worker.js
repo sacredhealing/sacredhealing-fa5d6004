@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v16.1 LaserStream
+// shreem-live-worker.js — Shreem Brzee v16.2 LaserStream
 // Architecture: Helius WebSocket → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase is LOGGING ONLY — never in the execution path
 // Signing: tweetnacl + bs58 (no @solana/web3.js dependency issues)
@@ -50,10 +50,11 @@ const STOP_POLL_MS  = 2000;
 
 // ── KEYPAIR (tweetnacl — no @solana/web3.js) ──────────────────────────────────
 let kp = null;
-function loadKeypair() {
-  if (!RAW_KEYPAIR) { console.error('[keypair] SHREEM_BOT_KEYPAIR not set'); return null; }
+
+function parseKeypair(raw) {
+  if (!raw || !raw.trim()) return null;
   try {
-    const t = RAW_KEYPAIR.trim();
+    const t = raw.trim();
     let sk;
     if (t.startsWith('[')) sk = new Uint8Array(JSON.parse(t));
     else if (t.includes(',')) sk = new Uint8Array(t.split(',').map(Number));
@@ -65,7 +66,24 @@ function loadKeypair() {
     return { secretKey: sk, publicKey: pair.publicKey, publicKeyB58: pub };
   } catch(e) { console.error('[keypair] ❌', e.message); return null; }
 }
-kp = loadKeypair();
+
+async function loadKeypairFromSupabase() {
+  // Try env var first (fast path)
+  if (RAW_KEYPAIR) {
+    const k = parseKeypair(RAW_KEYPAIR);
+    if (k) { kp = k; return; }
+  }
+  // Fetch from Supabase bot_secrets table (set via UI)
+  try {
+    const rows = await sbGet('bot_secrets', 'name=eq.SHREEM_BOT_KEYPAIR&select=value&limit=1');
+    const val = rows[0]?.value;
+    if (val) {
+      const k = parseKeypair(val);
+      if (k) { kp = k; console.log('[keypair] ✅ loaded from Supabase bot_secrets'); return; }
+    }
+  } catch(e) { console.error('[keypair] Supabase fetch failed:', e.message); }
+  console.error('[keypair] ❌ SHREEM_BOT_KEYPAIR not found in env or Supabase — trades will not execute');
+}
 
 // ── HTTP HELPERS ──────────────────────────────────────────────────────────────
 function httpJSON(url, method = 'GET', body = null, extraHeaders = {}) {
@@ -488,9 +506,10 @@ http.createServer(async (req, res) => {
 }).listen(PORT, ()=>console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.1 LaserStream booting — Helius WSS, local execution, Supabase logging only');
+console.log('[shreem] v16.2 LaserStream booting — Helius WSS, local execution, Supabase logging only');
 console.log('[shreem] Whales:', Object.values(WHALE_WALLETS).join(', '));
 (async()=>{
+  await loadKeypairFromSupabase();
   await syncSession();
   await syncPositions();
   await refreshSolPrice();
