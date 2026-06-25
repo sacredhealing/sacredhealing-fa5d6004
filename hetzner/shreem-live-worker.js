@@ -42,7 +42,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15.3 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.4 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -227,9 +227,11 @@ async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
         }
       } catch(fe) { console.log(`[filter] pool check skipped: ${fe.message}`); }
 
-      const r = await callExecutor({ action: 'buy', mint, label: name, whale_address: addr,
-        amount_sol: amountSol, token_amount: tokenAmount, sig, source: 'laserstream' });
-      console.log(r?.ok ? `[ws] ✅ BUY ${mint.slice(0,8)} — ${Date.now()-ts}ms total` : `[ws] ⏭ skip: ${r?.reason||'?'}`);
+      // Fire executor — non-blocking for DB logging inside
+      callExecutor({ action: 'buy', mint, label: name, whale_address: addr,
+        amount_sol: amountSol, token_amount: tokenAmount, sig, source: 'laserstream' })
+        .then(r => console.log(r?.ok ? `[ws] ✅ BUY ${mint.slice(0,8)} — ${Date.now()-ts}ms total` : `[ws] ⏭ skip: ${r?.reason||'?'}`))
+        .catch(e => console.error('[ws] BUY exec error:', e.message));
     } catch(e) { console.error('[ws] BUY error:', e.message); }
   }
 
@@ -268,8 +270,23 @@ async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
 }
 
 // ── WEBSOCKET ─────────────────────────────────────────────────────────────────
-let reconnDelay = 2000;
-let pingTimer   = null;
+let reconnDelay  = 2000;
+let pingTimer    = null;
+let lastMsgTime  = Date.now();
+let watchdogTimer = null;
+
+// Watchdog — if no message for 90s, force reconnect (silent dead connection)
+function startWatchdog() {
+  if (watchdogTimer) clearInterval(watchdogTimer);
+  watchdogTimer = setInterval(() => {
+    const silentMs = Date.now() - lastMsgTime;
+    if (silentMs > 90000 && wsReady) {
+      console.log(`[ws] ⚠ No messages for ${Math.round(silentMs/1000)}s — forcing reconnect`);
+      wsReady = false;
+      if (wsConn) { try { wsConn.terminate(); } catch {} }
+    }
+  }, 30000);
+}
 
 function connect() {
   if (wsConn) { try { wsConn.terminate(); } catch {} }
@@ -305,6 +322,7 @@ function connect() {
     }
 
     // Ping every 30s
+    startWatchdog();
     if (pingTimer) clearInterval(pingTimer);
     pingTimer = setInterval(() => {
       if (wsConn?.readyState === WebSocket.OPEN) wsConn.ping();
@@ -312,6 +330,7 @@ function connect() {
   });
 
   wsConn.on('message', async raw => {
+    lastMsgTime = Date.now(); // reset watchdog
     try {
       const msg = JSON.parse(raw.toString());
 
@@ -444,7 +463,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15.3-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.4-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -458,4 +477,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15.3 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.4 ready — LaserStream transactionSubscribe active');
