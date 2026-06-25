@@ -19,6 +19,13 @@ const PORT          = 3001;
 const STOP_POLL_MS  = 3000;
 const PRICE_TTL_MS  = 4000;
 
+// ── ENTRY FILTERS ────────────────────────────────────────────────────────────
+const MIN_WHALE_SOL    = 0.15;  // Skip if Cented spent less than 0.15 SOL — dust/test trade
+const MIN_POOL_USD     = 10000; // Skip if token liquidity pool under $10K
+const MIN_MCAP_USD     = 50000; // Skip if market cap under $50K
+const JUPITER_PROGRAM  = 'JUP6Lgp5g9za4cb226oNsKmha7pNoatvjf5G1jTmUacS';
+const RAYDIUM_PROGRAM  = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
+
 // Whale wallets
 const WHALES = {
   'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
@@ -35,7 +42,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15.2 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.3 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -192,6 +199,34 @@ async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
 
   if (action === 'BUY') {
     try {
+      // FILTER 1: Min whale position size — skip dust/test trades under 0.15 SOL
+      if (amountSol < MIN_WHALE_SOL) {
+        console.log(`[filter] ⏭ SKIP ${mint.slice(0,8)} — ${name} only spent ${amountSol.toFixed(4)} SOL (min ${MIN_WHALE_SOL})`);
+        return;
+      }
+
+      // FILTER 2: Pool liquidity + market cap check
+      try {
+        const dsRes = await req(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+        const pairs = (dsRes.data?.pairs||[]).filter(p => parseFloat(p?.priceUsd) > 0);
+        if (pairs.length > 0) {
+          pairs.sort((a,b) => parseFloat(b.liquidity?.usd||0) - parseFloat(a.liquidity?.usd||0));
+          const best    = pairs[0];
+          const poolLiq = parseFloat(best.liquidity?.usd||0);
+          const mcap    = parseFloat(best.fdv||best.marketCap||0);
+          if (poolLiq > 0 && poolLiq < MIN_POOL_USD) {
+            console.log(`[filter] ⏭ SKIP ${best.baseToken?.symbol||mint.slice(0,8)} — pool $${poolLiq.toFixed(0)} < min $${MIN_POOL_USD}`);
+            return;
+          }
+          if (mcap > 0 && mcap < MIN_MCAP_USD) {
+            console.log(`[filter] ⏭ SKIP ${best.baseToken?.symbol||mint.slice(0,8)} — mcap $${mcap.toFixed(0)} < min $${MIN_MCAP_USD}`);
+            return;
+          }
+          const sym = best.baseToken?.symbol || mint.slice(0,8);
+          console.log(`[filter] ✅ PASS ${sym} — pool $${poolLiq.toFixed(0)} mcap $${mcap.toFixed(0)} whale ${amountSol.toFixed(3)} SOL`);
+        }
+      } catch(fe) { console.log(`[filter] pool check skipped: ${fe.message}`); }
+
       const r = await callExecutor({ action: 'buy', mint, label: name, whale_address: addr,
         amount_sol: amountSol, token_amount: tokenAmount, sig, source: 'laserstream' });
       console.log(r?.ok ? `[ws] ✅ BUY ${mint.slice(0,8)} — ${Date.now()-ts}ms total` : `[ws] ⏭ skip: ${r?.reason||'?'}`);
@@ -409,7 +444,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15.2-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.3-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -423,4 +458,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15.2 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.3 ready — LaserStream transactionSubscribe active');
