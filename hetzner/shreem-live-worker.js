@@ -10,7 +10,7 @@ const WebSocket = require('ws');
 const SUPABASE_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxNTY5MzI5MCwiZXhwIjoyMDMxMjY5MjkwfQ.4puWuECKMNz_JGby8eSFMIMUUEQfBb2nFgCbanMTEno';
 const HELIUS_KEY    = '7de253c3-49e2-42be-9672-23a761260f86';
-const HELIUS_WS_URL = `wss://atlas-mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const HELIUS_WS_URL = `wss://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 const EXECUTOR_URL  = `${SUPABASE_URL}/functions/v1/shreem-live-executor`;
 const PORT          = 3001;
 const STOP_POLL_MS  = 3000;
@@ -284,17 +284,16 @@ function connectWebSocket() {
     reconnectDelay = 2000;
     console.log('[ws] ✅ Connected to Helius');
 
-    // Subscribe to each whale wallet using logsSubscribe
-    // This fires on every transaction involving the wallet
+    // Subscribe to each whale wallet using accountSubscribe (free plan compatible)
     let subId = 1;
     for (const [addr, name] of Object.entries(WHALE_WALLETS)) {
       const msg = {
         jsonrpc: '2.0',
         id: subId++,
-        method: 'logsSubscribe',
+        method: 'accountSubscribe',
         params: [
-          { mentions: [addr] },
-          { commitment: 'processed' }
+          addr,
+          { encoding: 'jsonParsed', commitment: 'processed' }
         ]
       };
       wsConn.send(JSON.stringify(msg));
@@ -306,50 +305,53 @@ function connectWebSocket() {
     try {
       const msg = JSON.parse(raw.toString());
       
-      // Subscription confirmation
-      if (msg.result && typeof msg.result === 'number') {
-        console.log(`[ws] Subscription confirmed: ${msg.result}`);
-        return;
-      }
 
-      // Transaction notification
-      if (msg.method === 'logsNotification') {
-        const value = msg.params?.result?.value;
-        if (!value) return;
 
-        const logs = value.logs || [];
-        const sig  = value.signature;
-        if (!sig || recentTxs.has(sig)) return;
+      // accountNotification — fires when wallet SOL balance changes (on every tx)
+      if (msg.method === 'accountNotification') {
+        const subId = msg.params?.subscription;
+        if (!subId) return;
 
-        // Check if this involves any of our whale wallets
-        // The logs mention the accounts involved
-        for (const [addr, name] of Object.entries(WHALE_WALLETS)) {
-          // Quick check — does any log mention this is a swap?
-          const isSwap = logs.some(l => 
-            l.includes('Program log: Instruction: Swap') ||
-            l.includes('Program JUP') ||
-            l.includes('Program log: ray_log') ||
-            l.includes('Program log: Instruction: Buy') ||
-            l.includes('Program log: Instruction: Sell')
-          );
-          if (!isSwap) continue;
+        // Find which whale this subscription belongs to
+        const whaleEntry = Object.entries(subIds).find(([addr, id]) => id === subId);
+        if (!whaleEntry) return;
+        const [addr, name] = [whaleEntry[0], WHALE_WALLETS[whaleEntry[0]]];
 
-          // Fetch full transaction to parse token changes
-          try {
+        // Account changed — fetch their recent transactions
+        console.log(`[ws] 👁 ${name} account changed — fetching recent tx`);
+        try {
+          const sigRes = await httpReq('https://mainnet.helius-rpc.com/?api-key=' + HELIUS_KEY, 'POST', {
+            jsonrpc: '2.0', id: 1,
+            method: 'getSignaturesForAddress',
+            params: [addr, { limit: 3 }]
+          });
+          const sigs = sigRes.data?.result || [];
+          for (const sigInfo of sigs) {
+            if (recentTxs.has(sigInfo.signature)) continue;
             const txRes = await httpReq('https://mainnet.helius-rpc.com/?api-key=' + HELIUS_KEY, 'POST', {
               jsonrpc: '2.0', id: 1,
               method: 'getTransaction',
-              params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
+              params: [sigInfo.signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
             });
             const tx = txRes.data?.result;
             if (!tx) continue;
-
             const parsed = parseWhaleAction(tx, addr);
             if (parsed) {
-              await handleWhaleSignal(name, addr, parsed.action, parsed.mint, 
-                parsed.amountSol, parsed.tokenAmount, parsed.sig || sig);
+              await handleWhaleSignal(name, addr, parsed.action, parsed.mint,
+                parsed.amountSol, parsed.tokenAmount, parsed.sig || sigInfo.signature);
             }
-          } catch(e) { console.error('[ws] getTransaction error:', e.message); }
+          }
+        } catch(e) { console.error('[ws] account fetch error:', e.message); }
+      }
+      
+      // Store subscription IDs when confirmed
+      if (msg.result && typeof msg.result === 'number' && msg.id) {
+        // Find which addr this id belongs to — map by order
+        const addrs = Object.keys(WHALE_WALLETS);
+        const idx = msg.id - 1;
+        if (idx >= 0 && idx < addrs.length) {
+          subIds[addrs[idx]] = msg.result;
+          console.log(`[ws] ✅ Sub ${msg.result} → ${WHALE_WALLETS[addrs[idx]]}`);
         }
       }
     } catch(e) { console.error('[ws] parse error:', e.message); }
