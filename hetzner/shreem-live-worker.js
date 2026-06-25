@@ -35,7 +35,7 @@ const SB_HDR = {
   'Content-Type': 'application/json',
 };
 
-console.log('[shreem] v15 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
+console.log('[shreem] v15.1 LASERSTREAM — transactionSubscribe, <50ms entry/exit');
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 function req(url, method = 'GET', body = null, headers = {}) {
@@ -199,16 +199,34 @@ async function onSignal(name, addr, action, mint, amountSol, tokenAmount, sig) {
   if (action === 'SELL') {
     try {
       const open = await sbGet('shreem_brzee_live_trades',
-        `or=(status.eq.open,status.eq.unconfirmed)&mint=eq.${mint}&select=id,symbol`);
+        `or=(status.eq.open,status.eq.unconfirmed)&mint=eq.${mint}&select=id,symbol,entry_price,amount_sol,opened_at`);
       if (!open.length) return;
       const trade = open[0];
       if (closing.has(trade.id)) return;
+
+      // Check current price before mirroring whale sell
+      // If we are already past stop loss (-25%), close regardless
+      // If whale is selling at a big loss and we haven't hit stop loss yet,
+      // still close — but log it as whale_sell_mirror not stop_loss
+      const currentPrice = await getPrice(mint);
+      const entryPrice   = Number(trade.entry_price || 0);
+      let pnlPct = 0;
+      if (currentPrice > 0 && entryPrice > 0) {
+        pnlPct = (currentPrice - entryPrice) / entryPrice * 100;
+        // If whale is selling but we're in profit or small loss — follow him
+        // If whale is selling at huge loss — we should have been out already, close now
+        console.log(`[ws] 🔴 ${name} SELL ${trade.symbol||mint.slice(0,8)} — our PnL: ${pnlPct.toFixed(1)}%`);
+      }
+
       closing.add(trade.id);
-      console.log(`[ws] 🔴 ${name} SELL — closing ${trade.symbol||mint.slice(0,8)}`);
-      const r = await callExecutor({ action: 'close', trade_id: trade.id, mint, reason: 'whale_sell_mirror' });
-      if (r?.ok) { positions.delete(trade.id); console.log(`[ws] ✅ SELL ${trade.symbol||mint.slice(0,8)} — ${Date.now()-ts}ms`); }
+      const reason = pnlPct <= -25 ? 'stop_loss_via_whale_exit' : 'whale_sell_mirror';
+      const r = await callExecutor({ action: 'close', trade_id: trade.id, mint, reason });
+      if (r?.ok) { 
+        positions.delete(trade.id); 
+        console.log(`[ws] ✅ SELL ${trade.symbol||mint.slice(0,8)} ${pnlPct.toFixed(1)}% — ${Date.now()-ts}ms`); 
+      }
     } catch(e) { console.error('[ws] SELL error:', e.message); }
-    finally { setTimeout(() => closing.delete(/* cleared above */''), 5000); }
+    finally { closing.delete(mint); }
   }
 }
 
@@ -346,7 +364,7 @@ async function stopLoss() {
         pnl_pct: pnlPct, pnl_sol: Number(pos.amount_sol||0) * pnlPct / 100,
       });
 
-      if (pnlPct <= -25) {
+      if (pnlPct <= -20) { // Tightened from -25% to -20% — catches faster dumps
         console.log(`[sl] 🛑 ${pos.symbol||pos.mint.slice(0,8)} ${pnlPct.toFixed(1)}%`);
         closing.add(id); positions.delete(id);
         callExecutor({ action: 'close', trade_id: id, reason: 'stop_loss_25pct' }).catch(() => {});
@@ -389,7 +407,7 @@ async function fallbackSell() {
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 http.createServer((_, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ version: 'v15-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
+  res.end(JSON.stringify({ version: 'v15.1-laserstream', ws: wsReady, positions: positions.size, live: botLive, sol: solUsd }));
 }).listen(PORT, () => console.log(`[shreem] health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -403,4 +421,4 @@ setInterval(refreshSol, 30000);
 refreshSol();
 connect();
 
-console.log('[shreem] v15 ready — LaserStream transactionSubscribe active');
+console.log('[shreem] v15.1 ready — LaserStream transactionSubscribe active');
