@@ -540,17 +540,8 @@ function connect() {
       // Subscription confirmations — ignore
       if (msg.result !== undefined && msg.id !== undefined) return;
 
-      // Extract signature from signatures-only stream
-      const sig = msg.params?.result?.signature
-               || msg.params?.result?.transaction?.signatures?.[0];
-      if (!sig) return;
-
-      // getTransaction — 1-10 credits. Committed to 'confirmed' for reliability.
-      const txRes = await httpJSON(HELIUS_RPC, 'POST', {
-        jsonrpc: '2.0', id: 1, method: 'getTransaction',
-        params: [sig, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }],
-      }, {}, 6000);
-      const tx = txRes?.result;
+      // Full stream — transaction arrives complete, no extra RPC call needed
+      const tx = msg.params?.result?.transaction;
       if (!tx) return;
 
       const keys      = (tx.transaction?.message?.accountKeys || []).map(k => typeof k === 'string' ? k : k?.pubkey || '');
@@ -633,7 +624,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.4-LaserStream',
+    version: 'v16.5-LaserStream-Full',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -648,7 +639,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.4 LaserStream booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v16.5 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
