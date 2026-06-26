@@ -14,7 +14,7 @@ const nacl    = require('tweetnacl');
 const bs58    = require('bs58');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '4319d817-88e2-4332-926f-84d98f0f5155';
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || 'e2f69606-6be5-435c-9674-87ffb55cc5a6';
 const HELIUS_RPC     = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 const HELIUS_WSS     = `wss://atlas-mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 const SUPABASE_URL   = 'https://ssygukfdbtehvtndandn.supabase.co';
