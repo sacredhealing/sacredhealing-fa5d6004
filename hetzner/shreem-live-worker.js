@@ -516,8 +516,8 @@ function connect() {
           { accountInclude: [addr] },
           {
             commitment: 'processed',
-            encoding: 'base64',
-            transactionDetails: 'signatures', // 1 credit — NOT full (20 credits/MB)
+            encoding: 'jsonParsed',
+            transactionDetails: 'full',
             showRewards: false,
             maxSupportedTransactionVersion: 0,
           },
