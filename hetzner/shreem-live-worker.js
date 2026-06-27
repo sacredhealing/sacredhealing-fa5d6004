@@ -516,8 +516,8 @@ function connect() {
           { accountInclude: [addr] },
           {
             commitment: 'processed',
-            encoding: 'base64',
-            transactionDetails: 'signatures',
+            encoding: 'jsonParsed',
+            transactionDetails: 'full',
             showRewards: false,
             maxSupportedTransactionVersion: 0,
           },
@@ -624,7 +624,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.4-LaserStream',
+    version: 'v16.5-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
