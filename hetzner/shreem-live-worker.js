@@ -468,23 +468,58 @@ function parseWhaleSwap(tx, whaleAddr) {
   const meta = tx.meta || tx.transaction?.meta;
   const msg  = tx.transaction?.message || tx.message;
   if (!meta || !msg) return null;
-  const keys    = (msg.accountKeys || []).map(k => typeof k === 'string' ? k : k?.pubkey || '');
-  const wi      = keys.indexOf(whaleAddr);
+
+  // jsonParsed: accountKeys are objects with .pubkey
+  const keys = (msg.accountKeys || []).map(k =>
+    typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
+  );
+  const wi = keys.indexOf(whaleAddr);
   if (wi < 0) return null;
+
   const solDiff = ((meta.postBalances?.[wi] || 0) - (meta.preBalances?.[wi] || 0)) / LAMPORTS;
-  const preT  = (meta.preTokenBalances  || []).filter(b => keys[b.accountIndex] === whaleAddr || b.owner === whaleAddr);
-  const postT = (meta.postTokenBalances || []).filter(b => keys[b.accountIndex] === whaleAddr || b.owner === whaleAddr);
+
+  // jsonParsed full stream: owner field is always present
+  // Cast wide net — match by owner OR by accountIndex key OR any non-stable mint that changed
+  const preBalances  = meta.preTokenBalances  || [];
+  const postBalances = meta.postTokenBalances || [];
+
+  // Build mint diff map across ALL token balances in tx (not just whale-filtered)
+  // Then find the mint where the whale's position changed most
+  const allMints = new Set([
+    ...preBalances.map(b => b.mint),
+    ...postBalances.map(b => b.mint),
+  ].filter(m => m && !STABLES.has(m)));
+
   let mint = null, tokenDiff = 0, symbol = null;
-  const allMints = new Set([...preT.map(b => b.mint), ...postT.map(b => b.mint)].filter(m => !STABLES.has(m)));
+
   for (const m of allMints) {
-    const pre     = preT.find(b => b.mint === m);
-    const post    = postT.find(b => b.mint === m);
-    const preAmt  = Number(pre?.uiTokenAmount?.uiAmount  || 0);
-    const postAmt = Number(post?.uiTokenAmount?.uiAmount || 0);
-    const diff    = postAmt - preAmt;
-    if (Math.abs(diff) > Math.abs(tokenDiff)) { mint = m; tokenDiff = diff; symbol = post?.uiTokenAmount?.symbol || null; }
+    // Try owner match first (most reliable in jsonParsed)
+    const preOwner  = preBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
+    const postOwner = postBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
+
+    let preAmt  = preOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || b.uiTokenAmount?.amount || 0), 0);
+    let postAmt = postOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || b.uiTokenAmount?.amount || 0), 0);
+
+    // Fallback: if no owner match, use ALL balances for this mint (catches router accounts)
+    if (preOwner.length === 0 && postOwner.length === 0) {
+      const preAll  = preBalances.filter(b => b.mint === m);
+      const postAll = postBalances.filter(b => b.mint === m);
+      preAmt  = preAll.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
+      postAmt = postAll.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
+    }
+
+    const diff = postAmt - preAmt;
+    if (Math.abs(diff) > Math.abs(tokenDiff)) {
+      mint = m;
+      tokenDiff = diff;
+      // Get symbol from postTokenBalances
+      const symEntry = postBalances.find(b => b.mint === m);
+      symbol = symEntry?.uiTokenAmount?.symbol || null;
+    }
   }
+
   if (!mint || Math.abs(solDiff) < 0.001) return null;
+
   return {
     action: tokenDiff > 0 ? 'BUY' : 'SELL',
     mint, symbol, whaleSolSize: Math.abs(solDiff),
@@ -624,7 +659,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.5-LaserStream',
+    version: 'v16.6-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -639,7 +674,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.5 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v16.6 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
