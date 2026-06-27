@@ -332,14 +332,14 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
     if (size < MIN_TRADE_SOL) { console.log(`[buy] size too small ${size.toFixed(4)}`); return; }
 
     const lamports = Math.floor(size * LAMPORTS);
-    console.log(`[buy] 🔱 ${label}→${symbol || mint.slice(0,8)} | ${size.toFixed(4)} SOL | pool $${(poolLiq||0).toFixed(0)} | whale ${whaleSolSize.toFixed(3)} SOL`);
+    console.log(`[buy] 🔱 ${label}→${symbol || mint.slice(0,8)} | ${size.toFixed(4)} SOL | pool $${(poolLiq||0).toFixed(0)} | whale ${whaleSolSize.toFixed(3)} SOL | mint=${mint}`);
 
     const quote  = await jupQuote(SOL_MINT, mint, lamports, BUY_SLIPPAGE);
     const swapTx = await jupSwapTx(quote);
     const txSig  = await signAndSendTx(swapTx);
 
     const latency = Date.now() - t0;
-    console.log(`[buy] ✅ ${symbol} | sig=${txSig.slice(0,16)}… | ${latency}ms`);
+    console.log(`[buy] ✅ ${symbol || 'null'} | sig=${txSig.slice(0,16)}… | ${latency}ms | stored_mint=${mint}`);
 
     const rawOut     = Number(quote.outAmount || 0);
     const decimals   = 6;
@@ -596,10 +596,16 @@ function connect() {
         executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
       } else {
         // Mirror SELL — close any matching position immediately
+        const cachedMints = [...posCache.values()].map(p => p.mint);
+        console.log(`[sell-mirror] swap.mint=${swap.mint} | posCache mints=${JSON.stringify(cachedMints)} | size=${posCache.size}`);
+        let matched = false;
         for (const [id, pos] of posCache) {
           if (pos.mint === swap.mint && !closing.has(id)) {
-            executeSell(pos, 'whale_sell_mirror'); break;
+            executeSell(pos, 'whale_sell_mirror'); matched = true; break;
           }
+        }
+        if (!matched && posCache.size > 0) {
+          console.log(`[sell-mirror] ❌ NO MATCH — swap.mint=${swap.mint.slice(0,16)}… vs cached=${cachedMints.map(m=>m.slice(0,16)).join(', ')}`);
         }
       }
     } catch(e) { console.error('[ws] msg error:', e.message); }
@@ -661,7 +667,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.7-LaserStream',
+    version: 'v16.8-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -676,7 +682,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.7 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v16.8 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
