@@ -520,6 +520,20 @@ function parseWhaleSwap(tx, whaleAddr) {
     }
   }
 
+  // Final fallback: if mint still null, read directly from postTokenBalances
+  // This catches cases where jsonParsed routing obscures token owner
+  if (!mint) {
+    const directMints = (meta.postTokenBalances || [])
+      .map(b => b.mint)
+      .filter(m => m && !STABLES.has(m));
+    if (directMints.length > 0) {
+      mint = directMints[0];
+      // Determine action from SOL diff — negative = spent SOL = BUY
+      tokenDiff = solDiff < 0 ? 1 : -1;
+      console.log(`[parser] fallback mint from postTokenBalances: ${mint}`);
+    }
+  }
+
   if (!mint || Math.abs(solDiff) < 0.001) return null;
 
   return {
@@ -667,7 +681,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.8-LaserStream',
+    version: 'v16.9-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -682,7 +696,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.8 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v16.9 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
