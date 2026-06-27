@@ -189,7 +189,9 @@ function signAndSendTx(txB64) {
 
 // ── JUPITER ───────────────────────────────────────────────────────────────────
 async function jupQuote(inputMint, outputMint, amount, slippage) {
-  const url = `https://api.jup.ag/swap/v1/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}&onlyDirectRoutes=false&asLegacyTransaction=false`;
+  // Always force outputMint to SOL when selling tokens — never route through intermediate tokens
+  const safeOutput = outputMint === SOL_MINT ? SOL_MINT : outputMint;
+  const url = `https://api.jup.ag/swap/v1/quote?inputMint=${inputMint}&outputMint=${safeOutput}&amount=${amount}&slippageBps=${slippage}&onlyDirectRoutes=false&asLegacyTransaction=false&swapMode=ExactIn`;
   const q   = await httpJSON(url, 'GET', null, {}, 6000);
   if (!q || q.error) throw new Error(`quote: ${q?.error || 'no data'}`);
   return q;
@@ -659,7 +661,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.6-LaserStream',
+    version: 'v16.7-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -674,7 +676,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.6 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v16.7 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
