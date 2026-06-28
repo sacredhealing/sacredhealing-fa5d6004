@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v16.9-RESTORED LaserStream
+// shreem-live-worker.js — Shreem Brzee v16.9-FINAL LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -465,82 +465,62 @@ async function pollStopLoss() {
   finally { stopBusy = false; }
 }
 
-// ── TX PARSER ─────────────────────────────────────────────────────────────────
+// ── TX PARSER — FINAL, no owner filter ──────────────────────────────────────
+// Owner filter never matches in jsonParsed (Jupiter is fee payer, not whale).
+// Strategy: SOL diff = direction. Biggest token balance change = mint.
+// Dedup: each tx arrives twice (once per subscription), processedSigs blocks double-fire.
 function parseWhaleSwap(tx, whaleAddr) {
   const meta = tx.meta || tx.transaction?.meta;
   const msg  = tx.transaction?.message || tx.message;
   if (!meta || !msg) return null;
 
-  // jsonParsed: accountKeys are objects with .pubkey
   const keys = (msg.accountKeys || []).map(k =>
     typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
   );
   const wi = keys.indexOf(whaleAddr);
   if (wi < 0) return null;
 
-  const solDiff = ((meta.postBalances?.[wi] || 0) - (meta.preBalances?.[wi] || 0)) / LAMPORTS;
+  const preSol  = (meta.preBalances?.[wi]  || 0) / 1e9;
+  const postSol = (meta.postBalances?.[wi] || 0) / 1e9;
+  const solDiff = postSol - preSol;
+  if (Math.abs(solDiff) < 0.001) return null; // dust / non-swap
 
-  // jsonParsed full stream: owner field is always present
-  // Cast wide net — match by owner OR by accountIndex key OR any non-stable mint that changed
-  const preBalances  = meta.preTokenBalances  || [];
-  const postBalances = meta.postTokenBalances || [];
+  const pre  = meta.preTokenBalances  || [];
+  const post = meta.postTokenBalances || [];
 
-  // Build mint diff map across ALL token balances in tx (not just whale-filtered)
-  // Then find the mint where the whale's position changed most
-  const allMints = new Set([
-    ...preBalances.map(b => b.mint),
-    ...postBalances.map(b => b.mint),
-  ].filter(m => m && !STABLES.has(m)));
+  // Build map of mint → {preAmt, postAmt} across ALL accounts in this tx
+  const mintMap = {};
+  for (const b of pre) {
+    if (!b.mint || STABLES.has(b.mint)) continue;
+    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0 };
+    mintMap[b.mint].pre += Number(b.uiTokenAmount?.uiAmount || 0);
+  }
+  for (const b of post) {
+    if (!b.mint || STABLES.has(b.mint)) continue;
+    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0 };
+    mintMap[b.mint].post += Number(b.uiTokenAmount?.uiAmount || 0);
+  }
 
-  let mint = null, tokenDiff = 0, symbol = null;
-
-  for (const m of allMints) {
-    // Try owner match first (most reliable in jsonParsed)
-    const preOwner  = preBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
-    const postOwner = postBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
-
-    let preAmt  = preOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || b.uiTokenAmount?.amount || 0), 0);
-    let postAmt = postOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || b.uiTokenAmount?.amount || 0), 0);
-
-    // Fallback: if no owner match, use ALL balances for this mint (catches router accounts)
-    if (preOwner.length === 0 && postOwner.length === 0) {
-      const preAll  = preBalances.filter(b => b.mint === m);
-      const postAll = postBalances.filter(b => b.mint === m);
-      preAmt  = preAll.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-      postAmt = postAll.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-    }
-
-    const diff = postAmt - preAmt;
-    if (Math.abs(diff) > Math.abs(tokenDiff)) {
-      mint = m;
-      tokenDiff = diff;
-      // Get symbol from postTokenBalances
-      const symEntry = postBalances.find(b => b.mint === m);
-      symbol = symEntry?.uiTokenAmount?.symbol || null;
+  // Pick mint with biggest absolute token change
+  let bestMint = null, bestDiff = 0, bestSymbol = null;
+  for (const [mint, amt] of Object.entries(mintMap)) {
+    const diff = amt.post - amt.pre;
+    if (Math.abs(diff) > Math.abs(bestDiff)) {
+      bestDiff   = diff;
+      bestMint   = mint;
+      const sym  = post.find(b => b.mint === mint);
+      bestSymbol = sym?.uiTokenAmount?.symbol || null;
     }
   }
 
-  // Final fallback: if mint still null, read directly from postTokenBalances
-  // This catches cases where jsonParsed routing obscures token owner
-  if (!mint) {
-    const directMints = (meta.postTokenBalances || [])
-      .map(b => b.mint)
-      .filter(m => m && !STABLES.has(m));
-    if (directMints.length > 0) {
-      mint = directMints[0];
-      // Determine action from SOL diff — negative = spent SOL = BUY
-      tokenDiff = solDiff < 0 ? 1 : -1;
-      console.log(`[parser] fallback mint from postTokenBalances: ${mint}`);
-    }
-  }
+  if (!bestMint) return null;
 
-  if (!mint || Math.abs(solDiff) < 0.001) return null;
+  // SOL direction is the truth — ignore token diff direction
+  const action = solDiff < 0 ? 'BUY' : 'SELL';
 
-  return {
-    action: tokenDiff > 0 ? 'BUY' : 'SELL',
-    mint, symbol, whaleSolSize: Math.abs(solDiff),
-  };
+  return { action, mint: bestMint, symbol: bestSymbol, whaleSolSize: Math.abs(solDiff) };
 }
+
 
 // ── WEBSOCKET — exponential backoff reconnect ─────────────────────────────────
 let ws          = null;
@@ -694,7 +674,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.9-RESTORED',
+    version: 'v16.9-FINAL',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -709,7 +689,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.9-RESTORED booting — buys confirmed working, sell label fallback, UI control');
+console.log('[shreem] v16.9-FINAL — no owner filter, SOL-direction, max token diff');
 (async () => {
   await loadKeypair();
   await syncSession();
