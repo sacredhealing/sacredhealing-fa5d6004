@@ -466,6 +466,17 @@ async function pollStopLoss() {
 }
 
 // ── TX PARSER ─────────────────────────────────────────────────────────────────
+function extractSwappedMint(meta) {
+  const allBalances = [
+    ...(meta?.preTokenBalances  || []),
+    ...(meta?.postTokenBalances || []),
+  ];
+  const entry = allBalances.find(b =>
+    b.mint && !STABLES.has(b.mint)
+  );
+  return entry ? entry.mint : null;
+}
+
 function parseWhaleSwap(tx, whaleAddr) {
   // tx is msg.params.result.transaction (jsonParsed full stream)
   const meta = tx.meta;
@@ -484,60 +495,15 @@ function parseWhaleSwap(tx, whaleAddr) {
   const preSol  = (meta.preBalances?.[wi]  || 0) / LAMPORTS;
   const postSol = (meta.postBalances?.[wi] || 0) / LAMPORTS;
   const solDiff = postSol - preSol;
-  if (Math.abs(solDiff) < 0.001) return null;
 
-  // Find token mint that changed most for this whale
-  // In jsonParsed, owner field IS present and reliable
-  const preT  = (meta.preTokenBalances  || []);
-  const postT = (meta.postTokenBalances || []);
-
-  // Collect all non-stable mints in this tx
-  const allMints = new Set([
-    ...preT.map(b => b.mint),
-    ...postT.map(b => b.mint),
-  ].filter(m => m && !STABLES.has(m)));
-
-  let mint = null, tokenDiff = 0, symbol = null;
-
-  for (const m of allMints) {
-    // Sum pre amounts for this mint (any account)
-    const preAmt = preT
-      .filter(b => b.mint === m)
-      .reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-    // Sum post amounts for this mint (any account)  
-    const postAmt = postT
-      .filter(b => b.mint === m)
-      .reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-
-    const diff = postAmt - preAmt;
-    if (Math.abs(diff) > Math.abs(tokenDiff)) {
-      mint = m;
-      tokenDiff = diff;
-      const symEntry = postT.find(b => b.mint === m);
-      symbol = symEntry?.uiTokenAmount?.symbol || null;
-    }
-  }
-
-  // Debug: log what we found
-  console.log(`[parser] mint=${mint ? mint.slice(0,16) : 'null'} solDiff=${solDiff.toFixed(4)} tokenDiff=${tokenDiff.toFixed(0)}`);
-
+  const mint = extractSwappedMint(meta);
   if (!mint) return null;
-
-  // If solDiff too small but tokenDiff exists, use tokenDiff to determine action
-  // solDiff can be near-zero when whale uses a proxy/router that absorbs fees
-  let action;
-  if (Math.abs(solDiff) >= 0.001) {
-    action = solDiff < 0 ? 'BUY' : 'SELL';
-  } else if (Math.abs(tokenDiff) > 0) {
-    // Token went up = received tokens = BUY
-    // Token went down = sent tokens = SELL
-    action = tokenDiff > 0 ? 'BUY' : 'SELL';
-  } else {
-    return null; // can't determine action
-  }
-
-  return { action, mint, symbol, whaleSolSize: Math.abs(solDiff) || 0.1 };
+  const action = solDiff < 0 ? 'BUY' : 'SELL';
+  const whaleSolSize = Math.abs(solDiff);
+  if (whaleSolSize < 0.001) return null;
+  return { action, mint, symbol: null, whaleSolSize };
 }
+
 
 // ── WEBSOCKET — exponential backoff reconnect ─────────────────────────────────
 let ws          = null;
