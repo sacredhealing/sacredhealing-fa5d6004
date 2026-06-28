@@ -1,7 +1,7 @@
-// shreem-live-worker.js — Shreem Brzee v16.9-SELL LaserStream
-// Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
+// shreem-live-worker.js — Shreem Brzee v17.6-OWNFILTER LaserStream
+// Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
-// 3 wallets: Cented, Remusofmars, trunoest
+// 2 wallets: Remusofmars, trunoest (Cented removed — 7s scalper)
 // Keypair: file → env → Supabase (triple fallback, loads once at boot)
 // WS: exponential backoff reconnect, ping/pong keepalive
 // Signal filters: min SOL size, duplicate suppression, stable skip
@@ -25,9 +25,8 @@ const BOT_WALLET     = 'Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA';
 const KEY_FILE       = '/root/.shreem_key';
 const PORT           = 3001;
 
-// ── WHALE WALLETS — 3 active, confirmed ──────────────────────────────────────
+// ── WHALE WALLETS — 2 active, confirmed holders ──────────────────────────────
 const WHALE_WALLETS = {
-  'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o': 'Cented',
   'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
   'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':   'trunoest',
 };
@@ -466,10 +465,12 @@ async function pollStopLoss() {
   finally { stopBusy = false; }
 }
 
-// ── TX PARSER — FINAL, no owner filter ──────────────────────────────────────
-// Owner filter never matches in jsonParsed (Jupiter is fee payer, not whale).
-// Strategy: SOL diff = direction. Biggest token balance change = mint.
-// Dedup: each tx arrives twice (once per subscription), processedSigs blocks double-fire.
+// ── TX PARSER — v17.6 whale-owner filter + ATA-closure sell detection ────────
+// Fix: filter preTokenBalances/postTokenBalances by owner===whaleAddr only.
+// This prevents Jupiter routing accounts & pool accounts from polluting mintMap.
+// Sell fix: when whale closes ATA, mint vanishes from postTokenBalances entirely.
+// We catch that by scanning preTokenBalances for mints the whale owned pre-tx
+// that have NO matching entry in postTokenBalances (amount dropped to 0 = sold).
 function parseWhaleSwap(tx, whaleAddr) {
   const meta = tx.meta || tx.transaction?.meta;
   const msg  = tx.transaction?.message || tx.message;
@@ -489,35 +490,71 @@ function parseWhaleSwap(tx, whaleAddr) {
   const pre  = meta.preTokenBalances  || [];
   const post = meta.postTokenBalances || [];
 
-  // Build map of mint → {preAmt, postAmt} across ALL accounts in this tx
+  // ── Only look at token accounts OWNED by the whale ───────────────────────
+  // In jsonParsed format, owner is at b.owner (string pubkey).
+  // Fallback: accountIndex === wi (whale is the direct token account holder).
+  const whaleOwns = (b) =>
+    (b.owner === whaleAddr) || (b.accountIndex === wi);
+
+  const whalePre  = pre.filter(b => !STABLES.has(b.mint) && whaleOwns(b));
+  const whalePost = post.filter(b => !STABLES.has(b.mint) && whaleOwns(b));
+
+  // Build mintMap from whale-owned token accounts only
   const mintMap = {};
-  for (const b of pre) {
-    if (!b.mint || STABLES.has(b.mint)) continue;
-    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0 };
+  for (const b of whalePre) {
+    if (!b.mint) continue;
+    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0, symbol: null };
     mintMap[b.mint].pre += Number(b.uiTokenAmount?.uiAmount || 0);
   }
-  for (const b of post) {
-    if (!b.mint || STABLES.has(b.mint)) continue;
-    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0 };
+  for (const b of whalePost) {
+    if (!b.mint) continue;
+    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0, symbol: null };
     mintMap[b.mint].post += Number(b.uiTokenAmount?.uiAmount || 0);
+    if (!mintMap[b.mint].symbol) mintMap[b.mint].symbol = b.uiTokenAmount?.symbol || null;
   }
 
-  // Pick mint with biggest absolute token change
+  // ── ATA closure fix: whale held mint pre-tx but it's GONE from post ───────
+  // When whale sells and closes ATA in same tx, postTokenBalances has no entry.
+  // Treat missing post entry as post=0 (fully sold).
+  for (const b of whalePre) {
+    if (!b.mint || STABLES.has(b.mint)) continue;
+    const hasInPost = whalePost.some(p => p.mint === b.mint);
+    if (!hasInPost) {
+      if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0, symbol: null };
+      // pre already added above; post stays 0 → diff = -pre = negative = SELL
+    }
+  }
+
+  // Pick mint with biggest absolute token change (whale-owned only)
   let bestMint = null, bestDiff = 0, bestSymbol = null;
   for (const [mint, amt] of Object.entries(mintMap)) {
     const diff = amt.post - amt.pre;
     if (Math.abs(diff) > Math.abs(bestDiff)) {
       bestDiff   = diff;
       bestMint   = mint;
-      const sym  = post.find(b => b.mint === mint);
-      bestSymbol = sym?.uiTokenAmount?.symbol || null;
+      bestSymbol = amt.symbol;
     }
+  }
+
+  // Fallback: if owner filter found nothing (some DEXs wrap differently),
+  // fall back to biggest change across ALL non-stable token accounts in tx.
+  if (!bestMint) {
+    const allMints = {};
+    for (const b of pre)  { if (!b.mint || STABLES.has(b.mint)) continue; if (!allMints[b.mint]) allMints[b.mint]={pre:0,post:0,sym:null}; allMints[b.mint].pre  += Number(b.uiTokenAmount?.uiAmount||0); }
+    for (const b of post) { if (!b.mint || STABLES.has(b.mint)) continue; if (!allMints[b.mint]) allMints[b.mint]={pre:0,post:0,sym:null}; allMints[b.mint].post += Number(b.uiTokenAmount?.uiAmount||0); allMints[b.mint].sym = b.uiTokenAmount?.symbol||null; }
+    for (const [mint, amt] of Object.entries(allMints)) {
+      const diff = amt.post - amt.pre;
+      if (Math.abs(diff) > Math.abs(bestDiff)) { bestDiff=diff; bestMint=mint; bestSymbol=amt.sym; }
+    }
+    if (bestMint) console.log(`[parse] ⚠️ owner-filter miss for ${whaleAddr.slice(0,8)} — using global fallback mint=${bestMint.slice(0,8)}`);
   }
 
   if (!bestMint) return null;
 
-  // SOL direction is the truth — ignore token diff direction
+  // SOL direction is ground truth — positive solDiff = received SOL = SELL
   const action = solDiff < 0 ? 'BUY' : 'SELL';
+
+  console.log(`[parse] ${action} | whale=${whaleAddr.slice(0,8)} | mint=${bestMint.slice(0,8)} | solDiff=${solDiff.toFixed(4)} | tokenDiff=${bestDiff.toFixed(2)} | ownerFiltered=${whalePre.length + whalePost.length > 0}`);
 
   return { action, mint: bestMint, symbol: bestSymbol, whaleSolSize: Math.abs(solDiff) };
 }
@@ -692,7 +729,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.9-SELL — no owner filter, SOL-direction, max token diff');
+console.log('[shreem] v17.6-OWNFILTER — whale owner filter + ATA-closure sell fix + Cented removed');
 (async () => {
   await loadKeypair();
   await syncSession();
@@ -715,3 +752,4 @@ setInterval(() => {
     if (now - ts > DEDUP_MS * 3) recentSignals.delete(mint);
   }
 }, 60000);
+
