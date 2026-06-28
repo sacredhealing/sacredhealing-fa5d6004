@@ -518,13 +518,25 @@ function parseWhaleSwap(tx, whaleAddr) {
     }
   }
 
+  // Debug: log what we found
+  console.log(`[parser] mint=${mint ? mint.slice(0,16) : 'null'} solDiff=${solDiff.toFixed(4)} tokenDiff=${tokenDiff.toFixed(0)}`);
+
   if (!mint) return null;
 
-  // SOL went down = whale spent SOL = BUY
-  // SOL went up   = whale received SOL = SELL
-  const action = solDiff < 0 ? 'BUY' : 'SELL';
+  // If solDiff too small but tokenDiff exists, use tokenDiff to determine action
+  // solDiff can be near-zero when whale uses a proxy/router that absorbs fees
+  let action;
+  if (Math.abs(solDiff) >= 0.001) {
+    action = solDiff < 0 ? 'BUY' : 'SELL';
+  } else if (Math.abs(tokenDiff) > 0) {
+    // Token went up = received tokens = BUY
+    // Token went down = sent tokens = SELL
+    action = tokenDiff > 0 ? 'BUY' : 'SELL';
+  } else {
+    return null; // can't determine action
+  }
 
-  return { action, mint, symbol, whaleSolSize: Math.abs(solDiff) };
+  return { action, mint, symbol, whaleSolSize: Math.abs(solDiff) || 0.1 };
 }
 
 // ── WEBSOCKET — exponential backoff reconnect ─────────────────────────────────
@@ -677,7 +689,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v17.0-LaserStream',
+    version: 'v17.1-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -692,7 +704,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v17.0 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v17.1 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
