@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v16.4 LaserStream
+// shreem-live-worker.js — Shreem Brzee v17.2 LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -477,30 +477,42 @@ function extractSwappedMint(meta) {
   return entry ? entry.mint : null;
 }
 
+function extractSwappedMint(meta) {
+  const allBalances = [
+    ...(meta?.preTokenBalances  || []),
+    ...(meta?.postTokenBalances || []),
+  ];
+  const entry = allBalances.find(b => b.mint && !STABLES.has(b.mint));
+  return entry ? entry.mint : null;
+}
+
 function parseWhaleSwap(tx, whaleAddr) {
-  // tx is msg.params.result.transaction (jsonParsed full stream)
   const meta = tx.meta;
   const msg  = tx.transaction?.message;
   if (!meta || !msg) return null;
 
-  // accountKeys in jsonParsed are objects: { pubkey, signer, writable, source }
+  // accountKeys in jsonParsed are objects with .pubkey
   const keys = (msg.accountKeys || []).map(k =>
     typeof k === 'string' ? k : (k?.pubkey || '')
   );
-
   const wi = keys.indexOf(whaleAddr);
   if (wi < 0) return null;
 
-  // SOL balance change for whale
+  // SOL balance change determines BUY vs SELL
   const preSol  = (meta.preBalances?.[wi]  || 0) / LAMPORTS;
   const postSol = (meta.postBalances?.[wi] || 0) / LAMPORTS;
   const solDiff = postSol - preSol;
-
-  const mint = extractSwappedMint(meta);
-  if (!mint) return null;
-  const action = solDiff < 0 ? 'BUY' : 'SELL';
   const whaleSolSize = Math.abs(solDiff);
   if (whaleSolSize < 0.001) return null;
+
+  // Wide-net mint extraction — checks pre AND post balances
+  // Catches ATA closures where post entry is dropped entirely
+  const mint = extractSwappedMint(meta);
+  if (!mint) return null;
+
+  // SOL down = spent SOL = BUY. SOL up = received SOL = SELL
+  const action = solDiff < 0 ? 'BUY' : 'SELL';
+
   return { action, mint, symbol: null, whaleSolSize };
 }
 
@@ -672,7 +684,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v17.1-LaserStream',
+    version: 'v17.2-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -687,7 +699,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v17.1 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v17.2 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
