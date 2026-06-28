@@ -180,20 +180,37 @@ export default function ShreemBrzeePerformance() {
   const goLive = async () => {
     setLoading(true);
     try {
-      const bal = botBal && botBal > 0 ? botBal : 0.3;
-      const r = await fetch(`${EDGE_BASE}/go-live`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({balance_sol: bal}) });
-      const j = r.ok ? await r.json() : null;
-      if (!j?.ok) throw new Error(j?.error||"failed");
+      const nowIso = new Date().toISOString();
+      const { error } = await d.from("shreem_brzee_session").upsert({
+        id: "default",
+        mode: "live",
+        started_at: nowIso,
+        stopped_at: null,
+        updated_at: nowIso,
+      }, { onConflict: "id" });
+      if (error) throw error;
+      // best-effort backend notify (non-blocking)
+      try {
+        const bal = botBal && botBal > 0 ? botBal : 0.3;
+        fetch(`${EDGE_BASE}/go-live`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({balance_sol: bal}) }).catch(()=>{});
+      } catch {}
       setLiveConfirm(false);
-      notify(`🔴 LIVE — ${bal.toFixed(4)} SOL`, "ok");
+      notify("🔴 LIVE", "ok");
       refreshAll(); refreshBal();
-    } catch(e:any) { notify(e.message, "err"); }
+    } catch(e:any) { notify(e.message || "failed", "err"); }
     setLoading(false);
   };
 
   const stopBot = async () => {
     try {
-      await d.from("shreem_brzee_session").update({ stopped_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id","default");
+      const nowIso = new Date().toISOString();
+      const { error } = await d.from("shreem_brzee_session").upsert({
+        id: "default",
+        mode: "stopped",
+        stopped_at: nowIso,
+        updated_at: nowIso,
+      }, { onConflict: "id" });
+      if (error) throw error;
       notify("Bot stopped", "info"); fetchSession();
     } catch(e:any) { notify(e.message,"err"); }
   };
