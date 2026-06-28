@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.2-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.3-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -481,7 +481,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.2-WEBHOOK',
+      version: 'v18.3-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -536,6 +536,38 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ── Test sell — injects real token position and fires Jupiter sell ──
+  // Usage: POST /test-sell with {"mint":"TOKEN_MINT","amount":1000000}
+  // Use a token you actually hold in bot wallet to test real execution
+  if (req.method === 'POST' && req.url === '/test-sell') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      try {
+        const { mint, amount, symbol } = JSON.parse(body);
+        if (!mint) { res.writeHead(400); res.end('missing mint'); return; }
+        // Inject fake position into posCache
+        const tradeId = `test_${Date.now()}_${mint.slice(0,8)}`;
+        const fakePos = {
+          id: tradeId, mint, symbol: symbol || mint.slice(0,8), label: 'TEST',
+          entry_price: 0.001, peak_price: 0.001,
+          amount_sol: 0.01, tokens_received: amount || 1000000,
+          token_decimals: 6, opened_at: new Date().toISOString(),
+        };
+        posCache.set(tradeId, fakePos);
+        console.log(`[test-sell] 🧪 injected fake position for ${symbol||mint.slice(0,8)} — firing real sell`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, tradeId, message: 'sell firing — check pm2 logs' }));
+        // Fire real sell against Jupiter
+        await executeSell(fakePos, 'test_sell');
+      } catch(e) {
+        console.error('[test-sell] error:', e.message);
+        res.writeHead(500); res.end(e.message);
+      }
+    });
+    return;
+  }
+
   res.writeHead(404); res.end('Not found');
 });
 
@@ -571,7 +603,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.2-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.3-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
