@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.1-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.2-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -37,9 +37,9 @@ const LAMPORTS      = 1_000_000_000;
 const BUY_SLIPPAGE  = 2500;
 const SELL_SLIPPAGE = 5000;
 const STOP_LOSS_PCT = -25;
-const TRAIL_PEAK    = 30;
+const TRAIL_PEAK    = 20;    // activate trailing at +20%
 const TRAIL_FLOOR   = 0.5;
-const MAX_POSITIONS = 3;
+const MAX_POSITIONS = 10;   // no artificial cap — 50% exposure is the limit
 const MIN_TRADE_SOL = 0.02;
 const TRADE_PCT     = 0.05;
 const MAX_EXPOSURE  = 0.50;
@@ -416,8 +416,6 @@ async function pollStopLoss() {
           await executeSell(pos, 'trailing_stop'); continue;
         }
       }
-      const ageH = (Date.now() - new Date(pos.opened_at).getTime()) / 3600000;
-      if (ageH >= 48) await executeSell(pos, 'timeout_48h');
     }
   } catch(e) { console.error('[stop] error:', e.message); }
   finally { stopBusy = false; }
@@ -483,7 +481,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.1-WEBHOOK',
+      version: 'v18.2-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -573,7 +571,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.1-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.2-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
