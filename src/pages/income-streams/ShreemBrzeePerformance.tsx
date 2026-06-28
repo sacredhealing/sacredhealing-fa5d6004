@@ -91,8 +91,9 @@ export default function ShreemBrzeePerformance() {
     setTimeout(() => setToast(""), 5000);
   };
 
-  const isRunning = !!session?.started_at && !session?.stopped_at;
-  const isLive    = session?.mode === "live";
+  const isLive    = session?.mode === "live" && !session?.stopped_at;
+  const isStopped = session?.mode === "stopped" || !!session?.stopped_at;
+  const isRunning = isLive;
   const solToEur  = (sol: number) => sol * solUsd * solEur;
 
   const fetchSession = useCallback(async () => {
