@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v17.2 LaserStream
+// shreem-live-worker.js — Shreem Brzee v17.3 LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -466,55 +466,68 @@ async function pollStopLoss() {
 }
 
 // ── TX PARSER ─────────────────────────────────────────────────────────────────
-function extractSwappedMint(meta) {
-  const allBalances = [
-    ...(meta?.preTokenBalances  || []),
-    ...(meta?.postTokenBalances || []),
-  ];
-  const entry = allBalances.find(b =>
-    b.mint && !STABLES.has(b.mint)
-  );
-  return entry ? entry.mint : null;
-}
-
-function extractSwappedMint(meta) {
-  const allBalances = [
-    ...(meta?.preTokenBalances  || []),
-    ...(meta?.postTokenBalances || []),
-  ];
-  const entry = allBalances.find(b => b.mint && !STABLES.has(b.mint));
-  return entry ? entry.mint : null;
-}
-
 function parseWhaleSwap(tx, whaleAddr) {
-  const meta = tx.meta;
-  const msg  = tx.transaction?.message;
-  if (!meta || !msg) return null;
+  const meta        = tx.meta;
+  const transaction = tx.transaction;
+  if (!meta || !transaction) return null;
 
-  // accountKeys in jsonParsed are objects with .pubkey
-  const keys = (msg.accountKeys || []).map(k =>
-    typeof k === 'string' ? k : (k?.pubkey || '')
+  // Whale must be PRIMARY signer (accountKeys[0]) — filters noise
+  const accountKeys = (transaction.message.accountKeys || []).map(k =>
+    typeof k === 'object' ? (k.pubkey || '') : k
   );
-  const wi = keys.indexOf(whaleAddr);
-  if (wi < 0) return null;
+  if (accountKeys[0] !== whaleAddr) return null;
 
-  // SOL balance change determines BUY vs SELL
-  const preSol  = (meta.preBalances?.[wi]  || 0) / LAMPORTS;
-  const postSol = (meta.postBalances?.[wi] || 0) / LAMPORTS;
+  // SOL balance change at index 0
+  const preSol  = (meta.preBalances?.[0]  || 0) / LAMPORTS;
+  const postSol = (meta.postBalances?.[0] || 0) / LAMPORTS;
   const solDiff = postSol - preSol;
-  const whaleSolSize = Math.abs(solDiff);
-  if (whaleSolSize < 0.001) return null;
 
-  // Wide-net mint extraction — checks pre AND post balances
-  // Catches ATA closures where post entry is dropped entirely
-  const mint = extractSwappedMint(meta);
-  if (!mint) return null;
+  // Gemini's exact logic: use preTokenBalances as anchor
+  // When whale closes ATA, it drops from postTokenBalances — postAmount resolves to 0
+  const preBalances  = meta.preTokenBalances  || [];
+  const postBalances = meta.postTokenBalances || [];
 
-  // SOL down = spent SOL = BUY. SOL up = received SOL = SELL
-  const action = solDiff < 0 ? 'BUY' : 'SELL';
+  let detectedMint   = null;
+  let action         = null;
 
-  return { action, mint, symbol: null, whaleSolSize };
+  for (const pre of preBalances) {
+    if (!pre.mint || STABLES.has(pre.mint)) continue;
+
+    const postMatch  = postBalances.find(p => p.accountIndex === pre.accountIndex);
+    const preAmount  = pre.uiTokenAmount?.uiAmount  ?? 0;
+    const postAmount = postMatch ? (postMatch.uiTokenAmount?.uiAmount ?? 0) : 0;
+
+    if (postAmount < preAmount) {
+      // Token amount dropped — definitive SELL
+      detectedMint = pre.mint;
+      action = 'SELL';
+      break;
+    }
+  }
+
+  // If not a SELL, check for BUY — token appeared or increased in postBalances
+  if (!detectedMint) {
+    for (const post of postBalances) {
+      if (!post.mint || STABLES.has(post.mint)) continue;
+
+      const preMatch  = preBalances.find(p => p.accountIndex === post.accountIndex);
+      const preAmount  = preMatch ? (preMatch.uiTokenAmount?.uiAmount ?? 0) : 0;
+      const postAmount = post.uiTokenAmount?.uiAmount ?? 0;
+
+      if (postAmount > preAmount) {
+        detectedMint = post.mint;
+        action = 'BUY';
+        break;
+      }
+    }
+  }
+
+  if (!detectedMint || !action) return null;
+
+  const whaleSolSize = Math.abs(solDiff) || 0.1;
+  return { action, mint: detectedMint, symbol: null, whaleSolSize };
 }
+
 
 
 // ── WEBSOCKET — exponential backoff reconnect ─────────────────────────────────
@@ -684,7 +697,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v17.2-LaserStream',
+    version: 'v17.3-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -699,7 +712,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v17.2 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v17.3 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
