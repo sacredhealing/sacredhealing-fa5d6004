@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.1 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.2 LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -465,86 +465,54 @@ async function pollStopLoss() {
   finally { stopBusy = false; }
 }
 
-// ── TX PARSER v18.0 ──────────────────────────────────────────────────────────
-// KEY FIX: Determine BUY vs SELL from SOL direction FIRST (unambiguous).
-// Then extract mint using the correct balance arrays for each action.
-// SOL direction: whaleSOL went DOWN = spent SOL = BUY. SOL went UP = SELL.
-// This completely prevents SELL loop from intercepting BUY transactions.
+// ── TX PARSER — v16.5 logic, confirmed working for BUY+SELL ─────────────────
+// SOL direction = action. Token diff = mint. Simple, battle-tested.
 function parseWhaleSwap(tx, whaleAddr) {
   const meta = tx.meta || tx.transaction?.meta;
   const msg  = tx.transaction?.message || tx.message;
   if (!meta || !msg) return null;
-
-  const keys = (msg.accountKeys || []).map(k =>
-    typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
-  );
-  const wi = keys.indexOf(whaleAddr);
+  const keys    = (msg.accountKeys || []).map(k => typeof k === 'string' ? k : k?.pubkey || '');
+  const wi      = keys.indexOf(whaleAddr);
   if (wi < 0) return null;
-
   const solDiff = ((meta.postBalances?.[wi] || 0) - (meta.preBalances?.[wi] || 0)) / LAMPORTS;
-  if (Math.abs(solDiff) < 0.001) return null; // dust / non-swap tx
+  if (Math.abs(solDiff) < 0.001) return null;
 
-  const preBalances  = meta.preTokenBalances  || [];
-  const postBalances = meta.postTokenBalances || [];
+  // Filter token balances to whale's accounts only
+  const preT  = (meta.preTokenBalances  || []).filter(b => keys[b.accountIndex] === whaleAddr || b.owner === whaleAddr);
+  const postT = (meta.postTokenBalances || []).filter(b => keys[b.accountIndex] === whaleAddr || b.owner === whaleAddr);
 
-  // ── DIRECTION GATE — SOL determines action, not token balances ────────────
+  // Wide-net fallback: if owner filter returns nothing, use ALL token balances
+  const preFinal  = preT.length  > 0 ? preT  : (meta.preTokenBalances  || []).filter(b => !STABLES.has(b.mint));
+  const postFinal = postT.length > 0 ? postT : (meta.postTokenBalances || []).filter(b => !STABLES.has(b.mint));
+
+  let mint = null, tokenDiff = 0, symbol = null;
+  const allMints = new Set([...preFinal.map(b => b.mint), ...postFinal.map(b => b.mint)].filter(m => m && !STABLES.has(m)));
+
+  for (const m of allMints) {
+    const pre     = preFinal.find(b => b.mint === m);
+    const post    = postFinal.find(b => b.mint === m);
+    const preAmt  = Number(pre?.uiTokenAmount?.uiAmount  || 0);
+    const postAmt = Number(post?.uiTokenAmount?.uiAmount || 0);
+    const diff    = postAmt - preAmt;
+    if (Math.abs(diff) > Math.abs(tokenDiff)) {
+      mint = m; tokenDiff = diff;
+      symbol = post?.uiTokenAmount?.symbol || pre?.uiTokenAmount?.symbol || null;
+    }
+  }
+
+  if (!mint) return null;
+
+  // SOL down = BUY, SOL up = SELL — unambiguous direction gate
   const action = solDiff < 0 ? 'BUY' : 'SELL';
-  const whaleSolSize = Math.abs(solDiff);
-  if (whaleSolSize < MIN_WHALE_SOL) return null;
 
-  if (action === 'BUY') {
-    // BUY: whale received tokens. Find mint where post > pre (token balance increased).
-    // Wide-net: try owner match first, fall back to all balances for that mint.
-    const allMints = new Set([
-      ...preBalances.map(b => b.mint),
-      ...postBalances.map(b => b.mint),
-    ].filter(m => m && !STABLES.has(m)));
+  // Sanity check: token direction must agree with SOL direction
+  // BUY = tokenDiff > 0 (received tokens), SELL = tokenDiff < 0 (spent tokens)
+  // If they disagree, it's a complex routing tx — skip it
+  if (action === 'BUY'  && tokenDiff < 0) return null;
+  if (action === 'SELL' && tokenDiff > 0) return null;
 
-    let bestMint = null, bestDiff = 0, bestSymbol = null;
-
-    for (const m of allMints) {
-      const preOwner  = preBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
-      const postOwner = postBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
-
-      let preAmt  = preOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-      let postAmt = postOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-
-      if (preOwner.length === 0 && postOwner.length === 0) {
-        preAmt  = preBalances.filter(b => b.mint === m).reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-        postAmt = postBalances.filter(b => b.mint === m).reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-      }
-
-      const diff = postAmt - preAmt;
-      if (diff > bestDiff) {
-        bestMint = m; bestDiff = diff;
-        const symEntry = postBalances.find(b => b.mint === m);
-        bestSymbol = symEntry?.uiTokenAmount?.symbol || null;
-      }
-    }
-
-    if (!bestMint || bestDiff <= 0) return null;
-    return { action: 'BUY', mint: bestMint, symbol: bestSymbol, whaleSolSize };
-  }
-
-  if (action === 'SELL') {
-    // SELL: whale spent tokens. Find mint where pre > post (token balance decreased).
-    // Catches ATA closures where post entry is missing entirely (postAmount defaults to 0).
-    for (const pre of preBalances) {
-      if (!pre.mint || STABLES.has(pre.mint)) continue;
-      const preAmount  = Number(pre.uiTokenAmount?.uiAmount ?? 0);
-      if (preAmount <= 0) continue;
-      const postMatch  = postBalances.find(p => p.accountIndex === pre.accountIndex);
-      const postAmount = postMatch ? Number(postMatch.uiTokenAmount?.uiAmount ?? 0) : 0;
-      if (postAmount < preAmount) {
-        return { action: 'SELL', mint: pre.mint, symbol: null, whaleSolSize };
-      }
-    }
-    return null; // couldn't identify sold token
-  }
-
-  return null;
+  return { action, mint, symbol, whaleSolSize: Math.abs(solDiff) };
 }
-
 
 
 
@@ -723,7 +691,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v18.1-LaserStream',
+    version: 'v18.2-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -738,7 +706,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.1 booting — WS always-on, UI gates trade exec');
+console.log('[shreem] v18.2 booting — v16.5 parser restored, UI control, WS always-on');
 (async () => {
   await loadKeypair();
   await syncSession();        // sets isLive/isRunning from DB
