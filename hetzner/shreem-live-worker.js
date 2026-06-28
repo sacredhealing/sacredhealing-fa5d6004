@@ -618,16 +618,33 @@ function connect() {
         executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
       } else {
         // Mirror SELL — close any matching position immediately
-        const cachedMints = [...posCache.values()].map(p => p.mint);
-        console.log(`[sell-mirror] swap.mint=${swap.mint} | posCache mints=${JSON.stringify(cachedMints)} | size=${posCache.size}`);
+        // Primary match: exact mint match
         let matched = false;
         for (const [id, pos] of posCache) {
           if (pos.mint === swap.mint && !closing.has(id)) {
+            console.log(`[sell-mirror] ✅ EXACT match ${swap.mint.slice(0,16)}`);
             executeSell(pos, 'whale_sell_mirror'); matched = true; break;
           }
         }
+        // Fallback: if whale (trunoest) sells ANY token and we have ONE open position
+        // that was opened from a trunoest signal — sell it immediately
+        // This handles cases where sell mint parsing differs from buy mint parsing
         if (!matched && posCache.size > 0) {
-          console.log(`[sell-mirror] ❌ NO MATCH — swap.mint=${swap.mint.slice(0,16)}… vs cached=${cachedMints.map(m=>m.slice(0,16)).join(', ')}`);
+          const posByLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
+          if (posByLabel.length === 1) {
+            console.log(`[sell-mirror] ✅ LABEL match — ${label} sold, closing ${posByLabel[0].mint.slice(0,16)}`);
+            executeSell(posByLabel[0], 'whale_sell_mirror_label');
+          } else if (posByLabel.length > 1) {
+            // Multiple positions from same whale — sell all of them
+            for (const pos of posByLabel) {
+              if (!closing.has(pos.id)) {
+                console.log(`[sell-mirror] ✅ LABEL multi — closing ${pos.mint.slice(0,16)}`);
+                executeSell(pos, 'whale_sell_mirror_label');
+              }
+            }
+          } else {
+            console.log(`[sell-mirror] ⚠️ no label match for ${label} | posCache size=${posCache.size}`);
+          }
         }
       }
     } catch(e) { console.error('[ws] msg error:', e.message); }
