@@ -467,79 +467,64 @@ async function pollStopLoss() {
 
 // ── TX PARSER ─────────────────────────────────────────────────────────────────
 function parseWhaleSwap(tx, whaleAddr) {
-  const meta = tx.meta || tx.transaction?.meta;
-  const msg  = tx.transaction?.message || tx.message;
+  // tx is msg.params.result.transaction (jsonParsed full stream)
+  const meta = tx.meta;
+  const msg  = tx.transaction?.message;
   if (!meta || !msg) return null;
 
-  // jsonParsed: accountKeys are objects with .pubkey
+  // accountKeys in jsonParsed are objects: { pubkey, signer, writable, source }
   const keys = (msg.accountKeys || []).map(k =>
-    typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
+    typeof k === 'string' ? k : (k?.pubkey || '')
   );
+
   const wi = keys.indexOf(whaleAddr);
   if (wi < 0) return null;
 
-  const solDiff = ((meta.postBalances?.[wi] || 0) - (meta.preBalances?.[wi] || 0)) / LAMPORTS;
+  // SOL balance change for whale
+  const preSol  = (meta.preBalances?.[wi]  || 0) / LAMPORTS;
+  const postSol = (meta.postBalances?.[wi] || 0) / LAMPORTS;
+  const solDiff = postSol - preSol;
+  if (Math.abs(solDiff) < 0.001) return null;
 
-  // jsonParsed full stream: owner field is always present
-  // Cast wide net — match by owner OR by accountIndex key OR any non-stable mint that changed
-  const preBalances  = meta.preTokenBalances  || [];
-  const postBalances = meta.postTokenBalances || [];
+  // Find token mint that changed most for this whale
+  // In jsonParsed, owner field IS present and reliable
+  const preT  = (meta.preTokenBalances  || []);
+  const postT = (meta.postTokenBalances || []);
 
-  // Build mint diff map across ALL token balances in tx (not just whale-filtered)
-  // Then find the mint where the whale's position changed most
+  // Collect all non-stable mints in this tx
   const allMints = new Set([
-    ...preBalances.map(b => b.mint),
-    ...postBalances.map(b => b.mint),
+    ...preT.map(b => b.mint),
+    ...postT.map(b => b.mint),
   ].filter(m => m && !STABLES.has(m)));
 
   let mint = null, tokenDiff = 0, symbol = null;
 
   for (const m of allMints) {
-    // Try owner match first (most reliable in jsonParsed)
-    const preOwner  = preBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
-    const postOwner = postBalances.filter(b => b.mint === m && (b.owner === whaleAddr || keys[b.accountIndex] === whaleAddr));
-
-    let preAmt  = preOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || b.uiTokenAmount?.amount || 0), 0);
-    let postAmt = postOwner.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || b.uiTokenAmount?.amount || 0), 0);
-
-    // Fallback: if no owner match, use ALL balances for this mint (catches router accounts)
-    if (preOwner.length === 0 && postOwner.length === 0) {
-      const preAll  = preBalances.filter(b => b.mint === m);
-      const postAll = postBalances.filter(b => b.mint === m);
-      preAmt  = preAll.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-      postAmt = postAll.reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
-    }
+    // Sum pre amounts for this mint (any account)
+    const preAmt = preT
+      .filter(b => b.mint === m)
+      .reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
+    // Sum post amounts for this mint (any account)  
+    const postAmt = postT
+      .filter(b => b.mint === m)
+      .reduce((s, b) => s + Number(b.uiTokenAmount?.uiAmount || 0), 0);
 
     const diff = postAmt - preAmt;
     if (Math.abs(diff) > Math.abs(tokenDiff)) {
       mint = m;
       tokenDiff = diff;
-      // Get symbol from postTokenBalances
-      const symEntry = postBalances.find(b => b.mint === m);
+      const symEntry = postT.find(b => b.mint === m);
       symbol = symEntry?.uiTokenAmount?.symbol || null;
     }
   }
 
-  // Final fallback: if mint still null, read directly from postTokenBalances
-  // This catches cases where jsonParsed routing obscures token owner
-  if (!mint) {
-    const directMints = (meta.postTokenBalances || [])
-      .map(b => b.mint)
-      .filter(m => m && !STABLES.has(m));
-    if (directMints.length > 0) {
-      mint = directMints[0];
-      // Determine action from SOL diff — negative = spent SOL = BUY
-      tokenDiff = solDiff < 0 ? 1 : -1;
-      console.log(`[parser] fallback mint from postTokenBalances: ${mint}`);
-    }
-  }
+  if (!mint) return null;
 
-  if (!mint || Math.abs(solDiff) < 0.001) return null;
+  // SOL went down = whale spent SOL = BUY
+  // SOL went up   = whale received SOL = SELL
+  const action = solDiff < 0 ? 'BUY' : 'SELL';
 
-  return {
-    action: tokenDiff > 0 ? 'BUY' : 'SELL',
-    mint, symbol, whaleSolSize: Math.abs(solDiff),
-  };
+  return { action, mint, symbol, whaleSolSize: Math.abs(solDiff) };
 }
 
 // ── WEBSOCKET — exponential backoff reconnect ─────────────────────────────────
@@ -681,7 +666,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.9-LaserStream',
+    version: 'v17.0-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -696,7 +681,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.9 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v17.0 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
