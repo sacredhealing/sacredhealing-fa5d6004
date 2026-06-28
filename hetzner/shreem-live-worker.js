@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.0 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.1 LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -687,7 +687,7 @@ async function syncSession() {
       isRunning = live;
     } else {
       // No row exists yet — upsert default stopped row and stay paused
-      sbFire('POST', '/rest/v1/shreem_brzee_session',
+      sbFire('POST', '/rest/v1/shreem_brzee_session?on_conflict=id',
         { id: 'default', mode: 'stopped', updated_at: new Date().toISOString() });
       isLive    = false;
       isRunning = false;
@@ -723,7 +723,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v18.0-LaserStream',
+    version: 'v18.1-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -738,13 +738,13 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.0 booting — BUY/SELL fixed, UI control fixed');
+console.log('[shreem] v18.1 booting — WS always-on, UI gates trade exec');
 (async () => {
   await loadKeypair();
-  await syncSession();        // sets isLive/isRunning from DB BEFORE connect
-  await syncPositions();      // restores posCache from DB BEFORE WS fires
+  await syncSession();        // sets isLive/isRunning from DB
+  await syncPositions();      // restores posCache from DB
   await refreshSolPrice();
-  connect();                  // WS opens; isLive already set correctly
+  connect();                  // WS ALWAYS connects — isLive only gates executeBuy/executeSell
   console.log(`[shreem] Boot complete | is_live=${isLive} | positions=${posCache.size}`);
 })();
 
