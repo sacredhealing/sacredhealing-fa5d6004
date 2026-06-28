@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v16.9-FINAL LaserStream
+// shreem-live-worker.js — Shreem Brzee v16.9-SELL LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -266,6 +266,7 @@ async function getTokenBal(mint) {
 const posCache  = new Map();  // id → position
 const closing   = new Set();  // ids currently being sold
 const cooldowns = new Map();  // mint → timestamp of last buy
+let   botReady  = false;      // false until syncPositions completes on boot
 let solUsd      = 150;
 let isLive      = true;       // HARDCODED LIVE — controlled by Supabase sync override
 let isRunning   = true;       // HARDCODED RUNNING
@@ -570,6 +571,8 @@ function connect() {
       const msg = JSON.parse(raw.toString());
       // Subscription confirmations — ignore
       if (msg.result !== undefined && msg.id !== undefined) return;
+      // Block trade execution until posCache is loaded from DB on boot
+      if (!botReady) { return; }
 
       // Full stream — transaction arrives complete, no extra RPC call needed
       const tx = msg.params?.result?.transaction;
@@ -674,7 +677,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v16.9-FINAL',
+    version: 'v16.9-SELL',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -689,11 +692,13 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v16.9-FINAL — no owner filter, SOL-direction, max token diff');
+console.log('[shreem] v16.9-SELL — no owner filter, SOL-direction, max token diff');
 (async () => {
   await loadKeypair();
   await syncSession();
   await syncPositions();
+  botReady = true;
+  console.log(`[shreem] ✅ posCache loaded: ${posCache.size} open positions`);
   await refreshSolPrice();
   connect();
 })();
