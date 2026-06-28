@@ -534,6 +534,10 @@ let reconnTimer = null;
 let reconnDelay = 2000;      // starts at 2s, backs off to 60s max
 const MAX_DELAY = 60000;
 
+// TX signature dedup cache — prevents double-processing same tx
+const processedSigs = new Set();
+setInterval(() => processedSigs.clear(), 30000);
+
 function connect() {
   if (ws && (ws.readyState === 0 || ws.readyState === 1)) return;
   console.log(`[ws] 🔌 Connecting… (delay was ${reconnDelay}ms)`);
@@ -579,6 +583,13 @@ function connect() {
       // Full stream — transaction arrives complete, no extra RPC call needed
       const tx = msg.params?.result?.transaction;
       if (!tx) return;
+
+      // Dedup — same tx can arrive once per whale subscription
+      const txSigRaw = tx.transaction?.signatures?.[0];
+      if (txSigRaw) {
+        if (processedSigs.has(txSigRaw)) return;
+        processedSigs.add(txSigRaw);
+      }
 
       const keys      = (tx.transaction?.message?.accountKeys || []).map(k => typeof k === 'string' ? k : k?.pubkey || '');
       const whaleAddr = keys.find(a => WHALE_ADDRS.has(a));
