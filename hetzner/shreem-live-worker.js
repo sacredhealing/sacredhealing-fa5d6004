@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v17.3 LaserStream
+// shreem-live-worker.js — Shreem Brzee v17.4 LaserStream
 // Architecture: Helius WSS → detect whale swap <50ms → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Cented, Remusofmars, trunoest
@@ -471,15 +471,17 @@ function parseWhaleSwap(tx, whaleAddr) {
   const transaction = tx.transaction;
   if (!meta || !transaction) return null;
 
-  // Whale must be PRIMARY signer (accountKeys[0]) — filters noise
   const accountKeys = (transaction.message.accountKeys || []).map(k =>
     typeof k === 'object' ? (k.pubkey || '') : k
   );
-  if (accountKeys[0] !== whaleAddr) return null;
 
-  // SOL balance change at index 0
-  const preSol  = (meta.preBalances?.[0]  || 0) / LAMPORTS;
-  const postSol = (meta.postBalances?.[0] || 0) / LAMPORTS;
+  // Whale must appear somewhere in accountKeys
+  const wi = accountKeys.indexOf(whaleAddr);
+  if (wi < 0) return null;
+
+  // SOL balance change at whale's index
+  const preSol  = (meta.preBalances?.[wi]  || 0) / LAMPORTS;
+  const postSol = (meta.postBalances?.[wi] || 0) / LAMPORTS;
   const solDiff = postSol - preSol;
 
   // Gemini's exact logic: use preTokenBalances as anchor
@@ -697,7 +699,7 @@ http.createServer(async (req, res) => {
   const bal = await getWalletSol().catch(() => 0);
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    version: 'v17.3-LaserStream',
+    version: 'v17.4-LaserStream',
     uptime: Math.floor(process.uptime()),
     ws_state: ws ? ['CONNECTING','OPEN','CLOSING','CLOSED'][ws.readyState] : 'null',
     positions: posCache.size,
@@ -712,7 +714,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v17.3 LaserStream-Full booting — Cented | Remusofmars | trunoest');
+console.log('[shreem] v17.4 LaserStream-Full booting — Cented | Remusofmars | trunoest');
 (async () => {
   await loadKeypair();
   await syncSession();
