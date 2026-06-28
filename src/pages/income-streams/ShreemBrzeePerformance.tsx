@@ -336,16 +336,29 @@ export default function ShreemBrzeePerformance() {
               </div>
             )}
 
+            {/* Status pill */}
+            <div style={{ display:"flex", justifyContent:"center" }}>
+              <div style={{
+                display:"inline-flex", alignItems:"center", gap:8, padding:"8px 16px", borderRadius:999,
+                background: isLive ? "rgba(16,185,129,.12)" : "rgba(239,68,68,.10)",
+                border: `1px solid ${isLive ? "rgba(16,185,129,.45)" : "rgba(239,68,68,.4)"}`,
+                color: isLive ? GREEN : RED, fontSize:11, fontWeight:900, letterSpacing:".25em", textTransform:"uppercase"
+              }}>
+                <span style={{ width:7, height:7, borderRadius:"50%", background:"currentColor", animation:isLive?"pulse 1.5s infinite":"none" }} />
+                {isLive ? "LIVE" : "STOPPED"}
+              </div>
+            </div>
+
             {/* Controls */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-              {!isRunning ? (
+              {!isLive ? (
                 <button onClick={() => { if (!liveConfirm) { setLiveConfirm(true); return; } goLive(); }} disabled={loading}
-                  style={{ gridColumn:"1/-1", padding:"14px 0", borderRadius:14, border:"1px solid rgba(212,175,55,.4)", background:liveConfirm?"rgba(239,68,68,.15)":"rgba(212,175,55,.1)", color:liveConfirm?RED:GOLD, fontSize:13, fontWeight:900, cursor:"pointer" }}>
+                  style={{ gridColumn:"1/-1", padding:"14px 0", borderRadius:14, border:`1px solid ${liveConfirm?"rgba(239,68,68,.5)":"rgba(16,185,129,.45)"}`, background:liveConfirm?"rgba(239,68,68,.15)":"rgba(16,185,129,.12)", color:liveConfirm?RED:GREEN, fontSize:13, fontWeight:900, cursor:"pointer" }}>
                   {loading ? "Starting…" : liveConfirm ? "⚠️ Confirm Go Live — Real SOL" : "▶ Go Live"}
                 </button>
               ) : (
                 <>
-                  <button onClick={stopBot} style={{ padding:"12px 0", borderRadius:14, border:"1px solid rgba(239,68,68,.3)", background:"rgba(239,68,68,.08)", color:RED, fontSize:13, fontWeight:800, cursor:"pointer" }}>■ Stop</button>
+                  <button onClick={stopBot} style={{ padding:"12px 0", borderRadius:14, border:"1px solid rgba(239,68,68,.4)", background:"rgba(239,68,68,.12)", color:RED, fontSize:13, fontWeight:900, cursor:"pointer" }}>■ Stop</button>
                   <button onClick={refreshAll} style={{ padding:"12px 0", borderRadius:14, border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.03)", color:"#94a3b8", fontSize:13, fontWeight:800, cursor:"pointer" }}>↻ Refresh</button>
                 </>
               )}
@@ -353,6 +366,48 @@ export default function ShreemBrzeePerformance() {
                 <button onClick={() => setLiveConfirm(false)} style={{ gridColumn:"1/-1", padding:"10px 0", borderRadius:12, border:"1px solid rgba(255,255,255,.08)", background:"transparent", color:"#64748b", fontSize:12, fontWeight:700, cursor:"pointer" }}>Cancel</button>
               )}
             </div>
+
+            {/* Live Trades Table */}
+            <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,175,55,0.15)", borderRadius:16, overflow:"hidden", backdropFilter:"blur(40px)" }}>
+              <div style={{ padding:"12px 14px", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize:9, fontWeight:800, letterSpacing:".4em", textTransform:"uppercase", color:"rgba(212,175,55,.7)" }}>Live Trades</span>
+              </div>
+              {allTrades.length === 0 ? (
+                <div style={{ padding:"24px 14px", textAlign:"center", color:"#64748b", fontSize:12 }}>No trades yet</div>
+              ) : (
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                    <thead>
+                      <tr style={{ background:"rgba(212,175,55,0.04)" }}>
+                        {["Token","Action","SOL","PnL %","Status","Opened"].map(h => (
+                          <th key={h} style={{ padding:"8px 10px", textAlign:"left", fontSize:9, fontWeight:800, letterSpacing:".15em", textTransform:"uppercase", color:"rgba(212,175,55,.6)", borderBottom:"1px solid rgba(255,255,255,.05)" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allTrades.slice(0, 50).map((t:any) => {
+                        const pnl = t.pnl_pct;
+                        const pnlColor = pnl == null ? "#64748b" : pnl >= 0 ? GREEN : RED;
+                        const statusColor = t.status === "open" ? GREEN : t.status === "closed" ? "#94a3b8" : t.status === "failed" ? RED : GOLD;
+                        return (
+                          <tr key={t.id} style={{ borderBottom:"1px solid rgba(255,255,255,.04)" }}>
+                            <td style={{ padding:"8px 10px", color:"#fff", fontWeight:700 }}>{t.symbol || (t.mint ? `${t.mint.slice(0,4)}…` : "—")}</td>
+                            <td style={{ padding:"8px 10px", color: t.action === "BUY" ? GREEN : RED, fontWeight:800 }}>{t.action}</td>
+                            <td style={{ padding:"8px 10px", color:GOLD, fontWeight:700 }}>{t.amount_sol != null ? Number(t.amount_sol).toFixed(4) : "—"}</td>
+                            <td style={{ padding:"8px 10px", color:pnlColor, fontWeight:800 }}>{pnl != null ? `${pnl >= 0 ? "+" : ""}${Number(pnl).toFixed(2)}%` : "—"}</td>
+                            <td style={{ padding:"8px 10px" }}>
+                              <span style={{ padding:"2px 8px", borderRadius:8, fontSize:9, fontWeight:800, letterSpacing:".1em", textTransform:"uppercase", background:`${statusColor}14`, color:statusColor, border:`1px solid ${statusColor}33` }}>{t.status}</span>
+                            </td>
+                            <td style={{ padding:"8px 10px", color:"#64748b" }}>{t.opened_at ? timeAgo(t.opened_at) : "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
 
             {/* Open Positions */}
             <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, overflow:"hidden" }}>
