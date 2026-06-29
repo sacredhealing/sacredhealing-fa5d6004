@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.12-DISKPOS LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.13 LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Remusofmars, trunoest, Cented
@@ -49,7 +49,7 @@ const MIN_TRADE_SOL = 0.02;
 const TRADE_PCT     = 0.05;   // 5% per trade
 const MAX_EXPOSURE  = 0.50;
 const MIN_POOL_USD  = 0;     // disabled — whales trade micro-caps
-const MIN_WHALE_SOL = 0.1;    // ignore whale trades < 0.1 SOL (noise/dust)
+const MIN_WHALE_SOL = 0.005;  // catch trunoest accumulation buys
 const COOLDOWN_MS   = 300000; // 5min cooldown per mint after buy
 const DEDUP_MS      = 8000;   // suppress duplicate signals on same mint within 8s
 const STOP_POLL_MS  = 2000;
@@ -768,7 +768,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.12-DISKPOS — disk position cache, sell never misses');
+console.log('[shreem] v18.13 — MIN_WHALE_SOL 0.005, catches trunoest accumulation');
 (async () => {
   await loadKeypair();
   // syncSession disabled — Supabase legacy keys disabled, control via pm2
