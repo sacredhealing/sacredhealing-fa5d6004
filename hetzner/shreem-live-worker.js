@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.6-DBFIRST LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.7-FINAL LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 2 wallets: Remusofmars, trunoest (Cented removed — 7s scalper)
@@ -634,6 +634,10 @@ function connect() {
 
       if (swap.action === 'BUY') {
         // Only buy when UI says live
+        if (!isLive || !isRunning) {
+          // Fast re-check — don't wait for 5s poll
+          await syncSession();
+        }
         if (isLive && isRunning) {
           executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
         } else {
@@ -774,7 +778,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.6-DBFIRST — sell queries Supabase directly, never trusts posCache alone');
+console.log('[shreem] v18.7-FINAL — DB-first sell, fast session sync 5s, instant UI go-live detection');
 (async () => {
   await loadKeypair();
   await syncSession();       // sets isLive from DB before anything starts
@@ -785,7 +789,7 @@ console.log('[shreem] v18.6-DBFIRST — sell queries Supabase directly, never tr
   connect();                 // WS connects — buy gate already set correctly
 })();
 
-setInterval(syncSession,     30000);
+setInterval(syncSession,      5000); // 5s — fast UI response
 setInterval(syncPositions,   20000);
 setInterval(pollStopLoss,    STOP_POLL_MS);
 setInterval(refreshSolPrice, 60000);
