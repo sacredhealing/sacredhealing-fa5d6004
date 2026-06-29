@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.8 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.9 LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Remusofmars, trunoest, Cented
@@ -265,7 +265,8 @@ async function getTokenBal(mint) {
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const posCache  = new Map();  // id → position
 const closing   = new Set();  // ids currently being sold
-const cooldowns = new Map();  // mint → timestamp of last buy
+const cooldowns  = new Map();  // mint → timestamp of last buy
+const buyingMints = new Set(); // mints currently being bought — race condition lock
 let   botReady  = false;      // false until syncPositions completes on boot
 let solUsd      = 150;
 let isLive      = false;      // controlled by UI Go Live button via Supabase
@@ -306,6 +307,13 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
 
   const { ok, reason } = signalFilter(mint, whaleSolSize);
   if (!ok) { console.log(`[buy] ⏭ skip ${symbol || mint.slice(0,8)} — ${reason}`); return; }
+
+  // Hard lock — prevent two buys of same mint simultaneously
+  if (buyingMints.has(mint)) {
+    console.log(`[buy] ⛔ already buying ${mint.slice(0,8)} — skipped`);
+    return;
+  }
+  buyingMints.add(mint);
 
   // Mark dedup immediately — before async ops
   recentSignals.set(mint, Date.now());
@@ -374,6 +382,7 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
     recentSignals.delete(mint);
   } finally {
     buyBusy = false;
+    buyingMints.delete(mint);
   }
 }
 
@@ -779,7 +788,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.8 — Cented re-added, DB-first sell, 5s session sync');
+console.log('[shreem] v18.9 — per-mint buy lock, no duplicate positions');
 (async () => {
   await loadKeypair();
   await syncSession();       // sets isLive from DB before anything starts
