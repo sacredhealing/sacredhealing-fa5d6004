@@ -6756,6 +6756,7 @@ export type Database = {
           pnl_pct: number | null
           pnl_sol: number | null
           sell_reason: string | null
+          sell_tx_sig: string | null
           session_id: string
           sig: string | null
           slippage_pct: number | null
@@ -6786,6 +6787,7 @@ export type Database = {
           pnl_pct?: number | null
           pnl_sol?: number | null
           sell_reason?: string | null
+          sell_tx_sig?: string | null
           session_id?: string
           sig?: string | null
           slippage_pct?: number | null
@@ -6816,6 +6818,7 @@ export type Database = {
           pnl_pct?: number | null
           pnl_sol?: number | null
           sell_reason?: string | null
+          sell_tx_sig?: string | null
           session_id?: string
           sig?: string | null
           slippage_pct?: number | null
