@@ -1739,12 +1739,21 @@ serve(async (req) => {
             if (!match) {
               console.log(`[live-close] No open position for SELL ${swap.mint?.slice(0,8)} from ${WHALE_WALLETS[wallet]}`);
             } else {
-              console.log(`[live-close] Closing ${match.symbol||match.mint?.slice(0,8)} trade_id=${match.id} (inline)`);
-              const sellRes = await executeSellInline(match, "whale_sell_mirror");
-              if (sellRes.ok) {
-                console.log(`[live-close] ✅ ${match.symbol||match.mint?.slice(0,8)} → tx=${sellRes.tx?.slice(0,16)} ${sellRes.latency_ms}ms`);
-              } else {
-                console.error(`[live-close] ❌ ${match.symbol||match.mint?.slice(0,8)} → ${sellRes.error}`);
+              console.log(`[live-close] Forwarding ${match.symbol||match.mint?.slice(0,8)} trade_id=${match.id} → hetzner sell bridge`);
+              try {
+                const resp = await fetch("http://178.105.183.74:3001/sell", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ mint: match.mint, tradeId: match.id, secret: "shreem-webhook-2026" }),
+                });
+                const txt = await resp.text();
+                if (resp.ok) {
+                  console.log(`[live-close] ✅ hetzner sell accepted (${resp.status}): ${txt.slice(0,200)}`);
+                } else {
+                  console.error(`[live-close] ❌ hetzner sell failed (${resp.status}): ${txt.slice(0,200)}`);
+                }
+              } catch (e: any) {
+                console.error(`[live-close] ❌ hetzner sell POST error: ${e?.message ?? String(e)}`);
               }
             }
           } catch (sellErr: any) {
