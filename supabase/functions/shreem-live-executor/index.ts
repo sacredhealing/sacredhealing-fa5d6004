@@ -113,8 +113,10 @@ async function rpc(method: string, params: unknown[]) {
 
 // ── Jupiter ───────────────────────────────────────────────────────────────────
 async function jupQuote(inputMint: string, outputMint: string, amount: number, slippage = SLIPPAGE_BPS) {
-  // Use dynamic slippage for pump.fun tokens — Jupiter calculates optimal per-token
-  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}&dynamicSlippage=true`;
+  // restrictIntermediateTokens=true forces Jupiter to only route through highly-liquid
+  // intermediates (SOL/USDC/USDT) — prevents exotic tokens like CASH appearing as hops.
+  // On sells, outputMint is always SOL_MINT so final settlement is native SOL.
+  const url = `${JUPITER}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippage}&dynamicSlippage=true&restrictIntermediateTokens=true`;
   const r = await fetch(url, { signal: timeoutSignal(10000) });
   if (!r.ok) throw new Error(`Jupiter quote ${r.status}: ${await r.text()}`);
   return r.json();
