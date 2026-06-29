@@ -481,20 +481,73 @@ async function executeSellInline(trade: any, reason: string): Promise<{ ok: bool
     .in("status", ["open","unconfirmed"]);
   if (lockErr) return { ok: false, error: `lock_failed:${lockErr.message}` };
 
-  // Get on-chain balance + decimals in parallel
-  const [rawBalance, decimals] = await Promise.all([
-    getTokenRawBalance(walletPub, trade.mint).catch(() => 0),
-    getMintDecimals(trade.mint).catch(() => 6),
-  ]);
+  // ── Race-condition fix ────────────────────────────────────────────────────
+  // Whales (esp. trunoest/Cented) often flip in <15s. Our buy tx may still be
+  // propagating when their SELL signal arrives. If we read balance once and
+  // see 0, we'd mark the trade closed → buy lands later → tokens stranded.
+  //
+  // Fix: if we have a buy tx_sig but haven't seen the token account yet,
+  // wait for the buy to confirm, then retry the balance read with backoff.
+  // ─────────────────────────────────────────────────────────────────────────
+  let rawBalance = 0;
+  let decimals = 6;
+  const buyTxSig: string | undefined = trade.tx_sig;
+
+  // First quick read — if it's already there, we save the retry latency
+  try {
+    [rawBalance, decimals] = await Promise.all([
+      getTokenRawBalance(walletPub, trade.mint).catch(() => 0),
+      getMintDecimals(trade.mint).catch(() => 6),
+    ]);
+  } catch {}
+
+  // If empty AND we have a pending buy → wait for it, then retry up to 4×
+  if (!rawBalance && buyTxSig) {
+    console.log(`[INLINE-SELL] ⏳ balance=0, awaiting buy tx ${buyTxSig.slice(0,16)}…`);
+    // Poll buy confirmation up to ~5s
+    const buyStart = Date.now();
+    let buyConfirmed = false;
+    let buyFailed = false;
+    while (Date.now() - buyStart < 5000) {
+      const statusRes = await rpcCall("getSignatureStatuses", [[buyTxSig], { searchTransactionHistory: true }]).catch(() => null);
+      const s = (statusRes as any)?.value?.[0];
+      if (s?.err) { buyFailed = true; break; }
+      if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) { buyConfirmed = true; break; }
+      await new Promise(r => setTimeout(r, 400));
+    }
+    if (buyFailed) {
+      console.warn(`[INLINE-SELL] buy tx failed on-chain — safe to close empty`);
+      await sb.from("shreem_brzee_live_trades").update({
+        status: "closed",
+        sell_reason: reason + "_buy_failed",
+        closed_at: new Date().toISOString(),
+      }).eq("id", trade.id);
+      return { ok: true, latency_ms: Date.now() - t0 };
+    }
+    // Even if not confirmed, retry balance read — propagation may be done
+    const delays = buyConfirmed ? [200, 500, 1000, 2000] : [800, 1500, 2500];
+    for (const d of delays) {
+      await new Promise(r => setTimeout(r, d));
+      rawBalance = await getTokenRawBalance(walletPub, trade.mint).catch(() => 0);
+      if (rawBalance > 0) {
+        console.log(`[INLINE-SELL] ✓ balance appeared: raw=${rawBalance}`);
+        break;
+      }
+    }
+  }
 
   if (!rawBalance || rawBalance <= 0) {
-    // Nothing to sell — already empty (sold elsewhere). Just close the row.
+    // Still empty. Could be:
+    //   (a) buy never landed on-chain (failed tx) → safe to close
+    //   (b) RPC lag — buy DID land but Helius hasn't indexed yet → DON'T close
+    // To avoid stranding tokens we DO NOT mark closed. Restore 'open' so the
+    // executor's auto_recover_stuck cron picks it up once balance shows up.
+    console.warn(`[INLINE-SELL] ⚠️ ${trade.mint.slice(0,8)} balance still 0 after retries — leaving OPEN for cron auto-recover`);
     await sb.from("shreem_brzee_live_trades").update({
-      status: "closed",
-      sell_reason: reason + "_empty_wallet",
-      closed_at: new Date().toISOString(),
+      status: "open",
+      updated_at: new Date().toISOString(),
     }).eq("id", trade.id);
-    return { ok: true, latency_ms: Date.now() - t0 };
+    return { ok: false, error: "balance_zero_deferred_to_cron", latency_ms: Date.now() - t0 };
   }
 
   // Quote + swap + send
