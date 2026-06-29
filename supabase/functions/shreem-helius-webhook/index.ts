@@ -1684,15 +1684,13 @@ serve(async (req) => {
             if (!match) {
               console.log(`[live-close] No open position for SELL ${swap.mint?.slice(0,8)} from ${WHALE_WALLETS[wallet]}`);
             } else {
-              console.log(`[live-close] Closing ${match.symbol||match.mint?.slice(0,8)} trade_id=${match.id}`);
-              const execR = await fetch(`${SUPABASE_URL}/functions/v1/shreem-live-executor`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_KEY}` },
-                body: JSON.stringify({ action: "close", trade_id: match.id, mint: match.mint, reason: "whale_sell_mirror" }),
-                signal: AbortSignal.timeout(25000),
-              });
-              const execData = await execR.json().catch(() => ({}));
-              console.log(`[live-close] ✅ ${match.symbol} →`, JSON.stringify(execData).slice(0, 200));
+              console.log(`[live-close] Closing ${match.symbol||match.mint?.slice(0,8)} trade_id=${match.id} (inline)`);
+              const sellRes = await executeSellInline(match, "whale_sell_mirror");
+              if (sellRes.ok) {
+                console.log(`[live-close] ✅ ${match.symbol||match.mint?.slice(0,8)} → tx=${sellRes.tx?.slice(0,16)} ${sellRes.latency_ms}ms`);
+              } else {
+                console.error(`[live-close] ❌ ${match.symbol||match.mint?.slice(0,8)} → ${sellRes.error}`);
+              }
             }
           } catch (sellErr: any) {
             console.error(`[live-close] ❌ SELL error:`, sellErr?.message ?? String(sellErr));
