@@ -1,7 +1,7 @@
-// shreem-live-worker.js — Shreem Brzee v18.7-FINAL LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.8 LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
-// 2 wallets: Remusofmars, trunoest (Cented removed — 7s scalper)
+// 3 wallets: Remusofmars, trunoest, Cented
 // Keypair: file → env → Supabase (triple fallback, loads once at boot)
 // WS: exponential backoff reconnect, ping/pong keepalive
 // Signal filters: min SOL size, duplicate suppression, stable skip
@@ -29,6 +29,7 @@ const PORT           = 3001;
 const WHALE_WALLETS = {
   'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
   'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':   'trunoest',
+  'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o':   'Cented',
 };
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
 
@@ -778,7 +779,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.7-FINAL — DB-first sell, fast session sync 5s, instant UI go-live detection');
+console.log('[shreem] v18.8 — Cented re-added, DB-first sell, 5s session sync');
 (async () => {
   await loadKeypair();
   await syncSession();       // sets isLive from DB before anything starts
