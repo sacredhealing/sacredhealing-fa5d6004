@@ -504,13 +504,33 @@ async function executeSellInline(trade: any, reason: string): Promise<{ ok: bool
   // If empty AND we have a pending buy → wait for it, then retry up to 4×
   if (!rawBalance && buyTxSig) {
     console.log(`[INLINE-SELL] ⏳ balance=0, awaiting buy tx ${buyTxSig.slice(0,16)}…`);
-    try { await waitConfirm(buyTxSig, 6000); } catch {}
-    const delays = [400, 800, 1500, 2500];
+    // Poll buy confirmation up to ~5s
+    const buyStart = Date.now();
+    let buyConfirmed = false;
+    let buyFailed = false;
+    while (Date.now() - buyStart < 5000) {
+      const statusRes = await rpcCall("getSignatureStatuses", [[buyTxSig], { searchTransactionHistory: true }]).catch(() => null);
+      const s = (statusRes as any)?.value?.[0];
+      if (s?.err) { buyFailed = true; break; }
+      if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) { buyConfirmed = true; break; }
+      await new Promise(r => setTimeout(r, 400));
+    }
+    if (buyFailed) {
+      console.warn(`[INLINE-SELL] buy tx failed on-chain — safe to close empty`);
+      await sb.from("shreem_brzee_live_trades").update({
+        status: "closed",
+        sell_reason: reason + "_buy_failed",
+        closed_at: new Date().toISOString(),
+      }).eq("id", trade.id);
+      return { ok: true, latency_ms: Date.now() - t0 };
+    }
+    // Even if not confirmed, retry balance read — propagation may be done
+    const delays = buyConfirmed ? [200, 500, 1000, 2000] : [800, 1500, 2500];
     for (const d of delays) {
       await new Promise(r => setTimeout(r, d));
       rawBalance = await getTokenRawBalance(walletPub, trade.mint).catch(() => 0);
       if (rawBalance > 0) {
-        console.log(`[INLINE-SELL] ✓ balance appeared after ${d}ms: raw=${rawBalance}`);
+        console.log(`[INLINE-SELL] ✓ balance appeared: raw=${rawBalance}`);
         break;
       }
     }
