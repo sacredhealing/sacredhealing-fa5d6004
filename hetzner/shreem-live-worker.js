@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.9 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.10 LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Remusofmars, trunoest, Cented
@@ -269,8 +269,8 @@ const cooldowns  = new Map();  // mint → timestamp of last buy
 const buyingMints = new Set(); // mints currently being bought — race condition lock
 let   botReady  = false;      // false until syncPositions completes on boot
 let solUsd      = 150;
-let isLive      = false;      // controlled by UI Go Live button via Supabase
-let isRunning   = false;      // controlled by UI Go Live button via Supabase
+let isLive      = true;       // hardcoded — control via pm2 start/stop
+let isRunning   = true;       // hardcoded — control via pm2 start/stop
 let buyBusy     = false;
 
 // ── SIGNAL QUALITY CHECK ──────────────────────────────────────────────────────
@@ -644,10 +644,6 @@ function connect() {
 
       if (swap.action === 'BUY') {
         // Only buy when UI says live
-        if (!isLive || !isRunning) {
-          // Fast re-check — don't wait for 5s poll
-          await syncSession();
-        }
         if (isLive && isRunning) {
           executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
         } else {
@@ -788,10 +784,10 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.9 — per-mint buy lock, no duplicate positions');
+console.log('[shreem] v18.10 — always live, control via pm2 start/stop only');
 (async () => {
   await loadKeypair();
-  await syncSession();       // sets isLive from DB before anything starts
+  // syncSession disabled — Supabase legacy keys disabled, control via pm2
   await syncPositions();     // loads posCache including unconfirmed
   botReady = true;
   console.log(`[shreem] ✅ posCache loaded: ${posCache.size} | isLive=${isLive}`);
@@ -799,7 +795,7 @@ console.log('[shreem] v18.9 — per-mint buy lock, no duplicate positions');
   connect();                 // WS connects — buy gate already set correctly
 })();
 
-setInterval(syncSession,      5000); // 5s — fast UI response
+// syncSession disabled — legacy API keys disabled on Supabase
 setInterval(syncPositions,   20000);
 setInterval(pollStopLoss,    STOP_POLL_MS);
 setInterval(refreshSolPrice, 60000);
