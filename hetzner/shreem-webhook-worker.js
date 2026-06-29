@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.6-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.7-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -481,7 +481,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.6-WEBHOOK',
+      version: 'v18.7-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -573,20 +573,27 @@ const server = http.createServer((req, res) => {
 
 // ── SUPABASE SESSION SYNC — reads UI Go Live toggle every 10s ─────────────────
 const SESSION_BRIDGE = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/shreem-session-bridge';
+const { execFile } = require('child_process');
 
 async function syncSessionState() {
-  try {
-    const row = await httpJSON(SESSION_BRIDGE, 'GET', null, { 'Content-Type': 'application/json' }, 8000);
-    if (!row || !row.mode) { console.log('[session] ⚠️ bridge returned no mode'); return; }
-    const wantLive = row.mode === 'live';
-    if (wantLive !== isLive) {
-      isLive    = wantLive;
-      isRunning = wantLive;
-      console.log(`[session] ✅ synced → isLive=${isLive} mode=${row.mode}`);
-    }
-  } catch(e) {
-    console.log(`[session] ❌ bridge error: ${e.message}`);
-  }
+  return new Promise((resolve) => {
+    execFile('curl', ['-s', '--max-time', '5', SESSION_BRIDGE], (err, stdout) => {
+      try {
+        if (err) { console.log(`[session] ❌ curl error: ${err.message}`); resolve(); return; }
+        const row = JSON.parse(stdout.trim());
+        if (!row || !row.mode) { console.log('[session] ⚠️ no mode in response'); resolve(); return; }
+        const wantLive = row.mode === 'live';
+        if (wantLive !== isLive) {
+          isLive    = wantLive;
+          isRunning = wantLive;
+          console.log(`[session] ✅ synced → isLive=${isLive} mode=${row.mode}`);
+        }
+      } catch(e) {
+        console.log(`[session] ❌ parse error: ${e.message}`);
+      }
+      resolve();
+    });
+  });
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
@@ -598,7 +605,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.6-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.7-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
