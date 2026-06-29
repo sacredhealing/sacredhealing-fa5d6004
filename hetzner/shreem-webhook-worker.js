@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.7-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.8-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -481,7 +481,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.7-WEBHOOK',
+      version: 'v18.8-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -512,6 +512,23 @@ const server = http.createServer((req, res) => {
         const payload = JSON.parse(body);
         const transactions = Array.isArray(payload) ? payload : [payload];
         console.log(`[webhook] 📥 received ${transactions.length} tx(s)`);
+        // DEBUG: log first tx structure to understand Helius format
+        if (transactions.length > 0) {
+          const tx = transactions[0];
+          const keys = tx.transaction?.message?.accountKeys || tx.accountData?.map(a=>a.account) || [];
+          const hasWhale = keys.some(k => {
+            const addr = typeof k === 'string' ? k : k?.pubkey || k?.toString();
+            return ['BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu','ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT'].includes(addr);
+          });
+          console.log(`[webhook-dbg] sig=${tx.signature?.slice(0,16)} type=${tx.type||'?'} source=${tx.source||'?'} hasWhale=${hasWhale} keys=${JSON.stringify(keys.slice(0,3).map(k=>typeof k==='string'?k.slice(0,8):k?.pubkey?.slice(0,8)||'?'))}`);
+          if (!hasWhale) {
+            // Log top-level fields to understand structure
+            console.log(`[webhook-dbg] top-keys: ${JSON.stringify(Object.keys(tx)).slice(0,120)}`);
+            // Check accountData field (Helius enhanced format)
+            if (tx.accountData) console.log(`[webhook-dbg] accountData[0]: ${JSON.stringify(tx.accountData[0]).slice(0,120)}`);
+            if (tx.feePayer) console.log(`[webhook-dbg] feePayer=${tx.feePayer.slice(0,16)}`);
+          }
+        }
         processWebhookPayload(transactions);
       } catch(e) {
         console.error('[webhook] parse error:', e.message);
@@ -605,7 +622,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.7-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.8-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
