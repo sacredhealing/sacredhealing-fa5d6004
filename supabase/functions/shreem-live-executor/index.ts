@@ -301,7 +301,7 @@ async function sellPosition(pos: any, kp: SolanaKeypair, wallet: string, reason:
         sell_reason: reason, exit_price: null,
         pnl_sol: pnlSol, pnl_pct: pnlPct,
         closed_at: new Date().toISOString(),
-        tx_sig_close: txSig,
+        sell_tx_sig: txSig,
       }).eq("id", pos.id);
       if (!sellUpdateErr) break;
       console.warn(`[SELL] DB update attempt ${attempt} failed: ${sellUpdateErr.message}`);
