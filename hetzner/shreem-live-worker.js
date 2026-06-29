@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.11 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.12-DISKPOS LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Remusofmars, trunoest, Cented
@@ -268,6 +268,24 @@ const closing   = new Set();  // ids currently being sold
 const cooldowns  = new Map();  // mint → timestamp of last buy
 const buyingMints = new Set(); // mints currently being bought — race condition lock
 let   botReady  = false;      // false until syncPositions completes on boot
+const POS_FILE  = '/root/.shreem_positions.json';
+
+function savePosCache() {
+  try {
+    const obj = {};
+    for (const [k,v] of posCache) obj[k] = v;
+    fs.writeFileSync(POS_FILE, JSON.stringify(obj));
+  } catch(e) { console.error('[pos] save error:', e.message); }
+}
+
+function loadPosCache() {
+  try {
+    if (!fs.existsSync(POS_FILE)) return;
+    const obj = JSON.parse(fs.readFileSync(POS_FILE, 'utf8'));
+    for (const [k,v] of Object.entries(obj)) posCache.set(k, v);
+    console.log(`[pos] 💾 loaded ${posCache.size} positions from disk`);
+  } catch(e) { console.error('[pos] load error:', e.message); }
+}
 let solUsd      = 150;
 let isLive      = true;       // hardcoded — control via pm2 start/stop
 let isRunning   = true;       // hardcoded — control via pm2 start/stop
@@ -364,6 +382,7 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
       amount_sol: size, tokens_received: rawOut,
       token_decimals: decimals, opened_at: new Date().toISOString(),
     });
+    savePosCache(); // persist to disk immediately
 
     // Log async — NEVER blocks execution
     sbFire('POST', '/rest/v1/shreem_brzee_live_trades', {
@@ -420,6 +439,7 @@ async function executeSell(pos, reason) {
     const pnlPct  = pos.amount_sol > 0 ? (pnlSol / pos.amount_sol) * 100 : 0;
     const latency = Date.now() - t0;
     console.log(`[sell] ✅ ${sym} | ${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}% | ${pnlSol >= 0 ? '+' : ''}${pnlSol.toFixed(4)} SOL | ${latency}ms`);
+    posCache.delete(pos.id); savePosCache(); // remove from disk immediately
     sbFire('PATCH', `/rest/v1/shreem_brzee_live_trades?id=eq.${pos.id}`, {
       status: 'closed', sell_reason: reason, sell_sig: txSig,
       closed_at: new Date().toISOString(), pnl_sol: pnlSol, pnl_pct: pnlPct,
@@ -650,62 +670,26 @@ function connect() {
           console.log(`[buy] ⛔ skipped — bot stopped (isLive=${isLive})`);
         }
       } else {
-        // SELL mirror — DB-first, posCache is secondary fallback
-        // Never trust memory alone — query Supabase directly for open positions
-        console.log(`[sell-mirror] 🔴 ${label} SELL detected | mint=${swap.mint.slice(0,12)}`);
-        (async () => {
-          try {
-            // 1. Query DB directly — bypass posCache entirely
-            const rows = await sbGet(
-              'shreem_brzee_live_trades',
-              `status=in.(open,pending,unconfirmed)&select=id,mint,symbol,label,entry_price,peak_price,amount_sol,tokens_received,token_decimals,opened_at`
-            );
-            console.log(`[sell-mirror] DB returned ${rows.length} open positions`);
-
-            // Build fresh posCache from DB result right now
-            for (const r of rows) {
-              if (!posCache.has(r.id)) {
-                posCache.set(r.id, {
-                  ...r,
-                  entry_price: Number(r.entry_price) || 0,
-                  peak_price:  Number(r.peak_price)  || Number(r.entry_price) || 0,
-                  amount_sol:  Number(r.amount_sol)  || 0,
-                });
-              }
-            }
-
-            // 2. Exact mint match from fresh DB data
-            let matched = false;
-            for (const [id, pos] of posCache) {
-              if (pos.mint === swap.mint && !closing.has(id)) {
-                console.log(`[sell-mirror] ✅ EXACT mint match → ${pos.symbol || pos.mint.slice(0,8)}`);
-                executeSell(pos, 'whale_sell_mirror');
-                matched = true; break;
-              }
-            }
-
-            // 3. Label fallback — whale exited anything, close all their open positions
-            if (!matched) {
-              const byLabel = rows.filter(p => p.label === label);
-              if (byLabel.length > 0) {
-                console.log(`[sell-mirror] ✅ LABEL fallback — ${label} exited, closing ${byLabel.length} pos`);
-                for (const r of byLabel) {
-                  const pos = posCache.get(r.id) || { ...r, entry_price: Number(r.entry_price)||0, amount_sol: Number(r.amount_sol)||0 };
-                  if (!closing.has(r.id)) executeSell(pos, 'whale_sell_mirror_label');
-                }
-                matched = true;
-              }
-            }
-
-            if (!matched) console.log(`[sell-mirror] ℹ️ no open positions for ${label}`);
-
-          } catch(e) {
-            console.error(`[sell-mirror] ❌ DB query failed: ${e.message}`);
-            // Final fallback — use whatever is in posCache
-            const byLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
-            for (const p of byLabel) executeSell(p, 'whale_sell_mirror_cache_fallback');
+        // SELL mirror — posCache only (DB auth broken, use disk-persisted memory)
+        console.log(`[sell-mirror] 🔴 ${label} SELL | mint=${swap.mint.slice(0,12)} | posCache=${posCache.size}`);
+        let matched = false;
+        // 1. Exact mint match
+        for (const [id, pos] of posCache) {
+          if (pos.mint === swap.mint && !closing.has(id)) {
+            console.log(`[sell-mirror] ✅ EXACT mint → ${pos.symbol || pos.mint.slice(0,8)}`);
+            executeSell(pos, 'whale_sell_mirror'); matched = true; break;
           }
-        })();
+        }
+        // 2. Label fallback — same whale sold anything
+        if (!matched) {
+          const byLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
+          if (byLabel.length > 0) {
+            console.log(`[sell-mirror] ✅ LABEL fallback — ${label} closing ${byLabel.length} pos`);
+            for (const p of byLabel) executeSell(p, 'whale_sell_mirror_label');
+            matched = true;
+          }
+        }
+        if (!matched) console.log(`[sell-mirror] ℹ️ ${label} sold, no open positions`);
       }
     } catch(e) { console.error('[ws] msg error:', e.message); }
   });
@@ -784,11 +768,12 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.11 — pool filter disabled, trades micro-caps');
+console.log('[shreem] v18.12-DISKPOS — disk position cache, sell never misses');
 (async () => {
   await loadKeypair();
   // syncSession disabled — Supabase legacy keys disabled, control via pm2
-  await syncPositions();     // loads posCache including unconfirmed
+  loadPosCache();            // reload positions from disk (survives restarts)
+  await syncPositions();     // try DB sync too (may fail silently if keys dead)
   botReady = true;
   console.log(`[shreem] ✅ posCache loaded: ${posCache.size} | isLive=${isLive}`);
   await refreshSolPrice();
