@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.8-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.9-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -217,6 +217,42 @@ async function getTokenBal(mint) {
 
 // ── TX PARSER — whale owner filter + ATA closure sell detection ───────────────
 function parseWhaleSwap(tx, whaleAddr) {
+  // ── HELIUS ENHANCED FORMAT (top-level nativeTransfers + tokenTransfers) ──────
+  // This is what Helius actually sends for SWAP transactions
+  if (tx.nativeTransfers || tx.tokenTransfers) {
+    // Get SOL direction from nativeTransfers
+    let solDiff = 0;
+    for (const t of (tx.nativeTransfers || [])) {
+      if (t.fromUserAccount === whaleAddr) solDiff -= (t.amount || 0) / 1e9;
+      if (t.toUserAccount   === whaleAddr) solDiff += (t.amount || 0) / 1e9;
+    }
+    if (Math.abs(solDiff) < MIN_WHALE_SOL) {
+      // Try accountData for SOL balance changes
+      const acct = (tx.accountData || []).find(a => a.account === whaleAddr);
+      if (acct) solDiff = (acct.nativeBalanceChange || 0) / 1e9;
+    }
+    if (Math.abs(solDiff) < MIN_WHALE_SOL) return null;
+
+    // Get token from tokenTransfers
+    const mintMap = {};
+    for (const t of (tx.tokenTransfers || [])) {
+      if (!t.mint || STABLES.has(t.mint)) continue;
+      if (t.fromUserAccount !== whaleAddr && t.toUserAccount !== whaleAddr) continue;
+      if (!mintMap[t.mint]) mintMap[t.mint] = { diff: 0, symbol: t.tokenSymbol || null };
+      if (t.toUserAccount   === whaleAddr) mintMap[t.mint].diff += Number(t.tokenAmount || 0);
+      if (t.fromUserAccount === whaleAddr) mintMap[t.mint].diff -= Number(t.tokenAmount || 0);
+    }
+    let bestMint = null, bestDiff = 0, bestSymbol = null;
+    for (const [mint, d] of Object.entries(mintMap)) {
+      if (Math.abs(d.diff) > Math.abs(bestDiff)) { bestDiff=d.diff; bestMint=mint; bestSymbol=d.symbol; }
+    }
+    if (!bestMint) return null;
+    const action = solDiff < 0 ? 'BUY' : 'SELL';
+    console.log(`[parse] ${action} | whale=${whaleAddr.slice(0,8)} | mint=${bestMint.slice(0,8)} | sol=${solDiff.toFixed(4)} | enhanced-format`);
+    return { action, mint: bestMint, symbol: bestSymbol, whaleSolSize: Math.abs(solDiff) };
+  }
+
+  // ── LEGACY FORMAT (tx.meta + tx.transaction.message) ─────────────────────────
   const meta = tx.meta;
   const msg  = tx.transaction?.message;
   if (!meta || !msg) return null;
@@ -234,43 +270,29 @@ function parseWhaleSwap(tx, whaleAddr) {
 
   const pre  = meta.preTokenBalances  || [];
   const post = meta.postTokenBalances || [];
-
-  // Filter to whale-owned token accounts only
   const whaleOwns = (b) => (b.owner === whaleAddr) || (b.accountIndex === wi);
   const whalePre  = pre.filter(b => b.mint && !STABLES.has(b.mint) && whaleOwns(b));
   const whalePost = post.filter(b => b.mint && !STABLES.has(b.mint) && whaleOwns(b));
 
   const mintMap = {};
-  for (const b of whalePre) {
-    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0, symbol: null };
-    mintMap[b.mint].pre += Number(b.uiTokenAmount?.uiAmount || 0);
-  }
-  for (const b of whalePost) {
-    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0, symbol: null };
-    mintMap[b.mint].post += Number(b.uiTokenAmount?.uiAmount || 0);
-    if (!mintMap[b.mint].symbol) mintMap[b.mint].symbol = b.uiTokenAmount?.symbol || null;
-  }
-  // ATA closure: mint present in pre but gone from post → post stays 0 = SELL
-  for (const b of whalePre) {
-    if (!mintMap[b.mint]) mintMap[b.mint] = { pre: 0, post: 0, symbol: null };
-  }
+  for (const b of whalePre)  { if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; mintMap[b.mint].pre  += Number(b.uiTokenAmount?.uiAmount||0); }
+  for (const b of whalePost) { if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; mintMap[b.mint].post += Number(b.uiTokenAmount?.uiAmount||0); mintMap[b.mint].symbol=b.uiTokenAmount?.symbol||null; }
+  for (const b of whalePre)  { if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; }
 
-  // Fallback to global if owner filter found nothing
   if (Object.keys(mintMap).length === 0) {
-    for (const b of pre)  { if (!b.mint || STABLES.has(b.mint)) continue; if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; mintMap[b.mint].pre  += Number(b.uiTokenAmount?.uiAmount||0); }
-    for (const b of post) { if (!b.mint || STABLES.has(b.mint)) continue; if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; mintMap[b.mint].post += Number(b.uiTokenAmount?.uiAmount||0); mintMap[b.mint].symbol = b.uiTokenAmount?.symbol||null; }
-    if (Object.keys(mintMap).length > 0) console.log(`[parse] ⚠️ owner-filter miss — using global fallback`);
+    for (const b of pre)  { if (!b.mint||STABLES.has(b.mint)) continue; if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; mintMap[b.mint].pre  += Number(b.uiTokenAmount?.uiAmount||0); }
+    for (const b of post) { if (!b.mint||STABLES.has(b.mint)) continue; if (!mintMap[b.mint]) mintMap[b.mint]={pre:0,post:0,symbol:null}; mintMap[b.mint].post += Number(b.uiTokenAmount?.uiAmount||0); mintMap[b.mint].symbol=b.uiTokenAmount?.symbol||null; }
   }
 
-  let bestMint = null, bestDiff = 0, bestSymbol = null;
-  for (const [mint, amt] of Object.entries(mintMap)) {
+  let bestMint=null, bestDiff=0, bestSymbol=null;
+  for (const [mint,amt] of Object.entries(mintMap)) {
     const diff = amt.post - amt.pre;
     if (Math.abs(diff) > Math.abs(bestDiff)) { bestDiff=diff; bestMint=mint; bestSymbol=amt.symbol; }
   }
   if (!bestMint) return null;
 
   const action = solDiff < 0 ? 'BUY' : 'SELL';
-  console.log(`[parse] ${action} | whale=${whaleAddr.slice(0,8)} | mint=${bestMint.slice(0,8)} | sol=${solDiff.toFixed(4)} | tokDiff=${bestDiff.toFixed(2)}`);
+  console.log(`[parse] ${action} | whale=${whaleAddr.slice(0,8)} | mint=${bestMint.slice(0,8)} | sol=${solDiff.toFixed(4)} | legacy-format`);
   return { action, mint: bestMint, symbol: bestSymbol, whaleSolSize: Math.abs(solDiff) };
 }
 
@@ -481,7 +503,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.8-WEBHOOK',
+      version: 'v18.9-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -622,7 +644,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.8-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.9-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
@@ -647,4 +669,5 @@ async function syncSessionState() {
   console.log('[shreem] ✅ Ready — waiting for Helius webhook pushes');
   console.log('[shreem] UI sync active — Go Live button controls bot every 10s');
 })();
+
 
