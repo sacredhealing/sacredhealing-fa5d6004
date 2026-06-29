@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.4-SELLFIX LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.5-UIFIX LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 2 wallets: Remusofmars, trunoest (Cented removed — 7s scalper)
@@ -267,8 +267,8 @@ const closing   = new Set();  // ids currently being sold
 const cooldowns = new Map();  // mint → timestamp of last buy
 let   botReady  = false;      // false until syncPositions completes on boot
 let solUsd      = 150;
-let isLive      = true;       // HARDCODED LIVE — controlled by Supabase sync override
-let isRunning   = true;       // HARDCODED RUNNING
+let isLive      = false;      // controlled by UI Go Live button via Supabase
+let isRunning   = false;      // controlled by UI Go Live button via Supabase
 let buyBusy     = false;
 
 // ── SIGNAL QUALITY CHECK ──────────────────────────────────────────────────────
@@ -633,29 +633,40 @@ function connect() {
       console.log(`[ws] 🐋 ${label} ${swap.action} ${swap.symbol || swap.mint.slice(0,8)} | ${swap.whaleSolSize.toFixed(3)} SOL | detect=${detectMs}ms`);
 
       if (swap.action === 'BUY') {
-        executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
+        // Only buy when UI says live
+        if (isLive && isRunning) {
+          executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
+        } else {
+          console.log(`[buy] ⛔ skipped — bot stopped (isLive=${isLive})`);
+        }
       } else {
-        // Mirror SELL — close any matching position immediately
+        // SELL mirror — ALWAYS fires regardless of isLive (never block exits)
         const cachedMints = [...posCache.values()].map(p => p.mint);
-        console.log(`[sell-mirror] swap.mint=${swap.mint} | posCache mints=${JSON.stringify(cachedMints)} | size=${posCache.size}`);
+        console.log(`[sell-mirror] 🔴 ${label} SELL | swap.mint=${swap.mint.slice(0,12)} | posCache=${posCache.size} entries`);
         let matched = false;
+        // 1. Exact mint match
         for (const [id, pos] of posCache) {
           if (pos.mint === swap.mint && !closing.has(id)) {
-            console.log(`[sell-mirror] ✅ EXACT mint match`);
+            console.log(`[sell-mirror] ✅ EXACT mint match → executing sell`);
             executeSell(pos, 'whale_sell_mirror'); matched = true; break;
           }
         }
-        // Label fallback — if mint mismatch, close any open position from same whale
+        // 2. Label fallback — same whale sold anything, close all their positions
         if (!matched) {
           const byLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
           if (byLabel.length > 0) {
-            console.log(`[sell-mirror] ✅ LABEL fallback — ${label} sold, closing ${byLabel.length} pos`);
-            for (const pos of byLabel) executeSell(pos, 'whale_sell_mirror_label');
+            console.log(`[sell-mirror] ✅ LABEL fallback — ${label} exited, closing ${byLabel.length} pos`);
+            for (const p of byLabel) executeSell(p, 'whale_sell_mirror_label');
             matched = true;
           }
         }
-        if (!matched && posCache.size > 0) {
-          console.log(`[sell-mirror] ⚠️ no match — swap.mint=${swap.mint.slice(0,16)} | cached=${cachedMints.map(m=>m.slice(0,16)).join(', ')}`);
+        // 3. No match log
+        if (!matched) {
+          if (posCache.size > 0) {
+            console.log(`[sell-mirror] ⚠️ no match — cached mints: ${cachedMints.map(m=>m.slice(0,12)).join(' | ')}`);
+          } else {
+            console.log(`[sell-mirror] ℹ️ ${label} sold but no open positions`);
+          }
         }
       }
     } catch(e) { console.error('[ws] msg error:', e.message); }
@@ -735,15 +746,15 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.4-SELLFIX — unconfirmed trades visible to sell-mirror + 3s retry on token fetch');
+console.log('[shreem] v18.5-UIFIX — sell always fires, buy gated on isLive, boot waits for session sync');
 (async () => {
   await loadKeypair();
-  await syncSession();
-  await syncPositions();
+  await syncSession();       // sets isLive from DB before anything starts
+  await syncPositions();     // loads posCache including unconfirmed
   botReady = true;
-  console.log(`[shreem] ✅ posCache loaded: ${posCache.size} open positions`);
+  console.log(`[shreem] ✅ posCache loaded: ${posCache.size} | isLive=${isLive}`);
   await refreshSolPrice();
-  connect();
+  connect();                 // WS connects — buy gate already set correctly
 })();
 
 setInterval(syncSession,     30000);
@@ -758,5 +769,6 @@ setInterval(() => {
     if (now - ts > DEDUP_MS * 3) recentSignals.delete(mint);
   }
 }, 60000);
+
 
 
