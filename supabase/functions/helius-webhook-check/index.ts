@@ -32,7 +32,14 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(result, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  const r = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${key}`);
-  const body = await r.json();
-  return new Response(JSON.stringify(body, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  const listR = await fetch(`https://api.helius.xyz/v0/webhooks?api-key=${key}`);
+  const hooks = await listR.json();
+  const detailed = [];
+  if (Array.isArray(hooks)) {
+    for (const h of hooks) {
+      const dr = await fetch(`https://api.helius.xyz/v0/webhooks/${h.webhookID}?api-key=${key}`);
+      detailed.push(await dr.json());
+    }
+  }
+  return new Response(JSON.stringify(detailed, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
