@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.3-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.4-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -481,7 +481,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.3-WEBHOOK',
+      version: 'v18.4-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -572,25 +572,22 @@ const server = http.createServer((req, res) => {
 });
 
 // ── SUPABASE SESSION SYNC — reads UI Go Live toggle every 10s ─────────────────
-// UI writes to shreem_brzee_session id='default' → worker reads mode field
-// mode='live' → isLive=true, isRunning=true
-// mode='stopped' → isLive=false, isRunning=false
 async function syncSessionState() {
   try {
     const rows = await httpJSON(
-      `${SUPABASE_URL}/rest/v1/shreem_brzee_session?id=eq.default&select=mode,started_at,stopped_at&limit=1`,
-      'GET', null, SB_HDR, 5000
+      `${SUPABASE_URL}/rest/v1/shreem_brzee_session?id=eq.default&select=mode&limit=1`,
+      'GET', null, SB_HDR, 8000
     );
     const row = Array.isArray(rows) ? rows[0] : null;
-    if (!row) return;
+    if (!row) { console.log('[session] ⚠️ no session row found'); return; }
     const wantLive = row.mode === 'live';
     if (wantLive !== isLive) {
       isLive    = wantLive;
       isRunning = wantLive;
-      console.log(`[session] UI toggle → isLive=${isLive} isRunning=${isRunning} mode=${row.mode}`);
+      console.log(`[session] ✅ synced → isLive=${isLive} mode=${row.mode}`);
     }
   } catch(e) {
-    // Non-fatal — bot keeps last known state
+    console.log(`[session] ❌ sync error: ${e.message}`);
   }
 }
 
@@ -603,7 +600,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.3-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.4-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
