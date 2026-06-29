@@ -169,7 +169,9 @@ async function getSolUsd(): Promise<number> {
 }
 
 async function jupQuote(input: string, output: string, amount: number) {
-  const url = `${JUPITER}/quote?inputMint=${input}&outputMint=${output}&amount=${amount}&slippageBps=${SLIPPAGE_BPS}&dynamicSlippage=true`;
+  // restrictIntermediateTokens=true → routing only through SOL/USDC/USDT,
+  // prevents exotic intermediates (e.g. CASH) and guarantees native SOL on sells.
+  const url = `${JUPITER}/quote?inputMint=${input}&outputMint=${output}&amount=${amount}&slippageBps=${SLIPPAGE_BPS}&dynamicSlippage=true&restrictIntermediateTokens=true`;
   const r = await fetch(url, { signal: timeoutSignal(8000) });
   if (!r.ok) throw new Error(`Jupiter quote ${r.status}`);
   return r.json();
