@@ -1412,6 +1412,7 @@ serve(async (req) => {
     let body: any = {};
     try { body = await req.json(); } catch {}
     const mint = String(body.mint || "");
+    const action = String(body.action || "BUY").toUpperCase();
     const sizeReq = Math.min(0.01, Math.max(0.001, Number(body.size_sol ?? 0.005)));
     if (!mint) return jsonResp({ ok: false, error: "missing_mint" }, 400);
 
@@ -1420,13 +1421,27 @@ serve(async (req) => {
       const kp = loadKeypair();
       if (!kp) return jsonResp({ ok: false, error: "no_keypair" }, 500);
       const walletPub = bs58.encode(kp.publicKey);
+
+      if (action === "SELL") {
+        const raw = await getTokenRawBalance(walletPub, mint);
+        if (!raw || raw <= 0) {
+          return jsonResp({ ok: false, error: "no_token_balance", mint }, 400);
+        }
+        const quote = await jupQuote(mint, SOL_MINT, raw);
+        const swapTx = await jupSwapTx(quote, walletPub);
+        const txSig = await signAndSend(swapTx, kp);
+        const ms = Date.now() - t0;
+        console.log(`[TEST-LIVE] 💰 SELL ${mint.slice(0,8)} | raw=${raw} | tx=${txSig.slice(0,16)} | ${ms}ms`);
+        return jsonResp({ ok: true, action: "SELL", tx: txSig, raw_amount: raw, latency_ms: ms, explorer: `https://solscan.io/tx/${txSig}` });
+      }
+
       const lamports = Math.floor(sizeReq * LAMPORTS);
       const quote = await jupQuote(SOL_MINT, mint, lamports);
       const swapTx = await jupSwapTx(quote, walletPub);
       const txSig = await signAndSend(swapTx, kp);
       const ms = Date.now() - t0;
-      console.log(`[TEST-LIVE] ⚡ ${mint.slice(0,8)} | ${sizeReq} SOL | tx=${txSig.slice(0,16)} | ${ms}ms`);
-      return jsonResp({ ok: true, tx: txSig, size_sol: sizeReq, latency_ms: ms, explorer: `https://solscan.io/tx/${txSig}` });
+      console.log(`[TEST-LIVE] ⚡ BUY ${mint.slice(0,8)} | ${sizeReq} SOL | tx=${txSig.slice(0,16)} | ${ms}ms`);
+      return jsonResp({ ok: true, action: "BUY", tx: txSig, size_sol: sizeReq, latency_ms: ms, explorer: `https://solscan.io/tx/${txSig}` });
     } catch (e: any) {
       console.error(`[TEST-LIVE] ❌ ${mint.slice(0,8)} failed: ${e?.message}`);
       return jsonResp({ ok: false, error: String(e?.message || e), latency_ms: Date.now() - t0 }, 500);
