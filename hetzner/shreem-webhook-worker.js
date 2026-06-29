@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.4-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.5-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -14,7 +14,7 @@ const bs58    = require('bs58');
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '5e971a11-d98d-40fc-8a12-37092eda4580';
 const HELIUS_RPC     = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 const SUPABASE_URL   = 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_ANON  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU2OTMyOTAsImV4cCI6MjAzMTI2OTI5MH0.C_QKdlXJ2TKPuTIHKhAMrHkdPJSmUBNjJwmMFb7xFaE';
+const SUPABASE_ANON  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
 const BOT_WALLET     = 'Fpnv12A17d3bVWjiaVqJNrvtv5L7enuuh4ZYNEwf5CZA';
 const KEY_FILE       = '/root/.shreem_key';
 const PORT           = 3001;
@@ -481,7 +481,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.4-WEBHOOK',
+      version: 'v18.5-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -600,7 +600,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.4-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.5-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
