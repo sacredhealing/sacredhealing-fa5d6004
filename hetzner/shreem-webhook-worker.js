@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.9-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.10-WEBHOOK
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -503,7 +503,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      version: 'v18.9-WEBHOOK',
+      version: 'v18.10-WEBHOOK',
       uptime: Math.floor(process.uptime()),
       positions: posCache.size,
       is_live: isLive,
@@ -607,6 +607,45 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ── /sell — called by Supabase edge function when whale sell detected ──────
+  if (req.method === 'POST' && req.url === '/sell') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      try {
+        const { mint, tradeId, secret } = JSON.parse(body);
+        if (secret !== WEBHOOK_SECRET) { res.writeHead(401); res.end('Unauthorized'); return; }
+        if (!mint) { res.writeHead(400); res.end('missing mint'); return; }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+
+        // Find matching open position
+        let pos = null;
+        if (tradeId && posCache.has(tradeId)) {
+          pos = posCache.get(tradeId);
+        } else {
+          // Find by mint
+          for (const [id, p] of posCache) {
+            if (p.mint === mint && !closing.has(id)) { pos = p; break; }
+          }
+        }
+
+        if (!pos) {
+          console.log(`[/sell] no open position for mint=${mint.slice(0,8)}`);
+          res.end(JSON.stringify({ ok: false, reason: 'no_position' }));
+          return;
+        }
+
+        console.log(`[/sell] 🔴 Supabase triggered sell for ${pos.symbol||mint.slice(0,8)}`);
+        res.end(JSON.stringify({ ok: true, tradeId: pos.id, message: 'sell firing' }));
+        await executeSell(pos, 'whale_sell_mirror');
+      } catch(e) {
+        console.error('[/sell] error:', e.message);
+        res.writeHead(500); res.end(e.message);
+      }
+    });
+    return;
+  }
+
   res.writeHead(404); res.end('Not found');
 });
 
@@ -644,7 +683,7 @@ async function syncSessionState() {
   console.log(`[shreem] Initial state: isLive=${isLive} isRunning=${isRunning}`);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[shreem] v18.9-WEBHOOK listening on port ${PORT}`);
+    console.log(`[shreem] v18.10-WEBHOOK listening on port ${PORT}`);
     console.log(`[shreem] Webhook endpoint: POST http://YOUR_IP:${PORT}/webhook`);
     console.log(`[shreem] Health: GET http://YOUR_IP:${PORT}/health`);
     console.log(`[shreem] Wallets: ${Object.values(WHALE_WALLETS).join(', ')}`);
