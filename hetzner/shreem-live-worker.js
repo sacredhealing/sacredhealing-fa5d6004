@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v17.6-OWNFILTER LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.4-SELLFIX LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 2 wallets: Remusofmars, trunoest (Cented removed — 7s scalper)
@@ -388,7 +388,13 @@ async function executeSell(pos, reason) {
     let rawAmt = await getTokenBal(pos.mint);
     if (!rawAmt || rawAmt < 1) rawAmt = Number(pos.tokens_received || 0);
     if (!rawAmt || rawAmt < 1) {
-      console.log(`[sell] no tokens for ${sym} — closing as stuck`);
+      // Retry once after 3s — unconfirmed buys need propagation time
+      await new Promise(r => setTimeout(r, 3000));
+      rawAmt = await getTokenBal(pos.mint);
+      if (!rawAmt || rawAmt < 1) rawAmt = Number(pos.tokens_received || 0);
+    }
+    if (!rawAmt || rawAmt < 1) {
+      console.log(`[sell] no tokens for ${sym} after retry — closing as stuck`);
       sbFire('PATCH', `/rest/v1/shreem_brzee_live_trades?id=eq.${pos.id}`, {
         status: 'closed', sell_reason: 'no_tokens_stuck',
         closed_at: new Date().toISOString(), pnl_sol: 0, pnl_pct: 0,
@@ -688,7 +694,7 @@ async function syncSession() {
 
 async function syncPositions() {
   try {
-    const rows = await sbGet('shreem_brzee_live_trades', 'status=in.(open,pending)&select=id,mint,symbol,label,entry_price,peak_price,amount_sol,tokens_received,token_decimals,opened_at');
+    const rows = await sbGet('shreem_brzee_live_trades', 'status=in.(open,pending,unconfirmed)&select=id,mint,symbol,label,entry_price,peak_price,amount_sol,tokens_received,token_decimals,opened_at');
     const dbIds = new Set(rows.map(r => r.id));
     for (const [id] of posCache) { if (!dbIds.has(id)) posCache.delete(id); }
     for (const r of rows) {
@@ -729,7 +735,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v17.6-OWNFILTER — whale owner filter + ATA-closure sell fix + Cented removed');
+console.log('[shreem] v18.4-SELLFIX — unconfirmed trades visible to sell-mirror + 3s retry on token fetch');
 (async () => {
   await loadKeypair();
   await syncSession();
@@ -752,4 +758,5 @@ setInterval(() => {
     if (now - ts > DEDUP_MS * 3) recentSignals.delete(mint);
   }
 }, 60000);
+
 
