@@ -1399,6 +1399,40 @@ serve(async (req) => {
     }
   }
 
+  // ── /test-live: REAL micro-buy gated by admin token ───────────────────────
+  // Bypasses size/filters and executes a true Jupiter swap with the size given
+  // in the body (capped at 0.01 SOL for safety). Requires header
+  //   x-admin-token: $SHREEM_TEST_LIVE_TOKEN
+  if (req.method === "POST" && path.endsWith("/test-live")) {
+    const adminTok = Deno.env.get("SHREEM_TEST_LIVE_TOKEN") || "";
+    const provided = req.headers.get("x-admin-token") || "";
+    if (!adminTok || provided !== adminTok) {
+      return jsonResp({ ok: false, error: "unauthorized" }, 401);
+    }
+    let body: any = {};
+    try { body = await req.json(); } catch {}
+    const mint = String(body.mint || "");
+    const sizeReq = Math.min(0.01, Math.max(0.001, Number(body.size_sol ?? 0.005)));
+    if (!mint) return jsonResp({ ok: false, error: "missing_mint" }, 400);
+
+    const t0 = Date.now();
+    try {
+      const kp = loadKeypair();
+      if (!kp) return jsonResp({ ok: false, error: "no_keypair" }, 500);
+      const walletPub = bs58.encode(kp.publicKey);
+      const lamports = Math.floor(sizeReq * LAMPORTS);
+      const quote = await jupQuote(SOL_MINT, mint, lamports);
+      const swapTx = await jupSwapTx(quote, walletPub);
+      const txSig = await signAndSend(swapTx, kp);
+      const ms = Date.now() - t0;
+      console.log(`[TEST-LIVE] ⚡ ${mint.slice(0,8)} | ${sizeReq} SOL | tx=${txSig.slice(0,16)} | ${ms}ms`);
+      return jsonResp({ ok: true, tx: txSig, size_sol: sizeReq, latency_ms: ms, explorer: `https://solscan.io/tx/${txSig}` });
+    } catch (e: any) {
+      console.error(`[TEST-LIVE] ❌ ${mint.slice(0,8)} failed: ${e?.message}`);
+      return jsonResp({ ok: false, error: String(e?.message || e), latency_ms: Date.now() - t0 }, 500);
+    }
+  }
+
   if (req.method === "POST" && path.endsWith("/test-sell")) {
     const sig = "TEST_SELL_" + Date.now();
     const signal = {
