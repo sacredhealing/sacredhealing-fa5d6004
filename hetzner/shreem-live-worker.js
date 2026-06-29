@@ -1,4 +1,4 @@
-// shreem-live-worker.js — Shreem Brzee v18.10 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.11 LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
 // 3 wallets: Remusofmars, trunoest, Cented
@@ -48,7 +48,7 @@ const MAX_POSITIONS = 3;      // 1 per whale max
 const MIN_TRADE_SOL = 0.02;
 const TRADE_PCT     = 0.05;   // 5% per trade
 const MAX_EXPOSURE  = 0.50;
-const MIN_POOL_USD  = 5000;
+const MIN_POOL_USD  = 0;     // disabled — whales trade micro-caps
 const MIN_WHALE_SOL = 0.1;    // ignore whale trades < 0.1 SOL (noise/dust)
 const COOLDOWN_MS   = 300000; // 5min cooldown per mint after buy
 const DEDUP_MS      = 8000;   // suppress duplicate signals on same mint within 8s
@@ -784,7 +784,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.10 — always live, control via pm2 start/stop only');
+console.log('[shreem] v18.11 — pool filter disabled, trades micro-caps');
 (async () => {
   await loadKeypair();
   // syncSession disabled — Supabase legacy keys disabled, control via pm2
