@@ -67,7 +67,10 @@ export default function UserManagementPanel() {
   const [filterTier, setFilterTier] = useState("all");
   const [showUnnamed, setShowUnnamed] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"create-user"|null>(null);
+  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"create-user"|"send-message"|"cancel-sub"|null>(null);
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageBody, setMessageBody] = useState("");
+  const [cancelImmediately, setCancelImmediately] = useState(false);
   const [newTier, setNewTier] = useState("");
   const [pendingProducts, setPendingProducts] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<string|null>(null);
