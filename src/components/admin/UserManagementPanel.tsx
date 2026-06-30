@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail, MessageSquare, XCircle, Clock } from "lucide-react";
 
 const ADMIN_UUID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17";
 
@@ -67,7 +67,10 @@ export default function UserManagementPanel() {
   const [filterTier, setFilterTier] = useState("all");
   const [showUnnamed, setShowUnnamed] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"create-user"|null>(null);
+  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"create-user"|"send-message"|"cancel-sub"|null>(null);
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageBody, setMessageBody] = useState("");
+  const [cancelImmediately, setCancelImmediately] = useState(false);
   const [newTier, setNewTier] = useState("");
   const [pendingProducts, setPendingProducts] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<string|null>(null);
@@ -342,6 +345,67 @@ export default function UserManagementPanel() {
     setSelectedUser(user); setNewTier(user.tier||"free"); setModalMode(mode);
   };
 
+  const openSendMessage = (user:any) => {
+    setSelectedUser(user);
+    const name = user.full_name?.split(" ")[0] || "Sacred One";
+    const tierLabel = TIER_LABELS[user.tier] || "Free";
+    setMessageSubject("Upgrade your Sacred Healing membership");
+    setMessageBody(
+      `You are currently on the ${tierLabel} tier.\n\nUpgrade to unlock deeper transmissions, full Jyotish, the Akashic Codex, and unlimited Quantum Apothecary access.\n\nVisit your membership page to upgrade — your soul's journey is waiting.`
+    );
+    setModalMode("send-message");
+  };
+
+  const openCancelSub = (user:any) => {
+    setSelectedUser(user);
+    setCancelImmediately(false);
+    setModalMode("cancel-sub");
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedUser || !messageBody.trim()) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "send_message", userId: selectedUser.id, subject: messageSubject, message: messageBody },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title:"✉ Message Sent", description:`Email delivered to ${selectedUser.full_name || selectedUser.email || "seeker"}.` });
+      setModalMode(null);
+    } catch (e:any) {
+      toast({ title:"Send Failed", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
+  };
+
+  const handleCancelSub = async () => {
+    if (!selectedUser) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "cancel_subscription", userId: selectedUser.id, immediately: cancelImmediately },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: cancelImmediately ? "Subscription Canceled" : "Cancellation Scheduled",
+        description: cancelImmediately
+          ? "Access revoked immediately."
+          : `Will end at period close${data?.expires_at ? ` (${new Date(data.expires_at).toLocaleDateString()})` : ""}.`,
+      });
+      setModalMode(null);
+      await loadUsers();
+    } catch (e:any) {
+      toast({ title:"Cancel Failed", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
+  };
+
+  const daysLeft = (iso?: string|null) => {
+    if (!iso) return null;
+    const ms = new Date(iso).getTime() - Date.now();
+    return Math.ceil(ms / (1000*60*60*24));
+  };
+
   return (
     <div style={{ fontFamily:"'Plus Jakarta Sans',Inter,sans-serif", color:"#fff", paddingBottom:60 }}>
 
@@ -472,13 +536,30 @@ export default function UserManagementPanel() {
                 </div>
 
                 <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)" }}>
-                  {new Date(user.created_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"})}
+                  <div>{new Date(user.created_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"})}</div>
+                  {user.expires_at && (() => {
+                    const d = daysLeft(user.expires_at);
+                    if (d === null) return null;
+                    const expired = d <= 0;
+                    const soon = !expired && d <= 14;
+                    const color = expired ? "#ef4444" : soon ? "#f59e0b" : cyan;
+                    return (
+                      <div style={{ fontSize:9, fontWeight:700, color, marginTop:2, display:"flex", alignItems:"center", gap:3 }}>
+                        <Clock size={9} />
+                        {expired ? "EXPIRED" : `${d}d left`}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
-                  <IconBtn icon={<Eye size={12}/>} title="View profile" onClick={()=>openUser(user,"view")} />
+                  <IconBtn icon={<Eye size={12}/>} title="View profile & subscription" onClick={()=>openUser(user,"view")} />
                   <IconBtn icon={<Crown size={12}/>} title="Change membership tier" onClick={()=>openUser(user,"edit-tier")} color={gold} />
                   <IconBtn icon={<Package size={12}/>} title="Manage individual products" onClick={()=>openProductModal(user)} color="#a78bfa" />
+                  <IconBtn icon={<MessageSquare size={12}/>} title="Send email message / upgrade nudge" onClick={()=>openSendMessage(user)} color="#22D3EE" />
+                  {(user.stripe_sub || (user.tier !== "free")) && (
+                    <IconBtn icon={<XCircle size={12}/>} title="Cancel subscription" onClick={()=>openCancelSub(user)} color="#f59e0b" />
+                  )}
                   <IconBtn
                     icon={isSendingReset ? <span style={{fontSize:10}}>…</span> : <Key size={12}/>}
                     title="Send password reset email"
@@ -611,15 +692,50 @@ export default function UserManagementPanel() {
         <SQIModal onClose={()=>setModalMode(null)}>
           <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>SOUL PROFILE</div>
           <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 20px" }}>{selectedUser.full_name||"No name set"}</h3>
+          {(() => {
+            const d = daysLeft(selectedUser.expires_at);
+            const expired = d !== null && d <= 0;
+            const subColor = expired ? "#ef4444" : (d !== null && d <= 14) ? "#f59e0b" : cyan;
+            return (
+              <div style={{
+                marginBottom:18, padding:"14px 16px", borderRadius:14,
+                background: `${subColor}10`, border: `1px solid ${subColor}40`,
+              }}>
+                <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:subColor, marginBottom:6 }}>
+                  SUBSCRIPTION STATUS
+                </div>
+                <div style={{ fontSize:16, fontWeight:800, color:"#fff" }}>
+                  {TIER_LABELS[selectedUser.tier]||"Free"}
+                </div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", marginTop:6, lineHeight:1.6 }}>
+                  {selectedUser.expires_at ? (
+                    <>
+                      {expired ? "Expired " : "Renews / ends "}
+                      <strong style={{ color:subColor }}>
+                        {new Date(selectedUser.expires_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}
+                      </strong>
+                      {d !== null && (
+                        <span style={{ color:subColor, marginLeft:8 }}>
+                          ({expired ? `${Math.abs(d)}d ago` : `${d} days left`})
+                        </span>
+                      )}
+                    </>
+                  ) : selectedUser.tier === "free" ? "No active subscription." : "Granted access (no expiry on file)."}
+                </div>
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginTop:6, fontFamily:"monospace", wordBreak:"break-all" }}>
+                  Stripe sub: {selectedUser.stripe_sub || "—"}
+                </div>
+              </div>
+            );
+          })()}
+
           <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
             {[
               ["Email", selectedUser.email || "— not found —"],
               ["ID", selectedUser.id],
-              ["Current Tier", TIER_LABELS[selectedUser.tier]||"Free"],
               ["Joined", new Date(selectedUser.created_at).toLocaleString()],
               ["Last Login", selectedUser.last_login_date?new Date(selectedUser.last_login_date).toLocaleString():"Unknown"],
               ["Onboarding", selectedUser.onboarding_completed?"Complete":"Not completed"],
-              ["Stripe Sub", selectedUser.stripe_sub||"None"],
             ].map(([label,val])=>(
               <div key={label as string} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
                 <span style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{label}</span>
@@ -647,6 +763,10 @@ export default function UserManagementPanel() {
           <div style={{ display:"flex", gap:10, marginTop:18, flexWrap:"wrap" }}>
             <SQIBtn label="Edit Tier" onClick={()=>setModalMode("edit-tier")} color={gold} />
             <SQIBtn label="Edit Products" onClick={()=>{ setModalMode(null); openProductModal(selectedUser); }} color="#a78bfa" />
+            <SQIBtn label="✉ Send Message" onClick={()=>openSendMessage(selectedUser)} color="#22D3EE" />
+            {(selectedUser.stripe_sub || selectedUser.tier !== "free") && (
+              <SQIBtn label="✕ Cancel Subscription" onClick={()=>openCancelSub(selectedUser)} color="#f59e0b" />
+            )}
             <SQIBtn
               label={resetingId===selectedUser.id?"Sending…":"🔑 Send Reset"}
               onClick={()=>handleResetPassword(selectedUser.id, selectedUser.full_name)}
@@ -727,6 +847,62 @@ export default function UserManagementPanel() {
           <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
             <SQIBtn label={actionLoading?"Saving…":"◈ Save Product Access"} onClick={handleSaveProducts} loading={actionLoading} color="#a78bfa" />
             <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
+          </div>
+        </SQIModal>
+      )}
+
+      {/* Send Message Modal */}
+      {modalMode==="send-message" && selectedUser && (
+        <SQIModal onClose={()=>setModalMode(null)}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:cyan, marginBottom:8 }}>SACRED TRANSMISSION</div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 4px" }}>Message {selectedUser.full_name||"Seeker"}</h3>
+          <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:18 }}>
+            Sends a branded email to <strong style={{ color: cyan }}>{selectedUser.email || "their inbox"}</strong>.
+          </p>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6 }}>SUBJECT</label>
+            <input type="text" value={messageSubject} onChange={e=>setMessageSubject(e.target.value)} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom:16 }}>
+            <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6 }}>MESSAGE</label>
+            <textarea rows={8} value={messageBody} onChange={e=>setMessageBody(e.target.value)} style={{ ...inputStyle, fontFamily:"inherit", resize:"vertical", lineHeight:1.6 }} />
+          </div>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <SQIBtn label={actionLoading?"Sending…":"✉ Send Email"} onClick={handleSendMessage} loading={actionLoading} color={cyan} />
+            <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
+          </div>
+        </SQIModal>
+      )}
+
+      {/* Cancel Subscription Modal */}
+      {modalMode==="cancel-sub" && selectedUser && (
+        <SQIModal onClose={()=>setModalMode(null)}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"#f59e0b", marginBottom:8 }}>CANCEL SUBSCRIPTION</div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 6px" }}>{selectedUser.full_name||"Seeker"}</h3>
+          <p style={{ color:"rgba(255,255,255,0.5)", fontSize:12, marginBottom:14 }}>
+            Tier: <strong style={{ color:TIER_COLORS[selectedUser.tier]||"#fff" }}>{TIER_LABELS[selectedUser.tier]||"Free"}</strong>
+            {selectedUser.expires_at && <> · Current period ends <strong style={{ color:"#fff" }}>{new Date(selectedUser.expires_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</strong></>}
+          </p>
+          <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", marginBottom:18, fontFamily:"monospace", wordBreak:"break-all" }}>
+            Stripe sub: {selectedUser.stripe_sub || "(none on file — local revocation only)"}
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:18 }}>
+            <button onClick={()=>setCancelImmediately(false)}
+              style={{ background:!cancelImmediately?"rgba(245,158,11,0.12)":"rgba(255,255,255,0.02)", border:`1px solid ${!cancelImmediately?"#f59e0b":"rgba(255,255,255,0.08)"}`, borderRadius:12, padding:"12px 14px", color:!cancelImmediately?"#f59e0b":"rgba(255,255,255,0.6)", fontSize:12, fontWeight:!cancelImmediately?700:400, textAlign:"left", cursor:"pointer" }}>
+              <div style={{ fontWeight:800, marginBottom:3 }}>Cancel at period end (recommended)</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)" }}>Keeps access until the current billing period closes. No refund.</div>
+            </button>
+            <button onClick={()=>setCancelImmediately(true)}
+              style={{ background:cancelImmediately?"rgba(239,68,68,0.12)":"rgba(255,255,255,0.02)", border:`1px solid ${cancelImmediately?"#ef4444":"rgba(255,255,255,0.08)"}`, borderRadius:12, padding:"12px 14px", color:cancelImmediately?"#ef4444":"rgba(255,255,255,0.6)", fontSize:12, fontWeight:cancelImmediately?700:400, textAlign:"left", cursor:"pointer" }}>
+              <div style={{ fontWeight:800, marginBottom:3 }}>Cancel immediately</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)" }}>Revokes access now and downgrades tier to free.</div>
+            </button>
+          </div>
+
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <SQIBtn label={actionLoading?"Canceling…":(cancelImmediately?"✕ Cancel Now":"Schedule Cancel")} onClick={handleCancelSub} loading={actionLoading} color={cancelImmediately?"#ef4444":"#f59e0b"} />
+            <SQIBtn label="Back" onClick={()=>setModalMode(null)} />
           </div>
         </SQIModal>
       )}
