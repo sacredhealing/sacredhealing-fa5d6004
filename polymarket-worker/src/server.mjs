@@ -660,7 +660,7 @@ app.get('/health', (_req, res) => {
   try {
     res.json({
       status: 'running',
-      bot: 'SQI-2050 Shiesty Signal Oracle v3',
+      bot: 'SQI-2050 CLAWBOT v3',
       mode: PAPER_MODE ? 'PAPER' : 'LIVE',
       liveEnabled,
       balance: parseFloat(balance.toFixed(2)),
@@ -886,7 +886,6 @@ async function processAffiliateCommissions(tradeId, userId, grossPnl, tier) {
       // Update affiliate profile total_earnings
       const l1Profile = await dbGet('affiliate_profiles', `user_id=eq.${l1UserId}&select=total_earnings`);
       const currentL1 = parseFloat(l1Profile?.[0]?.total_earnings || 0);
-      await dbGet('affiliate_profiles', ''); // just to test connectivity
       // Use PATCH to increment
       try {
         const patchReq = { total_earnings: currentL1 + l1Amount, pending_balance: currentL1 + l1Amount };
@@ -929,7 +928,7 @@ async function processAffiliateCommissions(tradeId, userId, grossPnl, tier) {
 
 async function main() {
   console.log('══════════════════════════════════════════════════════');
-  console.log('  SQI-2050 ⚡ Shiesty Signal Oracle v3 — Railway');
+  console.log('  SQI-2050 🦈 CLAWBOT v3 — Hetzner');
   console.log(`  Mode: ${PAPER_MODE ? '📋 PAPER' : '🔴 LIVE'} | Risk: ${(RISK_PCT*100).toFixed(1)}% | Max pos: ${MAX_POSITIONS}`);
   console.log(`  Whale gate: min ${(WHALE_MIN_WR*100).toFixed(0)}% WR | min ${WHALE_MIN_TRADES} trades`);
   console.log('══════════════════════════════════════════════════════');
@@ -949,18 +948,22 @@ async function main() {
     log('LIVE', 'CLOB credentials loaded — LIVE trading ACTIVE');
   }
 
-  if (PRIVATE_KEY && process.env.POLYGON_RPC_URL) {
+  // Whale mirror is read-only block listening — it only needs an RPC endpoint.
+  // BOT_PRIVATE_KEY is for signing live orders later (gated separately in
+  // executeLiveOrder), not for watching the chain, so it must not block startup.
+  if (process.env.POLYGON_RPC_URL) {
     try {
       const provider = new ethers.JsonRpcProvider(
         process.env.POLYGON_RPC_URL, undefined, { staticNetwork: true }
       );
       await provider.getBlockNumber();
       await startWhaleMirror(provider);
+      if (!PRIVATE_KEY) warn('WHALE', 'Mirroring in detect-only mode — no BOT_PRIVATE_KEY set, live execution will no-op on any signal until one is added');
     } catch (e) {
       warn('WHALE', `RPC failed — whale mirror disabled: ${e?.message}`);
     }
   } else {
-    warn('WHALE', 'No BOT_PRIVATE_KEY or POLYGON_RPC_URL — whale mirror disabled');
+    warn('WHALE', 'No POLYGON_RPC_URL — whale mirror disabled');
   }
 
   lastScanTime = Date.now();
