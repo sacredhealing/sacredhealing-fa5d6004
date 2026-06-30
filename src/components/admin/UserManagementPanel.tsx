@@ -536,13 +536,30 @@ export default function UserManagementPanel() {
                 </div>
 
                 <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)" }}>
-                  {new Date(user.created_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"})}
+                  <div>{new Date(user.created_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"})}</div>
+                  {user.expires_at && (() => {
+                    const d = daysLeft(user.expires_at);
+                    if (d === null) return null;
+                    const expired = d <= 0;
+                    const soon = !expired && d <= 14;
+                    const color = expired ? "#ef4444" : soon ? "#f59e0b" : cyan;
+                    return (
+                      <div style={{ fontSize:9, fontWeight:700, color, marginTop:2, display:"flex", alignItems:"center", gap:3 }}>
+                        <Clock size={9} />
+                        {expired ? "EXPIRED" : `${d}d left`}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
-                  <IconBtn icon={<Eye size={12}/>} title="View profile" onClick={()=>openUser(user,"view")} />
+                  <IconBtn icon={<Eye size={12}/>} title="View profile & subscription" onClick={()=>openUser(user,"view")} />
                   <IconBtn icon={<Crown size={12}/>} title="Change membership tier" onClick={()=>openUser(user,"edit-tier")} color={gold} />
                   <IconBtn icon={<Package size={12}/>} title="Manage individual products" onClick={()=>openProductModal(user)} color="#a78bfa" />
+                  <IconBtn icon={<MessageSquare size={12}/>} title="Send email message / upgrade nudge" onClick={()=>openSendMessage(user)} color="#22D3EE" />
+                  {(user.stripe_sub || (user.tier !== "free")) && (
+                    <IconBtn icon={<XCircle size={12}/>} title="Cancel subscription" onClick={()=>openCancelSub(user)} color="#f59e0b" />
+                  )}
                   <IconBtn
                     icon={isSendingReset ? <span style={{fontSize:10}}>…</span> : <Key size={12}/>}
                     title="Send password reset email"
