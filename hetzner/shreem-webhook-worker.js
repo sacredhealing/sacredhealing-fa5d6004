@@ -1,4 +1,4 @@
-// shreem-webhook-worker.js — Shreem Brzee v18.10-WEBHOOK
+// shreem-webhook-worker.js — Shreem Brzee v18.11-DISKPOS
 // Architecture: Helius Webhook POST → Hetzner HTTP server → Jupiter swap
 // Supabase: LOGGING ONLY + session sync for UI Go Live toggle
 // Wallets: Remusofmars, trunoest
@@ -23,7 +23,6 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'shreem-webhook-2026';
 
 // ── WHALE WALLETS ─────────────────────────────────────────────────────────────
 const WHALE_WALLETS = {
-  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
   'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':   'trunoest',
 };
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
@@ -51,6 +50,22 @@ const STOP_POLL_MS  = 3000;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const posCache     = new Map();
+const POS_FILE     = '/root/.shreem_webhook_positions.json';
+function savePosCache() {
+  try {
+    const obj = {};
+    for (const [k,v] of posCache) obj[k] = v;
+    fs.writeFileSync(POS_FILE, JSON.stringify(obj));
+  } catch(e) { console.error('[pos] save error:', e.message); }
+}
+function loadPosCache() {
+  try {
+    if (!fs.existsSync(POS_FILE)) return;
+    const obj = JSON.parse(fs.readFileSync(POS_FILE, 'utf8'));
+    for (const [k,v] of Object.entries(obj)) posCache.set(k, v);
+    console.log(`[pos] 💾 loaded ${posCache.size} positions from disk`);
+  } catch(e) { console.error('[pos] load error:', e.message); }
+}
 const closing      = new Set();
 const cooldowns    = new Map();
 const recentSigs   = new Set();   // dedupe webhook duplicate deliveries
@@ -347,6 +362,7 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
       amount_sol: size, tokens_received: rawOut,
       token_decimals: decimals, opened_at: new Date().toISOString(),
     });
+    savePosCache();
     sbFire('POST', '/rest/v1/shreem_brzee_live_trades', {
       id: tradeId, session_id: 'default', sig: txSig, mint,
       symbol: symbol||mint.slice(0,8), label, wallet: label,
@@ -367,6 +383,7 @@ async function executeSell(pos, reason) {
   if (closing.has(pos.id) || !kp) return;
   closing.add(pos.id);
   posCache.delete(pos.id);
+  savePosCache();
   const sym = pos.symbol || pos.mint.slice(0,8);
   const t0  = Date.now();
   console.log(`[sell] 🔴 ${sym} reason=${reason}`);
@@ -677,6 +694,7 @@ async function syncSessionState() {
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 (async () => {
   await loadKeypair();
+  loadPosCache();
 
   // Read initial state from Supabase before accepting webhooks
   await syncSessionState();
@@ -708,5 +726,6 @@ async function syncSessionState() {
   console.log('[shreem] ✅ Ready — waiting for Helius webhook pushes');
   console.log('[shreem] UI sync active — Go Live button controls bot every 10s');
 })();
+
 
 
