@@ -1,7 +1,7 @@
-// shreem-live-worker.js — Shreem Brzee v18.13 LaserStream
+// shreem-live-worker.js — Shreem Brzee v18.15-RACEFIX LaserStream
 // Architecture: Helius WSS → detect whale swap → Jupiter swap direct on Hetzner
 // Supabase: LOGGING ONLY — never in execution path
-// 3 wallets: Remusofmars, trunoest, Cented
+// trunoest ONLY — Cented removed, scalper too fast
 // Keypair: file → env → Supabase (triple fallback, loads once at boot)
 // WS: exponential backoff reconnect, ping/pong keepalive
 // Signal filters: min SOL size, duplicate suppression, stable skip
@@ -27,9 +27,7 @@ const PORT           = 3001;
 
 // ── WHALE WALLETS — 2 active, confirmed holders ──────────────────────────────
 const WHALE_WALLETS = {
-  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
   'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':   'trunoest',
-  'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o':   'Cented',
 };
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
 
@@ -671,25 +669,32 @@ function connect() {
         }
       } else {
         // SELL mirror — posCache only (DB auth broken, use disk-persisted memory)
-        console.log(`[sell-mirror] 🔴 ${label} SELL | mint=${swap.mint.slice(0,12)} | posCache=${posCache.size}`);
-        let matched = false;
-        // 1. Exact mint match
-        for (const [id, pos] of posCache) {
-          if (pos.mint === swap.mint && !closing.has(id)) {
-            console.log(`[sell-mirror] ✅ EXACT mint → ${pos.symbol || pos.mint.slice(0,8)}`);
-            executeSell(pos, 'whale_sell_mirror'); matched = true; break;
+        (async () => {
+          // If we're still mid-buy on this exact mint, wait briefly for posCache to populate
+          if (buyingMints.has(swap.mint)) {
+            console.log(`[sell-mirror] ⏳ buy still in-flight for ${swap.mint.slice(0,8)} — waiting 800ms`);
+            await new Promise(r => setTimeout(r, 800));
           }
-        }
-        // 2. Label fallback — same whale sold anything
-        if (!matched) {
-          const byLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
-          if (byLabel.length > 0) {
-            console.log(`[sell-mirror] ✅ LABEL fallback — ${label} closing ${byLabel.length} pos`);
-            for (const p of byLabel) executeSell(p, 'whale_sell_mirror_label');
-            matched = true;
+          console.log(`[sell-mirror] 🔴 ${label} SELL | mint=${swap.mint.slice(0,12)} | posCache=${posCache.size}`);
+          let matched = false;
+          // 1. Exact mint match
+          for (const [id, pos] of posCache) {
+            if (pos.mint === swap.mint && !closing.has(id)) {
+              console.log(`[sell-mirror] ✅ EXACT mint → ${pos.symbol || pos.mint.slice(0,8)}`);
+              executeSell(pos, 'whale_sell_mirror'); matched = true; break;
+            }
           }
-        }
-        if (!matched) console.log(`[sell-mirror] ℹ️ ${label} sold, no open positions`);
+          // 2. Label fallback — same whale sold anything
+          if (!matched) {
+            const byLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
+            if (byLabel.length > 0) {
+              console.log(`[sell-mirror] ✅ LABEL fallback — ${label} closing ${byLabel.length} pos`);
+              for (const p of byLabel) executeSell(p, 'whale_sell_mirror_label');
+              matched = true;
+            }
+          }
+          if (!matched) console.log(`[sell-mirror] ℹ️ ${label} sold, no open positions`);
+        })();
       }
     } catch(e) { console.error('[ws] msg error:', e.message); }
   });
@@ -768,7 +773,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => console.log(`[shreem] Health :${PORT}`));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('[shreem] v18.13 — MIN_WHALE_SOL 0.005, catches trunoest accumulation');
+console.log('[shreem] v18.15-RACEFIX — sell waits for in-flight buy to land before checking posCache');
 (async () => {
   await loadKeypair();
   // syncSession disabled — Supabase legacy keys disabled, control via pm2
