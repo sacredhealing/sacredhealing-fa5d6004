@@ -1,6 +1,6 @@
 {
-  "name": "sqi-sovereign-sniper",
-  "version": "3.0.0",
+  "name": "sqi-sovereign-sniper-position-manager",
+  "version": "5.0.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -11,9 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js":       "^2.45.0",
     "@solana/web3.js":             "^1.95.0",
-    "@triton-one/yellowstone-grpc":"^1.0.0",
-    "bs58":                        "^5.0.0",
-    "ws":                          "^8.18.0"
+    "bs58":                        "^5.0.0"
   },
   "engines": {
     "node": ">=20"
