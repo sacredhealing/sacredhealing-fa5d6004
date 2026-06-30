@@ -475,7 +475,11 @@ function processWebhookPayload(transactions) {
     // Find which whale triggered this webhook
     const meta = tx.meta;
     const msg  = tx.transaction?.message;
-    if (!meta || !msg) continue;
+    if (!meta || !msg) {
+      console.log(`[webhook-dbg] ⚠️ SKIPPED — meta=${!!meta} msg=${!!msg} | raw_keys=${JSON.stringify(Object.keys(tx))}`);
+      console.log(`[webhook-dbg] full_payload: ${JSON.stringify(tx).slice(0, 2000)}`);
+      continue;
+    }
 
     const keys = (msg.accountKeys || []).map(k =>
       typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
