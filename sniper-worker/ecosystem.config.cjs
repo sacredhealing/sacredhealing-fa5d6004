@@ -32,6 +32,8 @@ module.exports = {
       MIN_AI_SCORE:        '60',
       JITO_TIP_SOL:        '0.001',
       SLIPPAGE_BPS:        '8000',
+      MAX_PRICE_IMPACT_PCT:'15',    // hard cap, independent of slippage tolerance
+      AI_TIMEOUT_MS:       '350',   // AI veto must respond within this or it's ignored (fail-open)
     },
     restart_delay:    3000,
     max_restarts:     50,
