@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail, MessageSquare, XCircle, Clock } from "lucide-react";
 
 const ADMIN_UUID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17";
 
