@@ -289,6 +289,104 @@ serve(async (req) => {
         return new Response(JSON.stringify({ user: data.user }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      // ── CANCEL SUBSCRIPTION ──────────────────────────────────────────────
+      case "cancel_subscription": {
+        if (!userId) throw new Error("userId required");
+        const cancelImmediately = body.immediately === true;
+
+        const { data: membership } = await adminClient
+          .from("user_memberships")
+          .select("id, stripe_subscription_id, expires_at, status")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let stripeResult: any = null;
+        const subId = membership?.stripe_subscription_id;
+        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+
+        if (subId && stripeKey) {
+          try {
+            if (cancelImmediately) {
+              const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${stripeKey}` },
+              });
+              stripeResult = await res.json();
+              if (!res.ok) throw new Error(stripeResult?.error?.message || "Stripe cancel failed");
+            } else {
+              const params = new URLSearchParams();
+              params.set("cancel_at_period_end", "true");
+              const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${stripeKey}`,
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: params.toString(),
+              });
+              stripeResult = await res.json();
+              if (!res.ok) throw new Error(stripeResult?.error?.message || "Stripe cancel failed");
+            }
+          } catch (e: any) {
+            console.warn("Stripe cancel error:", e.message);
+            stripeResult = { error: e.message };
+          }
+        }
+
+        if (membership?.id) {
+          await adminClient
+            .from("user_memberships")
+            .update({
+              status: cancelImmediately ? "canceled" : "active",
+              canceled_at: new Date().toISOString(),
+            })
+            .eq("id", membership.id);
+        }
+
+        if (cancelImmediately) {
+          await adminClient
+            .from("admin_granted_access")
+            .update({ is_active: false })
+            .eq("user_id", userId)
+            .eq("access_type", "membership");
+          await adminClient
+            .from("profiles")
+            .update({ membership_tier: "free" })
+            .eq("id", userId);
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          stripe_subscription_id: subId || null,
+          stripe_result: stripeResult,
+          mode: cancelImmediately ? "immediate" : "period_end",
+          expires_at: membership?.expires_at || null,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // ── SEND CUSTOM MESSAGE (upgrade nudge, any admin note) ──────────────
+      case "send_message": {
+        if (!userId) throw new Error("userId required");
+        const subject = body.subject || "A message from Sacred Healing";
+        const message = body.message;
+        if (!message) throw new Error("message required");
+
+        const { data: invokeData, error } = await adminClient.functions.invoke("send-to-user", {
+          body: {
+            target_user_id: userId,
+            email_type: "custom",
+            custom_subject: subject,
+            custom_body: message,
+          },
+        });
+        if (error) throw error;
+        if (invokeData?.error) throw new Error(invokeData.error);
+        return new Response(JSON.stringify({ success: true, result: invokeData }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: corsHeaders });
     }
