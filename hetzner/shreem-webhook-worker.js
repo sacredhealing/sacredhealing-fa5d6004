@@ -24,6 +24,7 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'shreem-webhook-2026';
 // ── WHALE WALLETS ─────────────────────────────────────────────────────────────
 const WHALE_WALLETS = {
   'ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT':   'trunoest',
+  'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu': 'Remusofmars',
 };
 const WHALE_ADDRS = new Set(Object.keys(WHALE_WALLETS));
 
