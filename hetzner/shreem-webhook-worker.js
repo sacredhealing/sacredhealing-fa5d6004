@@ -36,7 +36,7 @@ const LAMPORTS      = 1_000_000_000;
 const BUY_SLIPPAGE  = 2500;
 const SELL_SLIPPAGE = 5000;
 const STOP_LOSS_PCT = -25;
-const TRAIL_PEAK    = 20;    // activate trailing at +20%
+const TRAIL_PEAK    = 15;    // activate trailing at +15%
 const TRAIL_FLOOR   = 0.5;
 const MAX_POSITIONS = 10;   // no artificial cap — 50% exposure is the limit
 const MIN_TRADE_SOL = 0.02;
@@ -726,6 +726,7 @@ async function syncSessionState() {
   console.log('[shreem] ✅ Ready — waiting for Helius webhook pushes');
   console.log('[shreem] UI sync active — Go Live button controls bot every 10s');
 })();
+
 
 
 
