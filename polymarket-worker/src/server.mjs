@@ -247,6 +247,22 @@ async function fetchEndDate(marketId) {
   } catch { return null; }
 }
 
+// ─── Fetch market by token ID (human-readable labeling for whale mirrors) ────
+const marketByTokenCache = new Map();
+async function fetchMarketByToken(tokenId) {
+  if (!tokenId) return null;
+  if (marketByTokenCache.has(tokenId)) return marketByTokenCache.get(tokenId);
+  try {
+    const r = await safeFetch(`${GAMMA_API}/markets?clob_token_ids=${tokenId}&limit=1`);
+    if (!r.ok) return null;
+    const arr = await r.json();
+    const m = Array.isArray(arr) ? arr[0] : null;
+    const result = m ? { id: m.id, question: m.question || '' } : null;
+    if (result) marketByTokenCache.set(tokenId, result);
+    return result;
+  } catch { return null; }
+}
+
 // ─── Live order execution ────────────────────────────────────────────────────
 async function executeLiveOrder(signal) {
   if (!POLY_API_KEY || !POLY_API_SEC || !POLY_PASS) return null;
@@ -476,11 +492,16 @@ async function startWhaleMirror(provider) {
           if (!decoded) continue;
           const order = decoded.args[0];
           const price = Number(order.takerAmount) / (Number(order.makerAmount) || 1);
+          const tokenIdStr = order.tokenId?.toString() || '';
+          const market = await fetchMarketByToken(tokenIdStr);
+          const label = market?.question
+            ? `[WHALE] ${whaleAddr.slice(0, 8)} | ${market.question.slice(0, 80)}`
+            : `[WHALE] ${whaleAddr.slice(0, 8)} block:${blockNumber}`;
           await recordTrade({
-            marketId: '', direction: order.side === 0 ? 'buy' : 'sell',
+            marketId: market?.id || '', direction: order.side === 0 ? 'buy' : 'sell',
             outcome: order.side === 0 ? 'Yes' : 'No',
-            tokenId: order.tokenId?.toString() || '',
-            reason: `[WHALE] ${whaleAddr.slice(0, 8)} block:${blockNumber}`,
+            tokenId: tokenIdStr,
+            reason: label,
             currentPrice: Math.min(0.99, Math.max(0.01, price)),
           }, 'whale_mirror');
         } catch { /* not a fillOrder */ }
@@ -570,9 +591,6 @@ async function resolveOpenTrades() {
           const endMs = new Date(trade.market_end_date).getTime();
           if (endMs > now - 3_600_000) continue;
         }
-
-        const market = await dbGet(`polymarket_trades`, '') // fetch market detail below
-          .then(() => null); // placeholder — replaced below
 
         const mktRes = await safeFetch(`${GAMMA_API}/markets/${trade.market_id}`).catch(() => null);
         if (!mktRes?.ok) continue;
