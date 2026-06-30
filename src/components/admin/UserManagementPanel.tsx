@@ -692,15 +692,50 @@ export default function UserManagementPanel() {
         <SQIModal onClose={()=>setModalMode(null)}>
           <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>SOUL PROFILE</div>
           <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 20px" }}>{selectedUser.full_name||"No name set"}</h3>
+          {(() => {
+            const d = daysLeft(selectedUser.expires_at);
+            const expired = d !== null && d <= 0;
+            const subColor = expired ? "#ef4444" : (d !== null && d <= 14) ? "#f59e0b" : cyan;
+            return (
+              <div style={{
+                marginBottom:18, padding:"14px 16px", borderRadius:14,
+                background: `${subColor}10`, border: `1px solid ${subColor}40`,
+              }}>
+                <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:subColor, marginBottom:6 }}>
+                  SUBSCRIPTION STATUS
+                </div>
+                <div style={{ fontSize:16, fontWeight:800, color:"#fff" }}>
+                  {TIER_LABELS[selectedUser.tier]||"Free"}
+                </div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", marginTop:6, lineHeight:1.6 }}>
+                  {selectedUser.expires_at ? (
+                    <>
+                      {expired ? "Expired " : "Renews / ends "}
+                      <strong style={{ color:subColor }}>
+                        {new Date(selectedUser.expires_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}
+                      </strong>
+                      {d !== null && (
+                        <span style={{ color:subColor, marginLeft:8 }}>
+                          ({expired ? `${Math.abs(d)}d ago` : `${d} days left`})
+                        </span>
+                      )}
+                    </>
+                  ) : selectedUser.tier === "free" ? "No active subscription." : "Granted access (no expiry on file)."}
+                </div>
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginTop:6, fontFamily:"monospace", wordBreak:"break-all" }}>
+                  Stripe sub: {selectedUser.stripe_sub || "—"}
+                </div>
+              </div>
+            );
+          })()}
+
           <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
             {[
               ["Email", selectedUser.email || "— not found —"],
               ["ID", selectedUser.id],
-              ["Current Tier", TIER_LABELS[selectedUser.tier]||"Free"],
               ["Joined", new Date(selectedUser.created_at).toLocaleString()],
               ["Last Login", selectedUser.last_login_date?new Date(selectedUser.last_login_date).toLocaleString():"Unknown"],
               ["Onboarding", selectedUser.onboarding_completed?"Complete":"Not completed"],
-              ["Stripe Sub", selectedUser.stripe_sub||"None"],
             ].map(([label,val])=>(
               <div key={label as string} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
                 <span style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{label}</span>
@@ -728,6 +763,10 @@ export default function UserManagementPanel() {
           <div style={{ display:"flex", gap:10, marginTop:18, flexWrap:"wrap" }}>
             <SQIBtn label="Edit Tier" onClick={()=>setModalMode("edit-tier")} color={gold} />
             <SQIBtn label="Edit Products" onClick={()=>{ setModalMode(null); openProductModal(selectedUser); }} color="#a78bfa" />
+            <SQIBtn label="✉ Send Message" onClick={()=>openSendMessage(selectedUser)} color="#22D3EE" />
+            {(selectedUser.stripe_sub || selectedUser.tier !== "free") && (
+              <SQIBtn label="✕ Cancel Subscription" onClick={()=>openCancelSub(selectedUser)} color="#f59e0b" />
+            )}
             <SQIBtn
               label={resetingId===selectedUser.id?"Sending…":"🔑 Send Reset"}
               onClick={()=>handleResetPassword(selectedUser.id, selectedUser.full_name)}
