@@ -851,6 +851,62 @@ export default function UserManagementPanel() {
         </SQIModal>
       )}
 
+      {/* Send Message Modal */}
+      {modalMode==="send-message" && selectedUser && (
+        <SQIModal onClose={()=>setModalMode(null)}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:cyan, marginBottom:8 }}>SACRED TRANSMISSION</div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 4px" }}>Message {selectedUser.full_name||"Seeker"}</h3>
+          <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:18 }}>
+            Sends a branded email to <strong style={{ color: cyan }}>{selectedUser.email || "their inbox"}</strong>.
+          </p>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6 }}>SUBJECT</label>
+            <input type="text" value={messageSubject} onChange={e=>setMessageSubject(e.target.value)} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom:16 }}>
+            <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6 }}>MESSAGE</label>
+            <textarea rows={8} value={messageBody} onChange={e=>setMessageBody(e.target.value)} style={{ ...inputStyle, fontFamily:"inherit", resize:"vertical", lineHeight:1.6 }} />
+          </div>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <SQIBtn label={actionLoading?"Sending…":"✉ Send Email"} onClick={handleSendMessage} loading={actionLoading} color={cyan} />
+            <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
+          </div>
+        </SQIModal>
+      )}
+
+      {/* Cancel Subscription Modal */}
+      {modalMode==="cancel-sub" && selectedUser && (
+        <SQIModal onClose={()=>setModalMode(null)}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"#f59e0b", marginBottom:8 }}>CANCEL SUBSCRIPTION</div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 6px" }}>{selectedUser.full_name||"Seeker"}</h3>
+          <p style={{ color:"rgba(255,255,255,0.5)", fontSize:12, marginBottom:14 }}>
+            Tier: <strong style={{ color:TIER_COLORS[selectedUser.tier]||"#fff" }}>{TIER_LABELS[selectedUser.tier]||"Free"}</strong>
+            {selectedUser.expires_at && <> · Current period ends <strong style={{ color:"#fff" }}>{new Date(selectedUser.expires_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</strong></>}
+          </p>
+          <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", marginBottom:18, fontFamily:"monospace", wordBreak:"break-all" }}>
+            Stripe sub: {selectedUser.stripe_sub || "(none on file — local revocation only)"}
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:18 }}>
+            <button onClick={()=>setCancelImmediately(false)}
+              style={{ background:!cancelImmediately?"rgba(245,158,11,0.12)":"rgba(255,255,255,0.02)", border:`1px solid ${!cancelImmediately?"#f59e0b":"rgba(255,255,255,0.08)"}`, borderRadius:12, padding:"12px 14px", color:!cancelImmediately?"#f59e0b":"rgba(255,255,255,0.6)", fontSize:12, fontWeight:!cancelImmediately?700:400, textAlign:"left", cursor:"pointer" }}>
+              <div style={{ fontWeight:800, marginBottom:3 }}>Cancel at period end (recommended)</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)" }}>Keeps access until the current billing period closes. No refund.</div>
+            </button>
+            <button onClick={()=>setCancelImmediately(true)}
+              style={{ background:cancelImmediately?"rgba(239,68,68,0.12)":"rgba(255,255,255,0.02)", border:`1px solid ${cancelImmediately?"#ef4444":"rgba(255,255,255,0.08)"}`, borderRadius:12, padding:"12px 14px", color:cancelImmediately?"#ef4444":"rgba(255,255,255,0.6)", fontSize:12, fontWeight:cancelImmediately?700:400, textAlign:"left", cursor:"pointer" }}>
+              <div style={{ fontWeight:800, marginBottom:3 }}>Cancel immediately</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)" }}>Revokes access now and downgrades tier to free.</div>
+            </button>
+          </div>
+
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <SQIBtn label={actionLoading?"Canceling…":(cancelImmediately?"✕ Cancel Now":"Schedule Cancel")} onClick={handleCancelSub} loading={actionLoading} color={cancelImmediately?"#ef4444":"#f59e0b"} />
+            <SQIBtn label="Back" onClick={()=>setModalMode(null)} />
+          </div>
+        </SQIModal>
+      )}
+
       {/* Delete Confirm */}
       {confirmDelete && (
         <SQIModal onClose={()=>setConfirmDelete(null)}>
