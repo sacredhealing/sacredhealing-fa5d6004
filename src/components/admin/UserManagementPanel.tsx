@@ -345,6 +345,67 @@ export default function UserManagementPanel() {
     setSelectedUser(user); setNewTier(user.tier||"free"); setModalMode(mode);
   };
 
+  const openSendMessage = (user:any) => {
+    setSelectedUser(user);
+    const name = user.full_name?.split(" ")[0] || "Sacred One";
+    const tierLabel = TIER_LABELS[user.tier] || "Free";
+    setMessageSubject("Upgrade your Sacred Healing membership");
+    setMessageBody(
+      `You are currently on the ${tierLabel} tier.\n\nUpgrade to unlock deeper transmissions, full Jyotish, the Akashic Codex, and unlimited Quantum Apothecary access.\n\nVisit your membership page to upgrade — your soul's journey is waiting.`
+    );
+    setModalMode("send-message");
+  };
+
+  const openCancelSub = (user:any) => {
+    setSelectedUser(user);
+    setCancelImmediately(false);
+    setModalMode("cancel-sub");
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedUser || !messageBody.trim()) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "send_message", userId: selectedUser.id, subject: messageSubject, message: messageBody },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title:"✉ Message Sent", description:`Email delivered to ${selectedUser.full_name || selectedUser.email || "seeker"}.` });
+      setModalMode(null);
+    } catch (e:any) {
+      toast({ title:"Send Failed", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
+  };
+
+  const handleCancelSub = async () => {
+    if (!selectedUser) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "cancel_subscription", userId: selectedUser.id, immediately: cancelImmediately },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: cancelImmediately ? "Subscription Canceled" : "Cancellation Scheduled",
+        description: cancelImmediately
+          ? "Access revoked immediately."
+          : `Will end at period close${data?.expires_at ? ` (${new Date(data.expires_at).toLocaleDateString()})` : ""}.`,
+      });
+      setModalMode(null);
+      await loadUsers();
+    } catch (e:any) {
+      toast({ title:"Cancel Failed", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
+  };
+
+  const daysLeft = (iso?: string|null) => {
+    if (!iso) return null;
+    const ms = new Date(iso).getTime() - Date.now();
+    return Math.ceil(ms / (1000*60*60*24));
+  };
+
   return (
     <div style={{ fontFamily:"'Plus Jakarta Sans',Inter,sans-serif", color:"#fff", paddingBottom:60 }}>
 
