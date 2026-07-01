@@ -38,7 +38,15 @@ const BUY_SLIPPAGE  = 2500;
 const SELL_SLIPPAGE = 5000;
 const STOP_LOSS_PCT = -25;
 const TRAIL_PEAK    = 15;    // activate trailing at +15%
-const TRAIL_FLOOR   = 0.65;   // locks 65% of peak gain, gives back 35% (was 0.5 / 50%)
+// Tiered trailing floor — locks profit fast on modest pumps, gives more room the
+// bigger the peak gets so a real runner (300%+) doesn't get stopped out early.
+// Returns the fraction of peak% that must be retained before exit fires.
+function trailFloorFraction(peakPct) {
+  if (peakPct < 30)  return 0.80; // +15–30%: lock in fast, exit near peak
+  if (peakPct < 100) return 0.70; // +30–100%: give it a bit more room
+  if (peakPct < 300) return 0.60; // +100–300%: real trend, wider berth
+  return 0.50;                    // +300%+: moonshot tier, ride it further
+}
 const MAX_POSITIONS = 10;   // no artificial cap — 50% exposure is the limit
 const MIN_TRADE_SOL = 0.02;
 const TRADE_PCT     = 0.05;
@@ -456,9 +464,9 @@ async function pollStopLoss() {
         await executeSell(pos, 'stop_loss'); continue;
       }
       if (peakPct >= TRAIL_PEAK) {
-        const floor = peakPct * TRAIL_FLOOR;
+        const floor = peakPct * trailFloorFraction(peakPct);
         if (pnlPct <= floor) {
-          console.log(`[trail] 🔒 ${pos.symbol} peak=${peakPct.toFixed(1)}% now=${pnlPct.toFixed(1)}%`);
+          console.log(`[trail] 🔒 ${pos.symbol} peak=${peakPct.toFixed(1)}% now=${pnlPct.toFixed(1)}% floor=${floor.toFixed(1)}%`);
           await executeSell(pos, 'trailing_stop'); continue;
         }
       }
