@@ -472,19 +472,35 @@ function processWebhookPayload(transactions) {
       setTimeout(() => recentSigs.delete(sig), 60000);
     }
 
-    // Find which whale triggered this webhook
-    const meta = tx.meta;
-    const msg  = tx.transaction?.message;
-    if (!meta || !msg) {
-      console.log(`[webhook-dbg] ⚠️ SKIPPED — meta=${!!meta} msg=${!!msg} | raw_keys=${JSON.stringify(Object.keys(tx))}`);
+    // Find which whale triggered this webhook.
+    // Helius Enhanced payloads have NO tx.meta / tx.transaction.message — they carry
+    // participant addresses in nativeTransfers / tokenTransfers / accountData instead.
+    // Legacy raw-RPC payloads carry them in tx.transaction.message.accountKeys.
+    const addrSet = new Set();
+    for (const t of (tx.nativeTransfers || [])) {
+      if (t.fromUserAccount) addrSet.add(t.fromUserAccount);
+      if (t.toUserAccount)   addrSet.add(t.toUserAccount);
+    }
+    for (const t of (tx.tokenTransfers || [])) {
+      if (t.fromUserAccount) addrSet.add(t.fromUserAccount);
+      if (t.toUserAccount)   addrSet.add(t.toUserAccount);
+    }
+    for (const a of (tx.accountData || [])) {
+      if (a.account) addrSet.add(a.account);
+    }
+    if (tx.feePayer) addrSet.add(tx.feePayer);
+    const legacyKeys = (tx.transaction?.message?.accountKeys || []).map(k =>
+      typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
+    );
+    for (const k of legacyKeys) addrSet.add(k);
+
+    if (addrSet.size === 0) {
+      console.log(`[webhook-dbg] ⚠️ SKIPPED — no addresses found | raw_keys=${JSON.stringify(Object.keys(tx))}`);
       console.log(`[webhook-dbg] full_payload: ${JSON.stringify(tx).slice(0, 2000)}`);
       continue;
     }
 
-    const keys = (msg.accountKeys || []).map(k =>
-      typeof k === 'string' ? k : (k?.pubkey || k?.toString() || '')
-    );
-    const whaleAddr = keys.find(a => WHALE_ADDRS.has(a));
+    const whaleAddr = [...addrSet].find(a => WHALE_ADDRS.has(a));
     if (!whaleAddr) continue;
 
     const label = WHALE_WALLETS[whaleAddr];
