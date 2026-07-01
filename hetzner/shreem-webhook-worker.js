@@ -518,26 +518,10 @@ function processWebhookPayload(transactions) {
     if (swap.action === 'BUY') {
       executeBuy(swap.mint, swap.symbol, label, swap.whaleSolSize);
     } else {
-      // Mirror sell — exact mint match first
-      let matched = false;
-      const cachedMints = [...posCache.values()].map(p => p.mint);
-      console.log(`[sell-mirror] swap.mint=${swap.mint.slice(0,16)} | cached=${JSON.stringify(cachedMints.map(m=>m.slice(0,8)))}`);
-      for (const [id, pos] of posCache) {
-        if (pos.mint === swap.mint && !closing.has(id)) {
-          console.log(`[sell-mirror] ✅ exact mint match`);
-          executeSell(pos, 'whale_sell_mirror'); matched = true; break;
-        }
-      }
-      // Label fallback — same whale sold anything, close our position for that whale
-      if (!matched) {
-        const byLabel = [...posCache.values()].filter(p => p.label === label && !closing.has(p.id));
-        if (byLabel.length > 0) {
-          console.log(`[sell-mirror] ✅ label fallback — ${label} sold, closing ${byLabel.length} pos`);
-          for (const pos of byLabel) executeSell(pos, 'whale_sell_mirror_label');
-          matched = true;
-        }
-      }
-      if (!matched) console.log(`[sell-mirror] ⚠️ no position to close for ${label}`);
+      // Whale-sell mirror REMOVED — exits are price-based only, via pollStopLoss()
+      // (-25% hard stop, +15% trailing activation locking 65% of peak gain).
+      // This log is informational only and does not trigger a sell.
+      console.log(`[sell-info] ${label} sold ${swap.symbol||swap.mint.slice(0,8)} — ignored, exit is price-based only`);
     }
   }
 }
