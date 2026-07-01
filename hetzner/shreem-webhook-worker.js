@@ -48,7 +48,7 @@ function trailFloorFraction(peakPct) {
   return 0.50;                    // +300%+: moonshot tier, ride it further
 }
 const MAX_POSITIONS = 10;   // no artificial cap — 50% exposure is the limit
-const MIN_TRADE_SOL = 0.015; // TEMP: lowered from 0.02 so $13 wallet clears the floor for a test cycle
+const MIN_TRADE_SOL = 0.012; // TEMP: was 0.015 -- wallet balance drift put real trades (0.0149) just under the old floor
 const TRADE_PCT     = 0.10;  // TEMP: raised from 0.05 for the same reason — revert once buy/sell confirmed working
 const MAX_EXPOSURE  = 0.50;
 const MIN_POOL_USD  = 3000;
