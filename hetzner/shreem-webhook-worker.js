@@ -238,6 +238,15 @@ async function getTokenBal(mint) {
     );
   } catch { return 0; }
 }
+async function getTokenDecimals(mint) {
+  try {
+    const r = await httpJSON(HELIUS_RPC, 'POST', {
+      jsonrpc: '2.0', id: 1, method: 'getTokenSupply', params: [mint],
+    }, {}, 5000);
+    const d = r?.result?.value?.decimals;
+    return (typeof d === 'number') ? d : 6; // fallback only if RPC lookup genuinely fails
+  } catch { return 6; }
+}
 
 // ── TX PARSER — whale owner filter + ATA closure sell detection ───────────────
 function parseWhaleSwap(tx, whaleAddr) {
@@ -366,7 +375,11 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
     const latency = Date.now() - t0;
     console.log(`[buy] ✅ ${symbol||'?'} | sig=${txSig.slice(0,16)}… | ${latency}ms`);
     const rawOut      = Number(quote.outAmount || 0);
-    const decimals    = 6;
+    const decimals    = await getTokenDecimals(mint); // FIX: was hardcoded 6 — caused entryUsd
+                                                        // to be computed on wrong basis vs the
+                                                        // live DexScreener/Jupiter price, producing
+                                                        // false pnl% readings in pollStopLoss (e.g.
+                                                        // logged -56% stop trigger vs -12.9% real loss)
     const tokensHuman = rawOut / Math.pow(10, decimals);
     const entryUsd    = tokensHuman > 0 ? (size * solUsd) / tokensHuman : 0;
     const tradeId     = `live_${Date.now()}_${mint.slice(0,8)}`;
