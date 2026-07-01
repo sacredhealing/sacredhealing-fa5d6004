@@ -83,7 +83,7 @@ let   kp           = null;
 let   isLive       = true;
 let   isRunning    = true;
 let   buyBusy      = false;
-let   solUsd       = 150;
+let   solUsd       = 73; // fallback only — real value fetched immediately on startup via refreshSolUsd()
 let   stopBusy     = false;
 const priceCache   = new Map();
 const PRICE_TTL    = 3000;
@@ -740,14 +740,21 @@ async function syncSessionState() {
     console.log(`[shreem] Auth header: "${WEBHOOK_SECRET}"`);
   });
 
-  // SOL price refresh every 5 min
-  setInterval(async () => {
+  // SOL price refresh — immediately on startup, then every 5 min
+  // FIX: previously only refreshed on the 5-min interval with no initial call,
+  // so solUsd stayed at the hardcoded stale default (150, ~2x real price) for
+  // up to 5 minutes after every restart -- inflating entryUsd and causing false
+  // stop-loss triggers (e.g. logged -56% vs real -12.9% loss) on every trade
+  // that happened shortly after a deploy/restart.
+  async function refreshSolUsd() {
     try {
       const d = await httpJSON('https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112', 'GET', null, {}, 5000);
       const p = parseFloat(Object.values(d?.data||{})[0]?.price||0);
-      if (p > 0) { solUsd = p; }
-    } catch {}
-  }, 300000);
+      if (p > 0) { solUsd = p; console.log(`[price] SOL/USD refreshed: $${p.toFixed(2)}`); }
+    } catch (e) { console.error('[price] SOL/USD refresh failed:', e.message); }
+  }
+  refreshSolUsd(); // fire immediately, don't wait for the first interval tick
+  setInterval(refreshSolUsd, 300000);
 
   // Stop loss / trailing poll every 3s
   setInterval(pollStopLoss, STOP_POLL_MS);
