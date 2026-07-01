@@ -205,8 +205,10 @@ async function fetchPrice(mint) {
     }
   } catch {}
   try {
-    const d = await httpJSON(`https://api.jup.ag/price/v2?ids=${mint}`, 'GET', null, {}, 4000);
-    const p = parseFloat(Object.values(d?.data || {})[0]?.price || 0);
+    // FIX: Price API V2 is fully deprecated (confirmed empty response from server).
+    // V3 uses a different base URL and response shape (usdPrice, no .data wrapper).
+    const d = await httpJSON(`https://lite-api.jup.ag/price/v3?ids=${mint}`, 'GET', null, {}, 4000);
+    const p = parseFloat(d?.[mint]?.usdPrice || 0);
     if (p > 0) { priceCache.set(mint, { p, t: Date.now() }); return p; }
   } catch {}
   return 0;
@@ -748,9 +750,11 @@ async function syncSessionState() {
   // that happened shortly after a deploy/restart.
   async function refreshSolUsd() {
     try {
-      const d = await httpJSON('https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112', 'GET', null, {}, 5000);
-      const p = parseFloat(Object.values(d?.data||{})[0]?.price||0);
+      // FIX: V2 confirmed dead (empty response). V3: different base URL + usdPrice field.
+      const d = await httpJSON('https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112', 'GET', null, {}, 5000);
+      const p = parseFloat(d?.['So11111111111111111111111111111111111111112']?.usdPrice || 0);
       if (p > 0) { solUsd = p; console.log(`[price] SOL/USD refreshed: $${p.toFixed(2)}`); }
+      else { console.error(`[price] SOL/USD refresh returned no price — raw response: ${JSON.stringify(d).slice(0,200)}`); }
     } catch (e) { console.error('[price] SOL/USD refresh failed:', e.message); }
   }
   refreshSolUsd(); // fire immediately, don't wait for the first interval tick
