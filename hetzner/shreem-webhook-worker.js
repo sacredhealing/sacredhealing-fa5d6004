@@ -247,7 +247,10 @@ function parseWhaleSwap(tx, whaleAddr) {
       const acct = (tx.accountData || []).find(a => a.account === whaleAddr);
       if (acct) solDiff = (acct.nativeBalanceChange || 0) / 1e9;
     }
-    if (Math.abs(solDiff) < MIN_WHALE_SOL) return null;
+    if (Math.abs(solDiff) < MIN_WHALE_SOL) {
+      console.log(`[parse-dbg] ⏭ solDiff=${solDiff.toFixed(5)} < MIN_WHALE_SOL=${MIN_WHALE_SOL} | nativeTransfers=${JSON.stringify((tx.nativeTransfers||[]).map(t=>({from:t.fromUserAccount?.slice(0,6),to:t.toUserAccount?.slice(0,6),amt:t.amount})))}`);
+      return null;
+    }
 
     // Get token from tokenTransfers
     const mintMap = {};
@@ -262,7 +265,10 @@ function parseWhaleSwap(tx, whaleAddr) {
     for (const [mint, d] of Object.entries(mintMap)) {
       if (Math.abs(d.diff) > Math.abs(bestDiff)) { bestDiff=d.diff; bestMint=mint; bestSymbol=d.symbol; }
     }
-    if (!bestMint) return null;
+    if (!bestMint) {
+      console.log(`[parse-dbg] ⏭ no bestMint | solDiff=${solDiff.toFixed(5)} | tokenTransfers=${JSON.stringify((tx.tokenTransfers||[]).map(t=>({mint:t.mint?.slice(0,8),from:t.fromUserAccount?.slice(0,6),to:t.toUserAccount?.slice(0,6),amt:t.tokenAmount})))}`);
+      return null;
+    }
     const action = solDiff < 0 ? 'BUY' : 'SELL';
     console.log(`[parse] ${action} | whale=${whaleAddr.slice(0,8)} | mint=${bestMint.slice(0,8)} | sol=${solDiff.toFixed(4)} | enhanced-format`);
     return { action, mint: bestMint, symbol: bestSymbol, whaleSolSize: Math.abs(solDiff) };
