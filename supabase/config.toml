@@ -153,6 +153,8 @@ project_id = "ssygukfdbtehvtndandn"
     verify_jwt = true
   [functions.delta-arb-proxy]
     verify_jwt = false
+  [functions.clawbot-bridge]
+    verify_jwt = false
   [functions.clawbot-proxy]
     verify_jwt = false
   [functions.token-price-batch]
