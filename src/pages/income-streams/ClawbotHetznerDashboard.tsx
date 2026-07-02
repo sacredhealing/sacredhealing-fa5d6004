@@ -13,17 +13,18 @@ const BG = '#050505';
 // Uses the existing clawbot-proxy edge function — same proxy, same bot
 const PROXY = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-proxy';
 
-const WHALE_LIST = [
-  { alias: 'BAA2BC — Iran Insider', wr: 83, pnl: 191503, days: 14 },
-  { alias: 'ED107A — NoMachine99x', wr: 89, pnl: 58947, days: 42 },
-  { alias: 'A7A8C1 — WorldCup', wr: 87, pnl: 47554, days: 60 },
-  { alias: '204F72 — PerfectWR', wr: 100, pnl: 25928, days: 90 },
-  { alias: '06DC51 — CryptoOracle', wr: 78, pnl: 131298, days: 90 },
-  { alias: 'E9076A — CoTrader', wr: 83, pnl: 30103, days: 90 },
-  { alias: 'F49CE4 — HighFreq', wr: 52, pnl: 41975, days: 90 },
-  { alias: 'A77105', wr: 78, pnl: 6136, days: 90 },
-  { alias: 'FEA31B — Elite', wr: 75, pnl: 2151, days: 90 },
-];
+const WHALE_ALIASES: Record<string, string> = {
+  '0xbaa2bcb5': 'Iran Insider',
+  '0x06dc5182': 'CryptoOracle',
+  '0xed107a85': 'NoMachine99x',
+  '0xa7a8c1fd': 'WorldCup',
+  '0xf49ce459': 'HighFreq',
+  '0xe9076a87': 'CoTrader',
+  '0x204f72f3': 'PerfectWR',
+  '0xa77105bb': 'A77105',
+  '0xfea31bc0': 'Elite',
+};
+
 
 const GLASS = 'rounded-[40px] bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl';
 const GLASS_SM = 'rounded-[20px] bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl';
@@ -297,40 +298,43 @@ export default function ClawbotHetznerDashboard() {
                 </div>
                 <Pill color="#22c55e">TRACKING</Pill>
               </div>
-              {WHALE_LIST.map((w, i) => {
-                const daily = w.pnl / w.days;
-                const weekly = daily * 7;
-                const monthly = daily * 30;
-                const yearly = daily * 365;
+              {(health?.approvedWhales ?? []).length === 0 && (
+                <div className="text-[11px] text-white/30 py-3">No whale data yet — registry populating in background.</div>
+              )}
+              {(health?.approvedWhales ?? []).map((w: any, i: number) => {
+                const label = WHALE_ALIASES[w.addr] ? `${w.addr} — ${WHALE_ALIASES[w.addr]}` : w.addr;
+                const isNew = w.wr === 'new';
                 return (
-                  <div key={i}>
+                  <div key={w.addr ?? i}>
                     <button
                       className="w-full flex items-center justify-between py-2.5 border-b border-white/[0.04]"
                       onClick={() => setExpandedWhale(expandedWhale === i ? null : i)}
                     >
-                      <span className="text-[12px] text-white/70 text-left">{w.alias}</span>
+                      <span className="text-[12px] text-white/70 text-left">{label}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-black" style={{ color: GOLD }}>{w.wr}% WR</span>
+                        <span className="text-[11px] font-black" style={{ color: isNew ? 'rgba(255,255,255,0.3)' : GOLD }}>
+                          {isNew ? 'Awaiting data' : `${w.wr} WR`}
+                        </span>
                         <span className="text-[10px] text-white/25">{expandedWhale === i ? '▴' : '▾'}</span>
                       </div>
                     </button>
                     {expandedWhale === i && (
                       <div className="mb-2 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-3 grid grid-cols-2 gap-2">
-                        {[
-                          ['Daily', `$${daily.toFixed(0)}`, `${(daily/w.pnl*100).toFixed(1)}%/day`],
-                          ['Weekly', `$${weekly.toFixed(0)}`, `${(weekly/w.pnl*100).toFixed(0)}%/wk`],
-                          ['Monthly', `$${monthly.toFixed(0)}`, `${(monthly/w.pnl*100).toFixed(0)}%/mo`],
-                          ['Yearly', `$${Math.round(yearly).toLocaleString()}`, `${(yearly/w.pnl*100).toFixed(0)}%/yr`],
-                        ].map(([label, amt, pct]) => (
-                          <div key={label} className="rounded-xl bg-white/[0.03] p-2.5">
-                            <div className="text-[9px] font-bold tracking-[0.15em] uppercase text-white/30 mb-1">{label}</div>
-                            <div className="text-[14px] font-black" style={{ color: GOLD }}>{amt}</div>
-                            <div className="text-[10px] text-white/30">{pct}</div>
+                        <div className="rounded-xl bg-white/[0.03] p-2.5">
+                          <div className="text-[9px] font-bold tracking-[0.15em] uppercase text-white/30 mb-1">Trades Tracked</div>
+                          <div className="text-[14px] font-black" style={{ color: GOLD }}>{w.trades ?? 0}</div>
+                        </div>
+                        <div className="rounded-xl bg-white/[0.03] p-2.5">
+                          <div className="text-[9px] font-bold tracking-[0.15em] uppercase text-white/30 mb-1">Win Rate</div>
+                          <div className="text-[14px] font-black" style={{ color: GOLD }}>{isNew ? '—' : w.wr}</div>
+                        </div>
+                        <div className="col-span-2 rounded-xl bg-white/[0.03] p-2.5">
+                          <div className="text-[9px] font-bold tracking-[0.15em] uppercase text-white/30 mb-1">Status</div>
+                          <div className="text-[11px] text-white/50">
+                            {isNew
+                              ? 'Elite-listed, on-chain win-rate fetch pending or below CLOB history threshold.'
+                              : 'Live win rate from CLOB trade history, refreshed hourly.'}
                           </div>
-                        ))}
-                        <div className="col-span-2 rounded-xl bg-white/[0.03] p-2.5 flex justify-between items-center">
-                          <span className="text-[10px] text-white/30">Total PnL (historical)</span>
-                          <span className="text-[13px] font-black text-green-400">${w.pnl.toLocaleString()}</span>
                         </div>
                       </div>
                     )}
