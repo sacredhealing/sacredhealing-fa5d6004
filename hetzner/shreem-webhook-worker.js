@@ -249,6 +249,31 @@ async function getPoolLiq(mint) {
     return parseFloat(pairs[0].liquidity?.usd || 0);
   } catch { return 0; }
 }
+// SAFETY: reject Token-2022 mints with extensions that let the creator move tokens
+// out of ANY holder's wallet without their signature (PermanentDelegate, TransferHook).
+// This is the mechanism behind tokens getting drained via a raw "Sent" tx right after
+// a legitimate buy -- confirmed pattern on this wallet (Robin, green, Stakoor).
+const TOKEN_2022_PROGRAM = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
+async function isTokenSafe(mint) {
+  try {
+    const r = await httpJSON(HELIUS_RPC, 'POST', {
+      jsonrpc: '2.0', id: 1, method: 'getAccountInfo',
+      params: [mint, { encoding: 'jsonParsed' }],
+    }, {}, 5000);
+    const info = r?.result?.value;
+    if (!info) return { safe: false, reason: 'mint_not_found' };
+    if (info.owner !== TOKEN_2022_PROGRAM) return { safe: true }; // classic SPL token, no extension risk
+    const extensions = info.data?.parsed?.info?.extensions || [];
+    const dangerous = extensions.find(e =>
+      e.extension === 'permanentDelegate' || e.extension === 'transferHook'
+    );
+    if (dangerous) return { safe: false, reason: `token2022_${dangerous.extension}` };
+    return { safe: true };
+  } catch (e) {
+    // If the check itself fails, fail closed -- don't buy something we couldn't verify
+    return { safe: false, reason: `check_failed_${e.message}` };
+  }
+}
 async function getWalletSol() {
   try {
     const r = await httpJSON(HELIUS_RPC, 'POST',
@@ -392,6 +417,8 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
     if (totalExp / walletSol >= MAX_EXPOSURE) { console.log('[buy] exposure cap'); return; }
     const poolLiq = await getPoolLiq(mint);
     if (poolLiq > 0 && poolLiq < MIN_POOL_USD) { console.log(`[buy] ⏭ pool $${poolLiq.toFixed(0)} < $${MIN_POOL_USD}`); return; }
+    const safety = await isTokenSafe(mint);
+    if (!safety.safe) { console.log(`[buy] 🚫 REJECTED ${symbol||mint.slice(0,8)} — ${safety.reason}`); return; }
     const free = walletSol - 0.005;
     const room = walletSol * MAX_EXPOSURE - totalExp;
     const size = Math.min(free * TRADE_PCT, room, free);
