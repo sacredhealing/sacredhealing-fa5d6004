@@ -386,8 +386,8 @@ async function fetchMarkets() {
       const tokenIds = safeParseJSON(m.clobTokenIds,  ['', '']);
       return {
         id: m.id, question: String(m.question || ''),
-        liquidity: safeFloat(m.liquidity),
-        volume:    safeFloat(m.volume),
+        liquidity: safeFloat(m.liquidityNum ?? m.liquidity),
+        volume:    safeFloat(m.volumeNum ?? m.volume),
         closed:    !!m.closed,
         outcomes: (Array.isArray(names) ? names : ['Yes', 'No']).map((name, i) => ({
           name: String(name),
@@ -528,6 +528,13 @@ async function runOneScan() {
     lastScan     = new Date();
     lastScanTime = Date.now();
     log('SCAN', `#${scanCount} | ${markets.length} mkts | bal $${balance.toFixed(2)} | pos ${openPositions}/${MAX_POSITIONS} | size $${tradeSize().toFixed(2)}`);
+
+    if (scanCount % 10 === 1) {
+      const latCandidates = markets.filter(m => m.liquidity > 5000 && !m.closed).length;
+      const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
+      const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
+      log('DIAG', `latArb-eligible=${latCandidates} volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
+    }
 
     if (openPositions >= MAX_POSITIONS) return;
 
