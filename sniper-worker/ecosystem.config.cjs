@@ -9,15 +9,21 @@ module.exports = {
       PAPER_MODE:          'true',
       SUPABASE_URL:        'https://ssygukfdbtehvtndandn.supabase.co',
       SUPABASE_SERVICE_KEY:'',   // SET THIS
-      HELIUS_API_KEY:      '',   // SET THIS — used for price/dev-wallet RPC reads, not detection anymore
-      WALLET_PRIVATE_KEY:  '',   // SET THIS — same dedicated wallet the edge function buys with
+      HELIUS_API_KEY:      '',   // SET THIS — now also drives detection (WebSocket), not just price/dev-wallet reads
+      GEMINI_API_KEY:      '',   // SET THIS — AI veto score, moved back here from the (now retired) edge function
+      WALLET_PRIVATE_KEY:  '',   // SET THIS — dedicated sniper wallet, never Phantom/main wallet
       TELEGRAM_TOKEN:      '',   // optional alerts
       TELEGRAM_CHAT_ID:    '',   // optional alerts
-      // ── Exit strategy — this is the ONLY thing this process decides.
-      //    Entry config (BUY_AMOUNT_SOL, MAX_OPEN_POSITIONS, MAX_DAILY_TRADES,
-      //    MAX_DAILY_LOSS_SOL, MIN_AI_SCORE, AI_TIMEOUT_MS, GEMINI_API_KEY) now
-      //    lives in the sniper-helius-webhook edge function's Supabase secrets,
-      //    not here — detection and entry happen there, not on Hetzner. ──
+      // ── v6: everything lives in THIS process now — detection, entry filter,
+      //    AI veto, and exit. The v5 split (edge function did entry, this did
+      //    exit) is retired; the edge function + webhook registration in the
+      //    repo are no longer wired to anything live. See index.js header. ──
+      BUY_AMOUNT_SOL:       '0.05',  // SOL per entry
+      MAX_OPEN_POSITIONS:   '5',
+      MAX_DAILY_TRADES:     '20',
+      MAX_DAILY_LOSS_SOL:   '0.5',
+      MIN_AI_SCORE:         '60',    // below this, AI veto rejects (fails open if Gemini errors/times out)
+      AI_TIMEOUT_MS:        '350',   // hard cap on AI veto latency before failing open
       TAKE_PROFIT_X:       '3.0',   // TP1: sell 50% at 3x
       MOONBAG_X:           '10.0',  // TP2: sell 40% at 10x, 10% rides
       STOP_LOSS_PCT:       '0.35',  // hard SL -35%
