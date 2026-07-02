@@ -1,0 +1,1 @@
+import{j as l}from"./vendor-react-DdWqvjvq.js";import"./vendor-crypto-Cz0s2Wb9.js";const t=()=>l.jsx("div",{className:"fixed inset-0 w-full h-full bg-[#050505]",children:l.jsx("iframe",{src:"/creative-soul-landing.html",title:"Creative Soul Studio",className:"w-full h-full border-0",sandbox:"allow-scripts allow-same-origin"})});export{t as default};

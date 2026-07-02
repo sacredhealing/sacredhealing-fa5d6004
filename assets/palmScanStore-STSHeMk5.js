@@ -1,0 +1,1 @@
+const a="sh:palmScan";function e(){try{const t=localStorage.getItem(a);return t?JSON.parse(t):null}catch{return null}}function n(t){try{localStorage.setItem(a,JSON.stringify(t))}catch{}}export{e as g,n as s};
