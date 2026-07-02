@@ -7335,6 +7335,7 @@ export type Database = {
         Row: {
           action: string
           ai_score: number | null
+          ath_price: number | null
           closed_at: string | null
           created_at: string
           entry_price: number | null
@@ -7345,15 +7346,21 @@ export type Database = {
           mode: string
           multiplier_x: number | null
           pnl_sol: number | null
+          realized_pnl: number | null
           rug_score: number | null
           size_sol: number | null
           status: string
           symbol: string | null
+          tokens_held: number | null
+          tp1_hit: boolean | null
+          tp2_hit: boolean | null
+          trail_armed: boolean | null
           user_id: string | null
         }
         Insert: {
           action?: string
           ai_score?: number | null
+          ath_price?: number | null
           closed_at?: string | null
           created_at?: string
           entry_price?: number | null
@@ -7364,15 +7371,21 @@ export type Database = {
           mode?: string
           multiplier_x?: number | null
           pnl_sol?: number | null
+          realized_pnl?: number | null
           rug_score?: number | null
           size_sol?: number | null
           status?: string
           symbol?: string | null
+          tokens_held?: number | null
+          tp1_hit?: boolean | null
+          tp2_hit?: boolean | null
+          trail_armed?: boolean | null
           user_id?: string | null
         }
         Update: {
           action?: string
           ai_score?: number | null
+          ath_price?: number | null
           closed_at?: string | null
           created_at?: string
           entry_price?: number | null
@@ -7383,10 +7396,15 @@ export type Database = {
           mode?: string
           multiplier_x?: number | null
           pnl_sol?: number | null
+          realized_pnl?: number | null
           rug_score?: number | null
           size_sol?: number | null
           status?: string
           symbol?: string | null
+          tokens_held?: number | null
+          tp1_hit?: boolean | null
+          tp2_hit?: boolean | null
+          trail_armed?: boolean | null
           user_id?: string | null
         }
         Relationships: []
