@@ -478,7 +478,17 @@ async function startWhaleMirror(provider) {
       if (!block?.prefetchedTransactions) return;
       for (const tx of block.prefetchedTransactions) {
         if (tx.to?.toLowerCase() !== CTF_EXCHANGE.toLowerCase()) continue;
-        const whaleAddr = tx.from?.toLowerCase();
+        // NOTE: tx.from is Polymarket's operator/relayer wallet, NOT the trader —
+        // Polymarket orders are signed off-chain and settled on-chain by the
+        // operator, so the real trader identity only exists inside the decoded
+        // order struct (order.maker). Gating on tx.from never matches real whales.
+        let decoded, order;
+        try {
+          decoded = iface.parseTransaction({ data: tx.data, value: tx.value });
+          if (!decoded) continue;
+          order = decoded.args[0];
+        } catch { continue; /* not a fillOrder */ }
+        const whaleAddr = order.maker?.toLowerCase();
         if (!whaleAddr) continue;
         // Fast path: check known elites first (no CLOB lookup needed)
         const isKnown = KNOWN_WHALES.includes(whaleAddr);
@@ -488,9 +498,6 @@ async function startWhaleMirror(provider) {
         }
         log('WHALE', `${isKnown ? '⭐ ELITE' : '✅ NEW'} whale ${whaleAddr.slice(0,8)} detected on block ${blockNumber}`);
         try {
-          const decoded = iface.parseTransaction({ data: tx.data, value: tx.value });
-          if (!decoded) continue;
-          const order = decoded.args[0];
           const price = Number(order.takerAmount) / (Number(order.makerAmount) || 1);
           const tokenIdStr = order.tokenId?.toString() || '';
           const market = await fetchMarketByToken(tokenIdStr);
