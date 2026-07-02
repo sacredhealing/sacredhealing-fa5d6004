@@ -173,6 +173,33 @@ function signAndSendTx(txB64) {
     return r.result;
   });
 }
+// FIX: sendTransaction only confirms BROADCAST, not on-chain success. A signature
+// can come back and the tx can still revert, expire, or never land. This was the
+// root cause of "log says sold, wallet still has the token" -- executeBuy/executeSell
+// were declaring success right after broadcast with zero verification.
+async function confirmTx(sig, maxWaitMs = 20000) {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    try {
+      const r = await httpJSON(HELIUS_RPC, 'POST', {
+        jsonrpc: '2.0', id: 1, method: 'getSignatureStatuses',
+        params: [[sig], { searchTransactionHistory: true }],
+      }, {}, 5000);
+      const status = r?.result?.value?.[0];
+      if (status) {
+        if (status.err) throw new Error(`on-chain failure: ${JSON.stringify(status.err)}`);
+        if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+          return true;
+        }
+      }
+    } catch (e) {
+      if (e.message.startsWith('on-chain failure')) throw e;
+      // network hiccup polling status — keep retrying within the time budget
+    }
+    await new Promise(res => setTimeout(res, 1000));
+  }
+  throw new Error(`confirmation timeout after ${maxWaitMs}ms — sig=${sig} (may still land later, treat as unconfirmed)`);
+}
 
 // ── JUPITER ───────────────────────────────────────────────────────────────────
 async function jupQuote(inputMint, outputMint, amount, slippage) {
@@ -374,6 +401,7 @@ async function executeBuy(mint, symbol, label, whaleSolSize) {
     const quote  = await jupQuote(SOL_MINT, mint, lamports, BUY_SLIPPAGE);
     const swapTx = await jupSwapTx(quote);
     const txSig  = await signAndSendTx(swapTx);
+    await confirmTx(txSig); // FIX: verify on-chain landing before treating as a real position
     const latency = Date.now() - t0;
     console.log(`[buy] ✅ ${symbol||'?'} | sig=${txSig.slice(0,16)}… | ${latency}ms`);
     const rawOut      = Number(quote.outAmount || 0);
@@ -431,6 +459,7 @@ async function executeSell(pos, reason) {
     const quote  = await jupQuote(pos.mint, SOL_MINT, rawAmt, SELL_SLIPPAGE);
     const swapTx = await jupSwapTx(quote);
     const txSig  = await signAndSendTx(swapTx);
+    await confirmTx(txSig); // FIX: verify it actually landed before declaring success
     const solOut  = Number(quote.outAmount || 0) / LAMPORTS;
     const pnlSol  = solOut - (pos.amount_sol || 0);
     const pnlPct  = pos.amount_sol > 0 ? (pnlSol / pos.amount_sol) * 100 : 0;
