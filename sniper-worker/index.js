@@ -97,7 +97,7 @@ const RPC_WS = HELIUS_API_KEY
 // explicitly here satisfies that eager init without needing to touch the
 // server's global Node version (which clawbot/shreem also run on).
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { transport: WebSocket } });
-const connection = new Connection(RPC_HTTP, { commitment: 'processed', wsEndpoint: RPC_WS });
+const connection = new Connection(RPC_HTTP, { commitment: 'confirmed', wsEndpoint: RPC_WS });
 let keypair = null;
 if (WALLET_PRIVATE_KEY && !PAPER_MODE) {
   try { keypair = Keypair.fromSecretKey(bs58.decode(WALLET_PRIVATE_KEY)); }
@@ -533,7 +533,7 @@ function startDetection() {
     if (logInfo.err) return;
     const launch = parseLaunch(logInfo.logs, logInfo.signature);
     if (launch) processCandidate(launch).catch((e) => L.warn(`[candidate] ${e.message}`));
-  }, 'processed');
+  }, 'confirmed');
   L.info(`✦ Subscribed to pump.fun program logs (${PUMP_PROGRAM.slice(0, 8)}...) via WebSocket`);
 }
 
