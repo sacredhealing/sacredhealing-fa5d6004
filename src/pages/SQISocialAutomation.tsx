@@ -1068,7 +1068,7 @@ const platformColor = (p: string) => {
 };
 
 const ReelCreator = () => {
-  const [subTab, setSubTab] = useState<"yt" | "zoom" | "existing">("yt");
+  const [subTab, setSubTab] = useState<"yt" | "zoom" | "existing" | "pipeline">("yt");
   const [selected, setSelected] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
