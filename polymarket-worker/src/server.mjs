@@ -45,6 +45,7 @@ let scanLoopAlive = false;
 let lastScanTime  = Date.now();
 
 const priceHistory  = new Map();
+let diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '' };
 const processedSigs = new Set();
 const recentTrades  = [];
 const errors        = [];
@@ -415,6 +416,7 @@ function latencyArb(markets) {
       if (fresh.length < 3) continue;
       const move = (yes.price - fresh[0].price) / (fresh[0].price || 0.001);
       const abs  = Math.abs(move);
+      if (abs > diagStats.maxMove) { diagStats.maxMove = abs; diagStats.maxMoveQ = m.question?.slice(0, 40); }
       if (abs < 0.03) continue;
       const sigId = `lat-${m.id}-${Math.floor(now / 60000)}`;
       if (processedSigs.has(sigId)) continue;
@@ -448,6 +450,7 @@ function volScalper(markets) {
       const mean = hist.reduce((a, b) => a + b, 0) / hist.length;
       const std  = Math.sqrt(hist.reduce((s, p) => s + (p - mean) ** 2, 0) / hist.length);
       const vol  = mean > 0 ? std / mean : 0;
+      if (vol > diagStats.maxVol) { diagStats.maxVol = vol; diagStats.maxVolQ = m.question?.slice(0, 40); }
       if (vol < 0.05) continue;
       const sigId = `scalp-${m.id}-${Math.floor(Date.now() / 120000)}`;
       if (processedSigs.has(sigId)) continue;
@@ -534,6 +537,8 @@ async function runOneScan() {
       const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
+      log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 3.00% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 5.00%`);
+      diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '' };
     }
 
     if (openPositions >= MAX_POSITIONS) return;
