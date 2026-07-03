@@ -23,7 +23,7 @@ jobs:
 
       - name: Deploy social-post to Lovable (ssygukfd)
         env:
-          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           set +e
           supabase functions deploy social-post --project-ref ssygukfdbtehvtndandn --no-verify-jwt > _social_post_deploy_log.txt 2>&1
