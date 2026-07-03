@@ -45,7 +45,7 @@ let scanLoopAlive = false;
 let lastScanTime  = Date.now();
 
 const priceHistory  = new Map();
-let diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '' };
+let diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '' };
 const processedSigs = new Set();
 const recentTrades  = [];
 const errors        = [];
@@ -404,16 +404,18 @@ async function fetchMarkets() {
 function latencyArb(markets) {
   const now = Date.now();
   const signals = [];
+  let skippedNoOutcome = 0, skippedHistory = 0, evaluated = 0;
   try {
     for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).sort((a, b) => b.volume - a.volume).slice(0, 10)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       const no  = m.outcomes.find(o => o.name.toLowerCase() === 'no');
-      if (!yes || !no) continue;
+      if (!yes || !no) { skippedNoOutcome++; continue; }
       const hist = priceHistory.get(m.id) || [];
       hist.push({ price: yes.price, ts: now });
       const fresh = hist.filter(s => s.ts >= now - 60000);
       priceHistory.set(m.id, fresh);
-      if (fresh.length < 3) continue;
+      if (fresh.length < 3) { skippedHistory++; continue; }
+      evaluated++;
       const move = (yes.price - fresh[0].price) / (fresh[0].price || 0.001);
       const abs  = Math.abs(move);
       if (abs > diagStats.maxMove) { diagStats.maxMove = abs; diagStats.maxMoveQ = m.question?.slice(0, 40); }
@@ -430,6 +432,7 @@ function latencyArb(markets) {
         currentPrice: outcome.price,
       });
     }
+    diagStats.latDebug = `noOutcome=${skippedNoOutcome} noHistory=${skippedHistory} evaluated=${evaluated}`;
   } catch (e) { logErr('LATARB', e?.message); }
   return signals;
 }
@@ -539,7 +542,8 @@ async function runOneScan() {
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
       log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 3.00% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 5.00%`);
-      diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '' };
+      log('DIAG', `latArb breakdown (last scan): ${diagStats.latDebug}`);
+      diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '' };
     }
 
     if (openPositions >= MAX_POSITIONS) return;
