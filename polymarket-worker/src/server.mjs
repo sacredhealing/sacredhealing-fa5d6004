@@ -412,9 +412,9 @@ function latencyArb(markets) {
       if (!yes || !no) { skippedNoOutcome++; continue; }
       const hist = priceHistory.get(m.id) || [];
       hist.push({ price: yes.price, ts: now });
-      const fresh = hist.filter(s => s.ts >= now - 60000);
+      const fresh = hist.filter(s => s.ts >= now - 180000);
       priceHistory.set(m.id, fresh);
-      if (fresh.length < 3) { skippedHistory++; continue; }
+      if (fresh.length < 2) { skippedHistory++; continue; }
       evaluated++;
       const move = (yes.price - fresh[0].price) / (fresh[0].price || 0.001);
       const abs  = Math.abs(move);
@@ -547,7 +547,7 @@ async function runOneScan() {
       const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
-      log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 3.00% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 5.00%`);
+      log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 1.50% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 2.50%`);
       log('DIAG', `latArb breakdown (last scan): ${diagStats.latDebug} | ${diagStats.samplePrice}`);
       diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '', samplePrice: '' };
     }
