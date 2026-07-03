@@ -129,6 +129,7 @@ export const AutoContentPipeline = () => {
   const [clipLength, setClipLength] = useState(60);
   const [caption, setCaption] = useState("");
   const [cadenceHours, setCadenceHours] = useState(24); // default: 1/day — safest against spam suppression
+  const [fullVideoUrl, setFullVideoUrl] = useState<string | undefined>();
   const [clips, setClips] = useState<ClipResult[]>([]);
   const [running, setRunning] = useState(false);
   const [log, setLog] = useState<string[]>([]);
@@ -140,6 +141,7 @@ export const AutoContentPipeline = () => {
     setVideoFile(file);
     setClips([]);
     setLog([]);
+    setFullVideoUrl(undefined);
     const v = document.createElement("video");
     v.src = URL.createObjectURL(file);
     v.onloadedmetadata = () => setDuration(v.duration);
@@ -189,6 +191,19 @@ export const AutoContentPipeline = () => {
     await ff.writeFile("src.mp4", inputBuf);
     addLog("Video loaded into browser engine.");
 
+    // Upload the FULL, uncut video to R2 first — clips will link back to this for people who want to go deeper.
+    // Note: very large source files (roughly >150–200MB) may fail here due to edge-function payload limits;
+    // if that happens, trim the source first or ask me to move this step to a Hetzner worker.
+    let fullUrl: string | undefined;
+    try {
+      addLog("Uploading full video for the 'watch the full teaching' link…");
+      fullUrl = await uploadAsset(u8ToBase64(inputBuf), "video", videoFile.type || "video/mp4");
+      setFullVideoUrl(fullUrl);
+      addLog(`✓ Full video available: ${fullUrl}`);
+    } catch (e: any) {
+      addLog(`✗ Full video upload failed (clips will still post without the link): ${e.message}`);
+    }
+
     const segments: { start: number; end: number }[] = [];
     for (let t = 0; t < duration; t += clipLength) {
       segments.push({ start: t, end: Math.min(t + clipLength, duration) });
@@ -233,7 +248,8 @@ export const AutoContentPipeline = () => {
       } catch (e: any) {
         addLog(`✗ Hook generation failed, using generic title: ${e.message}`);
       }
-      const finalCaption = `${clipCaption || hook}${hashtags.length ? "\n\n" + hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ") : ""}`;
+      const watchMoreLine = fullUrl ? `\n\n🎬 Watch the full teaching → ${fullUrl}` : "";
+      const finalCaption = `${clipCaption || hook}${watchMoreLine}${hashtags.length ? "\n\n" + hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ") : ""}`;
 
       // Generate 4 platform thumbnails from a frame 1s in, with the real topic burned onto each
       const thumbs: Record<string, string> = {};
@@ -360,6 +376,13 @@ export const AutoContentPipeline = () => {
             {running ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Scissors size={14} />}
             {running ? "Processing…" : "Chop, Thumbnail & Schedule"}
           </button>
+        </div>
+      )}
+
+      {fullVideoUrl && (
+        <div style={{ background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 12, color: "#fff" }}>
+          <strong>Full video link (auto-added to every clip's caption):</strong>{" "}
+          <a href={fullVideoUrl} target="_blank" rel="noreferrer" style={{ color: C.cyan }}>{fullVideoUrl}</a>
         </div>
       )}
 
