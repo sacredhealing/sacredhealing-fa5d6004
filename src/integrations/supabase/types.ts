@@ -7409,6 +7409,48 @@ export type Database = {
         }
         Relationships: []
       }
+      social_post_queue: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string
+          media_type: string | null
+          media_url: string | null
+          platforms: string[] | null
+          profile: string | null
+          results: Json | null
+          scheduled_for: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          platforms?: string[] | null
+          profile?: string | null
+          results?: Json | null
+          scheduled_for?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          platforms?: string[] | null
+          profile?: string | null
+          results?: Json | null
+          scheduled_for?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       social_shares: {
         Row: {
           content_id: string | null
