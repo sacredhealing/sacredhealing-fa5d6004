@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { Upload, Scissors, Send, CheckCircle2, XCircle, Clock, RefreshCw, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { toBlobURL, fetchFile } from "@ffmpeg/util";
 
 const C = {
   gold: "#D4AF37",
@@ -22,7 +24,7 @@ const THUMB_SPECS: { id: string; label: string; w: number; h: number }[] = [
   { id: "facebook", label: "Facebook (1.91:1)", w: 1200, h: 630 },
 ];
 
-let ffmpegInstance: any = null;
+let ffmpegInstance: FFmpeg | null = null;
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
     p,
@@ -30,28 +32,13 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   ]);
 }
 
-async function loadFFmpeg(): Promise<any> {
+async function loadFFmpeg(): Promise<FFmpeg> {
   if (ffmpegInstance) return ffmpegInstance;
-  if (!(window as any).FFmpegWASM) {
-    await withTimeout(new Promise<void>((res, rej) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js";
-      s.onload = () => res();
-      s.onerror = () => rej(new Error("Failed to load FFmpeg script from CDN"));
-      document.head.appendChild(s);
-    }), 25000, "Loading FFmpeg engine script");
-    await withTimeout(new Promise<void>((res, rej) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js";
-      s.onload = () => res();
-      s.onerror = () => rej(new Error("Failed to load FFmpeg util script from CDN"));
-      document.head.appendChild(s);
-    }), 25000, "Loading FFmpeg util script");
-  }
-  const { FFmpeg } = (window as any).FFmpegWASM || (window as any);
-  const { toBlobURL } = (window as any).FFmpegUtil || {};
   const ff = new FFmpeg();
-  const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd";
+  // FFmpeg's own worker is now bundled by Vite (same-origin) since it's a real npm import —
+  // this is what fixes the "cannot be accessed from origin" error. Only the large core+wasm
+  // binaries are still pulled from CDN as blobs (keeps app bundle size small).
+  const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
   const [coreURL, wasmURL] = await withTimeout(
     Promise.all([
       toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
@@ -213,8 +200,7 @@ export const AutoContentPipeline = () => {
     addLog("Loading FFmpeg WebAssembly engine…");
     const ff = await loadFFmpeg();
 
-    const { fetchFile } = (window as any).FFmpegUtil || {};
-    const inputBuf = fetchFile ? await fetchFile(videoFile) : new Uint8Array(await videoFile.arrayBuffer());
+    const inputBuf = await fetchFile(videoFile);
     await ff.writeFile("src.mp4", inputBuf);
     addLog("Video loaded into browser engine.");
 
