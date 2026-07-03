@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { Upload, Scissors, Send, CheckCircle2, XCircle, Clock, RefreshCw, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
+const FUNCTION_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL, fetchFile } from "@ffmpeg/util";
 
@@ -151,12 +153,18 @@ export const AutoContentPipeline = () => {
     v.onloadedmetadata = () => setDuration(v.duration);
   };
 
-  const uploadAsset = async (base64: string, mediaType: "video" | "image", mime: string) => {
-    const { data, error } = await supabase.functions.invoke("social-post", {
-      body: { action: "upload_asset", mediaBase64: base64, mediaType, mediaMimeType: mime },
+  // Direct binary upload — sends raw bytes, no base64 encoding, no giant JSON string.
+  // This is the fix for the "whole phone hangs" bug: base64-encoding a full video on the
+  // main thread was locking up the browser (and the phone with it) on anything but tiny files.
+  const uploadBinary = async (data: Uint8Array | Blob, mediaType: "video" | "image", mime: string, ext: string) => {
+    const res = await fetch(`${FUNCTION_URL}?action=upload_binary&mediaType=${mediaType}&ext=${ext}`, {
+      method: "POST",
+      headers: { "Content-Type": mime },
+      body: data instanceof Blob ? data : (data.buffer as ArrayBuffer),
     });
-    if (error || !data?.success) throw new Error(data?.error || error?.message || "Upload failed");
-    return data.url as string;
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.error || `Upload failed (HTTP ${res.status})`);
+    return json.url as string;
   };
 
   const generateHook = async (audioBase64: string) => {
@@ -167,15 +175,14 @@ export const AutoContentPipeline = () => {
     return data as { hook: string; caption: string; hashtags: string[] };
   };
 
-  const publishClip = async (base64: string, thumbCaption: string, scheduledTime?: string) => {
+  const publishClip = async (mediaUrl: string, thumbCaption: string, scheduledTime?: string) => {
     const { data, error } = await supabase.functions.invoke("social-post", {
       body: {
         action: "publish",
         caption: thumbCaption,
         platforms: ["instagram", "youtube", "tiktok", "facebook"],
-        mediaBase64: base64,
+        mediaUrl,
         mediaType: "video",
-        mediaMimeType: "video/mp4",
         profile: "kritagya",
         scheduledTime,
       },
@@ -210,7 +217,7 @@ export const AutoContentPipeline = () => {
     let fullUrl: string | undefined;
     try {
       addLog("Uploading full video for the 'watch the full teaching' link…");
-      fullUrl = await uploadAsset(u8ToBase64(inputBuf), "video", videoFile.type || "video/mp4");
+      fullUrl = await uploadBinary(inputBuf, "video", videoFile.type || "video/mp4", "mp4");
       setFullVideoUrl(fullUrl);
       addLog(`✓ Full video available: ${fullUrl}`);
     } catch (e: any) {
@@ -242,7 +249,16 @@ export const AutoContentPipeline = () => {
         outName,
       ]);
       const clipData = (await ff.readFile(outName)) as Uint8Array;
-      const clipBase64 = u8ToBase64(clipData);
+
+      addLog(`Uploading clip ${i + 1}…`);
+      let clipUrl: string;
+      try {
+        clipUrl = await uploadBinary(clipData, "video", "video/mp4", "mp4");
+      } catch (e: any) {
+        addLog(`✗ Clip ${i + 1} upload failed, skipping: ${e.message}`);
+        setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: "error", error: e.message } : c)));
+        continue;
+      }
 
       // Extract audio and get a content-derived hook/caption/hashtags — thumbnail has to reflect what's actually said
       setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: "transcribing" } : c)));
@@ -279,7 +295,7 @@ export const AutoContentPipeline = () => {
           ]);
           const rawThumb = (await ff.readFile(thumbName)) as Uint8Array;
           const overlaid = await overlayTextOnImage(rawThumb, spec.w, spec.h, hook);
-          const url = await uploadAsset(u8ToBase64(overlaid), "image", "image/jpeg");
+          const url = await uploadBinary(overlaid, "image", "image/jpeg", "jpg");
           thumbs[spec.id] = url;
           addLog(`✓ ${spec.label} thumbnail generated with topic overlay.`);
         } catch (e: any) {
@@ -300,17 +316,15 @@ export const AutoContentPipeline = () => {
 
       let postResults: ClipResult["postResults"] | undefined;
       try {
-        const res = await publishClip(clipBase64, finalCaption, scheduledTime);
+        const res = await publishClip(clipUrl, finalCaption, scheduledTime);
         postResults = res.results;
       } catch (e: any) {
         addLog(`✗ Publish/schedule failed for clip ${i + 1}: ${e.message}`);
       }
 
-      const videoUrl = await uploadAsset(clipBase64, "video", "video/mp4").catch(() => undefined);
-
       setClips((prev) =>
         prev.map((c) => (c.index === i
-          ? { ...c, thumbs, postResults, videoUrl, hook, scheduledFor: scheduledTime, status: scheduledTime ? "scheduled" : "done" }
+          ? { ...c, thumbs, postResults, videoUrl: clipUrl, hook, scheduledFor: scheduledTime, status: scheduledTime ? "scheduled" : "done" }
           : c))
       );
     }

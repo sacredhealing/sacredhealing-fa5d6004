@@ -209,9 +209,39 @@ async function saveToQueue(payload: any, results: any, mediaUrl: string | null, 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const url = new URL(req.url);
+
+  // ── Raw binary upload — used by the frontend for videos/images to avoid
+  // base64-encoding large files (which freezes mobile browsers on big videos).
+  // Called as: POST ?action=upload_binary&mediaType=video|image&ext=mp4
+  if (url.searchParams.get("action") === "upload_binary") {
+    try {
+      if (!R2_KEY_ID || !R2_SECRET) {
+        return new Response(JSON.stringify({ success: false, error: "R2 credentials not configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const mediaType = url.searchParams.get("mediaType") || "video";
+      const ext = url.searchParams.get("ext") || (mediaType === "video" ? "mp4" : "jpg");
+      const contentType = req.headers.get("content-type") || (mediaType === "video" ? "video/mp4" : "image/jpeg");
+      const buf = new Uint8Array(await req.arrayBuffer());
+      const key = `pipeline/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const fileUrl = await uploadToR2(key, buf, contentType);
+      return new Response(JSON.stringify({ success: true, url: fileUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ success: false, error: err.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
   try {
     const body = await req.json();
-    const { action, context, caption, platforms, mediaBase64, mediaMimeType, mediaType, scheduledTime, profile } = body;
+    const { action, context, caption, platforms, mediaBase64, mediaUrl: preUploadedUrl, mediaMimeType, mediaType, scheduledTime, profile } = body;
 
     // ── ACTION: Generate caption + hashtags
     if (action === "generate_caption") {
@@ -299,10 +329,10 @@ serve(async (req) => {
 
     // ── ACTION: Publish (immediate) or Schedule (hold for cron)
     if (action === "publish") {
-      // Upload media to R2 if provided
-      let mediaUrl: string | null = null;
+      // Prefer an already-uploaded URL (from upload_binary) — avoids re-encoding large files as base64.
+      let mediaUrl: string | null = preUploadedUrl || null;
       const uploadResult: Record<string, any> = {};
-      if (mediaBase64 && R2_KEY_ID && R2_SECRET) {
+      if (!mediaUrl && mediaBase64 && R2_KEY_ID && R2_SECRET) {
         try {
           const bytes = Uint8Array.from(atob(mediaBase64), (c) => c.charCodeAt(0));
           const ext = mediaType === "video" ? "mp4" : "jpg";
