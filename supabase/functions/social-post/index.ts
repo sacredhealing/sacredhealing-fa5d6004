@@ -197,6 +197,36 @@ serve(async (req) => {
       });
     }
 
+    // ── ACTION: Upload only (no posting) — used by Auto-Pipeline for clips/thumbnails
+    if (action === "upload_asset") {
+      if (!mediaBase64) {
+        return new Response(JSON.stringify({ success: false, error: "mediaBase64 required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!R2_KEY_ID || !R2_SECRET) {
+        return new Response(JSON.stringify({ success: false, error: "R2 credentials not configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const bytes = Uint8Array.from(atob(mediaBase64), (c) => c.charCodeAt(0));
+        const ext = mediaType === "video" ? "mp4" : "jpg";
+        const key = `pipeline/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const url = await uploadToR2(key, bytes, mediaMimeType || (mediaType === "video" ? "video/mp4" : "image/jpeg"));
+        return new Response(JSON.stringify({ success: true, url }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // ── ACTION: Publish
     if (action === "publish") {
       const results: Record<string, any> = {};

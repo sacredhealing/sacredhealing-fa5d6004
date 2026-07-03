@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { AutoContentPipeline } from "@/components/AutoContentPipeline";
 import {
   Youtube,
   Instagram,
@@ -1086,7 +1087,8 @@ const ReelCreator = () => {
     setTimeout(() => { setGenerating(false); setGenerated(true); }, 2800);
   };
 
-  const SUB_TABS: { id: "yt" | "zoom" | "existing"; label: string }[] = [
+  const SUB_TABS: { id: "yt" | "zoom" | "existing" | "pipeline"; label: string }[] = [
+    { id: "pipeline", label: "🚀 Auto-Pipeline" },
     { id: "yt", label: "▶ YouTube Import" },
     { id: "zoom", label: "🎬 Zoom Processor" },
     { id: "existing", label: "📋 Existing Videos" },
@@ -1132,6 +1134,7 @@ const ReelCreator = () => {
       </div>
 
       {/* Sub-tab content */}
+      {subTab === "pipeline" && <AutoContentPipeline />}
       {subTab === "yt" && <YouTubeImporter onAddVideo={handleAddVideo} />}
       {subTab === "zoom" && <ZoomProcessor initialVideo={zoomVideo} />}
       {subTab === "existing" && (
