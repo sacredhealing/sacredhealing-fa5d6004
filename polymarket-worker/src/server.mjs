@@ -420,7 +420,7 @@ function latencyArb(markets) {
       const abs  = Math.abs(move);
       if (Number.isNaN(abs)) { nanCount++; continue; }
       if (abs > diagStats.maxMove) { diagStats.maxMove = abs; diagStats.maxMoveQ = m.question?.slice(0, 40); }
-      if (abs < 0.03) continue;
+      if (abs < 0.015) continue;
       const sigId = `lat-${m.id}-${Math.floor(now / 60000)}`;
       if (processedSigs.has(sigId)) continue;
       processedSigs.add(sigId);
@@ -460,11 +460,11 @@ function volScalper(markets) {
       const std  = Math.sqrt(hist.reduce((s, p) => s + (p - mean) ** 2, 0) / hist.length);
       const vol  = mean > 0 ? std / mean : 0;
       if (vol > diagStats.maxVol) { diagStats.maxVol = vol; diagStats.maxVolQ = m.question?.slice(0, 40); }
-      if (vol < 0.05) continue;
+      if (vol < 0.025) continue;
       const sigId = `scalp-${m.id}-${Math.floor(Date.now() / 120000)}`;
       if (processedSigs.has(sigId)) continue;
       processedSigs.add(sigId);
-      if (yes.price > mean * 0.97) continue;
+      if (yes.price > mean * 0.99) continue;
       signals.push({
         marketId: m.id, direction: 'buy',
         outcome: 'Yes', tokenId: yes.tokenId,
