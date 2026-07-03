@@ -1,0 +1,53 @@
+name: Test Full Chain (trigger_worker + worker_status)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - name: Check CORS headers on OPTIONS preflight
+        run: |
+          echo "=== OPTIONS preflight headers ===" > _chain_test.txt
+          curl -s -X OPTIONS "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post" \
+            -H "Origin: https://sacredhealing.lovable.app" \
+            -H "Access-Control-Request-Method: POST" \
+            -D - -o /dev/null >> _chain_test.txt
+
+      - name: Trigger worker with a fake video URL
+        run: |
+          echo "" >> _chain_test.txt
+          echo "=== trigger_worker response ===" >> _chain_test.txt
+          curl -s -X POST "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post" \
+            -H "Content-Type: application/json" \
+            -d '{"action":"trigger_worker","videoUrl":"https://example.com/fake-test-video.mp4","clipLength":60,"cadenceHours":24}' \
+            -w "\nHTTP_STATUS:%{http_code}\n" >> _chain_test.txt
+          cat _chain_test.txt
+
+      - name: Wait then poll worker_status
+        run: |
+          sleep 8
+          JOB_ID=$(grep -o '"jobId":"[^"]*"' _chain_test.txt | tail -1 | cut -d'"' -f4)
+          echo "" >> _chain_test.txt
+          echo "=== worker_status response (jobId=$JOB_ID) ===" >> _chain_test.txt
+          curl -s -X POST "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post" \
+            -H "Content-Type: application/json" \
+            -d "{\"action\":\"worker_status\",\"jobId\":\"$JOB_ID\"}" \
+            -w "\nHTTP_STATUS:%{http_code}\n" >> _chain_test.txt
+          cat _chain_test.txt
+
+      - name: Commit result
+        run: |
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Deploy Bot"
+          git add _chain_test.txt
+          git commit -m "full chain test $(date -u +%Y-%m-%dT%H:%M)" || true
+          git push "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" HEAD:main || true
