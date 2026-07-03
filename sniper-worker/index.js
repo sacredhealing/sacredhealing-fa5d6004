@@ -42,6 +42,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Connection, Keypair, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
+import WebSocket from 'ws';
 
 // ── ENV ──────────────────────────────────────────────────────────
 const SUPABASE_URL       = process.env.SUPABASE_URL        || 'https://ssygukfdbtehvtndandn.supabase.co';
@@ -88,7 +89,14 @@ const RPC_WS = HELIUS_API_KEY
   : undefined; // Connection derives wss:// from the http endpoint if unset
 
 // ── CLIENTS ──────────────────────────────────────────────────────
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Node 20 on the Hetzner host has no native `WebSocket` global (that only
+// landed as stable in Node 22 — the sandbox this was tested in runs 22,
+// which is why this didn't surface until deploy). supabase-js initializes
+// a RealtimeClient eagerly inside createClient(), even though this worker
+// never opens a realtime channel — only REST via .from(). Passing `ws`
+// explicitly here satisfies that eager init without needing to touch the
+// server's global Node version (which clawbot/shreem also run on).
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { transport: WebSocket } });
 const connection = new Connection(RPC_HTTP, { commitment: 'processed', wsEndpoint: RPC_WS });
 let keypair = null;
 if (WALLET_PRIVATE_KEY && !PAPER_MODE) {

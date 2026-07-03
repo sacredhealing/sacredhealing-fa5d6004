@@ -11,7 +11,8 @@
   "dependencies": {
     "@supabase/supabase-js":       "^2.45.0",
     "@solana/web3.js":             "^1.95.0",
-    "bs58":                        "^5.0.0"
+    "bs58":                        "^5.0.0",
+    "ws":                          "^8.18.0"
   },
   "engines": {
     "node": ">=20"
