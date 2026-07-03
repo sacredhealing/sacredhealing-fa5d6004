@@ -406,7 +406,7 @@ function latencyArb(markets) {
   const signals = [];
   let skippedNoOutcome = 0, skippedHistory = 0, evaluated = 0, nanCount = 0;
   try {
-    for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).sort((a, b) => b.volume - a.volume).slice(0, 10)) {
+    for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).sort((a, b) => b.volume - a.volume).slice(0, 25)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       const no  = m.outcomes.find(o => o.name.toLowerCase() === 'no');
       if (!yes || !no) { skippedNoOutcome++; continue; }
@@ -447,7 +447,7 @@ function latencyArb(markets) {
 function volScalper(markets) {
   const signals = [];
   try {
-    for (const m of markets.filter(m => m.liquidity > 100000 && !m.closed).slice(0, 15)) {
+    for (const m of markets.filter(m => m.liquidity > 100000 && !m.closed).slice(0, 30)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       if (!yes) continue;
       const key  = `vol-${m.id}`;
