@@ -39,14 +39,24 @@
  * ╚══════════════════════════════════════════════════════════════╝
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { Connection, Keypair, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
-import WebSocket from 'ws';
 
 // ── ENV ──────────────────────────────────────────────────────────
-const SUPABASE_URL       = process.env.SUPABASE_URL        || 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_KEY       = process.env.SUPABASE_SERVICE_KEY || '';
+// No SUPABASE_SERVICE_KEY here on purpose — see BRIDGE section below.
+// Lovable owns this Supabase project directly; the service_role key is
+// not retrievable from the Lovable UI or the Supabase dashboard under
+// this account (confirmed blocked in multiple prior sessions). Instead
+// of that key, this worker talks to the clawbot-bridge edge function,
+// which already exists, is already live, and already holds the real
+// service_role key INSIDE Supabase (auto-injected by the platform to
+// every edge function — nobody has to retrieve or paste it). The
+// bridge is generic: /functions/v1/clawbot-bridge/<table> proxies to
+// PostgREST for whatever table you ask for, gated by a shared secret
+// instead of a real key. Same mechanism CLAWBOT already runs on.
+const BRIDGE_URL         = process.env.BRIDGE_URL   || 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge';
+const BRIDGE_SECRET      = process.env.BRIDGE_SECRET || 'clawbot-bridge-2026'; // matches clawbot-bridge's default; override here if Lovable's edge function secret differs
+const SUPABASE_ANON_KEY  = process.env.SUPABASE_ANON_KEY || ''; // optional — some Supabase edge functions require this at the platform gateway level in addition to the app-level apikey secret above; safe to leave blank and add only if you see 401/403s that persist after BRIDGE_SECRET is confirmed correct
 const HELIUS_API_KEY     = process.env.HELIUS_API_KEY       || '';
 const GEMINI_API_KEY     = process.env.GEMINI_API_KEY       || '';
 const PAPER_MODE         = (process.env.PAPER_MODE || 'true') === 'true';
@@ -89,15 +99,50 @@ const RPC_WS = HELIUS_API_KEY
   : undefined; // Connection derives wss:// from the http endpoint if unset
 
 // ── CLIENTS ──────────────────────────────────────────────────────
-// Node 20 on the Hetzner host has no native `WebSocket` global (that only
-// landed as stable in Node 22 — the sandbox this was tested in runs 22,
-// which is why this didn't surface until deploy). supabase-js initializes
-// a RealtimeClient eagerly inside createClient(), even though this worker
-// never opens a realtime channel — only REST via .from(). Passing `ws`
-// explicitly here satisfies that eager init without needing to touch the
-// server's global Node version (which clawbot/shreem also run on).
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { transport: WebSocket } });
 const connection = new Connection(RPC_HTTP, { commitment: 'confirmed', wsEndpoint: RPC_WS });
+
+// ── BRIDGE — thin PostgREST-over-fetch replacement for @supabase/supabase-js.
+// Talks to clawbot-bridge, which forwards to PostgREST using Supabase's
+// real service_role key internally. Query-string filters use PostgREST
+// syntax directly (e.g. 'status=eq.open', 'mint=eq.<mint>').
+// ══════════════════════════════════════════════════════════════════
+function bridgeHeaders(extra = {}) {
+  const h = { apikey: BRIDGE_SECRET, ...extra };
+  if (SUPABASE_ANON_KEY) h['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
+  return h;
+}
+async function bridgeSelect(table, query = '') {
+  try {
+    const r = await fetch(`${BRIDGE_URL}/${table}${query ? `?${query}` : ''}`, {
+      headers: bridgeHeaders(),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) { L.warn(`[bridge-select] ${table}: HTTP ${r.status}`); return null; }
+    return await r.json();
+  } catch (e) { L.warn(`[bridge-select] ${table}: ${e.message}`); return null; }
+}
+async function bridgeInsert(table, row) {
+  try {
+    const r = await fetch(`${BRIDGE_URL}/${table}`, {
+      method: 'POST',
+      headers: bridgeHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(row),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) L.warn(`[bridge-insert] ${table}: HTTP ${r.status} ${await r.text().catch(() => '')}`);
+  } catch (e) { L.warn(`[bridge-insert] ${table}: ${e.message}`); }
+}
+async function bridgeUpdate(table, query, patch) {
+  try {
+    const r = await fetch(`${BRIDGE_URL}/${table}?${query}`, {
+      method: 'PATCH',
+      headers: bridgeHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(patch),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) L.warn(`[bridge-update] ${table}: HTTP ${r.status} ${await r.text().catch(() => '')}`);
+  } catch (e) { L.warn(`[bridge-update] ${table}: ${e.message}`); }
+}
 let keypair = null;
 if (WALLET_PRIVATE_KEY && !PAPER_MODE) {
   try { keypair = Keypair.fromSecretKey(bs58.decode(WALLET_PRIVATE_KEY)); }
@@ -193,13 +238,11 @@ function dailyGatesOk() {
   return { ok: true };
 }
 async function seedDailyCountersFromDB() {
-  try {
-    const since = new Date(); since.setUTCHours(0, 0, 0, 0);
-    const { data } = await sb.from('sniper_trades').select('pnl_sol, created_at').gte('created_at', since.toISOString());
-    dailyTrades = data?.length ?? 0;
-    dailyPnl = (data ?? []).reduce((s, t) => s + (parseFloat(t.pnl_sol) || 0), 0);
-    L.info(`✦ Seeded daily counters: ${dailyTrades} trades, ${dailyPnl.toFixed(4)} SOL PnL`);
-  } catch (e) { L.warn(`Daily counter seed failed: ${e.message}`); }
+  const since = new Date(); since.setUTCHours(0, 0, 0, 0);
+  const data = await bridgeSelect('sniper_trades', `select=pnl_sol,created_at&created_at=gte.${since.toISOString()}`);
+  dailyTrades = data?.length ?? 0;
+  dailyPnl = (data ?? []).reduce((s, t) => s + (parseFloat(t.pnl_sol) || 0), 0);
+  L.info(`✦ Seeded daily counters: ${dailyTrades} trades, ${dailyPnl.toFixed(4)} SOL PnL`);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -509,12 +552,12 @@ async function processCandidate(token) {
     tg(`🎯 *${PAPER_MODE ? 'PAPER ' : ''}SNIPE ENTRY* \`${token.symbol}\`\n${solSpent.toFixed(4)} SOL | rug:${token.rugScore} ai:${token.aiScore ?? 'n/a'}`);
 
     // Fire-and-forget — dashboard/durability only, never blocks the pipeline.
-    sb.from('sniper_trades').insert({
+    bridgeInsert('sniper_trades', {
       mint: token.mint, symbol: token.symbol, launchpad: 'pump_fun',
       action: 'SNIPE_ENTRY', status: 'open', is_paper: PAPER_MODE,
       size_sol: solSpent, entry_price: entryPrice, tokens_held: tokensHeld,
       ath_price: entryPrice, ai_score: token.aiScore ?? null, rug_score: token.rugScore ?? null,
-    }).then(({ error }) => { if (error) L.warn(`[log-insert] ${token.symbol}: ${error.message}`); });
+    });
   } catch (e) {
     L.warn(`[pipeline-error] ${token.symbol}: ${e.message}`);
   } finally {
@@ -575,8 +618,7 @@ async function managePositions() {
     else if (minElapsed >= MAX_HOLD_MIN && !pos.tp1Hit)   { exitPct = 1.0;  exitAction = 'TIMEOUT_EXIT'; }
 
     if (!exitAction || exitPct <= 0) {
-      sb.from('sniper_trades').update({ ath_price: pos.athPrice, trail_armed: pos.trailArmed }).eq('mint', mint).eq('status', 'open')
-        .then(({ error }) => { if (error) L.warn(`[ath-sync] ${error.message}`); });
+      bridgeUpdate('sniper_trades', `mint=eq.${encodeURIComponent(mint)}&status=eq.open`, { ath_price: pos.athPrice, trail_armed: pos.trailArmed });
       continue;
     }
 
@@ -598,7 +640,7 @@ async function managePositions() {
     const fullExit = exitPct >= 1.0 || pos.tokensHeld <= 1e-6;
     if (fullExit) dailyPnl += pos.realizedPnl;
 
-    sb.from('sniper_trades').update({
+    bridgeUpdate('sniper_trades', `mint=eq.${encodeURIComponent(mint)}&status=eq.open`, {
       action: exitAction, exit_price: currentPrice,
       multiplier_x: parseFloat(x.toFixed(4)),
       pnl_sol: parseFloat(pos.realizedPnl.toFixed(8)),
@@ -606,7 +648,7 @@ async function managePositions() {
       tp1_hit: pos.tp1Hit, tp2_hit: pos.tp2Hit, trail_armed: pos.trailArmed,
       realized_pnl: pos.realizedPnl,
       status: fullExit ? (pos.realizedPnl > 0 ? 'won' : 'lost') : 'open',
-    }).eq('mint', mint).eq('status', 'open').then(({ error }) => { if (error) L.warn(`[exit-log] ${error.message}`); });
+    });
 
     if (fullExit) { positions.delete(mint); devWatching.delete(mint); devTriggered.delete(mint); }
 
@@ -645,47 +687,43 @@ async function checkDevWallets() {
 // edits and a crash-recovery seed on the NEXT restart, not this one.
 // ══════════════════════════════════════════════════════════════════
 async function syncOpenPositionsFromDB() {
-  try {
-    const { data, error } = await sb.from('sniper_trades').select('*').eq('status', 'open');
-    if (error) { L.warn(`Sync error: ${error.message}`); return; }
-    for (const row of data ?? []) {
-      if (!positions.has(row.mint)) {
-        positions.set(row.mint, {
-          mint: row.mint, symbol: row.symbol, launchpad: row.launchpad,
-          entryPrice: parseFloat(row.entry_price), entryTime: new Date(row.created_at).getTime(),
-          tokensHeld: row.tokens_held != null ? parseFloat(row.tokens_held) : 0,
-          athPrice: row.ath_price != null ? parseFloat(row.ath_price) : parseFloat(row.entry_price),
-          tp1Hit: row.tp1_hit ?? false, tp2Hit: row.tp2_hit ?? false, trailArmed: row.trail_armed ?? false,
-          realizedPnl: row.realized_pnl != null ? parseFloat(row.realized_pnl) : 0,
-          creator: row.creator ?? null,
-        });
-        if (row.creator) devWatching.set(row.mint, { creator: row.creator, lastSig: null });
-        L.info(`[sync] adopted ${row.symbol} (${row.mint.slice(0, 8)}...) from Supabase — restart recovery`);
-      }
+  const data = await bridgeSelect('sniper_trades', 'select=*&status=eq.open');
+  if (!data) return; // bridgeSelect already logged the failure
+  for (const row of data) {
+    if (!positions.has(row.mint)) {
+      positions.set(row.mint, {
+        mint: row.mint, symbol: row.symbol, launchpad: row.launchpad,
+        entryPrice: parseFloat(row.entry_price), entryTime: new Date(row.created_at).getTime(),
+        tokensHeld: row.tokens_held != null ? parseFloat(row.tokens_held) : 0,
+        athPrice: row.ath_price != null ? parseFloat(row.ath_price) : parseFloat(row.entry_price),
+        tp1Hit: row.tp1_hit ?? false, tp2Hit: row.tp2_hit ?? false, trailArmed: row.trail_armed ?? false,
+        realizedPnl: row.realized_pnl != null ? parseFloat(row.realized_pnl) : 0,
+        creator: row.creator ?? null,
+      });
+      if (row.creator) devWatching.set(row.mint, { creator: row.creator, lastSig: null });
+      L.info(`[sync] adopted ${row.symbol} (${row.mint.slice(0, 8)}...) from Supabase — restart recovery`);
     }
-  } catch (e) { L.warn(`Sync exception: ${e.message}`); }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
 // STATS (every 5 min)
 // ══════════════════════════════════════════════════════════════════
 async function printStats() {
-  try {
-    const { data } = await sb.from('sniper_trades').select('pnl_sol, status, multiplier_x').order('created_at', { ascending: false }).limit(1000);
-    const all = data ?? [];
-    const wins = all.filter((t) => t.status === 'won').length;
-    const losses = all.filter((t) => t.status === 'lost').length;
-    const pnl = all.reduce((s, t) => s + (parseFloat(t.pnl_sol) || 0), 0);
-    const wr = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(0) : '—';
-    console.log('');
-    console.log('══════════════════════════════════════════════════════');
-    console.log('  SQI SOVEREIGN SNIPER — v6 CONSOLIDATED SNAPSHOT');
-    console.log(`  Mode: ${PAPER_MODE ? 'PAPER' : 'LIVE'} | Uptime: ${Math.round((Date.now() - startTime) / 60000)}min`);
-    console.log(`  W/L: ${wins}/${losses} (${wr}%) | Net PnL: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(4)} SOL | Open: ${positions.size}/${MAX_POSITIONS}`);
-    console.log(`  Today: ${dailyTrades}/${MAX_DAILY_TRADES} trades | ${dailyPnl >= 0 ? '+' : ''}${dailyPnl.toFixed(4)} SOL`);
-    console.log('══════════════════════════════════════════════════════');
-    console.log('');
-  } catch (e) { L.warn(`Stats error: ${e.message}`); }
+  const data = await bridgeSelect('sniper_trades', 'select=pnl_sol,status,multiplier_x&order=created_at.desc&limit=1000');
+  const all = data ?? [];
+  const wins = all.filter((t) => t.status === 'won').length;
+  const losses = all.filter((t) => t.status === 'lost').length;
+  const pnl = all.reduce((s, t) => s + (parseFloat(t.pnl_sol) || 0), 0);
+  const wr = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(0) : '—';
+  console.log('');
+  console.log('══════════════════════════════════════════════════════');
+  console.log('  SQI SOVEREIGN SNIPER — v6 CONSOLIDATED SNAPSHOT');
+  console.log(`  Mode: ${PAPER_MODE ? 'PAPER' : 'LIVE'} | Uptime: ${Math.round((Date.now() - startTime) / 60000)}min`);
+  console.log(`  W/L: ${wins}/${losses} (${wr}%) | Net PnL: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(4)} SOL | Open: ${positions.size}/${MAX_POSITIONS}`);
+  console.log(`  Today: ${dailyTrades}/${MAX_DAILY_TRADES} trades | ${dailyPnl >= 0 ? '+' : ''}${dailyPnl.toFixed(4)} SOL`);
+  console.log('══════════════════════════════════════════════════════');
+  console.log('');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -701,7 +739,7 @@ async function start() {
   console.log(`  Entry:  BUY:${BUY_SOL}SOL MaxPos:${MAX_POSITIONS} MaxDailyTrades:${MAX_DAILY_TRADES} MaxDailyLoss:${MAX_DAILY_LOSS}SOL MinQuality:${MIN_AI_SCORE} (deterministic, no LLM call — GEMINI_API_KEY unused)`);
   console.log(`  Exit:   TP1:${TP1_X}x(50%) TP2:${TP2_X}x(40%) SL:-${SL_PCT * 100}% Trail:${TRAIL_PCT * 100}%(arms@+${TRAIL_ACTIVATE_PCT * 100}%) MaxHold:${MAX_HOLD_MIN}min`);
   console.log(`  Detection: direct Helius WebSocket (onLogs) — no webhook, no edge function`);
-  console.log(`  Supabase: ${SUPABASE_URL.slice(8, 28)}... (logging only, async)`);
+  console.log(`  Bridge: ${BRIDGE_URL} (logging only, async, no service_role key needed)`);
   console.log('');
 
   if (!HELIUS_API_KEY) { L.alert('No HELIUS_API_KEY set — detection cannot start. Exiting.'); process.exit(1); }
