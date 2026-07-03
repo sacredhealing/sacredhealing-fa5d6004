@@ -17,11 +17,19 @@
  * ║                                                                  ║
  * ║  What did NOT change, on purpose: the mechanical filter chain  ║
  * ║  (bonding curve / holder / buy-velocity / rug-score RPC calls) ║
- * ║  and the AI veto are untouched, verbatim from the verified      ║
- * ║  edge function. Those RPC calls are the thing buying "few      ║
- * ║  losses" — cutting them would be cutting the filter, not the   ║
- * ║  overhead. Same for the exit logic below (TP1/TP2/SL/trail/    ║
- * ║  dev-wallet-exit) — unchanged from the verified v5 worker.     ║
+ * ║  is untouched, verbatim from the verified edge function. Same  ║
+ * ║  for the exit logic below (TP1/TP2/SL/trail/dev-wallet-exit)   ║
+ * ║  — unchanged from the verified v5 worker.                      ║
+ * ║                                                                  ║
+ * ║  What DID change from the first v6 pass: the Gemini AI veto is ║
+ * ║  now dormant, not called. It only ever saw the same five signals║
+ * ║  the deterministic rug/quality score already computed — no new ║
+ * ║  information, just network latency and a fail-open failure mode║
+ * ║  on top of it. Replaced with computeQualityScore(), a weighted ║
+ * ║  formula over the same inputs. See its comment block for the   ║
+ * ║  reasoning and how to re-enable aiVeto() if you later feed it  ║
+ * ║  something the numbers can't see (token text, dev wallet       ║
+ * ║  history).                                                       ║
  * ║                                                                  ║
  * ║  Concurrency note: this file is now the ONLY thing that can    ║
  * ║  enter a position. If you ever run two copies of this process  ║
@@ -238,9 +246,44 @@ async function getBuyVelocity(bondingCurve) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// AI VETO — fail-open, timeout-bound. Never the sole approver, never
-// allowed to slow entry beyond AI_TIMEOUT_MS. Verbatim from the
-// edge function.
+// QUALITY SCORE — deterministic, in-process replacement for the
+// Gemini veto below. It scores the SAME five signals the mechanical
+// rug check already computed (devHoldPct, clusterPct, devTxCount,
+// solInCurve, buyVelocity, uniqueBuyers) — no new information, so an
+// LLM call added latency and a failure mode without adding filtering
+// power. This is a straight weighted formula over those signals:
+// dev-hold and holder concentration dominate (strongest rug
+// predictors), thin liquidity and a fresh dev wallet subtract,
+// buy velocity and buyer count add back as corroborating "organic
+// interest" signals. Tune the weights against real sniper_trades
+// outcomes once you have enough closed positions to see what
+// actually predicted losses.
+//
+// Writes into the same `ai_score` column the old veto used, so the
+// dashboard needs no schema change.
+// ══════════════════════════════════════════════════════════════════
+function computeQualityScore(token) {
+  let score = 100;
+  score -= (token.devHoldPct || 0) * 150;               // dominant weight — strongest rug predictor
+  score -= (token.clusterPct || 0) * 60;                 // top-3 holder concentration
+  score -= Math.max(0, 5 - (token.devTxCount || 0)) * 6; // fresh/unproven dev wallet
+  score -= Math.max(0, 5 - (token.solInCurve || 0)) * 4; // thin liquidity
+  score += Math.min((token.buyVelocity || 0) * 2, 20);   // organic buy pressure, capped bonus
+  score += Math.min((token.uniqueBuyers || 0) * 1, 15);  // broad holder base, capped bonus
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AI VETO — DORMANT. Not called from filter() anymore (see
+// computeQualityScore above). Kept here, working and untouched, for
+// the case where you want to feed an LLM something the mechanical
+// filter genuinely can't score — token name/description for
+// scam-language patterns beyond the honeypot keyword list, or the
+// dev wallet's prior launch history. As written below it only sees
+// the same five numbers the quality score already uses, which is
+// why it was removed from the hot path: no information advantage,
+// plus network latency and a fail-open failure mode. To re-enable,
+// call this instead of/alongside computeQualityScore in filter().
 // ══════════════════════════════════════════════════════════════════
 async function aiVeto(token) {
   if (!GEMINI_API_KEY) return { vetoed: false, score: null };
@@ -305,10 +348,10 @@ async function filter(token) {
   token.rugScore = rug;
   if (rug >= 7) return { pass: false, reason: `rug ${rug}/10` };
 
-  const { vetoed, score } = await aiVeto(token);
-  token.aiScore = score;
-  if (vetoed) return { pass: false, reason: `AI veto (${score})` };
-  return { pass: true, reason: `rug:${rug}/10 ai:${score ?? 'n/a'}` };
+  const qualityScore = computeQualityScore(token);
+  token.aiScore = qualityScore; // reuse field name → same Supabase column, dashboard unchanged
+  if (qualityScore < MIN_AI_SCORE) return { pass: false, reason: `quality ${qualityScore}` };
+  return { pass: true, reason: `rug:${rug}/10 q:${qualityScore}` };
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -647,7 +690,7 @@ async function start() {
   console.log('╚══════════════════════════════════════════════════╝');
   console.log(`  Mode:   ${PAPER_MODE ? '📋 PAPER' : '⚡ LIVE'}`);
   console.log(`  Wallet: ${keypair ? keypair.publicKey.toBase58() : 'Not set (paper mode)'}`);
-  console.log(`  Entry:  BUY:${BUY_SOL}SOL MaxPos:${MAX_POSITIONS} MaxDailyTrades:${MAX_DAILY_TRADES} MaxDailyLoss:${MAX_DAILY_LOSS}SOL MinAI:${MIN_AI_SCORE} AITimeout:${AI_TIMEOUT_MS}ms`);
+  console.log(`  Entry:  BUY:${BUY_SOL}SOL MaxPos:${MAX_POSITIONS} MaxDailyTrades:${MAX_DAILY_TRADES} MaxDailyLoss:${MAX_DAILY_LOSS}SOL MinQuality:${MIN_AI_SCORE} (deterministic, no LLM call — GEMINI_API_KEY unused)`);
   console.log(`  Exit:   TP1:${TP1_X}x(50%) TP2:${TP2_X}x(40%) SL:-${SL_PCT * 100}% Trail:${TRAIL_PCT * 100}%(arms@+${TRAIL_ACTIVATE_PCT * 100}%) MaxHold:${MAX_HOLD_MIN}min`);
   console.log(`  Detection: direct Helius WebSocket (onLogs) — no webhook, no edge function`);
   console.log(`  Supabase: ${SUPABASE_URL.slice(8, 28)}... (logging only, async)`);
