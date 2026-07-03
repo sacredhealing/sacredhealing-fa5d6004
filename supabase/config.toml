@@ -1,6 +1,8 @@
 project_id = "ssygukfdbtehvtndandn"
 
 [functions]
+  [functions.social-post]
+    verify_jwt = false
   [functions.binance-balance]
     verify_jwt = false
   [functions.send-reset-email]

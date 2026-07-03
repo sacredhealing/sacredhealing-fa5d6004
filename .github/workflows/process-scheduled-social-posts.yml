@@ -1,0 +1,17 @@
+name: Process Scheduled Social Posts
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fire due scheduled posts
+        run: |
+          curl -s -X POST "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post" \
+            -H "Content-Type: application/json" \
+            -d '{"action":"process_scheduled"}' | tee _scheduled_run.txt

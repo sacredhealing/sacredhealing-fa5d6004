@@ -165,16 +165,40 @@ Respond ONLY with valid JSON (no markdown):
   return JSON.parse(clean);
 }
 
+// ── Post to all requested platforms, given an already-uploaded media URL
+async function postToPlatforms(platforms: string[], mediaUrl: string | null, caption: string, mediaType: string | null) {
+  const results: Record<string, any> = {};
+
+  if (platforms?.includes("instagram")) {
+    if (mediaUrl) {
+      results.instagram = await postToInstagram(mediaUrl, caption || "", mediaType === "video");
+    } else {
+      results.instagram = { success: false, reason: "No media URL available for Instagram post" };
+    }
+  }
+  if (platforms?.includes("youtube")) {
+    results.youtube = { success: false, reason: "YouTube API OAuth pending Google review — resubmit at console.cloud.google.com" };
+  }
+  if (platforms?.includes("tiktok")) {
+    results.tiktok = { success: false, reason: "TikTok app under review — approval expected 2–4 weeks" };
+  }
+  if (platforms?.includes("facebook")) {
+    results.facebook = { success: false, reason: "Facebook personal profile posting blocked by Meta API — business page pending" };
+  }
+  return results;
+}
+
 // ── Save post to queue in Supabase
-async function saveToQueue(payload: any, results: any) {
+async function saveToQueue(payload: any, results: any, mediaUrl: string | null, status: string) {
   const { data, error } = await supabase.from("social_post_queue").insert({
     caption: payload.caption,
     platforms: payload.platforms,
     media_type: payload.mediaType || null,
+    media_url: mediaUrl,
     scheduled_for: payload.scheduledTime || null,
     profile: payload.profile || "kritagya",
     results,
-    status: payload.scheduledTime ? "scheduled" : "published",
+    status,
     created_at: new Date().toISOString(),
   }).select("id").single();
   if (error) console.error("Queue save error:", error.message);
@@ -195,6 +219,48 @@ serve(async (req) => {
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ── ACTION: Generate content-aware hook from clip audio (for thumbnail text + caption)
+    if (action === "generate_hook") {
+      const { audioBase64, audioMimeType } = body;
+      if (!audioBase64) {
+        return new Response(JSON.stringify({ success: false, error: "audioBase64 required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const prompt = `Listen to this audio clip from a spiritual healing / Siddha Quantum consciousness teaching. Respond ONLY with valid JSON (no markdown):
+{"hook": "3-6 word punchy thumbnail title capturing the SPECIFIC topic discussed (not generic)", "caption": "2-3 sentence Instagram caption in the SQI brand voice reflecting what was actually said", "hashtags": ["tag1","tag2", ...12-18 tags mixing niche + brand + trending spiritual tags]}`;
+        const geminiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { inline_data: { mime_type: audioMimeType || "audio/mp3", data: audioBase64 } },
+                  { text: prompt },
+                ],
+              }],
+              generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
+            }),
+          }
+        );
+        const geminiData = await geminiRes.json();
+        const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        const clean = text.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(clean);
+        return new Response(JSON.stringify({ success: true, ...parsed }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // ── ACTION: Upload only (no posting) — used by Auto-Pipeline for clips/thumbnails
@@ -227,12 +293,11 @@ serve(async (req) => {
       }
     }
 
-    // ── ACTION: Publish
+    // ── ACTION: Publish (immediate) or Schedule (hold for cron)
     if (action === "publish") {
-      const results: Record<string, any> = {};
-
       // Upload media to R2 if provided
       let mediaUrl: string | null = null;
+      const uploadResult: Record<string, any> = {};
       if (mediaBase64 && R2_KEY_ID && R2_SECRET) {
         try {
           const bytes = Uint8Array.from(atob(mediaBase64), (c) => c.charCodeAt(0));
@@ -241,45 +306,64 @@ serve(async (req) => {
           mediaUrl = await uploadToR2(key, bytes, mediaMimeType || (mediaType === "video" ? "video/mp4" : "image/jpeg"));
         } catch (uploadErr: any) {
           console.error("R2 upload error:", uploadErr.message);
-          results._mediaUpload = { success: false, error: uploadErr.message };
+          uploadResult._mediaUpload = { success: false, error: uploadErr.message };
         }
       }
 
-      // Instagram (live — token connected)
-      if (platforms?.includes("instagram")) {
-        if (!mediaUrl && mediaBase64) {
-          results.instagram = { success: false, reason: "Media upload to R2 failed — set R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY" };
-        } else if (mediaUrl) {
-          results.instagram = await postToInstagram(mediaUrl, caption || "", mediaType === "video");
-        } else {
-          // Text-only post (carousel with placeholder or skip)
-          results.instagram = { success: false, reason: "Instagram requires media — text-only posts not supported by Graph API" };
-        }
+      const isFuture = scheduledTime && new Date(scheduledTime).getTime() > Date.now();
+
+      // Scheduled for later — hold. Do NOT post now. Cron (process_scheduled) fires it when due.
+      if (isFuture) {
+        const queueId = await saveToQueue(body, uploadResult, mediaUrl, "scheduled");
+        return new Response(
+          JSON.stringify({ success: true, scheduled: true, scheduledFor: scheduledTime, queueId, mediaUrl }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
-      // YouTube — API pending Google review
-      if (platforms?.includes("youtube")) {
-        results.youtube = { success: false, reason: "YouTube API OAuth pending Google review — resubmit at console.cloud.google.com" };
-      }
-
-      // TikTok — app under review
-      if (platforms?.includes("tiktok")) {
-        results.tiktok = { success: false, reason: "TikTok app under review — approval expected 2–4 weeks" };
-      }
-
-      // Facebook — personal profile posting blocked by Meta API, page pending
-      if (platforms?.includes("facebook")) {
-        results.facebook = { success: false, reason: "Facebook personal profile posting blocked by Meta API — business page pending" };
-      }
-
-      // Save to queue regardless
-      const queueId = await saveToQueue(body, results);
+      // Otherwise post immediately
+      const results = await postToPlatforms(platforms || [], mediaUrl, caption || "", mediaType);
+      Object.assign(results, uploadResult);
+      const queueId = await saveToQueue(body, results, mediaUrl, "published");
 
       const anySuccess = Object.values(results).some((r: any) => r.success);
       return new Response(
         JSON.stringify({ success: anySuccess, results, queueId, mediaUrl }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // ── ACTION: Process scheduled queue — called by cron every 15 min
+    if (action === "process_scheduled") {
+      const nowIso = new Date().toISOString();
+      const { data: due, error: dueErr } = await supabase
+        .from("social_post_queue")
+        .select("id, caption, platforms, media_type, media_url")
+        .eq("status", "scheduled")
+        .lte("scheduled_for", nowIso)
+        .limit(20);
+
+      if (dueErr) {
+        return new Response(JSON.stringify({ success: false, error: dueErr.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const processed: any[] = [];
+      for (const row of due || []) {
+        const results = await postToPlatforms(row.platforms || [], row.media_url, row.caption || "", row.media_type);
+        const anySuccess = Object.values(results).some((r: any) => r.success);
+        await supabase.from("social_post_queue").update({
+          status: anySuccess ? "published" : "failed",
+          results,
+        }).eq("id", row.id);
+        processed.push({ id: row.id, anySuccess, results });
+      }
+
+      return new Response(JSON.stringify({ success: true, processedCount: processed.length, processed }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {

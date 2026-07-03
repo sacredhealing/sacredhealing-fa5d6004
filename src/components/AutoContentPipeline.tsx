@@ -61,11 +61,66 @@ interface ClipResult {
   index: number;
   start: number;
   end: number;
+  hook?: string;
+  scheduledFor?: string;
   videoUrl?: string;
   thumbs: Record<string, string>; // platform -> R2 url
   postResults?: Record<string, { success: boolean; reason?: string; postId?: string }>;
-  status: "pending" | "processing" | "uploading" | "posting" | "done" | "error";
+  status: "pending" | "processing" | "transcribing" | "uploading" | "posting" | "scheduled" | "done" | "error";
   error?: string;
+}
+
+// Draw a title overlay onto a base image (canvas), return JPEG bytes
+async function overlayTextOnImage(imgBytes: Uint8Array, w: number, h: number, title: string): Promise<Uint8Array> {
+  const blob = new Blob([imgBytes.buffer as ArrayBuffer], { type: "image/jpeg" });
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, w, h);
+
+  // Bottom gradient for legibility
+  const grad = ctx.createLinearGradient(0, h * 0.55, 0, h);
+  grad.addColorStop(0, "rgba(5,5,5,0)");
+  grad.addColorStop(1, "rgba(5,5,5,0.85)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, h * 0.55, w, h * 0.45);
+
+  const fontSize = Math.round(w * 0.075);
+  ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
+  ctx.fillStyle = "#D4AF37";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+
+  // Simple word-wrap
+  const words = title.toUpperCase().split(" ");
+  const maxWidth = w * 0.86;
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+
+  const lineHeight = fontSize * 1.15;
+  let y = h - h * 0.08;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    ctx.strokeStyle = "rgba(0,0,0,0.6)";
+    ctx.lineWidth = fontSize * 0.08;
+    ctx.strokeText(lines[i], w / 2, y);
+    ctx.fillText(lines[i], w / 2, y);
+    y -= lineHeight;
+  }
+
+  const outBlob: Blob = await new Promise((res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.9));
+  return new Uint8Array(await outBlob.arrayBuffer());
 }
 
 export const AutoContentPipeline = () => {
@@ -73,7 +128,7 @@ export const AutoContentPipeline = () => {
   const [duration, setDuration] = useState(0);
   const [clipLength, setClipLength] = useState(60);
   const [caption, setCaption] = useState("");
-  const [autoPost, setAutoPost] = useState(true);
+  const [cadenceHours, setCadenceHours] = useState(24); // default: 1/day — safest against spam suppression
   const [clips, setClips] = useState<ClipResult[]>([]);
   const [running, setRunning] = useState(false);
   const [log, setLog] = useState<string[]>([]);
@@ -98,7 +153,15 @@ export const AutoContentPipeline = () => {
     return data.url as string;
   };
 
-  const publishClip = async (base64: string, thumbCaption: string) => {
+  const generateHook = async (audioBase64: string) => {
+    const { data, error } = await supabase.functions.invoke("social-post", {
+      body: { action: "generate_hook", audioBase64, audioMimeType: "audio/mp3" },
+    });
+    if (error || !data?.success) throw new Error(data?.error || error?.message || "Hook generation failed");
+    return data as { hook: string; caption: string; hashtags: string[] };
+  };
+
+  const publishClip = async (base64: string, thumbCaption: string, scheduledTime?: string) => {
     const { data, error } = await supabase.functions.invoke("social-post", {
       body: {
         action: "publish",
@@ -108,10 +171,11 @@ export const AutoContentPipeline = () => {
         mediaType: "video",
         mediaMimeType: "video/mp4",
         profile: "kritagya",
+        scheduledTime,
       },
     });
     if (error) throw new Error(error.message);
-    return data.results as ClipResult["postResults"];
+    return data;
   };
 
   const run = async () => {
@@ -133,6 +197,7 @@ export const AutoContentPipeline = () => {
       index: i, start: s.start, end: s.end, thumbs: {}, status: "pending",
     }));
     setClips(initialClips);
+    addLog(`${segments.length} clip(s) will be created. Spaced ${cadenceHours}h apart starting now.`);
 
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
@@ -151,9 +216,28 @@ export const AutoContentPipeline = () => {
       const clipData = (await ff.readFile(outName)) as Uint8Array;
       const clipBase64 = u8ToBase64(clipData);
 
-      // Generate 4 platform thumbnails from a frame 1s into the clip
+      // Extract audio and get a content-derived hook/caption/hashtags — thumbnail has to reflect what's actually said
+      setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: "transcribing" } : c)));
+      let hook = `Sacred Transmission — Part ${i + 1}`;
+      let clipCaption = caption;
+      let hashtags: string[] = [];
+      try {
+        addLog(`Transcribing clip ${i + 1} audio to find its real topic…`);
+        await ff.exec(["-i", outName, "-vn", "-acodec", "libmp3lame", "-b:a", "64k", `audio_${i}.mp3`]);
+        const audioData = (await ff.readFile(`audio_${i}.mp3`)) as Uint8Array;
+        const h = await generateHook(u8ToBase64(audioData));
+        hook = h.hook || hook;
+        if (!caption) clipCaption = h.caption;
+        hashtags = h.hashtags || [];
+        addLog(`✓ Topic detected: "${hook}"`);
+      } catch (e: any) {
+        addLog(`✗ Hook generation failed, using generic title: ${e.message}`);
+      }
+      const finalCaption = `${clipCaption || hook}${hashtags.length ? "\n\n" + hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ") : ""}`;
+
+      // Generate 4 platform thumbnails from a frame 1s in, with the real topic burned onto each
       const thumbs: Record<string, string> = {};
-      setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: "uploading" } : c)));
+      setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: "uploading", hook } : c)));
       for (const spec of THUMB_SPECS) {
         const thumbName = `thumb_${i}_${spec.id}.jpg`;
         try {
@@ -164,30 +248,41 @@ export const AutoContentPipeline = () => {
             "-vf", `scale=${spec.w}:${spec.h}:force_original_aspect_ratio=increase,crop=${spec.w}:${spec.h}`,
             thumbName,
           ]);
-          const thumbData = (await ff.readFile(thumbName)) as Uint8Array;
-          const url = await uploadAsset(u8ToBase64(thumbData), "image", "image/jpeg");
+          const rawThumb = (await ff.readFile(thumbName)) as Uint8Array;
+          const overlaid = await overlayTextOnImage(rawThumb, spec.w, spec.h, hook);
+          const url = await uploadAsset(u8ToBase64(overlaid), "image", "image/jpeg");
           thumbs[spec.id] = url;
-          addLog(`✓ ${spec.label} thumbnail generated.`);
+          addLog(`✓ ${spec.label} thumbnail generated with topic overlay.`);
         } catch (e: any) {
           addLog(`✗ ${spec.label} thumbnail failed: ${e.message}`);
         }
       }
 
+      // Schedule: clip 0 can post immediately, each subsequent clip spaced cadenceHours apart
+      const scheduledDate = new Date(Date.now() + i * cadenceHours * 60 * 60 * 1000);
+      const scheduledTime = i === 0 ? undefined : scheduledDate.toISOString();
+
+      setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: scheduledTime ? "scheduled" : "posting" } : c)));
+      addLog(
+        scheduledTime
+          ? `Clip ${i + 1} queued for ${scheduledDate.toLocaleString()} — Instagram live, others held until API-approved.`
+          : `Posting clip ${i + 1} now — live to Instagram, queued for YouTube/TikTok/Facebook…`
+      );
+
       let postResults: ClipResult["postResults"] | undefined;
-      if (autoPost) {
-        setClips((prev) => prev.map((c) => (c.index === i ? { ...c, status: "posting" } : c)));
-        addLog(`Posting clip ${i + 1} — live to Instagram, queued for YouTube/TikTok/Facebook…`);
-        try {
-          postResults = await publishClip(clipBase64, caption || `Sacred transmission — part ${i + 1}`);
-        } catch (e: any) {
-          addLog(`✗ Publish failed for clip ${i + 1}: ${e.message}`);
-        }
+      try {
+        const res = await publishClip(clipBase64, finalCaption, scheduledTime);
+        postResults = res.results;
+      } catch (e: any) {
+        addLog(`✗ Publish/schedule failed for clip ${i + 1}: ${e.message}`);
       }
 
       const videoUrl = await uploadAsset(clipBase64, "video", "video/mp4").catch(() => undefined);
 
       setClips((prev) =>
-        prev.map((c) => (c.index === i ? { ...c, thumbs, postResults, videoUrl, status: "done" } : c))
+        prev.map((c) => (c.index === i
+          ? { ...c, thumbs, postResults, videoUrl, hook, scheduledFor: scheduledTime, status: scheduledTime ? "scheduled" : "done" }
+          : c))
       );
     }
 
@@ -231,16 +326,28 @@ export const AutoContentPipeline = () => {
             style={{ width: 120, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 14 }}
           />
 
-          <label style={{ fontSize: 11, color: C.muted, display: "block", marginBottom: 6 }}>Caption (optional — Gemini will fill this in on the Publisher tab if left blank)</label>
+          <label style={{ fontSize: 11, color: C.muted, display: "block", marginBottom: 6 }}>Caption (optional — auto-generated per clip from its actual audio if left blank)</label>
           <textarea
             value={caption} onChange={(e) => setCaption(e.target.value)} rows={2}
             style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 14, boxSizing: "border-box", fontFamily: "inherit" }}
           />
 
-          <label style={{ fontSize: 12, color: "#fff", display: "flex", alignItems: "center", gap: 8, marginBottom: 14, cursor: "pointer" }}>
-            <input type="checkbox" checked={autoPost} onChange={(e) => setAutoPost(e.target.checked)} />
-            Auto-post to Instagram as each clip finishes (others queue automatically)
+          <label style={{ fontSize: 11, color: C.muted, display: "block", marginBottom: 6 }}>
+            Posting cadence — first clip posts now, rest are spaced out and fire automatically via scheduled queue
           </label>
+          <select
+            value={cadenceHours} onChange={(e) => setCadenceHours(Number(e.target.value))}
+            style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 6, fontFamily: "inherit" }}
+          >
+            <option value={24}>1 per day (recommended — safest against spam suppression)</option>
+            <option value={12}>2 per day</option>
+            <option value={8}>3 per day</option>
+            <option value={168}>1 per week (evergreen drip)</option>
+          </select>
+          <p style={{ fontSize: 11, color: C.muted, margin: "0 0 14px", lineHeight: 1.5 }}>
+            Posting many near-identical clips from one source in a short window reads as spam to Instagram's
+            distribution system and suppresses reach — the opposite of viral. 1/day is the defensible default.
+          </p>
 
           <button
             onClick={run} disabled={running}
@@ -251,7 +358,7 @@ export const AutoContentPipeline = () => {
             }}
           >
             {running ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Scissors size={14} />}
-            {running ? "Processing…" : "Chop, Thumbnail & Post"}
+            {running ? "Processing…" : "Chop, Thumbnail & Schedule"}
           </button>
         </div>
       )}
@@ -264,12 +371,14 @@ export const AutoContentPipeline = () => {
 
       {clips.map((c) => (
         <div key={c.index} style={{ background: "rgba(255,255,255,0.025)", border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, marginBottom: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
             <p style={{ fontWeight: 800, fontSize: 13, color: "#fff", margin: 0 }}>
               Clip {c.index + 1} — {c.start.toFixed(0)}s to {c.end.toFixed(0)}s
             </p>
             <StatusBadge status={c.status} />
           </div>
+          {c.hook && <p style={{ fontSize: 12, color: C.gold, margin: "0 0 4px", fontWeight: 700 }}>"{c.hook}"</p>}
+          {c.scheduledFor && <p style={{ fontSize: 11, color: C.muted, margin: "0 0 10px" }}>Scheduled: {new Date(c.scheduledFor).toLocaleString()}</p>}
 
           {Object.keys(c.thumbs).length > 0 && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
@@ -303,8 +412,10 @@ const StatusBadge = ({ status }: { status: ClipResult["status"] }) => {
   const map: Record<string, { color: string; label: string }> = {
     pending: { color: C.muted, label: "Pending" },
     processing: { color: C.cyan, label: "Cutting…" },
+    transcribing: { color: C.cyan, label: "Detecting topic…" },
     uploading: { color: C.cyan, label: "Uploading…" },
     posting: { color: C.amber, label: "Posting…" },
+    scheduled: { color: C.gold, label: "Scheduled" },
     done: { color: C.green, label: "Done" },
     error: { color: C.red, label: "Error" },
   };
