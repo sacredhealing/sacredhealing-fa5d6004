@@ -7,8 +7,9 @@ module.exports = {
     env: {
       NODE_ENV:            'production',
       PAPER_MODE:          'true',
-      SUPABASE_URL:        'https://ssygukfdbtehvtndandn.supabase.co',
-      SUPABASE_SERVICE_KEY:'',   // SET THIS
+      BRIDGE_URL:          'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge',
+      BRIDGE_SECRET:       'clawbot-bridge-2026', // confirm/override from Lovable → Edge Functions → clawbot-bridge → Secrets (CLAWBOT_BRIDGE_SECRET) if this 403s
+      SUPABASE_ANON_KEY:   '', // only set if BRIDGE_SECRET alone still 403s — Supabase's gateway may require it in addition
       HELIUS_API_KEY:      '',   // SET THIS — now also drives detection (WebSocket), not just price/dev-wallet reads
       GEMINI_API_KEY:      '',   // SET THIS — AI veto score, moved back here from the (now retired) edge function
       WALLET_PRIVATE_KEY:  '',   // SET THIS — dedicated sniper wallet, never Phantom/main wallet
