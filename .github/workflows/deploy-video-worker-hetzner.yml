@@ -1,0 +1,116 @@
+name: Deploy Video Worker to Hetzner
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'deploy | restart | status | logs'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - restart
+          - status
+          - logs
+  push:
+    paths:
+      - 'video-worker/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: |
+          sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p 22 -H 178.105.183.74 > ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Bootstrap + deploy video-worker on Hetzner
+        env:
+          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          set +e
+          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 bash -s -- "$GH_TOKEN" > _video_worker_deploy_log.txt 2>&1 << 'REMOTE_SCRIPT'
+          set -e
+          GH_TOKEN="$1"
+          echo "[SQI] === Video Worker Bootstrap ==="
+
+          if ! command -v node &>/dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get install -y nodejs
+          fi
+          echo "[SQI] Node: $(node -v)"
+
+          if ! command -v ffmpeg &>/dev/null; then
+            apt-get update -y
+            apt-get install -y ffmpeg
+          fi
+          echo "[SQI] ffmpeg: $(ffmpeg -version | head -1)"
+
+          apt-get install -y libvips-dev build-essential python3 || true
+
+          if ! command -v pm2 &>/dev/null; then
+            npm install -g pm2
+            env PATH=$PATH:/usr/bin pm2 startup systemd -u root --hp /root || true
+            systemctl enable pm2-root 2>/dev/null || true
+          fi
+          echo "[SQI] PM2: $(pm2 -v)"
+
+          REPO_DIR="/root/sqi-app"
+          if [ ! -d "$REPO_DIR/.git" ]; then
+            echo "[SQI] Cloning repo..."
+            git clone "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "$REPO_DIR"
+          else
+            echo "[SQI] Pulling latest..."
+            cd "$REPO_DIR"
+            git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+            git fetch origin
+            git reset --hard origin/main
+          fi
+
+          cd "$REPO_DIR/video-worker"
+          mkdir -p tmp
+          npm install --omit=dev
+
+          if pm2 describe video-worker > /dev/null 2>&1; then
+            pm2 restart video-worker --update-env
+            echo "[SQI] ✅ video-worker restarted"
+          else
+            pm2 start server.js --name video-worker
+            echo "[SQI] ✅ video-worker started fresh"
+          fi
+          pm2 save
+
+          sleep 3
+          echo ""
+          echo "[SQI] ───── PM2 STATUS ─────"
+          pm2 list
+          echo ""
+          echo "[SQI] ───── HEALTH CHECK http://localhost:3002/health ─────"
+          curl -sf http://localhost:3002/health || echo "Not ready yet"
+          echo ""
+          echo "[SQI] ───── LAST 20 LOG LINES ─────"
+          pm2 logs video-worker --lines 20 --nostream 2>/dev/null || true
+          echo ""
+          echo "[SQI-2050] VIDEO WORKER DEPLOYMENT COMPLETE"
+          REMOTE_SCRIPT
+          EXIT=$?
+          echo "SSH EXIT CODE: $EXIT" >> _video_worker_deploy_log.txt
+          cat _video_worker_deploy_log.txt
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Deploy Bot"
+          git add _video_worker_deploy_log.txt
+          git commit -m "video-worker deploy log $(date -u +%Y-%m-%dT%H:%M)" || true
+          git push "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" HEAD:main || true
+          exit $EXIT

@@ -139,6 +139,7 @@ export const AutoContentPipeline = () => {
   const [clips, setClips] = useState<ClipResult[]>([]);
   const [running, setRunning] = useState(false);
   const [log, setLog] = useState<string[]>([]);
+  const [processMode, setProcessMode] = useState<"server" | "device">("server");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const addLog = (m: string) => setLog((p) => [...p.slice(-10), m]);
@@ -195,11 +196,63 @@ export const AutoContentPipeline = () => {
     if (!videoFile || !duration) return;
     setRunning(true);
     try {
-      await runPipeline();
+      if (processMode === "server") {
+        await runOnServer();
+      } else {
+        await runPipeline();
+      }
     } catch (e: any) {
       addLog(`✗ Pipeline stopped: ${e.message}`);
     } finally {
       setRunning(false);
+    }
+  };
+
+  const runOnServer = async () => {
+    if (!videoFile) return;
+    addLog("Uploading video to server (your phone's job ends here)…");
+    const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase();
+    const uploadRes = await fetch(`${FUNCTION_URL}?action=upload_binary&mediaType=video&ext=${ext}`, {
+      method: "POST",
+      headers: { "Content-Type": videoFile.type || "video/mp4" },
+      body: videoFile, // sent as a stream, never fully loaded into JS memory
+    });
+    const uploadJson = await uploadRes.json();
+    if (!uploadRes.ok || !uploadJson.success) throw new Error(uploadJson.error || "Video upload failed");
+    const videoUrl = uploadJson.url as string;
+    setFullVideoUrl(videoUrl);
+    addLog(`✓ Uploaded. Handing off to Hetzner worker…`);
+
+    const { data: triggerData, error: triggerError } = await supabase.functions.invoke("social-post", {
+      body: { action: "trigger_worker", videoUrl, clipLength, cadenceHours, caption },
+    });
+    if (triggerError || !triggerData?.success) {
+      throw new Error(triggerData?.error || triggerError?.message || "Could not start server-side processing");
+    }
+    const jobId = triggerData.jobId as string;
+    addLog(`✓ Server job started (${jobId}). Processing now — you can lock your phone, this runs on the server.`);
+
+    // Poll for progress every 5s, up to ~30 minutes
+    for (let attempt = 0; attempt < 360; attempt++) {
+      await new Promise((r) => setTimeout(r, 5000));
+      const { data: statusData, error: statusError } = await supabase.functions.invoke("social-post", {
+        body: { action: "worker_status", jobId },
+      });
+      if (statusError || !statusData?.success) {
+        addLog(`✗ Lost contact with worker: ${statusData?.error || statusError?.message}`);
+        break;
+      }
+      const workerClips = (statusData.clips || []) as any[];
+      setClips(workerClips.map((c) => ({
+        index: c.index, start: c.start, end: c.end, hook: c.hook, scheduledFor: c.scheduledFor,
+        videoUrl: c.videoUrl, thumbs: c.thumbs || {}, postResults: c.postResults, status: c.status,
+      })));
+      const newLines: string[] = statusData.log || [];
+      setLog(newLines.slice(-10));
+      if (statusData.status === "done" || statusData.status === "error") {
+        addLog(statusData.status === "done" ? "✓ Server pipeline complete." : "✗ Server pipeline stopped with an error — see log above.");
+        break;
+      }
     }
   };
 
@@ -391,6 +444,34 @@ export const AutoContentPipeline = () => {
             Posting many near-identical clips from one source in a short window reads as spam to Instagram's
             distribution system and suppresses reach — the opposite of viral. 1/day is the defensible default.
           </p>
+
+          <label style={{ fontSize: 11, color: C.muted, display: "block", marginBottom: 6 }}>
+            Where should this run?
+          </label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <button
+              onClick={() => setProcessMode("server")}
+              style={{
+                flex: 1, textAlign: "left", padding: "10px 12px", borderRadius: 10, cursor: "pointer",
+                background: processMode === "server" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                border: processMode === "server" ? "1px solid rgba(212,175,55,0.4)" : `1px solid ${C.border}`,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: processMode === "server" ? C.gold : "#fff" }}>On Server (recommended)</div>
+              <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>Upload only — close the tab, it keeps running</div>
+            </button>
+            <button
+              onClick={() => setProcessMode("device")}
+              style={{
+                flex: 1, textAlign: "left", padding: "10px 12px", borderRadius: 10, cursor: "pointer",
+                background: processMode === "device" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                border: processMode === "device" ? "1px solid rgba(212,175,55,0.4)" : `1px solid ${C.border}`,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: processMode === "device" ? C.gold : "#fff" }}>On This Device</div>
+              <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>Keep tab open — heavier on phones</div>
+            </button>
+          </div>
 
           <button
             onClick={run} disabled={running}

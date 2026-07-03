@@ -367,6 +367,64 @@ serve(async (req) => {
       );
     }
 
+    // ── ACTION: Trigger Hetzner video worker — server does the heavy lifting, not the phone
+    if (action === "trigger_worker") {
+      const { videoUrl, clipLength, cadenceHours, caption: workerCaption } = body;
+      if (!videoUrl) {
+        return new Response(JSON.stringify({ success: false, error: "videoUrl required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const workerRes = await fetch("http://178.105.183.74:3002/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            videoUrl,
+            clipLength: clipLength || 60,
+            cadenceHours: cadenceHours || 24,
+            caption: workerCaption || "",
+            functionUrl: "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post",
+          }),
+        });
+        const workerJson = await workerRes.json();
+        return new Response(JSON.stringify(workerJson), {
+          status: workerRes.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: `Could not reach video worker on Hetzner: ${err.message}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ── ACTION: Poll Hetzner worker job status (proxied — browser never talks to Hetzner directly)
+    if (action === "worker_status") {
+      const { jobId } = body;
+      if (!jobId) {
+        return new Response(JSON.stringify({ success: false, error: "jobId required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const statusRes = await fetch(`http://178.105.183.74:3002/status/${jobId}`);
+        const statusJson = await statusRes.json();
+        return new Response(JSON.stringify(statusJson), {
+          status: statusRes.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: `Could not reach video worker on Hetzner: ${err.message}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // ── ACTION: Process scheduled queue — called by cron every 15 min
     if (action === "process_scheduled") {
       const nowIso = new Date().toISOString();

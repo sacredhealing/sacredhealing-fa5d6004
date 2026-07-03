@@ -1,0 +1,14 @@
+{
+  "name": "sqi-video-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SQI Auto-Pipeline video processing worker — runs on Hetzner, offloads heavy ffmpeg/thumbnail work from mobile browsers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sharp": "^0.33.5"
+  }
+}
