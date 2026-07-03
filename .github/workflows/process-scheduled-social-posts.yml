@@ -9,9 +9,21 @@ jobs:
   process:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
       - name: Fire due scheduled posts
         run: |
-          curl -s -X POST "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post" \
+          curl -s -w "\nHTTP_STATUS:%{http_code}\n" -X POST "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post" \
             -H "Content-Type: application/json" \
-            -d '{"action":"process_scheduled"}' | tee _scheduled_run.txt
+            -d '{"action":"process_scheduled"}' > _scheduled_run.txt
+          cat _scheduled_run.txt
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Deploy Bot"
+          git add _scheduled_run.txt
+          git commit -m "scheduled-run check $(date -u +%Y-%m-%dT%H:%M)" || true
+          git push "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" HEAD:main || true
