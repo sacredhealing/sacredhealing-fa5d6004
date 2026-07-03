@@ -23,27 +23,38 @@ const THUMB_SPECS: { id: string; label: string; w: number; h: number }[] = [
 ];
 
 let ffmpegInstance: any = null;
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`${label} timed out after ${ms / 1000}s — check your connection and keep this tab in the foreground, then try again.`)), ms)),
+  ]);
+}
+
 async function loadFFmpeg(): Promise<any> {
   if (ffmpegInstance) return ffmpegInstance;
   if (!(window as any).FFmpegWASM) {
-    await new Promise<void>((res, rej) => {
+    await withTimeout(new Promise<void>((res, rej) => {
       const s = document.createElement("script");
       s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js";
       s.onload = () => res();
-      s.onerror = rej;
+      s.onerror = () => rej(new Error("Failed to load FFmpeg script from CDN"));
       document.head.appendChild(s);
-    });
-    await new Promise<void>((res, rej) => {
+    }), 25000, "Loading FFmpeg engine script");
+    await withTimeout(new Promise<void>((res, rej) => {
       const s = document.createElement("script");
       s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js";
       s.onload = () => res();
-      s.onerror = rej;
+      s.onerror = () => rej(new Error("Failed to load FFmpeg util script from CDN"));
       document.head.appendChild(s);
-    });
+    }), 25000, "Loading FFmpeg util script");
   }
   const { FFmpeg } = (window as any).FFmpegWASM || (window as any);
   const ff = new FFmpeg();
-  await ff.load({ coreURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js" });
+  await withTimeout(
+    ff.load({ coreURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js" }),
+    30000,
+    "Loading FFmpeg WebAssembly core"
+  );
   ffmpegInstance = ff;
   return ff;
 }
@@ -183,6 +194,16 @@ export const AutoContentPipeline = () => {
   const run = async () => {
     if (!videoFile || !duration) return;
     setRunning(true);
+    try {
+      await runPipeline();
+    } catch (e: any) {
+      addLog(`✗ Pipeline stopped: ${e.message}`);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const runPipeline = async () => {
     addLog("Loading FFmpeg WebAssembly engine…");
     const ff = await loadFFmpeg();
 
@@ -303,7 +324,6 @@ export const AutoContentPipeline = () => {
     }
 
     addLog("Pipeline complete.");
-    setRunning(false);
   };
 
   return (
