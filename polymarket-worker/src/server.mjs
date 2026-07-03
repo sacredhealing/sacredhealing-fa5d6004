@@ -45,7 +45,7 @@ let scanLoopAlive = false;
 let lastScanTime  = Date.now();
 
 const priceHistory  = new Map();
-let diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '' };
+let diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '', samplePrice: '' };
 const processedSigs = new Set();
 const recentTrades  = [];
 const errors        = [];
@@ -404,7 +404,7 @@ async function fetchMarkets() {
 function latencyArb(markets) {
   const now = Date.now();
   const signals = [];
-  let skippedNoOutcome = 0, skippedHistory = 0, evaluated = 0;
+  let skippedNoOutcome = 0, skippedHistory = 0, evaluated = 0, nanCount = 0;
   try {
     for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).sort((a, b) => b.volume - a.volume).slice(0, 10)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
@@ -418,6 +418,7 @@ function latencyArb(markets) {
       evaluated++;
       const move = (yes.price - fresh[0].price) / (fresh[0].price || 0.001);
       const abs  = Math.abs(move);
+      if (Number.isNaN(abs)) { nanCount++; continue; }
       if (abs > diagStats.maxMove) { diagStats.maxMove = abs; diagStats.maxMoveQ = m.question?.slice(0, 40); }
       if (abs < 0.03) continue;
       const sigId = `lat-${m.id}-${Math.floor(now / 60000)}`;
@@ -432,7 +433,12 @@ function latencyArb(markets) {
         currentPrice: outcome.price,
       });
     }
-    diagStats.latDebug = `noOutcome=${skippedNoOutcome} noHistory=${skippedHistory} evaluated=${evaluated}`;
+    diagStats.latDebug = `noOutcome=${skippedNoOutcome} noHistory=${skippedHistory} evaluated=${evaluated} nanCount=${nanCount}`;
+    if (evaluated > 0 && !diagStats.samplePrice) {
+      const dbgM = markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2)[0];
+      const dbgYes = dbgM?.outcomes.find(o => o.name.toLowerCase() === 'yes');
+      diagStats.samplePrice = `rawPrice=${dbgYes?.price} type=${typeof dbgYes?.price}`;
+    }
   } catch (e) { logErr('LATARB', e?.message); }
   return signals;
 }
@@ -542,8 +548,8 @@ async function runOneScan() {
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
       log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 3.00% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 5.00%`);
-      log('DIAG', `latArb breakdown (last scan): ${diagStats.latDebug}`);
-      diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '' };
+      log('DIAG', `latArb breakdown (last scan): ${diagStats.latDebug} | ${diagStats.samplePrice}`);
+      diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '', samplePrice: '' };
     }
 
     if (openPositions >= MAX_POSITIONS) return;
