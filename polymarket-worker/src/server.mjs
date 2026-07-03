@@ -405,7 +405,7 @@ function latencyArb(markets) {
   const now = Date.now();
   const signals = [];
   try {
-    for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed).sort((a, b) => b.volume - a.volume).slice(0, 10)) {
+    for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).sort((a, b) => b.volume - a.volume).slice(0, 10)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       const no  = m.outcomes.find(o => o.name.toLowerCase() === 'no');
       if (!yes || !no) continue;
@@ -534,9 +534,10 @@ async function runOneScan() {
 
     if (scanCount % 10 === 1) {
       const latCandidates = markets.filter(m => m.liquidity > 5000 && !m.closed).length;
+      const binaryCandidates = markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).length;
       const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
-      log('DIAG', `latArb-eligible=${latCandidates} volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
+      log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
       log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 3.00% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 5.00%`);
       diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '' };
     }
