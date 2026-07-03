@@ -241,11 +241,12 @@ export const AutoContentPipeline = () => {
       addLog(`Cutting clip ${i + 1}/${segments.length} (${seg.start.toFixed(0)}s–${seg.end.toFixed(0)}s)…`);
 
       await ff.exec([
-        "-i", "src.mp4",
         "-ss", String(seg.start),
-        "-to", String(seg.end),
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-        "-c:a", "aac", "-movflags", "+faststart",
+        "-i", "src.mp4",
+        "-to", String(seg.end - seg.start),
+        "-c", "copy",
+        "-avoid_negative_ts", "make_zero",
+        "-movflags", "+faststart",
         outName,
       ]);
       const clipData = (await ff.readFile(outName)) as Uint8Array;
