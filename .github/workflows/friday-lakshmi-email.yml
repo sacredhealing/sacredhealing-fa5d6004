@@ -1,0 +1,29 @@
+name: SQI - Friday Lakshmi Email
+
+on:
+  schedule:
+    - cron: '0 9 * * 5'
+  workflow_dispatch:
+
+jobs:
+  send-friday-lakshmi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Trigger lakshmi-friday
+        env:
+          SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+        run: |
+          echo "SQI Lakshmi Friday Transmission at $(date -u)"
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            "${SUPABASE_URL}/functions/v1/lakshmi-friday" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{}" \
+            --max-time 600)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "HTTP: $HTTP_CODE"
+          echo "Body: $BODY"
