@@ -208,24 +208,53 @@ export const AutoContentPipeline = () => {
     }
   };
 
+  // Upload with real progress feedback and a hard timeout — a silent hang here was the actual
+  // cause of "nothing happens": no feedback, no timeout, so a stalled connection just sat forever.
+  const uploadWithProgress = (url: string, file: File): Promise<{ success: boolean; url?: string; error?: string }> => {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.timeout = 15 * 60 * 1000; // 15 min hard ceiling
+      let lastPct = -1;
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable) return;
+        const pct = Math.floor((e.loaded / e.total) * 100);
+        if (pct !== lastPct && pct % 10 === 0) {
+          lastPct = pct;
+          addLog(`Uploading… ${pct}% (${(e.loaded / 1e6).toFixed(0)}MB / ${(e.total / 1e6).toFixed(0)}MB)`);
+        }
+      };
+      xhr.onload = () => {
+        try {
+          const json = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300 && json.success) resolve({ success: true, url: json.url });
+          else resolve({ success: false, error: json.error || `Upload failed (HTTP ${xhr.status})` });
+        } catch {
+          resolve({ success: false, error: `Upload failed (HTTP ${xhr.status}) — server sent an unreadable response` });
+        }
+      };
+      xhr.onerror = () => resolve({ success: false, error: "Upload failed — network error or connection dropped" });
+      xhr.ontimeout = () => resolve({ success: false, error: "Upload timed out after 15 minutes — connection too slow or file too large for this network" });
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+      xhr.send(file);
+    });
+  };
+
   const runOnServer = async () => {
     if (!videoFile) return;
-    addLog("Uploading video to server (your phone's job ends here)…");
+    addLog(`Uploading video to server — ${(videoFile.size / 1e6).toFixed(0)}MB, your phone's job ends once this finishes…`);
     const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase();
-    const uploadRes = await fetch(`${FUNCTION_URL}?action=upload_binary&mediaType=video&ext=${ext}`, {
-      method: "POST",
-      headers: { "Content-Type": videoFile.type || "video/mp4" },
-      body: videoFile, // sent as a stream, never fully loaded into JS memory
-    });
-    const uploadJson = await uploadRes.json();
-    if (!uploadRes.ok || !uploadJson.success) throw new Error(uploadJson.error || "Video upload failed");
-    const videoUrl = uploadJson.url as string;
+    const uploadResult = await uploadWithProgress(`${FUNCTION_URL}?action=upload_binary&mediaType=video&ext=${ext}`, videoFile);
+    if (!uploadResult.success) throw new Error(uploadResult.error || "Video upload failed");
+    const videoUrl = uploadResult.url as string;
     setFullVideoUrl(videoUrl);
     addLog(`✓ Uploaded. Handing off to Hetzner worker…`);
 
-    const { data: triggerData, error: triggerError } = await supabase.functions.invoke("social-post", {
-      body: { action: "trigger_worker", videoUrl, clipLength, cadenceHours, caption },
-    });
+    const { data: triggerData, error: triggerError } = await withTimeout(
+      supabase.functions.invoke("social-post", { body: { action: "trigger_worker", videoUrl, clipLength, cadenceHours, caption } }),
+      20000,
+      "Starting server-side processing"
+    );
     if (triggerError || !triggerData?.success) {
       throw new Error(triggerData?.error || triggerError?.message || "Could not start server-side processing");
     }
