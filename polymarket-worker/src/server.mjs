@@ -410,7 +410,7 @@ function latencyArb(markets) {
       if (!yes || !no) continue;
       const hist = priceHistory.get(m.id) || [];
       hist.push({ price: yes.price, ts: now });
-      const fresh = hist.filter(s => s.ts >= now - 30000);
+      const fresh = hist.filter(s => s.ts >= now - 60000);
       priceHistory.set(m.id, fresh);
       if (fresh.length < 3) continue;
       const move = (yes.price - fresh[0].price) / (fresh[0].price || 0.001);
