@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { AutoContentPipeline } from "@/components/AutoContentPipeline";
 import {
   Youtube,
@@ -1607,4 +1609,26 @@ const SocialAutomationV = () => {
   );
 };
 
-export default SocialAutomationV;
+/* ─────────────────────────────────────────────
+   Admin Guard — restricted to Kritagya + Laila
+   (same admin list used by other /admin dashboards in this app)
+───────────────────────────────────────────── */
+const ADMIN_UUIDS = [
+  "bd0b21c9-577a-450b-bb1e-21c9d0423f17",
+  "a711f099-3d34-456f-8473-8a65eab056d5",
+];
+
+const SocialAutomationGuarded = () => {
+  const { user, isLoading } = useAuth();
+  const isAdmin = !!user && ADMIN_UUIDS.includes(user.id);
+
+  if (isLoading) {
+    return <div style={{ background: C.black, minHeight: "100vh" }} />;
+  }
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  return <SocialAutomationV />;
+};
+
+export default SocialAutomationGuarded;

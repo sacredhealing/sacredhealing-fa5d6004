@@ -231,8 +231,12 @@ serve(async (req) => {
         });
       }
       try {
-        const prompt = `Listen to this audio clip from a spiritual healing / Siddha Quantum consciousness teaching. Respond ONLY with valid JSON (no markdown):
-{"hook": "3-6 word punchy thumbnail title capturing the SPECIFIC topic discussed (not generic)", "caption": "2-3 sentence Instagram caption in the SQI brand voice reflecting what was actually said", "hashtags": ["tag1","tag2", ...12-18 tags mixing niche + brand + trending spiritual tags]}`;
+        const prompt = `Listen to this audio clip from Kritagya Das's spiritual healing / Siddha Quantum consciousness teaching. Write a caption a real person would post — warm, personal, first-person, like Kritagya talking directly to his community, not corporate copy. Respond ONLY with valid JSON (no markdown):
+{
+  "hook": "3-6 word punchy thumbnail title capturing the SPECIFIC topic discussed (not generic)",
+  "caption": "3-5 sentence caption in first person, reflecting what was actually said in this clip. Personal and warm — like a real message, not an ad. End with one genuine, specific line inviting people who want to go deeper to DM the word 'AWAKEN' or send a DM to join Sacred Healing / Siddha Quantum Nexus — make this feel like an invitation, not a sales pitch.",
+  "hashtags": ["...12-18 tags mixing niche spiritual/healing tags, brand tags (SiddhaQuantumNexus, KritagyaDas), and broader trending spiritual tags — no duplicates, no # symbol in the array items"]
+}`;
         const geminiRes = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
           {
