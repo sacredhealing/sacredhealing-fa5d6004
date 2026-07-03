@@ -1,0 +1,80 @@
+[SQI] === Video Worker Bootstrap ===
+[SQI] Node: v20.20.2
+[SQI] ffmpeg: ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers
+Reading package lists...
+Building dependency tree...
+Reading state information...
+libvips-dev is already the newest version (8.18.0-1build1).
+build-essential is already the newest version (12.12ubuntu2.26.04.1).
+python3 is already the newest version (3.14.3-0ubuntu2).
+Solving dependencies...
+0 upgraded, 0 newly installed, 0 to remove and 22 not upgraded.
+3 not fully installed or removed.
+After this operation, 0 B of additional disk space will be used.
+Setting up mkdocs-get-deps (0.2.0-2)…
+Setting up mkdocs (1.6.1+dfsg1-2)…
+Setting up libspng-doc (0.7.4-2build1)…
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+
+Restarting services...
+ systemctl restart packagekit.service
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+[SQI] PM2: 7.0.1
+[SQI] Pulling latest...
+HEAD is now at 604055fd Clear stale deploy log before retry
+
+added 2 packages, and audited 82 packages in 1s
+
+20 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+[PM2] Applying action restartProcessId on app [video-worker](ids: [ 3 ])
+[PM2] [video-worker](3) ✓
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2421848  │ 6h     │ 13   │ online    │ 0%       │ 59.4mb   │ root     │ disabled │
+│ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2253894  │ 27h    │ 0    │ online    │ 0%       │ 79.8mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 0s     │ 1    │ online    │ 0%       │ 10.4mb   │ root     │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[SQI] ✅ video-worker restarted
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+
+[SQI] ───── PM2 STATUS ─────
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2421848  │ 6h     │ 13   │ online    │ 0%       │ 59.6mb   │ root     │ disabled │
+│ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2253894  │ 27h    │ 0    │ online    │ 0%       │ 79.9mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 3s     │ 1    │ online    │ 0%       │ 62.2mb   │ root     │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+[SQI] ───── HEALTH CHECK http://localhost:3002/health ─────
+{"ok":true}
+[SQI] ───── LAST 20 LOG LINES ─────
+[TAILING] Tailing last 20 lines for [video-worker] process (change the value with --lines option)
+/root/.pm2/logs/video-worker-error.log last 20 lines:
+/root/.pm2/logs/video-worker-out.log last 20 lines:
+3|video-wo | [SQI Video Worker] listening on :3002
+3|video-wo | [SQI Video Worker] listening on :3002
+
+
+[SQI-2050] VIDEO WORKER DEPLOYMENT COMPLETE
+SSH EXIT CODE: 0
