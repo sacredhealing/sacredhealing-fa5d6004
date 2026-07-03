@@ -377,7 +377,7 @@ async function recordTrade(signal, strategy) {
 // ─── Fetch markets ────────────────────────────────────────────────────────────
 async function fetchMarkets() {
   try {
-    const r = await safeFetch(`${GAMMA_API}/markets?limit=50&active=true&closed=false`);
+    const r = await safeFetch(`${GAMMA_API}/markets?limit=200&active=true&closed=false`);
     if (!r.ok) return [];
     const data = await r.json();
     if (!Array.isArray(data)) return [];
@@ -396,7 +396,7 @@ async function fetchMarkets() {
           tokenId: String(Array.isArray(tokenIds) ? tokenIds[i] : ''),
         })),
       };
-    });
+    }).sort((a, b) => b.volume - a.volume);
   } catch (e) { logErr('MARKETS', e?.message); return []; }
 }
 
