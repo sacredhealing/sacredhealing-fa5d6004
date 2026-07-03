@@ -1,0 +1,30 @@
+name: SQI - Diagnostic Content Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Check content_changelog
+        env:
+          SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+          SCRIPT_B64: aW1wb3J0IGpzb24sIHVybGxpYi5yZXF1ZXN0LCBvcwp1cmwgPSBvcy5lbnZpcm9uWydTVVBBQkFTRV9VUkwnXSArICIvcmVzdC92MS9jb250ZW50X2NoYW5nZWxvZz9zZWxlY3Q9KiZvcmRlcj1jcmVhdGVkX2F0LmRlc2MmbGltaXQ9MTAiCnJlcSA9IHVybGxpYi5yZXF1ZXN0LlJlcXVlc3QodXJsLCBoZWFkZXJzPXsKICAgICJBdXRob3JpemF0aW9uIjogZiJCZWFyZXIge29zLmVudmlyb25bJ1NVUEFCQVNFX0tFWSddfSIsCiAgICAiYXBpa2V5Ijogb3MuZW52aXJvblsnU1VQQUJBU0VfS0VZJ10KfSkKdHJ5OgogICAgcmVzcCA9IHVybGxpYi5yZXF1ZXN0LnVybG9wZW4ocmVxLCB0aW1lb3V0PTE1KQogICAgZGF0YSA9IGpzb24ubG9hZHMocmVzcC5yZWFkKCkpCiAgICB3aXRoIG9wZW4oJ2NvbnRlbnRfY2hlY2tfcmVzdWx0Lmpzb24nLCd3JykgYXMgZjoKICAgICAgICBqc29uLmR1bXAoZGF0YSwgZiwgaW5kZW50PTIpCiAgICBwcmludChmIlJvd3MgZm91bmQ6IHtsZW4oZGF0YSl9IikKZXhjZXB0IHVybGxpYi5lcnJvci5IVFRQRXJyb3IgYXMgZToKICAgIGVyciA9IGUucmVhZCgpLmRlY29kZSgpCiAgICB3aXRoIG9wZW4oJ2NvbnRlbnRfY2hlY2tfcmVzdWx0Lmpzb24nLCd3JykgYXMgZjoKICAgICAgICBmLndyaXRlKGVycikKICAgIHByaW50KCJIVFRQIEVSUk9SOiIsIGUuY29kZSwgZXJyKQo=
+        run: |
+          echo "$SCRIPT_B64" | base64 -d > /tmp/check.py
+          python3 /tmp/check.py
+      - name: Commit result
+        run: |
+          git config user.name "SQI Bot"
+          git config user.email "bot@sqi.local"
+          mkdir -p diagnostics
+          mv content_check_result.json diagnostics/content-check.json
+          git add diagnostics/content-check.json
+          git commit -m "diagnostic: content_changelog check" || echo "nothing to commit"
+          git push
