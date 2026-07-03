@@ -76,7 +76,79 @@ async function uploadToR2(key: string, data: Uint8Array, contentType: string): P
   return `${R2_PUBLIC_URL}/${key}`;
 }
 
-// ── Instagram Graph API posting
+async function presignR2PutUrl(key: string, expirySeconds = 3600): Promise<string> {
+  const host = `${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  const now = new Date();
+  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const amzDate = now.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const credScope = `${dateStamp}/auto/s3/aws4_request`;
+  const credential = `${R2_KEY_ID}/${credScope}`;
+
+  const queryParams: [string, string][] = [
+    ["X-Amz-Algorithm", "AWS4-HMAC-SHA256"],
+    ["X-Amz-Credential", credential],
+    ["X-Amz-Date", amzDate],
+    ["X-Amz-Expires", String(expirySeconds)],
+    ["X-Amz-SignedHeaders", "host"],
+  ];
+  queryParams.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  const canonicalQuery = queryParams.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
+
+  const canonicalRequest = `PUT\n/${R2_BUCKET}/${key}\n${canonicalQuery}\nhost:${host}\n\nhost\nUNSIGNED-PAYLOAD`;
+  const strToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${credScope}\n${toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonicalRequest)))}`;
+  const kDate = await hmacSHA256(`AWS4${R2_SECRET}`, dateStamp);
+  const kRegion = await hmacSHA256(kDate, "auto");
+  const kService = await hmacSHA256(kRegion, "s3");
+  const kSigning = await hmacSHA256(kService, "aws4_request");
+  const sig = toHex(await hmacSHA256(kSigning, strToSign));
+
+  return `https://${host}/${R2_BUCKET}/${key}?${canonicalQuery}&X-Amz-Signature=${sig}`;
+}
+
+
+async function setupR2Cors(): Promise<string> {
+  const host = `${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  const corsXml = `<?xml version="1.0" encoding="UTF-8"?>
+<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <CORSRule>
+    <AllowedOrigin>https://sacredhealing.lovable.app</AllowedOrigin>
+    <AllowedMethod>PUT</AllowedMethod>
+    <AllowedMethod>GET</AllowedMethod>
+    <AllowedHeader>*</AllowedHeader>
+    <MaxAgeSeconds>3600</MaxAgeSeconds>
+  </CORSRule>
+</CORSConfiguration>`;
+  const bodyBytes = new TextEncoder().encode(corsXml);
+  const now = new Date();
+  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const amzDate = now.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const payloadHash = await sha256Hex(bodyBytes);
+  const canonicalHeaders = `content-type:application/xml\nhost:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date";
+  const canonicalRequest = `PUT\n/${R2_BUCKET}\ncors=\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+  const credScope = `${dateStamp}/auto/s3/aws4_request`;
+  const strToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${credScope}\n${toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonicalRequest)))}`;
+  const kDate = await hmacSHA256(`AWS4${R2_SECRET}`, dateStamp);
+  const kRegion = await hmacSHA256(kDate, "auto");
+  const kService = await hmacSHA256(kRegion, "s3");
+  const kSigning = await hmacSHA256(kService, "aws4_request");
+  const sig = toHex(await hmacSHA256(kSigning, strToSign));
+  const authorization = `AWS4-HMAC-SHA256 Credential=${R2_KEY_ID}/${credScope}, SignedHeaders=${signedHeaders}, Signature=${sig}`;
+  const res = await fetch(`https://${host}/${R2_BUCKET}?cors`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/xml",
+      "x-amz-content-sha256": payloadHash,
+      "x-amz-date": amzDate,
+      Authorization: authorization,
+    },
+    body: bodyBytes,
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`CORS setup failed: ${res.status} ${text}`);
+  return "CORS policy applied";
+}
+
 async function postToInstagram(mediaUrl: string, caption: string, isVideo: boolean): Promise<{ success: boolean; postId?: string; error?: string }> {
   if (!IG_TOKEN || !IG_USER_ID) return { success: false, error: "INSTAGRAM_ACCESS_TOKEN or INSTAGRAM_USER_ID not set" };
   try {
@@ -294,6 +366,46 @@ serve(async (req) => {
         });
       } catch (err: any) {
         return new Response(JSON.stringify({ success: false, error: err.message }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ── ACTION: One-time R2 CORS setup — run once so direct browser-to-R2 uploads are allowed
+    if (action === "setup_r2_cors") {
+      try {
+        const result = await setupR2Cors();
+        return new Response(JSON.stringify({ success: true, message: result }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ── ACTION: Presign a direct-to-R2 upload URL — for large files (videos) that shouldn't
+    // pass through this function's body at all. Browser PUTs straight to R2 with this URL.
+    if (action === "presign_upload") {
+      if (!R2_KEY_ID || !R2_SECRET) {
+        return new Response(JSON.stringify({ success: false, error: "R2 credentials not configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const { ext } = body;
+        const key = `pipeline/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext || "mp4"}`;
+        const uploadUrl = await presignR2PutUrl(key, 3600);
+        const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+        return new Response(JSON.stringify({ success: true, uploadUrl, publicUrl }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

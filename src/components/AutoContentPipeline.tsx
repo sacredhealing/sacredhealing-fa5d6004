@@ -208,50 +208,53 @@ export const AutoContentPipeline = () => {
     }
   };
 
-  // Upload with real progress feedback and a hard timeout — a silent hang here was the actual
-  // cause of "nothing happens": no feedback, no timeout, so a stalled connection just sat forever.
-  const uploadWithProgress = (url: string, file: File): Promise<{ success: boolean; url?: string; error?: string }> => {
+  // Upload with real progress feedback and a size-scaled timeout — a silent hang here was the
+  // actual cause of "nothing happens" earlier, and a flat 15-min timeout was too short for large files.
+  const uploadWithProgress = (url: string, file: File): Promise<{ success: boolean; error?: string }> => {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
-      xhr.timeout = 15 * 60 * 1000; // 15 min hard ceiling
-      let lastPct = -1;
+      xhr.timeout = Math.min(90 * 60 * 1000, Math.max(15 * 60 * 1000, (file.size / (300 * 1024)) * 1000));
+      let lastLoggedPct = -1;
       xhr.upload.onprogress = (e) => {
         if (!e.lengthComputable) return;
         const pct = Math.floor((e.loaded / e.total) * 100);
-        if (pct !== lastPct && pct % 10 === 0) {
-          lastPct = pct;
+        if (pct !== lastLoggedPct) {
+          lastLoggedPct = pct;
           addLog(`Uploading… ${pct}% (${(e.loaded / 1e6).toFixed(0)}MB / ${(e.total / 1e6).toFixed(0)}MB)`);
         }
       };
       xhr.onload = () => {
-        try {
-          const json = JSON.parse(xhr.responseText);
-          if (xhr.status >= 200 && xhr.status < 300 && json.success) resolve({ success: true, url: json.url });
-          else resolve({ success: false, error: json.error || `Upload failed (HTTP ${xhr.status})` });
-        } catch {
-          resolve({ success: false, error: `Upload failed (HTTP ${xhr.status}) — server sent an unreadable response` });
-        }
+        if (xhr.status >= 200 && xhr.status < 300) resolve({ success: true });
+        else resolve({ success: false, error: `Upload to storage failed (HTTP ${xhr.status}): ${xhr.responseText.slice(0, 200)}` });
       };
       xhr.onerror = () => resolve({ success: false, error: "Upload failed — network error or connection dropped" });
-      xhr.ontimeout = () => resolve({ success: false, error: "Upload timed out after 15 minutes — connection too slow or file too large for this network" });
-      xhr.open("POST", url);
-      xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+      xhr.ontimeout = () => resolve({ success: false, error: `Upload timed out — too slow for a ${(file.size / 1e6).toFixed(0)}MB file on this connection. Try Wi-Fi or a shorter source video.` });
+      xhr.open("PUT", url);
       xhr.send(file);
     });
   };
 
   const runOnServer = async () => {
     if (!videoFile) return;
-    addLog(`Uploading video to server — ${(videoFile.size / 1e6).toFixed(0)}MB, your phone's job ends once this finishes…`);
+    addLog(`Requesting a direct upload slot for ${(videoFile.size / 1e6).toFixed(0)}MB…`);
     const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase();
-    const uploadResult = await uploadWithProgress(`${FUNCTION_URL}?action=upload_binary&mediaType=video&ext=${ext}`, videoFile);
+
+    const { data: presignData, error: presignError } = await supabase.functions.invoke("social-post", {
+      body: { action: "presign_upload", ext },
+    });
+    if (presignError || !presignData?.success) {
+      throw new Error(presignData?.error || presignError?.message || "Could not get an upload slot");
+    }
+    const { uploadUrl, publicUrl } = presignData as { uploadUrl: string; publicUrl: string };
+
+    addLog(`Uploading video directly to storage — your phone's job ends once this finishes…`);
+    const uploadResult = await uploadWithProgress(uploadUrl, videoFile);
     if (!uploadResult.success) throw new Error(uploadResult.error || "Video upload failed");
-    const videoUrl = uploadResult.url as string;
-    setFullVideoUrl(videoUrl);
+    setFullVideoUrl(publicUrl);
     addLog(`✓ Uploaded. Handing off to Hetzner worker…`);
 
     const { data: triggerData, error: triggerError } = await withTimeout(
-      supabase.functions.invoke("social-post", { body: { action: "trigger_worker", videoUrl, clipLength, cadenceHours, caption } }),
+      supabase.functions.invoke("social-post", { body: { action: "trigger_worker", videoUrl: publicUrl, clipLength, cadenceHours, caption } }),
       20000,
       "Starting server-side processing"
     );
