@@ -1,0 +1,25 @@
+name: Deploy social-post — Lovable Only
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase/functions/social-post/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy social-post to Lovable (ssygukfd)
+        env:
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+        run: |
+          supabase functions deploy social-post --project-ref ssygukfdbtehvtndandn --no-verify-jwt
+          echo "✅ social-post deployed at $(date)"
