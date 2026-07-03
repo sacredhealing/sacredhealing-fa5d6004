@@ -1611,22 +1611,35 @@ const SocialAutomationV = () => {
 
 /* ─────────────────────────────────────────────
    Admin Guard — restricted to Kritagya + Laila
-   (same admin list used by other /admin dashboards in this app)
 ───────────────────────────────────────────── */
-const ADMIN_UUIDS = [
-  "bd0b21c9-577a-450b-bb1e-21c9d0423f17",
-  "a711f099-3d34-456f-8473-8a65eab056d5",
+const ADMIN_EMAILS = [
+  "sacredhealingvibe@gmail.com",
+  "laila.amrouche@gmail.com",
 ];
 
 const SocialAutomationGuarded = () => {
   const { user, isLoading } = useAuth();
-  const isAdmin = !!user && ADMIN_UUIDS.includes(user.id);
+  const email = user?.email?.toLowerCase().trim();
+  const isAdmin = !!email && ADMIN_EMAILS.includes(email);
 
   if (isLoading) {
     return <div style={{ background: C.black, minHeight: "100vh" }} />;
   }
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
   if (!isAdmin) {
-    return <Navigate to="/" replace />;
+    return (
+      <div style={{ background: C.black, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ maxWidth: 480, textAlign: "center", color: "#fff" }}>
+          <p style={{ fontWeight: 800, fontSize: 16, marginBottom: 10 }}>Not on the admin list</p>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 16, lineHeight: 1.6 }}>
+            You're logged in as <strong style={{ color: C.gold }}>{user.email}</strong>, which isn't in the
+            approved list for this page. Send this exact email to whoever manages access so it can be added.
+          </p>
+        </div>
+      </div>
+    );
   }
   return <SocialAutomationV />;
 };
