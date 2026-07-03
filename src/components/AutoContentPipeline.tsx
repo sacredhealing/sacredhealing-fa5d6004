@@ -49,12 +49,18 @@ async function loadFFmpeg(): Promise<any> {
     }), 25000, "Loading FFmpeg util script");
   }
   const { FFmpeg } = (window as any).FFmpegWASM || (window as any);
+  const { toBlobURL } = (window as any).FFmpegUtil || {};
   const ff = new FFmpeg();
-  await withTimeout(
-    ff.load({ coreURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js" }),
+  const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd";
+  const [coreURL, wasmURL] = await withTimeout(
+    Promise.all([
+      toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+      toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+    ]),
     30000,
-    "Loading FFmpeg WebAssembly core"
+    "Downloading FFmpeg WebAssembly core"
   );
+  await withTimeout(ff.load({ coreURL, wasmURL }), 30000, "Starting FFmpeg WebAssembly engine");
   ffmpegInstance = ff;
   return ff;
 }
