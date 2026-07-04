@@ -7,6 +7,7 @@ const https  = require('https');
 const http   = require('http');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
+const NodeWS = require('ws'); // Node 20 lacks native WebSocket; supabase-js realtime client needs one even though we never use realtime features
 
 const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
@@ -22,7 +23,7 @@ const SYMBOLS = ['BTCUSDC','ETHUSDC','SOLUSDC','BNBUSDC','XRPUSDC','DOGEUSDC','A
 const ASSETS  = {};
 SYMBOLS.forEach(s => { ASSETS[s] = s.replace('USDC',''); });
 
-const supabase   = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase   = createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { transport: NodeWS } });
 const prices     = {};
 const openTrades = {};
 const lastSignal = {};
