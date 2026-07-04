@@ -193,6 +193,21 @@ jobs:
           with urllib.request.urlopen(req) as r: print("wrote", path)
           PYEOF
 
+      - name: Test Binance from Hetzner IP
+        if: inputs.action == 'status'
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: |
+          sshpass -p "$HP" ssh -T root@178.105.183.74 "
+            source /root/delta-arb/delta-arb-hetzner/.env 2>/dev/null || true
+            export \$(grep -v '^#' /root/delta-arb/delta-arb-hetzner/.env | xargs) 2>/dev/null
+            TS=\$(date +%s%3N)
+            QS=\"timestamp=\${TS}&recvWindow=5000\"
+            SIG=\$(echo -n \"\$QS\" | openssl dgst -sha256 -hmac \"\$BINANCE_API_SECRET\" | sed 's/^.* //')
+            echo '=== BINANCE ACCOUNT CALL FROM HETZNER (Germany) ==='
+            curl -s -w ' HTTP_%{http_code}\n' \"https://api.binance.com/api/v3/account?\${QS}&signature=\${SIG}\" -H \"X-MBX-APIKEY: \$BINANCE_API_KEY\"
+          " 2>&1
+
       - name: Logs
         if: inputs.action == 'logs'
         env:
