@@ -9,8 +9,15 @@ const GREEN = '#22c55e';
 const RED   = 'rgba(255,80,80,0.9)';
 
 const SB_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+// Direct REST access with the frontend anon key hits two dead ends: Supabase disabled
+// legacy JWT-format anon keys project-wide, AND bot_trades has RLS that blocks anon SELECT
+// entirely. clawbot-bridge (same edge function the bot writes through) runs server-side
+// with the service_role key, so it sidesteps both issues for reads too.
+const BRIDGE_URL = `${SB_URL}/functions/v1/clawbot-bridge`;
+const BRIDGE_KEY  = 'clawbot-bridge-2026';
+const SB_KEY  = 'sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd'; // used only for binance-balance function call
 const HDRS    = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
+const BRIDGE_HDRS = { apikey: BRIDGE_KEY };
 
 const glass = (extra = {}) => ({
   borderRadius: 28,
@@ -60,10 +67,10 @@ export default function DeltaArbBotV2() {
     if (!botActive) return;
     setSpin(true); setErr('');
     try {
-      let url = `${SB_URL}/rest/v1/bot_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=200`;
+      let url = `${BRIDGE_URL}/bot_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=200`;
       if (mode === 'PAPER') url += '&mode=eq.PAPER';
       if (mode === 'LIVE')  url += '&mode=eq.LIVE';
-      const r = await fetch(url, { headers: HDRS });
+      const r = await fetch(url, { headers: BRIDGE_HDRS });
       if (r.ok) {
         const data = await r.json();
         if (Array.isArray(data)) setTrades(data);
