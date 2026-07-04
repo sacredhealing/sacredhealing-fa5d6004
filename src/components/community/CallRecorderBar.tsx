@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Circle, Square, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import useCallScreenRecorder from '@/hooks/useCallScreenRecorder';
 
@@ -17,6 +16,10 @@ function fmt(s: number) {
   const sec = (s % 60).toString().padStart(2, '0');
   return `${m}:${sec}`;
 }
+
+/** Below this, "Stop & save" asks for a confirmation tap so a stray click
+ * doesn't kill a live class after a few seconds. */
+const MIN_SAFE_STOP_SECONDS = 20;
 
 /**
  * Small inline bar shown to the host of a Daily call.
@@ -43,59 +46,71 @@ export const CallRecorderBar: React.FC<CallRecorderBarProps> = ({
     }
   }, [autoStart, status, roomName, sessionId, start]);
 
+  const handleStopClick = () => {
+    if (elapsed < MIN_SAFE_STOP_SECONDS) {
+      const ok = window.confirm(
+        `Only ${fmt(elapsed)} has been recorded. Stop and save anyway?`
+      );
+      if (!ok) return;
+    }
+    stop();
+  };
+
   return (
     <div
       className={
-        'flex items-center gap-3 px-3 py-2 rounded-md border border-border/40 bg-background/60 text-xs ' +
+        'flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-xl text-xs ' +
         (className || '')
       }
     >
       {status === 'idle' && (
         <>
-          <Button
-            size="sm"
-            variant="destructive"
+          <button
             onClick={() => start({ roomName, sessionId })}
-            className="gap-1.5"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#D4AF37] text-black font-black text-[10px] tracking-[0.1em] uppercase transition-all hover:scale-[1.02] active:scale-95"
           >
             <Circle className="w-3 h-3 fill-current" /> Record call
-          </Button>
-          <span className="text-muted-foreground">
-            Saves to your profile / Stargate when you stop.
-          </span>
+          </button>
+          <span className="text-white/40">Saves to your profile / Stargate when you stop.</span>
         </>
       )}
       {status === 'requesting' && (
-        <span className="flex items-center gap-2 text-muted-foreground">
+        <span className="flex items-center gap-2 text-white/40">
           <Loader2 className="w-3 h-3 animate-spin" /> Waiting for screen + mic permission…
         </span>
       )}
       {status === 'recording' && (
         <>
-          <span className="flex items-center gap-1.5 text-red-500 font-semibold">
+          <span className="flex items-center gap-1.5 text-red-400 font-black tracking-wide">
             <Circle className="w-2.5 h-2.5 fill-current animate-pulse" /> REC {fmt(elapsed)}
           </span>
-          <Button size="sm" variant="outline" onClick={stop} className="gap-1.5 ml-auto">
-            <Square className="w-3 h-3" /> Stop & save
-          </Button>
+          <button
+            onClick={handleStopClick}
+            className="flex items-center gap-1.5 ml-auto px-4 py-2 rounded-full border border-white/10 text-white/70 font-black text-[10px] tracking-[0.1em] uppercase hover:border-[#D4AF37]/40 hover:text-[#D4AF37] transition-all"
+          >
+            <Square className="w-3 h-3" /> Stop &amp; save
+          </button>
         </>
       )}
       {status === 'uploading' && (
-        <span className="flex items-center gap-2 text-muted-foreground">
+        <span className="flex items-center gap-2 text-white/40">
           <Loader2 className="w-3 h-3 animate-spin" /> Uploading recording…
         </span>
       )}
       {status === 'ready' && (
-        <span className="flex items-center gap-2 text-emerald-500">
+        <span className="flex items-center gap-2 text-[#22D3EE]">
           <CheckCircle2 className="w-3 h-3" /> Saved to your profile.
         </span>
       )}
       {status === 'failed' && (
-        <span className="flex items-center gap-2 text-amber-500">
+        <span className="flex items-center gap-2 text-amber-400">
           <AlertTriangle className="w-3 h-3" /> {error || 'Recording failed'}
-          <Button size="sm" variant="ghost" onClick={() => start({ roomName, sessionId })}>
+          <button
+            onClick={() => start({ roomName, sessionId })}
+            className="underline decoration-dotted underline-offset-2 hover:text-[#D4AF37]"
+          >
             Retry
-          </Button>
+          </button>
         </span>
       )}
     </div>
