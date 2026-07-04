@@ -95,11 +95,16 @@ jobs:
         env:
           PUB_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
+          {
           echo "=== NEW PUBLISHABLE KEY TEST ==="
           echo "Key present: $([ -n "$PUB_KEY" ] && echo YES || echo NO), length: ${#PUB_KEY}"
+          echo "Key prefix: ${PUB_KEY:0:15}"
           curl -s -o /tmp/pubtest.json -w 'HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=1' -H "apikey: $PUB_KEY" -H "Authorization: Bearer $PUB_KEY"
           cat /tmp/pubtest.json
           echo ""
+          } > /tmp/pubtest_full.txt 2>&1
+          cat /tmp/pubtest_full.txt
+          mv /tmp/pubtest_full.txt /tmp/pubtest.json
           GH_TOKEN="${{ secrets.GH_ADMIN_PAT }}" python3 - <<'PYEOF'
           import json, base64, urllib.request, time, os
           token = os.environ["GH_TOKEN"]
