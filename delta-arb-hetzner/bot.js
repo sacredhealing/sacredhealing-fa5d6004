@@ -242,6 +242,13 @@ async function autoClose() {
 async function getRealBalance() {
   if (!BINANCE_KEY || !BINANCE_SEC) return { ok: false, error: 'No Binance keys configured' };
   try {
+    const priceData = await new Promise((resolve, reject) => {
+      https.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', res => {
+        let b=''; res.on('data',d=>b+=d); res.on('end',()=>{ try{resolve(JSON.parse(b));}catch(e){reject(e);} });
+      }).on('error', reject);
+    });
+    const btcPrice = parseFloat(priceData?.price ?? '0');
+
     const ts  = Date.now();
     const qs  = 'timestamp=' + ts + '&recvWindow=10000';
     const sig = crypto.createHmac('sha256', BINANCE_SEC).update(qs).digest('hex');
@@ -252,9 +259,20 @@ async function getRealBalance() {
       );
       req.on('error', reject); req.end();
     });
-    if (!data.balances) return { ok: false, error: JSON.stringify(data).slice(0, 200) };
-    const get = (a) => { const b = data.balances.find(x => x.asset === a); return b ? parseFloat(b.free) : 0; };
-    return { ok: true, usdc: get('USDC'), usdt: get('USDT'), btc: get('BTC'), ts: new Date().toISOString() };
+    if (!data.balances) return { ok: false, error: JSON.stringify(data).slice(0, 200), btcPrice };
+    const get = (a) => { const b = data.balances.find(x => x.asset === a); return b ? parseFloat(b.free) + parseFloat(b.locked) : 0; };
+    const usdt = get('USDT'), usdc = get('USDC'), btc = get('BTC');
+    return {
+      ok: true,
+      usdt: Math.round(usdt * 100) / 100,
+      usdc: Math.round(usdc * 100) / 100,
+      btc: Math.round(btc * 1e8) / 1e8,
+      btcPrice: Math.round(btcPrice * 100) / 100,
+      totalUsd: Math.round((usdt + usdc + btc * btcPrice) * 100) / 100,
+      canTrade: !!data.canTrade,
+      accountType: data.accountType ?? null,
+      ts: new Date().toISOString()
+    };
   } catch(e) {
     return { ok: false, error: e.message };
   }
