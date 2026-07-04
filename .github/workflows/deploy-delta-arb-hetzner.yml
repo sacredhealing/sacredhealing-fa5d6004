@@ -152,6 +152,10 @@ jobs:
             grep -oE 'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' /tmp/bundle.js | sort -u | head -3
             echo "ssygukfdbtehvtndandn mentioned: $(grep -c ssygukfdbtehvtndandn /tmp/bundle.js || echo 0)"
           done
+          echo "=== VERIFY EXTRACTED KEY ==="
+          FOUND_KEY=$(grep -oE 'sb_publishable_[A-Za-z0-9_-]+' /tmp/bundle.js | sort -u | head -1)
+          echo "Testing key: $FOUND_KEY"
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=3' -H "apikey: $FOUND_KEY" -H "Authorization: Bearer $FOUND_KEY"
           } > /tmp/keyfind.txt 2>&1
           cat /tmp/keyfind.txt
           python3 - <<'PYEOF'
