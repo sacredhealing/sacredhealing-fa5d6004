@@ -2,96 +2,96 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 22m    │ 25   │ online    │ 0%       │ 55.4mb   │ root     │ disabled │
-│ 8  │ delta-arb         │ default     │ 2.0.0   │ fork    │ 0        │ 0      │ 15   │ errored   │ 0%       │ 0b       │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 24m    │ 25   │ online    │ 0%       │ 55.6mb   │ root     │ disabled │
+│ 9  │ delta-arb         │ default     │ 2.0.0   │ fork    │ 0        │ 0      │ 15   │ errored   │ 0%       │ 0b       │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 88m    │ 0    │ online    │ 0%       │ 88.8mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 74.5mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 89m    │ 0    │ online    │ 0%       │ 89.4mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 74.4mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
 /root/.pm2/logs/delta-arb-error.log last 80 lines:
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar | Error: supabaseKey is required.
-8|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:315:29)
-8|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-8|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-8|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-8|delta-ar |     at Module._load (node:internal/modules/cjs/loader:1091:12)
-8|delta-ar |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:32:23)
-8|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-8|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
+9|delta-ar | 
+9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+9|delta-ar | import ws from "ws"
+9|delta-ar | new RealtimeClient(url, { transport: ws })
+9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
+9|delta-ar | 
+9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+9|delta-ar | import ws from "ws"
+9|delta-ar | new RealtimeClient(url, { transport: ws })
+9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
+9|delta-ar | 
+9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+9|delta-ar | import ws from "ws"
+9|delta-ar | new RealtimeClient(url, { transport: ws })
+9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
+9|delta-ar | 
+9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+9|delta-ar | import ws from "ws"
+9|delta-ar | new RealtimeClient(url, { transport: ws })
+9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
+9|delta-ar | 
+9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+9|delta-ar | import ws from "ws"
+9|delta-ar | new RealtimeClient(url, { transport: ws })
+9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
 
 === HEALTH ===
 health: offline
