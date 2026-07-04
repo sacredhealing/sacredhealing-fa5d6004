@@ -199,7 +199,7 @@ jobs:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
           GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/test_binance.sh && bash delta-arb-hetzner/test_binance.sh" > /tmp/binancetest.txt 2>&1
+          sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/test_binance.sh && bash delta-arb-hetzner/test_binance.sh; echo '=== BOT /balance ENDPOINT ==='; curl -s http://localhost:8081/balance" > /tmp/binancetest.txt 2>&1
           cat /tmp/binancetest.txt
           python3 - <<'PYEOF'
           import json, base64, urllib.request, os
