@@ -118,6 +118,9 @@ jobs:
               headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
           with urllib.request.urlopen(req) as r: print("wrote", path)
           PYEOF
+
+      - name: Logs
+        if: inputs.action == 'logs'
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
         run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo not-running"
