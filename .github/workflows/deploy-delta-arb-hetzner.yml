@@ -197,16 +197,35 @@ jobs:
         if: inputs.action == 'status'
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           sshpass -p "$HP" ssh -T root@178.105.183.74 "
-            source /root/delta-arb/delta-arb-hetzner/.env 2>/dev/null || true
             export \$(grep -v '^#' /root/delta-arb/delta-arb-hetzner/.env | xargs) 2>/dev/null
             TS=\$(date +%s%3N)
             QS=\"timestamp=\${TS}&recvWindow=5000\"
             SIG=\$(echo -n \"\$QS\" | openssl dgst -sha256 -hmac \"\$BINANCE_API_SECRET\" | sed 's/^.* //')
             echo '=== BINANCE ACCOUNT CALL FROM HETZNER (Germany) ==='
             curl -s -w ' HTTP_%{http_code}\n' \"https://api.binance.com/api/v3/account?\${QS}&signature=\${SIG}\" -H \"X-MBX-APIKEY: \$BINANCE_API_KEY\"
-          " 2>&1
+          " > /tmp/binancetest.txt 2>&1
+          cat /tmp/binancetest.txt
+          python3 - <<'PYEOF'
+          import json, base64, urllib.request, os
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/binance_hetzner_test_latest.txt"
+          content = open("/tmp/binancetest.txt").read()
+          def get_sha():
+              try:
+                  r0 = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", headers={"Authorization": f"token {token}"})
+                  with urllib.request.urlopen(r0) as x: return json.load(x)["sha"]
+              except Exception: return None
+          sha = get_sha()
+          body = {"message": "diag: binance from hetzner test", "content": base64.b64encode(content.encode()).decode()}
+          if sha: body["sha"] = sha
+          req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
+              headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
+          with urllib.request.urlopen(req) as r: print("wrote", path)
+          PYEOF
 
       - name: Logs
         if: inputs.action == 'logs'
