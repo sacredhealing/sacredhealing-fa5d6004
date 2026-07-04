@@ -129,6 +129,50 @@ jobs:
           with urllib.request.urlopen(req) as r: print("wrote", path)
           PYEOF
 
+      - name: Extract live key from Lovable-deployed bundle
+        if: inputs.action == 'status'
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          {
+          echo "=== Fetching sacredhealing.lovable.app ==="
+          curl -s -L https://sacredhealing.lovable.app/ -o /tmp/index.html
+          echo "index.html bytes: $(wc -c < /tmp/index.html)"
+          JS_PATHS=$(grep -oE 'src="[^"]*\.js"' /tmp/index.html | sed 's/src="//;s/"//' | sort -u)
+          echo "JS assets found:"
+          echo "$JS_PATHS"
+          for p in $JS_PATHS; do
+            if [[ "$p" == http* ]]; then URL="$p"; else URL="https://sacredhealing.lovable.app${p}"; fi
+            echo "--- fetching $URL ---"
+            curl -s -L "$URL" -o /tmp/bundle.js
+            echo "bytes: $(wc -c < /tmp/bundle.js)"
+            echo "sb_publishable matches:"
+            grep -oE 'sb_publishable_[A-Za-z0-9_-]+' /tmp/bundle.js | sort -u
+            echo "legacy eyJ matches near supabase (first 3):"
+            grep -oE 'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' /tmp/bundle.js | sort -u | head -3
+            echo "ssygukfdbtehvtndandn mentioned: $(grep -c ssygukfdbtehvtndandn /tmp/bundle.js || echo 0)"
+          done
+          } > /tmp/keyfind.txt 2>&1
+          cat /tmp/keyfind.txt
+          python3 - <<'PYEOF'
+          import json, base64, urllib.request, os
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/livekey_extract_latest.txt"
+          content = open("/tmp/keyfind.txt").read()
+          def get_sha():
+              try:
+                  r0 = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", headers={"Authorization": f"token {token}"})
+                  with urllib.request.urlopen(r0) as x: return json.load(x)["sha"]
+              except Exception: return None
+          sha = get_sha()
+          body = {"message": "diag: live key extract", "content": base64.b64encode(content.encode()).decode()}
+          if sha: body["sha"] = sha
+          req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
+              headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
+          with urllib.request.urlopen(req) as r: print("wrote", path)
+          PYEOF
+
       - name: Logs
         if: inputs.action == 'logs'
         env:
