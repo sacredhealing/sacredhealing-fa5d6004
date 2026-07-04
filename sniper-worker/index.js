@@ -187,8 +187,12 @@ async function tg(msg) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CHEAP, RPC-FREE PRE-FILTER — reject obvious junk before spending
-// a single credit. Verbatim from the edge function.
+// CHEAP PRE-FILTER — DORMANT. Required a real name/symbol to check
+// against honeypot keywords, which parseLaunch no longer provides
+// (logsSubscribe never had real metadata to begin with — see
+// parseLaunch's comment). Left here in case a future version adds a
+// metadata lookup (e.g. fetching the URI's JSON) before this point in
+// the pipeline; wire it back into processCandidate() if so.
 // ══════════════════════════════════════════════════════════════════
 const HONEY = ['airdrop', 'claim', 'official', 'presale', 'safe', 'guaranteed', '100x'];
 function cheapReject(name, symbol) {
@@ -198,32 +202,53 @@ function cheapReject(name, symbol) {
   return null;
 }
 
+
 // ══════════════════════════════════════════════════════════════════
-// PARSE — extract a pump.fun create event from onLogs payload.
+// PARSE — detect a real pump.fun launch and pull mint/creator from
+// the actual transaction, not from log text.
+//
+// Ground-truth from a live 3-minute capture (July 2026): pump.fun's
+// current instruction is "CreateV2", not "Create" — confirmed by
+// CreateV2/SetAuthority/InitializeMint2 all showing near-identical
+// counts (82/82/83 per ~6400 txns), the exact 1:1:1 pattern of a
+// real launch (create + renounce authority + init the new mint).
+// The two previous instruction names this checked for ("Create",
+// "CreatePool") either don't exist on the current program version or
+// fire on completely unrelated events (the SPL Associated Token
+// Account program logs a bare "Create" on every single buy/sell that
+// needs a token account — pure noise, not a launch).
+//
+// logsSubscribe only ever returns text log lines, never account
+// addresses or instruction data — there was never a way to get a real
+// mint address by parsing "Program log:" lines as JSON, which is what
+// this function used to assume. Instead: on a CreateV2 sighting, fetch
+// the full transaction once and read meta.postTokenBalances, a
+// standard field on every transaction that reveals new mints
+// regardless of whether we understand pump.fun's specific account
+// layout. Name/symbol aren't reliably available this way without the
+// program's IDL — left as placeholders; nothing downstream (filter,
+// execution) depends on them being accurate, only the mint address.
 // ══════════════════════════════════════════════════════════════════
-function parseLaunch(logs, sig) {
-  const isCreate = logs.some((l) =>
-    l.includes('Instruction: Create') || l.includes('InitializeMint') || l.includes('CreatePool')
-  );
+async function parseLaunch(logs, sig) {
+  const isCreate = logs.some((l) => l.includes('Program log: Instruction: CreateV2'));
   if (!isCreate) return null;
 
-  let name = 'UNKNOWN', symbol = '???', uri = '', mint = '', creator = '';
-  for (const line of logs) {
-    if (!line.includes('Program log:')) continue;
-    const raw = line.replace(/^.*Program log:\s*/, '').trim();
-    if (raw.startsWith('{')) {
-      try {
-        const d = JSON.parse(raw);
-        name = d.name ?? d.tokenName ?? name;
-        symbol = d.symbol ?? d.tokenSymbol ?? symbol;
-        uri = d.uri ?? d.metadataUri ?? uri;
-        mint = d.mint ?? mint;
-        creator = d.user ?? d.creator ?? creator;
-      } catch { /* not JSON, skip */ }
-    }
+  try {
+    const tx = await rpc('getTransaction', [sig, { maxSupportedTransactionVersion: 0, encoding: 'jsonParsed' }]);
+    const postBalances = tx?.meta?.postTokenBalances || [];
+    const preMints = new Set((tx?.meta?.preTokenBalances || []).map((b) => b.mint));
+    // The new mint is one that appears post-transaction but didn't exist pre-transaction on this account set.
+    const newBalance = postBalances.find((b) => !preMints.has(b.mint)) || postBalances[0];
+    const mint = newBalance?.mint;
+    if (!mint) return null;
+    const creator = tx?.transaction?.message?.accountKeys?.[0]?.pubkey
+      || tx?.transaction?.message?.accountKeys?.[0]
+      || '';
+    return { mint, creator, name: 'UNKNOWN', symbol: '???', uri: '', signature: sig };
+  } catch (e) {
+    L.warn(`[parseLaunch] tx fetch failed for ${sig?.slice(0, 8)}...: ${e.message}`);
+    return null;
   }
-  if (!mint) return null;
-  return { mint, creator, name, symbol, uri, signature: sig };
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -506,9 +531,6 @@ async function executeSell(mint, amountRaw) {
 // until AFTER the decision is made.
 // ══════════════════════════════════════════════════════════════════
 async function processCandidate(token) {
-  const pre = cheapReject(token.name, token.symbol);
-  if (pre) return;
-
   const gates = dailyGatesOk();
   if (!gates.ok) { L.info(`[gate] ${token.symbol}: ${gates.reason}`); return; }
 
@@ -594,8 +616,9 @@ function startDetection() {
     if (msg.method !== 'logsNotification') return; // ignore the subscribe-confirmation reply etc.
     const value = msg.params?.result?.value;
     if (!value || value.err) return;
-    const launch = parseLaunch(value.logs || [], value.signature);
-    if (launch) processCandidate(launch).catch((e) => L.warn(`[candidate] ${e.message}`));
+    parseLaunch(value.logs || [], value.signature)
+      .then((launch) => { if (launch) return processCandidate(launch); })
+      .catch((e) => L.warn(`[candidate] ${e.message}`));
   });
 
   ws.on('error', (e) => L.warn(`[ws] ${e.message}`));
