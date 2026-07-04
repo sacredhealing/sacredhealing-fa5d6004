@@ -238,8 +238,37 @@ async function autoClose() {
   }
 }
 
+// ── REAL BALANCE (always live, independent of PAPER/LIVE trading mode) ────
+async function getRealBalance() {
+  if (!BINANCE_KEY || !BINANCE_SEC) return { ok: false, error: 'No Binance keys configured' };
+  try {
+    const ts  = Date.now();
+    const qs  = 'timestamp=' + ts + '&recvWindow=10000';
+    const sig = crypto.createHmac('sha256', BINANCE_SEC).update(qs).digest('hex');
+    const data = await new Promise((resolve, reject) => {
+      const req = https.request('https://api.binance.com/api/v3/account?' + qs + '&signature=' + sig,
+        { headers: { 'X-MBX-APIKEY': BINANCE_KEY } },
+        res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>{ try{resolve(JSON.parse(b));}catch(e){reject(e);} }); }
+      );
+      req.on('error', reject); req.end();
+    });
+    if (!data.balances) return { ok: false, error: JSON.stringify(data).slice(0, 200) };
+    const get = (a) => { const b = data.balances.find(x => x.asset === a); return b ? parseFloat(b.free) : 0; };
+    return { ok: true, usdc: get('USDC'), usdt: get('USDT'), btc: get('BTC'), ts: new Date().toISOString() };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 // ── HEALTH ────────────────────────────────────────────────
 http.createServer((req, res) => {
+  if (req.url === '/balance') {
+    getRealBalance().then(bal => {
+      res.writeHead(200, {'Content-Type':'application/json', 'Access-Control-Allow-Origin':'*'});
+      res.end(JSON.stringify(bal));
+    });
+    return;
+  }
   const uptime = Math.floor((Date.now() - startTime) / 1000);
   const tickCounts = {};
   SYMBOLS.forEach(s => { tickCounts[ASSETS[s]] = (prices[s]||[]).length; });
