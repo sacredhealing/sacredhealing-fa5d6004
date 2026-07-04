@@ -574,7 +574,7 @@ async function startWhaleMirror(provider) {
       const latest = await provider.getBlockNumber();
       if (latest <= lastProcessedBlock) return;
       const fromBlock = lastProcessedBlock + 1;
-      const toBlock = Math.min(latest, fromBlock + 200); // cap range per call
+      const toBlock = Math.min(latest, fromBlock + 9); // Alchemy free tier caps eth_getLogs at 10-block range
 
       const logs = await provider.getLogs({ address: CTF_EXCHANGE.toLowerCase(), fromBlock, toBlock });
       lastProcessedBlock = toBlock;
