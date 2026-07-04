@@ -19,9 +19,10 @@ const StargateMembership = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { isStargateMember, loading: stargateLoading } = useStargateAccess();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [memberTab, setMemberTab] = useState<'membership' | 'healing' | 'gita' | 'wisdom'>('membership');
+  const [memberTab, setMemberTab] = useState<'membership' | 'healing' | 'gita' | 'wisdom'>('gita');
 
   const [telegramLink, setTelegramLink] = useState<string | null>(null);
 
