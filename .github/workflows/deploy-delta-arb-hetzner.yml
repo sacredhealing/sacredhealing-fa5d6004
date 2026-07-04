@@ -163,6 +163,8 @@ jobs:
             echo "Row count check (Prefer: count=exact):"
             curl -s -I 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id' -H "apikey: $FOUND_KEY" -H "Authorization: Bearer $FOUND_KEY" -H "Prefer: count=exact" | grep -i content-range
           done
+          echo "=== TEST BRIDGE FOR READS (bypasses RLS via service_role) ==="
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=id,asset,status,pnl_usdc&limit=5' -H 'apikey: clawbot-bridge-2026'
           } > /tmp/keyfind.txt 2>&1
           cat /tmp/keyfind.txt
           python3 - <<'PYEOF'
