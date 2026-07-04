@@ -2,10 +2,10 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 2h     │ 25   │ online    │ 0%       │ 56.9mb   │ root     │ disabled │
-│ 13 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2722395  │ 44s    │ 0    │ online    │ 0%       │ 52.0mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 2h     │ 25   │ online    │ 0%       │ 57.2mb   │ root     │ disabled │
+│ 13 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2722395  │ 93s    │ 0    │ online    │ 0%       │ 53.1mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 3h     │ 0    │ online    │ 0%       │ 89.8mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 3h     │ 0    │ online    │ 0%       │ 90.6mb   │ root     │ disabled │
 │ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 30h    │ 1    │ online    │ 0%       │ 74.6mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
@@ -93,8 +93,6 @@
 13|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-13|delta-a | [OPEN] ADA DOWN | delta=-0.2608% | $2.00 | entry=$0.1912
-13|delta-a | [OPEN] Saved to DB | id=d1ce2ea4-cc2a-49bc-95aa-ef1e1fa01b41 | total trades=56
 13|delta-a | [ALIVE] 2026-07-04T20:56:05.481Z | trades:56 | open:[DOGE,SOL,UNI,XRP,ADA] | ticks:BTC:302 ETH:261 SOL:69...
 13|delta-a | [OPEN] XRP UP | delta=+0.1464% | $2.00 | entry=$1.1629
 13|delta-a | [OPEN] Saved to DB | id=32fa7af0-8c9d-4684-a94b-11b09daa2e1e | total trades=57
@@ -173,6 +171,8 @@
 13|delta-a | ==================================================
 13|delta-a | [HEALTH] Listening on :8081
 13|delta-a | [WS] Connected to Binance — 12 pairs
+13|delta-a | [OPEN] ADA DOWN | delta=-0.1554% | $2.00 | entry=$0.1928
+13|delta-a | [OPEN] Saved to DB | id=975803c9-2245-406b-9b7b-052f0d0fb28c | total trades=1
 
 === HEALTH ===
 {
@@ -181,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.120%",
-  "trades": 0,
-  "open": 0,
-  "uptime": "0m 44s",
+  "trades": 1,
+  "open": 1,
+  "uptime": "1m 33s",
   "ticks": {
-    "BTC": 32,
-    "ETH": 17,
-    "SOL": 11,
-    "BNB": 5,
-    "XRP": 10,
-    "DOGE": 4,
-    "ADA": 0,
-    "AVAX": 1,
-    "DOT": 1,
+    "BTC": 58,
+    "ETH": 29,
+    "SOL": 17,
+    "BNB": 9,
+    "XRP": 24,
+    "DOGE": 7,
+    "ADA": 7,
+    "AVAX": 2,
+    "DOT": 2,
     "LINK": 1,
-    "UNI": 0,
+    "UNI": 3,
     "MATIC": 0
   },
-  "ts": "2026-07-04T21:28:40.636Z"
+  "ts": "2026-07-04T21:29:29.342Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
