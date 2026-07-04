@@ -332,13 +332,49 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
     onSendMessage(inputValue, selectedImages.length>0 ? selectedImages : undefined);
     setInputValue(''); setSelectedImages([]);
   };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    Array.from(e.target.files||[]).forEach(f=>{
-      const r=new FileReader();
-      r.onloadend=()=>setSelectedImages(p=>[...p,r.result as string]);
-      r.readAsDataURL(f);
+  // Downscale + re-encode to JPEG so multi-photo uploads never exceed the
+  // edge function's request-body limit (phone camera photos can be 3-8MB
+  // each; base64 inflates that further). Caps longest edge at 1280px.
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('image decode failed'));
+        img.onload = () => {
+          const MAX_DIM = 1280;
+          let { width, height } = img;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width > height) { height = Math.round(height * (MAX_DIM / width)); width = MAX_DIM; }
+            else { width = Math.round(width * (MAX_DIM / height)); height = MAX_DIM; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('canvas context unavailable')); return; }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     });
-    e.target.value='';
+
+  const MAX_IMAGES = 6;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).slice(0, Math.max(0, MAX_IMAGES - selectedImages.length));
+    files.forEach(f => {
+      compressImage(f)
+        .then(dataUrl => setSelectedImages(p => [...p, dataUrl]))
+        .catch(() => {
+          // Fall back to raw file if compression fails for any reason
+          const r = new FileReader();
+          r.onloadend = () => setSelectedImages(p => [...p, r.result as string]);
+          r.readAsDataURL(f);
+        });
+    });
+    e.target.value = '';
   };
   const removeImage = (i: number) => setSelectedImages(p=>p.filter((_,j)=>j!==i));
 
