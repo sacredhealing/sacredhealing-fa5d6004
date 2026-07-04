@@ -2,16 +2,15 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 42m    │ 25   │ online    │ 0%       │ 56.5mb   │ root     │ disabled │
-│ 11 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2707418  │ 11m    │ 0    │ online    │ 0%       │ 55.9mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 44m    │ 25   │ online    │ 0%       │ 56.4mb   │ root     │ disabled │
+│ 11 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2707418  │ 12m    │ 0    │ online    │ 0%       │ 56.8mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 108m   │ 0    │ online    │ 0%       │ 89.1mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 75.0mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 110m   │ 0    │ online    │ 0%       │ 89.4mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 74.9mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
 /root/.pm2/logs/delta-arb-error.log last 80 lines:
-11|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
 11|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
 11|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
 11|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
@@ -80,6 +79,7 @@
 11|delta-a | [DB] Insert error: Invalid API key
 11|delta-a | [DB] Insert error: Invalid API key
 11|delta-a | [DB] Insert error: Invalid API key
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
@@ -167,6 +167,12 @@
 11|delta-a | [OPEN] Saved to DB | id=cf0e63c0-e8db-48ea-b689-4596925d3e98 | total trades=17
 11|delta-a | [OPEN] LINK UP | delta=+0.1488% | $2.00 | entry=$8.0770
 11|delta-a | [OPEN] Saved to DB | id=0fbad6f7-03b2-42ab-9b37-d9237c3a4225 | total trades=18
+11|delta-a | [OPEN] AVAX UP | delta=+0.1427% | $2.00 | entry=$7.0160
+11|delta-a | [OPEN] Saved to DB | id=89330eb5-6a24-4b63-b1e5-e8d841889017 | total trades=19
+11|delta-a | [OPEN] DOT UP | delta=+0.2242% | $2.00 | entry=$0.8940
+11|delta-a | [OPEN] Saved to DB | id=6f18df21-b71e-4cd2-ac42-a34bdf49e138 | total trades=20
+11|delta-a | [OPEN] BTC UP | delta=+0.1232% | $2.00 | entry=$63334.4700
+11|delta-a | [OPEN] Saved to DB | id=ab9d8733-a4ff-406a-9e08-7681baddca8d | total trades=21
 
 === HEALTH ===
 {
@@ -175,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.120%",
-  "trades": 18,
-  "open": 7,
-  "uptime": "11m 1s",
+  "trades": 21,
+  "open": 9,
+  "uptime": "12m 47s",
   "ticks": {
-    "BTC": 366,
-    "ETH": 414,
-    "SOL": 95,
-    "BNB": 28,
-    "XRP": 94,
-    "DOGE": 36,
-    "ADA": 44,
-    "AVAX": 24,
-    "DOT": 5,
-    "LINK": 6,
-    "UNI": 14,
+    "BTC": 474,
+    "ETH": 553,
+    "SOL": 115,
+    "BNB": 32,
+    "XRP": 88,
+    "DOGE": 44,
+    "ADA": 53,
+    "AVAX": 27,
+    "DOT": 8,
+    "LINK": 9,
+    "UNI": 15,
     "MATIC": 0
   },
-  "ts": "2026-07-04T20:02:06.749Z"
+  "ts": "2026-07-04T20:03:52.577Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
