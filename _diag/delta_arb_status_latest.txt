@@ -2,26 +2,15 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 36m    │ 25   │ online    │ 0%       │ 55.9mb   │ root     │ disabled │
-│ 11 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2707418  │ 4m     │ 0    │ online    │ 0%       │ 54.2mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 42m    │ 25   │ online    │ 0%       │ 56.5mb   │ root     │ disabled │
+│ 11 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2707418  │ 11m    │ 0    │ online    │ 0%       │ 55.9mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 101m   │ 0    │ online    │ 0%       │ 89.5mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 74.8mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 108m   │ 0    │ online    │ 0%       │ 89.1mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 75.0mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
 /root/.pm2/logs/delta-arb-error.log last 80 lines:
-11|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-11|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-11|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-11|delta-a | Error: Node.js 20 detected without native WebSocket support.
-11|delta-a | 
-11|delta-a | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-11|delta-a | import ws from "ws"
-11|delta-a | new RealtimeClient(url, { transport: ws })
-11|delta-a |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-11|delta-a |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-11|delta-a |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
 11|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
 11|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
 11|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
@@ -91,6 +80,17 @@
 11|delta-a | [DB] Insert error: Invalid API key
 11|delta-a | [DB] Insert error: Invalid API key
 11|delta-a | [DB] Insert error: Invalid API key
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+11|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
 11|delta-a | 
@@ -141,6 +141,32 @@
 11|delta-a | [OPEN] Saved to DB | id=976e1906-88b5-4101-bc32-3dd9979ae707 | total trades=5
 11|delta-a | [OPEN] ETH DOWN | delta=-0.1745% | $2.00 | entry=$1790.1400
 11|delta-a | [OPEN] Saved to DB | id=1450e1d1-5e0b-4b78-b6cf-66ec074d3d65 | total trades=6
+11|delta-a | [OPEN] ADA UP | delta=+0.2076% | $2.00 | entry=$0.1931
+11|delta-a | [OPEN] Saved to DB | id=71479657-b839-4675-b088-f84770de8334 | total trades=7
+11|delta-a | [ALIVE] 2026-07-04T19:56:05.476Z | trades:7 | open:[AVAX,UNI,SOL,DOGE,ETH,ADA] | ticks:BTC:240 ETH:341 SOL:78...
+11|delta-a | [OPEN] ADA DOWN | delta=-0.1552% | $2.00 | entry=$0.1930
+11|delta-a | [OPEN] Saved to DB | id=9b57de1c-6a6d-452b-9b54-f630f247f440 | total trades=8
+11|delta-a | [OPEN] ADA UP | delta=+0.2075% | $2.00 | entry=$0.1932
+11|delta-a | [OPEN] Saved to DB | id=b9fcb060-3ecc-4060-89bf-054f6f9872ff | total trades=9
+11|delta-a | [OPEN] UNI UP | delta=+0.1547% | $2.00 | entry=$3.2380
+11|delta-a | [OPEN] Saved to DB | id=2819a054-18f9-4f6c-8ae7-9bafdba3ccd7 | total trades=10
+11|delta-a | [OPEN] SOL UP | delta=+0.1224% | $2.00 | entry=$81.8200
+11|delta-a | [OPEN] Saved to DB | id=c0950555-41d9-4bce-a2e9-5e8bc20fd9dc | total trades=11
+11|delta-a | [OPEN] AVAX UP | delta=+0.1715% | $2.00 | entry=$7.0100
+11|delta-a | [OPEN] Saved to DB | id=3c58c699-2756-4900-97a6-e278c23e41f9 | total trades=12
+11|delta-a | [OPEN] ETH UP | delta=+0.1246% | $2.00 | entry=$1792.4700
+11|delta-a | [OPEN] Saved to DB | id=8f54637c-82c1-4b41-b8fb-f793e630fa0c | total trades=13
+11|delta-a | [OPEN] DOGE UP | delta=+0.1275% | $2.00 | entry=$0.0785
+11|delta-a | [OPEN] Saved to DB | id=813a3e36-006f-4a39-bd35-605bf56aa7a2 | total trades=14
+11|delta-a | [OPEN] ADA DOWN | delta=-0.2068% | $2.00 | entry=$0.1930
+11|delta-a | [OPEN] Saved to DB | id=5f801141-c0aa-4915-b1f2-0f18e31b8be4 | total trades=15
+11|delta-a | [OPEN] AVAX DOWN | delta=-0.1711% | $2.00 | entry=$7.0020
+11|delta-a | [OPEN] Saved to DB | id=d18163e2-2491-4cbf-875e-52ab80d31b59 | total trades=16
+11|delta-a | [ALIVE] 2026-07-04T20:01:05.476Z | trades:16 | open:[UNI,SOL,ETH,DOGE,ADA,AVAX] | ticks:BTC:320 ETH:384 SOL:95...
+11|delta-a | [OPEN] ADA UP | delta=+0.1554% | $2.00 | entry=$0.1932
+11|delta-a | [OPEN] Saved to DB | id=cf0e63c0-e8db-48ea-b689-4596925d3e98 | total trades=17
+11|delta-a | [OPEN] LINK UP | delta=+0.1488% | $2.00 | entry=$8.0770
+11|delta-a | [OPEN] Saved to DB | id=0fbad6f7-03b2-42ab-9b37-d9237c3a4225 | total trades=18
 
 === HEALTH ===
 {
@@ -149,24 +175,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.120%",
-  "trades": 6,
-  "open": 6,
-  "uptime": "4m 25s",
+  "trades": 18,
+  "open": 7,
+  "uptime": "11m 1s",
   "ticks": {
-    "BTC": 211,
-    "ETH": 304,
-    "SOL": 66,
-    "BNB": 39,
-    "XRP": 76,
-    "DOGE": 37,
-    "ADA": 64,
-    "AVAX": 26,
-    "DOT": 2,
-    "LINK": 10,
-    "UNI": 12,
+    "BTC": 366,
+    "ETH": 414,
+    "SOL": 95,
+    "BNB": 28,
+    "XRP": 94,
+    "DOGE": 36,
+    "ADA": 44,
+    "AVAX": 24,
+    "DOT": 5,
+    "LINK": 6,
+    "UNI": 14,
     "MATIC": 0
   },
-  "ts": "2026-07-04T19:55:30.959Z"
+  "ts": "2026-07-04T20:02:06.749Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
@@ -178,3 +204,6 @@ bot.js
 node_modules
 package-lock.json
 package.json
+=== FRONTEND ANON KEY TEST ===
+HTTP_401
+{"message":"Legacy API keys are disabled","hint":"Your legacy API keys (anon, service_role) were disabled on 2026-06-19T14:40:00.111908+00:00. Re-enable them in the Supabase dashboard, or use the new publishable and secret API keys."}
