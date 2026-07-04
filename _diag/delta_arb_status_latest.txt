@@ -2,11 +2,11 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 84m    │ 25   │ online    │ 0%       │ 56.7mb   │ root     │ disabled │
-│ 11 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2707418  │ 52m    │ 0    │ online    │ 0%       │ 62.8mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 85m    │ 25   │ online    │ 0%       │ 56.6mb   │ root     │ disabled │
+│ 11 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2707418  │ 53m    │ 0    │ online    │ 0%       │ 63.2mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 2h     │ 0    │ online    │ 0%       │ 89.3mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 29h    │ 1    │ online    │ 0%       │ 74.6mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 2h     │ 0    │ online    │ 0%       │ 89.7mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 29h    │ 1    │ online    │ 0%       │ 74.4mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -183,22 +183,22 @@
   "threshold": "0.120%",
   "trades": 49,
   "open": 7,
-  "uptime": "52m 49s",
+  "uptime": "53m 59s",
   "ticks": {
-    "BTC": 317,
-    "ETH": 426,
-    "SOL": 80,
-    "BNB": 51,
-    "XRP": 89,
-    "DOGE": 34,
+    "BTC": 332,
+    "ETH": 413,
+    "SOL": 76,
+    "BNB": 54,
+    "XRP": 72,
+    "DOGE": 29,
     "ADA": 28,
-    "AVAX": 18,
-    "DOT": 8,
+    "AVAX": 30,
+    "DOT": 10,
     "LINK": 15,
-    "UNI": 11,
+    "UNI": 15,
     "MATIC": 0
   },
-  "ts": "2026-07-04T20:43:55.206Z"
+  "ts": "2026-07-04T20:45:04.754Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
