@@ -22,6 +22,6 @@ sb_publishable matches:
 legacy eyJ matches near supabase (first 3):
 ssygukfdbtehvtndandn mentioned: 0
 0
-=== VERIFY EXTRACTED KEY ===
-Testing key: 
-{"message":"No API key found in request","hint":"No `apikey` request header or url param was found."} HTTP_401
+=== VERIFY EXTRACTED KEY(S) ===
+Testing key: sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd
+[] HTTP_200
