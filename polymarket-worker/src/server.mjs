@@ -221,8 +221,15 @@ async function dbInsert(table, data) {
       },
       body: JSON.stringify(data),
     });
+    if (!r.ok) {
+      const body = await r.text().catch(() => '');
+      logErr('DB', `insert into ${table} failed: ${r.status} ${body.slice(0, 300)}`);
+    }
     return r.ok;
-  } catch { return false; }
+  } catch (e) {
+    logErr('DB', `insert into ${table} threw: ${e?.message}`);
+    return false;
+  }
 }
 
 async function dbUpdate(table, filter, data) {
@@ -375,8 +382,8 @@ async function executeLiveOrder(signal) {
 // ─── Record trade ────────────────────────────────────────────────────────────
 async function recordTrade(signal, strategy) {
   try {
-    if (openPositions >= MAX_POSITIONS) return false;
-    if (!signal || typeof signal !== 'object') return false;
+    if (openPositions >= MAX_POSITIONS) { warn('TRADE', `${strategy} blocked: position cap ${openPositions}/${MAX_POSITIONS}`); return false; }
+    if (!signal || typeof signal !== 'object') { warn('TRADE', `${strategy} blocked: invalid signal object`); return false; }
 
     const size = tradeSize();
     const fee  = size * 0.0005;
@@ -407,7 +414,7 @@ async function recordTrade(signal, strategy) {
 
     // Paper path
     const cost   = signal.direction === 'buy' ? size + fee : fee;
-    if (signal.direction === 'buy' && cost > balance) return false;
+    if (signal.direction === 'buy' && cost > balance) { warn('TRADE', `${strategy} blocked: insufficient balance $${balance.toFixed(2)} < cost $${cost.toFixed(2)}`); return false; }
 
     const newBal = signal.direction === 'buy' ? balance - cost : balance + size - fee;
     const txHash = `paper-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -442,6 +449,7 @@ async function recordTrade(signal, strategy) {
       log('TRADE', `${strategy} | ${signal.direction.toUpperCase()} ${signal.outcome} | $${size.toFixed(2)} @ ${(safeFloat(signal.currentPrice, 0.5) * 100).toFixed(1)}% | bal $${newBal.toFixed(2)} | pos ${openPositions}/${MAX_POSITIONS}`);
       return true;
     }
+    warn('TRADE', `${strategy} blocked: dbInsert returned false for "${(signal.reason || '').slice(0, 60)}"`);
     return false;
   } catch (e) {
     logErr('TRADE', e?.message);
