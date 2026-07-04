@@ -94,17 +94,22 @@ jobs:
         if: inputs.action == 'status'
         env:
           PUB_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_URL: ${{ secrets.VITE_SUPABASE_URL }}
         run: |
           {
-          echo "=== NEW PUBLISHABLE KEY TEST ==="
-          echo "Key present: $([ -n "$PUB_KEY" ] && echo YES || echo NO), length: ${#PUB_KEY}"
-          echo "Key prefix: ${PUB_KEY:0:15}"
-          curl -s -o /tmp/pubtest.json -w 'HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=1' -H "apikey: $PUB_KEY" -H "Authorization: Bearer $PUB_KEY"
+          echo "=== VITE_SUPABASE_URL ==="
+          echo "$VITE_URL"
+          echo "=== PUBLISHABLE KEY (vs ssy project) ==="
+          echo "present: $([ -n "$PUB_KEY" ] && echo YES || echo NO) len: ${#PUB_KEY} prefix: ${PUB_KEY:0:15}"
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=1' -H "apikey: $PUB_KEY" -H "Authorization: Bearer $PUB_KEY"
+          echo "=== ANON KEY (vs ssy project) ==="
+          echo "present: $([ -n "$ANON_KEY" ] && echo YES || echo NO) len: ${#ANON_KEY} prefix: ${ANON_KEY:0:15}"
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=1' -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY"
+          echo "=== PUBLISHABLE KEY against VITE_SUPABASE_URL (whatever project that is) ==="
+          curl -s -w ' HTTP_%{http_code}\n' "$VITE_URL/rest/v1/bot_trades?select=id&limit=1" -H "apikey: $PUB_KEY" -H "Authorization: Bearer $PUB_KEY"
+          } > /tmp/pubtest.json 2>&1
           cat /tmp/pubtest.json
-          echo ""
-          } > /tmp/pubtest_full.txt 2>&1
-          cat /tmp/pubtest_full.txt
-          mv /tmp/pubtest_full.txt /tmp/pubtest.json
           GH_TOKEN="${{ secrets.GH_ADMIN_PAT }}" python3 - <<'PYEOF'
           import json, base64, urllib.request, time, os
           token = os.environ["GH_TOKEN"]
