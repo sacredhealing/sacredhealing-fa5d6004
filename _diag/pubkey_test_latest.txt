@@ -1,1 +1,5 @@
+=== NEW PUBLISHABLE KEY TEST ===
+Key present: YES, length: 46
+Key prefix: sb_publishable_
+HTTP_401
 {"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."}
