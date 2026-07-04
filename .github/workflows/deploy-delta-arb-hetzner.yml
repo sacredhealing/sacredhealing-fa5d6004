@@ -84,7 +84,8 @@ jobs:
             echo '=== ENV MODE ===' && grep BOT_MODE /root/delta-arb/delta-arb-hetzner/.env 2>/dev/null || echo 'no .env' &&
             echo '=== ENV SUPABASE KEY LEN ===' && (grep SUPABASE_SERVICE_ROLE_KEY /root/delta-arb/delta-arb-hetzner/.env | cut -d= -f2 | wc -c) 2>/dev/null || echo 'no key line' &&
             echo '=== ENV BINANCE KEY LEN ===' && (grep BINANCE_API_KEY /root/delta-arb/delta-arb-hetzner/.env | cut -d= -f2 | wc -c) 2>/dev/null || echo 'no key line' &&
-            echo '=== DIR ===' && ls /root/delta-arb/delta-arb-hetzner/ 2>/dev/null || echo 'dir missing'
+            echo '=== DIR ===' && ls /root/delta-arb/delta-arb-hetzner/ 2>/dev/null || echo 'dir missing' &&
+            echo '=== FRONTEND ANON KEY TEST ===' && curl -s -o /tmp/anontest.json -w 'HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4' && cat /tmp/anontest.json
           " > /tmp/status_out.txt 2>&1
           cat /tmp/status_out.txt
           GH_TOKEN="$GH_TOKEN" python3 /tmp/write_status.py
