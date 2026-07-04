@@ -90,8 +90,34 @@ jobs:
           cat /tmp/status_out.txt
           GH_TOKEN="$GH_TOKEN" python3 /tmp/write_status.py
 
-      - name: Logs
-        if: inputs.action == 'logs'
+      - name: Test new publishable key
+        if: inputs.action == 'status'
+        env:
+          PUB_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          echo "=== NEW PUBLISHABLE KEY TEST ==="
+          echo "Key present: $([ -n "$PUB_KEY" ] && echo YES || echo NO), length: ${#PUB_KEY}"
+          curl -s -o /tmp/pubtest.json -w 'HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades?select=id&limit=1' -H "apikey: $PUB_KEY" -H "Authorization: Bearer $PUB_KEY"
+          cat /tmp/pubtest.json
+          echo ""
+          GH_TOKEN="${{ secrets.GH_ADMIN_PAT }}" python3 - <<'PYEOF'
+          import json, base64, urllib.request, time, os
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/pubkey_test_latest.txt"
+          content = open("/tmp/pubtest.json").read()
+          def get_sha():
+              try:
+                  r0 = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", headers={"Authorization": f"token {token}"})
+                  with urllib.request.urlopen(r0) as x: return json.load(x)["sha"]
+              except Exception: return None
+          sha = get_sha()
+          body = {"message": "diag: pubkey test", "content": base64.b64encode(content.encode()).decode()}
+          if sha: body["sha"] = sha
+          req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
+              headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
+          with urllib.request.urlopen(req) as r: print("wrote", path)
+          PYEOF
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
         run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo not-running"
