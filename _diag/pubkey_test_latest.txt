@@ -1,5 +1,10 @@
-=== NEW PUBLISHABLE KEY TEST ===
-Key present: YES, length: 46
-Key prefix: sb_publishable_
-HTTP_401
-{"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."}
+=== VITE_SUPABASE_URL ===
+https://ssygukfdbtehvtndandn.supabase.co
+=== PUBLISHABLE KEY (vs ssy project) ===
+present: YES len: 46 prefix: sb_publishable_
+{"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."} HTTP_401
+=== ANON KEY (vs ssy project) ===
+present: YES len: 208 prefix: eyJhbGciOiJIUzI
+{"message":"Legacy API keys are disabled","hint":"Your legacy API keys (anon, service_role) were disabled on 2026-06-19T14:40:00.111908+00:00. Re-enable them in the Supabase dashboard, or use the new publishable and secret API keys."} HTTP_401
+=== PUBLISHABLE KEY against VITE_SUPABASE_URL (whatever project that is) ===
+{"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."} HTTP_401
