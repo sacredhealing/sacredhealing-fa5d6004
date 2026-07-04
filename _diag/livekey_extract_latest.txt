@@ -28,11 +28,11 @@ Testing key: sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd
 Row count check (Prefer: count=exact):
 content-range: */0
 === TEST BRIDGE FOR READS (bypasses RLS via service_role) ===
-[{"id":"4ee328f1-5b2b-4ff2-b5ad-5e1124bbe8da","asset":"ADA","status":"open","pnl_usdc":0.0000}, 
- {"id":"5a993d24-8f17-4c1c-b85c-e10857f89498","asset":"ADA","status":"lost","pnl_usdc":-0.0010}, 
+[{"id":"5a993d24-8f17-4c1c-b85c-e10857f89498","asset":"ADA","status":"lost","pnl_usdc":-0.0010}, 
  {"id":"71479657-b839-4675-b088-f84770de8334","asset":"ADA","status":"lost","pnl_usdc":-0.0010}, 
  {"id":"9b57de1c-6a6d-452b-9b54-f630f247f440","asset":"ADA","status":"lost","pnl_usdc":-0.0021}, 
- {"id":"d388e60e-f832-4b01-9697-84f1569ff357","asset":"UNI","status":"lost","pnl_usdc":-0.0019}] HTTP_200
+ {"id":"d388e60e-f832-4b01-9697-84f1569ff357","asset":"UNI","status":"lost","pnl_usdc":-0.0019}, 
+ {"id":"cf37d2f6-983f-48b0-b5e5-ef21bcc73337","asset":"SOL","status":"lost","pnl_usdc":-0.0027}] HTTP_200
 === TEST binance-balance FUNCTION AUTH ===
 -- with legacy anon key --
 {"ok":false,"error":"Binance 451: {\n  \"code\": 0,\n  \"msg\": \"Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received t","btcPrice":0} HTTP_200
