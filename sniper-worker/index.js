@@ -765,7 +765,7 @@ async function start() {
   console.log(`  Wallet: ${keypair ? keypair.publicKey.toBase58() : 'Not set (paper mode)'}`);
   console.log(`  Entry:  BUY:${BUY_SOL}SOL MaxPos:${MAX_POSITIONS} MaxDailyTrades:${MAX_DAILY_TRADES} MaxDailyLoss:${MAX_DAILY_LOSS}SOL MinQuality:${MIN_AI_SCORE} (deterministic, no LLM call — GEMINI_API_KEY unused)`);
   console.log(`  Exit:   TP1:${TP1_X}x(50%) TP2:${TP2_X}x(40%) SL:-${SL_PCT * 100}% Trail:${TRAIL_PCT * 100}%(arms@+${TRAIL_ACTIVATE_PCT * 100}%) MaxHold:${MAX_HOLD_MIN}min`);
-  console.log(`  Detection: direct Helius WebSocket (onLogs) — no webhook, no edge function`);
+  console.log(`  Detection: direct raw WebSocket (logsSubscribe) — no webhook, no edge function, no Connection.onLogs`);
   console.log(`  Bridge: ${BRIDGE_URL} (logging only, async, no service_role key needed)`);
   console.log('');
 
