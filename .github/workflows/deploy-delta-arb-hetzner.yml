@@ -27,29 +27,65 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Status
+      - name: Write helper script
+        if: inputs.action == 'status'
+        run: |
+          cat > /tmp/write_status.py << 'PYEOF'
+          import json, base64, urllib.request, time, os
+
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/delta_arb_status_latest.txt"
+          content = open("/tmp/status_out.txt").read()
+
+          def get_sha():
+              try:
+                  req0 = urllib.request.Request(
+                      f"https://api.github.com/repos/{repo}/contents/{path}",
+                      headers={"Authorization": f"token {token}"}
+                  )
+                  with urllib.request.urlopen(req0) as r0:
+                      return json.load(r0)["sha"]
+              except Exception:
+                  return None
+
+          sha = get_sha()
+          for attempt in range(6):
+              body = {"message": "diag: delta-arb hetzner status", "content": base64.b64encode(content.encode()).decode()}
+              if sha:
+                  body["sha"] = sha
+              payload = json.dumps(body).encode()
+              req = urllib.request.Request(
+                  f"https://api.github.com/repos/{repo}/contents/{path}",
+                  data=payload,
+                  headers={"Authorization": f"token {token}", "Content-Type": "application/json"},
+                  method="PUT"
+              )
+              try:
+                  with urllib.request.urlopen(req) as r:
+                      print("Wrote status OK on attempt", attempt)
+                      break
+              except Exception as e:
+                  print("attempt", attempt, "failed:", e)
+                  time.sleep(2)
+                  sha = get_sha()
+          PYEOF
+
+      - name: Status (write via Contents API, no git race)
         if: inputs.action == 'status'
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          OUT=$(sshpass -p "$HP" ssh -T root@178.105.183.74 "
+          sshpass -p "$HP" ssh -T root@178.105.183.74 "
             echo '=== PM2 LIST ===' && pm2 list &&
-            echo '=== PM2 LOGS delta-arb (last 50) ===' && pm2 logs delta-arb --lines 50 --nostream 2>/dev/null || echo 'no delta-arb process' &&
+            echo '=== PM2 LOGS delta-arb (last 80) ===' && pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo 'no delta-arb process' &&
             echo '=== HEALTH ===' && curl -s http://localhost:8081/health || echo 'health: offline' &&
-            echo '=== NODE VERSION ===' && node -v &&
+            echo '=== ENV MODE ===' && grep BOT_MODE /root/delta-arb/delta-arb-hetzner/.env 2>/dev/null || echo 'no .env' &&
             echo '=== DIR ===' && ls /root/delta-arb/delta-arb-hetzner/ 2>/dev/null || echo 'dir missing'
-          " 2>&1)
-          echo "$OUT"
-          LOG="_delta_arb_status_$(date +%s).txt"
-          echo "$OUT" > $LOG
-          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
-          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo_out
-          cp $LOG repo_out/$LOG
-          cd repo_out
-          git add $LOG
-          git commit -m "diag: delta-arb hetzner status" || true
-          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
+          " > /tmp/status_out.txt 2>&1
+          cat /tmp/status_out.txt
+          GH_TOKEN="$GH_TOKEN" python3 /tmp/write_status.py
 
       - name: Logs
         if: inputs.action == 'logs'
