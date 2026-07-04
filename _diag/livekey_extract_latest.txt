@@ -25,3 +25,5 @@ ssygukfdbtehvtndandn mentioned: 0
 === VERIFY EXTRACTED KEY(S) ===
 Testing key: sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd
 [] HTTP_200
+Row count check (Prefer: count=exact):
+content-range: */0
