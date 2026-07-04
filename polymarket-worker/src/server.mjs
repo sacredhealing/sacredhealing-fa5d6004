@@ -555,77 +555,56 @@ function volScalper(markets) {
 }
 
 // ─── Whale Mirror ─────────────────────────────────────────────────────────────
-// eth_getBlockByNumber with full transaction objects is a heavy, fragile call on
-// free-tier RPC (observed failing with "Internal error" on nearly every block
-// under continuous polling). eth_getLogs filtered by contract address is the
-// standard, far more reliable pattern - it's a lightweight, server-side-filtered
-// call that virtually every RPC provider handles well even under load.
-async function startWhaleMirror(provider) {
-  log('WHALE', `Log-based listener active | min WR ${(WHALE_MIN_WR * 100).toFixed(0)}% | min trades ${WHALE_MIN_TRADES}`);
-  const iface = new ethers.Interface([
-    'function fillOrder((uint256 salt,address maker,address signer,address taker,uint256 tokenId,uint256 makerAmount,uint256 takerAmount,uint256 expiration,uint256 nonce,uint256 feeRateBps,uint8 side,uint8 signatureType) order,bytes signature,uint256 fillAmount)',
-  ]);
-
-  let lastProcessedBlock = await provider.getBlockNumber();
-  let consecutiveErrors = 0;
+// IMPORTANT: as of April 28 2026, Polymarket migrated to CTF Exchange V2, which
+// REMOVED the fillOrder function entirely (replaced by matchOrders, which takes
+// an array of maker orders + separate fill/fee amount arrays - a materially
+// riskier ABI to decode blind). Rather than reverse-engineer that, this uses
+// Polymarket's own public Data API (data-api.polymarket.com, no auth required),
+// which reports each wallet's trades directly - no on-chain decoding, no RPC
+// rate limits, no contract-address dependency at all.
+async function startWhaleMirror(_provider) {
+  log('WHALE', `Data API listener active | min WR ${(WHALE_MIN_WR * 100).toFixed(0)}% | min trades ${WHALE_MIN_TRADES}`);
+  const lastSeenTx = new Map(); // address -> last processed transactionHash
+  let idx = 0;
 
   setInterval(async () => {
-    try {
-      const latest = await provider.getBlockNumber();
-      if (latest <= lastProcessedBlock) return;
-      const fromBlock = lastProcessedBlock + 1;
-      const toBlock = Math.min(latest, fromBlock + 9); // Alchemy free tier caps eth_getLogs at 10-block range
+    // Rotate through the 9 wallets, ~2 per tick, so we're not hammering the API
+    const batch = [KNOWN_WHALES[idx % KNOWN_WHALES.length], KNOWN_WHALES[(idx + 1) % KNOWN_WHALES.length]];
+    idx += 2;
 
-      const logs = await provider.getLogs({ address: CTF_EXCHANGE.toLowerCase(), fromBlock, toBlock });
-      lastProcessedBlock = toBlock;
-      consecutiveErrors = 0;
-      if (!logs.length) return;
+    for (const whaleAddr of batch) {
+      try {
+        const r = await safeFetch(`https://data-api.polymarket.com/trades?user=${whaleAddr}&limit=5`);
+        if (!r.ok) { logErr('WHALE', `data-api ${r.status} for ${whaleAddr.slice(0,8)}`); continue; }
+        const trades = await r.json();
+        if (!Array.isArray(trades) || !trades.length) continue;
 
-      const uniqueTxHashes = [...new Set(logs.map(l => l.transactionHash))];
-      for (const txHash of uniqueTxHashes) {
-        try {
-          const tx = await provider.getTransaction(txHash);
-          if (!tx || tx.to?.toLowerCase() !== CTF_EXCHANGE.toLowerCase()) continue;
-          // NOTE: tx.from is Polymarket's operator/relayer wallet, NOT the trader —
-          // Polymarket orders are signed off-chain and settled on-chain by the
-          // operator, so the real trader identity only exists inside the decoded
-          // order struct (order.maker). Gating on tx.from never matches real whales.
-          let decoded, order;
-          try {
-            decoded = iface.parseTransaction({ data: tx.data, value: tx.value });
-            if (!decoded) continue;
-            order = decoded.args[0];
-          } catch { continue; /* not a fillOrder */ }
-          const whaleAddr = order.maker?.toLowerCase();
-          if (!whaleAddr) continue;
-          const isKnown = KNOWN_WHALES.includes(whaleAddr);
-          if (!isKnown) {
-            const approved = await isWhaleApproved(whaleAddr);
-            if (!approved) continue;
-          }
-          log('WHALE', `${isKnown ? '⭐ ELITE' : '✅ NEW'} whale ${whaleAddr.slice(0,8)} detected in block range ${fromBlock}-${toBlock}`);
-          try {
-            const price = Number(order.takerAmount) / (Number(order.makerAmount) || 1);
-            const tokenIdStr = order.tokenId?.toString() || '';
-            const market = await fetchMarketByToken(tokenIdStr);
-            const label = market?.question
-              ? `[WHALE] ${whaleAddr.slice(0, 8)} | ${market.question.slice(0, 80)}`
-              : `[WHALE] ${whaleAddr.slice(0, 8)} tx:${txHash.slice(0, 10)}`;
-            await recordTrade({
-              marketId: market?.id || '', direction: order.side === 0 ? 'buy' : 'sell',
-              outcome: order.side === 0 ? 'Yes' : 'No',
-              tokenId: tokenIdStr,
-              reason: label,
-              currentPrice: Math.min(0.99, Math.max(0.01, price)),
-            }, 'whale_mirror');
-          } catch { /* not a fillOrder */ }
-        } catch (e) { logErr('WHALE', `tx fetch ${e?.message}`); }
-      }
-    } catch (e) {
-      consecutiveErrors++;
-      logErr('WHALE', `getLogs failed (${consecutiveErrors}x): ${e?.message}`);
+        const lastSeen = lastSeenTx.get(whaleAddr);
+        let newTrades;
+        if (lastSeen === undefined) {
+          newTrades = []; // first time seeing this wallet - record baseline, don't backfill history
+          lastSeenTx.set(whaleAddr, trades[0].transactionHash);
+        } else {
+          const idxOfLastSeen = trades.findIndex(t => t.transactionHash === lastSeen);
+          newTrades = idxOfLastSeen === -1 ? trades : trades.slice(0, idxOfLastSeen);
+        }
+
+        for (const t of newTrades.reverse()) {
+          lastSeenTx.set(whaleAddr, t.transactionHash);
+          log('WHALE', `⭐ ELITE whale ${whaleAddr.slice(0,8)} traded | ${t.title?.slice(0, 60)} | ${t.side} ${t.outcome} @ ${t.price}`);
+          const market = await fetchMarketByToken(String(t.asset));
+          await recordTrade({
+            marketId: market?.id || t.conditionId || '',
+            direction: String(t.side).toLowerCase(),
+            outcome: t.outcome,
+            tokenId: String(t.asset),
+            reason: `[WHALE] ${whaleAddr.slice(0, 8)} | ${(t.title || '').slice(0, 70)}`,
+            currentPrice: Math.min(0.99, Math.max(0.01, safeFloat(t.price, 0.5))),
+          }, 'whale_mirror');
+        }
+      } catch (e) { logErr('WHALE', `${whaleAddr.slice(0,8)} check failed: ${e?.message}`); }
     }
-  }, 8000);
+  }, 10000);
 }
 
 // ─── Scan loop with watchdog ──────────────────────────────────────────────────
