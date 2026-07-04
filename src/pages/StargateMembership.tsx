@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useStargateAccess } from '@/hooks/useStargateAccess';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import { HiddenWisdomVault } from '@/components/stargate/HiddenWisdomVault';
