@@ -7,6 +7,7 @@ const BG    = '#050505';
 const CYAN  = '#22D3EE';
 const GREEN = '#22c55e';
 const RED   = 'rgba(255,80,80,0.9)';
+const PAPER_START_CAPITAL = 100; // bot.js hardcodes this as the fixed paper baseline — see getLiveBalance()
 
 const SB_URL  = 'https://ssygukfdbtehvtndandn.supabase.co';
 // Direct REST access with the frontend anon key hits two dead ends: Supabase disabled
@@ -40,6 +41,26 @@ export default function DeltaArbBotV2() {
   const [capital,  setCapital]  = useState(null);
   const [capErr,   setCapErr]   = useState('');
   const [botActive, setBotActive] = useState(true);
+  const [paperPnl, setPaperPnl] = useState(null); // always reflects ALL paper trades, regardless of the mode tab selected
+
+  // ── Paper equity (always full history, independent of mode filter) ──────
+  const loadPaperPnl = useCallback(async () => {
+    try {
+      const url = `${BRIDGE_URL}/bot_trades?select=pnl_usdc&mode=eq.PAPER`;
+      const r = await fetch(url, { headers: BRIDGE_HDRS });
+      if (r.ok) {
+        const data = await r.json();
+        if (Array.isArray(data)) {
+          setPaperPnl(data.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0));
+        }
+      }
+    } catch (e) { /* leave paperPnl as-is on transient failure */ }
+  }, []);
+  useEffect(() => { loadPaperPnl(); }, [loadPaperPnl]);
+  useEffect(() => {
+    const iv = setInterval(loadPaperPnl, 8000);
+    return () => clearInterval(iv);
+  }, [loadPaperPnl]);
 
   useEffect(() => {
     const iv = setInterval(() => setPulse(p => !p), 2000);
@@ -197,12 +218,37 @@ export default function DeltaArbBotV2() {
           ))}
         </div>
 
+        {/* PAPER CAPITAL CARD — distinct from real Binance balance below */}
+        <div style={{ ...glass({ padding:'16px 22px', borderColor:`${CYAN}22`, background:`${CYAN}05` }) }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+            <Target size={13} color={CYAN}/>
+            <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.18em', color:`${CYAN}77` }}>
+              PAPER CAPITAL · SIMULATED, NOT REAL MONEY
+            </span>
+          </div>
+          <div style={{ display:'flex', gap:32, alignItems:'flex-end', flexWrap:'wrap' }}>
+            <div>
+              <div style={{ fontSize:8, fontWeight:700, letterSpacing:'0.22em', color:'rgba(255,255,255,0.2)', marginBottom:5 }}>FIXED STARTING CAPITAL</div>
+              <div style={{ fontSize:30, fontWeight:900, color:CYAN, letterSpacing:'-0.03em' }}>${PAPER_START_CAPITAL.toFixed(2)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize:8, fontWeight:700, letterSpacing:'0.22em', color:'rgba(255,255,255,0.2)', marginBottom:5 }}>CURRENT PAPER EQUITY</div>
+              <div style={{ fontSize:30, fontWeight:900, color: paperPnl===null ? 'rgba(255,255,255,0.3)' : (paperPnl>=0?GOLD:RED), letterSpacing:'-0.03em' }}>
+                {paperPnl===null ? '...' : `$${(PAPER_START_CAPITAL + paperPnl).toFixed(4)}`}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:10, lineHeight:1.5 }}>
+            Every PAPER trade sizes against this fixed $100, not your real Binance balance — that's why trade sizes are always 2% of $100 (~$2) regardless of what's actually in your account.
+          </div>
+        </div>
+
         {/* BALANCE CARD */}
         <div style={{ ...glass({ padding:'20px 22px', borderColor:`${GOLD}22`, background:`${GOLD}05` }) }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
             <Activity size={13} color={GOLD}/>
             <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.18em', color:`${GOLD}77` }}>
-              BINANCE USDC BALANCE · LIVE
+              REAL BINANCE BALANCE · YOUR ACTUAL MONEY
             </span>
           </div>
           <div style={{ display:'flex', gap:32, alignItems:'flex-end', marginBottom:18, flexWrap:'wrap' }}>
