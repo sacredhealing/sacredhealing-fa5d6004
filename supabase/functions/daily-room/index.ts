@@ -331,7 +331,22 @@ Deno.serve(async (req) => {
         body: JSON.stringify(basePayload),
       });
 
+      // Tracks whether Daily.co's native server-side cloud recording is actually
+      // active for this room. If the plan/account doesn't have the recording
+      // add-on, Daily rejects `enable_recording` and we silently retry without
+      // it below — which means the ONLY recording for this session becomes the
+      // fragile browser-tab recorder (CallRecorderBar). Surface this loudly so
+      // it doesn't fail silently in the logs the way it has been.
+      let cloudRecordingActive = enableRecording !== null;
+
       if (!roomRes.ok && enableRecording === "cloud") {
+        const failBody = await roomRes.clone().text().catch(() => "");
+        console.warn(
+          "[daily-room] enable_recording='cloud' rejected by Daily.co — falling back to browser-only recording for this session.",
+          "Check that the Recording add-on is active on the Daily.co plan.",
+          "Daily.co response:", failBody,
+        );
+        cloudRecordingActive = false;
         const props = { ...(basePayload.properties as Record<string, unknown>) };
         delete props.enable_recording;
         const retryPayload = {
@@ -403,7 +418,12 @@ Deno.serve(async (req) => {
             partner_user_id: typeof partner_user_id === "string" ? partner_user_id : null,
             channel_id: effectiveChannelId,
             title: (typeof title === "string" && title.trim()) || "Call Recording",
-            description: typeof description === "string" ? description : null,
+            description: cloudRecordingActive
+              ? (typeof description === "string" ? description : null)
+              : [
+                  typeof description === "string" ? description : "",
+                  "[no Daily.co cloud recording — browser recorder only]",
+                ].filter(Boolean).join(" "),
             status: "pending",
           });
         } catch (e) {
@@ -413,7 +433,7 @@ Deno.serve(async (req) => {
         console.log("[daily-room] recording skipped for session", session.id, "channel", effectiveChannelId, "category", requestedStargateCat);
       }
 
-      return respond({ ok: true, success: true, session, room_url: room.url });
+      return respond({ ok: true, success: true, session, room_url: room.url, cloud_recording_active: cloudRecordingActive });
     }
 
     if (action === "end") {
