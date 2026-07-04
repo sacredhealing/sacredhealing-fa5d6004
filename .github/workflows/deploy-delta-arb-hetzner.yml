@@ -165,6 +165,13 @@ jobs:
           done
           echo "=== TEST BRIDGE FOR READS (bypasses RLS via service_role) ==="
           curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=id,asset,status,pnl_usdc&limit=5' -H 'apikey: clawbot-bridge-2026'
+          echo "=== TEST binance-balance FUNCTION AUTH ==="
+          echo "-- with legacy anon key --"
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/binance-balance' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4'
+          echo "-- with extracted new key --"
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/binance-balance' -H 'apikey: sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd'
+          echo "-- with no apikey header --"
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/binance-balance'
           } > /tmp/keyfind.txt 2>&1
           cat /tmp/keyfind.txt
           python3 - <<'PYEOF'
