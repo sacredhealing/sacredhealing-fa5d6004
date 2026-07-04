@@ -41,6 +41,7 @@
 
 import { Connection, Keypair, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
+import WebSocket from 'ws';
 
 // ── ENV ──────────────────────────────────────────────────────────
 // No SUPABASE_SERVICE_KEY here on purpose — see BRIDGE section below.
@@ -566,18 +567,44 @@ async function processCandidate(token) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// DETECTION — direct Helius WebSocket via Connection.onLogs. No
-// webhook, no intermediary service. This is what "as few moving
-// parts as possible" buys back in latency vs. the v5 architecture.
+// DETECTION — direct raw WebSocket (logsSubscribe), not
+// Connection.onLogs(). @solana/web3.js's own subscription client
+//401'd against this exact key/URL while a bare `ws` connection with
+// the identical logsSubscribe call worked immediately and streamed
+// cleanly — a bug/version mismatch inside rpc-websockets, not a
+// Helius or key problem. This talks to Helius directly with nothing
+// but the `ws` library, same JSON-RPC shape, no other moving parts.
 // ══════════════════════════════════════════════════════════════════
+let wsReconnectDelay = 1000;
 function startDetection() {
-  const programId = new PublicKey(PUMP_PROGRAM);
-  connection.onLogs(programId, (logInfo) => {
-    if (logInfo.err) return;
-    const launch = parseLaunch(logInfo.logs, logInfo.signature);
+  const ws = new WebSocket(RPC_WS);
+
+  ws.on('open', () => {
+    wsReconnectDelay = 1000; // reset backoff on a clean connect
+    ws.send(JSON.stringify({
+      jsonrpc: '2.0', id: 1, method: 'logsSubscribe',
+      params: [{ mentions: [PUMP_PROGRAM] }, { commitment: 'confirmed' }],
+    }));
+    L.info(`✦ Subscribed to pump.fun program logs (${PUMP_PROGRAM.slice(0, 8)}...) via WebSocket`);
+  });
+
+  ws.on('message', (raw) => {
+    let msg;
+    try { msg = JSON.parse(raw.toString()); } catch { return; }
+    if (msg.method !== 'logsNotification') return; // ignore the subscribe-confirmation reply etc.
+    const value = msg.params?.result?.value;
+    if (!value || value.err) return;
+    const launch = parseLaunch(value.logs || [], value.signature);
     if (launch) processCandidate(launch).catch((e) => L.warn(`[candidate] ${e.message}`));
-  }, 'confirmed');
-  L.info(`✦ Subscribed to pump.fun program logs (${PUMP_PROGRAM.slice(0, 8)}...) via WebSocket`);
+  });
+
+  ws.on('error', (e) => L.warn(`[ws] ${e.message}`));
+
+  ws.on('close', (code) => {
+    L.warn(`[ws] closed (code ${code}) — reconnecting in ${wsReconnectDelay}ms`);
+    setTimeout(startDetection, wsReconnectDelay);
+    wsReconnectDelay = Math.min(wsReconnectDelay * 2, 30000); // exponential backoff, capped at 30s
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════
