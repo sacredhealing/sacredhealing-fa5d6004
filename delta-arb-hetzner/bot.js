@@ -6,11 +6,34 @@
 const https  = require('https');
 const http   = require('http');
 const crypto = require('crypto');
-const { createClient } = require('@supabase/supabase-js');
-const NodeWS = require('ws'); // Node 20 lacks native WebSocket; supabase-js realtime client needs one even though we never use realtime features
 
-const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://ssygukfdbtehvtndandn.supabase.co';
-const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+// DB writes go through the clawbot-bridge edge function so Hetzner never touches the
+// Supabase service_role key directly — matches the pattern used by sniper-live/clawbot,
+// and sidesteps the legacy-API-key deprecation (June 19) that broke direct service-role auth.
+const BRIDGE_URL    = process.env.BRIDGE_URL    || 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge';
+const BRIDGE_SECRET = process.env.BRIDGE_SECRET || 'clawbot-bridge-2026';
+
+function bridgeRequest(method, table, body, query) {
+  return new Promise((resolve, reject) => {
+    const qs = query ? '?' + query : '';
+    const payload = body ? JSON.stringify(body) : undefined;
+    const headers = { apikey: BRIDGE_SECRET, 'Content-Type': 'application/json' };
+    if (method === 'POST') headers['Prefer'] = 'return=representation';
+    if (payload) headers['Content-Length'] = Buffer.byteLength(payload);
+    const req = https.request(BRIDGE_URL + '/' + table + qs, { method, headers }, res => {
+      let b = '';
+      res.on('data', d => b += d);
+      res.on('end', () => {
+        if (res.statusCode >= 400) { reject(new Error('Bridge ' + res.statusCode + ': ' + b)); return; }
+        try { resolve(b ? JSON.parse(b) : null); } catch (e) { resolve(null); }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
 const BINANCE_KEY   = process.env.BINANCE_API_KEY    || '';
 const BINANCE_SEC   = process.env.BINANCE_API_SECRET || '';
 const MODE          = (process.env.BOT_MODE || 'PAPER').toUpperCase();
@@ -23,7 +46,6 @@ const SYMBOLS = ['BTCUSDC','ETHUSDC','SOLUSDC','BNBUSDC','XRPUSDC','DOGEUSDC','A
 const ASSETS  = {};
 SYMBOLS.forEach(s => { ASSETS[s] = s.replace('USDC',''); });
 
-const supabase   = createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { transport: NodeWS } });
 const prices     = {};
 const openTrades = {};
 const lastSignal = {};
@@ -35,7 +57,7 @@ console.log('');
 console.log('==================================================');
 console.log(' SQI DELTA-ARB BOT v5.1 — STARTING');
 console.log(` Mode: ${MODE} | Pairs: ${SYMBOLS.length} | Threshold: ${(DELTA_THRESH*100).toFixed(3)}%`);
-console.log(` Supabase: ${SUPABASE_URL}`);
+console.log(` DB bridge: ${BRIDGE_URL}`);
 console.log(` Binance key: ${BINANCE_KEY ? BINANCE_KEY.slice(0,8)+'...' : 'NOT SET'}`);
 console.log('==================================================');
 
@@ -136,17 +158,17 @@ async function openTrade(sym, asset, signal, deltaStr) {
   }
 
   try {
-    const { data, error } = await supabase.from('bot_trades').insert({
+    const rows = await bridgeRequest('POST', 'bot_trades', {
       asset, signal, delta: deltaStr,
       size_usd: tradeSize, entry_price: currentPrice,
       status: 'open', pnl_usdc: 0, mode: MODE, order_id: orderId,
-    }).select('id').single();
+    });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    if (!row || !row.id) { console.error('[DB] Insert returned no row:', JSON.stringify(rows)); return; }
 
-    if (error) { console.error('[DB] Insert error:', error.message); return; }
-
-    openTrades[sym] = { id: data.id, entry: currentPrice, direction: signal, ts: now, size: tradeSize };
+    openTrades[sym] = { id: row.id, entry: currentPrice, direction: signal, ts: now, size: tradeSize };
     tradeCount++;
-    console.log('[OPEN] Saved to DB | id=' + data.id + ' | total trades=' + tradeCount);
+    console.log('[OPEN] Saved to DB | id=' + row.id + ' | total trades=' + tradeCount);
   } catch(e) {
     console.error('[DB] Exception:', e.message);
   }
@@ -165,7 +187,7 @@ async function closeTrade(sym, asset) {
   const status = pnl >= 0 ? 'won' : 'lost';
 
   try {
-    await supabase.from('bot_trades').update({ status, pnl_usdc: Math.round(pnl*10000)/10000 }).eq('id', trade.id);
+    await bridgeRequest('PATCH', 'bot_trades', { status, pnl_usdc: Math.round(pnl*10000)/10000 }, 'id=eq.' + trade.id);
     console.log('[CLOSE] ' + asset + ' ' + status.toUpperCase() + ' | PnL=' + (pnl>=0?'+':'') + '$' + pnl.toFixed(4));
   } catch(e) {
     console.error('[DB] Close error:', e.message);
