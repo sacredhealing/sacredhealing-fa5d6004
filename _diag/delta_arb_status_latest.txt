@@ -2,100 +2,134 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 24m    │ 25   │ online    │ 0%       │ 55.6mb   │ root     │ disabled │
-│ 9  │ delta-arb         │ default     │ 2.0.0   │ fork    │ 0        │ 0      │ 15   │ errored   │ 0%       │ 0b       │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 26m    │ 25   │ online    │ 0%       │ 55.9mb   │ root     │ disabled │
+│ 10 │ delta-arb         │ default     │ 2.0.0   │ fork    │ 2706293  │ 62s    │ 0    │ online    │ 0%       │ 61.0mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 89m    │ 0    │ online    │ 0%       │ 89.4mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 74.4mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 91m    │ 0    │ online    │ 0%       │ 89.0mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 28h    │ 1    │ online    │ 0%       │ 74.5mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
+10|delta-a | 
+10|delta-a | ==================================================
+10|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
+10|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.120%
+10|delta-a |  Supabase: https://ssygukfdbtehvtndandn.supabase.co
+10|delta-a |  Binance key: YgNSRqbP...
+10|delta-a | ==================================================
+10|delta-a | [HEALTH] Listening on :8081
+10|delta-a | [WS] Connected to Binance — 12 pairs
+10|delta-a | [OPEN] UNI DOWN | delta=-0.1846% | $2.00 | entry=$3.2440
+
 /root/.pm2/logs/delta-arb-error.log last 80 lines:
-9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
-9|delta-ar | 
-9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-9|delta-ar | import ws from "ws"
-9|delta-ar | new RealtimeClient(url, { transport: ws })
-9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
-9|delta-ar | 
-9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-9|delta-ar | import ws from "ws"
-9|delta-ar | new RealtimeClient(url, { transport: ws })
-9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
-9|delta-ar | 
-9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-9|delta-ar | import ws from "ws"
-9|delta-ar | new RealtimeClient(url, { transport: ws })
-9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
-9|delta-ar | 
-9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-9|delta-ar | import ws from "ws"
-9|delta-ar | new RealtimeClient(url, { transport: ws })
-9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
-9|delta-ar | Error: Node.js 20 detected without native WebSocket support.
-9|delta-ar | 
-9|delta-ar | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
-9|delta-ar | import ws from "ws"
-9|delta-ar | new RealtimeClient(url, { transport: ws })
-9|delta-ar |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
-9|delta-ar |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
-9|delta-ar |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
-9|delta-ar |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
-9|delta-ar |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
-9|delta-ar |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
-9|delta-ar |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
-9|delta-ar |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
-9|delta-ar |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
-9|delta-ar |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+10|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a | Error: Node.js 20 detected without native WebSocket support.
+10|delta-a | 
+10|delta-a | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+10|delta-a | import ws from "ws"
+10|delta-a | new RealtimeClient(url, { transport: ws })
+10|delta-a |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+10|delta-a |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+10|delta-a |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+10|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+10|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+10|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+10|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+10|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a | Error: Node.js 20 detected without native WebSocket support.
+10|delta-a | 
+10|delta-a | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+10|delta-a | import ws from "ws"
+10|delta-a | new RealtimeClient(url, { transport: ws })
+10|delta-a |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+10|delta-a |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+10|delta-a |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+10|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+10|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+10|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+10|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+10|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a | Error: Node.js 20 detected without native WebSocket support.
+10|delta-a | 
+10|delta-a | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+10|delta-a | import ws from "ws"
+10|delta-a | new RealtimeClient(url, { transport: ws })
+10|delta-a |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+10|delta-a |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+10|delta-a |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+10|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+10|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+10|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+10|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+10|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a | Error: Node.js 20 detected without native WebSocket support.
+10|delta-a | 
+10|delta-a | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+10|delta-a | import ws from "ws"
+10|delta-a | new RealtimeClient(url, { transport: ws })
+10|delta-a |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+10|delta-a |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+10|delta-a |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+10|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+10|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+10|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+10|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+10|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a | Error: Node.js 20 detected without native WebSocket support.
+10|delta-a | 
+10|delta-a | Suggested solution: For Node.js < 22, install "ws" package and provide it via the transport option:
+10|delta-a | import ws from "ws"
+10|delta-a | new RealtimeClient(url, { transport: ws })
+10|delta-a |     at Function.getWebSocketConstructor (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/lib/websocket-factory.ts:178:11)
+10|delta-a |     at RealtimeClient._initializeOptions (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:805:63)
+10|delta-a |     at new RealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/realtime-js/src/RealtimeClient.ts:284:39)
+10|delta-a |     at SupabaseClient._initRealtimeClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:629:12)
+10|delta-a |     at new SupabaseClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/SupabaseClient.ts:366:26)
+10|delta-a |     at createClient (/root/delta-arb/delta-arb-hetzner/node_modules/@supabase/supabase-js/src/index.ts:65:10)
+10|delta-a |     at Object.<anonymous> (/root/delta-arb/delta-arb-hetzner/bot.js:25:20)
+10|delta-a |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|delta-a |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|delta-a |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|delta-a | [DB] Insert error: Invalid API key
 
 === HEALTH ===
-health: offline
-=== ENV MODE ===
+{
+  "status": "running",
+  "version": "5.1",
+  "mode": "PAPER",
+  "pairs": 12,
+  "threshold": "0.120%",
+  "trades": 0,
+  "open": 0,
+  "uptime": "1m 2s",
+  "ticks": {
+    "BTC": 60,
+    "ETH": 50,
+    "SOL": 17,
+    "BNB": 4,
+    "XRP": 12,
+    "DOGE": 10,
+    "ADA": 14,
+    "AVAX": 7,
+    "DOT": 2,
+    "LINK": 1,
+    "UNI": 21,
+    "MATIC": 0
+  },
+  "ts": "2026-07-04T19:45:37.463Z"
+}=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
 220
