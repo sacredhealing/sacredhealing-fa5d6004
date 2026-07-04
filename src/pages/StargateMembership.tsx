@@ -128,8 +128,53 @@ const StargateMembership = () => {
     "Vara del av ett helande community"
   ];
 
+  // Members (admin, Stargate subscribers, manually-added, grant) get the recordings vault directly
+  // instead of the sales landing page.
+  if (user && isStargateMember && !stargateLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="relative bg-gradient-to-br from-purple-900/40 via-background to-amber-900/20 px-4 py-10 text-center">
+          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 mb-3">
+            {isAdmin ? t('stargate.adminFullAccessBadge') : 'Stargate Member'}
+          </Badge>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            ✨ Stargate Vault ✨
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
+            Alla inspelade Bhagavad Gita-klasser, Healing Chamber-sessioner och dold visdom.
+          </p>
+        </div>
+
+        <div className="px-4 py-6 max-w-4xl mx-auto">
+          <Tabs value={memberTab} onValueChange={(v) => setMemberTab(v as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="gita">Bhagavad Gita</TabsTrigger>
+              <TabsTrigger value="healing">Healing Chamber</TabsTrigger>
+              <TabsTrigger value="wisdom">
+                <BookOpen className="w-4 h-4 mr-1" />
+                Wisdom
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="gita" className="mt-6">
+              <h3 className="text-xl font-semibold mb-4 text-foreground">Bhagavad Gita Class Sessions</h3>
+              <RecordingsList callType="stargate" stargateCategory="bhagavad-gita" emptyText="No Bhagavad Gita class recordings yet." />
+            </TabsContent>
+            <TabsContent value="healing" className="mt-6">
+              <h3 className="text-xl font-semibold mb-4 text-foreground">Healing Chamber Sessions</h3>
+              <RecordingsList callType="stargate" stargateCategory="healing-chamber" emptyText="No Healing Chamber recordings yet." />
+            </TabsContent>
+            <TabsContent value="wisdom" className="mt-6">
+              <HiddenWisdomVault />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24">
+
       {/* Telegram Invite Card */}
       {telegramLink && (
         <div className="px-4 py-6">
