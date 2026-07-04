@@ -1,0 +1,24 @@
+=== Fetching sacredhealing.lovable.app ===
+index.html bytes: 6040
+JS assets found:
+/__l5e/events.js
+/assets/index-GHKDEgYZ.js
+/~flock.js
+--- fetching https://sacredhealing.lovable.app/__l5e/events.js ---
+bytes: 44148
+sb_publishable matches:
+legacy eyJ matches near supabase (first 3):
+ssygukfdbtehvtndandn mentioned: 0
+0
+--- fetching https://sacredhealing.lovable.app/assets/index-GHKDEgYZ.js ---
+bytes: 1420862
+sb_publishable matches:
+sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd
+legacy eyJ matches near supabase (first 3):
+ssygukfdbtehvtndandn mentioned: 1
+--- fetching https://sacredhealing.lovable.app/~flock.js ---
+bytes: 21296
+sb_publishable matches:
+legacy eyJ matches near supabase (first 3):
+ssygukfdbtehvtndandn mentioned: 0
+0
