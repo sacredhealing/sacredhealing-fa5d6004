@@ -576,7 +576,7 @@ async function startWhaleMirror(provider) {
       const fromBlock = lastProcessedBlock + 1;
       const toBlock = Math.min(latest, fromBlock + 200); // cap range per call
 
-      const logs = await provider.getLogs({ address: CTF_EXCHANGE, fromBlock, toBlock });
+      const logs = await provider.getLogs({ address: CTF_EXCHANGE.toLowerCase(), fromBlock, toBlock });
       lastProcessedBlock = toBlock;
       consecutiveErrors = 0;
       if (!logs.length) return;
