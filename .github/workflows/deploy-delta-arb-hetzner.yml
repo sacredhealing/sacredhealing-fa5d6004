@@ -142,10 +142,9 @@ jobs:
           echo ".env written | MODE=\$BOT_MODE | BINANCE=\$([ -n "\$BIN_KEY" ] && echo SET || echo MISSING)"
 
           if pm2 describe delta-arb > /dev/null 2>&1; then
-            pm2 restart delta-arb --update-env && echo "Restarted"
-          else
-            pm2 start bot.js --name delta-arb --cwd /root/delta-arb/delta-arb-hetzner && echo "Started"
+            pm2 delete delta-arb || true
           fi
+          pm2 start bot.js --name delta-arb --cwd /root/delta-arb/delta-arb-hetzner --node-args="--env-file=.env" && echo "Started with --env-file"
           pm2 save
 
           sleep 10
