@@ -234,7 +234,11 @@ async function parseLaunch(logs, sig) {
   if (!isCreate) return null;
 
   try {
-    const tx = await rpc('getTransaction', [sig, { maxSupportedTransactionVersion: 0, encoding: 'jsonParsed' }]);
+    // 'json' not 'jsonParsed' — we only read meta.postTokenBalances below, a
+    // field present regardless of encoding. jsonParsed additionally asks
+    // Helius to decode every instruction against known program IDLs, which
+    // we never use and which costs meaningfully more credits per call.
+    const tx = await rpc('getTransaction', [sig, { maxSupportedTransactionVersion: 0, encoding: 'json' }]);
     const postBalances = tx?.meta?.postTokenBalances || [];
     const preMints = new Set((tx?.meta?.preTokenBalances || []).map((b) => b.mint));
     // The new mint is one that appears post-transaction but didn't exist pre-transaction on this account set.
