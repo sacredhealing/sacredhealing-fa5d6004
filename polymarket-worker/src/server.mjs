@@ -7,6 +7,7 @@
 import 'dotenv/config';
 import express from 'express';
 import { ethers } from 'ethers';
+import WebSocket from 'ws';
 
 // ─── Global crash guard (must be first) ──────────────────────────────────────
 process.on('uncaughtException', (e) => {
@@ -48,6 +49,80 @@ const priceHistory  = new Map();
 let diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '', samplePrice: '' };
 const processedSigs = new Set();
 const recentTrades  = [];
+
+// ─── Live price feed (CLOB WebSocket) ─────────────────────────────────────────
+// Gamma API (/markets) is a cached discovery catalog, NOT a live feed — its
+// outcomePrices can lag the real matching engine by minutes. This WS connection
+// gets actual live ticks so latencyArb/volScalper aren't comparing stale data.
+const livePrices = new Map(); // tokenId -> { price, ts }
+let wsClient = null;
+let wsSubscribedIds = new Set();
+let wsMessageLogCount = 0;
+let wsConnected = false;
+
+function connectPriceWebSocket() {
+  try {
+    wsClient = new WebSocket('wss://ws-subscriptions-clob.polymarket.com/ws/market');
+
+    wsClient.on('open', () => {
+      wsConnected = true;
+      log('WS', 'Connected to CLOB market feed');
+      if (wsSubscribedIds.size > 0) {
+        wsClient.send(JSON.stringify({ assets_ids: [...wsSubscribedIds], type: 'market' }));
+      }
+    });
+
+    wsClient.on('message', (raw) => {
+      try {
+        const msg = JSON.parse(raw.toString());
+        // Log the first few raw messages verbatim so the schema can be confirmed
+        // from real data instead of guessed - avoids repeating past mistakes.
+        if (wsMessageLogCount < 8) {
+          wsMessageLogCount++;
+          log('WS-RAW', JSON.stringify(msg).slice(0, 300));
+        }
+        const events = Array.isArray(msg) ? msg : [msg];
+        for (const evt of events) {
+          const tokenId = evt.asset_id || evt.token_id || evt.market || evt.tokenID;
+          const rawPrice = evt.price ?? evt.last_trade_price ?? evt.midpoint ?? evt.mid_price;
+          const price = safeFloat(rawPrice, NaN);
+          if (tokenId && !Number.isNaN(price)) {
+            livePrices.set(String(tokenId), { price, ts: Date.now() });
+          }
+        }
+      } catch { /* ignore malformed/unrecognized message */ }
+    });
+
+    wsClient.on('close', () => {
+      wsConnected = false;
+      warn('WS', 'CLOB feed disconnected, reconnecting in 5s...');
+      setTimeout(connectPriceWebSocket, 5000);
+    });
+
+    wsClient.on('error', (e) => { logErr('WS', e?.message); });
+  } catch (e) {
+    logErr('WS', `connect failed: ${e?.message}`);
+    setTimeout(connectPriceWebSocket, 5000);
+  }
+}
+
+function updateWsSubscription(tokenIds) {
+  const newSet = new Set(tokenIds.filter(Boolean).map(String));
+  const changed = newSet.size !== wsSubscribedIds.size || [...newSet].some(id => !wsSubscribedIds.has(id));
+  wsSubscribedIds = newSet;
+  if (changed && wsClient?.readyState === WebSocket.OPEN && wsSubscribedIds.size > 0) {
+    wsClient.send(JSON.stringify({ assets_ids: [...wsSubscribedIds], type: 'market' }));
+    log('WS', `Subscribed to ${wsSubscribedIds.size} live token feeds`);
+  }
+}
+
+// Returns a live WS tick if we have one <5min old, otherwise falls back to the
+// Gamma-sourced price so nothing breaks if a market isn't subscribed yet.
+function getLivePrice(tokenId, fallback) {
+  const entry = livePrices.get(String(tokenId));
+  if (entry && Date.now() - entry.ts < 300000) return entry.price;
+  return fallback;
+}
 const errors        = [];
 const whaleRegistry = new Map();
 const endDateCache  = new Map();
@@ -410,13 +485,14 @@ function latencyArb(markets) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       const no  = m.outcomes.find(o => o.name.toLowerCase() === 'no');
       if (!yes || !no) { skippedNoOutcome++; continue; }
+      const currentPrice = getLivePrice(yes.tokenId, yes.price);
       const hist = priceHistory.get(m.id) || [];
-      hist.push({ price: yes.price, ts: now });
+      hist.push({ price: currentPrice, ts: now });
       const fresh = hist.filter(s => s.ts >= now - 180000);
       priceHistory.set(m.id, fresh);
       if (fresh.length < 2) { skippedHistory++; continue; }
       evaluated++;
-      const move = (yes.price - fresh[0].price) / (fresh[0].price || 0.001);
+      const move = (currentPrice - fresh[0].price) / (fresh[0].price || 0.001);
       const abs  = Math.abs(move);
       if (Number.isNaN(abs)) { nanCount++; continue; }
       if (abs > diagStats.maxMove) { diagStats.maxMove = abs; diagStats.maxMoveQ = m.question?.slice(0, 40); }
@@ -430,7 +506,7 @@ function latencyArb(markets) {
         outcome: outcome.name, tokenId: outcome.tokenId,
         confidence: Math.min(90, 60 + abs * 300),
         reason: `[LATENCY] ${m.question} | ${(move * 100).toFixed(1)}% move`,
-        currentPrice: outcome.price,
+        currentPrice: getLivePrice(outcome.tokenId, outcome.price),
       });
     }
     diagStats.latDebug = `noOutcome=${skippedNoOutcome} noHistory=${skippedHistory} evaluated=${evaluated} nanCount=${nanCount}`;
@@ -450,9 +526,10 @@ function volScalper(markets) {
     for (const m of markets.filter(m => m.liquidity > 100000 && !m.closed).slice(0, 30)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       if (!yes) continue;
+      const currentPrice = getLivePrice(yes.tokenId, yes.price);
       const key  = `vol-${m.id}`;
       const hist = priceHistory.get(key) || [];
-      hist.push(yes.price);
+      hist.push(currentPrice);
       if (hist.length > 20) hist.shift();
       priceHistory.set(key, hist);
       if (hist.length < 10) continue;
@@ -464,13 +541,13 @@ function volScalper(markets) {
       const sigId = `scalp-${m.id}-${Math.floor(Date.now() / 120000)}`;
       if (processedSigs.has(sigId)) continue;
       processedSigs.add(sigId);
-      if (yes.price > mean * 0.99) continue;
+      if (currentPrice > mean * 0.99) continue;
       signals.push({
         marketId: m.id, direction: 'buy',
         outcome: 'Yes', tokenId: yes.tokenId,
         confidence: Math.min(85, 50 + vol * 200),
         reason: `[SCALP] ${m.question} | vol=${(vol * 100).toFixed(1)}%`,
-        currentPrice: yes.price,
+        currentPrice,
       });
     }
   } catch (e) { logErr('SCALPER', e?.message); }
@@ -541,12 +618,19 @@ async function runOneScan() {
     lastScanTime = Date.now();
     log('SCAN', `#${scanCount} | ${markets.length} mkts | bal $${balance.toFixed(2)} | pos ${openPositions}/${MAX_POSITIONS} | size $${tradeSize().toFixed(2)}`);
 
+    // Keep the live-price WebSocket subscribed to whatever we're currently
+    // tracking - Gamma is discovery-only now, WS carries the real price ticks.
+    const wsCandidates = markets.filter(m => m.liquidity > 5000 && !m.closed).slice(0, 40);
+    const idsToSub = wsCandidates.flatMap(m => m.outcomes.map(o => o.tokenId)).filter(Boolean);
+    updateWsSubscription(idsToSub);
+
     if (scanCount % 10 === 1) {
       const latCandidates = markets.filter(m => m.liquidity > 5000 && !m.closed).length;
       const binaryCandidates = markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).length;
       const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
+      log('DIAG', `WS connected=${wsConnected} subscribed=${wsSubscribedIds.size} livePrices=${livePrices.size}`);
       log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 1.50% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 2.50%`);
       log('DIAG', `latArb breakdown (last scan): ${diagStats.latDebug} | ${diagStats.samplePrice}`);
       diagStats = { maxMove: 0, maxVol: 0, maxMoveQ: '', maxVolQ: '', latDebug: '', samplePrice: '' };
@@ -972,6 +1056,8 @@ async function main() {
   await loadMembers();
   await seedWhaleRegistry();
   log('BOOT', `Balance: $${balance.toFixed(2)} | Open: ${openPositions}/${MAX_POSITIONS}`);
+
+  connectPriceWebSocket();
 
   if (!PAPER_MODE && POLY_API_KEY && POLY_API_SEC && POLY_PASS) {
     liveEnabled = true;
