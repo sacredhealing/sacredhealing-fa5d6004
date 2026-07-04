@@ -199,14 +199,7 @@ jobs:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
           GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          sshpass -p "$HP" ssh -T root@178.105.183.74 "
-            export \$(grep -v '^#' /root/delta-arb/delta-arb-hetzner/.env | xargs) 2>/dev/null
-            TS=\$(date +%s%3N)
-            QS=\"timestamp=\${TS}&recvWindow=5000\"
-            SIG=\$(echo -n \"\$QS\" | openssl dgst -sha256 -hmac \"\$BINANCE_API_SECRET\" | sed 's/^.* //')
-            echo '=== BINANCE ACCOUNT CALL FROM HETZNER (Germany) ==='
-            curl -s -w ' HTTP_%{http_code}\n' \"https://api.binance.com/api/v3/account?\${QS}&signature=\${SIG}\" -H \"X-MBX-APIKEY: \$BINANCE_API_KEY\"
-          " > /tmp/binancetest.txt 2>&1
+          sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/test_binance.sh && bash delta-arb-hetzner/test_binance.sh" > /tmp/binancetest.txt 2>&1
           cat /tmp/binancetest.txt
           python3 - <<'PYEOF'
           import json, base64, urllib.request, os
