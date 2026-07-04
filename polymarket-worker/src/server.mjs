@@ -555,55 +555,77 @@ function volScalper(markets) {
 }
 
 // ─── Whale Mirror ─────────────────────────────────────────────────────────────
+// eth_getBlockByNumber with full transaction objects is a heavy, fragile call on
+// free-tier RPC (observed failing with "Internal error" on nearly every block
+// under continuous polling). eth_getLogs filtered by contract address is the
+// standard, far more reliable pattern - it's a lightweight, server-side-filtered
+// call that virtually every RPC provider handles well even under load.
 async function startWhaleMirror(provider) {
-  log('WHALE', `Block listener active | min WR ${(WHALE_MIN_WR * 100).toFixed(0)}% | min trades ${WHALE_MIN_TRADES}`);
+  log('WHALE', `Log-based listener active | min WR ${(WHALE_MIN_WR * 100).toFixed(0)}% | min trades ${WHALE_MIN_TRADES}`);
   const iface = new ethers.Interface([
     'function fillOrder((uint256 salt,address maker,address signer,address taker,uint256 tokenId,uint256 makerAmount,uint256 takerAmount,uint256 expiration,uint256 nonce,uint256 feeRateBps,uint8 side,uint8 signatureType) order,bytes signature,uint256 fillAmount)',
   ]);
 
-  provider.on('block', async (blockNumber) => {
+  let lastProcessedBlock = await provider.getBlockNumber();
+  let consecutiveErrors = 0;
+
+  setInterval(async () => {
     try {
-      const block = await provider.getBlock(blockNumber, true);
-      if (!block?.prefetchedTransactions) return;
-      for (const tx of block.prefetchedTransactions) {
-        if (tx.to?.toLowerCase() !== CTF_EXCHANGE.toLowerCase()) continue;
-        // NOTE: tx.from is Polymarket's operator/relayer wallet, NOT the trader —
-        // Polymarket orders are signed off-chain and settled on-chain by the
-        // operator, so the real trader identity only exists inside the decoded
-        // order struct (order.maker). Gating on tx.from never matches real whales.
-        let decoded, order;
+      const latest = await provider.getBlockNumber();
+      if (latest <= lastProcessedBlock) return;
+      const fromBlock = lastProcessedBlock + 1;
+      const toBlock = Math.min(latest, fromBlock + 200); // cap range per call
+
+      const logs = await provider.getLogs({ address: CTF_EXCHANGE, fromBlock, toBlock });
+      lastProcessedBlock = toBlock;
+      consecutiveErrors = 0;
+      if (!logs.length) return;
+
+      const uniqueTxHashes = [...new Set(logs.map(l => l.transactionHash))];
+      for (const txHash of uniqueTxHashes) {
         try {
-          decoded = iface.parseTransaction({ data: tx.data, value: tx.value });
-          if (!decoded) continue;
-          order = decoded.args[0];
-        } catch { continue; /* not a fillOrder */ }
-        const whaleAddr = order.maker?.toLowerCase();
-        if (!whaleAddr) continue;
-        // Fast path: check known elites first (no CLOB lookup needed)
-        const isKnown = KNOWN_WHALES.includes(whaleAddr);
-        if (!isKnown) {
-          const approved = await isWhaleApproved(whaleAddr);
-          if (!approved) continue;
-        }
-        log('WHALE', `${isKnown ? '⭐ ELITE' : '✅ NEW'} whale ${whaleAddr.slice(0,8)} detected on block ${blockNumber}`);
-        try {
-          const price = Number(order.takerAmount) / (Number(order.makerAmount) || 1);
-          const tokenIdStr = order.tokenId?.toString() || '';
-          const market = await fetchMarketByToken(tokenIdStr);
-          const label = market?.question
-            ? `[WHALE] ${whaleAddr.slice(0, 8)} | ${market.question.slice(0, 80)}`
-            : `[WHALE] ${whaleAddr.slice(0, 8)} block:${blockNumber}`;
-          await recordTrade({
-            marketId: market?.id || '', direction: order.side === 0 ? 'buy' : 'sell',
-            outcome: order.side === 0 ? 'Yes' : 'No',
-            tokenId: tokenIdStr,
-            reason: label,
-            currentPrice: Math.min(0.99, Math.max(0.01, price)),
-          }, 'whale_mirror');
-        } catch { /* not a fillOrder */ }
+          const tx = await provider.getTransaction(txHash);
+          if (!tx || tx.to?.toLowerCase() !== CTF_EXCHANGE.toLowerCase()) continue;
+          // NOTE: tx.from is Polymarket's operator/relayer wallet, NOT the trader —
+          // Polymarket orders are signed off-chain and settled on-chain by the
+          // operator, so the real trader identity only exists inside the decoded
+          // order struct (order.maker). Gating on tx.from never matches real whales.
+          let decoded, order;
+          try {
+            decoded = iface.parseTransaction({ data: tx.data, value: tx.value });
+            if (!decoded) continue;
+            order = decoded.args[0];
+          } catch { continue; /* not a fillOrder */ }
+          const whaleAddr = order.maker?.toLowerCase();
+          if (!whaleAddr) continue;
+          const isKnown = KNOWN_WHALES.includes(whaleAddr);
+          if (!isKnown) {
+            const approved = await isWhaleApproved(whaleAddr);
+            if (!approved) continue;
+          }
+          log('WHALE', `${isKnown ? '⭐ ELITE' : '✅ NEW'} whale ${whaleAddr.slice(0,8)} detected in block range ${fromBlock}-${toBlock}`);
+          try {
+            const price = Number(order.takerAmount) / (Number(order.makerAmount) || 1);
+            const tokenIdStr = order.tokenId?.toString() || '';
+            const market = await fetchMarketByToken(tokenIdStr);
+            const label = market?.question
+              ? `[WHALE] ${whaleAddr.slice(0, 8)} | ${market.question.slice(0, 80)}`
+              : `[WHALE] ${whaleAddr.slice(0, 8)} tx:${txHash.slice(0, 10)}`;
+            await recordTrade({
+              marketId: market?.id || '', direction: order.side === 0 ? 'buy' : 'sell',
+              outcome: order.side === 0 ? 'Yes' : 'No',
+              tokenId: tokenIdStr,
+              reason: label,
+              currentPrice: Math.min(0.99, Math.max(0.01, price)),
+            }, 'whale_mirror');
+          } catch { /* not a fillOrder */ }
+        } catch (e) { logErr('WHALE', `tx fetch ${e?.message}`); }
       }
-    } catch (e) { logErr('WHALE', `block ${e?.message}`); }
-  });
+    } catch (e) {
+      consecutiveErrors++;
+      logErr('WHALE', `getLogs failed (${consecutiveErrors}x): ${e?.message}`);
+    }
+  }, 8000);
 }
 
 // ─── Scan loop with watchdog ──────────────────────────────────────────────────
