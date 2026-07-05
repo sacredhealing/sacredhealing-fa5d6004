@@ -2,11 +2,11 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 23h    │ 25   │ online    │ 0%       │ 59.8mb   │ root     │ disabled │
-│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 24m    │ 0    │ online    │ 0%       │ 57.9mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 23h    │ 25   │ online    │ 0%       │ 59.2mb   │ root     │ disabled │
+│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 25m    │ 0    │ online    │ 0%       │ 58.1mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
 │ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 24h    │ 0    │ online    │ 0%       │ 91.8mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.9mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.5mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -93,7 +93,6 @@
 16|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-16|delta-a | ==================================================
 16|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
 16|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
 16|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
@@ -173,6 +172,7 @@
 16|delta-a | [CLOSE] ADA LOST | Gross=$-0.0032 | Fee=-$0.0040 | Net=$-0.0072 | id=ba9a354b-6461-432a-b305-8c613f1dc727
 16|delta-a | [OPEN] BNB DOWN | delta=-0.2105% | $2.00 | entry=$583.1800
 16|delta-a | [OPEN] Tracking in-memory | total opened=2
+16|delta-a | [ALIVE] 2026-07-05T18:22:01.797Z | trades:2 | open:[BNB] | ticks:BTC:167 ETH:332 SOL:67...
 
 === HEALTH ===
 {
@@ -183,22 +183,22 @@
   "threshold": "0.200%",
   "trades": 2,
   "open": 1,
-  "uptime": "24m 12s",
+  "uptime": "25m 33s",
   "ticks": {
-    "BTC": 247,
-    "ETH": 414,
-    "SOL": 86,
-    "BNB": 283,
-    "XRP": 51,
-    "DOGE": 47,
-    "ADA": 32,
-    "AVAX": 25,
+    "BTC": 150,
+    "ETH": 309,
+    "SOL": 67,
+    "BNB": 161,
+    "XRP": 50,
+    "DOGE": 44,
+    "ADA": 27,
+    "AVAX": 26,
     "DOT": 8,
-    "LINK": 24,
-    "UNI": 26,
+    "LINK": 20,
+    "UNI": 10,
     "MATIC": 0
   },
-  "ts": "2026-07-05T18:21:14.544Z"
+  "ts": "2026-07-05T18:22:34.977Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
