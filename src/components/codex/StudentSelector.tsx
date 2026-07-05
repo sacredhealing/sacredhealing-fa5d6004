@@ -562,9 +562,9 @@ export function StudentSelector() {
             <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.12)" }} />
             </div>
-            <PanelHeader />
+            {PanelHeader()}
             <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              {view === "list" ? <ListContent /> : <CreateContent />}
+              {view === "list" ? ListContent() : CreateContent()}
             </div>
             {activeStudent && view === "list" && (
               <div style={{
@@ -607,9 +607,9 @@ export function StudentSelector() {
             overflow: "hidden",
           }}
         >
-          <PanelHeader />
+          {PanelHeader()}
           <div style={{ flex: 1, overflowY: "auto" }}>
-            {view === "list" ? <ListContent /> : <CreateContent />}
+            {view === "list" ? ListContent() : CreateContent()}
           </div>
           {activeStudent && view === "list" && (
             <div style={{ padding: "8px 14px 10px", borderTop: "1px solid rgba(212,175,55,0.07)", background: "rgba(212,175,55,0.02)" }}>
