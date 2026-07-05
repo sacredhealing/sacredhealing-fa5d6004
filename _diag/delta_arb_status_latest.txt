@@ -2,11 +2,11 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2914688  │ 75m    │ 28   │ online    │ 0%       │ 57.4mb   │ root     │ disabled │
-│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 5h     │ 0    │ online    │ 0%       │ 66.7mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2914688  │ 77m    │ 28   │ online    │ 0%       │ 57.8mb   │ root     │ disabled │
+│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 5h     │ 0    │ online    │ 0%       │ 66.6mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 28h    │ 0    │ online    │ 0%       │ 92.6mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 78.0mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 28h    │ 0    │ online    │ 0%       │ 91.9mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 77.7mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -93,7 +93,6 @@
 16|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-16|delta-a | [OPEN] Tracking in-memory | total opened=58
 16|delta-a | [OPEN] LINK UP | delta=+0.3945% | $2.00 | entry=$8.1430
 16|delta-a | [OPEN] Tracking in-memory | total opened=59
 16|delta-a | [ALIVE] 2026-07-05T22:32:01.805Z | trades:59 | open:[XRP,DOGE,ETH,SOL,ADA,LINK] | ticks:BTC:3331 ETH:2121 SOL:453...
@@ -173,6 +172,7 @@
 16|delta-a | [OPEN] Tracking in-memory | total opened=76
 16|delta-a | [OPEN] DOGE DOWN | delta=-0.2039% | $2.00 | entry=$0.0783
 16|delta-a | [OPEN] Tracking in-memory | total opened=77
+16|delta-a | [ALIVE] 2026-07-05T23:12:01.805Z | trades:77 | open:[ADA,XRP,SOL,DOGE] | ticks:BTC:923 ETH:901 SOL:123...
 
 === HEALTH ===
 {
@@ -183,22 +183,22 @@
   "threshold": "0.200%",
   "trades": 77,
   "open": 4,
-  "uptime": "313m 39s",
+  "uptime": "315m 33s",
   "ticks": {
-    "BTC": 735,
-    "ETH": 876,
-    "SOL": 128,
-    "BNB": 101,
-    "XRP": 153,
+    "BTC": 970,
+    "ETH": 936,
+    "SOL": 115,
+    "BNB": 111,
+    "XRP": 144,
     "DOGE": 73,
-    "ADA": 146,
-    "AVAX": 12,
+    "ADA": 78,
+    "AVAX": 15,
     "DOT": 19,
-    "LINK": 81,
-    "UNI": 22,
+    "LINK": 84,
+    "UNI": 21,
     "MATIC": 0
   },
-  "ts": "2026-07-05T23:10:40.925Z"
+  "ts": "2026-07-05T23:12:35.527Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
@@ -208,6 +208,7 @@ BOT_MODE=PAPER
 === DIR ===
 bot.js
 fetch_funding.sh
+find_top_funding.sh
 node_modules
 package-lock.json
 package.json
