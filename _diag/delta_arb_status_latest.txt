@@ -2,11 +2,11 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 23h    │ 25   │ online    │ 0%       │ 59.2mb   │ root     │ disabled │
-│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 25m    │ 0    │ online    │ 0%       │ 58.1mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2914688  │ 21m    │ 28   │ online    │ 0%       │ 56.5mb   │ root     │ disabled │
+│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 4h     │ 0    │ online    │ 0%       │ 64.8mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 24h    │ 0    │ online    │ 0%       │ 91.8mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.5mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 28h    │ 0    │ online    │ 0%       │ 92.3mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 77.3mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -93,86 +93,86 @@
 16|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-16|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
-16|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
-16|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
-16|delta-a |  Binance key: YgNSRqbP...
-16|delta-a | ==================================================
-16|delta-a | [HEALTH] Listening on :8081
-16|delta-a | [WS] Connected to Binance — 12 pairs
-16|delta-a | [ALIVE] 2026-07-05T16:54:49.866Z | trades:0 | open:[none] | ticks:BTC:368 ETH:224 SOL:62...
-16|delta-a | [OPEN] ADA DOWN | delta=-0.2630% | $2.00 | entry=$0.1896
-16|delta-a | [OPEN] Saved to DB | id=8626ecbc-d784-4f46-9682-f5c93267a37e | total trades=1
-16|delta-a | [ALIVE] 2026-07-05T16:59:49.866Z | trades:1 | open:[ADA] | ticks:BTC:273 ETH:300 SOL:84...
-16|delta-a | [ALIVE] 2026-07-05T17:04:49.867Z | trades:1 | open:[ADA] | ticks:BTC:310 ETH:412 SOL:119...
-16|delta-a | [ALIVE] 2026-07-05T17:09:49.868Z | trades:1 | open:[ADA] | ticks:BTC:282 ETH:414 SOL:78...
-16|delta-a | [AUTO] Closing stale ADA
-16|delta-a | [ALIVE] 2026-07-05T17:14:49.868Z | trades:1 | open:[none] | ticks:BTC:222 ETH:193 SOL:77...
-16|delta-a | [ALIVE] 2026-07-05T17:19:49.869Z | trades:1 | open:[none] | ticks:BTC:221 ETH:303 SOL:78...
-16|delta-a | [OPEN] ETH UP | delta=+0.4726% | $2.00 | entry=$1783.6000
-16|delta-a | [OPEN] Saved to DB | id=62e50c2f-8eb5-46df-bbaf-0f892a70e0fa | total trades=2
-16|delta-a | [OPEN] DOGE UP | delta=+0.6084% | $2.00 | entry=$0.0777
-16|delta-a | [OPEN] Saved to DB | id=65d729d9-82a0-484b-9aec-38f83655d6a4 | total trades=3
-16|delta-a | [OPEN] LINK UP | delta=+0.3513% | $2.00 | entry=$7.9990
-16|delta-a | [OPEN] Saved to DB | id=c2973530-4a5d-440d-ad08-5f5279c188b0 | total trades=4
-16|delta-a | [ALIVE] 2026-07-05T17:24:49.870Z | trades:4 | open:[ETH,DOGE,LINK] | ticks:BTC:522 ETH:1736 SOL:165...
-16|delta-a | [OPEN] SOL UP | delta=+0.3331% | $2.00 | entry=$81.3200
-16|delta-a | [OPEN] Saved to DB | id=2cb41a84-2d65-4388-828b-511b7ac6be57 | total trades=5
-16|delta-a | [OPEN] XRP UP | delta=+0.3261% | $2.00 | entry=$1.1382
-16|delta-a | [OPEN] Saved to DB | id=528a27de-2b89-48ee-a7b5-75cf09ee1386 | total trades=6
-16|delta-a | [OPEN] ETH DOWN | delta=-0.2523% | $2.00 | entry=$1779.3800
-16|delta-a | [OPEN] Saved to DB | id=cbd04be5-feee-4a0b-82f8-6f2fcc9e2ce3 | total trades=7
-16|delta-a | [OPEN] SOL DOWN | delta=-0.2337% | $2.00 | entry=$81.1100
-16|delta-a | [OPEN] Saved to DB | id=3b77ccf6-6035-4dd7-a17b-e6870c3767b6 | total trades=8
-16|delta-a | [OPEN] ADA DOWN | delta=-0.2622% | $2.00 | entry=$0.1902
-16|delta-a | [OPEN] Saved to DB | id=0a1d1cd0-0c6a-4d50-8bb4-0636d703d937 | total trades=9
-16|delta-a | [OPEN] LINK DOWN | delta=-0.2249% | $2.00 | entry=$7.9850
-16|delta-a | [OPEN] Saved to DB | id=9296308f-e91f-4b3a-8949-86725cc3f862 | total trades=10
-16|delta-a | [OPEN] DOGE DOWN | delta=-0.2186% | $2.00 | entry=$0.0776
-16|delta-a | [OPEN] Saved to DB | id=baff485e-cfcd-48c1-bfe2-8f9cecfff62b | total trades=11
-16|delta-a | [OPEN] XRP DOWN | delta=-0.2109% | $2.00 | entry=$1.1354
-16|delta-a | [OPEN] Saved to DB | id=b7cff75d-4757-4bef-95e9-dc42e039d391 | total trades=12
-16|delta-a | [OPEN] BNB DOWN | delta=-0.2353% | $2.00 | entry=$585.1300
-16|delta-a | [OPEN] Saved to DB | id=00392369-e539-4154-a871-eeac099528ca | total trades=13
-16|delta-a | [ALIVE] 2026-07-05T17:29:49.870Z | trades:13 | open:[ETH,SOL,ADA,LINK,DOGE,XRP,BNB] | ticks:BTC:351 ETH:789 SOL:97...
-16|delta-a | [ALIVE] 2026-07-05T17:34:49.870Z | trades:13 | open:[ETH,SOL,ADA,LINK,DOGE,XRP,BNB] | ticks:BTC:399 ETH:767 SOL:81...
-16|delta-a | [ALIVE] 2026-07-05T17:39:49.871Z | trades:13 | open:[ETH,SOL,ADA,LINK,DOGE,XRP,BNB] | ticks:BTC:273 ETH:1020 SOL:64...
-16|delta-a | [AUTO] Closing stale ETH
+16|delta-a | [ALIVE] 2026-07-05T21:47:01.804Z | trades:28 | open:[SOL,BNB,XRP,ADA] | ticks:BTC:644 ETH:688 SOL:133...
 16|delta-a | [AUTO] Closing stale SOL
-16|delta-a | [AUTO] Closing stale ADA
-16|delta-a | [AUTO] Closing stale LINK
-16|delta-a | [AUTO] Closing stale DOGE
-16|delta-a | [AUTO] Closing stale XRP
-16|delta-a | [OPEN] ADA DOWN | delta=-0.2100% | $2.00 | entry=$0.1901
-16|delta-a | [OPEN] Saved to DB | id=d44510b7-9e69-4c52-96f2-39111d911684 | total trades=14
+16|delta-a | [CLOSE] SOL LOST | Gross=+$0.0029 | Fee=-$0.0040 | Net=$-0.0011 | id=5c81177b-5091-45b7-b079-918e89e62361
 16|delta-a | [AUTO] Closing stale BNB
-16|delta-a | [OPEN] ETH DOWN | delta=-0.2190% | $2.00 | entry=$1776.5300
-16|delta-a | [OPEN] Saved to DB | id=ffd8f7e8-554b-4feb-9936-4791e30b37e6 | total trades=15
-16|delta-a | [OPEN] DOGE DOWN | delta=-0.2070% | $2.00 | entry=$0.0771
-16|delta-a | [OPEN] Saved to DB | id=2693dbe9-20ed-42e2-9975-8365fc130547 | total trades=16
-16|delta-a | [ALIVE] 2026-07-05T17:44:49.872Z | trades:16 | open:[ADA,ETH,DOGE] | ticks:BTC:352 ETH:616 SOL:87...
-16|delta-a | [ALIVE] 2026-07-05T17:49:49.873Z | trades:16 | open:[ADA,ETH,DOGE] | ticks:BTC:261 ETH:528 SOL:82...
-16|delta-a | [ALIVE] 2026-07-05T17:54:49.873Z | trades:16 | open:[ADA,ETH,DOGE] | ticks:BTC:229 ETH:319 SOL:52...
-16|delta-a | 
-16|delta-a | ==================================================
-16|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
-16|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
-16|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
-16|delta-a |  Binance key: YgNSRqbP...
-16|delta-a | ==================================================
-16|delta-a | [HEALTH] Listening on :8081
-16|delta-a | [WS] Connected to Binance — 12 pairs
-16|delta-a | [OPEN] ADA DOWN | delta=-0.2626% | $2.00 | entry=$0.1899
-16|delta-a | [OPEN] Tracking in-memory | total opened=1
-16|delta-a | [ALIVE] 2026-07-05T18:02:01.797Z | trades:1 | open:[ADA] | ticks:BTC:127 ETH:253 SOL:35...
-16|delta-a | [ALIVE] 2026-07-05T18:07:01.797Z | trades:1 | open:[ADA] | ticks:BTC:288 ETH:343 SOL:73...
-16|delta-a | [ALIVE] 2026-07-05T18:12:01.798Z | trades:1 | open:[ADA] | ticks:BTC:300 ETH:329 SOL:71...
-16|delta-a | [ALIVE] 2026-07-05T18:17:01.797Z | trades:1 | open:[ADA] | ticks:BTC:290 ETH:350 SOL:61...
+16|delta-a | [CLOSE] BNB LOST | Gross=$-0.0026 | Fee=-$0.0040 | Net=$-0.0066 | id=02b551be-008a-44c9-9869-63d1c67017a7
+16|delta-a | [AUTO] Closing stale XRP
+16|delta-a | [CLOSE] XRP LOST | Gross=$-0.0019 | Fee=-$0.0040 | Net=$-0.0059 | id=5a79f2fd-4550-4a31-bfbb-eee2493da7f8
+16|delta-a | [ALIVE] 2026-07-05T21:52:01.804Z | trades:28 | open:[ADA] | ticks:BTC:302 ETH:366 SOL:43...
+16|delta-a | [CLOSE] ADA WON | Gross=+$0.0042 | Fee=-$0.0040 | Net=+$0.0002 | id=900c406a-0c11-4872-898d-1533afc22f0d
+16|delta-a | [OPEN] ADA DOWN | delta=-0.3136% | $2.00 | entry=$0.1907
+16|delta-a | [OPEN] Tracking in-memory | total opened=29
+16|delta-a | [OPEN] ETH UP | delta=+0.3415% | $2.00 | entry=$1786.6600
+16|delta-a | [OPEN] Tracking in-memory | total opened=30
+16|delta-a | [OPEN] LINK UP | delta=+0.4985% | $2.00 | entry=$8.0640
+16|delta-a | [OPEN] Tracking in-memory | total opened=31
+16|delta-a | [OPEN] SOL UP | delta=+0.3437% | $2.00 | entry=$81.7500
+16|delta-a | [OPEN] Tracking in-memory | total opened=32
+16|delta-a | [OPEN] DOGE UP | delta=+0.3872% | $2.00 | entry=$0.0778
+16|delta-a | [OPEN] Tracking in-memory | total opened=33
+16|delta-a | [OPEN] BNB UP | delta=+0.4163% | $2.00 | entry=$590.9000
+16|delta-a | [OPEN] Tracking in-memory | total opened=34
+16|delta-a | [OPEN] XRP UP | delta=+0.4289% | $2.00 | entry=$1.1473
+16|delta-a | [OPEN] Tracking in-memory | total opened=35
+16|delta-a | [CLOSE] ADA LOST | Gross=$-0.0042 | Fee=-$0.0040 | Net=$-0.0082 | id=36ea5645-1e5b-46db-af0d-c37f8caf00da
+16|delta-a | [OPEN] ADA UP | delta=+0.3676% | $2.00 | entry=$0.1911
+16|delta-a | [OPEN] Tracking in-memory | total opened=36
+16|delta-a | [ALIVE] 2026-07-05T21:57:01.804Z | trades:36 | open:[ETH,LINK,SOL,DOGE,BNB,XRP,ADA] | ticks:BTC:1203 ETH:1522 SOL:295...
+16|delta-a | [CLOSE] ADA LOST | Gross=$-0.0063 | Fee=-$0.0040 | Net=$-0.0103 | id=e7d14fdf-ae9d-4b52-b682-ac10b1d174ca
+16|delta-a | [OPEN] ADA DOWN | delta=-0.2095% | $2.00 | entry=$0.1905
+16|delta-a | [OPEN] Tracking in-memory | total opened=37
+16|delta-a | [CLOSE] LINK LOST | Gross=$-0.0030 | Fee=-$0.0040 | Net=$-0.0070 | id=0b0faf34-a84a-4554-8c8c-59ffb12e4b93
+16|delta-a | [OPEN] LINK DOWN | delta=-0.2230% | $2.00 | entry=$8.0520
+16|delta-a | [OPEN] Tracking in-memory | total opened=38
+16|delta-a | [CLOSE] ETH LOST | Gross=$-0.0000 | Fee=-$0.0040 | Net=$-0.0040 | id=d44e4830-217e-40f3-b362-1a06d69cbb32
+16|delta-a | [OPEN] ETH DOWN | delta=-0.2568% | $2.00 | entry=$1786.6400
+16|delta-a | [OPEN] Tracking in-memory | total opened=39
+16|delta-a | [CLOSE] DOGE WON | Gross=+$0.0046 | Fee=-$0.0040 | Net=+$0.0006 | id=794afa6d-115f-4db7-bd54-0a1c3b0ef11f
+16|delta-a | [OPEN] DOGE DOWN | delta=-0.2048% | $2.00 | entry=$0.0780
+16|delta-a | [OPEN] Tracking in-memory | total opened=40
+16|delta-a | [CLOSE] XRP LOST | Gross=$-0.0051 | Fee=-$0.0040 | Net=$-0.0091 | id=a8a8d0d5-114e-4009-b1ae-0c9305eb7e25
+16|delta-a | [OPEN] XRP DOWN | delta=-0.2180% | $2.00 | entry=$1.1444
+16|delta-a | [OPEN] Tracking in-memory | total opened=41
+16|delta-a | [CLOSE] SOL LOST | Gross=$-0.0022 | Fee=-$0.0040 | Net=$-0.0062 | id=ece50242-52d1-41a9-94b5-ad4c30b39950
+16|delta-a | [OPEN] SOL DOWN | delta=-0.2199% | $2.00 | entry=$81.6600
+16|delta-a | [OPEN] Tracking in-memory | total opened=42
+16|delta-a | [CLOSE] BNB LOST | Gross=$-0.0066 | Fee=-$0.0040 | Net=$-0.0106 | id=dc6659e8-4f81-4e19-9140-eff663e4c7dc
+16|delta-a | [OPEN] BNB DOWN | delta=-0.2557% | $2.00 | entry=$588.9600
+16|delta-a | [OPEN] Tracking in-memory | total opened=43
+16|delta-a | [ALIVE] 2026-07-05T22:02:01.805Z | trades:43 | open:[ADA,LINK,ETH,DOGE,XRP,SOL,BNB] | ticks:BTC:761 ETH:1019 SOL:254...
+16|delta-a | [CLOSE] SOL LOST | Gross=$-0.0073 | Fee=-$0.0040 | Net=$-0.0113 | id=517f84e0-c7a2-4019-a138-4b4a1bbaf1f8
+16|delta-a | [OPEN] SOL UP | delta=+0.3551% | $2.00 | entry=$81.9600
+16|delta-a | [OPEN] Tracking in-memory | total opened=44
+16|delta-a | [CLOSE] XRP LOST | Gross=$-0.0031 | Fee=-$0.0040 | Net=$-0.0071 | id=8c7b4301-6206-4266-a341-2cc413bae1df
+16|delta-a | [OPEN] XRP UP | delta=+0.3502% | $2.00 | entry=$1.1462
+16|delta-a | [OPEN] Tracking in-memory | total opened=45
+16|delta-a | [CLOSE] DOGE LOST | Gross=$-0.0015 | Fee=-$0.0040 | Net=$-0.0055 | id=46683583-70a9-4e74-b8a9-31cdbb535282
+16|delta-a | [OPEN] DOGE UP | delta=+0.3344% | $2.00 | entry=$0.0780
+16|delta-a | [OPEN] Tracking in-memory | total opened=46
+16|delta-a | [CLOSE] LINK LOST | Gross=$-0.0040 | Fee=-$0.0040 | Net=$-0.0080 | id=a71a8683-50c8-4c63-bc6a-8fede128ad21
+16|delta-a | [OPEN] LINK UP | delta=+0.3607% | $2.00 | entry=$8.0680
+16|delta-a | [OPEN] Tracking in-memory | total opened=47
+16|delta-a | [CLOSE] SOL LOST | Gross=$-0.0046 | Fee=-$0.0040 | Net=$-0.0086 | id=c57a9619-9379-4951-8d51-d228cc11d44b
+16|delta-a | [OPEN] SOL DOWN | delta=-0.2196% | $2.00 | entry=$81.7700
+16|delta-a | [OPEN] Tracking in-memory | total opened=48
+16|delta-a | [CLOSE] XRP LOST | Gross=$-0.0045 | Fee=-$0.0040 | Net=$-0.0085 | id=d54663ac-283c-452d-a143-c296d2f24d45
+16|delta-a | [OPEN] XRP DOWN | delta=-0.2355% | $2.00 | entry=$1.1436
+16|delta-a | [OPEN] Tracking in-memory | total opened=49
+16|delta-a | [CLOSE] DOGE LOST | Gross=$-0.0059 | Fee=-$0.0040 | Net=$-0.0099 | id=a8588b0e-86b6-487d-9b18-96ff8469f5a1
+16|delta-a | [OPEN] DOGE DOWN | delta=-0.2821% | $2.00 | entry=$0.0778
+16|delta-a | [OPEN] Tracking in-memory | total opened=50
+16|delta-a | [ALIVE] 2026-07-05T22:07:01.805Z | trades:50 | open:[ADA,ETH,BNB,LINK,SOL,XRP,DOGE] | ticks:BTC:948 ETH:1082 SOL:334...
+16|delta-a | [ALIVE] 2026-07-05T22:12:01.805Z | trades:50 | open:[ADA,ETH,BNB,LINK,SOL,XRP,DOGE] | ticks:BTC:557 ETH:482 SOL:149...
 16|delta-a | [AUTO] Closing stale ADA
-16|delta-a | [CLOSE] ADA LOST | Gross=$-0.0032 | Fee=-$0.0040 | Net=$-0.0072 | id=ba9a354b-6461-432a-b305-8c613f1dc727
-16|delta-a | [OPEN] BNB DOWN | delta=-0.2105% | $2.00 | entry=$583.1800
-16|delta-a | [OPEN] Tracking in-memory | total opened=2
-16|delta-a | [ALIVE] 2026-07-05T18:22:01.797Z | trades:2 | open:[BNB] | ticks:BTC:167 ETH:332 SOL:67...
+16|delta-a | [CLOSE] ADA WON | Gross=+$0.0042 | Fee=-$0.0040 | Net=+$0.0002 | id=ba53e362-00c8-4685-8c10-268c9b53fa21
+16|delta-a | [AUTO] Closing stale ETH
+16|delta-a | [CLOSE] ETH LOST | Gross=$-0.0054 | Fee=-$0.0040 | Net=$-0.0094 | id=00dd2cae-49eb-43e8-a727-94992f73968c
+16|delta-a | [AUTO] Closing stale BNB
+16|delta-a | [OPEN] ADA UP | delta=+0.3684% | $2.00 | entry=$0.1907
+16|delta-a | [OPEN] Tracking in-memory | total opened=51
+16|delta-a | [CLOSE] BNB LOST | Gross=$-0.0030 | Fee=-$0.0040 | Net=$-0.0070 | id=43eeca02-2c26-4189-a3d3-57440deacdf3
 
 === HEALTH ===
 {
@@ -181,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.200%",
-  "trades": 2,
-  "open": 1,
-  "uptime": "25m 33s",
+  "trades": 51,
+  "open": 5,
+  "uptime": "259m 19s",
   "ticks": {
-    "BTC": 150,
-    "ETH": 309,
-    "SOL": 67,
-    "BNB": 161,
-    "XRP": 50,
-    "DOGE": 44,
-    "ADA": 27,
-    "AVAX": 26,
-    "DOT": 8,
-    "LINK": 20,
-    "UNI": 10,
+    "BTC": 878,
+    "ETH": 977,
+    "SOL": 255,
+    "BNB": 124,
+    "XRP": 181,
+    "DOGE": 60,
+    "ADA": 97,
+    "AVAX": 31,
+    "DOT": 3,
+    "LINK": 32,
+    "UNI": 23,
     "MATIC": 0
   },
-  "ts": "2026-07-05T18:22:34.977Z"
+  "ts": "2026-07-05T22:16:21.367Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
