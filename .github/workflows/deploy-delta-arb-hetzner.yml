@@ -271,6 +271,9 @@ jobs:
         run: |
           sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/fetch_funding.sh && bash delta-arb-hetzner/fetch_funding.sh" > /tmp/funding_history.json 2>&1
           wc -l /tmp/funding_history.json
+          echo "=== TOP FUNDING RATES ACROSS ALL PAIRS ==="
+          sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/find_top_funding.sh && bash delta-arb-hetzner/find_top_funding.sh" > /tmp/top_funding.txt 2>&1
+          cat /tmp/top_funding.txt
           GH_TOKEN="$GH_TOKEN" python3 - <<'PYEOF'
           import json, base64, urllib.request, os
           token = os.environ["GH_TOKEN"]
@@ -289,6 +292,28 @@ jobs:
               headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
           with urllib.request.urlopen(req) as r: print("wrote", path)
           PYEOF
+          GH_TOKEN="$GH_TOKEN" python3 - <<'PYEOF'
+          import json, base64, urllib.request, os
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/top_funding_latest.txt"
+          content = open("/tmp/top_funding.txt").read()
+          def get_sha():
+              try:
+                  r0 = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", headers={"Authorization": f"token {token}"})
+                  with urllib.request.urlopen(r0) as x: return json.load(x)["sha"]
+              except Exception: return None
+          sha = get_sha()
+          body = {"message": "diag: top funding rates across all pairs", "content": base64.b64encode(content.encode()).decode()}
+          if sha: body["sha"] = sha
+          req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
+              headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
+          with urllib.request.urlopen(req) as r: print("wrote", path)
+          PYEOF
+        if: inputs.action == 'logs'
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo not-running"
 
       - name: Logs
         if: inputs.action == 'logs'
