@@ -12,6 +12,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -328,7 +329,7 @@ const COPY: Record<Lang, Copy> = {
 
 /* ─── HTML builder ────────────────────────────────────────────────────── */
 
-function buildEmail(c: Copy, displayName: string): string {
+function buildEmail(c: Copy, displayName: string, account: { email: string; memberSince: string; planLabel: string; loginUrl: string }): string {
   const name = displayName || (
     c.greeting === "Beloved" ? "Sacred One" :
     c.greeting === "Kära" ? "Kära Själ" :
@@ -365,6 +366,27 @@ function buildEmail(c: Copy, displayName: string): string {
   <tr><td style="padding:36px 40px 0;">
     <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 18px;">${c.intro1}</p>
     <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 32px;">${c.intro2}</p>
+
+    <!-- ACCOUNT DETAILS -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.18);border-radius:16px;margin-bottom:32px;">
+      <tr><td style="padding:22px 24px;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:14px;">Your Account</div>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:5px 0;font-size:14px;color:rgba(255,255,255,0.5);font-family:Arial,sans-serif;">Email</td>
+            <td style="padding:5px 0;font-size:14px;color:rgba(255,255,255,0.85);font-family:Arial,sans-serif;text-align:right;">${account.email}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-size:14px;color:rgba(255,255,255,0.5);font-family:Arial,sans-serif;">Member Since</td>
+            <td style="padding:5px 0;font-size:14px;color:rgba(255,255,255,0.85);font-family:Arial,sans-serif;text-align:right;">${account.memberSince}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-size:14px;color:rgba(255,255,255,0.5);font-family:Arial,sans-serif;">Plan</td>
+            <td style="padding:5px 0;font-size:14px;color:#D4AF37;font-family:Arial,sans-serif;text-align:right;">${account.planLabel}</td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
 
     <!-- GOLD DIVIDER -->
     <div style="height:1px;background:linear-gradient(to right,transparent,rgba(212,175,55,0.25),transparent);margin-bottom:32px;"></div>
@@ -447,7 +469,7 @@ function buildEmail(c: Copy, displayName: string): string {
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:36px;">
-      <a href="${APP_URL}/dashboard"
+      <a href="${account.loginUrl}"
          style="display:inline-block;background:#D4AF37;color:#050505;font-size:13px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;padding:20px 60px;border-radius:100px;text-decoration:none;font-family:Arial,sans-serif;">
         ${c.cta} →
       </a>
@@ -486,7 +508,7 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, name, language } = await req.json();
+    const { email, name, user_id, language } = await req.json();
     if (!email) throw new Error("email required");
 
     const resendKey = Deno.env.get("RESEND_API_KEY") || "";
@@ -496,6 +518,47 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
     const resend = new Resend(resendKey);
+
+    // Service-role client: used only to read the profile (tier, join date) and
+    // to generate a one-time magic login link. Never touches the password —
+    // Supabase only stores a salted hash, which can't be retrieved even by us.
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
+    let memberSince = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    let planLabel = "Seeker (Free)";
+    if (user_id) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("membership_tier, created_at")
+        .eq("user_id", user_id)
+        .maybeSingle();
+      if (profile?.created_at) {
+        memberSince = new Date(profile.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      }
+      const tierMap: Record<string, string> = {
+        "free": "Seeker (Free)",
+        "prana-flow": "Prana-Flow",
+        "siddha-quantum": "Siddha-Quantum",
+        "akasha-infinity": "Akasha-Infinity",
+      };
+      if (profile?.membership_tier) planLabel = tierMap[profile.membership_tier] || profile.membership_tier;
+    }
+
+    // One-time magic login link — no password is ever generated, stored, or emailed.
+    let loginUrl = `${APP_URL}/dashboard`;
+    try {
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${APP_URL}/dashboard` },
+      });
+      if (!linkErr && linkData?.properties?.action_link) {
+        loginUrl = linkData.properties.action_link;
+      }
+    } catch { /* fall back to plain dashboard URL if link generation fails */ }
 
     // IP geo for language
     const forwarded = req.headers.get("x-forwarded-for");
@@ -514,7 +577,7 @@ serve(async (req: Request): Promise<Response> => {
     const lang = (countryCode ? countryToLang(countryCode) : resolveClientLang(language)) as Lang;
     const copy = COPY[lang] || COPY["en"];
     const displayName = (name && String(name).trim()) || "";
-    const html = buildEmail(copy, displayName);
+    const html = buildEmail(copy, displayName, { email, memberSince, planLabel, loginUrl });
 
     const result = await resend.emails.send({
       from: FROM_ADDRESS,
