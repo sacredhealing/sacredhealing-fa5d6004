@@ -21,6 +21,16 @@ interface AppUser {
   has_ayurveda: boolean;
 }
 
+function isCompactViewport(): boolean {
+  if (typeof window === "undefined") return false;
+  const narrow = window.innerWidth < 768;
+  const coarsePointer =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches;
+  const touchCapable = navigator.maxTouchPoints > 0;
+  return narrow || coarsePointer || touchCapable;
+}
+
 export function useActiveStudent(): Student | null {
   const [student, setStudent] = useState<Student | null>(null);
   useEffect(() => {
@@ -47,7 +57,7 @@ export function StudentSelector() {
   const [activeId, setActiveId] = useState<string | null>(getActiveStudentId());
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => isCompactViewport());
 
   // Search
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,10 +82,14 @@ export function StudentSelector() {
   const danger = "#f87171";
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => setIsMobile(isCompactViewport());
     check();
     window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
+    };
   }, []);
 
   useEffect(() => {
@@ -608,7 +622,7 @@ export function StudentSelector() {
           }}
         >
           {PanelHeader()}
-          <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
             {view === "list" ? ListContent() : CreateContent()}
           </div>
           {activeStudent && view === "list" && (
