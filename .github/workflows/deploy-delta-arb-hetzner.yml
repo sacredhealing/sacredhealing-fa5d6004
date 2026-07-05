@@ -220,6 +220,32 @@ jobs:
           with urllib.request.urlopen(req) as r: print("wrote", path)
           PYEOF
 
+      - name: Pull full trade history for analysis
+        if: inputs.action == 'status'
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          curl -s 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at&mode=eq.PAPER&order=created_at.asc&limit=1000' -H 'apikey: clawbot-bridge-2026' > /tmp/all_trades.json
+          echo "Trade count: $(python3 -c "import json; print(len(json.load(open('/tmp/all_trades.json'))))")"
+          python3 - <<'PYEOF'
+          import json, base64, urllib.request, os
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/all_trades_latest.json"
+          content = open("/tmp/all_trades.json").read()
+          def get_sha():
+              try:
+                  r0 = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", headers={"Authorization": f"token {token}"})
+                  with urllib.request.urlopen(r0) as x: return json.load(x)["sha"]
+              except Exception: return None
+          sha = get_sha()
+          body = {"message": "diag: full trade history dump", "content": base64.b64encode(content.encode()).decode()}
+          if sha: body["sha"] = sha
+          req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
+              headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
+          with urllib.request.urlopen(req) as r: print("wrote", path)
+          PYEOF
+
       - name: Logs
         if: inputs.action == 'logs'
         env:
