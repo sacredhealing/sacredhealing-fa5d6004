@@ -274,6 +274,8 @@ jobs:
           echo "=== TOP FUNDING RATES ACROSS ALL PAIRS ==="
           sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/find_top_funding.sh && bash delta-arb-hetzner/find_top_funding.sh" > /tmp/top_funding.txt 2>&1
           cat /tmp/top_funding.txt
+          echo "=== PERSISTENCE CHECK ON TOP CANDIDATES ==="
+          sshpass -p "$HP" ssh -T root@178.105.183.74 "cd /root/delta-arb && git pull -q origin main && chmod +x delta-arb-hetzner/check_persistence.sh && bash delta-arb-hetzner/check_persistence.sh" > /tmp/persistence.json 2>&1
           GH_TOKEN="$GH_TOKEN" python3 - <<'PYEOF'
           import json, base64, urllib.request, os
           token = os.environ["GH_TOKEN"]
@@ -305,6 +307,24 @@ jobs:
               except Exception: return None
           sha = get_sha()
           body = {"message": "diag: top funding rates across all pairs", "content": base64.b64encode(content.encode()).decode()}
+          if sha: body["sha"] = sha
+          req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
+              headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
+          with urllib.request.urlopen(req) as r: print("wrote", path)
+          PYEOF
+          GH_TOKEN="$GH_TOKEN" python3 - <<'PYEOF'
+          import json, base64, urllib.request, os
+          token = os.environ["GH_TOKEN"]
+          repo  = "sacredhealing/sacredhealing-fa5d6004"
+          path  = "_diag/persistence_latest.json"
+          content = open("/tmp/persistence.json").read()
+          def get_sha():
+              try:
+                  r0 = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", headers={"Authorization": f"token {token}"})
+                  with urllib.request.urlopen(r0) as x: return json.load(x)["sha"]
+              except Exception: return None
+          sha = get_sha()
+          body = {"message": "diag: persistence check results", "content": base64.b64encode(content.encode()).decode()}
           if sha: body["sha"] = sha
           req = urllib.request.Request(f"https://api.github.com/repos/{repo}/contents/{path}", data=json.dumps(body).encode(),
               headers={"Authorization": f"token {token}", "Content-Type": "application/json"}, method="PUT")
