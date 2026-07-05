@@ -242,7 +242,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          curl -s 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at&mode=eq.PAPER&order=created_at.asc&limit=1000' -H 'apikey: clawbot-bridge-2026' > /tmp/all_trades.json
+          curl -s 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=asset,signal,delta,size_usd,entry_price,exit_price,status,pnl_usdc,mode,created_at&mode=eq.PAPER&created_at=gte.2026-07-05T18%3A15%3A00&order=created_at.asc&limit=500' -H 'apikey: clawbot-bridge-2026' > /tmp/all_trades.json
           echo "Trade count: $(python3 -c "import json; print(len(json.load(open('/tmp/all_trades.json'))))")"
           python3 - <<'PYEOF'
           import json, base64, urllib.request, os
