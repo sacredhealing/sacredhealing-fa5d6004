@@ -394,6 +394,24 @@ serve(async (req) => {
 
     const isStudentReading = Boolean(body.is_student_reading);
 
+    // Calculated ephemeris fields (from jyotish-ephemeris, VedAstro Swiss Ephemeris)
+    const calcLagna      = body.calculated_lagna      ? String(body.calculated_lagna)      : '';
+    const calcNakshatra  = body.calculated_nakshatra  ? String(body.calculated_nakshatra)  : '';
+    const calcMahadasha  = body.calculated_mahadasha  ? String(body.calculated_mahadasha)  : '';
+    const mahaStart      = body.mahadasha_start       ? String(body.mahadasha_start)       : '';
+    const mahaEnd        = body.mahadasha_end         ? String(body.mahadasha_end)         : '';
+    const calcAntardasha = body.calculated_antardasha ? String(body.calculated_antardasha) : '';
+    const antarStart     = body.antardasha_start      ? String(body.antardasha_start)      : '';
+    const antarEnd       = body.antardasha_end        ? String(body.antardasha_end)        : '';
+
+    const ephemerisBlock = calcMahadasha ? `
+━━━ CALCULATED EPHEMERIS (VedAstro Swiss Ephemeris — Lahiri — AUTHORITATIVE) ━━━
+Lagna (Ascendant): ${calcLagna || 'see birth data'}
+Moon Nakshatra: ${calcNakshatra || 'see birth data'}
+Current Mahadasha: ${calcMahadasha} (${mahaStart} → ${mahaEnd})
+Current Antardasha: ${calcAntardasha} (${antarStart} → ${antarEnd})
+ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha dates. Never approximate or guess dasha end years.` : '';
+
     // ── LOAD BHRIGU MEMORY (skip for student readings — use clean context) ──
     let bhriguMemory = null;
     if (user?.id && !isStudentReading) {
@@ -411,7 +429,7 @@ serve(async (req) => {
     );
 
     const allMessages = [
-      { role: "system", content: system },
+      { role: "system", content: system + ephemerisBlock },
       ...messages
     ];
 

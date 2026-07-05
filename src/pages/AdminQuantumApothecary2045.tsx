@@ -290,6 +290,31 @@ export default function AdminQuantumApothecary2045() {
             if (student.birth_place) parts.push(`Birth Place: ${student.birth_place}`);
             if (student.notes) parts.push(`Practitioner Notes: ${student.notes}`);
             parts.push('Use these birth details for all Jyotish, Dasha, and planetary readings. This seeker is NOT the admin — read THEIR chart, not the admin\'s.');
+
+            // Fetch precise dasha from jyotish-ephemeris (VedAstro Swiss Ephemeris)
+            if (student.birth_date) {
+              try {
+                const { data: ephData } = await (supabase as any).functions.invoke('jyotish-ephemeris', {
+                  body: {
+                    userId: `student_${student.id}`,
+                    birthDate: student.birth_date,
+                    birthTime: student.birth_time || '12:00',
+                    birthPlace: student.birth_place || '',
+                  },
+                });
+                if (ephData?.dashaData?.activeMaha) {
+                  parts.push(`\n━━ CALCULATED EPHEMERIS (Swiss Ephemeris, Lahiri — USE THESE EXACT DATES) ━━`);
+                  parts.push(`Lagna: ${ephData.ascendantSign || 'see birth data'}`);
+                  parts.push(`Moon Nakshatra: ${ephData.moonNakshatra || 'see birth data'}`);
+                  parts.push(`Current Mahadasha: ${ephData.dashaData.activeMaha.planet} (${ephData.dashaData.activeMaha.start} → ${ephData.dashaData.activeMaha.end})`);
+                  if (ephData.dashaData.activeAntar) {
+                    parts.push(`Current Antardasha: ${ephData.dashaData.activeAntar.planet} (${ephData.dashaData.activeAntar.start} → ${ephData.dashaData.activeAntar.end})`);
+                  }
+                  parts.push(`RULE: Never approximate dasha dates. Use ONLY the dates above.`);
+                }
+              } catch { /* non-blocking */ }
+            }
+
             extraSystemContext = parts.join('\n');
           }
         } catch { /* non-blocking — fall through without context */ }

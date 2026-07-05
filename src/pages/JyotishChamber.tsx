@@ -2729,6 +2729,37 @@ const JyotishChamber: React.FC = () => {
   const [fullReadingLoading, setFullReadingLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
+  const [studentEphemeris, setStudentEphemeris] = useState<typeof ephemeris>(null);
+
+  // When a student is selected, calculate their ephemeris via jyotish-ephemeris
+  useEffect(() => {
+    if (!activeStudent?.birth_date) { setStudentEphemeris(null); return; }
+    const calc = async () => {
+      try {
+        // Use a deterministic fake userId so jyotish-ephemeris can cache per student
+        const studentUserId = `student_${activeStudent.id}`;
+        const { data, error } = await supabase.functions.invoke('jyotish-ephemeris', {
+          body: {
+            userId: studentUserId,
+            birthDate: activeStudent.birth_date,
+            birthTime: activeStudent.birth_time || '12:00',
+            birthPlace: activeStudent.birth_place || '',
+          },
+        });
+        if (!error && data) {
+          setStudentEphemeris({
+            moonNakshatra: data.moonNakshatra || '',
+            moonLongitude: data.moonLongitude || 0,
+            ascendantSign: data.ascendantSign || '',
+            sunSign: data.sunSign || '',
+            marsSign: data.marsSign || '',
+            dashaData: data.dashaData || null,
+          });
+        }
+      } catch (e) { console.error('Student ephemeris error:', e); }
+    };
+    void calc();
+  }, [activeStudent?.id]);
 
   // Tier access
   const userTier = isAdmin ? 'admin' : (membershipTier || 'free');
@@ -3817,6 +3848,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               }
               loadBirthData={loadBirthData}
               isStudentReading={!!activeStudent}
+              studentEphemeris={activeStudent ? studentEphemeris : null}
             />
           </motion.div>
         )}
