@@ -2,8 +2,8 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 22h    │ 25   │ online    │ 0%       │ 59.0mb   │ root     │ disabled │
-│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 3m     │ 0    │ online    │ 0%       │ 53.5mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 22h    │ 25   │ online    │ 0%       │ 59.3mb   │ root     │ disabled │
+│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 8m     │ 0    │ online    │ 0%       │ 54.7mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
 │ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 23h    │ 0    │ online    │ 0%       │ 92.1mb   │ root     │ disabled │
 │ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.9mb   │ root     │ disabled │
@@ -93,9 +93,6 @@
 16|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-16|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
-16|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
-16|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
 16|delta-a |  Binance key: YgNSRqbP...
 16|delta-a | ==================================================
 16|delta-a | [HEALTH] Listening on :8081
@@ -173,6 +170,9 @@
 16|delta-a | ==================================================
 16|delta-a | [HEALTH] Listening on :8081
 16|delta-a | [WS] Connected to Binance — 12 pairs
+16|delta-a | [OPEN] ADA DOWN | delta=-0.2626% | $2.00 | entry=$0.1899
+16|delta-a | [OPEN] Tracking in-memory | total opened=1
+16|delta-a | [ALIVE] 2026-07-05T18:02:01.797Z | trades:1 | open:[ADA] | ticks:BTC:127 ETH:253 SOL:35...
 
 === HEALTH ===
 {
@@ -181,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.200%",
-  "trades": 0,
-  "open": 0,
-  "uptime": "3m 58s",
+  "trades": 1,
+  "open": 1,
+  "uptime": "8m 56s",
   "ticks": {
-    "BTC": 114,
-    "ETH": 185,
-    "SOL": 31,
-    "BNB": 46,
-    "XRP": 29,
-    "DOGE": 36,
-    "ADA": 50,
-    "AVAX": 18,
-    "DOT": 4,
-    "LINK": 9,
-    "UNI": 7,
+    "BTC": 282,
+    "ETH": 352,
+    "SOL": 65,
+    "BNB": 64,
+    "XRP": 93,
+    "DOGE": 35,
+    "ADA": 54,
+    "AVAX": 20,
+    "DOT": 5,
+    "LINK": 13,
+    "UNI": 5,
     "MATIC": 0
   },
-  "ts": "2026-07-05T18:01:00.029Z"
+  "ts": "2026-07-05T18:05:57.848Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
