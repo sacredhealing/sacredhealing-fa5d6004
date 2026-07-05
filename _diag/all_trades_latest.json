@@ -63,4 +63,12 @@
  {"asset":"DOGE","signal":"DOWN","delta":"-0.2162%","size_usd":2,"entry_price":0.07845,"exit_price":0.07813,"status":"won","pnl_usdc":0.0042,"mode":"PAPER","created_at":"2026-07-05T22:49:02.803066+00:00"}, 
  {"asset":"ADA","signal":"DOWN","delta":"-0.2599%","size_usd":2,"entry_price":0.1919,"exit_price":0.1902,"status":"won","pnl_usdc":0.0137,"mode":"PAPER","created_at":"2026-07-05T22:49:02.974135+00:00"}, 
  {"asset":"LINK","signal":"DOWN","delta":"-0.4175%","size_usd":2,"entry_price":8.109,"exit_price":8.071,"status":"won","pnl_usdc":0.0054,"mode":"PAPER","created_at":"2026-07-05T22:49:03.179129+00:00"}, 
- {"asset":"TEST","signal":"UP","delta":"+0.0000%","size_usd":0.01,"entry_price":1,"exit_price":null,"status":"open","pnl_usdc":0.0000,"mode":"PAPER","created_at":"2026-07-05T22:58:30.565149+00:00"}]
+ {"asset":"TEST","signal":"UP","delta":"+0.0000%","size_usd":0.01,"entry_price":1,"exit_price":null,"status":"open","pnl_usdc":0.0000,"mode":"PAPER","created_at":"2026-07-05T22:58:30.565149+00:00"}, 
+ {"asset":"SOL","signal":"DOWN","delta":"-0.2445%","size_usd":2,"entry_price":81.6,"exit_price":81.76,"status":"lost","pnl_usdc":-0.0079,"mode":"PAPER","created_at":"2026-07-05T23:00:05.458124+00:00"}, 
+ {"asset":"ADA","signal":"DOWN","delta":"-0.3145%","size_usd":2,"entry_price":0.1902,"exit_price":0.1904,"status":"lost","pnl_usdc":-0.0061,"mode":"PAPER","created_at":"2026-07-05T23:00:17.34968+00:00"}, 
+ {"asset":"ETH","signal":"DOWN","delta":"-0.2029%","size_usd":2,"entry_price":1785.3,"exit_price":1794.59,"status":"lost","pnl_usdc":-0.0144,"mode":"PAPER","created_at":"2026-07-05T23:06:02.10937+00:00"}, 
+ {"asset":"BNB","signal":"DOWN","delta":"-0.2032%","size_usd":2,"entry_price":589.24,"exit_price":591.2,"status":"lost","pnl_usdc":-0.0107,"mode":"PAPER","created_at":"2026-07-05T23:06:02.332143+00:00"}, 
+ {"asset":"DOGE","signal":"DOWN","delta":"-0.2045%","size_usd":2,"entry_price":0.07808,"exit_price":0.07849,"status":"lost","pnl_usdc":-0.0145,"mode":"PAPER","created_at":"2026-07-05T23:06:02.622012+00:00"}, 
+ {"asset":"LINK","signal":"DOWN","delta":"-0.2719%","size_usd":2,"entry_price":8.069,"exit_price":8.105,"status":"lost","pnl_usdc":-0.0129,"mode":"PAPER","created_at":"2026-07-05T23:06:02.801758+00:00"}, 
+ {"asset":"ADA","signal":"UP","delta":"+0.3690%","size_usd":2,"entry_price":0.1904,"exit_price":0.1904,"status":"lost","pnl_usdc":-0.0040,"mode":"PAPER","created_at":"2026-07-05T23:06:17.132223+00:00"}, 
+ {"asset":"XRP","signal":"UP","delta":"+0.3380%","size_usd":2,"entry_price":1.1578,"exit_price":1.1583,"status":"lost","pnl_usdc":-0.0031,"mode":"PAPER","created_at":"2026-07-05T23:07:32.193784+00:00"}]
