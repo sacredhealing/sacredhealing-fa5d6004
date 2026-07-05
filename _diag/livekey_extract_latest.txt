@@ -29,16 +29,19 @@ Row count check (Prefer: count=exact):
 content-range: */0
 === TEST BRIDGE FOR READS (bypasses RLS via service_role) ===
 === TEST BRIDGE PATCH (reproduce Close error) ===
-Testing PATCH on open trade id: df2ede32-dcd7-48f6-b6c3-4007fb9d6acb
+Testing PATCH on open trade id: 2ad285be-fb40-413f-89ec-307836350be8
 Internal Server Error HTTP_500
 === GET still works? ===
 [{"id":"5a993d24-8f17-4c1c-b85c-e10857f89498","status":"lost"}, 
  {"id":"71479657-b839-4675-b088-f84770de8334","status":"lost"}] HTTP_200
 === POST still works? (test row on separate table) ===
-[{"id":"a2ac520f-7c8a-4cd2-ab22-f9837e3fe5ae","user_id":null,"bot_type":"sqi-sovereign","strategy":null,"action":null,"entry_price":1,"exit_price":null,"size_usd":0.01,"pnl_usd":0,"pnl_pct":0,"status":"open","created_at":"2026-07-05T17:38:15.924497+00:00","closed_at":null,"seed_balance":null,"session_id":null,"market_question":null,"market_id":null,"side":null,"price":null,"ai_probability":null,"edge_pct":null,"reasoning":null,"settled_at":null,"asset":"TEST","signal":"UP","delta":"+0.0000%","pnl_usdc":0.0000,"mode":"PAPER","order_id":null}] HTTP_201
+[{"id":"f03bf1c8-33dd-4236-9235-d30ecfc84b2c","user_id":null,"bot_type":"sqi-sovereign","strategy":null,"action":null,"entry_price":1,"exit_price":null,"size_usd":0.01,"pnl_usd":0,"pnl_pct":0,"status":"open","created_at":"2026-07-05T17:55:09.094893+00:00","closed_at":null,"seed_balance":null,"session_id":null,"market_question":null,"market_id":null,"side":null,"price":null,"ai_probability":null,"edge_pct":null,"reasoning":null,"settled_at":null,"asset":"TEST","signal":"UP","delta":"+0.0000%","pnl_usdc":0.0000,"mode":"PAPER","order_id":null}] HTTP_201
 === PATCH with explicit Prefer header ===
 Internal Server Error HTTP_500
 === PATCH with only one field, no Content-Type ===
+Internal Server Error HTTP_500
+=== DOES DELETE WORK? (test on the throwaway TEST row) ===
+Deleting test row id: 02d1db50-7022-466e-b3fa-0f5c9f5965f2
 Internal Server Error HTTP_500
 === TEST binance-balance FUNCTION AUTH ===
 -- with legacy anon key --
