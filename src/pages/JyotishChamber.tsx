@@ -19,6 +19,8 @@ import { canAccessJyotishModule } from '@/lib/tierAccess';
 import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
 import { BhriguAkashaChat } from '@/components/vedic/BhriguAkashaChat';
 import { BhumiOraclePanel } from '@/components/vedic/BhumiOraclePanel';
+import { StudentSelector } from '@/components/admin/StudentSelector';
+import type { Student } from '@/lib/codex/students';
 
 // ── Types ────────────────────────────────────────────────────────
 interface BirthData {
@@ -2726,6 +2728,7 @@ const JyotishChamber: React.FC = () => {
   const [oracleExpandedSection, setOracleExpandedSection] = useState<string|null>(null);
   const [fullReadingLoading, setFullReadingLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
+  const [activeStudent, setActiveStudent] = useState<Student | null>(null);
 
   // Tier access
   const userTier = isAdmin ? 'admin' : (membershipTier || 'free');
@@ -3798,8 +3801,20 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
         {(activeTab === 'oracle' || builtTabs.has('oracle')) && builtTabs.has('oracle') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
+            {isAdmin && (
+              <StudentSelector onStudentChange={setActiveStudent} />
+            )}
             <BhriguAkashaChat
-              birthData={birthData}
+              birthData={
+                activeStudent
+                  ? {
+                      birth_name:  activeStudent.name,
+                      birth_date:  activeStudent.birth_date  ?? '',
+                      birth_time:  activeStudent.birth_time  ?? '',
+                      birth_place: activeStudent.birth_place ?? '',
+                    }
+                  : birthData
+              }
               loadBirthData={loadBirthData}
             />
           </motion.div>

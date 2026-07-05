@@ -5,10 +5,13 @@ import { Send, X, Sparkles, Loader2, Clock, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useChatMessages, type ChatMessage } from '@/hooks/useChatMessages';
 import { AyurvedaLexicon } from './AyurvedaLexicon';
+import { StudentSelector } from '@/components/admin/StudentSelector';
+import type { Student } from '@/lib/codex/students';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
@@ -513,6 +516,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [showHistory, setShowHistory] = useState(false);
   const [selectedHistMsg, setSelectedHistMsg] = useState<ChatMessage | null>(null);
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
+  const [activeStudent, setActiveStudent] = useState<Student | null>(null);
   const [jyotishProfile, setJyotishProfile] = useState<{
     lagna: string | null; moon_sign: string | null; current_dasha: string | null;
     birth_date: string | null; birth_time: string | null; birth_place: string | null;
@@ -537,6 +542,17 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         });
       });
   }, [user?.id]);
+
+  // When a student is selected, override jyotishProfile with student birth data
+  useEffect(() => {
+    if (!activeStudent) return;
+    setJyotishProfile({
+      lagna: null, moon_sign: null, current_dasha: null,
+      birth_date:  activeStudent.birth_date  ?? null,
+      birth_time:  activeStudent.birth_time  ?? null,
+      birth_place: activeStudent.birth_place ?? null,
+    });
+  }, [activeStudent]);
 
   // Inject styles
   useEffect(() => {
@@ -644,7 +660,18 @@ ${m.content}`
           Authorization: `Bearer ${authToken}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ messages: apiMessages, profile, dosha, language, jyotishProfile }),
+        body: JSON.stringify({
+          messages: apiMessages, profile, dosha, language, jyotishProfile,
+          ...(activeStudent ? {
+            studentContext: {
+              name:        activeStudent.name,
+              birth_date:  activeStudent.birth_date,
+              birth_time:  activeStudent.birth_time,
+              birth_place: activeStudent.birth_place,
+              notes:       activeStudent.notes,
+            },
+          } : {}),
+        }),
       });
       if (!response.ok || !response.body) {
         if (response.status === 429) toast.error(t('ayurvedaChat.rateLimit', 'Rate limit exceeded.'));
@@ -839,6 +866,14 @@ ${m.content}`
                 color: showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
               ◈ Lexicon
             </button>
+
+          {/* Admin student selector — shown inline below tabs */}
+          </div>
+          {isAdmin && (
+            <div style={{ padding: '8px 12px 0', flexShrink: 0 }}>
+              <StudentSelector onStudentChange={setActiveStudent} />
+            </div>
+          )}
             <button type="button" onClick={() => { setShowHistory(true); setShowLexicon(false); }}
               style={{ flex:1, padding:'10px 0', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                 background:'none', border:'none', borderBottom: showHistory ? '2px solid #D4AF37' : '2px solid transparent',

@@ -702,7 +702,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages = [], profile = {}, dosha = null, language = "en", jyotishProfile = null } = body;
+    const { messages = [], profile = {}, dosha = null, language = "en", jyotishProfile = null, studentContext = null } = body;
 
     const isFirstMessage = !messages || (messages as Array<{role:string;content:string}>).filter(m => m.role === "user").length === 0;
 
@@ -806,6 +806,11 @@ serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile, alternateNames);
 
+    // If admin is reading for a student, prepend a clear student context block
+    const finalSystemPrompt = studentContext && typeof studentContext === 'object'
+      ? `${systemPrompt}\n\n━━━ STUDENT SEEKER — ADMIN CONSULTATION ━━━\nThe practitioner (admin) is consulting on behalf of a STUDENT. Read THIS student's chart — not the admin's.\nStudent Name: ${studentContext.name || 'Unknown'}\nBirth Date: ${studentContext.birth_date || 'not provided'}\nBirth Time: ${studentContext.birth_time || 'not provided'}\nBirth Place: ${studentContext.birth_place || 'not provided'}\n${studentContext.notes ? `Practitioner Notes: ${studentContext.notes}` : ''}\nDeriving Vata/Pitta/Kapha from birth chart and any provided notes. Apply Jyotish-Dosha mapping to their chart. Address this student directly in your response using their name.`
+      : systemPrompt;
+
     // FULL HISTORY — Agastya remembers everything
     // The [CURRENT MESSAGE] marker in the last message tells Gemini what to respond to NOW
     const history = (messages as Array<{ role: string; content: string; created_at?: string }>)
@@ -845,7 +850,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: finalSystemPrompt },
           ...finalMessages,
         ],
         temperature: 2.0,
