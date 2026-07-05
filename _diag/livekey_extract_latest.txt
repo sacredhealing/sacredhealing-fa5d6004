@@ -29,21 +29,26 @@ Row count check (Prefer: count=exact):
 content-range: */0
 === TEST BRIDGE FOR READS (bypasses RLS via service_role) ===
 === TEST BRIDGE PATCH (reproduce Close error) ===
-Testing PATCH on open trade id: 66d84720-4554-4736-8ea1-63c1dc63f671
+Testing PATCH on open trade id: a613fbb1-75d7-4f8c-b20f-4e10600ff788
 Internal Server Error HTTP_500
 === GET still works? ===
 [{"id":"5a993d24-8f17-4c1c-b85c-e10857f89498","status":"lost"}, 
  {"id":"71479657-b839-4675-b088-f84770de8334","status":"lost"}] HTTP_200
 === POST still works? (test row on separate table) ===
-[{"id":"368aa0d6-1fdb-4c98-9f32-a94b2bbcc1a5","user_id":null,"bot_type":"sqi-sovereign","strategy":null,"action":null,"entry_price":1,"exit_price":null,"size_usd":0.01,"pnl_usd":0,"pnl_pct":0,"status":"open","created_at":"2026-07-05T18:21:20.490682+00:00","closed_at":null,"seed_balance":null,"session_id":null,"market_question":null,"market_id":null,"side":null,"price":null,"ai_probability":null,"edge_pct":null,"reasoning":null,"settled_at":null,"asset":"TEST","signal":"UP","delta":"+0.0000%","pnl_usdc":0.0000,"mode":"PAPER","order_id":null}] HTTP_201
+[{"id":"57116066-b81c-4e07-87ce-0d0f6f6a8895","user_id":null,"bot_type":"sqi-sovereign","strategy":null,"action":null,"entry_price":1,"exit_price":null,"size_usd":0.01,"pnl_usd":0,"pnl_pct":0,"status":"open","created_at":"2026-07-05T18:22:42.084961+00:00","closed_at":null,"seed_balance":null,"session_id":null,"market_question":null,"market_id":null,"side":null,"price":null,"ai_probability":null,"edge_pct":null,"reasoning":null,"settled_at":null,"asset":"TEST","signal":"UP","delta":"+0.0000%","pnl_usdc":0.0000,"mode":"PAPER","order_id":null}] HTTP_201
 === PATCH with explicit Prefer header ===
 Internal Server Error HTTP_500
 === PATCH with only one field, no Content-Type ===
 Internal Server Error HTTP_500
 === DOES DELETE WORK? (test on the throwaway TEST row) ===
-Deleting test row id: 368aa0d6-1fdb-4c98-9f32-a94b2bbcc1a5
+Deleting test row id: 57116066-b81c-4e07-87ce-0d0f6f6a8895
 Internal Server Error HTTP_500
-=== TEST binance-balance FUNCTION AUTH ===
+=== MOST RECENT delta-arb TRADES (verify new insert-only close design) ===
+[{"asset":"ADA","signal":"DOWN","status":"lost","pnl_usdc":-0.0072,"entry_price":0.1899,"exit_price":0.1902,"created_at":"2026-07-05T18:17:02.023636+00:00"}, 
+ {"asset":"TEST","signal":"UP","status":"open","pnl_usdc":0.0000,"entry_price":1,"exit_price":null,"created_at":"2026-07-05T17:58:07.479019+00:00"}, 
+ {"asset":"TEST","signal":"UP","status":"open","pnl_usdc":0.0000,"entry_price":1,"exit_price":null,"created_at":"2026-07-05T17:55:09.094893+00:00"}, 
+ {"asset":"DOGE","signal":"DOWN","status":"open","pnl_usdc":0.0000,"entry_price":0.07714,"exit_price":null,"created_at":"2026-07-05T17:44:20.105676+00:00"}, 
+ {"asset":"ETH","signal":"DOWN","status":"open","pnl_usdc":0.0000,"entry_price":1776.53,"exit_price":null,"created_at":"2026-07-05T17:44:05.117778+00:00"}]=== TEST binance-balance FUNCTION AUTH ===
 -- with legacy anon key --
 {"ok":false,"error":"Binance 451: {\n  \"code\": 0,\n  \"msg\": \"Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received t","btcPrice":0} HTTP_200
 -- with extracted new key --
