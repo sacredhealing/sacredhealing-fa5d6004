@@ -40,6 +40,14 @@ const MODE          = (process.env.BOT_MODE || 'PAPER').toUpperCase();
 const PORT          = parseInt(process.env.PORT || '8081');
 const RISK_PCT      = parseFloat(process.env.RISK_PCT || '0.02');
 const DELTA_THRESH  = parseFloat(process.env.DELTA_THRESHOLD || '0.0005');
+// Data-driven tune from 987 PAPER trades (2026-07-04/05, ~18h window):
+// DOWN signals: 46.0% WR, +0.2108 total PnL. UP signals: 41.0% WR, -0.0860 total PnL.
+// Best delta bucket was 0.20-0.30% (48.7% WR, 3x the avg return of the 0.15-0.20% bucket).
+// UNI/AVAX/DOT/BTC were net losers across the sample; ADA/BNB/SOL/ETH were net winners.
+// CAVEAT: 18h of data from one market regime — this is a tune, not a proven fix. Treat the
+// next run as an out-of-sample validation, not a confirmation.
+const UP_THRESH_MULT = parseFloat(process.env.UP_THRESH_MULTIPLIER || '1.6'); // require stronger moves before trading UP
+const EXCLUDED_ASSETS = (process.env.EXCLUDED_ASSETS || 'UNI,AVAX,DOT,BTC').split(',').map(s=>s.trim()).filter(Boolean);
 const SCAN_MS       = parseInt(process.env.SCAN_INTERVAL_MS || '5000');
 
 const SYMBOLS = ['BTCUSDC','ETHUSDC','SOLUSDC','BNBUSDC','XRPUSDC','DOGEUSDC','ADAUSDC','AVAXUSDC','DOTUSDC','LINKUSDC','UNIUSDC','MATICUSDC'];
@@ -200,6 +208,7 @@ async function scan() {
   for (const sym of SYMBOLS) {
     try {
       const asset = ASSETS[sym];
+      if (EXCLUDED_ASSETS.includes(asset)) continue;
       const d1m   = getDelta(sym, 60 * 1000);
       const d3m   = getDelta(sym, 3 * 60 * 1000);
 
@@ -211,9 +220,10 @@ async function scan() {
       const dir     = best > 0 ? 'UP' : 'DOWN';
       const key     = sym + '_' + dir;
       const now     = Date.now();
+      const effectiveThresh = dir === 'UP' ? DELTA_THRESH * UP_THRESH_MULT : DELTA_THRESH;
 
       if (lastSignal[key] && now - lastSignal[key] < 90000) continue;
-      if (absD < DELTA_THRESH) continue;
+      if (absD < effectiveThresh) continue;
 
       if (openTrades[sym] && openTrades[sym].direction !== dir) await closeTrade(sym, asset);
       if (!openTrades[sym]) {
