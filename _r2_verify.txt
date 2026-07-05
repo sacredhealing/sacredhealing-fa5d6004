@@ -1,0 +1,22 @@
+=== 1. setup_r2_cors ===
+{"success":false,"error":"CORS setup failed: 403 <?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>"}
+HTTP_STATUS:500
+
+=== 2. presign_upload ===
+{"success":true,"uploadUrl":"https://79dae6f785e6758a441aa69dd3f7b2af.r2.cloudflarestorage.com/siddhaquantumnexus/pipeline/1783268102774-um9awjq4tpb.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=dcda22d6e98ddfceae2c7503c4a3579c%2F20260705%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260705T161502Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=16be0395eaf6f003674abb44598677ea3b2638336e1a7438e1990105f0c33af8","publicUrl":"https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev/pipeline/1783268102774-um9awjq4tpb.txt"}
+
+=== 3. PUT test file directly to presigned URL ===
+
+HTTP_STATUS:200
+
+=== 4. Read back from public URL ===
+sqi-r2-verify-1783268102
+
+HTTP_STATUS:200
+
+=== 5. trigger_worker with fake video (confirms Hetzner path still works) ===
+{"success":true,"jobId":"mr7zsbe2smv6vl"}
+
+=== 6. worker_status (jobId=mr7zsbe2smv6vl) ===
+{"success":true,"status":"error","log":["Downloading source video from R2…","✗ Job failed: Could not download source video (HTTP 404)"],"clips":[]}
+HTTP_STATUS:200
