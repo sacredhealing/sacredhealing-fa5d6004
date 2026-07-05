@@ -518,6 +518,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
+  const [studentEphemeris, setStudentEphemeris] = useState<any>(null);
   const [jyotishProfile, setJyotishProfile] = useState<{
     lagna: string | null; moon_sign: string | null; current_dasha: string | null;
     birth_date: string | null; birth_time: string | null; birth_place: string | null;
@@ -552,6 +553,19 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       birth_time:  activeStudent.birth_time  ?? null,
       birth_place: activeStudent.birth_place ?? null,
     });
+
+    // Also fetch precise ephemeris for this student
+    if (!activeStudent.birth_date) return;
+    (supabase as any).functions.invoke('jyotish-ephemeris', {
+      body: {
+        userId: `student_${activeStudent.id}`,
+        birthDate: activeStudent.birth_date,
+        birthTime: activeStudent.birth_time || '12:00',
+        birthPlace: activeStudent.birth_place || '',
+      },
+    }).then(({ data }: { data: any }) => {
+      if (data?.dashaData) setStudentEphemeris(data);
+    }).catch(() => {});
   }, [activeStudent]);
 
   // Inject styles
@@ -669,6 +683,15 @@ ${m.content}`
               birth_time:  activeStudent.birth_time,
               birth_place: activeStudent.birth_place,
               notes:       activeStudent.notes,
+              // Precise ephemeris — exact dasha dates from Swiss Ephemeris
+              lagna:           studentEphemeris?.ascendantSign  || null,
+              moon_nakshatra:  studentEphemeris?.moonNakshatra  || null,
+              mahadasha:       studentEphemeris?.dashaData?.activeMaha?.planet || null,
+              mahadasha_start: studentEphemeris?.dashaData?.activeMaha?.start  || null,
+              mahadasha_end:   studentEphemeris?.dashaData?.activeMaha?.end    || null,
+              antardasha:      studentEphemeris?.dashaData?.activeAntar?.planet || null,
+              antardasha_start:studentEphemeris?.dashaData?.activeAntar?.start  || null,
+              antardasha_end:  studentEphemeris?.dashaData?.activeAntar?.end    || null,
             },
           } : {}),
         }),
