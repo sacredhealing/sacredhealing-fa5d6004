@@ -393,7 +393,7 @@ async function recordTrade(signal, strategy) {
       const txHash  = order?.orderId || order?.id || `live-${Date.now()}`;
       const endDate = await fetchEndDate(signal.marketId);
       await dbInsert('polymarket_trades', {
-        user_id: 'bd0b21c9-577a-450b-bb1e-21c9d0423f17',
+        user_id: 'bd0b21c9-577a-450b-bb1e-196e02c4388c',
         market_id: signal.marketId || 'unknown',
         market_question: signal.reason || '',
         outcome: signal.outcome,
@@ -421,7 +421,7 @@ async function recordTrade(signal, strategy) {
     const endDate = await fetchEndDate(signal.marketId);
 
     const ok = await dbInsert('polymarket_trades', {
-      user_id: 'bd0b21c9-577a-450b-bb1e-21c9d0423f17',
+      user_id: 'bd0b21c9-577a-450b-bb1e-196e02c4388c',
       market_id: signal.marketId || 'unknown',
       market_question: signal.reason || '',
       outcome: signal.outcome,
@@ -747,7 +747,7 @@ async function resolveOpenTrades() {
         if (trade.is_paper && tradeWon) {
           const winnings = shares * exitPrice;
           // Check if this is a master trade or member trade
-          const isMasterTrade = trade.user_id === 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+          const isMasterTrade = trade.user_id === 'bd0b21c9-577a-450b-bb1e-196e02c4388c';
           if (isMasterTrade) {
             balance = Math.max(0, balance + winnings);
           }
