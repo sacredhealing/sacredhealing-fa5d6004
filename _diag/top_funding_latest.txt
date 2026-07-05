@@ -1,0 +1,36 @@
+=== ALL CURRENT FUNDING RATES (sorted, top/bottom 15) ===
+Total perpetual symbols: 823
+
+--- TOP 15 HIGHEST current funding rates ---
+KORUUSDT          0.4384%  (annualized ~480.1%)
+MVLLUSDT          0.1496%  (annualized ~163.8%)
+CRCLUSDT          0.1351%  (annualized ~148.0%)
+MSTRUSDT          0.0865%  (annualized ~94.7%)
+AKEUSDT           0.0738%  (annualized ~80.8%)
+BLUAIUSDT         0.0629%  (annualized ~68.9%)
+BTWUSDT           0.0596%  (annualized ~65.2%)
+BROCCOLIF3BUSDT   0.0587%  (annualized ~64.2%)
+4USDT             0.0556%  (annualized ~60.9%)
+BMNRUSDT          0.0492%  (annualized ~53.8%)
+AIOTUSDT          0.0469%  (annualized ~51.3%)
+ESPORTSUSDT       0.0412%  (annualized ~45.1%)
+TSMUSDT           0.0381%  (annualized ~41.7%)
+COINUSDT          0.0379%  (annualized ~41.5%)
+CAPUSDT           0.0351%  (annualized ~38.4%)
+
+--- TOP 15 LOWEST (most negative) current funding rates ---
+BARDUSDT         -0.0511%  (annualized ~-56.0%)
+VANRYUSDT        -0.0565%  (annualized ~-61.9%)
+EPICUSDT         -0.0571%  (annualized ~-62.6%)
+MIRAUSDT         -0.0620%  (annualized ~-67.9%)
+BASUSDT          -0.0664%  (annualized ~-72.7%)
+DATAIPUSDC       -0.0699%  (annualized ~-76.5%)
+REUSDT           -0.0760%  (annualized ~-83.2%)
+LABUSDT          -0.0761%  (annualized ~-83.3%)
+AIGENSYNUSDT     -0.0777%  (annualized ~-85.1%)
+GWEIUSDT         -0.0830%  (annualized ~-90.8%)
+NEWTUSDT         -0.1600%  (annualized ~-175.2%)
+ALICEUSDT        -0.1832%  (annualized ~-200.6%)
+RPLUSDT          -0.1876%  (annualized ~-205.4%)
+ONGUSDT          -0.3457%  (annualized ~-378.5%)
+HOTUSDT          -0.5428%  (annualized ~-594.3%)
