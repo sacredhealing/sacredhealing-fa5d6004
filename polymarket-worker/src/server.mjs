@@ -340,7 +340,10 @@ async function fetchMarketByToken(tokenId) {
     if (!r.ok) return null;
     const arr = await r.json();
     const m = Array.isArray(arr) ? arr[0] : null;
-    const result = m ? { id: m.id, question: m.question || '' } : null;
+    const result = m ? {
+      id: m.id, question: m.question || '',
+      category: String(m.category || (Array.isArray(m.tags) ? (m.tags[0]?.label ?? m.tags[0] ?? '') : '') || '').toLowerCase(),
+    } : null;
     if (result) marketByTokenCache.set(tokenId, result);
     return result;
   } catch { return null; }
@@ -379,6 +382,27 @@ async function executeLiveOrder(signal) {
   } catch (e) { logErr('LIVE', e?.message); return null; }
 }
 
+// ─── Realistic trading fee ────────────────────────────────────────────────────
+// Per Polymarket's official fee schedule (effective March 30 2026): taker fees
+// are category-specific and scale with a symmetric 4*p*(1-p) curve that peaks
+// at the 50c price point and drops toward zero near 1c/99c. No fee is charged
+// on winning redemptions (winning shares always redeem at $1.00). Unknown
+// categories default to the general 1.00% peak rate (conservative middle
+// estimate) rather than assuming the cheapest tier.
+const CATEGORY_PEAK_FEE = {
+  geopolitics: 0, 'world events': 0,
+  sports: 0.0075,
+  politics: 0.01, finance: 0.01, tech: 0.01, mentions: 0.01,
+  economics: 0.0125, culture: 0.0125, weather: 0.0125, other: 0.0125,
+  crypto: 0.018,
+};
+function calcRealisticFee(sizeUsdc, price, category) {
+  const peak = CATEGORY_PEAK_FEE[String(category || '').toLowerCase()] ?? 0.01;
+  const p = Math.min(0.999, Math.max(0.001, safeFloat(price, 0.5)));
+  const shapeFactor = 4 * p * (1 - p); // 1.0 at p=0.5, 0 at p=0 or 1
+  return sizeUsdc * peak * shapeFactor;
+}
+
 // ─── Record trade ────────────────────────────────────────────────────────────
 async function recordTrade(signal, strategy) {
   try {
@@ -386,7 +410,7 @@ async function recordTrade(signal, strategy) {
     if (!signal || typeof signal !== 'object') { warn('TRADE', `${strategy} blocked: invalid signal object`); return false; }
 
     const size = tradeSize();
-    const fee  = size * 0.0005;
+    const fee  = calcRealisticFee(size, signal.currentPrice, signal.category);
 
     if (!PAPER_MODE && liveEnabled) {
       const order   = await executeLiveOrder(signal);
@@ -473,6 +497,7 @@ async function fetchMarkets() {
         liquidity: safeFloat(m.liquidityNum ?? m.liquidity),
         volume:    safeFloat(m.volumeNum ?? m.volume),
         closed:    !!m.closed,
+        category: String(m.category || (Array.isArray(m.tags) ? (m.tags[0]?.label ?? m.tags[0] ?? '') : '') || '').toLowerCase(),
         outcomes: (Array.isArray(names) ? names : ['Yes', 'No']).map((name, i) => ({
           name: String(name),
           price:   safeFloat(Array.isArray(prices)   ? prices[i]   : 0.5, 0.5),
@@ -515,6 +540,7 @@ function latencyArb(markets) {
         confidence: Math.min(90, 60 + abs * 300),
         reason: `[LATENCY] ${m.question} | ${(move * 100).toFixed(1)}% move`,
         currentPrice: getLivePrice(outcome.tokenId, outcome.price),
+        category: m.category,
       });
     }
     diagStats.latDebug = `noOutcome=${skippedNoOutcome} noHistory=${skippedHistory} evaluated=${evaluated} nanCount=${nanCount}`;
@@ -556,6 +582,7 @@ function volScalper(markets) {
         confidence: Math.min(85, 50 + vol * 200),
         reason: `[SCALP] ${m.question} | vol=${(vol * 100).toFixed(1)}%`,
         currentPrice,
+        category: m.category,
       });
     }
   } catch (e) { logErr('SCALPER', e?.message); }
@@ -608,6 +635,7 @@ async function startWhaleMirror(_provider) {
             tokenId: String(t.asset),
             reason: `[WHALE] ${whaleAddr.slice(0, 8)} | ${(t.title || '').slice(0, 70)}`,
             currentPrice: Math.min(0.99, Math.max(0.01, safeFloat(t.price, 0.5))),
+            category: market?.category,
           }, 'whale_mirror');
         }
       } catch (e) { logErr('WHALE', `${whaleAddr.slice(0,8)} check failed: ${e?.message}`); }
@@ -639,6 +667,8 @@ async function runOneScan() {
       const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
+      const sampleCats = markets.slice(0, 5).map(m => `${m.category || 'EMPTY'}`).join(', ');
+      log('DIAG', `sample categories=[${sampleCats}] (EMPTY means category field-name guess failed, defaulting to 1.00% fee)`);
       log('DIAG', `WS connected=${wsConnected} subscribed=${wsSubscribedIds.size} livePrices=${livePrices.size}`);
       log('DIAG', `maxMove(since last)=${(diagStats.maxMove*100).toFixed(2)}% [${diagStats.maxMoveQ}] | need 1.50% | maxVol=${(diagStats.maxVol*100).toFixed(2)}% [${diagStats.maxVolQ}] | need 2.50%`);
       log('DIAG', `latArb breakdown (last scan): ${diagStats.latDebug} | ${diagStats.samplePrice}`);
