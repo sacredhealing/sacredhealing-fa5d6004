@@ -20,7 +20,7 @@ import {
 } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
 import { supabase } from '@/integrations/supabase/client';
-import { getActiveStudentId } from '@/lib/codex/students';
+import { getActiveStudentId, getStudent } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
 
@@ -277,7 +277,24 @@ export default function AdminQuantumApothecary2045() {
     setInput('');
     setIsTyping(true);
     try {
-      const response = await chatWithAlchemist([...messages, userMsg], { apiKey: effectiveKey });
+      // Build student birth context if a student is active
+      let extraSystemContext: string | undefined;
+      const activeStudentId = getActiveStudentId();
+      if (activeStudentId) {
+        try {
+          const student = await getStudent(activeStudentId);
+          if (student) {
+            const parts: string[] = [`SEEKER: ${student.name}`];
+            if (student.birth_date) parts.push(`Birth Date: ${student.birth_date}`);
+            if (student.birth_time) parts.push(`Birth Time: ${student.birth_time}`);
+            if (student.birth_place) parts.push(`Birth Place: ${student.birth_place}`);
+            if (student.notes) parts.push(`Practitioner Notes: ${student.notes}`);
+            parts.push('Use these birth details for all Jyotish, Dasha, and planetary readings. This seeker is NOT the admin — read THEIR chart, not the admin\'s.');
+            extraSystemContext = parts.join('\n');
+          }
+        } catch { /* non-blocking — fall through without context */ }
+      }
+      const response = await chatWithAlchemist([...messages, userMsg], { apiKey: effectiveKey, extraSystemContext });
       setMessages(prev => [...prev, { role: 'model', text: response }]);
       if (response) {
         const lower = response.toLowerCase();
@@ -303,7 +320,6 @@ export default function AdminQuantumApothecary2045() {
         }
       }
       if (user?.id && response?.trim()) {
-        const activeStudentId = getActiveStudentId();
         void curateTransmission({
           source_type: 'apothecary', raw_content: response, user_prompt: userMsg.text,
           ...(activeStudentId ? { student_id: activeStudentId } : {}),
