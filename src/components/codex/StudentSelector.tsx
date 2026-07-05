@@ -622,7 +622,7 @@ export function StudentSelector() {
           }}
         >
           {PanelHeader()}
-          <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
             {view === "list" ? ListContent() : CreateContent()}
           </div>
           {activeStudent && view === "list" && (
