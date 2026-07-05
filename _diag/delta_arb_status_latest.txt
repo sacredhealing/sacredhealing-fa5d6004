@@ -2,11 +2,11 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 22h    │ 25   │ online    │ 0%       │ 58.8mb   │ root     │ disabled │
-│ 15 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2872152  │ 48m    │ 0    │ online    │ 0%       │ 64.4mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 22h    │ 25   │ online    │ 0%       │ 59.4mb   │ root     │ disabled │
+│ 15 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2872152  │ 65m    │ 0    │ online    │ 0%       │ 64.1mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 23h    │ 0    │ online    │ 0%       │ 91.7mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.5mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 23h    │ 0    │ online    │ 0%       │ 92.1mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.7mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -93,23 +93,6 @@
 15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-15|delta-a | [OPEN] BNB UP | delta=+0.1334% | $2.00 | entry=$585.4100
-15|delta-a | [OPEN] Saved to DB | id=7b30f81d-fd40-4d9f-8bf6-9a8c9766b00d | total trades=1131
-15|delta-a | [OPEN] ETH UP | delta=+0.1288% | $2.00 | entry=$1772.1900
-15|delta-a | [OPEN] Saved to DB | id=03ac4720-ea12-4c17-8e9d-c76ad707e3a5 | total trades=1132
-15|delta-a | [AUTO] Closing stale XRP
-15|delta-a | [AUTO] Closing stale AVAX
-15|delta-a | [ALIVE] 2026-07-05T16:37:55.811Z | trades:1132 | open:[LINK,SOL,DOGE,ADA,UNI,BNB,ETH] | ticks:BTC:283 ETH:248 SOL:76...
-15|delta-a | [OPEN] SOL DOWN | delta=-0.1233% | $2.00 | entry=$81.0300
-15|delta-a | [OPEN] Saved to DB | id=471bbe97-6498-400a-9aba-fb0e46a94d8a | total trades=1133
-15|delta-a | [OPEN] ADA DOWN | delta=-0.1581% | $2.00 | entry=$0.1895
-15|delta-a | [OPEN] Saved to DB | id=058b9e58-6add-464e-b8ef-beb2aab62850 | total trades=1134
-15|delta-a | [OPEN] DOGE DOWN | delta=-0.1298% | $2.00 | entry=$0.0769
-15|delta-a | [OPEN] Saved to DB | id=2a5177c3-7f6c-4f96-a72c-ab106e691c58 | total trades=1135
-15|delta-a | [OPEN] BNB DOWN | delta=-0.1656% | $2.00 | entry=$584.8800
-15|delta-a | [OPEN] Saved to DB | id=9eadd26f-4272-4af5-bdab-2e02af880f74 | total trades=1136
-15|delta-a | [OPEN] ETH DOWN | delta=-0.1264% | $2.00 | entry=$1770.0200
-15|delta-a | [OPEN] Saved to DB | id=c92fbdd1-c7a4-44d5-bf36-b2a57cb69e11 | total trades=1137
 15|delta-a | [OPEN] ADA UP | delta=+0.1584% | $2.00 | entry=$0.1897
 15|delta-a | [OPEN] Saved to DB | id=de4bf829-238a-48b1-83ed-06a4844d053f | total trades=1138
 15|delta-a | [ALIVE] 2026-07-05T16:42:55.811Z | trades:1138 | open:[LINK,UNI,SOL,DOGE,BNB,ETH,ADA] | ticks:BTC:230 ETH:203 SOL:60...
@@ -173,6 +156,23 @@
 15|delta-a | [OPEN] Saved to DB | id=00392369-e539-4154-a871-eeac099528ca | total trades=13
 15|delta-a | [ALIVE] 2026-07-05T17:29:49.870Z | trades:13 | open:[ETH,SOL,ADA,LINK,DOGE,XRP,BNB] | ticks:BTC:351 ETH:789 SOL:97...
 15|delta-a | [ALIVE] 2026-07-05T17:34:49.870Z | trades:13 | open:[ETH,SOL,ADA,LINK,DOGE,XRP,BNB] | ticks:BTC:399 ETH:767 SOL:81...
+15|delta-a | [ALIVE] 2026-07-05T17:39:49.871Z | trades:13 | open:[ETH,SOL,ADA,LINK,DOGE,XRP,BNB] | ticks:BTC:273 ETH:1020 SOL:64...
+15|delta-a | [AUTO] Closing stale ETH
+15|delta-a | [AUTO] Closing stale SOL
+15|delta-a | [AUTO] Closing stale ADA
+15|delta-a | [AUTO] Closing stale LINK
+15|delta-a | [AUTO] Closing stale DOGE
+15|delta-a | [AUTO] Closing stale XRP
+15|delta-a | [OPEN] ADA DOWN | delta=-0.2100% | $2.00 | entry=$0.1901
+15|delta-a | [OPEN] Saved to DB | id=d44510b7-9e69-4c52-96f2-39111d911684 | total trades=14
+15|delta-a | [AUTO] Closing stale BNB
+15|delta-a | [OPEN] ETH DOWN | delta=-0.2190% | $2.00 | entry=$1776.5300
+15|delta-a | [OPEN] Saved to DB | id=ffd8f7e8-554b-4feb-9936-4791e30b37e6 | total trades=15
+15|delta-a | [OPEN] DOGE DOWN | delta=-0.2070% | $2.00 | entry=$0.0771
+15|delta-a | [OPEN] Saved to DB | id=2693dbe9-20ed-42e2-9975-8365fc130547 | total trades=16
+15|delta-a | [ALIVE] 2026-07-05T17:44:49.872Z | trades:16 | open:[ADA,ETH,DOGE] | ticks:BTC:352 ETH:616 SOL:87...
+15|delta-a | [ALIVE] 2026-07-05T17:49:49.873Z | trades:16 | open:[ADA,ETH,DOGE] | ticks:BTC:261 ETH:528 SOL:82...
+15|delta-a | [ALIVE] 2026-07-05T17:54:49.873Z | trades:16 | open:[ADA,ETH,DOGE] | ticks:BTC:229 ETH:319 SOL:52...
 
 === HEALTH ===
 {
@@ -181,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.200%",
-  "trades": 13,
-  "open": 7,
-  "uptime": "48m 20s",
+  "trades": 16,
+  "open": 3,
+  "uptime": "65m 12s",
   "ticks": {
-    "BTC": 307,
-    "ETH": 1160,
-    "SOL": 77,
-    "BNB": 31,
-    "XRP": 64,
-    "DOGE": 44,
-    "ADA": 26,
-    "AVAX": 34,
-    "DOT": 9,
-    "LINK": 9,
-    "UNI": 6,
+    "BTC": 234,
+    "ETH": 345,
+    "SOL": 59,
+    "BNB": 55,
+    "XRP": 17,
+    "DOGE": 31,
+    "ADA": 32,
+    "AVAX": 12,
+    "DOT": 2,
+    "LINK": 7,
+    "UNI": 7,
     "MATIC": 0
   },
-  "ts": "2026-07-05T17:38:09.872Z"
+  "ts": "2026-07-05T17:55:02.788Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
