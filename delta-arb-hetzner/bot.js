@@ -144,6 +144,12 @@ async function binanceOrder(symbol, side, quoteQty) {
 }
 
 // ── OPEN TRADE ───────────────────────────────────────────
+// NOTE: no DB write here anymore. bot_trades has a broken trigger that 500s on
+// any UPDATE or DELETE (confirmed — INSERT/SELECT work fine, mutation doesn't).
+// Until that's fixed at the database level, we track opens purely in memory and
+// write ONE complete INSERT when the trade closes. Tradeoff: in-flight "open"
+// trades won't show in the DB/frontend until they resolve — but PnL/win-rate
+// data will finally be honest and complete instead of silently vanishing.
 async function openTrade(sym, asset, signal, deltaStr) {
   const now          = Date.now();
   const currentPrice = (prices[sym]||[]).slice(-1)[0]?.price;
@@ -151,7 +157,7 @@ async function openTrade(sym, asset, signal, deltaStr) {
 
   const balance   = await getLiveBalance();
   const tradeSize = Math.max(0.10, Math.round(balance * RISK_PCT * 100) / 100);
-  
+
   console.log('[OPEN] ' + asset + ' ' + signal + ' | delta=' + deltaStr + ' | $' + tradeSize.toFixed(2) + ' | entry=$' + currentPrice.toFixed(4));
 
   let orderId = null;
@@ -165,21 +171,9 @@ async function openTrade(sym, asset, signal, deltaStr) {
     }
   }
 
-  try {
-    const rows = await bridgeRequest('POST', 'bot_trades', {
-      asset, signal, delta: deltaStr,
-      size_usd: tradeSize, entry_price: currentPrice,
-      status: 'open', pnl_usdc: 0, mode: MODE, order_id: orderId,
-    });
-    const row = Array.isArray(rows) ? rows[0] : rows;
-    if (!row || !row.id) { console.error('[DB] Insert returned no row:', JSON.stringify(rows)); return; }
-
-    openTrades[sym] = { id: row.id, entry: currentPrice, direction: signal, ts: now, size: tradeSize };
-    tradeCount++;
-    console.log('[OPEN] Saved to DB | id=' + row.id + ' | total trades=' + tradeCount);
-  } catch(e) {
-    console.error('[DB] Exception:', e.message);
-  }
+  openTrades[sym] = { entry: currentPrice, direction: signal, ts: now, size: tradeSize, deltaStr, orderId };
+  tradeCount++;
+  console.log('[OPEN] Tracking in-memory | total opened=' + tradeCount);
 }
 
 // ── CLOSE TRADE ──────────────────────────────────────────
@@ -199,10 +193,15 @@ async function closeTrade(sym, asset) {
   const status = pnl >= 0 ? 'won' : 'lost';
 
   try {
-    await bridgeRequest('PATCH', 'bot_trades', { status, pnl_usdc: Math.round(pnl*10000)/10000 }, 'id=eq.' + trade.id);
-    console.log('[CLOSE] ' + asset + ' ' + status.toUpperCase() + ' | Gross=' + (grossPnl>=0?'+':'') + '$' + grossPnl.toFixed(4) + ' | Fee=-$' + fee.toFixed(4) + ' | Net=' + (pnl>=0?'+':'') + '$' + pnl.toFixed(4));
+    const rows = await bridgeRequest('POST', 'bot_trades', {
+      asset, signal: trade.direction, delta: trade.deltaStr,
+      size_usd: trade.size, entry_price: trade.entry, exit_price: currentPrice,
+      status, pnl_usdc: Math.round(pnl*10000)/10000, mode: MODE, order_id: trade.orderId,
+    });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    console.log('[CLOSE] ' + asset + ' ' + status.toUpperCase() + ' | Gross=' + (grossPnl>=0?'+':'') + '$' + grossPnl.toFixed(4) + ' | Fee=-$' + fee.toFixed(4) + ' | Net=' + (pnl>=0?'+':'') + '$' + pnl.toFixed(4) + (row&&row.id ? ' | id='+row.id : ''));
   } catch(e) {
-    console.error('[DB] Close error:', e.message);
+    console.error('[DB] Close-insert error:', e.message);
   }
   delete openTrades[sym];
 }
