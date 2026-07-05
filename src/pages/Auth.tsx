@@ -239,20 +239,10 @@ const Auth: React.FC = () => {
             });
           }
 
-          // Send welcome email (language chosen by edge function from IP geolocation; client language used as fallback)
-          try {
-            const { data: welcomeData, error: welcomeErr } = await supabase.functions.invoke('send-welcome-email', {
-              body: { email, name, language: i18n.language },
-            });
-            if (welcomeErr) {
-              console.error('[Auth] Welcome email invoke error:', welcomeErr);
-            }
-            if (welcomeData?.error) {
-              console.error('[Auth] Welcome email returned error:', welcomeData.error);
-            }
-          } catch (welcomeErr) {
-            console.error('[Auth] Welcome email exception:', welcomeErr);
-          }
+          // Welcome email is now sent automatically server-side via a database
+          // trigger on auth.users insert (see migration 20260705120000), so it no
+          // longer depends on this client call succeeding. See public.email_send_log
+          // for delivery status of every signup.
 
           navigate('/dashboard');
         }
