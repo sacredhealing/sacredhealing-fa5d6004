@@ -2,7 +2,7 @@
 index.html bytes: 6040
 JS assets found:
 /__l5e/events.js
-/assets/index-DuC1r4cv.js
+/assets/index-CFnkiauI.js
 /~flock.js
 --- fetching https://sacredhealing.lovable.app/__l5e/events.js ---
 bytes: 44148
@@ -10,7 +10,7 @@ sb_publishable matches:
 legacy eyJ matches near supabase (first 3):
 ssygukfdbtehvtndandn mentioned: 0
 0
---- fetching https://sacredhealing.lovable.app/assets/index-DuC1r4cv.js ---
+--- fetching https://sacredhealing.lovable.app/assets/index-CFnkiauI.js ---
 bytes: 1420862
 sb_publishable matches:
 sb_publishable_i3eZmDd0WxQeoHbmyW9XUA_jE1q9QUd
@@ -29,13 +29,13 @@ Row count check (Prefer: count=exact):
 content-range: */0
 === TEST BRIDGE FOR READS (bypasses RLS via service_role) ===
 === TEST BRIDGE PATCH (reproduce Close error) ===
-Testing PATCH on open trade id: 076cd83c-cd1d-419f-8a01-f3efa6686054
+Testing PATCH on open trade id: f6dad18a-f31b-4e5a-99bf-9894849d93d9
 Internal Server Error HTTP_500
 === GET still works? ===
 [{"id":"5a993d24-8f17-4c1c-b85c-e10857f89498","status":"lost"}, 
  {"id":"71479657-b839-4675-b088-f84770de8334","status":"lost"}] HTTP_200
 === POST still works? (test row on separate table) ===
-[{"id":"5b19af75-0e3d-43db-8992-babb1c21ffdc","user_id":null,"bot_type":"sqi-sovereign","strategy":null,"action":null,"entry_price":1,"exit_price":null,"size_usd":0.01,"pnl_usd":0,"pnl_pct":0,"status":"open","created_at":"2026-07-05T16:57:08.450653+00:00","closed_at":null,"seed_balance":null,"session_id":null,"market_question":null,"market_id":null,"side":null,"price":null,"ai_probability":null,"edge_pct":null,"reasoning":null,"settled_at":null,"asset":"TEST","signal":"UP","delta":"+0.0000%","pnl_usdc":0.0000,"mode":"PAPER","order_id":null}] HTTP_201
+[{"id":"fb3eaec7-47d7-4b7a-bff2-ed56a81bf43f","user_id":null,"bot_type":"sqi-sovereign","strategy":null,"action":null,"entry_price":1,"exit_price":null,"size_usd":0.01,"pnl_usd":0,"pnl_pct":0,"status":"open","created_at":"2026-07-05T17:13:42.477537+00:00","closed_at":null,"seed_balance":null,"session_id":null,"market_question":null,"market_id":null,"side":null,"price":null,"ai_probability":null,"edge_pct":null,"reasoning":null,"settled_at":null,"asset":"TEST","signal":"UP","delta":"+0.0000%","pnl_usdc":0.0000,"mode":"PAPER","order_id":null}] HTTP_201
 === PATCH with explicit Prefer header ===
 Internal Server Error HTTP_500
 === PATCH with only one field, no Content-Type ===
