@@ -1,0 +1,8 @@
+=== Does AKEUSDT have a SPOT market? ===
+NO SPOT MARKET FOUND
+=== SPOT 24h volume ===
+{"code":-1121,"msg":"Invalid symbol."}
+=== FUTURES 24h volume ===
+{"closeTime":1783293293540,"count":110346,"firstId":65715663,"highPrice":"0.0003150","lastId":65826017,"lastPrice":"0.0003003","lastQty":"21801","lowPrice":"0.0002888","openPrice":"0.0003083","openTime":1783206840000,"priceChange":"-0.0000080","priceChangePercent":"-2.595","quoteVolume":"4475516.2598969","symbol":"AKEUSDT","volume":"14818138372","weightedAvgPrice":"0.0003020"}
+=== FUTURES order book depth (top 5) ===
+{"lastUpdateId":10975931095128,"E":1783293304775,"T":1783293304766,"bids":[["0.0003003","456004"],["0.0003002","1487007"],["0.0003001","1561121"],["0.0003000","234237250"],["0.0002999","3927796"]],"asks":[["0.0003004","64569"],["0.0003005","524864"],["0.0003006","1258598"],["0.0003007","97358"],["0.0003008","1539408"]]}
