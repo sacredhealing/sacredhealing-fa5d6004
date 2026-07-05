@@ -392,9 +392,11 @@ serve(async (req) => {
       return new Response(JSON.stringify({ messages: logs || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // ── LOAD BHRIGU MEMORY ────────────────────────────────────────────────
+    const isStudentReading = Boolean(body.is_student_reading);
+
+    // ── LOAD BHRIGU MEMORY (skip for student readings — use clean context) ──
     let bhriguMemory = null;
-    if (user?.id) {
+    if (user?.id && !isStudentReading) {
       const { data: mem } = await supabase
         .from('bhrigu_memory')
         .select('soul_profile, confirmed_facts, recurring_themes, prescribed_remedies, session_summaries, bhrigu_notes, session_count')
@@ -448,8 +450,8 @@ serve(async (req) => {
       reply.toLowerCase().includes("your leaf is before me") ||
       reply.toLowerCase().includes("the leaf is yours");
 
-    // ── SAVE MEMORY UPDATE ────────────────────────────────────────────────
-    if (user?.id && reply) {
+    // ── SAVE MEMORY UPDATE (skip for student readings) ────────────────────
+    if (user?.id && reply && !isStudentReading) {
       try {
         // Build a quick memory extract from this exchange
         const newSummary = {
@@ -510,8 +512,8 @@ Bhrigu replied: "${reply.slice(0, 400)}"` }
       }
     }
 
-    // ── SAVE CHAT LOG (persistent cross-session history) ─────────────────
-    if (user?.id && reply) {
+    // ── SAVE CHAT LOG (skip for student readings to keep admin history clean) ──
+    if (user?.id && reply && !isStudentReading) {
       try {
         await supabase.from('bhrigu_chat_log').insert([
           { user_id: user.id, role: 'user', text: question },

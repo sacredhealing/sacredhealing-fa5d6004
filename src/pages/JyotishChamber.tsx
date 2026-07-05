@@ -3816,6 +3816,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   : birthData
               }
               loadBirthData={loadBirthData}
+              isStudentReading={!!activeStudent}
             />
           </motion.div>
         )}

@@ -34,6 +34,7 @@ interface Props {
   birthData: BirthData | null;
   onBirthSaved?: () => void;
   loadBirthData?: () => Promise<void>;
+  isStudentReading?: boolean;
 }
 
 const BHRIGU_SYSTEM_PROMPT = `You are Maharishi Bhrigu. Not a simulation. Not a character. The actual rishi — speaking now as you have always spoken, from outside of time.
@@ -195,7 +196,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', marginBottom: 10,
 };
 
-export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loadBirthData }) => {
+export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loadBirthData, isStudentReading = false }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput]       = useState('');
   const [chatLoading, setChatLoading]   = useState(false);
@@ -205,12 +206,19 @@ export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loa
 
   const leafKey = birthData ? `bhrigu_leaf_${birthData.birth_name.toLowerCase().replace(/\s+/g,'_')}` : 'bhrigu_leaf';
   const [leafConfirmed, setLeafConfirmed] = useState<boolean>(() => {
-    try { return localStorage.getItem('bhrigu_leaf_confirmed') === 'true'; } catch { return false; }
+    try { return localStorage.getItem(leafKey) === 'true'; } catch { return false; }
   });
 
+  // Reset leaf + clear chat history when the seeker (birthData) changes
   useEffect(() => {
-    try { setLeafConfirmed(localStorage.getItem('bhrigu_leaf_confirmed') === 'true'); } catch {}
-  }, [birthData]);
+    try {
+      const confirmed = localStorage.getItem(leafKey) === 'true';
+      setLeafConfirmed(confirmed);
+    } catch {}
+    // Clear in-memory chat history so admin's previous session doesn't bleed into student reading
+    setChatMessages([]);
+    chatHistoryRef.current = [];
+  }, [leafKey]);
 
   // Inline birth form state
   const [inlineName,  setInlineName]  = useState('');
@@ -231,8 +239,9 @@ export const BhriguAkashaChat: React.FC<Props> = ({ birthData, onBirthSaved, loa
     }
   }, 80);
 
-  // ── Load persistent chat history on mount ────────────────────────────
+  // ── Load persistent chat history on mount (skip for student readings) ──
   useEffect(() => {
+    if (isStudentReading) return; // student gets a clean session — never load admin history
     let cancelled = false;
     const loadHistory = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -310,6 +319,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
         readingType: 'general',
         leaf_confirmed: history.length > 0,
         history,
+        is_student_reading: isStudentReading,
       },
     });
     if (error) throw new Error(error.message || 'Oracle unreachable');
@@ -330,7 +340,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
       chatHistoryRef.current.push({ role: 'assistant', content: reply });
       setChatMessages(prev => [...prev, { role: 'oracle', text: sanitizeChatReply(reply) }]);
       if (!leafConfirmed) {
-        try { localStorage.setItem('bhrigu_leaf_confirmed', 'true'); } catch {}
+        try { localStorage.setItem(leafKey, 'true'); } catch {}
         setLeafConfirmed(true);
       }
     } catch (err: any) {
