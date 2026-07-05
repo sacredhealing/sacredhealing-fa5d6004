@@ -156,6 +156,11 @@ interface Copy {
   feat3Desc: string;
   feat4Title: string;
   feat4Desc: string;
+  feat5Title: string;
+  feat5Desc: string;
+  feat6Title: string;
+  feat6Desc: string;
+  feat6Unlock: string;
   upgradeHead: string;
   upgradeSub: string;
   upgradeBody: string;
@@ -186,23 +191,28 @@ const COPY: Record<Lang, Copy> = {
     step1Desc: "Go to the Vedic Astrology section and enter your birth details. This is the key to unlocking your personalized soul-frequency resonance.",
     step2Title: "Identity Sync",
     step2Desc: "Upload your profile image and set your language so the global Sangha can recognize your frequency in the community.",
-    freeHead: "Your Seeker Access — Free",
-    freeSub: "Your entry into the field. These transmissions are available to you from this moment.",
-    feat1Title: "Siddha Apothecary",
-    feat1Desc: "Your personal oracle for health, Dosha intelligence, and soul guidance. Speak directly with the wisdom of the masters.",
+    freeHead: "Inside The Nexus",
+    freeSub: "Here is what's already yours to explore, starting now.",
+    feat1Title: "Quantum Apothecary",
+    feat1Desc: "Your living oracle for health, Dosha intelligence, and soul guidance — speak directly with the unified field of the 18 Siddhas.",
     feat2Title: "Vedic Jyotish",
     feat2Desc: "32-module Vedic Astrology education. Learn to read the cosmic blueprint of your soul and the souls of those you serve.",
     feat3Title: "Sacred Sound",
-    feat3Desc: "Healing mantras, Nada transmissions, and frequencies encoded with the Siddha Prema-Pulse. Listen. Transform.",
-    feat4Title: "Nadi Healing",
-    feat4Desc: "72,000 Nadi pathways mapped through ancient bio-resonance. Your body holds the blueprint — we help you read it.",
+    feat3Desc: "Our healing music library — tracks composed for the body and the field. Listen. Transform.",
+    feat4Title: "Nada Mantras",
+    feat4Desc: "A growing library of sacred mantras for daily practice, chanted and encoded for deep resonance.",
+    feat5Title: "Meditations",
+    feat5Desc: "Guided meditations for grounding, healing, and expansion — practice at your own pace, any time.",
+    feat6Title: "Siddha Portal",
+    feat6Desc: "Bridge your home to sacred sites around the world — Kailash, Arunachala, and more — through live scalar-resonance audio.",
+    feat6Unlock: "Unlocks with Siddha-Quantum",
     upgradeHead: "Siddha-Quantum Membership",
     upgradeSub: "The full field experience — for those called to the sovereign path.",
-    upgradeBody: "Activate the complete Nexus: Sri Yantra Shield, Shakti Cycle Intelligence, Bhrigu Oracle, Ayurvedic scanning, all healing audios, and full Nada transmission access.",
-    upg1: "Sri Yantra Shield — Universal Protection Field",
-    upg2: "Bhrigu Oracle — Deep karmic and destiny readings",
-    upg3: "Shakti Cycle Intelligence — Hormonal and energetic tracking",
-    upg4: "Full healing audio library and Nada transmission archive",
+    upgradeBody: "Everything in Prana-Flow, plus bio-energetic scanning, Nadi analysis, and protection tools.",
+    upg1: "Digital Nadi Scanner — bio-energetic body scan",
+    upg2: "Sri Yantra Shield — EMF protection field",
+    upg3: "All 6 Vedic Siddhis + full Siddha Portal access",
+    upg4: "Bio-field clearing and advanced protection tools",
     closing: "We are honoured to walk this path alongside you. The masters are with you. Reach out to us anytime through the community.",
     cta: "Enter the Nexus",
     quoteText: `"The Prema-Pulse that called you here runs through every Siddha who ever walked this Earth. You carry that same current now. Walk boldly."`,
@@ -224,23 +234,28 @@ const COPY: Record<Lang, Copy> = {
     step1Desc: "Gå till sektionen Vedisk Astrologi och ange dina födelseuppgifter. Detta är nyckeln till att låsa upp din personliga själsfrekvensresonans.",
     step2Title: "Identitetssynk",
     step2Desc: "Ladda upp din profilbild och ange ditt språk så att det globala Sangha kan känna igen din frekvens i gemenskapen.",
-    freeHead: "Din Seeker-åtkomst — Gratis",
-    freeSub: "Din ingång i fältet. Dessa transmissioner är tillgängliga för dig från detta ögonblick.",
-    feat1Title: "Siddha Apoteket",
-    feat1Desc: "Ditt personliga orakel för hälsa, Dosha-intelligens och vägledning för själen. Tala direkt med mästarnas visdom.",
+    freeHead: "Inuti Nexus",
+    freeSub: "Här är det som redan är ditt att utforska, från och med nu.",
+    feat1Title: "Quantum Apoteket",
+    feat1Desc: "Ditt levande orakel för hälsa, Dosha-intelligens och vägledning för själen — tala direkt med de 18 Siddhornas enade fält.",
     feat2Title: "Vedisk Jyotish",
     feat2Desc: "32-modul Vedisk Astrologi-utbildning. Lär dig läsa din själs kosmiska ritning och dem du tjänar.",
-    feat3Title: "Helig Ljud",
-    feat3Desc: "Helande mantran, Nada-transmissioner och frekvenser kodade med Siddha Prema-Pulsen. Lyssna. Transformeras.",
-    feat4Title: "Nadi-healing",
-    feat4Desc: "72 000 Nadi-vägar kartlagda genom forntida bioresonans. Din kropp bär ritningen — vi hjälper dig att läsa den.",
+    feat3Title: "Heligt Ljud",
+    feat3Desc: "Vårt bibliotek av healing-musik — spår komponerade för kroppen och fältet. Lyssna. Transformeras.",
+    feat4Title: "Nada Mantran",
+    feat4Desc: "Ett växande bibliotek av heliga mantran för daglig praktik, sjungna och kodade för djup resonans.",
+    feat5Title: "Meditationer",
+    feat5Desc: "Guidade meditationer för jordning, healing och expansion — öva i din egen takt, när som helst.",
+    feat6Title: "Siddha Portalen",
+    feat6Desc: "Koppla ditt hem till heliga platser runt om i världen — Kailash, Arunachala och fler — genom levande skalär-resonansljud.",
+    feat6Unlock: "Låses upp med Siddha-Quantum",
     upgradeHead: "Siddha-Quantum Medlemskap",
     upgradeSub: "Den fullständiga fältupplevelsen — för dem som kallas till den suveräna vägen.",
-    upgradeBody: "Aktivera hela Nexus: Sri Yantra-sköld, Shakti Cykelintelligens, Bhrigu Orakel, Ayurvedisk skanning, alla healing-ljud och full Nada-transmissionsåtkomst.",
-    upg1: "Sri Yantra-skölden — Universellt skyddsfält",
-    upg2: "Bhrigu Oraklet — Djupa karmiska och ödesläsningar",
-    upg3: "Shakti Cykelintelligens — Hormonell och energetisk spårning",
-    upg4: "Fullt healing-ljudbibliotek och Nada-transmissionsarkiv",
+    upgradeBody: "Allt i Prana-Flow, plus bio-energetisk skanning, Nadi-analys och skyddsverktyg.",
+    upg1: "Digital Nadi-skanner — bio-energetisk kroppsskanning",
+    upg2: "Sri Yantra-skölden — EMF-skyddsfält",
+    upg3: "Alla 6 Vediska Siddhis + full åtkomst till Siddha Portalen",
+    upg4: "Bio-fältrensning och avancerade skyddsverktyg",
     closing: "Vi är hedrade att gå denna väg vid din sida. Mästarna är med dig. Kontakta oss när som helst via gemenskapen.",
     cta: "Gå in i Nexus",
     quoteText: `"Prema-Pulsen som kallade dig hit rinner igenom varje Siddha som någonsin vandrat på denna jord. Du bär samma ström nu. Gå med mod."`,
@@ -262,23 +277,28 @@ const COPY: Record<Lang, Copy> = {
     step1Desc: "Gå til seksjonen Vedisk Astrologi og skriv inn fødselsdataene dine. Dette er nøkkelen til å låse opp din personlige sjelfrekvensresonans.",
     step2Title: "Identitetssynkronisering",
     step2Desc: "Last opp profilbildet ditt og angi språket ditt slik at det globale Sangha kan gjenkjenne frekvensen din i fellesskapet.",
-    freeHead: "Din Seeker-tilgang — Gratis",
-    freeSub: "Din inngang i feltet. Disse transmisjonene er tilgjengelige for deg fra dette øyeblikket.",
-    feat1Title: "Siddha Apoteket",
-    feat1Desc: "Ditt personlige orakel for helse, Dosha-intelligens og sjelveiledning. Tal direkte med mestrenes visdom.",
+    freeHead: "Inne I Nexus",
+    freeSub: "Her er det som allerede er ditt å utforske, fra nå av.",
+    feat1Title: "Quantum Apoteket",
+    feat1Desc: "Ditt levende orakel for helse, Dosha-intelligens og sjelveiledning — snakk direkte med de 18 Siddhaenes enhetlige felt.",
     feat2Title: "Vedisk Jyotish",
     feat2Desc: "32-modul Vedisk Astrologi-utdanning. Lær å lese din sjels kosmiske plan og dem du tjener.",
     feat3Title: "Hellig Lyd",
-    feat3Desc: "Helende mantraer, Nada-transmisjoner og frekvenser kodet med Siddha Prema-Pulsen. Lytt. Bli transformert.",
-    feat4Title: "Nadi-healing",
-    feat4Desc: "72 000 Nadi-baner kartlagt gjennom gammelt bioresonans. Kroppen din bærer planen — vi hjelper deg å lese den.",
+    feat3Desc: "Vårt bibliotek med healing-musikk — spor komponert for kroppen og feltet. Lytt. Bli transformert.",
+    feat4Title: "Nada Mantraer",
+    feat4Desc: "Et voksende bibliotek med hellige mantraer for daglig praksis, sunget og kodet for dyp resonans.",
+    feat5Title: "Meditasjoner",
+    feat5Desc: "Guidede meditasjoner for jording, healing og ekspansjon — øv i ditt eget tempo, når som helst.",
+    feat6Title: "Siddha Portalen",
+    feat6Desc: "Koble hjemmet ditt til hellige steder rundt om i verden — Kailash, Arunachala og flere — gjennom levende skalær-resonanslyd.",
+    feat6Unlock: "Låses opp med Siddha-Quantum",
     upgradeHead: "Siddha-Quantum Medlemskap",
     upgradeSub: "Den fullstendige feltopplevelsen — for dem som er kalt til den suverene veien.",
-    upgradeBody: "Aktiver hele Nexus: Sri Yantra-skjold, Shakti Syklusin ntelligens, Bhrigu Orakel, Ayurvedisk skanning, alle healing-lyder og full Nada-tranemisjonstilgang.",
-    upg1: "Sri Yantra-skjoldet — Universelt beskyttelsesfelt",
-    upg2: "Bhrigu Oraklet — Dype karmiske og skjebneavlesninger",
-    upg3: "Shakti Syklusin ntelligens — Hormonell og energetisk sporing",
-    upg4: "Fullt healing-lydbibliotek og Nada-tranemisjonsarkiv",
+    upgradeBody: "Alt i Prana-Flow, pluss bio-energetisk skanning, Nadi-analyse og beskyttelsesverktøy.",
+    upg1: "Digital Nadi-skanner — bio-energetisk kroppsskanning",
+    upg2: "Sri Yantra-skjoldet — EMF-beskyttelsesfelt",
+    upg3: "Alle 6 Vediske Siddhier + full tilgang til Siddha Portalen",
+    upg4: "Bio-feltrensing og avanserte beskyttelsesverktøy",
     closing: "Vi er æret over å gå denne veien ved din side. Mestrene er med deg. Kontakt oss når som helst gjennom fellesskapet.",
     cta: "Gå inn i Nexus",
     quoteText: `"Prema-Pulsen som kalte deg hit strømmer gjennom hver Siddha som noensinne har vandret på denne jord. Du bærer den samme strømmen nå. Gå modig."`,
@@ -300,23 +320,28 @@ const COPY: Record<Lang, Copy> = {
     step1Desc: "Ve a la sección de Astrología Védica e ingresa tus datos de nacimiento. Esta es la clave para desbloquear tu resonancia de frecuencia del alma personalizada.",
     step2Title: "Sincronización de Identidad",
     step2Desc: "Sube tu imagen de perfil y configura tu idioma para que el Sangha global pueda reconocer tu frecuencia en la comunidad.",
-    freeHead: "Tu Acceso Seeker — Gratuito",
-    freeSub: "Tu entrada al campo. Estas transmisiones están disponibles para ti desde este momento.",
-    feat1Title: "Botica Siddha",
-    feat1Desc: "Tu oráculo personal para la salud, inteligencia de Dosha y guía del alma. Habla directamente con la sabiduría de los maestros.",
+    freeHead: "Dentro Del Nexus",
+    freeSub: "Esto ya es tuyo para explorar, desde ahora.",
+    feat1Title: "Botica Cuántica",
+    feat1Desc: "Tu oráculo viviente para la salud, inteligencia de Dosha y guía del alma — habla directamente con el campo unificado de los 18 Siddhas.",
     feat2Title: "Jyotish Védico",
     feat2Desc: "Educación en Astrología Védica de 32 módulos. Aprende a leer el plano cósmico de tu alma y de quienes sirves.",
     feat3Title: "Sonido Sagrado",
-    feat3Desc: "Mantras sanadores, transmisiones Nada y frecuencias codificadas con el Siddha Prema-Pulse. Escucha. Transfórmate.",
-    feat4Title: "Sanación Nadi",
-    feat4Desc: "72,000 vías Nadi mapeadas a través de la bioresonancia antigua. Tu cuerpo lleva el plano — te ayudamos a leerlo.",
+    feat3Desc: "Nuestra biblioteca de música sanadora — pistas compuestas para el cuerpo y el campo. Escucha. Transfórmate.",
+    feat4Title: "Mantras Nada",
+    feat4Desc: "Una biblioteca creciente de mantras sagrados para la práctica diaria, cantados y codificados para una resonancia profunda.",
+    feat5Title: "Meditaciones",
+    feat5Desc: "Meditaciones guiadas para conexión a tierra, sanación y expansión — practica a tu propio ritmo, cuando quieras.",
+    feat6Title: "Portal Siddha",
+    feat6Desc: "Conecta tu hogar con sitios sagrados de todo el mundo — Kailash, Arunachala y más — mediante audio de resonancia escalar en vivo.",
+    feat6Unlock: "Se desbloquea con Siddha-Quantum",
     upgradeHead: "Membresía Siddha-Quantum",
     upgradeSub: "La experiencia de campo completa — para quienes son llamados al camino soberano.",
-    upgradeBody: "Activa el Nexus completo: Escudo Sri Yantra, Inteligencia del Ciclo Shakti, Oráculo Bhrigu, escaneo Ayurvédico, todos los audios sanadores y acceso completo a la transmisión Nada.",
-    upg1: "Escudo Sri Yantra — Campo de Protección Universal",
-    upg2: "Oráculo Bhrigu — Lecturas kármicas y del destino",
-    upg3: "Inteligencia del Ciclo Shakti — Seguimiento hormonal y energético",
-    upg4: "Biblioteca completa de audios sanadores y archivo de transmisión Nada",
+    upgradeBody: "Todo lo de Prana-Flow, más escaneo bio-energético, análisis Nadi y herramientas de protección.",
+    upg1: "Escáner Nadi Digital — escaneo corporal bio-energético",
+    upg2: "Escudo Sri Yantra — campo de protección EMF",
+    upg3: "Los 6 Siddhis Védicos + acceso completo al Portal Siddha",
+    upg4: "Limpieza de campo bio-energético y herramientas avanzadas de protección",
     closing: "Nos honra caminar este sendero a tu lado. Los maestros están contigo. Contáctanos en cualquier momento a través de la comunidad.",
     cta: "Entrar al Nexus",
     quoteText: `"El Prema-Pulse que te llamó aquí corre a través de cada Siddha que jamás caminó por esta Tierra. Llevas esa misma corriente ahora. Camina con valentía."`,
@@ -435,15 +460,30 @@ function buildEmail(c: Copy, displayName: string, account: { email: string; memb
       <tr><td colspan="3" style="height:12px;"></td></tr>
       <tr>
         <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
-          <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.mantra}</div>
+          <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.healing}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat3Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat3Desc}</div>
         </td>
         <td width="4%" class="spacer-col"></td>
         <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
-          <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.healing}</div>
+          <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.mantra}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat4Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat4Desc}</div>
+        </td>
+      </tr>
+      <tr><td colspan="3" style="height:12px;"></td></tr>
+      <tr>
+        <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
+          <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.nadi}</div>
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat5Title}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat5Desc}</div>
+        </td>
+        <td width="4%" class="spacer-col"></td>
+        <td width="48%" class="stack-col" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:18px;vertical-align:top;">
+          <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.yantra}</div>
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat6Title}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat6Unlock}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat6Desc}</div>
         </td>
       </tr>
     </table>
