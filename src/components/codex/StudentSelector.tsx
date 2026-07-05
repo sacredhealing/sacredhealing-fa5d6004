@@ -3,6 +3,7 @@
 // Panel header shows "End session" clearly when a student is active.
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Plus, Search, ChevronDown, Users } from "lucide-react";
 import {
@@ -522,8 +523,16 @@ export function StudentSelector() {
         </button>
       )}
 
-      {/* ── PANEL — single implementation for every screen size ── */}
-      {open && (
+      {/* ── PANEL — single implementation for every screen size ──
+           Rendered via portal: an ancestor (ScalarToolbarBanner) uses
+           backdropFilter, which creates a containing block for
+           fixed-position descendants in this rendering engine — so
+           without the portal, "position: fixed" here silently resolves
+           relative to that small toolbar box instead of the viewport,
+           trapping the sheet near the top of the page no matter what
+           height/position values are used. Portaling to document.body
+           escapes that ancestor chain entirely. */}
+      {open && typeof document !== "undefined" && createPortal(
         <>
           <div
             onClick={() => { setOpen(false); setView("list"); }}
@@ -579,7 +588,8 @@ export function StudentSelector() {
               </div>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );
