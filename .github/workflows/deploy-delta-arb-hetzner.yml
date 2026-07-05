@@ -180,6 +180,8 @@ jobs:
           TEST_ID=$(curl -s 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=id&asset=eq.TEST&limit=1' -H 'apikey: clawbot-bridge-2026' | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if d else 'NONE')")
           echo "Deleting test row id: $TEST_ID"
           curl -s -w ' HTTP_%{http_code}\n' -X DELETE "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?id=eq.$TEST_ID" -H 'apikey: clawbot-bridge-2026'
+          echo "=== MOST RECENT delta-arb TRADES (verify new insert-only close design) ==="
+          curl -s 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=asset,signal,status,pnl_usdc,entry_price,exit_price,created_at&mode=eq.PAPER&order=created_at.desc&limit=5' -H 'apikey: clawbot-bridge-2026'
           echo "=== TEST binance-balance FUNCTION AUTH ==="
           echo "-- with legacy anon key --"
           curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/binance-balance' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4'
