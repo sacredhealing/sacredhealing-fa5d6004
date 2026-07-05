@@ -2,177 +2,177 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 21h    │ 25   │ online    │ 0%       │ 59.0mb   │ root     │ disabled │
-│ 14 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2871249  │ 53s    │ 0    │ online    │ 0%       │ 52.9mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 21h    │ 25   │ online    │ 0%       │ 59.3mb   │ root     │ disabled │
+│ 15 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2872152  │ 55s    │ 0    │ online    │ 0%       │ 52.7mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 22h    │ 0    │ online    │ 0%       │ 92.2mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.5mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 22h    │ 0    │ online    │ 0%       │ 92.5mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.6mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
 /root/.pm2/logs/delta-arb-error.log last 80 lines:
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
-14|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
+15|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-14|delta-a | [OPEN] ADA UP | delta=+0.1587% | $2.00 | entry=$0.1893
-14|delta-a | [OPEN] Saved to DB | id=96638938-41fb-4656-817e-98041394c5d0 | total trades=1114
-14|delta-a | [OPEN] ADA DOWN | delta=-0.1585% | $2.00 | entry=$0.1890
-14|delta-a | [OPEN] Saved to DB | id=297bf82b-0533-40b8-ada5-c56c9a018b20 | total trades=1115
-14|delta-a | [OPEN] XRP UP | delta=+0.1409% | $2.00 | entry=$1.1371
-14|delta-a | [OPEN] Saved to DB | id=69c35e3d-8352-48d9-b35f-f3eaad532710 | total trades=1116
-14|delta-a | [OPEN] ADA UP | delta=+0.2116% | $2.00 | entry=$0.1894
-14|delta-a | [OPEN] Saved to DB | id=7ff649b0-52d5-4c1a-914e-14b1eb554642 | total trades=1117
-14|delta-a | [AUTO] Closing stale BNB
-14|delta-a | [AUTO] Closing stale AVAX
-14|delta-a | [OPEN] AVAX DOWN | delta=-0.1300% | $2.00 | entry=$6.9140
-14|delta-a | [OPEN] Saved to DB | id=d4061897-b580-43cd-a671-f52cc0e2c8d3 | total trades=1118
-14|delta-a | [OPEN] BNB DOWN | delta=-0.1418% | $2.00 | entry=$584.6200
-14|delta-a | [OPEN] Saved to DB | id=23631e6f-1be4-4eb9-a9bf-7ed6f4aa74c1 | total trades=1119
-14|delta-a | [OPEN] XRP DOWN | delta=-0.1408% | $2.00 | entry=$1.1350
-14|delta-a | [OPEN] Saved to DB | id=da320bba-124b-45b6-a2f4-38d3c2b50ecf | total trades=1120
-14|delta-a | [OPEN] ADA DOWN | delta=-0.1586% | $2.00 | entry=$0.1889
-14|delta-a | [OPEN] Saved to DB | id=95f66d55-9437-4d3e-a8b9-79f1d14a416f | total trades=1121
-14|delta-a | [AUTO] Closing stale DOT
-14|delta-a | [AUTO] Closing stale UNI
-14|delta-a | [ALIVE] 2026-07-05T16:22:55.811Z | trades:1121 | open:[ETH,SOL,LINK,DOGE,AVAX,BNB,XRP,ADA] | ticks:BTC:537 ETH:427 SOL:88...
-14|delta-a | [AUTO] Closing stale ETH
-14|delta-a | [AUTO] Closing stale SOL
-14|delta-a | [OPEN] ADA UP | delta=+0.1586% | $2.00 | entry=$0.1894
-14|delta-a | [OPEN] Saved to DB | id=62dd8b19-ef21-43c7-98e8-d9b375f0851b | total trades=1122
-14|delta-a | [ALIVE] 2026-07-05T16:27:55.812Z | trades:1122 | open:[LINK,DOGE,AVAX,BNB,XRP,ADA] | ticks:BTC:376 ETH:212 SOL:70...
-14|delta-a | [AUTO] Closing stale LINK
-14|delta-a | [OPEN] SOL DOWN | delta=-0.1479% | $2.00 | entry=$81.0100
-14|delta-a | [OPEN] Saved to DB | id=f25ef0d6-951e-411a-8668-f197c4827ce7 | total trades=1123
-14|delta-a | [OPEN] ADA DOWN | delta=-0.2637% | $2.00 | entry=$0.1891
-14|delta-a | [OPEN] Saved to DB | id=200b5d28-0807-4d87-b60c-c7bb7c661733 | total trades=1124
-14|delta-a | [OPEN] LINK DOWN | delta=-0.1257% | $2.00 | entry=$7.9440
-14|delta-a | [OPEN] Saved to DB | id=0c8e23b1-ed2d-40de-8f43-283e516ccce1 | total trades=1125
-14|delta-a | [AUTO] Closing stale DOGE
-14|delta-a | [OPEN] ETH DOWN | delta=-0.1230% | $2.00 | entry=$1769.6200
-14|delta-a | [OPEN] Saved to DB | id=31d86a4b-1311-411d-a64e-cb70b2a3a9a7 | total trades=1126
-14|delta-a | [ALIVE] 2026-07-05T16:32:55.811Z | trades:1126 | open:[AVAX,BNB,XRP,SOL,ADA,LINK,ETH] | ticks:BTC:664 ETH:431 SOL:121...
-14|delta-a | [OPEN] SOL UP | delta=+0.1234% | $2.00 | entry=$81.1100
-14|delta-a | [OPEN] Saved to DB | id=86390f4d-9045-4734-bd10-9639b42e51ad | total trades=1127
-14|delta-a | [OPEN] DOGE UP | delta=+0.1951% | $2.00 | entry=$0.0770
-14|delta-a | [OPEN] Saved to DB | id=ae12acc8-daba-4bde-a10c-19b8ed48f0ef | total trades=1128
-14|delta-a | [OPEN] ADA UP | delta=+0.1585% | $2.00 | entry=$0.1896
-14|delta-a | [OPEN] Saved to DB | id=fa46e65e-012b-47e3-8511-05de7ef60590 | total trades=1129
-14|delta-a | [OPEN] UNI UP | delta=+0.1273% | $2.00 | entry=$3.1460
-14|delta-a | [OPEN] Saved to DB | id=6820e432-bd7b-4867-aa67-4bf4a244acca | total trades=1130
-14|delta-a | [OPEN] BNB UP | delta=+0.1334% | $2.00 | entry=$585.4100
-14|delta-a | [OPEN] Saved to DB | id=7b30f81d-fd40-4d9f-8bf6-9a8c9766b00d | total trades=1131
-14|delta-a | [OPEN] ETH UP | delta=+0.1288% | $2.00 | entry=$1772.1900
-14|delta-a | [OPEN] Saved to DB | id=03ac4720-ea12-4c17-8e9d-c76ad707e3a5 | total trades=1132
-14|delta-a | [AUTO] Closing stale XRP
-14|delta-a | [AUTO] Closing stale AVAX
-14|delta-a | [ALIVE] 2026-07-05T16:37:55.811Z | trades:1132 | open:[LINK,SOL,DOGE,ADA,UNI,BNB,ETH] | ticks:BTC:283 ETH:248 SOL:76...
-14|delta-a | [OPEN] SOL DOWN | delta=-0.1233% | $2.00 | entry=$81.0300
-14|delta-a | [OPEN] Saved to DB | id=471bbe97-6498-400a-9aba-fb0e46a94d8a | total trades=1133
-14|delta-a | [OPEN] ADA DOWN | delta=-0.1581% | $2.00 | entry=$0.1895
-14|delta-a | [OPEN] Saved to DB | id=058b9e58-6add-464e-b8ef-beb2aab62850 | total trades=1134
-14|delta-a | [OPEN] DOGE DOWN | delta=-0.1298% | $2.00 | entry=$0.0769
-14|delta-a | [OPEN] Saved to DB | id=2a5177c3-7f6c-4f96-a72c-ab106e691c58 | total trades=1135
-14|delta-a | [OPEN] BNB DOWN | delta=-0.1656% | $2.00 | entry=$584.8800
-14|delta-a | [OPEN] Saved to DB | id=9eadd26f-4272-4af5-bdab-2e02af880f74 | total trades=1136
-14|delta-a | [OPEN] ETH DOWN | delta=-0.1264% | $2.00 | entry=$1770.0200
-14|delta-a | [OPEN] Saved to DB | id=c92fbdd1-c7a4-44d5-bf36-b2a57cb69e11 | total trades=1137
-14|delta-a | [OPEN] ADA UP | delta=+0.1584% | $2.00 | entry=$0.1897
-14|delta-a | [OPEN] Saved to DB | id=de4bf829-238a-48b1-83ed-06a4844d053f | total trades=1138
-14|delta-a | [ALIVE] 2026-07-05T16:42:55.811Z | trades:1138 | open:[LINK,UNI,SOL,DOGE,BNB,ETH,ADA] | ticks:BTC:230 ETH:203 SOL:60...
-14|delta-a | [OPEN] AVAX UP | delta=+0.1445% | $2.00 | entry=$6.9300
-14|delta-a | [OPEN] Saved to DB | id=09605a0d-3edd-4b4a-852c-7be61851a893 | total trades=1139
-14|delta-a | [OPEN] DOT UP | delta=+0.2291% | $2.00 | entry=$0.8750
-14|delta-a | [OPEN] Saved to DB | id=3192bfd6-d0a3-436e-a12a-5e3c9753b37d | total trades=1140
-14|delta-a | 
-14|delta-a | ==================================================
-14|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
-14|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
-14|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
-14|delta-a |  Binance key: YgNSRqbP...
-14|delta-a | ==================================================
-14|delta-a | [HEALTH] Listening on :8081
-14|delta-a | [WS] Connected to Binance — 12 pairs
-14|delta-a | [OPEN] ADA DOWN | delta=-0.3141% | $2.00 | entry=$0.1904
-14|delta-a | [OPEN] Saved to DB | id=d9289294-7d2c-403f-a0cf-95649710e25a | total trades=1
+15|delta-a | [AUTO] Closing stale AVAX
+15|delta-a | [OPEN] AVAX DOWN | delta=-0.1300% | $2.00 | entry=$6.9140
+15|delta-a | [OPEN] Saved to DB | id=d4061897-b580-43cd-a671-f52cc0e2c8d3 | total trades=1118
+15|delta-a | [OPEN] BNB DOWN | delta=-0.1418% | $2.00 | entry=$584.6200
+15|delta-a | [OPEN] Saved to DB | id=23631e6f-1be4-4eb9-a9bf-7ed6f4aa74c1 | total trades=1119
+15|delta-a | [OPEN] XRP DOWN | delta=-0.1408% | $2.00 | entry=$1.1350
+15|delta-a | [OPEN] Saved to DB | id=da320bba-124b-45b6-a2f4-38d3c2b50ecf | total trades=1120
+15|delta-a | [OPEN] ADA DOWN | delta=-0.1586% | $2.00 | entry=$0.1889
+15|delta-a | [OPEN] Saved to DB | id=95f66d55-9437-4d3e-a8b9-79f1d14a416f | total trades=1121
+15|delta-a | [AUTO] Closing stale DOT
+15|delta-a | [AUTO] Closing stale UNI
+15|delta-a | [ALIVE] 2026-07-05T16:22:55.811Z | trades:1121 | open:[ETH,SOL,LINK,DOGE,AVAX,BNB,XRP,ADA] | ticks:BTC:537 ETH:427 SOL:88...
+15|delta-a | [AUTO] Closing stale ETH
+15|delta-a | [AUTO] Closing stale SOL
+15|delta-a | [OPEN] ADA UP | delta=+0.1586% | $2.00 | entry=$0.1894
+15|delta-a | [OPEN] Saved to DB | id=62dd8b19-ef21-43c7-98e8-d9b375f0851b | total trades=1122
+15|delta-a | [ALIVE] 2026-07-05T16:27:55.812Z | trades:1122 | open:[LINK,DOGE,AVAX,BNB,XRP,ADA] | ticks:BTC:376 ETH:212 SOL:70...
+15|delta-a | [AUTO] Closing stale LINK
+15|delta-a | [OPEN] SOL DOWN | delta=-0.1479% | $2.00 | entry=$81.0100
+15|delta-a | [OPEN] Saved to DB | id=f25ef0d6-951e-411a-8668-f197c4827ce7 | total trades=1123
+15|delta-a | [OPEN] ADA DOWN | delta=-0.2637% | $2.00 | entry=$0.1891
+15|delta-a | [OPEN] Saved to DB | id=200b5d28-0807-4d87-b60c-c7bb7c661733 | total trades=1124
+15|delta-a | [OPEN] LINK DOWN | delta=-0.1257% | $2.00 | entry=$7.9440
+15|delta-a | [OPEN] Saved to DB | id=0c8e23b1-ed2d-40de-8f43-283e516ccce1 | total trades=1125
+15|delta-a | [AUTO] Closing stale DOGE
+15|delta-a | [OPEN] ETH DOWN | delta=-0.1230% | $2.00 | entry=$1769.6200
+15|delta-a | [OPEN] Saved to DB | id=31d86a4b-1311-411d-a64e-cb70b2a3a9a7 | total trades=1126
+15|delta-a | [ALIVE] 2026-07-05T16:32:55.811Z | trades:1126 | open:[AVAX,BNB,XRP,SOL,ADA,LINK,ETH] | ticks:BTC:664 ETH:431 SOL:121...
+15|delta-a | [OPEN] SOL UP | delta=+0.1234% | $2.00 | entry=$81.1100
+15|delta-a | [OPEN] Saved to DB | id=86390f4d-9045-4734-bd10-9639b42e51ad | total trades=1127
+15|delta-a | [OPEN] DOGE UP | delta=+0.1951% | $2.00 | entry=$0.0770
+15|delta-a | [OPEN] Saved to DB | id=ae12acc8-daba-4bde-a10c-19b8ed48f0ef | total trades=1128
+15|delta-a | [OPEN] ADA UP | delta=+0.1585% | $2.00 | entry=$0.1896
+15|delta-a | [OPEN] Saved to DB | id=fa46e65e-012b-47e3-8511-05de7ef60590 | total trades=1129
+15|delta-a | [OPEN] UNI UP | delta=+0.1273% | $2.00 | entry=$3.1460
+15|delta-a | [OPEN] Saved to DB | id=6820e432-bd7b-4867-aa67-4bf4a244acca | total trades=1130
+15|delta-a | [OPEN] BNB UP | delta=+0.1334% | $2.00 | entry=$585.4100
+15|delta-a | [OPEN] Saved to DB | id=7b30f81d-fd40-4d9f-8bf6-9a8c9766b00d | total trades=1131
+15|delta-a | [OPEN] ETH UP | delta=+0.1288% | $2.00 | entry=$1772.1900
+15|delta-a | [OPEN] Saved to DB | id=03ac4720-ea12-4c17-8e9d-c76ad707e3a5 | total trades=1132
+15|delta-a | [AUTO] Closing stale XRP
+15|delta-a | [AUTO] Closing stale AVAX
+15|delta-a | [ALIVE] 2026-07-05T16:37:55.811Z | trades:1132 | open:[LINK,SOL,DOGE,ADA,UNI,BNB,ETH] | ticks:BTC:283 ETH:248 SOL:76...
+15|delta-a | [OPEN] SOL DOWN | delta=-0.1233% | $2.00 | entry=$81.0300
+15|delta-a | [OPEN] Saved to DB | id=471bbe97-6498-400a-9aba-fb0e46a94d8a | total trades=1133
+15|delta-a | [OPEN] ADA DOWN | delta=-0.1581% | $2.00 | entry=$0.1895
+15|delta-a | [OPEN] Saved to DB | id=058b9e58-6add-464e-b8ef-beb2aab62850 | total trades=1134
+15|delta-a | [OPEN] DOGE DOWN | delta=-0.1298% | $2.00 | entry=$0.0769
+15|delta-a | [OPEN] Saved to DB | id=2a5177c3-7f6c-4f96-a72c-ab106e691c58 | total trades=1135
+15|delta-a | [OPEN] BNB DOWN | delta=-0.1656% | $2.00 | entry=$584.8800
+15|delta-a | [OPEN] Saved to DB | id=9eadd26f-4272-4af5-bdab-2e02af880f74 | total trades=1136
+15|delta-a | [OPEN] ETH DOWN | delta=-0.1264% | $2.00 | entry=$1770.0200
+15|delta-a | [OPEN] Saved to DB | id=c92fbdd1-c7a4-44d5-bf36-b2a57cb69e11 | total trades=1137
+15|delta-a | [OPEN] ADA UP | delta=+0.1584% | $2.00 | entry=$0.1897
+15|delta-a | [OPEN] Saved to DB | id=de4bf829-238a-48b1-83ed-06a4844d053f | total trades=1138
+15|delta-a | [ALIVE] 2026-07-05T16:42:55.811Z | trades:1138 | open:[LINK,UNI,SOL,DOGE,BNB,ETH,ADA] | ticks:BTC:230 ETH:203 SOL:60...
+15|delta-a | [OPEN] AVAX UP | delta=+0.1445% | $2.00 | entry=$6.9300
+15|delta-a | [OPEN] Saved to DB | id=09605a0d-3edd-4b4a-852c-7be61851a893 | total trades=1139
+15|delta-a | [OPEN] DOT UP | delta=+0.2291% | $2.00 | entry=$0.8750
+15|delta-a | [OPEN] Saved to DB | id=3192bfd6-d0a3-436e-a12a-5e3c9753b37d | total trades=1140
+15|delta-a | 
+15|delta-a | ==================================================
+15|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
+15|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
+15|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
+15|delta-a |  Binance key: YgNSRqbP...
+15|delta-a | ==================================================
+15|delta-a | [HEALTH] Listening on :8081
+15|delta-a | [WS] Connected to Binance — 12 pairs
+15|delta-a | [OPEN] ADA DOWN | delta=-0.3141% | $2.00 | entry=$0.1904
+15|delta-a | [OPEN] Saved to DB | id=d9289294-7d2c-403f-a0cf-95649710e25a | total trades=1
+15|delta-a | 
+15|delta-a | ==================================================
+15|delta-a |  SQI DELTA-ARB BOT v5.1 — STARTING
+15|delta-a |  Mode: PAPER | Pairs: 12 | Threshold: 0.200%
+15|delta-a |  DB bridge: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge
+15|delta-a |  Binance key: YgNSRqbP...
+15|delta-a | ==================================================
+15|delta-a | [HEALTH] Listening on :8081
+15|delta-a | [WS] Connected to Binance — 12 pairs
 
 === HEALTH ===
 {
@@ -181,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.200%",
-  "trades": 1,
-  "open": 1,
-  "uptime": "0m 53s",
+  "trades": 0,
+  "open": 0,
+  "uptime": "0m 56s",
   "ticks": {
-    "BTC": 16,
-    "ETH": 46,
-    "SOL": 12,
-    "BNB": 8,
-    "XRP": 24,
-    "DOGE": 4,
-    "ADA": 85,
-    "AVAX": 9,
-    "DOT": 0,
-    "LINK": 1,
-    "UNI": 3,
+    "BTC": 34,
+    "ETH": 38,
+    "SOL": 17,
+    "BNB": 12,
+    "XRP": 11,
+    "DOGE": 13,
+    "ADA": 16,
+    "AVAX": 4,
+    "DOT": 1,
+    "LINK": 3,
+    "UNI": 4,
     "MATIC": 0
   },
-  "ts": "2026-07-05T16:46:41.814Z"
+  "ts": "2026-07-05T16:50:45.845Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
