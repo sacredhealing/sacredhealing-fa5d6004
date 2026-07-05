@@ -204,14 +204,14 @@ const COPY: Record<Lang, Copy> = {
     feat5Title: "Meditations",
     feat5Desc: "Guided meditations for grounding, healing, and expansion — practice at your own pace, any time.",
     feat6Title: "Siddha Portal",
-    feat6Desc: "Bridge your home to sacred sites around the world — Kailash, Arunachala, and more — through live scalar-resonance audio.",
-    feat6Unlock: "Unlocks with Siddha-Quantum",
+    feat6Desc: "Your gateway into deep Siddha education — Agastyar Academy (108 modules), Siddha Medicine Academy (274 lessons), Mantra Academy, Mudra Academy, and full curricula on Kriya Yoga, Vastu, and Siddha philosophy.",
+    feat6Unlock: "Included free",
     upgradeHead: "Siddha-Quantum Membership",
     upgradeSub: "The full field experience — for those called to the sovereign path.",
     upgradeBody: "Everything in Prana-Flow, plus bio-energetic scanning, Nadi analysis, and protection tools.",
     upg1: "Digital Nadi Scanner — bio-energetic body scan",
     upg2: "Sri Yantra Shield — EMF protection field",
-    upg3: "All 6 Vedic Siddhis + full Siddha Portal access",
+    upg3: "All 6 Vedic Siddhis unlocked across every module",
     upg4: "Bio-field clearing and advanced protection tools",
     closing: "We are honoured to walk this path alongside you. The masters are with you. Reach out to us anytime through the community.",
     cta: "Enter the Nexus",
@@ -247,14 +247,14 @@ const COPY: Record<Lang, Copy> = {
     feat5Title: "Meditationer",
     feat5Desc: "Guidade meditationer för jordning, healing och expansion — öva i din egen takt, när som helst.",
     feat6Title: "Siddha Portalen",
-    feat6Desc: "Koppla ditt hem till heliga platser runt om i världen — Kailash, Arunachala och fler — genom levande skalär-resonansljud.",
-    feat6Unlock: "Låses upp med Siddha-Quantum",
+    feat6Desc: "Din ingång till djup Siddha-utbildning — Agastyar Academy (108 moduler), Siddha Medicine Academy (274 lektioner), Mantra Academy, Mudra Academy, och fullständiga kurser i Kriya Yoga, Vastu och Siddha-filosofi.",
+    feat6Unlock: "Ingår gratis",
     upgradeHead: "Siddha-Quantum Medlemskap",
     upgradeSub: "Den fullständiga fältupplevelsen — för dem som kallas till den suveräna vägen.",
     upgradeBody: "Allt i Prana-Flow, plus bio-energetisk skanning, Nadi-analys och skyddsverktyg.",
     upg1: "Digital Nadi-skanner — bio-energetisk kroppsskanning",
     upg2: "Sri Yantra-skölden — EMF-skyddsfält",
-    upg3: "Alla 6 Vediska Siddhis + full åtkomst till Siddha Portalen",
+    upg3: "Alla 6 Vediska Siddhis upplåsta i alla moduler",
     upg4: "Bio-fältrensning och avancerade skyddsverktyg",
     closing: "Vi är hedrade att gå denna väg vid din sida. Mästarna är med dig. Kontakta oss när som helst via gemenskapen.",
     cta: "Gå in i Nexus",
@@ -290,14 +290,14 @@ const COPY: Record<Lang, Copy> = {
     feat5Title: "Meditasjoner",
     feat5Desc: "Guidede meditasjoner for jording, healing og ekspansjon — øv i ditt eget tempo, når som helst.",
     feat6Title: "Siddha Portalen",
-    feat6Desc: "Koble hjemmet ditt til hellige steder rundt om i verden — Kailash, Arunachala og flere — gjennom levende skalær-resonanslyd.",
-    feat6Unlock: "Låses opp med Siddha-Quantum",
+    feat6Desc: "Din inngang til dyp Siddha-utdanning — Agastyar Academy (108 moduler), Siddha Medicine Academy (274 leksjoner), Mantra Academy, Mudra Academy, og fullstendige kurs i Kriya Yoga, Vastu og Siddha-filosofi.",
+    feat6Unlock: "Inkludert gratis",
     upgradeHead: "Siddha-Quantum Medlemskap",
     upgradeSub: "Den fullstendige feltopplevelsen — for dem som er kalt til den suverene veien.",
     upgradeBody: "Alt i Prana-Flow, pluss bio-energetisk skanning, Nadi-analyse og beskyttelsesverktøy.",
     upg1: "Digital Nadi-skanner — bio-energetisk kroppsskanning",
     upg2: "Sri Yantra-skjoldet — EMF-beskyttelsesfelt",
-    upg3: "Alle 6 Vediske Siddhier + full tilgang til Siddha Portalen",
+    upg3: "Alle 6 Vediske Siddhier låst opp i alle moduler",
     upg4: "Bio-feltrensing og avanserte beskyttelsesverktøy",
     closing: "Vi er æret over å gå denne veien ved din side. Mestrene er med deg. Kontakt oss når som helst gjennom fellesskapet.",
     cta: "Gå inn i Nexus",
@@ -333,14 +333,14 @@ const COPY: Record<Lang, Copy> = {
     feat5Title: "Meditaciones",
     feat5Desc: "Meditaciones guiadas para conexión a tierra, sanación y expansión — practica a tu propio ritmo, cuando quieras.",
     feat6Title: "Portal Siddha",
-    feat6Desc: "Conecta tu hogar con sitios sagrados de todo el mundo — Kailash, Arunachala y más — mediante audio de resonancia escalar en vivo.",
-    feat6Unlock: "Se desbloquea con Siddha-Quantum",
+    feat6Desc: "Tu puerta de entrada a la educación Siddha profunda — Academia Agastyar (108 módulos), Academia de Medicina Siddha (274 lecciones), Academia de Mantras, Academia de Mudras, y currículos completos de Kriya Yoga, Vastu y filosofía Siddha.",
+    feat6Unlock: "Incluido gratis",
     upgradeHead: "Membresía Siddha-Quantum",
     upgradeSub: "La experiencia de campo completa — para quienes son llamados al camino soberano.",
     upgradeBody: "Todo lo de Prana-Flow, más escaneo bio-energético, análisis Nadi y herramientas de protección.",
     upg1: "Escáner Nadi Digital — escaneo corporal bio-energético",
     upg2: "Escudo Sri Yantra — campo de protección EMF",
-    upg3: "Los 6 Siddhis Védicos + acceso completo al Portal Siddha",
+    upg3: "Los 6 Siddhis Védicos desbloqueados en todos los módulos",
     upg4: "Limpieza de campo bio-energético y herramientas avanzadas de protección",
     closing: "Nos honra caminar este sendero a tu lado. Los maestros están contigo. Contáctanos en cualquier momento a través de la comunidad.",
     cta: "Entrar al Nexus",
@@ -479,10 +479,10 @@ function buildEmail(c: Copy, displayName: string, account: { email: string; memb
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat5Desc}</div>
         </td>
         <td width="4%" class="spacer-col"></td>
-        <td width="48%" class="stack-col" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.22);border-radius:14px;padding:18px;vertical-align:top;">
+        <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.yantra}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat6Title}</div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat6Unlock}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(212,175,55,0.55);font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat6Unlock}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat6Desc}</div>
         </td>
       </tr>
