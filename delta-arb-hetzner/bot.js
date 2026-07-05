@@ -183,20 +183,24 @@ async function openTrade(sym, asset, signal, deltaStr) {
 }
 
 // ── CLOSE TRADE ──────────────────────────────────────────
+const FEE_PCT_ROUNDTRIP = parseFloat(process.env.FEE_PCT_ROUNDTRIP || '0.002'); // 0.1% taker each side, no BNB discount — conservative default
+
 async function closeTrade(sym, asset) {
   const trade = openTrades[sym];
   if (!trade) return;
   const currentPrice = (prices[sym]||[]).slice(-1)[0]?.price;
   if (!currentPrice) return;
 
-  const pnl    = trade.direction === 'UP'
+  const grossPnl = trade.direction === 'UP'
     ? ((currentPrice - trade.entry) / trade.entry) * trade.size
     : ((trade.entry - currentPrice) / trade.entry) * trade.size;
+  const fee = trade.size * FEE_PCT_ROUNDTRIP;
+  const pnl = grossPnl - fee; // net of real round-trip trading fees — this is the honest number
   const status = pnl >= 0 ? 'won' : 'lost';
 
   try {
     await bridgeRequest('PATCH', 'bot_trades', { status, pnl_usdc: Math.round(pnl*10000)/10000 }, 'id=eq.' + trade.id);
-    console.log('[CLOSE] ' + asset + ' ' + status.toUpperCase() + ' | PnL=' + (pnl>=0?'+':'') + '$' + pnl.toFixed(4));
+    console.log('[CLOSE] ' + asset + ' ' + status.toUpperCase() + ' | Gross=' + (grossPnl>=0?'+':'') + '$' + grossPnl.toFixed(4) + ' | Fee=-$' + fee.toFixed(4) + ' | Net=' + (pnl>=0?'+':'') + '$' + pnl.toFixed(4));
   } catch(e) {
     console.error('[DB] Close error:', e.message);
   }
