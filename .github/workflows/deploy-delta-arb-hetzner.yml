@@ -295,7 +295,7 @@ jobs:
           cd /root/delta-arb/delta-arb-hetzner
           npm install --omit=dev -q
 
-          printf 'SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co\nSUPABASE_SERVICE_ROLE_KEY=%s\nBINANCE_API_KEY=%s\nBINANCE_API_SECRET=%s\nBOT_MODE=%s\nPORT=8081\nDELTA_THRESHOLD=0.0012\nTRADE_SIZE_USD=15\nSCAN_INTERVAL_MS=15000\n' "\$SB_KEY" "\$BIN_KEY" "\$BIN_SEC" "\$BOT_MODE" > .env
+          printf 'SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co\nSUPABASE_SERVICE_ROLE_KEY=%s\nBINANCE_API_KEY=%s\nBINANCE_API_SECRET=%s\nBOT_MODE=%s\nPORT=8081\nDELTA_THRESHOLD=0.0020\nUP_THRESH_MULTIPLIER=1.6\nEXCLUDED_ASSETS=UNI,AVAX,DOT,BTC\nTRADE_SIZE_USD=15\nSCAN_INTERVAL_MS=15000\n' "\$SB_KEY" "\$BIN_KEY" "\$BIN_SEC" "\$BOT_MODE" > .env
           echo ".env written | MODE=\$BOT_MODE | BINANCE=\$([ -n "\$BIN_KEY" ] && echo SET || echo MISSING)"
 
           if pm2 describe delta-arb > /dev/null 2>&1; then
