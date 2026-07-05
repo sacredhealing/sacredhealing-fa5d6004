@@ -168,6 +168,14 @@ jobs:
           FIRST_ID=$(curl -s 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=id&status=eq.open&limit=1' -H 'apikey: clawbot-bridge-2026' | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if d else 'NONE')")
           echo "Testing PATCH on open trade id: $FIRST_ID"
           curl -s -w ' HTTP_%{http_code}\n' -X PATCH "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?id=eq.$FIRST_ID" -H 'apikey: clawbot-bridge-2026' -H 'Content-Type: application/json' -d '{"status":"won","pnl_usdc":0.0001}'
+          echo "=== GET still works? ==="
+          curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?select=id,status&limit=2' -H 'apikey: clawbot-bridge-2026'
+          echo "=== POST still works? (test row on separate table) ==="
+          curl -s -w ' HTTP_%{http_code}\n' -X POST "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades" -H 'apikey: clawbot-bridge-2026' -H 'Content-Type: application/json' -H 'Prefer: return=representation' -d '{"asset":"TEST","signal":"UP","delta":"+0.0000%","size_usd":0.01,"entry_price":1,"status":"open","pnl_usdc":0,"mode":"PAPER"}'
+          echo "=== PATCH with explicit Prefer header ==="
+          curl -s -w ' HTTP_%{http_code}\n' -X PATCH "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?id=eq.$FIRST_ID" -H 'apikey: clawbot-bridge-2026' -H 'Content-Type: application/json' -H 'Prefer: return=minimal' -d '{"status":"won"}'
+          echo "=== PATCH with only one field, no Content-Type ==="
+          curl -s -w ' HTTP_%{http_code}\n' -X PATCH "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-bridge/bot_trades?id=eq.$FIRST_ID" -H 'apikey: clawbot-bridge-2026' -d '{"status":"lost"}'
           echo "=== TEST binance-balance FUNCTION AUTH ==="
           echo "-- with legacy anon key --"
           curl -s -w ' HTTP_%{http_code}\n' 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/binance-balance' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4'
