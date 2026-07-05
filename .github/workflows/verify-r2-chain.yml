@@ -1,0 +1,62 @@
+name: Verify R2 Chain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - name: Run verification chain
+        run: |
+          FN="https://ssygukfdbtehvtndandn.supabase.co/functions/v1/social-post"
+          echo "=== 1. setup_r2_cors ===" > _r2_verify.txt
+          curl -s -X POST "$FN" -H "Content-Type: application/json" \
+            -d '{"action":"setup_r2_cors"}' -w "\nHTTP_STATUS:%{http_code}\n" >> _r2_verify.txt
+
+          echo "" >> _r2_verify.txt
+          echo "=== 2. presign_upload ===" >> _r2_verify.txt
+          PRESIGN=$(curl -s -X POST "$FN" -H "Content-Type: application/json" -d '{"action":"presign_upload","ext":"txt"}')
+          echo "$PRESIGN" >> _r2_verify.txt
+
+          UPLOAD_URL=$(echo "$PRESIGN" | grep -o '"uploadUrl":"[^"]*"' | cut -d'"' -f4 | sed 's/\\u0026/\&/g')
+          PUBLIC_URL=$(echo "$PRESIGN" | grep -o '"publicUrl":"[^"]*"' | cut -d'"' -f4)
+          echo "uploadUrl=$UPLOAD_URL"
+          echo "publicUrl=$PUBLIC_URL"
+
+          echo "" >> _r2_verify.txt
+          echo "=== 3. PUT test file directly to presigned URL ===" >> _r2_verify.txt
+          echo "sqi-r2-verify-$(date -u +%s)" > /tmp/testfile.txt
+          curl -s -X PUT "$UPLOAD_URL" --data-binary @/tmp/testfile.txt -H "Content-Type: text/plain" \
+            -w "\nHTTP_STATUS:%{http_code}\n" >> _r2_verify.txt
+
+          echo "" >> _r2_verify.txt
+          echo "=== 4. Read back from public URL ===" >> _r2_verify.txt
+          curl -s "$PUBLIC_URL" -w "\nHTTP_STATUS:%{http_code}\n" >> _r2_verify.txt
+
+          echo "" >> _r2_verify.txt
+          echo "=== 5. trigger_worker with fake video (confirms Hetzner path still works) ===" >> _r2_verify.txt
+          TRIGGER=$(curl -s -X POST "$FN" -H "Content-Type: application/json" \
+            -d '{"action":"trigger_worker","videoUrl":"https://example.com/fake-verify.mp4","clipLength":60,"cadenceHours":24}')
+          echo "$TRIGGER" >> _r2_verify.txt
+          JOB_ID=$(echo "$TRIGGER" | grep -o '"jobId":"[^"]*"' | cut -d'"' -f4)
+          sleep 8
+          echo "" >> _r2_verify.txt
+          echo "=== 6. worker_status (jobId=$JOB_ID) ===" >> _r2_verify.txt
+          curl -s -X POST "$FN" -H "Content-Type: application/json" \
+            -d "{\"action\":\"worker_status\",\"jobId\":\"$JOB_ID\"}" -w "\nHTTP_STATUS:%{http_code}\n" >> _r2_verify.txt
+
+          cat _r2_verify.txt
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Deploy Bot"
+          git add _r2_verify.txt
+          git commit -m "r2 chain verify $(date -u +%Y-%m-%dT%H:%M)" || true
+          git push "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" HEAD:main || true
