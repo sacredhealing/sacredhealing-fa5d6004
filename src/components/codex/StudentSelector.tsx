@@ -21,16 +21,6 @@ interface AppUser {
   has_ayurveda: boolean;
 }
 
-function isCompactViewport(): boolean {
-  if (typeof window === "undefined") return false;
-  const narrow = window.innerWidth < 768;
-  const coarsePointer =
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(pointer: coarse)").matches;
-  const touchCapable = navigator.maxTouchPoints > 0;
-  return narrow || coarsePointer || touchCapable;
-}
-
 export function useActiveStudent(): Student | null {
   const [student, setStudent] = useState<Student | null>(null);
   useEffect(() => {
@@ -57,7 +47,6 @@ export function StudentSelector() {
   const [activeId, setActiveId] = useState<string | null>(getActiveStudentId());
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => isCompactViewport());
 
   // Search
   const [searchTerm, setSearchTerm] = useState("");
@@ -82,24 +71,13 @@ export function StudentSelector() {
   const danger = "#f87171";
 
   useEffect(() => {
-    const check = () => setIsMobile(isCompactViewport());
-    check();
-    window.addEventListener("resize", check);
-    window.addEventListener("orientationchange", check);
-    return () => {
-      window.removeEventListener("resize", check);
-      window.removeEventListener("orientationchange", check);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isMobile && open) {
+    if (open) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [isMobile, open]);
+  }, [open]);
 
   const loadStudents = useCallback(async () => {
     setLoading(true);
@@ -126,18 +104,6 @@ export function StudentSelector() {
     window.addEventListener("sqi:active-student-changed", sync);
     return () => window.removeEventListener("sqi:active-student-changed", sync);
   }, []);
-
-  useEffect(() => {
-    if (isMobile) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        panelRef.current && !panelRef.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
-      ) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [isMobile]);
 
   useEffect(() => {
     clearTimeout(searchTimer.current);
@@ -556,8 +522,8 @@ export function StudentSelector() {
         </button>
       )}
 
-      {/* ── MOBILE: BOTTOM SHEET ── */}
-      {isMobile && open && (
+      {/* ── PANEL — single implementation for every screen size ── */}
+      {open && (
         <>
           <div
             onClick={() => { setOpen(false); setView("list"); }}
@@ -570,24 +536,28 @@ export function StudentSelector() {
             ref={panelRef}
             style={{
               position: "fixed", bottom: 0, left: 0, right: 0,
-              zIndex: 999, maxHeight: "85vh",
+              zIndex: 999,
+              height: "min(85dvh, 85vh)",
+              maxWidth: 480, marginInline: "auto",
               display: "flex", flexDirection: "column",
               background: "rgba(8,5,2,0.99)",
               border: "1px solid rgba(212,175,55,0.12)",
               borderBottom: "none",
               borderRadius: "20px 20px 0 0",
               boxShadow: "0 -12px 60px rgba(0,0,0,0.9)",
+              overflow: "hidden",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
+            <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0", flexShrink: 0 }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.12)" }} />
             </div>
             {PanelHeader()}
-            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}>
+            <div style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}>
               {view === "list" ? ListContent() : CreateContent()}
             </div>
             {activeStudent && view === "list" && (
               <div style={{
+                flexShrink: 0,
                 padding: "10px 16px 20px",
                 borderTop: "1px solid rgba(212,175,55,0.08)",
                 background: "rgba(212,175,55,0.02)",
@@ -610,38 +580,6 @@ export function StudentSelector() {
             )}
           </div>
         </>
-      )}
-
-      {/* ── DESKTOP: DROPDOWN ── */}
-      {!isMobile && open && (
-        <div
-          ref={panelRef}
-          style={{
-            position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 300,
-            width: 340, maxHeight: "75vh",
-            display: "flex", flexDirection: "column",
-            background: "rgba(10,7,3,0.98)",
-            border: "1px solid rgba(212,175,55,0.15)",
-            borderRadius: 14, backdropFilter: "blur(40px)",
-            boxShadow: "0 24px 60px rgba(0,0,0,0.85)",
-            overflow: "hidden",
-          }}
-        >
-          {PanelHeader()}
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
-            {view === "list" ? ListContent() : CreateContent()}
-          </div>
-          {activeStudent && view === "list" && (
-            <div style={{ padding: "8px 14px 10px", borderTop: "1px solid rgba(212,175,55,0.07)", background: "rgba(212,175,55,0.02)" }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(212,175,55,0.3)", marginBottom: 5 }}>Soul data loaded into SQI</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {(activeStudent as any).linked_user_id && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.6)" }}>Jyotish ✓</span>}
-                {activeStudent.birth_date && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(200,184,154,0.6)" }}>Born {activeStudent.birth_date}</span>}
-                {activeStudent.birth_place && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(200,184,154,0.6)" }}>{activeStudent.birth_place}</span>}
-              </div>
-            </div>
-          )}
-        </div>
       )}
     </div>
   );
