@@ -3,10 +3,10 @@
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
 │ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2701442  │ 21h    │ 25   │ online    │ 0%       │ 59.0mb   │ root     │ disabled │
-│ 15 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2872152  │ 2m     │ 0    │ online    │ 0%       │ 54.0mb   │ root     │ disabled │
+│ 15 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2872152  │ 4m     │ 0    │ online    │ 0%       │ 55.3mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 22h    │ 0    │ online    │ 0%       │ 92.5mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 76.9mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 22h    │ 0    │ online    │ 0%       │ 92.2mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 77.3mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -183,22 +183,22 @@
   "threshold": "0.200%",
   "trades": 0,
   "open": 0,
-  "uptime": "2m 19s",
+  "uptime": "4m 13s",
   "ticks": {
-    "BTC": 94,
-    "ETH": 81,
-    "SOL": 29,
-    "BNB": 36,
-    "XRP": 22,
-    "DOGE": 24,
-    "ADA": 25,
-    "AVAX": 8,
-    "DOT": 2,
-    "LINK": 11,
-    "UNI": 4,
+    "BTC": 302,
+    "ETH": 200,
+    "SOL": 55,
+    "BNB": 58,
+    "XRP": 38,
+    "DOGE": 46,
+    "ADA": 43,
+    "AVAX": 14,
+    "DOT": 3,
+    "LINK": 23,
+    "UNI": 6,
     "MATIC": 0
   },
-  "ts": "2026-07-05T16:52:09.288Z"
+  "ts": "2026-07-05T16:54:03.610Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
