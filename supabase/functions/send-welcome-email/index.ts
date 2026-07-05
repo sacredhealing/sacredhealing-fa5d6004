@@ -341,6 +341,12 @@ function buildEmail(c: Copy, displayName: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${c.subject}</title>
+<style>
+  @media only screen and (max-width:600px) {
+    .stack-col { display:block !important; width:100% !important; box-sizing:border-box !important; margin-bottom:14px !important; }
+    .spacer-col { display:none !important; }
+  }
+</style>
 </head>
 <body style="margin:0;padding:0;background:#000000;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#000000;">
@@ -369,13 +375,13 @@ function buildEmail(c: Copy, displayName: string): string {
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
       <tr>
-        <td width="48%" style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:20px;vertical-align:top;">
+        <td width="48%" class="stack-col" style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:20px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:12px;">${SVG.jyotish}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.step1Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.step1Desc}</div>
         </td>
-        <td width="4%"></td>
-        <td width="48%" style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:20px;vertical-align:top;">
+        <td width="4%" class="spacer-col"></td>
+        <td width="48%" class="stack-col" style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:20px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:12px;">${SVG.nadi}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.step2Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.step2Desc}</div>
@@ -392,13 +398,13 @@ function buildEmail(c: Copy, displayName: string): string {
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
       <tr>
-        <td width="48%" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
+        <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.lotus}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat1Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat1Desc}</div>
         </td>
-        <td width="4%"></td>
-        <td width="48%" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
+        <td width="4%" class="spacer-col"></td>
+        <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.yantra}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat2Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat2Desc}</div>
@@ -406,13 +412,13 @@ function buildEmail(c: Copy, displayName: string): string {
       </tr>
       <tr><td colspan="3" style="height:12px;"></td></tr>
       <tr>
-        <td width="48%" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
+        <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.mantra}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat3Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat3Desc}</div>
         </td>
-        <td width="4%"></td>
-        <td width="48%" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
+        <td width="4%" class="spacer-col"></td>
+        <td width="48%" class="stack-col" style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.healing}</div>
           <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:8px;">${c.feat4Title}</div>
           <div style="font-size:15px;color:rgba(255,255,255,0.82);line-height:1.75;font-family:Arial,sans-serif;">${c.feat4Desc}</div>
