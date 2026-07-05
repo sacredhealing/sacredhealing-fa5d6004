@@ -406,26 +406,32 @@ export function StudentSelector() {
       )}
 
       {[
-        { label: "Name *", value: newName, onChange: setNewName, placeholder: "Full name" },
-        { label: "Birth date", value: newDate, onChange: setNewDate, placeholder: "YYYY-MM-DD" },
-        { label: "Birth time", value: newTime, onChange: setNewTime, placeholder: "HH:MM (24h)" },
-        { label: "Birth place", value: newPlace, onChange: setNewPlace, placeholder: "City, Country" },
-        { label: "Notes for SQI", value: newNotes, onChange: setNewNotes, placeholder: "Optional context" },
-      ].map(({ label, value, onChange, placeholder }) => (
+        { label: "Name *", value: newName, onChange: setNewName, placeholder: "Full name", inputMode: "text" as const },
+        { label: "Birth date", value: newDate, onChange: setNewDate, placeholder: "YYYY-MM-DD", inputMode: "numeric" as const },
+        { label: "Birth time", value: newTime, onChange: setNewTime, placeholder: "HH:MM (24h)", inputMode: "numeric" as const },
+        { label: "Birth place", value: newPlace, onChange: setNewPlace, placeholder: "City, Country", inputMode: "text" as const },
+        { label: "Notes for SQI", value: newNotes, onChange: setNewNotes, placeholder: "Optional context", inputMode: "text" as const },
+      ].map(({ label, value, onChange, placeholder, inputMode }) => (
         <div key={label} style={{ marginBottom: 10 }}>
           <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 5 }}>
             {label}
           </div>
           <input
             type="text"
+            inputMode={inputMode}
+            autoComplete="off"
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onFocus={(e) => {
+              // Keep field visible when Android keyboard opens
+              setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+            }}
             style={{
               width: "100%", padding: "10px 12px",
               borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(255,255,255,0.03)",
-              fontSize: 14, color: "rgba(255,255,255,0.85)",
+              fontSize: 16, color: "rgba(255,255,255,0.85)",
               fontFamily: "inherit", outline: "none",
               boxSizing: "border-box",
             }}
