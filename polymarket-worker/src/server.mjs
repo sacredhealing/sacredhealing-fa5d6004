@@ -342,7 +342,7 @@ async function fetchMarketByToken(tokenId) {
     const m = Array.isArray(arr) ? arr[0] : null;
     const result = m ? {
       id: m.id, question: m.question || '',
-      category: String(m.category || (Array.isArray(m.tags) ? (m.tags[0]?.label ?? m.tags[0] ?? '') : '') || '').toLowerCase(),
+      category: String(m.feeType || '').replace(/_fees$/, '').toLowerCase(),
     } : null;
     if (result) marketByTokenCache.set(tokenId, result);
     return result;
@@ -390,7 +390,8 @@ async function executeLiveOrder(signal) {
 // categories default to the general 1.00% peak rate (conservative middle
 // estimate) rather than assuming the cheapest tier.
 const CATEGORY_PEAK_FEE = {
-  geopolitics: 0, 'world events': 0,
+  geopolitics: 0, 'world events': 0, '': 0.01,
+  general: 0.01,
   sports: 0.0075,
   politics: 0.01, finance: 0.01, tech: 0.01, mentions: 0.01,
   economics: 0.0125, culture: 0.0125, weather: 0.0125, other: 0.0125,
@@ -497,7 +498,7 @@ async function fetchMarkets() {
         liquidity: safeFloat(m.liquidityNum ?? m.liquidity),
         volume:    safeFloat(m.volumeNum ?? m.volume),
         closed:    !!m.closed,
-        category: String(m.category || (Array.isArray(m.tags) ? (m.tags[0]?.label ?? m.tags[0] ?? '') : '') || '').toLowerCase(),
+        category: String(m.feeType || '').replace(/_fees$/, '').toLowerCase(),
         outcomes: (Array.isArray(names) ? names : ['Yes', 'No']).map((name, i) => ({
           name: String(name),
           price:   safeFloat(Array.isArray(prices)   ? prices[i]   : 0.5, 0.5),
