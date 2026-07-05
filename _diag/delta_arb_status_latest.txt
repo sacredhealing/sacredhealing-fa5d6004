@@ -2,11 +2,11 @@
 ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2914688  │ 21m    │ 28   │ online    │ 0%       │ 56.5mb   │ root     │ disabled │
-│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 4h     │ 0    │ online    │ 0%       │ 64.8mb   │ root     │ disabled │
+│ 0  │ clawbot           │ default     │ N/A     │ fork    │ 2914688  │ 23m    │ 28   │ online    │ 0%       │ 56.8mb   │ root     │ disabled │
+│ 16 │ delta-arb         │ default     │ 2.1.0   │ fork    │ 2881992  │ 4h     │ 0    │ online    │ 0%       │ 65.4mb   │ root     │ disabled │
 │ 1  │ shreem-webhook    │ default     │ N/A     │ fork    │ 0        │ 0      │ 13   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
-│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 28h    │ 0    │ online    │ 0%       │ 92.3mb   │ root     │ disabled │
-│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 77.3mb   │ root     │ disabled │
+│ 7  │ sniper-live       │ default     │ 5.0.0   │ fork    │ 2691135  │ 28h    │ 0    │ online    │ 0%       │ 91.9mb   │ root     │ disabled │
+│ 3  │ video-worker      │ default     │ 1.0.0   │ fork    │ 2473998  │ 2D     │ 1    │ online    │ 0%       │ 77.7mb   │ root     │ disabled │
 └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 === PM2 LOGS delta-arb (last 80) ===
 [TAILING] Tailing last 80 lines for [delta-arb] process (change the value with --lines option)
@@ -93,10 +93,6 @@
 16|delta-a | [DB] Close error: Bridge 500: Internal Server Error
 
 /root/.pm2/logs/delta-arb-out.log last 80 lines:
-16|delta-a | [ALIVE] 2026-07-05T21:47:01.804Z | trades:28 | open:[SOL,BNB,XRP,ADA] | ticks:BTC:644 ETH:688 SOL:133...
-16|delta-a | [AUTO] Closing stale SOL
-16|delta-a | [CLOSE] SOL LOST | Gross=+$0.0029 | Fee=-$0.0040 | Net=$-0.0011 | id=5c81177b-5091-45b7-b079-918e89e62361
-16|delta-a | [AUTO] Closing stale BNB
 16|delta-a | [CLOSE] BNB LOST | Gross=$-0.0026 | Fee=-$0.0040 | Net=$-0.0066 | id=02b551be-008a-44c9-9869-63d1c67017a7
 16|delta-a | [AUTO] Closing stale XRP
 16|delta-a | [CLOSE] XRP LOST | Gross=$-0.0019 | Fee=-$0.0040 | Net=$-0.0059 | id=5a79f2fd-4550-4a31-bfbb-eee2493da7f8
@@ -173,6 +169,10 @@
 16|delta-a | [OPEN] ADA UP | delta=+0.3684% | $2.00 | entry=$0.1907
 16|delta-a | [OPEN] Tracking in-memory | total opened=51
 16|delta-a | [CLOSE] BNB LOST | Gross=$-0.0030 | Fee=-$0.0040 | Net=$-0.0070 | id=43eeca02-2c26-4189-a3d3-57440deacdf3
+16|delta-a | [ALIVE] 2026-07-05T22:17:01.805Z | trades:51 | open:[LINK,SOL,XRP,DOGE,ADA] | ticks:BTC:1304 ETH:1380 SOL:342...
+16|delta-a | [CLOSE] XRP LOST | Gross=$-0.0140 | Fee=-$0.0040 | Net=$-0.0180 | id=48979275-90cc-4759-af2d-74e661ce2941
+16|delta-a | [OPEN] XRP UP | delta=+0.4010% | $2.00 | entry=$1.1516
+16|delta-a | [OPEN] Tracking in-memory | total opened=52
 
 === HEALTH ===
 {
@@ -181,24 +181,24 @@
   "mode": "PAPER",
   "pairs": 12,
   "threshold": "0.200%",
-  "trades": 51,
+  "trades": 52,
   "open": 5,
-  "uptime": "259m 19s",
+  "uptime": "260m 45s",
   "ticks": {
-    "BTC": 878,
-    "ETH": 977,
-    "SOL": 255,
-    "BNB": 124,
-    "XRP": 181,
-    "DOGE": 60,
-    "ADA": 97,
-    "AVAX": 31,
-    "DOT": 3,
-    "LINK": 32,
-    "UNI": 23,
+    "BTC": 1584,
+    "ETH": 1499,
+    "SOL": 362,
+    "BNB": 159,
+    "XRP": 330,
+    "DOGE": 161,
+    "ADA": 142,
+    "AVAX": 55,
+    "DOT": 15,
+    "LINK": 94,
+    "UNI": 34,
     "MATIC": 0
   },
-  "ts": "2026-07-05T22:16:21.367Z"
+  "ts": "2026-07-05T22:17:47.577Z"
 }=== ENV MODE ===
 BOT_MODE=PAPER
 === ENV SUPABASE KEY LEN ===
