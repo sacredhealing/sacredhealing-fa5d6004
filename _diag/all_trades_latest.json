@@ -64,7 +64,7 @@
  {"asset":"ADA","signal":"UP","delta":"+0.1567%","size_usd":2,"entry_price":0.1918,"status":"won","pnl_usdc":0.0094,"mode":"PAPER","created_at":"2026-07-04T21:11:05.918493+00:00"}, 
  {"asset":"BTC","signal":"UP","delta":"+0.1311%","size_usd":2,"entry_price":63256.7,"status":"won","pnl_usdc":0.0001,"mode":"PAPER","created_at":"2026-07-04T21:12:35.998534+00:00"}, 
  {"asset":"ETH","signal":"UP","delta":"+0.1383%","size_usd":2,"entry_price":1787.87,"status":"lost","pnl_usdc":0.0001,"mode":"PAPER","created_at":"2026-07-04T21:12:36.153057+00:00"}, 
- {"asset":"BNB","signal":"UP","delta":"+0.1223%","size_usd":2,"entry_price":573.02,"status":"open","pnl_usdc":0.0000,"mode":"PAPER","created_at":"2026-07-04T21:13:05.784749+00:00"}, 
+ {"asset":"BNB","signal":"UP","delta":"+0.1223%","size_usd":2,"entry_price":573.02,"status":"lost","pnl_usdc":0.0001,"mode":"PAPER","created_at":"2026-07-04T21:13:05.784749+00:00"}, 
  {"asset":"DOGE","signal":"UP","delta":"+0.2693%","size_usd":2,"entry_price":0.0782,"status":"open","pnl_usdc":0.0000,"mode":"PAPER","created_at":"2026-07-04T21:13:05.947465+00:00"}, 
  {"asset":"LINK","signal":"UP","delta":"+0.1368%","size_usd":2,"entry_price":8.052,"status":"open","pnl_usdc":0.0000,"mode":"PAPER","created_at":"2026-07-04T21:13:50.623643+00:00"}, 
  {"asset":"XRP","signal":"UP","delta":"+0.1464%","size_usd":2,"entry_price":1.1629,"status":"open","pnl_usdc":0.0000,"mode":"PAPER","created_at":"2026-07-04T21:14:20.694421+00:00"}, 
