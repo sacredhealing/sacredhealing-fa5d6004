@@ -889,14 +889,6 @@ ${m.content}`
                 color: showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
               ◈ Lexicon
             </button>
-
-          {/* Admin student selector — shown inline below tabs */}
-          </div>
-          {isAdmin && (
-            <div style={{ padding: '8px 12px 0', flexShrink: 0 }}>
-              <StudentSelector onStudentChange={setActiveStudent} />
-            </div>
-          )}
             <button type="button" onClick={() => { setShowHistory(true); setShowLexicon(false); }}
               style={{ flex:1, padding:'10px 0', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                 background:'none', border:'none', borderBottom: showHistory ? '2px solid #D4AF37' : '2px solid transparent',
@@ -904,6 +896,13 @@ ${m.content}`
               ◇ History
             </button>
           </div>
+
+          {/* Admin student selector — shown inline below tabs */}
+          {isAdmin && (
+            <div style={{ padding: '8px 12px 0', flexShrink: 0 }}>
+              <StudentSelector onStudentChange={setActiveStudent} />
+            </div>
+          )}
 
           {/* Jyotish active bar */}
           {hasJyotish && (
