@@ -3,6 +3,9 @@ name: Deploy Subscription Cancellation Fix
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -10,25 +13,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Supabase CLI
-        run: |
-          curl -fsSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_linux_amd64.tar.gz \
-            | tar xz -C /usr/local/bin supabase
-          supabase --version
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
 
       - name: Deploy subscription functions
+        id: deploy
+        continue-on-error: true
         env:
           SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
         run: |
           FAILED=""
+          : > /tmp/deploy-log.txt
           for fn in admin-user-management stripe-cancel-subscription stripe-reactivate-subscription stripe-billing-portal; do
-            echo "=== Deploying $fn ==="
-            if supabase functions deploy $fn --project-ref ssygukfdbtehvtndandn --no-verify-jwt; then
-              echo "OK: $fn"
+            echo "=== Deploying $fn ===" | tee -a /tmp/deploy-log.txt
+            if supabase functions deploy $fn --project-ref ssygukfdbtehvtndandn --no-verify-jwt >> /tmp/deploy-log.txt 2>&1; then
+              echo "OK: $fn" | tee -a /tmp/deploy-log.txt
             else
-              echo "FAILED: $fn"
+              echo "FAILED: $fn" | tee -a /tmp/deploy-log.txt
               FAILED="$FAILED $fn"
             fi
           done
-          if [ -n "$FAILED" ]; then echo "Failed functions:$FAILED"; exit 1; fi
-          echo "ALL DEPLOYED"
+          echo "SUMMARY: failed=[$FAILED]" | tee -a /tmp/deploy-log.txt
+          [ -z "$FAILED" ]
+
+      - name: Commit log
+        if: always()
+        run: |
+          git config user.name "deploy-bot"
+          git config user.email "bot@sacredhealing"
+          cp /tmp/deploy-log.txt deploy-log-subscription-fix.txt
+          git add deploy-log-subscription-fix.txt
+          git commit -m "ci: subscription fix deploy log" || echo "nothing to commit"
+          git push
