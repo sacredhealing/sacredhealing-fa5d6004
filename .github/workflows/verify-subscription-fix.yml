@@ -1,0 +1,34 @@
+name: Verify Subscription Functions Deployed
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe function endpoints
+        run: |
+          : > verify-log-subscription-fix.txt
+          for fn in admin-user-management stripe-cancel-subscription stripe-reactivate-subscription stripe-billing-portal stripe-subscription-details; do
+            CODE=$(curl -s -o /tmp/body.txt -w "%{http_code}" -X POST \
+              "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/$fn" \
+              -H "Content-Type: application/json" -d '{}')
+            BODY=$(head -c 200 /tmp/body.txt)
+            echo "$fn → HTTP $CODE | $BODY" >> verify-log-subscription-fix.txt
+          done
+          cat verify-log-subscription-fix.txt
+
+      - name: Commit log
+        run: |
+          git config user.name "verify-bot"
+          git config user.email "bot@sacredhealing"
+          git add verify-log-subscription-fix.txt
+          git commit -m "ci: verify subscription functions" || echo "no change"
+          git push
