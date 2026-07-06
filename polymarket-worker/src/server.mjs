@@ -891,15 +891,15 @@ app.get('/', (_req, res) =>
 // ─── 9 Confirmed Elite Whale Addresses (verified June 2026) ─────────────────
 // Ranked by PnL | Top 3: BAA2BC (Iran Insider), ED107A (NO Machine), A7A8C1 (World Cup)
 const KNOWN_WHALES = [
-  '0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73',
-  '0x06dc51826bc524d9a83770e7de9dd7e005b04524',
-  '0xed107a85a4585a381e48c7f7ca4144909e7dd2e5',
-  '0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c',
-  '0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786',
-  '0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6',
-  '0x204f72f35326db932158cba6adff0b9a1da95e14',
-  '0xa77105bb4d2d4d200b0133a2036222353831162d',
-  '0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227',
+  '0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73', // Iran Insider / denizz - all-time rank 55, $2.47M pnl, proven long-term
+  '0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6', // CoTrader / suntori - confirmed active elite
+  '0x204f72f35326db932158cba6adff0b9a1da95e14', // PerfectWR / swisstony - confirmed active elite, $3.57M recent pnl
+  '0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227', // Elite / ndb1 - confirmed active elite
+  '0x095fbca2e0eaf0c9841005135427e1e0117190b2', // muchobliged - all-time rank 30, 38.7% ROI
+  '0x9468bb7e53c8a5f13cc283f2aed950ebf9865d4b', // myzbsq - all-time rank 129, 37.7% ROI
+  '0x9ee8bbc36d378af72e5f6b8e2ea2eb67c05a89de', // Qpkwks - all-time rank 53, 12.5% ROI
+  '0xf0318c32136c2db7fec88b84869aee6a1106c80c', // BreakTheBank - all-time rank 45, high volume
+  '0x67542c3219b37fd1610aad290676ff91cdbfe3bc', // maz26 - all-time rank 151, high volume
 ];
 
 async function seedWhaleRegistry() {
