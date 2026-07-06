@@ -387,12 +387,18 @@ export default function UserManagementPanel() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({
-        title: cancelImmediately ? "Subscription Canceled" : "Cancellation Scheduled",
-        description: cancelImmediately
-          ? "Access revoked immediately."
-          : `Will end at period close${data?.expires_at ? ` (${new Date(data.expires_at).toLocaleDateString()})` : ""}.`,
-      });
+      if (data?.stripe_found === 0 || data?.warning) {
+        toast({
+          title: "⚠ No Stripe Subscription Found",
+          description: data?.warning || "Access removed locally, but no open Stripe subscription was found. Verify in the Stripe dashboard so the user is not billed again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: cancelImmediately ? "Subscription Canceled" : "Cancellation Scheduled",
+          description: `Stripe: ${data?.stripe_cancelled ?? 0} subscription(s) canceled. ${cancelImmediately ? "Access revoked immediately." : `Will end at period close${data?.expires_at ? ` (${new Date(data.expires_at).toLocaleDateString()})` : ""}.`}`,
+        });
+      }
       setModalMode(null);
       await loadUsers();
     } catch (e:any) {
