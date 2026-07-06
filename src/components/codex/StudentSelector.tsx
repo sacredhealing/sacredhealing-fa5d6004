@@ -5,12 +5,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Plus, Search, ChevronDown, Users } from "lucide-react";
+import { X, Plus, Search, ChevronDown, Users, Pencil } from "lucide-react";
 import {
   listStudents,
   getActiveStudentId,
   setActiveStudentId,
   createStudent,
+  updateStudent,
+  getStudent,
   type Student,
 } from "@/lib/codex/students";
 
@@ -43,7 +45,8 @@ export function useActiveStudent(): Student | null {
 
 export function StudentSelector() {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<"list" | "create">("list");
+  const [view, setView] = useState<"list" | "create" | "edit">("list");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [activeId, setActiveId] = useState<string | null>(getActiveStudentId());
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
@@ -169,6 +172,58 @@ export function StudentSelector() {
     setCreating(false);
   };
 
+  const startCreate = useCallback(() => {
+    setEditingId(null);
+    setNewName(""); setNewDate(""); setNewTime("");
+    setNewPlace(""); setNewNotes(""); setLinkedUser(null);
+    setSearchTerm(""); setSearchResults([]);
+    setCreateError("");
+    setView("create");
+  }, []);
+
+  const startEdit = useCallback((student: Student, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setEditingId(student.id);
+    setNewName(student.name ?? "");
+    setNewDate(student.birth_date ?? "");
+    setNewTime(student.birth_time ?? "");
+    setNewPlace(student.birth_place ?? "");
+    setNewNotes(student.notes ?? "");
+    setLinkedUser(null);
+    setSearchTerm("");
+    setSearchResults([]);
+    setCreateError("");
+    setView("edit");
+  }, []);
+
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    setCreateError("");
+    if (!newName.trim()) { setCreateError("Name is required"); return; }
+    setCreating(true);
+    try {
+      await updateStudent(editingId, {
+        name: newName.trim(),
+        birth_date: newDate || null,
+        birth_time: newTime || null,
+        birth_place: newPlace || null,
+        notes: newNotes || null,
+      });
+      if (activeId === editingId) {
+        const refreshed = await getStudent(editingId);
+        if (refreshed) setActiveStudent(refreshed);
+      }
+      setNewName(""); setNewDate(""); setNewTime("");
+      setNewPlace(""); setNewNotes(""); setLinkedUser(null);
+      setEditingId(null);
+      setView("list");
+      await loadStudents();
+    } catch (err: any) {
+      setCreateError(err?.message ?? "Failed to save changes");
+    }
+    setCreating(false);
+  };
+
   const isActive = !!activeId;
 
   // ─── List content ─────────────────────────────────────────────
@@ -222,7 +277,7 @@ export function StudentSelector() {
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>No students yet</div>
           <button
             type="button"
-            onClick={() => setView("create")}
+            onClick={startCreate}
             style={{
               padding: "8px 16px", borderRadius: 8, cursor: "pointer",
               background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.25)",
@@ -277,6 +332,20 @@ export function StudentSelector() {
                   color: "rgba(34,211,238,0.55)",
                 }}>Chart ✓</span>
               )}
+              <button
+                type="button"
+                onClick={(e) => startEdit(s, e)}
+                title="Edit this student's details"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 26, height: 26, borderRadius: 6, cursor: "pointer",
+                  border: "1px solid rgba(212,175,55,0.18)",
+                  background: "rgba(212,175,55,0.04)",
+                  color: "rgba(212,175,55,0.55)", flexShrink: 0,
+                }}
+              >
+                <Pencil size={12} />
+              </button>
               {isSelected && <span style={{ width: 6, height: 6, borderRadius: "50%", background: gold }} />}
             </div>
           </div>
@@ -414,7 +483,7 @@ export function StudentSelector() {
 
       <button
         type="button"
-        onClick={handleCreate}
+        onClick={view === "edit" ? handleUpdate : handleCreate}
         disabled={!newName.trim() || creating}
         style={{
           width: "100%", padding: "12px",
@@ -427,7 +496,9 @@ export function StudentSelector() {
           marginBottom: 8,
         }}
       >
-        {creating ? "Creating…" : "Create student → activate"}
+        {view === "edit"
+          ? (creating ? "Saving…" : "Save changes")
+          : (creating ? "Creating…" : "Create student → activate")}
       </button>
     </div>
   );
@@ -442,24 +513,24 @@ export function StudentSelector() {
       background: "rgba(10,7,3,0.98)", backdropFilter: "blur(40px)",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {view === "create" && (
+        {(view === "create" || view === "edit") && (
           <button
             type="button"
-            onClick={() => setView("list")}
+            onClick={() => { setView("list"); setEditingId(null); }}
             style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(212,175,55,0.5)", padding: "0 4px 0 0", display: "flex", alignItems: "center" }}
           >
             <ChevronDown size={14} style={{ transform: "rotate(90deg)" }} />
           </button>
         )}
-        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: view === "create" ? gold : "rgba(212,175,55,0.5)" }}>
-          {view === "create" ? "New student" : "Reading for"}
+        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: view === "list" ? "rgba(212,175,55,0.5)" : gold }}>
+          {view === "create" ? "New student" : view === "edit" ? "Edit student" : "Reading for"}
         </span>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         {view === "list" && (
           <button
             type="button"
-            onClick={() => setView("create")}
+            onClick={startCreate}
             style={{
               fontSize: 8, fontWeight: 800, letterSpacing: "0.12em",
               textTransform: "uppercase", padding: "5px 10px", borderRadius: 6,
@@ -472,7 +543,7 @@ export function StudentSelector() {
         )}
         <button
           type="button"
-          onClick={() => { setOpen(false); setView("list"); }}
+          onClick={() => { setOpen(false); setView("list"); setEditingId(null); }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 2, display: "flex", alignItems: "center" }}
         >
           <X size={15} />
@@ -535,7 +606,7 @@ export function StudentSelector() {
       {open && typeof document !== "undefined" && createPortal(
         <>
           <div
-            onClick={() => { setOpen(false); setView("list"); }}
+            onClick={() => { setOpen(false); setView("list"); setEditingId(null); }}
             style={{
               position: "fixed", inset: 0, zIndex: 998,
               background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
