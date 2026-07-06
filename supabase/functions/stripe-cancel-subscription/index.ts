@@ -29,44 +29,71 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Fetch the user's Stripe customer ID from profiles
-    const { data: profile, error: profileError } = await supabaseClient
+    // Resolve Stripe customer: profiles → user_memberships → email lookup (with backfill)
+    const { data: profile } = await supabaseClient
       .from("profiles")
       .select("stripe_customer_id, membership_tier")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profile?.stripe_customer_id) {
-      throw new Error("No Stripe customer found for this user");
+    let customerId: string | null = profile?.stripe_customer_id ?? null;
+
+    if (!customerId) {
+      const { data: membership } = await supabaseClient
+        .from("user_memberships")
+        .select("stripe_customer_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      customerId = membership?.stripe_customer_id ?? null;
     }
 
-    // Find active subscriptions for this customer
-    const subscriptions = await stripe.subscriptions.list({
-      customer: profile.stripe_customer_id,
-      status: "active",
-      limit: 1,
-    });
+    if (!customerId && user.email) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) customerId = customers.data[0].id;
+    }
 
-    if (subscriptions.data.length === 0) {
+    if (!customerId) throw new Error("No Stripe customer found for this user");
+
+    // Backfill so future lookups are instant
+    if (!profile?.stripe_customer_id) {
+      await supabaseClient.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
+    }
+
+    // Cancel ALL open subscriptions at period end (graceful — access retained until cycle ends)
+    const openSubs: any[] = [];
+    for (const status of ["active", "trialing", "past_due"]) {
+      const list = await stripe.subscriptions.list({ customer: customerId, status: status as any, limit: 10 });
+      openSubs.push(...list.data);
+    }
+
+    if (openSubs.length === 0) {
       throw new Error("No active subscription found");
     }
 
-    const subscription = subscriptions.data[0];
+    let latestPeriodEnd = 0;
+    const cancelledIds: string[] = [];
+    for (const sub of openSubs) {
+      if (sub.cancel_at_period_end) { // already scheduled
+        latestPeriodEnd = Math.max(latestPeriodEnd, sub.current_period_end);
+        cancelledIds.push(sub.id);
+        continue;
+      }
+      const cancelled = await stripe.subscriptions.update(sub.id, { cancel_at_period_end: true });
+      latestPeriodEnd = Math.max(latestPeriodEnd, cancelled.current_period_end);
+      cancelledIds.push(sub.id);
+    }
 
-    // Cancel at period end (graceful — user keeps access until billing cycle ends)
-    const cancelled = await stripe.subscriptions.update(subscription.id, {
-      cancel_at_period_end: true,
-    });
-
-    // Log cancellation in Supabase
     await supabaseClient.from("subscription_events").insert({
       user_id: user.id,
       event_type: "cancellation_requested",
-      stripe_subscription_id: subscription.id,
-      current_period_end: new Date(cancelled.current_period_end * 1000).toISOString(),
+      stripe_subscription_id: cancelledIds[0],
+      current_period_end: new Date(latestPeriodEnd * 1000).toISOString(),
       metadata: {
-        membership_tier: profile.membership_tier,
+        membership_tier: profile?.membership_tier ?? null,
         cancelled_at: new Date().toISOString(),
+        all_subscription_ids: cancelledIds,
       },
     });
 
@@ -74,21 +101,16 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Subscription will cancel at end of billing period",
-        cancel_at: new Date(cancelled.current_period_end * 1000).toISOString(),
+        cancel_at: new Date(latestPeriodEnd * 1000).toISOString(),
+        subscriptions: cancelledIds,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
     );
   } catch (error) {
     console.error("stripe-cancel-subscription error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
     );
   }
 });
