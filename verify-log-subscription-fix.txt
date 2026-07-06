@@ -1,0 +1,5 @@
+admin-user-management → HTTP 401 | {"error":"Unauthorized"}
+stripe-cancel-subscription → HTTP 400 | {"error":"No authorization header"}
+stripe-reactivate-subscription → HTTP 404 | {"code":"NOT_FOUND","message":"Requested function was not found"}
+stripe-billing-portal → HTTP 404 | {"code":"NOT_FOUND","message":"Requested function was not found"}
+stripe-subscription-details → HTTP 500 | {"error":"No auth header"}
