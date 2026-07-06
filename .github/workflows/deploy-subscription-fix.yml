@@ -21,7 +21,7 @@ jobs:
         id: deploy
         continue-on-error: true
         env:
-          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           FAILED=""
           : > /tmp/deploy-log.txt
