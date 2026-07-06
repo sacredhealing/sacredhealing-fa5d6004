@@ -14,15 +14,15 @@ const BG = '#050505';
 const PROXY = 'https://ssygukfdbtehvtndandn.supabase.co/functions/v1/clawbot-proxy';
 
 const WHALE_ALIASES: Record<string, string> = {
-  '0xbaa2bcb5': 'Iran Insider',
-  '0x06dc5182': 'CryptoOracle',
-  '0xed107a85': 'NoMachine99x',
-  '0xa7a8c1fd': 'WorldCup',
-  '0xf49ce459': 'HighFreq',
-  '0xe9076a87': 'CoTrader',
-  '0x204f72f3': 'PerfectWR',
-  '0xa77105bb': 'A77105',
-  '0xfea31bc0': 'Elite',
+  '0xbaa2bcb5': 'Iran Insider (denizz)',
+  '0xe9076a87': 'CoTrader (suntori)',
+  '0x204f72f3': 'PerfectWR (swisstony)',
+  '0xfea31bc0': 'Elite (ndb1)',
+  '0x095fbca2': 'muchobliged',
+  '0x9468bb7e': 'myzbsq',
+  '0x9ee8bbc3': 'Qpkwks',
+  '0xf0318c32': 'BreakTheBank',
+  '0x67542c32': 'maz26',
 };
 
 
