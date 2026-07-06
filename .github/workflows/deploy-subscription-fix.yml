@@ -8,23 +8,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout with PAT
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
         run: |
-          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+          curl -fsSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_linux_amd64.tar.gz \
+            | tar xz -C /usr/local/bin supabase
+          supabase --version
 
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Deploy subscription functions to ssygukfdbtehvtndandn
+      - name: Deploy subscription functions
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        working-directory: repo
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
         run: |
+          FAILED=""
           for fn in admin-user-management stripe-cancel-subscription stripe-reactivate-subscription stripe-billing-portal; do
             echo "=== Deploying $fn ==="
-            supabase functions deploy $fn \
-              --project-ref ssygukfdbtehvtndandn \
-              --no-verify-jwt 2>&1
-            echo "Exit: $?"
+            if supabase functions deploy $fn --project-ref ssygukfdbtehvtndandn --no-verify-jwt; then
+              echo "OK: $fn"
+            else
+              echo "FAILED: $fn"
+              FAILED="$FAILED $fn"
+            fi
           done
+          if [ -n "$FAILED" ]; then echo "Failed functions:$FAILED"; exit 1; fi
+          echo "ALL DEPLOYED"
