@@ -6,6 +6,67 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+
+// ── Stripe helper: resolve + cancel ALL open subscriptions for a user ──────
+// Resolution order: user_memberships.stripe_subscription_id → stored customer
+// IDs (memberships + profiles) → Stripe customer lookup by auth email.
+async function cancelStripeSubsForUser(adminClient: any, userId: string, immediately: boolean) {
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!stripeKey) return { cancelled: [], errors: ["STRIPE_SECRET_KEY not configured"], found: 0 };
+  const H = { Authorization: `Bearer ${stripeKey}` };
+  const subIds = new Set<string>();
+  const custIds = new Set<string>();
+
+  const { data: m } = await adminClient.from("user_memberships")
+    .select("stripe_subscription_id, stripe_customer_id")
+    .eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (m?.stripe_subscription_id) subIds.add(m.stripe_subscription_id);
+  if (m?.stripe_customer_id) custIds.add(m.stripe_customer_id);
+
+  const { data: p } = await adminClient.from("profiles")
+    .select("stripe_customer_id").eq("id", userId).maybeSingle();
+  if (p?.stripe_customer_id) custIds.add(p.stripe_customer_id);
+
+  if (custIds.size === 0) {
+    const { data: au } = await adminClient.auth.admin.getUserById(userId);
+    const email = au?.user?.email;
+    if (email) {
+      const r = await fetch(`https://api.stripe.com/v1/customers?email=${encodeURIComponent(email)}&limit=5`, { headers: H });
+      const j = await r.json();
+      for (const c of j?.data ?? []) custIds.add(c.id);
+    }
+  }
+
+  const OPEN = ["active", "trialing", "past_due", "unpaid"];
+  for (const cid of custIds) {
+    const r = await fetch(`https://api.stripe.com/v1/subscriptions?customer=${cid}&status=all&limit=20`, { headers: H });
+    const j = await r.json();
+    for (const s of j?.data ?? []) if (OPEN.includes(s.status)) subIds.add(s.id);
+  }
+
+  const cancelled: string[] = [];
+  const errors: string[] = [];
+  for (const sid of subIds) {
+    try {
+      const res = immediately
+        ? await fetch(`https://api.stripe.com/v1/subscriptions/${sid}`, { method: "DELETE", headers: H })
+        : await fetch(`https://api.stripe.com/v1/subscriptions/${sid}`, {
+            method: "POST",
+            headers: { ...H, "Content-Type": "application/x-www-form-urlencoded" },
+            body: "cancel_at_period_end=true",
+          });
+      const j = await res.json();
+      if (!res.ok) {
+        // Stale stored ID pointing at an already-canceled/missing sub → not an error
+        if (j?.error?.code === "resource_missing" || /canceled/i.test(j?.error?.message ?? "")) continue;
+        throw new Error(j?.error?.message || `HTTP ${res.status}`);
+      }
+      cancelled.push(sid);
+    } catch (e: any) { errors.push(`${sid}: ${e.message}`); }
+  }
+  return { cancelled, errors, found: subIds.size, customerIds: [...custIds] };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -177,6 +238,13 @@ serve(async (req) => {
         const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
         if (targetIsAdmin) throw new Error("Cannot delete admin accounts");
 
+        // Cancel any open Stripe subscription BEFORE deleting, otherwise
+        // billing continues after the account is gone. Abort on failure.
+        const stripeDel = await cancelStripeSubsForUser(adminClient, userId, true);
+        if (stripeDel.errors.length > 0) {
+          throw new Error(`Deletion aborted — Stripe subscription could not be cancelled: ${stripeDel.errors.join("; ")}. Cancel it in the Stripe dashboard, then retry.`);
+        }
+
         await adminClient.from("admin_granted_access").delete().eq("user_id", userId);
         await adminClient.from("user_memberships").delete().eq("user_id", userId);
         await adminClient.from("shc_transactions").delete().eq("user_id", userId);
@@ -294,47 +362,23 @@ serve(async (req) => {
         if (!userId) throw new Error("userId required");
         const cancelImmediately = body.immediately === true;
 
+        // Cancel in Stripe FIRST — hard-fail if Stripe cancellation errors,
+        // so the admin is never shown success while billing continues.
+        const stripe = await cancelStripeSubsForUser(adminClient, userId, cancelImmediately);
+        if (stripe.errors.length > 0) {
+          return new Response(JSON.stringify({
+            error: `Stripe cancellation FAILED — user may still be billed. ${stripe.errors.join("; ")}`,
+            stripe,
+          }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
         const { data: membership } = await adminClient
           .from("user_memberships")
-          .select("id, stripe_subscription_id, expires_at, status")
+          .select("id, expires_at")
           .eq("user_id", userId)
-          .eq("status", "active")
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
-
-        let stripeResult: any = null;
-        const subId = membership?.stripe_subscription_id;
-        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-
-        if (subId && stripeKey) {
-          try {
-            if (cancelImmediately) {
-              const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${stripeKey}` },
-              });
-              stripeResult = await res.json();
-              if (!res.ok) throw new Error(stripeResult?.error?.message || "Stripe cancel failed");
-            } else {
-              const params = new URLSearchParams();
-              params.set("cancel_at_period_end", "true");
-              const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${stripeKey}`,
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: params.toString(),
-              });
-              stripeResult = await res.json();
-              if (!res.ok) throw new Error(stripeResult?.error?.message || "Stripe cancel failed");
-            }
-          } catch (e: any) {
-            console.warn("Stripe cancel error:", e.message);
-            stripeResult = { error: e.message };
-          }
-        }
 
         if (membership?.id) {
           await adminClient
@@ -360,9 +404,13 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({
           success: true,
-          stripe_subscription_id: subId || null,
-          stripe_result: stripeResult,
           mode: cancelImmediately ? "immediate" : "period_end",
+          stripe_found: stripe.found,
+          stripe_cancelled: stripe.cancelled.length,
+          stripe_subscription_ids: stripe.cancelled,
+          warning: stripe.found === 0
+            ? "No open Stripe subscription found for this user — verify in the Stripe dashboard."
+            : null,
           expires_at: membership?.expires_at || null,
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
