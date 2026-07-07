@@ -264,16 +264,25 @@ export const AutoContentPipeline = () => {
     const jobId = triggerData.jobId as string;
     addLog(`✓ Server job started (${jobId}). Processing now — you can lock your phone, this runs on the server.`);
 
-    // Poll for progress every 5s, up to ~30 minutes
+    // Poll for progress every 5s, up to ~30 minutes. Tolerate transient worker
+    // hiccups — only give up after several consecutive failed status checks.
+    let consecutiveFailures = 0;
+    const MAX_CONSECUTIVE_FAILURES = 6; // ~30s of silence before we bail
     for (let attempt = 0; attempt < 360; attempt++) {
       await new Promise((r) => setTimeout(r, 5000));
       const { data: statusData, error: statusError } = await supabase.functions.invoke("social-post", {
         body: { action: "worker_status", jobId },
       });
       if (statusError || !statusData?.success) {
-        addLog(`✗ Lost contact with worker: ${statusData?.error || statusError?.message}`);
-        break;
+        consecutiveFailures++;
+        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+          addLog(`✗ Lost contact with worker after ${consecutiveFailures} retries: ${statusData?.error || statusError?.message || "no response"}`);
+          break;
+        }
+        addLog(`… worker busy, retrying (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES})`);
+        continue;
       }
+      consecutiveFailures = 0;
       const workerClips = (statusData.clips || []) as any[];
       setClips(workerClips.map((c) => ({
         index: c.index, start: c.start, end: c.end, hook: c.hook, scheduledFor: c.scheduledFor,
