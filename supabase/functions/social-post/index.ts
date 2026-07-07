@@ -526,14 +526,16 @@ serve(async (req) => {
       }
       try {
         const statusRes = await fetch(`http://178.105.183.74:3002/status/${jobId}`);
-        const statusJson = await statusRes.json();
+        const statusJson = await statusRes.json().catch(() => ({ success: false, error: `Worker returned HTTP ${statusRes.status}` }));
+        // Always return 200 so supabase.functions.invoke doesn't treat transient worker
+        // hiccups (404 after restart, 5xx during heavy ffmpeg) as a hard client error.
         return new Response(JSON.stringify(statusJson), {
-          status: statusRes.status,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } catch (err: any) {
         return new Response(JSON.stringify({ success: false, error: `Could not reach video worker on Hetzner: ${err.message}` }), {
-          status: 502,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
