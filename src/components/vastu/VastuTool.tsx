@@ -625,7 +625,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
         </div>
 
         {/* Chat window — passes through, styled inside VastuChat */}
-        <div style={{ flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <VastuChatWindow
             messages={messages}
             onSendMessage={handleSendMessage}
