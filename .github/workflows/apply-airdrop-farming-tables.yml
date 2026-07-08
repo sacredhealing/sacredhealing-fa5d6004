@@ -1,0 +1,57 @@
+name: Apply Airdrop Farming Tables
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-airdrop-farming-tables.yml'
+  workflow_dispatch:
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create tables via Supabase Management API
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'NODEEOF'
+          const https = require('https');
+          const PAT = process.env.PAT;
+          const REF = 'ssygukfdbtehvtndandn';
+          const query = "-- Airdrop Farming Tracker \u2014 per-user weekly log, synced across devices.\n\nCREATE TABLE IF NOT EXISTS airdrop_farming_entries (\n  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id     uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,\n  protocol_id text NOT NULL,\n  week_key    text NOT NULL,\n  note        text,\n  created_at  timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (user_id, protocol_id, week_key)\n);\n\nCREATE TABLE IF NOT EXISTS airdrop_farming_hygiene (\n  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id     uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,\n  week_key    text NOT NULL,\n  item        text NOT NULL,\n  checked     boolean NOT NULL DEFAULT true,\n  updated_at  timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (user_id, week_key, item)\n);\n\nALTER TABLE airdrop_farming_entries ENABLE ROW LEVEL SECURITY;\nALTER TABLE airdrop_farming_hygiene ENABLE ROW LEVEL SECURITY;\n\nDO $$ BEGIN\n  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='airdrop_farming_entries' AND policyname='Users own airdrop_farming_entries') THEN\n    CREATE POLICY \"Users own airdrop_farming_entries\" ON airdrop_farming_entries FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\n  END IF;\n  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='airdrop_farming_hygiene' AND policyname='Users own airdrop_farming_hygiene') THEN\n    CREATE POLICY \"Users own airdrop_farming_hygiene\" ON airdrop_farming_hygiene FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\n  END IF;\nEND $$;\n\nGRANT ALL ON airdrop_farming_entries TO authenticated;\nGRANT ALL ON airdrop_farming_hygiene TO authenticated;\n";
+
+          function sql(q) {
+            return new Promise((resolve) => {
+              const body = JSON.stringify({ query: q });
+              const req = https.request(
+                {
+                  hostname: 'api.supabase.com',
+                  path: `/v1/projects/${REF}/database/query`,
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${PAT}`,
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                  },
+                },
+                (resp) => {
+                  let d = '';
+                  resp.on('data', (c) => (d += c));
+                  resp.on('end', () => {
+                    console.log('Status:', resp.statusCode);
+                    console.log(d);
+                    resolve(d);
+                  });
+                }
+              );
+              req.on('error', (e) => { console.error(e.message); resolve(null); });
+              req.write(body);
+              req.end();
+            });
+          }
+
+          (async () => {
+            await sql(query);
+            console.log('=== Airdrop farming tables migration complete ===');
+          })();
+          NODEEOF
