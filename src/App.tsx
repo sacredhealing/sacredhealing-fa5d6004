@@ -131,6 +131,7 @@ const AIIncomeDetail = React.lazy(() => import("./pages/income-streams/AIIncomeD
 const EducationDetail = React.lazy(() => import("./pages/income-streams/EducationDetail"));
 const SovereignSignalOracle = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
 const DeltaArbBot = React.lazy(() => import("./pages/income-streams/DeltaArbBotV2")); // v-20260609-123855
+const FlashArbMonitor = React.lazy(() => import("./pages/income-streams/FlashArbMonitor"));
 const PolymarketCopyTradingInfo = React.lazy(() => import("./pages/income-streams/PolymarketCopyTradingInfo"));
 const FomoCopyBot = React.lazy(() => import("./pages/income-streams/FomoCopyBot"));
 const ShreemBrzeePerformance = React.lazy(() => import("./pages/income-streams/ShreemBrzeePerformance"));
@@ -359,6 +360,7 @@ function AppRoutes() {
                   <Route path="/prediction-market-bot" element={<PredictionMarketBot />} />
                   <Route path="/income-streams/polymarket-bot" element={<SovereignSignalOracle />} />
                   <Route path="/income-streams/delta-arb-bot" element={<DeltaArbBot />} />
+                  <Route path="/income-streams/flash-arb-monitor" element={<FlashArbMonitor />} />
                   <Route path="/income-streams/polymarket-copy-trading" element={<PolymarketCopyTradingInfo />} />
                   <Route path="/income-streams/fomo-copy-bot" element={<FomoCopyBot />} />
                   <Route path="/income-streams/shreem-brzee-performance" element={<ShreemBrzeePerformance />} />
