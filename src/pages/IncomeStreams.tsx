@@ -108,6 +108,12 @@ const STREAM_ACCENT: Record<string, { color: string; glow: string; bg: string; b
     bg: 'rgba(245,158,11,0.06)',
     border: 'rgba(245,158,11,0.4)',
   },
+  'airdrop-farming': {
+    color: '#10B981',
+    glow: '0 0 24px rgba(16,185,129,0.2)',
+    bg: 'rgba(16,185,129,0.06)',
+    border: 'rgba(16,185,129,0.4)',
+  },
 };
 const DEFAULT_ACCENT = {
   color: '#D4AF37',
@@ -177,6 +183,11 @@ const IncomeStreams: React.FC = () => {
         (s) =>
           s.internal_slug === 'whale-intelligence' ||
           s.link === '/income-streams/whale-intelligence'
+      );
+      const hasAirdropFarming = withoutForex.some(
+        (s) =>
+          s.internal_slug === 'airdrop-farming' ||
+          s.link === '/income-streams/airdrop-farming'
       );
 
       const polymarketFallback: IncomeStream = {
@@ -315,6 +326,40 @@ const IncomeStreams: React.FC = () => {
         cta_button_text_no: null,
       };
 
+      const airdropFarmingFallback: IncomeStream = {
+        id: 'airdrop-farming-fallback',
+        title: 'Airdrop Farming',
+        title_sv: null,
+        title_es: null,
+        title_no: null,
+        description:
+          'Manual weekly routine across Meteora, Monad, and Polymarket. Zero capital needed — consistency and clean wallet hygiene only. Payouts are a bonus, not income.',
+        description_sv: null,
+        description_es: null,
+        description_no: null,
+        link: '/income-streams/airdrop-farming',
+        category: 'Crypto',
+        potential_earnings: 'ZERO CAPITAL · MANUAL · BONUS UPSIDE',
+        potential_earnings_sv: null,
+        potential_earnings_es: null,
+        potential_earnings_no: null,
+        is_featured: true,
+        image_url: null,
+        order_index: -2,
+        icon_name: 'Coins',
+        badge_text: 'NEW · TRACKER',
+        badge_text_sv: null,
+        badge_text_es: null,
+        badge_text_no: null,
+        color_from: null,
+        color_to: null,
+        internal_slug: 'airdrop-farming',
+        cta_button_text: 'Open tracker',
+        cta_button_text_sv: null,
+        cta_button_text_es: null,
+        cta_button_text_no: null,
+      };
+
       const fomoCopyBotFallback: IncomeStream = {
         id: 'fomo-copy-bot-fallback',
         title: 'FOMO Copy Bot (Admin)',
@@ -350,6 +395,7 @@ const IncomeStreams: React.FC = () => {
       };
 
       let merged = [...withoutForex];
+      if (!hasAirdropFarming) merged = [airdropFarmingFallback, ...merged];
       // Polymarket bots are admin-only: only inject fallbacks for admins
       if (isAdmin) {
         if (!hasSqiSovereignBot) merged = [sqiSovereignBotFallback, ...merged];
