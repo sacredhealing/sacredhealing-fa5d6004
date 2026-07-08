@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Circle, Flame, Plus, Trash2, HelpCircle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Flame, Plus, Trash2, HelpCircle, ChevronDown, CloudOff, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const GOLD = '#D4AF37';
 const BG = '#050505';
@@ -35,8 +37,8 @@ const HYGIENE_ITEMS = [
   'No round-trip in the same session (in and out within minutes)',
 ];
 
-const STORAGE_KEY_ENTRIES = 'sqi_airdrop_entries_v1';
-const STORAGE_KEY_HYGIENE = 'sqi_airdrop_hygiene_v1';
+const LOCAL_ENTRIES_KEY = 'sqi_airdrop_entries_v1';
+const LOCAL_HYGIENE_KEY = 'sqi_airdrop_hygiene_v1';
 
 function isoWeek(d: Date) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -51,56 +53,145 @@ type Entry = { protocolId: string; week: string; note: string; date: string };
 
 export default function AirdropFarmingTracker() {
   const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [entries, setEntries] = useState<Record<string, Entry>>({});
   const [hygiene, setHygiene] = useState<Record<string, boolean>>({});
   const [noteDraft, setNoteDraft] = useState<Record<string, string>>({});
   const [showExplainer, setShowExplainer] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [tablesMissing, setTablesMissing] = useState(false);
 
   const currentWeek = isoWeek(new Date());
+  const synced = isAuthenticated && !tablesMissing;
 
-  useEffect(() => {
+  // ---- Load ----
+  const loadFromSupabase = useCallback(async () => {
+    if (!user) return;
+    setDataLoading(true);
+    setSyncError(null);
+
+    const [entriesRes, hygieneRes] = await Promise.all([
+      (supabase as any).from('airdrop_farming_entries').select('*').eq('user_id', user.id),
+      (supabase as any).from('airdrop_farming_hygiene').select('*').eq('user_id', user.id),
+    ]);
+
+    if (entriesRes.error) {
+      // 42P01 = undefined_table — migration hasn't been run yet in Supabase
+      if ((entriesRes.error as any).code === '42P01' || entriesRes.error.message?.includes('does not exist')) {
+        setTablesMissing(true);
+      } else {
+        setSyncError(entriesRes.error.message);
+      }
+    } else if (entriesRes.data) {
+      const map: Record<string, Entry> = {};
+      for (const row of entriesRes.data as any[]) {
+        map[`${row.protocol_id}:${row.week_key}`] = {
+          protocolId: row.protocol_id,
+          week: row.week_key,
+          note: row.note || 'Action logged',
+          date: row.created_at,
+        };
+      }
+      setEntries(map);
+    }
+
+    if (hygieneRes.data) {
+      const map: Record<string, boolean> = {};
+      for (const row of hygieneRes.data as any[]) {
+        map[`${row.week_key}:${row.item}`] = row.checked;
+      }
+      setHygiene(map);
+    }
+
+    setDataLoading(false);
+  }, [user]);
+
+  const loadFromLocal = useCallback(() => {
     try {
-      const e = localStorage.getItem(STORAGE_KEY_ENTRIES);
+      const e = localStorage.getItem(LOCAL_ENTRIES_KEY);
       if (e) setEntries(JSON.parse(e));
-      const h = localStorage.getItem(STORAGE_KEY_HYGIENE);
+      const h = localStorage.getItem(LOCAL_HYGIENE_KEY);
       if (h) setHygiene(JSON.parse(h));
     } catch {}
+    setDataLoading(false);
   }, []);
 
-  function persistEntries(next: Record<string, Entry>) {
+  useEffect(() => {
+    if (authLoading) return;
+    if (isAuthenticated && user) {
+      loadFromSupabase();
+    } else {
+      loadFromLocal();
+    }
+  }, [authLoading, isAuthenticated, user, loadFromSupabase, loadFromLocal]);
+
+  // ---- Write helpers ----
+  function persistLocalEntries(next: Record<string, Entry>) {
     setEntries(next);
     try {
-      localStorage.setItem(STORAGE_KEY_ENTRIES, JSON.stringify(next));
+      localStorage.setItem(LOCAL_ENTRIES_KEY, JSON.stringify(next));
     } catch {}
   }
 
-  function persistHygiene(next: Record<string, boolean>) {
+  function persistLocalHygiene(next: Record<string, boolean>) {
     setHygiene(next);
     try {
-      localStorage.setItem(STORAGE_KEY_HYGIENE, JSON.stringify(next));
+      localStorage.setItem(LOCAL_HYGIENE_KEY, JSON.stringify(next));
     } catch {}
   }
 
-  function logAction(protocolId: string) {
-    const note = (noteDraft[protocolId] || '').trim();
+  async function logAction(protocolId: string) {
+    const note = (noteDraft[protocolId] || '').trim() || 'Action logged';
     const key = `${protocolId}:${currentWeek}`;
-    persistEntries({
-      ...entries,
-      [key]: { protocolId, week: currentWeek, note: note || 'Action logged', date: new Date().toISOString() },
-    });
+    const nowIso = new Date().toISOString();
+
+    if (synced && user) {
+      setEntries({ ...entries, [key]: { protocolId, week: currentWeek, note, date: nowIso } });
+      const { error } = await (supabase as any).from('airdrop_farming_entries').upsert(
+        { user_id: user.id, protocol_id: protocolId, week_key: currentWeek, note },
+        { onConflict: 'user_id,protocol_id,week_key' }
+      );
+      if (error) setSyncError(error.message);
+    } else {
+      persistLocalEntries({ ...entries, [key]: { protocolId, week: currentWeek, note, date: nowIso } });
+    }
     setNoteDraft({ ...noteDraft, [protocolId]: '' });
   }
 
-  function removeAction(protocolId: string) {
+  async function removeAction(protocolId: string) {
     const key = `${protocolId}:${currentWeek}`;
     const next = { ...entries };
     delete next[key];
-    persistEntries(next);
+
+    if (synced && user) {
+      setEntries(next);
+      const { error } = await supabase
+        .from('airdrop_farming_entries')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('protocol_id', protocolId)
+        .eq('week_key', currentWeek);
+      if (error) setSyncError(error.message);
+    } else {
+      persistLocalEntries(next);
+    }
   }
 
-  function toggleHygiene(item: string) {
+  async function toggleHygiene(item: string) {
     const key = `${currentWeek}:${item}`;
-    persistHygiene({ ...hygiene, [key]: !hygiene[key] });
+    const nextChecked = !hygiene[key];
+
+    if (synced && user) {
+      setHygiene({ ...hygiene, [key]: nextChecked });
+      const { error } = await (supabase as any).from('airdrop_farming_hygiene').upsert(
+        { user_id: user.id, week_key: currentWeek, item, checked: nextChecked },
+        { onConflict: 'user_id,week_key,item' }
+      );
+      if (error) setSyncError(error.message);
+    } else {
+      persistLocalHygiene({ ...hygiene, [key]: nextChecked });
+    }
   }
 
   function streakFor(protocolId: string) {
@@ -137,15 +228,52 @@ export default function AirdropFarmingTracker() {
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontWeight: 900, fontSize: 18, color: GOLD, letterSpacing: '-0.03em' }}>AIRDROP FARMING</span>
-              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', color: GREEN, border: `1px solid ${GREEN}55`, borderRadius: 99, padding: '2px 8px' }}>
-                MANUAL
-              </span>
+              {dataLoading ? (
+                <Loader2 size={13} color="rgba(255,255,255,0.4)" style={{ animation: 'spin 0.8s linear infinite' }} />
+              ) : synced ? (
+                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', color: GREEN, border: `1px solid ${GREEN}55`, borderRadius: 99, padding: '2px 8px' }}>
+                  SYNCED
+                </span>
+              ) : (
+                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', color: AMBER, border: `1px solid ${AMBER}55`, borderRadius: 99, padding: '2px 8px' }}>
+                  ON THIS DEVICE
+                </span>
+              )}
             </div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-              Week {currentWeek} · logged locally on this device
-            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Week {currentWeek}</div>
           </div>
         </div>
+
+        {/* Not signed in banner */}
+        {!authLoading && !isAuthenticated && (
+          <div className={g} style={{ padding: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(245,158,11,0.04)', borderColor: 'rgba(245,158,11,0.2)' }}>
+            <CloudOff size={16} color={AMBER} style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', flex: 1 }}>
+              Saving to this device only. Sign in to sync across your phone and laptop.
+            </span>
+            <button
+              onClick={() => navigate('/auth')}
+              style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 800, color: BG, cursor: 'pointer', flexShrink: 0 }}
+            >
+              Sign in
+            </button>
+          </div>
+        )}
+
+        {/* Tables missing banner (admin-visible setup step) */}
+        {tablesMissing && (
+          <div className={g} style={{ padding: 14, marginBottom: 12, background: 'rgba(239,68,68,0.05)', borderColor: 'rgba(239,68,68,0.25)' }}>
+            <span style={{ fontSize: 12.5, color: 'rgba(255,200,200,0.9)', lineHeight: 1.5 }}>
+              Sync tables haven't been created in Supabase yet — run the{' '}
+              <code style={{ color: GOLD }}>20260708_airdrop_farming_tables.sql</code> migration in the SQL Editor once.
+              Saving to this device in the meantime.
+            </span>
+          </div>
+        )}
+
+        {syncError && (
+          <div style={{ fontSize: 11, color: '#f87171', marginBottom: 10 }}>Sync error: {syncError}</div>
+        )}
 
         {/* Explainer toggle */}
         <button
