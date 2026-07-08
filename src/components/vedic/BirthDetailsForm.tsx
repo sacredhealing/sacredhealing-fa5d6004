@@ -246,13 +246,33 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
               </Label>
               <Input
                 id="birth_time"
-                type="time"
+                type="text"
+                inputMode="numeric"
+                placeholder="HH:MM (e.g. 12:45)"
                 value={formData.birth_time}
-                onChange={(e) => setFormData({ ...formData, birth_time: e.target.value })}
+                onChange={(e) => {
+                  // Auto-insert colon after 2 digits
+                  let val = e.target.value.replace(/[^\d:]/g, '');
+                  if (val.length === 2 && !val.includes(':') && e.nativeEvent instanceof InputEvent && e.nativeEvent.inputType !== 'deleteContentBackward') {
+                    val = val + ':';
+                  }
+                  if (val.length > 5) val = val.slice(0, 5);
+                  setFormData({ ...formData, birth_time: val });
+                }}
+                onBlur={(e) => {
+                  // Validate and normalise HH:MM on blur
+                  const val = e.target.value;
+                  const match = val.match(/^(\d{1,2}):(\d{2})$/);
+                  if (match) {
+                    const h = Math.min(23, parseInt(match[1]));
+                    const m = Math.min(59, parseInt(match[2]));
+                    setFormData({ ...formData, birth_time: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}` });
+                  }
+                }}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                {t('vedicAstrology.formTimeHint')}
+                24-hour format — e.g. 12:45 or 14:30
               </p>
             </div>
           </div>

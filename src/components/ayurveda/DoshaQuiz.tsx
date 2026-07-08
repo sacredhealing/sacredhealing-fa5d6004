@@ -294,8 +294,13 @@ export const DoshaQuiz: React.FC<DoshaQuizProps> = ({ onComplete, isLoading }) =
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <ScanField label="Birth Date" type="date" placeholder=""
               value={formData.birthDate} onChange={v => setFormData(p => ({ ...p, birthDate:v }))} />
-            <ScanField label="Birth Time" type="time" placeholder=""
-              value={formData.birthTime} onChange={v => setFormData(p => ({ ...p, birthTime:v }))} />
+            <ScanField label="Birth Time (HH:MM)" type="text" placeholder="e.g. 12:45"
+              value={formData.birthTime} onChange={v => {
+                let val = v.replace(/[^\d:]/g, '');
+                if (val.length === 2 && !val.includes(':')) val = val + ':';
+                if (val.length > 5) val = val.slice(0, 5);
+                setFormData(p => ({ ...p, birthTime: val }));
+              }} />
           </div>
           <ScanField label="Current Location" type="text" placeholder="City, Country"
             value={formData.location} onChange={v => setFormData(p => ({ ...p, location:v }))} />

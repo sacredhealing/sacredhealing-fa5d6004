@@ -280,7 +280,27 @@ export default function Students() {
                   <input type="date" value={form.birth_date ?? ""} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} style={inputStyle} />
                 </Field>
                 <Field label="Birth Time">
-                  <input type="time" value={form.birth_time ?? ""} onChange={(e) => setForm({ ...form, birth_time: e.target.value })} style={inputStyle} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="HH:MM (e.g. 12:45)"
+                    value={form.birth_time ?? ""}
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/[^\d:]/g, '');
+                      if (val.length === 2 && !val.includes(':')) val = val + ':';
+                      if (val.length > 5) val = val.slice(0, 5);
+                      setForm({ ...form, birth_time: val });
+                    }}
+                    onBlur={(e) => {
+                      const match = e.target.value.match(/^(\d{1,2}):(\d{2})$/);
+                      if (match) {
+                        const h = Math.min(23, parseInt(match[1]));
+                        const m = Math.min(59, parseInt(match[2]));
+                        setForm({ ...form, birth_time: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}` });
+                      }
+                    }}
+                    style={inputStyle}
+                  />
                 </Field>
               </div>
               <Field label="Birth Place">
