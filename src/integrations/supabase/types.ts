@@ -805,6 +805,60 @@ export type Database = {
         }
         Relationships: []
       }
+      airdrop_farming_entries: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          protocol_id: string
+          user_id: string
+          week_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          protocol_id: string
+          user_id: string
+          week_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          protocol_id?: string
+          user_id?: string
+          week_key?: string
+        }
+        Relationships: []
+      }
+      airdrop_farming_hygiene: {
+        Row: {
+          checked: boolean
+          id: string
+          item: string
+          updated_at: string
+          user_id: string
+          week_key: string
+        }
+        Insert: {
+          checked?: boolean
+          id?: string
+          item: string
+          updated_at?: string
+          user_id: string
+          week_key: string
+        }
+        Update: {
+          checked?: boolean
+          id?: string
+          item?: string
+          updated_at?: string
+          user_id?: string
+          week_key?: string
+        }
+        Relationships: []
+      }
       album_purchases: {
         Row: {
           album_id: string
