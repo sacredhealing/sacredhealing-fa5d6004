@@ -1,2 +1,5 @@
-=== 2026-07-08T20:17:31.876Z ===
-{"message":"Unauthorized"}
+=== 2026-07-08T20:19:24.127Z ===
+SUPABASE_ACCESS_TOKEN: status=401 body={"message":"Unauthorized"}
+SUPA_ADMIN_PAT: status=401 body={"message":"Unauthorized"}
+SUPABASE_PAT: status=401 body={"message":"Unauthorized"}
+SUPABASE_TOKEN: status=401 body={"message":"JWT could not be decoded"}
