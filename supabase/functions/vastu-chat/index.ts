@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+
 const SIDDHA_SYSTEM_INSTRUCTION = `
 # ROLE: THE SIDDHA VASTU ARCHITECT (MULTIMODAL & SPATIAL)
 
@@ -90,66 +92,56 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Build Gemini contents with system prompt injection
-    const geminiContents: any[] = [
-      { role: "user", parts: [{ text: SIDDHA_SYSTEM_INSTRUCTION }] },
-      { role: "model", parts: [{ text: "Namaste 🙏 The Siddha Abundance Architect is present. I am ready to analyze your space and guide your transformation. How shall we begin?" }] }
+    // Build OpenAI-compatible message history
+    const chatMessages: any[] = [
+      { role: 'system', content: SIDDHA_SYSTEM_INSTRUCTION },
     ];
 
-    // Add conversation history
-    for (const msg of messages) {
-      geminiContents.push({
-        role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
-        parts: [{ text: msg.content || msg.text || '' }]
+    for (const msg of (messages ?? [])) {
+      chatMessages.push({
+        role: msg.role === 'assistant' || msg.role === 'model' ? 'assistant' : 'user',
+        content: msg.content || msg.text || '',
       });
     }
 
-    // If images provided, replace last user message with multimodal content
-    if (images && images.length > 0 && geminiContents.length > 0) {
-      const lastMsg = geminiContents[geminiContents.length - 1];
+    // If images provided, replace the last user message's content with
+    // OpenAI-style multimodal content blocks (text + image_url data URIs).
+    if (images && images.length > 0 && chatMessages.length > 0) {
+      const lastMsg = chatMessages[chatMessages.length - 1];
       if (lastMsg.role === 'user') {
-        const imageParts = images.map((b64: string) => {
-          const data = b64.includes(',') ? b64.split(',')[1] : b64;
-          return { inlineData: { mimeType: 'image/jpeg', data } };
-        });
-        lastMsg.parts = [...imageParts, ...lastMsg.parts];
+        const textPart = { type: 'text', text: lastMsg.content || '' };
+        const imageParts = images.map((b64: string) => ({
+          type: 'image_url',
+          image_url: { url: b64.startsWith('data:') ? b64 : `data:image/jpeg;base64,${b64}` },
+        }));
+        lastMsg.content = [textPart, ...imageParts];
       }
     }
 
-    const modelName = 'gemini-2.0-flash';
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${GEMINI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        contents: geminiContents,
-        generationConfig: {
-          temperature: images && images.length > 0 ? 0.2 : 0.7,
-          topK: 40,
-          topP: 0.95,
-          // COST FIX: was 4096 — Vastu chat responses fit in 2048.
-          // Full module prescriptions with remedies: ~800-1200 tokens.
-          maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-        ],
+        model: 'gemini-2.5-flash',
+        messages: chatMessages,
+        temperature: images && images.length > 0 ? 0.2 : 0.7,
+        max_tokens: 2048,
+        stream: true,
       }),
     });
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
+      const errorText = await response.text().catch(() => 'unknown');
+      console.error('Vastu Gemini error:', response.status, errorText);
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limits exceeded, please try again later.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
       return new Response(JSON.stringify({ error: 'AI gateway error' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -159,26 +151,29 @@ serve(async (req) => {
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
-        const lines = text.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              if (content) {
-                const openAIFormat = { choices: [{ delta: { content } }] };
-                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
-              }
-            } catch {
-              // Ignore parse errors
+        for (const line of text.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') {
+            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+            continue;
+          }
+          try {
+            const data = JSON.parse(raw);
+            const content = data.choices?.[0]?.delta?.content ?? '';
+            if (content) {
+              controller.enqueue(
+                new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
+              );
             }
+          } catch {
+            // ignore partial JSON chunks
           }
         }
-      }
+      },
     });
 
-    return new Response(response.body?.pipeThrough(transformStream), {
+    return new Response(response.body.pipeThrough(transformStream), {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
   } catch (error) {
