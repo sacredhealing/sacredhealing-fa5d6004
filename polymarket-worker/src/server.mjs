@@ -389,6 +389,14 @@ async function executeLiveOrder(signal) {
 // on winning redemptions (winning shares always redeem at $1.00). Unknown
 // categories default to the general 1.00% peak rate (conservative middle
 // estimate) rather than assuming the cheapest tier.
+// Prefer markets that resolve soon, so paper-trading data comes back fast
+// instead of waiting weeks on tournament-outright bets to settle.
+function resolvesSoon(m, maxDays = 7) {
+  if (!m.endDate) return false;
+  const daysUntilEnd = (new Date(m.endDate).getTime() - Date.now()) / 86400000;
+  return daysUntilEnd > 0 && daysUntilEnd <= maxDays;
+}
+
 const CATEGORY_PEAK_FEE = {
   geopolitics: 0, 'world events': 0, '': 0.01,
   general: 0.01,
@@ -499,6 +507,7 @@ async function fetchMarkets() {
         volume:    safeFloat(m.volumeNum ?? m.volume),
         closed:    !!m.closed,
         category: String(m.feeType || '').replace(/_fees$/, '').toLowerCase(),
+        endDate: m.endDate || m.end_date_iso || null,
         outcomes: (Array.isArray(names) ? names : ['Yes', 'No']).map((name, i) => ({
           name: String(name),
           price:   safeFloat(Array.isArray(prices)   ? prices[i]   : 0.5, 0.5),
@@ -515,7 +524,10 @@ function latencyArb(markets) {
   const signals = [];
   let skippedNoOutcome = 0, skippedHistory = 0, evaluated = 0, nanCount = 0;
   try {
-    for (const m of markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2).sort((a, b) => b.volume - a.volume).slice(0, 25)) {
+    const latPool = markets.filter(m => m.liquidity > 5000 && !m.closed && m.outcomes.length === 2);
+    const latPoolSoon = latPool.filter(m => resolvesSoon(m, 7));
+    const latFinal = latPoolSoon.length >= 5 ? latPoolSoon : latPool; // fallback if too few resolve soon
+    for (const m of latFinal.sort((a, b) => b.volume - a.volume).slice(0, 25)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       const no  = m.outcomes.find(o => o.name.toLowerCase() === 'no');
       if (!yes || !no) { skippedNoOutcome++; continue; }
@@ -558,7 +570,10 @@ function latencyArb(markets) {
 function volScalper(markets) {
   const signals = [];
   try {
-    for (const m of markets.filter(m => m.liquidity > 100000 && !m.closed).slice(0, 30)) {
+    const volPool = markets.filter(m => m.liquidity > 100000 && !m.closed);
+    const volPoolSoon = volPool.filter(m => resolvesSoon(m, 7));
+    const volFinal = volPoolSoon.length >= 5 ? volPoolSoon : volPool; // fallback if too few resolve soon
+    for (const m of volFinal.slice(0, 30)) {
       const yes = m.outcomes.find(o => o.name.toLowerCase() === 'yes');
       if (!yes) continue;
       const currentPrice = getLivePrice(yes.tokenId, yes.price);
@@ -668,6 +683,8 @@ async function runOneScan() {
       const volCandidates = markets.filter(m => m.liquidity > 100000 && !m.closed).length;
       const sampleLiq = markets.slice(0, 3).map(m => m.liquidity.toFixed(0)).join(', ');
       log('DIAG', `latArb-eligible=${latCandidates} (binary=${binaryCandidates}) volScalp-eligible=${volCandidates} | sample liquidity=[${sampleLiq}]`);
+      const soonCount = markets.filter(m => resolvesSoon(m, 7)).length;
+      log('DIAG', `markets resolving within 7 days: ${soonCount}/${markets.length} (strategies prefer these, fall back to all if <5 qualify)`);
       const sampleCats = markets.slice(0, 5).map(m => `${m.category || 'EMPTY'}`).join(', ');
       log('DIAG', `sample categories=[${sampleCats}] (EMPTY means category field-name guess failed, defaulting to 1.00% fee)`);
       log('DIAG', `WS connected=${wsConnected} subscribed=${wsSubscribedIds.size} livePrices=${livePrices.size}`);
