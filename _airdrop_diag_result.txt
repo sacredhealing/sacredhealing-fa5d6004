@@ -1,0 +1,7 @@
+=== 2026-07-08T20:21:22+00:00 ===
+NEW_SERVICE_ROLE basic-select: HTTP 401 body={"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."}
+NEW_SERVICE_ROLE exec_sql: HTTP 401 body={"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."}
+SUPABASE_SERVICE_KEY basic-select: HTTP 401 body={"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."}
+SUPABASE_SERVICE_KEY exec_sql: HTTP 401 body={"message":"Invalid API key","hint":"Double check the provided API key for typos. This API key might also be owned by another Supabase project."}
+SUPABASE_SERVICE_ROLE_KEY basic-select: HTTP 401 body={"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
+SUPABASE_SERVICE_ROLE_KEY exec_sql: HTTP 401 body={"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
