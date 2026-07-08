@@ -10,6 +10,10 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
       - name: Create tables via Supabase Management API
         env:
           PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -55,3 +59,57 @@ jobs:
             console.log('=== Airdrop farming tables migration complete ===');
           })();
           NODEEOF
+
+      - name: Verify tables exist
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          node << 'NODEEOF'
+          const https = require('https');
+          const fs = require('fs');
+          const PAT = process.env.PAT;
+          const REF = 'ssygukfdbtehvtndandn';
+          const query = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('airdrop_farming_entries','airdrop_farming_hygiene');";
+
+          function sql(q) {
+            return new Promise((resolve) => {
+              const body = JSON.stringify({ query: q });
+              const req = https.request(
+                {
+                  hostname: 'api.supabase.com',
+                  path: `/v1/projects/${REF}/database/query`,
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${PAT}`,
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(body),
+                  },
+                },
+                (resp) => {
+                  let d = '';
+                  resp.on('data', (c) => (d += c));
+                  resp.on('end', () => resolve(d));
+                }
+              );
+              req.on('error', (e) => resolve(String(e.message)));
+              req.write(body);
+              req.end();
+            });
+          }
+
+          (async () => {
+            const result = await sql(query);
+            fs.writeFileSync('_airdrop_verify_result.txt', `=== ${new Date().toISOString()} ===\n${result}\n`);
+          })();
+          NODEEOF
+
+      - name: Commit verification result
+        env:
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI-Bot"
+          git add _airdrop_verify_result.txt
+          git commit -m "Airdrop farming tables verification result" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" HEAD:main || true
