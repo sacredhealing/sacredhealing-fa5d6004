@@ -486,7 +486,8 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
         <form onSubmit={handleSubmit} style={{maxWidth:'860px',margin:'0 auto',width:'100%'}}>
           {selectedImages.length>0&&(
             <div style={{marginBottom:'12px',background:'rgba(212,175,55,0.04)',
-              border:'1px solid rgba(212,175,55,0.15)',borderRadius:'18px',padding:'12px'}}>
+              border:'1px solid rgba(212,175,55,0.15)',borderRadius:'18px',padding:'12px',
+              maxHeight:'96px',overflowY:'auto'}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
                 <p style={{...lbl}}>{t('vastuChat.multiViewReady', 'Multi-View Diagnostic Ready')}</p>
                 <button type="button" onClick={()=>setSelectedImages([])} style={{
@@ -494,9 +495,10 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
                   color:'rgba(239,68,68,0.8)',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>
                   {t('vastuChat.clearAll', 'Clear All')}</button>
               </div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+              <div style={{display:'flex',flexWrap:'nowrap',gap:'8px',overflowX:'auto',
+                WebkitOverflowScrolling:'touch',scrollbarWidth:'none',paddingBottom:'2px'}}>
                 {selectedImages.map((img,i)=>(
-                  <div key={i} style={{position:'relative',width:60,height:60,borderRadius:'12px',
+                  <div key={i} style={{position:'relative',width:60,height:60,flexShrink:0,borderRadius:'12px',
                     overflow:'hidden',border:'1px solid rgba(212,175,55,0.2)'}}>
                     <img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="Selected"/>
                     <button type="button" onClick={()=>removeImage(i)} style={{
@@ -508,7 +510,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
                       onMouseLeave={e=>(e.currentTarget as HTMLButtonElement).style.opacity='0'}>✕</button>
                   </div>))}
                 <button type="button" onClick={()=>fileInputRef.current?.click()} style={{
-                  width:60,height:60,borderRadius:'12px',
+                  width:60,height:60,flexShrink:0,borderRadius:'12px',
                   border:'1px dashed rgba(212,175,55,0.25)',background:'rgba(212,175,55,0.04)',
                   color:'rgba(212,175,55,0.5)',fontSize:'20px',cursor:'pointer',
                   display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
