@@ -33,6 +33,8 @@ import "@/lib/performance"; // Initialize performance monitoring
 const Landing = React.lazy(() => import("./pages/Landing"));
 const About = React.lazy(() => import("./pages/About"));
 const Auth = React.lazy(() => import("./pages/Auth"));
+const QRSignIn = React.lazy(() => import("./pages/QRSignIn"));
+const PairConfirm = React.lazy(() => import("./pages/PairConfirm"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -312,6 +314,8 @@ function AppRoutes() {
       <Route path="/" element={<RootEntry />} />
       <Route path="/about" element={<About />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/qr-signin" element={<QRSignIn />} />
+      <Route path="/pair" element={<PairConfirm />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<AuthOnlyRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />

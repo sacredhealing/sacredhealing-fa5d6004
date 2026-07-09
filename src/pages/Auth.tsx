@@ -16,6 +16,8 @@ const Auth: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
+  const postLoginRedirect = searchParams.get('redirect');
+  const goAfterAuth = () => navigate(postLoginRedirect || '/dashboard');
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
   const { connectWallet, isConnecting } = usePhantomWallet();
   const { toast } = useToast();
@@ -55,9 +57,9 @@ const Auth: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      navigate('/dashboard');
+      goAfterAuth();
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Particle canvas (visual only)
   useEffect(() => {
@@ -137,7 +139,7 @@ const Auth: React.FC = () => {
             title: t('auth.welcomeBackMessage'),
             description: t('auth.welcomeBackMessage')
           });
-          navigate('/dashboard');
+          goAfterAuth();
         }
       } else {
         if (!name) {
@@ -244,7 +246,7 @@ const Auth: React.FC = () => {
           // longer depends on this client call succeeding. See public.email_send_log
           // for delivery status of every signup.
 
-          navigate('/dashboard');
+          goAfterAuth();
         }
       }
     } catch (err) {
@@ -266,6 +268,24 @@ const Auth: React.FC = () => {
         description: t('auth.createAccountFirst')
       });
     }
+  };
+
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${postLoginRedirect || '/dashboard'}` },
+    });
+    if (error) {
+      setIsGoogleLoading(false);
+      toast({
+        title: 'Google sign-in unavailable',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+    // On success the browser redirects to Google, so no further state change here.
   };
 
   if (authLoading) {
@@ -520,6 +540,26 @@ const Auth: React.FC = () => {
               <Button
                 variant="glass"
                 size="lg"
+                className="w-full bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/40 backdrop-blur-xl flex items-center justify-center gap-3"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+              >
+                {isGoogleLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.3h6.47c-.28 1.5-1.13 2.77-2.4 3.62v3h3.88c2.27-2.09 3.55-5.17 3.55-8.65z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.94H1.28v3.1C3.25 21.3 7.31 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.3a7.2 7.2 0 010-4.6v-3.1H1.28a12 12 0 000 10.8l4-3.1z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.94 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.28 6.6l4 3.1C6.23 6.86 8.88 4.75 12 4.75z"/>
+                  </svg>
+                )}
+                Continue with Google
+              </Button>
+
+              <Button
+                variant="glass"
+                size="lg"
                 className="w-full bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/40 backdrop-blur-xl"
                 onClick={handlePhantomConnect}
                 disabled={isConnecting}
@@ -531,6 +571,15 @@ const Auth: React.FC = () => {
                 )}
                 {t('auth.connectPhantomWallet')}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/qr-signin')}
+                className="w-full text-center text-[#D4AF37]/70 hover:text-[#D4AF37] text-[10px] font-extrabold tracking-[0.3em] uppercase py-3 border border-dashed border-[#D4AF37]/25 rounded-full transition-colors"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                ◈ Sign In With QR Code
+              </button>
             </div>
 
             <p className="mt-8 text-center text-white/40 text-[9px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
