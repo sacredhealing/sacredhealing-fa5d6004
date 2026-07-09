@@ -47,7 +47,7 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
       </h3>
     )}
     {section.body && (
-      <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, marginBottom: section.items ? '16px' : 0 }}>
+      <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, marginBottom: section.items ? '16px' : 0, fontFamily: "'Cormorant Garamond',serif" }}>
         {section.body.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginBottom: '12px' }}>
             <RichText text={para} />
@@ -61,7 +61,7 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
           <li key={i} style={{
             padding: '10px 0',
             borderBottom: i < (section.items?.length ?? 0) - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-            fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7,
+            fontSize: '18px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
             display: 'flex', gap: '10px', alignItems: 'flex-start',
           }}>
             <span style={{ color: '#D4AF37', flexShrink: 0, marginTop: '3px' }}>⟡</span>
@@ -483,7 +483,7 @@ const SecretSection: React.FC<{ section: ContentSection }> = ({ section }) => {
       </h3>
     )}
     {section.body && (
-      <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8 }}>
+      <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
         {section.body.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginBottom: '12px' }}>
             <RichText text={para} />
@@ -564,7 +564,7 @@ const ClosingSection: React.FC<{ text: string }> = ({ text }) => {
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '14px' }}>
         {t('academy.moduleContent.closingTransmission')}
       </div>
-      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.9, fontStyle: 'italic', maxWidth: '600px', margin: '0 auto' }}>
+      <p style={{ fontSize: '19px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, fontStyle: 'italic', maxWidth: '600px', margin: '0 auto', fontFamily: "'Cormorant Garamond',serif" }}>
         "{text}"
       </p>
     </div>
@@ -621,7 +621,7 @@ const DailyPractice: React.FC<{ text: string }> = ({ text }) => {
     <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '12px' }}>
       {t('academy.moduleContent.dailyPracticeHeading')}
     </div>
-    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8, margin: 0 }}>{text}</p>
+    <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.8, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>{text}</p>
   </div>
   );
 };
