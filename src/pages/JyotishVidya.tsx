@@ -146,7 +146,6 @@ const JyotishVidya: React.FC = () => {
   const handleModuleClick = async (module: JyotishModule) => {
     const canAccess = canAccessModule(module, tier, { isAdmin, userId: user?.id });
     if (!canAccess) return;
-    setExpandedModule((prev) => (prev === module.id ? null : module.id));
     if (user && !progress[module.id]) {
       await supabase.from('jyotish_progress').upsert(
         {
@@ -163,6 +162,7 @@ const JyotishVidya: React.FC = () => {
         [module.id]: { status: 'in_progress', completion_percentage: 0 },
       }));
     }
+    navigate(`/jyotish-vidya/module/${module.id}`);
   };
 
   const completedCount = useMemo(
