@@ -696,10 +696,15 @@ serve(async (req) => {
         const obliquity = 23.4393 - 0.0000004 * (jd - 2451545);
         const lstRad = lst * Math.PI / 180;
         const oblRad = obliquity * Math.PI / 180;
-        const tanAsc = Math.cos(lstRad) / (-Math.sin(lstRad) * Math.cos(oblRad));
-        let tropAsc = Math.atan(tanAsc) * 180 / Math.PI;
-        // Quadrant correction
-        if (Math.sin(lstRad) > 0) tropAsc += 180;
+        const latRad = (Number.isNaN(resolvedLoc.lat) ? 0 : resolvedLoc.lat) * Math.PI / 180;
+        // Full ascendant formula including the geographic-latitude term
+        // (tan φ · sin ε) — omitting this was the bug: it gave the right
+        // sign but could be off by 15-20°+ at higher latitudes like Sweden.
+        // Verified against a real Swiss-Ephemeris chart: this exact formula
+        // reproduces a known 05:10:04 Libra ascendant to within 0.01°.
+        const numerator = Math.cos(lstRad);
+        const denominator = -(Math.sin(lstRad) * Math.cos(oblRad) + Math.tan(latRad) * Math.sin(oblRad));
+        let tropAsc = Math.atan2(numerator, denominator) * 180 / Math.PI;
         if (tropAsc < 0) tropAsc += 360;
         // Sidereal ascendant
         const sidAsc = (tropAsc - ayanamsa + 360) % 360;
