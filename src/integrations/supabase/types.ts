@@ -4195,7 +4195,6 @@ export type Database = {
           moon_longitude: number | null
           moon_nakshatra: string | null
           nakshatra_progress: number | null
-          planet_longitudes: Json | null
           sun_sign: string | null
           updated_at: string
           user_id: string
@@ -4214,7 +4213,6 @@ export type Database = {
           moon_longitude?: number | null
           moon_nakshatra?: string | null
           nakshatra_progress?: number | null
-          planet_longitudes?: Json | null
           sun_sign?: string | null
           updated_at?: string
           user_id: string
@@ -4233,7 +4231,6 @@ export type Database = {
           moon_longitude?: number | null
           moon_nakshatra?: string | null
           nakshatra_progress?: number | null
-          planet_longitudes?: Json | null
           sun_sign?: string | null
           updated_at?: string
           user_id?: string
