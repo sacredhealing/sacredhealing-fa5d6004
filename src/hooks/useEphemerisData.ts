@@ -47,7 +47,7 @@ export function useEphemerisData() {
 
         if (cancelled) return;
 
-        if (data?.ephemeris_confirmed && data?.moon_nakshatra) {
+        if (data?.ephemeris_confirmed && data?.moon_nakshatra && data?.mars_sign && data?.planet_longitudes) {
           setEphemeris(data);
           setLoading(false);
           return;
