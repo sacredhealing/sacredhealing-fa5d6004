@@ -476,6 +476,56 @@ const AffiliateDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* Airdrop Farming — Income Stream card */}
+            <div
+              style={{
+                ...glassCard,
+                background: 'rgba(16,185,129,0.03)',
+                border: '1px solid rgba(16,185,129,0.2)',
+                marginTop: 12,
+                cursor: 'pointer',
+              }}
+              onClick={() => navigate('/income-streams/airdrop-farming')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 14,
+                  background: 'rgba(16,185,129,0.08)',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, flexShrink: 0,
+                }}>🌱</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: '#10B981', letterSpacing: '-0.02em' }}>
+                      Airdrop Farming
+                    </span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
+                      color: '#10B981', border: '1px solid rgba(16,185,129,0.35)',
+                      borderRadius: 99, padding: '2px 8px',
+                    }}>ZERO CAPITAL</span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
+                      color: 'rgba(212,175,55,0.9)', border: '1px solid rgba(212,175,55,0.3)',
+                      borderRadius: 99, padding: '2px 8px',
+                    }}>NEW</span>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
+                    Manual weekly routine · Meteora, Monad, Polymarket · no trading skill needed
+                  </p>
+                </div>
+                <span style={{ color: '#10B981', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
+              </div>
+              <p style={{
+                color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
+                lineHeight: 1.6, margin: '14px 0 0',
+                borderTop: '1px solid rgba(16,185,129,0.08)', paddingTop: 12,
+              }}>
+                Log a small weekly action across 3 apps that haven't launched a token yet. Payouts are a bonus, never budgeted income. Synced across your devices.
+              </p>
+            </div>
+
             {/* Delta-Arb Bot — Income Stream card */}
             <div
               style={{
