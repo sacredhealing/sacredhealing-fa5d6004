@@ -735,17 +735,34 @@ serve(async (req) => {
       try {
         const { data } = await supabase
           .from("profiles")
-          .select("nadi_baseline, birth_date, birth_time, birth_place, lagna, moon_sign, current_dasha")
+          .select("nadi_baseline, birth_date, birth_time, birth_place")
           .eq("id", userId)
           .single();
         if (data?.nadi_baseline) nadiBaseline = data.nadi_baseline;
         if (data?.birth_date) birth.birth_date = data.birth_date;
         if (data?.birth_time) birth.birth_time = data.birth_time;
         if (data?.birth_place) birth.birth_place = data.birth_place;
-        if (data?.lagna) birth.lagna = data.lagna;
-        if (data?.moon_sign) birth.moon_sign = data.moon_sign;
-        if (data?.current_dasha) birth.dasha = data.current_dasha;
       } catch { /* non-fatal */ }
+
+      // Fallback to the real jyotish_profiles table (actual computed chart)
+      // if the frontend didn't already send a resolved jyotishProfile.
+      if (!jyotishProfile) {
+        try {
+          const { data: jp } = await supabase
+            .from("jyotish_profiles")
+            .select("ascendant, moon_nakshatra, moon_longitude, dasha_data")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (jp?.ascendant) birth.lagna = jp.ascendant;
+          if (typeof jp?.moon_longitude === "number" && jp.moon_longitude > 0) {
+            const RASHI = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo",
+                           "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+            birth.moon_sign = RASHI[Math.floor((((jp.moon_longitude % 360) + 360) % 360) / 30)];
+          }
+          const activeMaha = (jp?.dasha_data as any)?.activeMaha;
+          if (activeMaha?.planet) birth.dasha = activeMaha.planet;
+        } catch { /* non-fatal */ }
+      }
 
     // Frontend jyotishProfile overrides DB values (always most current)
     if (jyotishProfile && typeof jyotishProfile === 'object') {

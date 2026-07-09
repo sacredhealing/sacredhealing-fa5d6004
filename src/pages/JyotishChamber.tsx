@@ -38,6 +38,8 @@ interface EphemerisData {
   sunSign: string;
   marsSign: string;
   planetLongitudes?: Record<string, number>;
+  calcSource?: string | null;
+  calculatedAt?: string | null;
   dashaData: {
     activeMaha: { planet: string; start: string; end: string; years: number } | null;
     activeAntar: { planet: string; start: string; end: string } | null;
@@ -2846,6 +2848,8 @@ const JyotishChamber: React.FC = () => {
         marsSign: c.mars_sign,
         planetLongitudes: c.planet_longitudes || undefined,
         dashaData: cached.dasha_data as any,
+        calcSource: 'cache',
+        calculatedAt: eph.calculatedAt || null,
       });
       if (c.bhrigu_leaf_confirmed) setLeafConfirmed(true);
       return;
@@ -2857,7 +2861,7 @@ const JyotishChamber: React.FC = () => {
     await calculateEphemeris(bd);
   };
 
-  const calculateEphemeris = async (bd: BirthData) => {
+  const calculateEphemeris = async (bd: BirthData, forceRefresh = false) => {
     if (!user || !bd.birth_date) return;
     setCalcLoading(true);
     try {
@@ -2867,6 +2871,7 @@ const JyotishChamber: React.FC = () => {
           birthDate: bd.birth_date,
           birthTime: bd.birth_time || '12:00',
           birthPlace: bd.birth_place || '',
+          forceRefresh,
         },
       });
       if (!error && data) {
@@ -2878,6 +2883,8 @@ const JyotishChamber: React.FC = () => {
           marsSign: data.marsSign || '',
           planetLongitudes: data.planetLongitudes || undefined,
           dashaData: data.dashaData || null,
+          calcSource: data.source || null,
+          calculatedAt: data.ephemerisData?.calculatedAt || null,
         });
       }
     } catch (e) {
@@ -3698,6 +3705,33 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             {!birthData ? <BirthPrompt /> : (
               <>
+                <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:24, padding:22, marginBottom:14 }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, flexWrap:'wrap', gap:8 }}>
+                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>Rasi Chart · Lagna & Grahas</div>
+                    <button
+                      onClick={() => birthData && calculateEphemeris(birthData, true)}
+                      disabled={calcLoading}
+                      style={{ padding:'6px 12px', borderRadius:99, border:'1px solid rgba(212,175,55,0.25)', background: calcLoading ? 'rgba(255,255,255,0.03)' : 'rgba(212,175,55,0.06)', color:'#D4AF37', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, cursor: calcLoading ? 'default' : 'pointer' }}
+                    >
+                      {calcLoading ? 'Recalculating…' : '↻ Recalculate Now'}
+                    </button>
+                  </div>
+                  <RasiChart
+                    ascendantSign={ephemeris?.ascendantSign}
+                    moonNakshatra={ephemeris?.moonNakshatra}
+                    planetLongitudes={ephemeris?.planetLongitudes}
+                    loading={calcLoading && !ephemeris?.ascendantSign}
+                  />
+                  <div style={{ textAlign:'center', marginTop:12, fontSize:10, color:'rgba(255,255,255,0.3)' }}>
+                    {ephemeris?.calculatedAt ? (
+                      <>Last calculated {new Date(ephemeris.calculatedAt).toLocaleString()} · source: {ephemeris.calcSource === 'cache' ? 'cached (from a prior calculation)' : ephemeris?.calcSource || 'unknown'}</>
+                    ) : ephemeris?.ascendantSign ? (
+                      <>Calculated this session · source: {ephemeris.calcSource || 'unknown'}</>
+                    ) : (
+                      <>Not yet calculated for this birth data</>
+                    )}
+                  </div>
+                </div>
                 <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:22, marginBottom:14 }}>
                   <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>Vimshottari Dasha Tree · Your Complete Life Timeline</div>
                   {ephemeris?.dashaData?.dashaTree ? (
@@ -3777,7 +3811,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               }
               loadBirthData={loadBirthData}
               isStudentReading={!!activeStudent}
-              studentEphemeris={activeStudent ? studentEphemeris : null}
+              studentEphemeris={activeStudent ? studentEphemeris : ephemeris}
             />
           </motion.div>
         )}

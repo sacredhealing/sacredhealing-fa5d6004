@@ -526,22 +526,52 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const msgsRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // Fetch Jyotish profile
+  // Fetch Jyotish profile — real birth data from `profiles`, then the actual
+  // computed chart from jyotish-ephemeris. (This used to select lagna/
+  // moon_sign/current_dasha directly from `profiles`, but those columns never
+  // existed there — every self reading silently got null jyotish data.)
   useEffect(() => {
     if (!user?.id) return;
+    let cancelled = false;
     (supabase as any)
       .from('profiles')
-      .select('lagna, moon_sign, current_dasha, birth_date, birth_time, birth_place')
+      .select('birth_date, birth_time, birth_place')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }: { data: any }) => {
-        if (data) setJyotishProfile({
-          lagna: data.lagna ?? null, moon_sign: data.moon_sign ?? null,
-          current_dasha: data.current_dasha ?? null,
-          birth_date: data.birth_date ?? null, birth_time: data.birth_time ?? null,
+      .then(async ({ data }: { data: any }) => {
+        if (cancelled || !data?.birth_date) return;
+        setJyotishProfile({
+          lagna: null, moon_sign: null, current_dasha: null,
+          birth_date: data.birth_date ?? null,
+          birth_time: data.birth_time ?? null,
           birth_place: data.birth_place ?? null,
         });
+        try {
+          const { data: eph } = await (supabase as any).functions.invoke('jyotish-ephemeris', {
+            body: {
+              userId: user.id,
+              birthDate: data.birth_date,
+              birthTime: data.birth_time || '12:00',
+              birthPlace: data.birth_place || '',
+            },
+          });
+          if (cancelled || !eph) return;
+          const RASHI = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                         'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+          const moonSign = (typeof eph.moonLongitude === 'number' && eph.moonLongitude > 0)
+            ? RASHI[Math.floor((((eph.moonLongitude % 360) + 360) % 360) / 30)]
+            : null;
+          setJyotishProfile({
+            lagna: eph.ascendantSign || null,
+            moon_sign: moonSign,
+            current_dasha: eph.dashaData?.activeMaha?.planet || null,
+            birth_date: data.birth_date ?? null,
+            birth_time: data.birth_time ?? null,
+            birth_place: data.birth_place ?? null,
+          });
+        } catch (e) { console.error('Ayurveda self ephemeris error:', e); }
       });
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   // When a student is selected, override jyotishProfile with student birth data
