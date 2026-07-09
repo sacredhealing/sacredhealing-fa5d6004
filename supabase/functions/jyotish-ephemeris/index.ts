@@ -589,7 +589,7 @@ serve(async (req) => {
 
       const vedRes = await fetch(calcUrl, {
         headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(6000),
       });
       const vedData = await vedRes.json();
 
