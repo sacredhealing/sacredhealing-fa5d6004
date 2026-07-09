@@ -18,6 +18,15 @@ interface RequestBody {
   timeOffset?: number;
   timezone?: string;
   timezoneOffsetMinutes?: number;
+  /** Real, deterministically-computed values from jyotish-ephemeris. When present,
+   *  the model must use these verbatim instead of estimating them itself. */
+  ephemeris?: {
+    moonNakshatra?: string;
+    ascendant?: string;
+    sunSign?: string;
+    mahadasha?: string;
+    antardasha?: string;
+  };
 }
 
 function formatTimeInTimezone(date: Date, timezone: string): { dateStr: string; timeStr: string } {
@@ -56,7 +65,7 @@ serve(async (req) => {
   }
 
   try {
-    const { user, timeOffset = 0, timezone = 'Europe/Stockholm' } = await req.json() as RequestBody;
+    const { user, timeOffset = 0, timezone = 'Europe/Stockholm', ephemeris } = await req.json() as RequestBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
@@ -75,19 +84,36 @@ CURRENT COSMIC MOMENT: ${currentDateStr} at ${currentTimeStr} (Timezone: ${timez
 Style: Mystical yet precise. Authoritative and transformative.`;
 
     // ── moonNakshatra is the single most important calculated field ──
-    // It must be the Moon Nakshatra at BIRTH (not today).
-    // It drives Vimshottari Dasha, all personalCompass fields, and the
-    // entire soul-level transmission. Inaccuracy here breaks everything downstream.
-    const moonNakshatraInstruction = `
-CRITICAL CALCULATION — moonNakshatra (BIRTH):
-  Using the exact birth data below, calculate the astronomical Moon Nakshatra
+    // It must be the Moon Nakshatra at BIRTH (not today). Whenever real
+    // ephemeris data is available, it is a LOCKED FACT — the model must not
+    // recompute it. LLMs cannot reliably do sidereal ephemeris arithmetic;
+    // asking Gemini to "calculate" this from scratch was the root cause of
+    // wrong nakshatra/ascendant values. Only fall back to estimation (and
+    // flag it as such) when no ephemeris data was supplied at all.
+    const hasRealEphemeris = !!ephemeris?.moonNakshatra;
+    const moonNakshatraInstruction = hasRealEphemeris ? `
+LOCKED BIRTH DATA (already precisely calculated via Swiss/Lahiri ephemeris — DO NOT recompute, DO NOT override, use these exact values):
+  Moon Nakshatra at birth: ${ephemeris!.moonNakshatra}
+  Ascendant (Lagna): ${ephemeris?.ascendant || 'not available — omit or say "Not yet calculated"'}
+  Sun Sign at birth: ${ephemeris?.sunSign || 'not available'}
+  Current Vimshottari Mahadasha: ${ephemeris?.mahadasha || 'not available'}
+  Current Antardasha: ${ephemeris?.antardasha || 'not available'}
+
+  Use personalCompass.moonNakshatra = "${ephemeris!.moonNakshatra}" exactly.
+  Use natalChart.moonNakshatra = "${ephemeris!.moonNakshatra}" exactly.
+  Use natalChart.ascendant = "${ephemeris?.ascendant || ''}" exactly (do not guess a different sign).
+  Use personalCompass.currentDasha.period based on "${ephemeris?.mahadasha || ''}" — do not invent a different planet.
+  Your job here is INTERPRETATION of these facts (career/relationship/health meaning), not calculation.` : `
+CRITICAL CALCULATION — moonNakshatra (BIRTH) — ESTIMATE ONLY, ephemeris data was unavailable:
+  Using the exact birth data below, estimate the astronomical Moon Nakshatra
   at the MOMENT OF BIRTH — NOT today's Nakshatra.
   Birth: ${user.birthDate} ${user.birthTime} at ${user.birthPlace}
 
   Method:
-    1. Calculate the Moon's sidereal longitude at that birth moment using Lahiri ayanamsa.
+    1. Estimate the Moon's sidereal longitude at that birth moment using Lahiri ayanamsa.
     2. Divide by 13°20' (800') to find which of the 27 Nakshatras the Moon occupied.
     3. Return ONLY the English name of that Nakshatra (e.g. "Anuradha", "Rohini", "Hasta").
+    4. This is a best-effort estimate, not a precise calculation — treat it as provisional.
 
   Validation rules:
     - Must be one of the 27 Nakshatras: Ashwini, Bharani, Krittika, Rohini, Mrigashira,
@@ -141,7 +167,7 @@ Return this exact JSON structure (no extra keys, no markdown):
     ]
   }${user.plan !== 'free' ? `,
   "personalCompass": {
-    "moonNakshatra": "BIRTH Moon Nakshatra — Moon position at ${user.birthDate} ${user.birthTime} ${user.birthPlace} (Lahiri ayanamsa). One of the 27 Nakshatras by name only.",
+    "moonNakshatra": "personalCompass.moonNakshatra — birth Moon Nakshatra. Use the LOCKED value given above verbatim.",
     "career": "string — personalised based on moonNakshatra and birth chart",
     "relationship": "string",
     "health": "string",
@@ -155,7 +181,7 @@ Return this exact JSON structure (no extra keys, no markdown):
   "natalChart": {
     "moonNakshatra": "SAME value as personalCompass.moonNakshatra — birth Moon Nakshatra",
     "moonSign": "string — Moon's sidereal zodiac sign at birth",
-    "ascendant": "string — Lagna / Rising sign at birth"
+    "ascendant": "string — Lagna / Rising sign at birth. Use the LOCKED value given above verbatim; do not derive a different one."
   }` : ''}${user.plan === 'premium' ? `,
   "masterBlueprint": {
     "soulPurpose": "string",

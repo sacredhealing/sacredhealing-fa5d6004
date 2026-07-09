@@ -379,7 +379,22 @@ export function useJyotishProfile(): JyotishProfile {
             plan: 'compass',
           };
 
-          await generateReading(profile, 0, 'Europe/Stockholm', authUser.id);
+          // Wait for the real ephemeris calculation before generating the AI
+          // reading — this is what stops Gemini from having to guess the
+          // nakshatra/ascendant/dasha itself.
+          if (!ephemerisLoading) {
+            await generateReading(profile, 0, 'Europe/Stockholm', authUser.id, {
+              ephemeris: ephemeris?.moon_nakshatra
+                ? {
+                    moonNakshatra: ephemeris.moon_nakshatra,
+                    ascendant: ephemeris.ascendant || undefined,
+                    sunSign: ephemeris.sun_sign || undefined,
+                    mahadasha: ephemeris.dasha_data?.activeMaha?.planet,
+                    antardasha: ephemeris.dasha_data?.activeAntar?.planet,
+                  }
+                : undefined,
+            });
+          }
         }
       } catch {
         // Keep neutral fallbacks; errors are handled by caller pages.
@@ -396,7 +411,7 @@ export function useJyotishProfile(): JyotishProfile {
     return () => {
       cancelled = true;
     };
-  }, [authUser?.id, generateReading]);
+  }, [authUser?.id, generateReading, ephemerisLoading, ephemeris?.moon_nakshatra]);
 
   const isLoading = birthDetailsLoading || readingLoading || ephemerisLoading || !isFreshForUser;
 

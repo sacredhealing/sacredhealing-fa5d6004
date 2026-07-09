@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import tzlookup from "https://esm.sh/tz-lookup@6.1.25";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -130,6 +131,89 @@ function extractPlanetLongitudes(payload: Record<string, unknown>): PlanetLongit
     if (pData?.Longitude != null) lons[ourKey] = parseFloat(String(pData.Longitude));
   }
   return lons;
+}
+
+/** Geocode a free-text birth place to coordinates via Open-Meteo (no API key required). */
+async function geocodePlace(place: string): Promise<{ lat: number; lon: number } | null> {
+  if (!place?.trim()) return null;
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1&language=en&format=json`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    const r = data?.results?.[0];
+    if (r?.latitude != null && r?.longitude != null) {
+      return { lat: parseFloat(r.latitude), lon: parseFloat(r.longitude) };
+    }
+  } catch (e) {
+    console.error("Geocode error:", e);
+  }
+  return null;
+}
+
+/**
+ * Given coordinates + a birth date/time, return the exact UTC offset in minutes
+ * for that IANA timezone ON THAT DATE (correctly handles DST/historical changes),
+ * instead of guessing a fixed offset.
+ */
+function resolveUtcOffsetMinutes(lat: number, lon: number, birthDate: string, birthTime: string): number | null {
+  try {
+    const ianaZone = tzlookup(lat, lon);
+    const [y, m, d] = birthDate.split("-").map(Number);
+    const [hh, mm] = (birthTime || "12:00").split(":").map(Number);
+    // Treat the wall-clock birth time as a UTC instant, then read what that
+    // instant looks like in the target zone; the delta is the zone's offset.
+    const utcGuess = new Date(Date.UTC(y, m - 1, d, hh, mm));
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: ianaZone, hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+    const parts = fmt.formatToParts(utcGuess).reduce((acc, p) => {
+      acc[p.type] = p.value; return acc;
+    }, {} as Record<string, string>);
+    const asIfUtc = Date.UTC(
+      Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+      Number(parts.hour) === 24 ? 0 : Number(parts.hour), Number(parts.minute), Number(parts.second)
+    );
+    return Math.round((asIfUtc - utcGuess.getTime()) / 60000);
+  } catch (e) {
+    console.error("Timezone resolution error:", e);
+    return null;
+  }
+}
+
+function offsetMinutesToString(mins: number): string {
+  const sign = mins < 0 ? "-" : "+";
+  const abs = Math.abs(mins);
+  const h = String(Math.floor(abs / 60)).padStart(2, "0");
+  const m = String(abs % 60).padStart(2, "0");
+  return `${sign}${h}:${m}`;
+}
+
+/**
+ * Resolves the real lat/lng and DST-aware UTC offset for a birth record.
+ * Uses supplied lat/lng if present; otherwise geocodes birthPlace. Falls back
+ * to the coarse keyword lookup only if live geocoding fails outright.
+ */
+async function resolveBirthLocation(
+  birthDate: string, birthTime: string, birthPlace: string,
+  suppliedLat?: number | string, suppliedLng?: number | string
+): Promise<{ lat: number; lon: number; timezone: string }> {
+  let lat = suppliedLat != null ? parseFloat(String(suppliedLat)) : NaN;
+  let lon = suppliedLng != null ? parseFloat(String(suppliedLng)) : NaN;
+
+  if ((Number.isNaN(lat) || Number.isNaN(lon)) && birthPlace) {
+    const geo = await geocodePlace(birthPlace);
+    if (geo) { lat = geo.lat; lon = geo.lon; }
+  }
+  if (Number.isNaN(lat) || Number.isNaN(lon)) {
+    const guess = guessBirthCoords(birthPlace || "");
+    lat = guess.lat; lon = guess.lon;
+  }
+
+  const offsetMin = resolveUtcOffsetMinutes(lat, lon, birthDate, birthTime);
+  const timezone = offsetMin != null ? offsetMinutesToString(offsetMin) : "+00:00";
+  return { lat, lon, timezone };
 }
 
 function guessBirthCoords(place: string): { lat: number; lon: number } {
@@ -370,7 +454,7 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { userId, birthDate, birthTime, birthPlace, lat, lng, timezone } =
+    const { userId, birthDate, birthTime, birthPlace, lat, lng, timezone, forceRefresh } =
       body;
 
     if (!userId || !birthDate) {
@@ -387,14 +471,15 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("jyotish_profiles")
       .select(
-        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, sun_sign, mars_sign"
+        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, sun_sign, mars_sign, planet_longitudes"
       )
       .eq("user_id", userId)
       .single();
 
     const cacheValid = existing?.ephemeris_confirmed && existing?.moon_nakshatra
       && existing?.birth_date === birthDate && !forceRefresh
-      && existing?.mars_sign; // re-fetch if mars_sign missing (legacy cache)
+      && existing?.mars_sign // re-fetch if mars_sign missing (legacy cache)
+      && existing?.planet_longitudes; // re-fetch if full graha data missing (pre-Rasi-chart cache)
 
     if (cacheValid) {
       return new Response(
@@ -408,19 +493,27 @@ serve(async (req) => {
           sunSign: existing.sun_sign || '',
           marsSign: existing.mars_sign || '',
           ephemerisData: existing.ephemeris_data,
+          planetLongitudes: existing.planet_longitudes || {},
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // ── Resolve REAL birth location + DST-aware UTC offset ──
+    // The frontend currently sends a hardcoded '+00:00' and no lat/lng at all,
+    // which silently broke every chart for anyone not born at UTC+0/lon 0.
+    // Geocode + timezone-lookup here so this is correct regardless of what
+    // (if anything) the caller supplies.
+    const resolvedLoc = await resolveBirthLocation(birthDate, birthTime, birthPlace, lat, lng);
+
     // ── VedAstro API call ──
     const [year, month, day] = birthDate.split("-");
     const timeStr = birthTime || "00:00";
-    const tzStr = timezone || "+00:00";
+    const tzStr = resolvedLoc.timezone;
     const vedastroTime = `${timeStr}/${day}/${month}/${year}/${tzStr}`;
     const locationStr = birthPlace
       ? encodeURIComponent(birthPlace)
-      : `${lat || 0},${lng || 0}`;
+      : `${resolvedLoc.lat},${resolvedLoc.lon}`;
 
     let moonNakshatra = "";
     let moonLongitude = 0;
@@ -561,7 +654,15 @@ serve(async (req) => {
         // Sidereal Lagna calculation (Lahiri ayanamsa approximation)
         const [yr, mo, dy] = birthDate.split('-').map(Number);
         const [hr, mn] = (birthTime || '12:00').split(':').map(Number);
-        const hour = hr + mn / 60;
+
+        // GST/JD math requires Universal Time, not local clock time — convert
+        // using the real, geocoded UTC offset for this birth (DST-aware).
+        const tzOffsetMatch = resolvedLoc.timezone.match(/([+-])(\d{2}):?(\d{2})/);
+        const tzOffsetHours = tzOffsetMatch
+          ? (tzOffsetMatch[1] === '-' ? -1 : 1) *
+            (parseInt(tzOffsetMatch[2]) + parseInt(tzOffsetMatch[3]) / 60)
+          : 0;
+        const hour = (hr + mn / 60) - tzOffsetHours;
 
         // Julian Day Number
         const a = Math.floor((14 - mo) / 12);
@@ -576,13 +677,16 @@ serve(async (req) => {
         const gst = (280.46061837 + 360.98564736629 * (jd - 2451545) +
                      T * T * 0.000387933 - T * T * T / 38710000) % 360;
 
-        // Local Sidereal Time — use birthPlace lat/lng if available
-        // Default to rough timezone offset from birthTime timezone string
-        const tzMatch = (birthTime || '').match(/([+-]\d{2}):?(\d{2})$/) ||
-                        ['', '+05', '30']; // default IST
-        const tzHr = parseInt(tzMatch[1] || '+05') + parseInt(tzMatch[2] || '30') / 60;
-        const lng = tzHr * 15; // rough longitude from timezone
-        const lst = (gst + lng + 360) % 360;
+        // Local Sidereal Time — use the actual birth longitude when we have it.
+        // Only fall back to deriving longitude from the UTC offset (never IST by default)
+        // if no lat/lng was supplied for this birth record.
+        let ascLng: number;
+        if (!Number.isNaN(resolvedLoc.lon)) {
+          ascLng = resolvedLoc.lon;
+        } else {
+          ascLng = tzOffsetHours * 15; // last-resort rough longitude from offset
+        }
+        const lst = (gst + ascLng + 360) % 360;
 
         // Lahiri ayanamsa (approx)
         const ayanamsa = 23.85 + (yr - 2000) * 0.014;
@@ -669,8 +773,7 @@ serve(async (req) => {
     let parans: ParanPoint[] = [];
     if (Object.keys(planetLongitudes).length >= 4 && birthDate && birthTime) {
       try {
-        const birthCoords = guessBirthCoords(birthPlace || "");
-        const acgResult = computeACGLines(planetLongitudes, birthDate, birthTime, birthCoords.lat, birthCoords.lon);
+        const acgResult = computeACGLines(planetLongitudes, birthDate, birthTime, resolvedLoc.lat, resolvedLoc.lon);
         acgLines = acgResult.acgLines;
         parans   = acgResult.parans;
         console.log("ACG lines computed:", acgLines.length, "parans:", parans.length);
@@ -704,6 +807,7 @@ serve(async (req) => {
         ascendant: ascendantSign || null,
         sun_sign: sunSign || null,
         mars_sign: marsSign || null,
+        planet_longitudes: planetLongitudes || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }

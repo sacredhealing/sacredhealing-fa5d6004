@@ -7,9 +7,9 @@ import { sanitizeVedicReading } from '@/lib/sanitizeVedicReading';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours - cost optimisation
 
 
-function getCacheKey(user: UserProfile, timeOffset: number, timezone: string, userId?: string | null) {
+function getCacheKey(user: UserProfile, timeOffset: number, timezone: string, userId?: string | null, ephemerisKey?: string) {
   const uid = userId ?? 'anon';
-  return `sh:vedic:reading:${uid}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}`;
+  return `sh:vedic:reading:${uid}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}:${ephemerisKey || 'noeph'}`;
 }
 
 
@@ -41,6 +41,14 @@ function saveToCache(key: string, reading: VedicReading) {
 }
 
 
+interface EphemerisGroundTruth {
+  moonNakshatra?: string;
+  ascendant?: string;
+  sunSign?: string;
+  mahadasha?: string;
+  antardasha?: string;
+}
+
 interface UseAIVedicReadingResult {
   reading: VedicReading | null;
   isLoading: boolean;
@@ -50,7 +58,7 @@ interface UseAIVedicReadingResult {
     timeOffset?: number,
     timezone?: string,
     userId?: string | null,
-    options?: { forceRefresh?: boolean }
+    options?: { forceRefresh?: boolean; ephemeris?: EphemerisGroundTruth }
   ) => Promise<void>;
 }
 
@@ -68,9 +76,12 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
       timeOffset: number = 0,
       timezone: string = 'Europe/Stockholm',
       userId?: string | null,
-      options?: { forceRefresh?: boolean }
+      options?: { forceRefresh?: boolean; ephemeris?: EphemerisGroundTruth }
     ) => {
-      const cacheKey = getCacheKey(user, timeOffset, timezone, userId);
+      const ephemerisKey = options?.ephemeris?.moonNakshatra
+        ? `${options.ephemeris.moonNakshatra}:${options.ephemeris.ascendant || ''}`
+        : undefined;
+      const cacheKey = getCacheKey(user, timeOffset, timezone, userId, ephemerisKey);
       const cached = options?.forceRefresh ? null : loadFromCache(cacheKey);
       if (cached) {
         setReading(cached);
@@ -86,7 +97,7 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke('generate-vedic-reading', {
-          body: { user, timeOffset, timezone },
+          body: { user, timeOffset, timezone, ephemeris: options?.ephemeris },
         });
 
         if (controller.signal.aborted) return;
