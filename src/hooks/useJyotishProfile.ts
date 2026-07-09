@@ -78,6 +78,22 @@ const DOSHA_MAP: Record<string, string> = {
 };
 
 // Each nakshatra spans a known rashi (moon sign)
+const RASHI_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+] as const;
+
+/**
+ * Precise moon sign from sidereal longitude. Preferred over the nakshatra-name
+ * lookup below: 9 of the 27 nakshatras straddle a rashi boundary (e.g.
+ * Krittika is 3/4 Taurus and only 1/4 Aries), so a name-based map is wrong
+ * for whichever pada isn't the one the map happens to pick.
+ */
+function moonSignFromLongitude(lon: number): string {
+  const idx = Math.floor((((lon % 360) + 360) % 360) / 30);
+  return RASHI_SIGNS[idx];
+}
+
 const NAKSHATRA_TO_MOON_SIGN: Record<string, string> = {
   Ashwini: 'Aries',         Bharani: 'Aries',           Krittika: 'Aries',
   Rohini: 'Taurus',         Mrigashira: 'Taurus',        Ardra: 'Gemini',
@@ -419,7 +435,9 @@ export function useJyotishProfile(): JyotishProfile {
     // ── PRIORITY 1: Use confirmed ephemeris data if available ──
     if (ephemeris?.moon_nakshatra) {
       const nakshatra = ephemeris.moon_nakshatra;
-      const moonSign = NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown';
+      const moonSign = (typeof ephemeris.moon_longitude === 'number' && ephemeris.moon_longitude > 0)
+        ? moonSignFromLongitude(ephemeris.moon_longitude)
+        : (NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown');
 
       // Extract dasha from ephemeris dasha_data
       const dashaData = ephemeris.dasha_data;
@@ -510,7 +528,9 @@ export function useJyotishProfile(): JyotishProfile {
       : { mahadasha: '', antardasha: '' };
 
     const nakshatra = String(moonNakshatra || '');
-    const moonSign = NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown';
+    const moonSign = (Number.isFinite(moonDeg) && moonDeg > 0)
+      ? moonSignFromLongitude(moonDeg)
+      : (NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown');
     const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map((y) => y.name);
     const karmaFocus = reading?.masterBlueprint?.karmaPatterns
       ? reading.masterBlueprint.karmaPatterns.split('.')[0].trim()

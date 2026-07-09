@@ -5549,16 +5549,21 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         if (studentRow?.linked_user_id) {
           const { data: jp } = await sb
             .from("jyotish_profiles")
-            .select("nakshatra, moon_sign, ascendant, mahadasha, antardasha, primary_dosha, karma_focus, active_yogas")
+            .select("moon_nakshatra, moon_longitude, ascendant, sun_sign, dasha_data")
             .eq("user_id", studentRow.linked_user_id)
             .maybeSingle();
           if (jp) {
+            const RASHI = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                           'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+            const moonSign = (typeof jp.moon_longitude === 'number' && jp.moon_longitude > 0)
+              ? RASHI[Math.floor((((jp.moon_longitude % 360) + 360) % 360) / 30)]
+              : null;
+            const activeMaha = (jp.dasha_data as any)?.activeMaha;
+            const activeAntar = (jp.dasha_data as any)?.activeAntar;
             resolvedStudentJyotish = [
               "[STUDENT JYOTISH — LIVE FROM APP PROFILE]",
-              `Moon nakshatra: ${jp.nakshatra ?? "—"} · Rashi: ${jp.moon_sign ?? "—"} · Lagna: ${jp.ascendant ?? "—"}`,
-              `Mahadasha: ${jp.mahadasha ?? "—"} · Antara: ${jp.antardasha ?? "—"}`,
-              `Dosha: ${jp.primary_dosha ?? "—"} · Karma: ${jp.karma_focus ?? "—"}`,
-              `Yogas: ${Array.isArray(jp.active_yogas) ? jp.active_yogas.join(", ") : "—"}`,
+              `Moon nakshatra: ${jp.moon_nakshatra ?? "—"} · Rashi: ${moonSign ?? "—"} · Lagna: ${jp.ascendant ?? "—"} · Sun sign: ${jp.sun_sign ?? "—"}`,
+              `Mahadasha: ${activeMaha?.planet ?? "—"} · Antardasha: ${activeAntar?.planet ?? "—"}`,
               "Apply this chart fully to ALL readings for this student in this session.",
             ].join("\n");
           }

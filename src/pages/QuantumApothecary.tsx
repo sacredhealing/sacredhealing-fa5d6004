@@ -2128,7 +2128,7 @@ function QuantumApothecaryInner() {
           try {
             const { data: jp } = await supabase
               .from('jyotish_profiles')
-              .select('moon_nakshatra, moon_sign, ascendant, sun_sign, mahadasha, antardasha, primary_dosha, karma_focus, active_yogas, healing_line, mantra, dasha_data, birth_date, birth_time, birth_place')
+              .select('moon_nakshatra, moon_longitude, ascendant, sun_sign, dasha_data, birth_date, birth_time, birth_place')
               .eq('user_id', linkedId)
               .maybeSingle();
             if (!cancelled) setActiveStudentJyotish(jp ?? null);
@@ -2160,16 +2160,17 @@ function QuantumApothecaryInner() {
     if (activeStudentJyotish) {
       const jp = activeStudentJyotish;
       const dd = jp.dasha_data ?? {};
-      const maha = jp.mahadasha || dd.currentMahadasha || dd.mahadasha || '—';
-      const antar = jp.antardasha || dd.currentAntardasha || dd.antardasha || '—';
+      const maha = dd.activeMaha?.planet || '—';
+      const antar = dd.activeAntar?.planet || '—';
+      const RASHI = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                     'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+      const moonSign = (typeof jp.moon_longitude === 'number' && jp.moon_longitude > 0)
+        ? RASHI[Math.floor((((jp.moon_longitude % 360) + 360) % 360) / 30)]
+        : '—';
       jyotishLines = [
         `[STUDENT JYOTISH — REAL EPHEMERIS DATA — USE THIS CHART NOT THE PRACTITIONER'S]`,
-        `Nakshatra: ${jp.moon_nakshatra || '—'} · Rashi: ${jp.moon_sign || '—'} · Lagna: ${jp.ascendant || '—'} · Sun: ${jp.sun_sign || '—'}`,
+        `Nakshatra: ${jp.moon_nakshatra || '—'} · Rashi: ${moonSign} · Lagna: ${jp.ascendant || '—'} · Sun: ${jp.sun_sign || '—'}`,
         `Mahadasha: ${maha} · Antardasha: ${antar}`,
-        `Dosha: ${jp.primary_dosha || '—'} · Karma: ${jp.karma_focus || '—'}`,
-        jp.active_yogas?.length ? `Yogas: ${Array.isArray(jp.active_yogas) ? jp.active_yogas.join(', ') : jp.active_yogas}` : '',
-        jp.healing_line ? `Healing: ${jp.healing_line}` : '',
-        jp.mantra ? `Mantra: ${jp.mantra}` : '',
         `ZERO FABRICATION LAW: The Dasha above comes from Swiss Ephemeris. Apply it exactly. Do NOT substitute any other Dasha period.`,
         `Apply ALL past life, Nadi, and health readings to THIS student chart — not the practitioner's.`,
       ].filter(Boolean);
