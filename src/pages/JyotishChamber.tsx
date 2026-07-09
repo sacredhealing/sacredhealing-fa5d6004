@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useTranslation } from '@/hooks/useTranslation';
 import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
 import { canAccessJyotishModule } from '@/lib/tierAccess';
+import { JYOTISH_MODULES as VIDYA_MODULES, TIER_CONFIG as VIDYA_TIER_CONFIG } from '@/lib/jyotishModules';
 import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
 import { BhriguAkashaChat } from '@/components/vedic/BhriguAkashaChat';
 import { BhumiOraclePanel } from '@/components/vedic/BhumiOraclePanel';
@@ -311,41 +312,6 @@ const DASHA_MEANINGS: Record<string, string> = Object.fromEntries(
   Object.entries(DASHA_DATA).map(([k,v]) => [k, v.surface])
 );
 
-// ── Module data (all 32) ──────────────────────────────────────────
-const JYOTISH_MODULES = [
-  { id:1, tier:'free', title:'The Eye of the Veda', sub:'Origin, Purpose & Sacred Context of Jyotish', dur:'15 min', topics:['What is Vedānga — the 6 limbs of the Veda and Jyotish as the supreme eye','History: Brahma → Nārada → Parāśara → Vedavyāsa','Bhrigu Muni — 500,000 pre-written horoscopes','Difference from Western astrology — sidereal vs tropical','Jyotish as healing science — not fatalism but illumination'] },
-  { id:2, tier:'free', title:'Cosmic Architecture: The 9 Grahas', sub:'The Nine Planetary Intelligences', dur:'27 min', topics:['Sun — soul, authority, father, vitality','Moon — mind, emotions, mother, public','Mars — energy, courage, land, surgery','Mercury — intellect, communication, trade','Jupiter — wisdom, dharma, blessings, children','Venus — love, beauty, arts, relationships','Saturn — karma, discipline, mastery','Rahu — obsession, illusion, amplification','Ketu — liberation, past life, moksha'] },
-  { id:3, tier:'free', title:'The 12 Rashis', sub:'Signs as Fields of Karmic Expression', dur:'30 min', topics:['Sign elements: Fire, Earth, Air, Water','Sign modes: Movable, Fixed, Dual','Exaltation and debilitation of planets','Your Moon sign and Sun sign profiles','Aries through Pisces — complete profiles'] },
-  { id:4, tier:'free', title:'The 12 Bhāvas (Houses)', sub:'The Map of Your Life Karma', dur:'20 min', topics:['Four aims: Dharma, Artha, Kāma, Moksha','Kendra (1,4,7,10) — pillars of existence','Trikona (1,5,9) — dharmic trinity','Dusthāna (6,8,12) — transformation houses','Each house complete meaning — 1st through 12th'] },
-  { id:5, tier:'free', title:'27 Nakshatra Awakening', sub:'Lunar Mansions — Soul Original Frequency', dur:'25 min', topics:['What is a Nakshatra — the Moon 27 daily mansions','Your birth star — how to find it and what it means','Nakshatra deity, ruling planet, symbol','All 27 Nakshatras from Ashvinī to Revatī','Nakshatra-specific mantras and practices'] },
-  { id:6, tier:'free', title:'Reading Your Own Chart: First Light', sub:'From Theory to the Living Chart', dur:'20 min', topics:['How to cast your chart — free software walkthrough','North vs South Indian chart layout','Identifying Lagna, Moon sign, Sun sign','Reading your dharmic trinity: 1st, 5th, 9th houses','Ethical chart reading guidelines'] },
-  { id:7, tier:'prana', title:'Planetary Dignity: Strength & Weakness', sub:'Shadbala and the Six Pillars of Graha Power', dur:'35 min', topics:['Six dignity states: Exalted, Own sign, Enemy, Debilitated','Vargottama — supreme dignity (same sign in D1 and D9)','Shadbala 6-fold strength calculation system','Planetary Avasthas — 5 maturity states','Retrograde and combust planets'] },
-  { id:8, tier:'prana', title:'Bhāva Analysis Mastery', sub:'Precision House Reading', dur:'40 min', topics:['All 144 lord-in-house combinations','Argalā — planetary intervention system','Detailed reading: 4th, 7th, 10th houses','Bhāva Arudha Padas — public perception layer','Multiple indicator confirmation principle'] },
-  { id:9, tier:'prana', title:'Aspects & Yogas: Core Combinations', sub:'The Grammar of Chart Synthesis', dur:'45 min', topics:['Graha drishti — special Mars, Jupiter, Saturn aspects','Rāja Yoga — all main power combinations','Pancha Mahāpurusha Yogas','Viparīta Rāja Yoga — elevation through loss','Dhana Yoga — wealth combinations'] },
-  { id:10, tier:'prana', title:'Vimshottari Dasha: The Master Clock', sub:'120-Year Planetary Timing System', dur:'50 min', topics:['9-planet sequence and year allocations','Calculating your starting dasha from birth star','Mahadasha, Antardasha, Pratyantardasha','Psychology of each major period','Case studies: key life events timed'] },
-  { id:11, tier:'prana', title:'Transit Science (Gochar)', sub:'Current Planetary Weather', dur:'35 min', topics:['How transits activate your natal chart','Saturn Sade Sati — the 7.5-year trial','Jupiter annual transit — expansion windows','Rāhu-Ketu 18-month axis shift','Eclipse effects — 6-month shadow activation'] },
-  { id:12, tier:'prana', title:'27 Nakshatras: Complete System', sub:'Full Nakshatra Predictive Science', dur:'60 min', topics:['All 27 Nakshatras — full deity, planet, symbol profiles','Nakshatra Padas — 108 divisions','Navtara Chakra — 9-fold classification from birth star','Nakshatra compatibility — Tārā matching','Nakshatra remedies for all 27 stars'] },
-  { id:13, tier:'prana', title:'Pañcāṅga: Sacred Calendar Science', sub:'Five Limbs of Living in Cosmic Rhythm', dur:'30 min', topics:['Tithi, Vāra, Nakshatra, Yoga, Karaṇa','Rāhu Kāla, Yamagaṇḍa, Gulika — inauspicious periods','Reading a Pañcāṅga almanac daily','Pañcāṅga as daily spiritual alignment'] },
-  { id:14, tier:'prana', title:'Navamsha (D9): The Soul Chart', sub:'The Inner Blueprint', dur:'40 min', topics:['What D9 represents — soul, dharma, life after 36','Vargottama — highest dignity in D9','D9 for marriage and spouse quality','Pushkara Navamsha — 5 most auspicious degrees','Combining D1 + D9 + D10 for complete picture'] },
-  { id:15, tier:'siddha', title:'All 16 Divisional Charts', sub:'The 16 Lenses of Karmic Life Areas', dur:'90 min', topics:['D1 through D60 — all 16 Vargas explained','D-2 Horā (wealth) · D-7 Saptamsha (children)','D-10 Daśāṃśa (career) · D-12 (ancestral karma)','D-60 Ṣaṣṭyaṃśa — deepest past-life karma'] },
-  { id:16, tier:'siddha', title:'Ashtakavarga System', sub:'8-Source Strength Grid', dur:'50 min', topics:['8 sources of bindus for each planet','Sarva Ashtakavarga — total house strength','Transit predictions using bindu count','Longevity assessment via Pindāyu'] },
-  { id:17, tier:'siddha', title:'Special Dasha Systems', sub:'Three Master Clocks Beyond Vimshottari', dur:'75 min', topics:['Yogini Dasha — 36-year cycle, 8 Yoginis','Kālachakra Dasha — most secret system','Chara Dasha (Jaimini) — sign-based timing','Triple-dasha cross-referencing'] },
-  { id:18, tier:'siddha', title:'Jaimini Jyotish System', sub:'Soul-Level Vedic Astrology', dur:'80 min', topics:['Chara Kārakas — 8 soul significators','Ātmakāraka — the soul planet','Karakāṃśa — soul purpose in Navamsha','Upapada Lagna — TRUE marriage indicator','Rāśi drishti — Jaimini aspects'] },
-  { id:19, tier:'siddha', title:'Prashna Jyotish', sub:'Answering Any Question Without a Birth Chart', dur:'60 min', topics:['Why the moment of asking contains the answer','Career, finance, health, relationship Prashna','Lost items and missing persons','Ethics of Prashna — what not to answer'] },
-  { id:20, tier:'siddha', title:'Muhurta: Electional Mastery', sub:'Choosing the Perfect Moment', dur:'55 min', topics:['Chandra Bala, Tārā Bala, Pañcāṅga Śuddhi','Muhurta for marriage, business, surgery','Abhijit Muhurta — the universal shortcut','Shodasha Samskāra — 16 life ceremony timing'] },
-  { id:21, tier:'siddha', title:'Medical Jyotish', sub:'Body, Disease & Healing Through the Chart', dur:'65 min', topics:['Each planet body parts and organ systems','Dusthāna analysis — disease, chronic, hospitalization','Longevity assessment methods','Ayurvedic dosha from Lagna and Moon'] },
-  { id:22, tier:'siddha', title:'Relationships & Compatibility', sub:'Full Vedic Synastry', dur:'60 min', topics:['Ashtakoot 8-fold system — maximum 36 points','Upapada Lagna — ultimate marriage quality indicator','Navamsha D9 synastry comparison','Timing marriage through dasha + transit'] },
-  { id:23, tier:'akasha', title:'Bhrigu Nandi Nadi System (BNN)', sub:'5000-Year-Old Predictive Palm-Leaf Science', dur:'120 min', secret:true, topics:['BNN Core Grammar — conjunction as event language','Jupiter progression — 12-year life chapters','108 core planetary combinations','CCTV, M-Technique, D-Technique'] },
-  { id:24, tier:'akasha', title:'Nadi Secrets: The 18 Siddhar Transmissions', sub:'Secret Science of the Tamil Siddhars Palm Leaf Oracle', dur:'90 min', secret:true, topics:['Agastya, Bogar, Thirumoolar Nadi lineages','Physical repositories: Vaitheswaran Koil, Adyar','The 16 Kāṇḍas of Ajeeva Nadi','Thumb impression method — how leaves find their owner'] },
-  { id:25, tier:'akasha', title:'Bhrigu Samhitā Technique', sub:'500,000-Horoscope Database of Maharishi Bhrigu', dur:'75 min', secret:true, topics:['Bhrigu Bindu — most sensitive degree in your chart','Jupiter as primary timing engine','Any planet transiting BB = most significant events','Integrating Bhrigu with BNN and Parāśara'] },
-  { id:26, tier:'akasha', title:'Kālachakra Dasha: Quantum Timing', sub:'The Most Secret Advanced Dasha System', dur:'80 min', secret:true, topics:['Most ancient dasha — preserved in tantric lineages','Savya vs Apasavya rotation rules','Death timing and longevity assessment','Events missed by Vimshottari appear here'] },
-  { id:27, tier:'akasha', title:'Mundane Jyotish', sub:'Nations, Leaders & Civilizational Cycles', dur:'70 min', topics:['National horoscopes — reading country charts','Jupiter-Saturn conjunctions — 20-year epochs','Eclipse charts and collective karmic themes','Vedic economic astrology — market timing'] },
-  { id:28, tier:'akasha', title:'Svara Shāstra: Breath Astrology', sub:'The Most Secret Siddha Oracle', dur:'60 min', secret:true, topics:['Iḍā (Moon), Piṅgalā (Sun), Suṣumnā (neutral)','Five elements in breath — Earth, Water, Fire, Air, Space','Predicting from breath alone — no chart needed','Daily Svara practice for cosmic alignment'] },
-  { id:29, tier:'akasha', title:'Jyotish & Mantra Vidya', sub:'Planetary Seed Mantras', dur:'75 min', topics:['Beej mantras for all 9 Grahas','Navagraha Stotra — collective hymn','Mantra timing — best Nakshatra, Tithi, Vāra','Building a 40-day personal Graha sādhana'] },
-  { id:30, tier:'akasha', title:'Siddha Parihāram: Advanced Remedial Science', sub:'Remedies from the Tamil Siddhar Tradition', dur:'80 min', secret:true, topics:['Gemstone prescription — the complete system','Yantra construction and consecration','Thulāvaraṇam — sacred weight-based remedy','Navagraha homa — 9-planet fire ceremony'] },
-  { id:31, tier:'akasha', title:'Spirituality, Moksha & the Chart of Liberation', sub:'Reading the Soul Journey Toward Liberation', dur:'70 min', topics:['Moksha indicators in the chart','Reading charts of Siddha masters','Timing of spiritual awakening','Past-life indicators through D-60 and Ketu'] },
-  { id:32, tier:'akasha', title:'Chart Reading at Siddha Level', sub:'Full Integration — Reading as Bhrigu Would', dur:'90 min', secret:true, topics:['The rule of 3 confirmations','Steps 1–10: Complete Siddha methodology','BNN progression + Transit confirmation','Capstone: 60-min recorded chart reading'] },
-];
 
 const TIER_ACCESS: Record<string, string[]> = {
   free: ['free'],
@@ -2722,6 +2688,7 @@ const JyotishChamber: React.FC = () => {
   const [lexSearch, setLexSearch] = useState('');
   const [lexCat, setLexCat] = useState('All');
   const [activeTierTab, setActiveTierTab] = useState('free');
+  const [vidyaProgress, setVidyaProgress] = useState<Record<number, { status: string; completion_percentage: number }>>({});
   const [openModules, setOpenModules] = useState<Set<number>>(new Set());
   const [openNadi, setOpenNadi] = useState<string|null>(null);
   const [builtTabs, setBuiltTabs] = useState<Set<string>>(new Set(['overview']));
@@ -2736,6 +2703,21 @@ const JyotishChamber: React.FC = () => {
   const [studentEphemeris, setStudentEphemeris] = useState<typeof ephemeris>(null);
 
   // When a student is selected, calculate their ephemeris via jyotish-ephemeris
+  useEffect(() => {
+    if (!user?.id) { setVidyaProgress({}); return; }
+    supabase
+      .from('jyotish_progress')
+      .select('module_id, status, completion_percentage')
+      .eq('user_id', user.id)
+      .then(({ data }: { data: any }) => {
+        const map: Record<number, { status: string; completion_percentage: number }> = {};
+        (data || []).forEach((r: { module_id: number; status: string; completion_percentage: number }) => {
+          map[r.module_id] = { status: r.status, completion_percentage: r.completion_percentage };
+        });
+        setVidyaProgress(map);
+      });
+  }, [user?.id]);
+
   useEffect(() => {
     if (!activeStudent?.birth_date) { setStudentEphemeris(null); return; }
     const calc = async () => {
@@ -3840,8 +3822,16 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 18px', marginBottom:14, borderRadius:20, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.01)' }}>
               <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', flexShrink:0 }}>Your Path</div>
-              <div style={{ flex:1, height:3, borderRadius:99, background:'rgba(255,255,255,0.05)', overflow:'hidden' }}><div style={{ height:'100%', background:'#D4AF37', borderRadius:99, width:'25%' }}/></div>
-              <div style={{ fontSize:9, color:'rgba(255,255,255,0.25)' }}>8 / 32</div>
+              {(() => {
+                const completedVidya = Object.values(vidyaProgress).filter(p => p.status === 'completed' || p.completion_percentage >= 100).length;
+                const pct = Math.round((completedVidya / VIDYA_MODULES.length) * 100);
+                return (
+                  <>
+                    <div style={{ flex:1, height:3, borderRadius:99, background:'rgba(255,255,255,0.05)', overflow:'hidden' }}><div style={{ height:'100%', background:'#D4AF37', borderRadius:99, width:`${pct}%` }}/></div>
+                    <div style={{ fontSize:9, color:'rgba(255,255,255,0.25)' }}>{completedVidya} / {VIDYA_MODULES.length}</div>
+                  </>
+                );
+              })()}
             </div>
             <div style={{ display:'flex', gap:5, marginBottom:18 }}>
               {[
@@ -3855,7 +3845,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 </button>
               ))}
             </div>
-            {JYOTISH_MODULES.filter(m => m.tier === activeTierTab).map(m => {
+            {VIDYA_MODULES.filter(m => m.tier === activeTierTab).map(m => {
               const ok = isAdmin || canAccessJyotishModule({ isAdmin, userId: user?.id, tier: membershipTier, moduleId: m.id });
               const isOpen = openModules.has(m.id);
               const tierCol = { free:'#6B7280', prana:'#22D3EE', siddha:'#D4AF37', akasha:'#ffffff' }[m.tier] || '#D4AF37';
@@ -3864,9 +3854,9 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   <div onClick={() => ok && toggleModule(m.id)} style={{ display:'flex', alignItems:'flex-start', gap:10, cursor: ok ? 'pointer' : 'default' }}>
                     <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
                     <div style={{ flex:1 }}>
-                      {m.secret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
+                      {m.isSecret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
                       <div style={{ fontSize:12.5, fontWeight:900, letterSpacing:'-0.02em', lineHeight:1.3, marginBottom:2 }}>{m.title}</div>
-                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.35 }}>{m.sub}</div>
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.35 }}>{m.subtitle}</div>
                     </div>
                     <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{ok ? (isOpen ? '▲' : '▼') : '🔒'}</span>
                   </div>
@@ -3874,10 +3864,13 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     <span style={{ padding:'3px 9px', borderRadius:99, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, background:`${tierCol}18`, border:`1px solid ${tierCol}33`, color:tierCol }}>
                       { {free:'Free',prana:'Prāna-Flow',siddha:'Siddha-Quantum',akasha:'Ākāsha-Infinity'}[m.tier] }
                     </span>
-                    <span style={{ fontSize:9.5, color:'rgba(255,255,255,0.25)' }}>{m.dur}</span>
+                    <span style={{ fontSize:9.5, color:'rgba(255,255,255,0.25)' }}>{m.duration}</span>
                   </div>
                   {ok && isOpen && (
                     <div onClick={e => e.stopPropagation()} style={{ paddingTop:15, borderTop:'1px solid rgba(255,255,255,0.04)', marginTop:13 }}>
+                      {m.description && (
+                        <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', lineHeight:1.55, marginBottom:12, fontStyle:'italic' }}>{m.description}</p>
+                      )}
                       <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Curriculum</div>
                       <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:6 }}>
                         {m.topics.map(tp => (
@@ -3886,7 +3879,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           </li>
                         ))}
                       </ul>
-                      <button style={{ width:'100%', marginTop:14, padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
+                      <button onClick={() => navigate(`/jyotish-vidya/module/${m.id}`)} style={{ width:'100%', marginTop:14, padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
                     </div>
                   )}
                   {!ok && (

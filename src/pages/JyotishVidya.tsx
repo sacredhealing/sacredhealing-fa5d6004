@@ -16,6 +16,7 @@ const supabase: any = _supabase;
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import {
   getCourseTierRequiredRank,
   getSalesPageForRank,
@@ -65,57 +66,13 @@ const JyotishVidya: React.FC = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { tier: membershipTier, loading: membershipLoading, settled } = useMembership();
+  const jyotish = useJyotishProfile();
   const membershipReady = !membershipLoading && settled;
 
   const [activeTier, setActiveTier] = useState<JyotishTier>('free');
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [dataReady, setDataReady] = useState(false);
-
-  // ── Jyotish Birth Data ──
-  const [birthData, setBirthData] = useState({
-    birth_date: '', birth_time: '', birth_place: '',
-    lagna: '', moon_sign: '', current_dasha: ''
-  });
-  const [birthSaving, setBirthSaving] = useState(false);
-  const [birthSaved, setBirthSaved] = useState(false);
-
-  // Load existing birth data from profiles
-  useEffect(() => {
-    if (!user?.id) return;
-    (supabase as any)
-      .from('profiles')
-      .select('birth_date, birth_time, birth_place, lagna, moon_sign, current_dasha')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }: { data: any }) => {
-        if (data) setBirthData({
-          birth_date:    data.birth_date    ?? '',
-          birth_time:    data.birth_time    ?? '',
-          birth_place:   data.birth_place   ?? '',
-          lagna:         data.lagna         ?? '',
-          moon_sign:     data.moon_sign     ?? '',
-          current_dasha: data.current_dasha ?? '',
-        });
-      });
-  }, [user?.id]);
-
-  const saveBirthData = async () => {
-    if (!user?.id) return;
-    setBirthSaving(true);
-    await supabase.from('profiles').upsert({
-      id: user.id,
-      ...(birthData.birth_date    && { birth_date:    birthData.birth_date }),
-      ...(birthData.birth_time    && { birth_time:    birthData.birth_time }),
-      ...(birthData.birth_place   && { birth_place:   birthData.birth_place }),
-      ...(birthData.lagna         && { lagna:         birthData.lagna }),
-      ...(birthData.moon_sign     && { moon_sign:     birthData.moon_sign }),
-      ...(birthData.current_dasha && { current_dasha: birthData.current_dasha }),
-    });
-    setBirthSaving(false);
-    setBirthSaved(true);
-    setTimeout(() => setBirthSaved(false), 3000);
-  };
 
   const refreshProgress = useCallback(async () => {
     if (!user?.id) {
@@ -311,6 +268,67 @@ const JyotishVidya: React.FC = () => {
           })}
         </div>
 
+        {/* ── Your Jyotish Profile (read-only — birth data lives in one place: Jyotish Chamber) ── */}
+        {user && (
+          <div style={{
+            background: 'rgba(212,175,55,0.04)',
+            border: '1px solid rgba(212,175,55,0.18)',
+            borderRadius: 20,
+            padding: '20px 22px',
+            marginBottom: 24,
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5,
+              background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <Star size={16} style={{ color: '#D4AF37', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700,
+                  color: '#D4AF37', lineHeight: 1.1 }}>Your Jyotish Profile</div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
+                  color: 'rgba(212,175,55,0.4)', marginTop: 2 }}>
+                  Same chart used everywhere in the app
+                </div>
+              </div>
+            </div>
+            {jyotish.isLoading ? (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>Calculating your chart…</div>
+            ) : jyotish.ascendant || jyotish.moonSign ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                {[
+                  { label: 'Lagna', value: jyotish.ascendant },
+                  { label: 'Moon Sign', value: jyotish.moonSign },
+                  { label: 'Dasha', value: jyotish.mahadasha ? `${jyotish.mahadasha}${jyotish.antardasha ? ` — ${jyotish.antardasha}` : ''}` : '' },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
+                      color: 'rgba(212,175,55,0.38)', marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: value ? '#D4AF37' : 'rgba(255,255,255,0.3)' }}>
+                      {value || '—'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: 0, flex: 1, minWidth: 200 }}>
+                  Add your birth details once in Jyotish Chamber — your chart will then show here, and everywhere else in the app, automatically.
+                </p>
+                <Link
+                  to="/vedic-astrology"
+                  style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 999,
+                    border: '1px solid rgba(212,175,55,0.4)', background: 'rgba(212,175,55,0.1)',
+                    color: '#D4AF37', fontSize: 10, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase',
+                    textDecoration: 'none', whiteSpace: 'nowrap' }}
+                >
+                  Open Jyotish Chamber →
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Modules */}
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
           {getModulesByTier(activeTier).map((module) => {
@@ -339,127 +357,6 @@ const JyotishVidya: React.FC = () => {
                   isExpanded ? 'border-[#D4AF37]/20 md:col-span-2' : 'border-white/[0.05]',
                 )}
               >
-          
-        {/* ── Jyotish Birth Data Card ── */}
-        {user && (
-          <div style={{
-            background: 'rgba(212,175,55,0.04)',
-            border: '1px solid rgba(212,175,55,0.18)',
-            borderRadius: 20,
-            padding: '20px 22px',
-            marginBottom: 24,
-            position: 'relative',
-            overflow: 'hidden',
-          }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5,
-              background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <Star size={16} style={{ color: '#D4AF37', flexShrink: 0 }} />
-              <div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700,
-                  color: '#D4AF37', lineHeight: 1.1 }}>Your Jyotish Profile</div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
-                  color: 'rgba(212,175,55,0.4)', marginTop: 2 }}>
-                  Connects automatically to Agastya Muni · Ayurveda Chat
-                </div>
-              </div>
-              {birthSaved && (
-                <div style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
-                  textTransform: 'uppercase', color: '#4ade80', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span>✓</span> Saved &amp; Connected
-                </div>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginBottom: 18, lineHeight: 1.65,
-              fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>
-              "The sky at the moment of your birth is not decoration. It is the body's deepest blueprint.
-              When I see your Lagna and your Moon, I see which Dhatu was weakest from the first breath."
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              {[
-                { key: 'birth_date',    label: 'Date of Birth',        placeholder: 'DD/MM/YYYY' },
-                { key: 'birth_time',    label: 'Time of Birth',        placeholder: 'HH:MM (24h)' },
-              ].map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase',
-                    color: 'rgba(212,175,55,0.38)', marginBottom: 5 }}>{label}</div>
-                  <input
-                    value={birthData[key as keyof typeof birthData]}
-                    onChange={e => setBirthData(p => ({ ...p, [key]: e.target.value }))}
-                    placeholder={placeholder}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(212,175,55,0.16)', borderRadius: 10,
-                      padding: '10px 13px', color: 'rgba(255,255,255,0.85)', fontSize: 13,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase',
-                color: 'rgba(212,175,55,0.38)', marginBottom: 5 }}>Place of Birth</div>
-              <input
-                value={birthData.birth_place}
-                onChange={e => setBirthData(p => ({ ...p, birth_place: e.target.value }))}
-                placeholder="City, Country"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(212,175,55,0.16)', borderRadius: 10,
-                  padding: '10px 13px', color: 'rgba(255,255,255,0.85)', fontSize: 13,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none', boxSizing: 'border-box' }}
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              {[
-                { key: 'lagna',     label: 'Lagna / Ascendant', placeholder: 'e.g. Scorpio' },
-                { key: 'moon_sign', label: 'Moon Sign / Rashi',  placeholder: 'e.g. Cancer' },
-              ].map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase',
-                    color: 'rgba(212,175,55,0.38)', marginBottom: 5 }}>{label}</div>
-                  <input
-                    value={birthData[key as keyof typeof birthData]}
-                    onChange={e => setBirthData(p => ({ ...p, [key]: e.target.value }))}
-                    placeholder={placeholder}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(212,175,55,0.16)', borderRadius: 10,
-                      padding: '10px 13px', color: 'rgba(255,255,255,0.85)', fontSize: 13,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase',
-                color: 'rgba(212,175,55,0.38)', marginBottom: 5 }}>Current Dasha — Antardasha</div>
-              <input
-                value={birthData.current_dasha}
-                onChange={e => setBirthData(p => ({ ...p, current_dasha: e.target.value }))}
-                placeholder="e.g. Saturn — Moon (optional)"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(212,175,55,0.16)', borderRadius: 10,
-                  padding: '10px 13px', color: 'rgba(255,255,255,0.85)', fontSize: 13,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none', boxSizing: 'border-box' }}
-              />
-            </div>
-            <button
-              onClick={saveBirthData}
-              disabled={birthSaving}
-              style={{ width: '100%', padding: '13px', borderRadius: 999,
-                background: 'linear-gradient(135deg, rgba(212,175,55,0.32), rgba(212,175,55,0.14))',
-                border: '1px solid rgba(212,175,55,0.48)', color: '#D4AF37',
-                fontSize: 13.5, fontWeight: 700, cursor: birthSaving ? 'default' : 'pointer',
-                fontFamily: "'Cormorant Garamond', serif", letterSpacing: '0.04em',
-                opacity: birthSaving ? 0.6 : 1 }}
-            >
-              {birthSaving ? 'Saving...' : '✦ Save & Connect to Agastya'}
-            </button>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center',
-              marginTop: 10, lineHeight: 1.55 }}>
-              This data connects automatically to the Ayurveda Chat.
-              Agastya reads your birth chart in every consultation.
-            </div>
-          </div>
-        )}
       <div className="mb-2.5 flex items-start gap-3">
                   <div className="shrink-0">
                     <div className="mb-1 text-[8px] font-extrabold uppercase tracking-[0.4em] text-[#D4AF37]/50">
