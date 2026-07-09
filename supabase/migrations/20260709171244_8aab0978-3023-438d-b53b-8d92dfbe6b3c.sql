@@ -1,0 +1,2 @@
+ALTER TABLE public.jyotish_profiles ADD COLUMN IF NOT EXISTS planet_longitudes jsonb;
+COMMENT ON COLUMN public.jyotish_profiles.planet_longitudes IS 'Sidereal longitudes (Lahiri ayanamsa, degrees 0-360) for sun, moon, mars, mercury, jupiter, venus, saturn, rahu, ketu — as computed by jyotish-ephemeris. Used to render the full Rasi (D1) chart.';
