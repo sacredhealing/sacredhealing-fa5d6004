@@ -68,6 +68,7 @@ export const EkadashiOracleCard: React.FC = () => {
       paksha: e.paksha,
       isSplit: e.isSplit,
       isEdgeCase: e.isEdgeCase,
+      parana: tradition === 'vaishnava' ? e.vaishnavaParana : e.smartaParana,
     }))
     .filter(e => daysFromNow(e.date) >= -1);
   const next = upcoming[0];
@@ -86,6 +87,10 @@ export const EkadashiOracleCard: React.FC = () => {
   const pillBg  = isToday ? 'rgba(212,175,55,0.22)' : isAfter ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.08)';
   const pillBdr = isToday ? 'rgba(212,175,55,0.6)'  : isAfter ? 'rgba(34,211,238,0.3)' : 'rgba(212,175,55,0.22)';
   const pillClr = isAfter ? '#22D3EE' : '#D4AF37';
+
+  // Formats a UTC ISO timestamp in the device's own local timezone —
+  // exactly what Intl/Date already know, no geo-to-timezone lookup needed.
+  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 
   const dosha    = doshaProfile?.primary || jyotish.primaryDosha || undefined;
   const moonSign = jyotish.moonSign || undefined;
@@ -193,6 +198,25 @@ export const EkadashiOracleCard: React.FC = () => {
                       ⚠️ Rare calendar configuration this cycle — worth a quick cross-check with your local panchang.
                     </div>
                   )}
+                  <div style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.12)', borderRadius: 14, padding: '12px', marginBottom: 14 }}>
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(34,211,238,0.5)', marginBottom: 6 }}>
+                      Parana · Break Fast · {fmtDate(next.parana.paranaDate)}
+                    </div>
+                    {next.parana.isEdgeCase ? (
+                      <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: 'rgba(255,180,80,0.8)', lineHeight: 1.5 }}>
+                        Dwadashi ends before Hari Vasara clears at your location this cycle — the standard window collapses. Break the fast at sunrise on {fmtDate(next.parana.paranaDate)} and check a local panchang for the Gauna (Trayodashi-day) parana rule.
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 16, fontWeight: 900, color: '#22D3EE', letterSpacing: '-0.02em' }}>
+                          {fmtTime(next.parana.windowStartUtc)} – {fmtTime(next.parana.windowEndUtc)}
+                        </div>
+                        <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, lineHeight: 1.5 }}>
+                          Your local time, computed from your location. Avoid breaking fast before this window opens — that's Hari Vasara, the last quarter of Ekadashi bleeding into the first of Dwadashi.
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </>
               )}
               <div style={s.lbl}>Upcoming</div>
