@@ -6,6 +6,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { ChevronDown, Lock } from 'lucide-react';
+import { useAyurvedaProgress } from '@/hooks/useAyurvedaProgress';
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
 const gold   = (a: number) => `rgba(212,175,55,${a})`;
@@ -381,9 +382,11 @@ interface HeroCardProps {
   badge?: string;
   stats?: { v: string; l: string }[];
   features?: string[];
+  /** Real progress data — only pass this when backed by an actual query. */
+  progress?: { pct: number; label: string; done?: boolean };
   delay?: number;
 }
-const HeroCard = ({ SvgIcon, label, title, subtitle, desc, tiers, cta, href, ac, ac2, badge, stats, features, delay = 0 }: HeroCardProps) => {
+const HeroCard = ({ SvgIcon, label, title, subtitle, desc, tiers, cta, href, ac, ac2, badge, stats, features, progress, delay = 0 }: HeroCardProps) => {
   const navigate = useNavigate();
   const acFaint  = ac.replace(/[\d.]+\)$/, '0.1)');
   const acGlow   = ac.replace(/[\d.]+\)$/, '0.22)');
@@ -414,6 +417,17 @@ const HeroCard = ({ SvgIcon, label, title, subtitle, desc, tiers, cta, href, ac,
         </div>
         <p style={{ ...ITALIC, color:white(0.6), lineHeight:1.7, marginBottom:12 }}>{desc}</p>
         <TierPills tiers={tiers}/>
+        {progress && (
+          <div style={{ marginBottom:14 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+              <span style={{ ...LABEL, fontSize:8, color:white(0.4) }}>{progress.done ? 'Completed' : 'Your Progress'}</span>
+              <span style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:10, fontWeight:800, color:progress.done?green(0.9):ac.replace(/[\d.]+\)$/, '0.95)') }}>{progress.label}</span>
+            </div>
+            <div style={{ height:3, borderRadius:10, background:'rgba(255,255,255,0.08)', overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${progress.pct}%`, borderRadius:10, background:`linear-gradient(90deg,${ac},${progress.done?green(0.9):ac.replace(/[\d.]+\)$/, '0.6)')})`, boxShadow:`0 0 8px ${acGlow}` }}/>
+            </div>
+          </div>
+        )}
         {stats && (
           <div style={{ display:'grid', gridTemplateColumns:`repeat(${stats.length},1fr)`, gap:8, marginBottom:14, padding:'10px 0', borderTop:`1px solid ${ac.replace(/[\d.]+\)$/, '0.1)')}`, borderBottom:`1px solid ${ac.replace(/[\d.]+\)$/, '0.1)')}` }}>
             {stats.map(s=>(
@@ -490,6 +504,15 @@ export default function SiddhaPortal() {
   const { t } = useTranslation();
   const { tier, loading, settled } = useMembership();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { stats: agastyarStats } = useAyurvedaProgress(!loading && settled);
+
+  const agastyarProgress = agastyarStats.totalModules > 0
+    ? {
+        pct: agastyarStats.completionPercent,
+        label: `${agastyarStats.completedModules} / ${agastyarStats.totalModules} · ${agastyarStats.completionPercent}%`,
+        done: agastyarStats.completionPercent >= 100,
+      }
+    : undefined;
 
   useEffect(() => {
     if (!loading && settled && !adminLoading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
@@ -559,32 +582,27 @@ export default function SiddhaPortal() {
       {/* CONTENT */}
       <div style={{ padding:'0 16px' }}>
 
-        {/* ── PINNACLE ACADEMIES ── */}
-        <div style={{ ...LABEL, fontSize:8, color:gold(0.45), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-          <span>⚜</span> Pinnacle Academies
-        </div>
-
-        <HeroCard SvgIcon={Icon.Lotus} label="Academy · 108 Modules · Siddha Ayurveda" title="Agastyar Academy"
-          subtitle="The Supreme Ayurvedic Path of the 18 Siddhas"
-          desc="The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity. Scalar-encoded with Agastyar's living consciousness."
-          tiers={[{l:'Free',c:white(0.55)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
-          cta="Enter Academy" href="/agastyar-academy" ac={gold(0.9)} ac2={cyan(0.8)}
-          badge="LIVE" stats={[{v:'108',l:'Modules'},{v:'18',l:'Masters'},{v:'4',l:'Tiers'}]} delay={0.05}/>
-
-        <HeroCard SvgIcon={Icon.StarCrystal} label="Vidya · 32 Modules · Bhrigu Oracle" title="Sovereign Jyotish Vidya"
-          subtitle="Vedic Astrology · Bhrigu Nadi · 9 Grahas"
-          desc="The full 32-module path of Vedic astrology — from the 9 Grahas to Bhrigu Nadi mastery with live oracle readings."
-          tiers={[{l:'Free 1–6',c:white(0.55)},{l:'Prana 7–14',c:green(0.85)},{l:'Siddha 15–22',c:cyan(0.9)},{l:'Akasha 23–32',c:gold(0.95)}]}
-          cta="Enter Vidya" href="/jyotish-vidya" ac={cyan(0.9)} ac2={gold(0.8)}
-          badge="LIVE" stats={[{v:'32',l:'Modules'},{v:'9',l:'Grahas'},{v:'4',l:'Tiers'}]} delay={0.08}/>
-
-        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
+        {/* CONTINUE LEARNING — only renders when there's real progress to show */}
+        {agastyarProgress && agastyarProgress.pct > 0 && !agastyarProgress.done && (
+          <>
+            <div style={{ ...LABEL, fontSize:8, color:teal(0.6), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+              <span>◆</span> Continue Learning
+            </div>
+            <HeroCard SvgIcon={Icon.Herb} label="Agastyar Academy · In Progress" title="Continue Your Path"
+              desc="Pick up where you left off in the 108-module Ayurveda curriculum."
+              tiers={[]}
+              progress={agastyarProgress}
+              cta="Resume Academy" href="/agastyar-academy" ac={teal(0.9)} delay={0.02}/>
+            <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
+          </>
+        )}
 
         {/* ══ CATEGORY 1: AYURVEDA & SIDDHA MEDICINE ══ */}
         <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Hair · Fasting" ac={teal(0.9)} count={5} delay={0.06} defaultOpen>
           <HeroCard SvgIcon={Icon.Herb} label="108 Modules · Agastyar Lineage · Complete Vidya" title="Agastyar Academy"
             desc="The most comprehensive Ayurveda education ever assembled — 108 modules across all four tiers, rooted entirely in Agastyar's direct transmission from the Tamil Siddha lineage."
             tiers={[{l:'Free · M1–27',c:white(0.5)},{l:'Prana · M28–54',c:green(0.85)},{l:'Siddha · M55–81',c:teal(0.9)},{l:'Akasha · M82–108',c:gold(0.95)}]}
+            progress={agastyarProgress}
             cta="Enter the Academy" href="/agastyar-academy" ac={teal(0.9)} badge="LIVE"
             features={['108 Modules','Panchakarma','Rasayana','Nadi Vaidya','Pulse Reading','Kaya Kalpa']}/>
           <HeroCard SvgIcon={Icon.Moon} label="274 Lessons · Varma · Rasayana · 4 Tiers" title="Siddha Medicine Academy"
