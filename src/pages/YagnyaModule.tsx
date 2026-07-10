@@ -421,27 +421,29 @@ function LessonRow({ lesson, accentColor, idx }: { lesson: { title: string; dura
   const [open, setOpen] = useState(false);
   return (
     <div style={{ marginBottom: 8 }}>
-      <div onClick={() => setOpen(!open)} style={{
-        display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer",
-        padding: "11px 14px", borderRadius: 14,
-        background: open ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.018)",
-        border: `1px solid ${open ? accentColor + "45" : "rgba(255,255,255,0.06)"}`,
-        transition: "all 0.22s",
-      }}>
-        <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${accentColor}18`, border: `1px solid ${accentColor}45`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, fontWeight: 800, color: accentColor }}>{String(idx + 1).padStart(2, "0")}</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.88)", marginBottom: 2, lineHeight: 1.35 }}>{lesson.title}</div>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: accentColor + "75" }}>{lesson.duration}</div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: "100%", display: "flex", alignItems: "flex-start", gap: 10,
+          padding: "13px 14px", borderRadius: 14, cursor: "pointer",
+          background: open ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
+          border: `1px solid ${open ? accentColor + "55" : "rgba(255,255,255,0.07)"}`,
+          transition: "all 0.22s", textAlign: "left" as const,
+        }}>
+        <div style={{ width: 26, height: 26, borderRadius: "50%", background: `${accentColor}20`, border: `1px solid ${accentColor}50`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, fontWeight: 800, color: accentColor, minWidth: 26 }}>{String(idx + 1).padStart(2, "0")}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.9)", marginBottom: 3, lineHeight: 1.35 }}>{lesson.title}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: accentColor + "80" }}>{lesson.duration}</div>
         </div>
-        <div style={{ color: accentColor + "90", fontSize: 15, lineHeight: 1, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0, marginTop: 5 }}>›</div>
-      </div>
+        <div style={{ color: accentColor, fontSize: 18, lineHeight: 1, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0, marginTop: 4 }}>›</div>
+      </button>
       {open && (
-        <div style={{ padding: "12px 14px 10px 48px", borderLeft: `2px solid ${accentColor}28`, marginLeft: 12 }}>
-          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase" as const, color: accentColor + "70", marginBottom: 8 }}>WHAT YOU WILL LEARN</div>
+        <div style={{ padding: "14px 14px 12px 54px", borderLeft: `2px solid ${accentColor}30`, marginLeft: 13 }}>
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase" as const, color: accentColor + "75", marginBottom: 10 }}>WHAT YOU WILL LEARN</div>
           {lesson.objectives.map((o, i) => (
-            <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
-              <span style={{ color: accentColor, fontSize: 10, lineHeight: 1.9, flexShrink: 0 }}>◈</span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.65 }}>{o}</span>
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
+              <span style={{ color: accentColor, fontSize: 11, lineHeight: 1.8, flexShrink: 0 }}>◈</span>
+              <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>{o}</span>
             </div>
           ))}
         </div>
@@ -457,76 +459,81 @@ function ModuleCard({ mod, accentColor, defaultOpen, delay }: {
   const [open, setOpen] = useState(!!defaultOpen);
   const [tab, setTab] = useState<"lessons" | "practice" | "outcomes">("lessons");
   return (
-    <div style={{ marginBottom: 14, animation: `fadeInUp 0.48s ${delay ?? 0}s ease both` }}>
-      <div onClick={() => setOpen(!open)} style={{
-        background: open ? `linear-gradient(135deg, ${accentColor}10, rgba(5,5,5,0.65))` : "rgba(255,255,255,0.02)",
-        border: `1px solid ${open ? accentColor + "40" : "rgba(255,255,255,0.07)"}`,
-        borderRadius: open ? "20px 20px 0 0" : "20px",
-        padding: "18px 20px",
-        cursor: "pointer",
-        boxShadow: open ? `0 0 28px ${accentColor}10` : "none",
-        transition: "all 0.28s",
-        display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12,
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase" as const, color: accentColor + "70" }}>MODULE {mod.number}</div>
-            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" as const }}>· {mod.duration}</div>
+    <div style={{ marginBottom: 16, animation: `fadeInUp 0.48s ${delay ?? 0}s ease both`, borderRadius: 20, overflow: "hidden", border: `1px solid ${open ? accentColor + "45" : "rgba(255,255,255,0.07)"}`, boxShadow: open ? `0 0 28px ${accentColor}12` : "none", transition: "box-shadow 0.28s, border-color 0.28s" }}>
+      {/* ── HEADER — only this toggles open/close ── */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: "100%", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12,
+          background: open ? `linear-gradient(135deg, ${accentColor}12, rgba(5,5,5,0.7))` : "rgba(255,255,255,0.025)",
+          padding: "20px 20px 18px", cursor: "pointer", border: "none", textAlign: "left" as const,
+          borderBottom: open ? `1px solid ${accentColor}22` : "none", transition: "background 0.28s",
+        }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 7 }}>
+            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase" as const, color: accentColor + "80" }}>MODULE {mod.number}</div>
+            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase" as const }}>· {mod.duration}</div>
           </div>
-          <div style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.94)", letterSpacing: "-0.02em", lineHeight: 1.25, marginBottom: 5 }}>{mod.title}</div>
-          <div style={{ fontSize: 11, fontStyle: "italic", color: "rgba(255,255,255,0.36)", lineHeight: 1.5 }}>{mod.arc}</div>
+          <div style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em", lineHeight: 1.25, marginBottom: 6 }}>{mod.title}</div>
+          <div style={{ fontSize: 11, fontStyle: "italic", color: "rgba(255,255,255,0.38)", lineHeight: 1.5 }}>{mod.arc}</div>
         </div>
-        <div style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${accentColor}45`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.22s", transform: open ? "rotate(45deg)" : "none" }}>
-          <span style={{ color: accentColor, fontSize: 15, lineHeight: 1 }}>+</span>
+        <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${accentColor}55`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "transform 0.22s", transform: open ? "rotate(45deg)" : "none", background: open ? `${accentColor}18` : "transparent" }}>
+          <span style={{ color: accentColor, fontSize: 18, lineHeight: 1 }}>+</span>
         </div>
-      </div>
+      </button>
+      {/* ── BODY — completely separate from header, no click propagation issues ── */}
       {open && (
-        <div style={{ background: "rgba(5,5,5,0.6)", border: `1px solid ${accentColor}28`, borderTop: "none", borderRadius: "0 0 20px 20px", padding: "16px 16px 20px" }}>
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 12 }}>
+        <div style={{ background: "rgba(5,5,5,0.65)", padding: "18px 16px 22px" }}>
+          {/* Tab row */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 18, borderBottom: "1px solid rgba(255,255,255,0.07)", paddingBottom: 14 }}>
             {(["lessons", "practice", "outcomes"] as const).map(t => (
-              <button key={t} onClick={(e) => { e.stopPropagation(); setTab(t); }} style={{
-                background: tab === t ? `${accentColor}18` : "transparent",
-                border: `1px solid ${tab === t ? accentColor + "45" : "rgba(255,255,255,0.07)"}`,
-                borderRadius: "20px", padding: "5px 11px", cursor: "pointer",
-                fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase" as const,
-                color: tab === t ? accentColor : "rgba(255,255,255,0.28)",
-                transition: "all 0.18s",
-              }}>{t === "lessons" ? "LESSONS" : t === "practice" ? "SADHANA" : "OUTCOMES"}</button>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                style={{
+                  background: tab === t ? `${accentColor}20` : "transparent",
+                  border: `1px solid ${tab === t ? accentColor + "55" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: "20px", padding: "7px 13px", cursor: "pointer",
+                  fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase" as const,
+                  color: tab === t ? accentColor : "rgba(255,255,255,0.3)",
+                  transition: "all 0.18s", flex: 1,
+                }}>
+                {t === "lessons" ? "LESSONS" : t === "practice" ? "SADHANA" : "OUTCOMES"}
+              </button>
             ))}
           </div>
-          {/* Lessons */}
+          {/* LESSONS tab */}
           {tab === "lessons" && (
             <div>{mod.lessons.map((l, i) => <LessonRow key={i} lesson={l} accentColor={accentColor} idx={i} />)}</div>
           )}
-          {/* Sadhana / Practice */}
+          {/* SADHANA tab */}
           {tab === "practice" && (
             <div>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.45em", textTransform: "uppercase" as const, color: accentColor + "80", marginBottom: 5 }}>SADHANA PROTOCOL</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.92)", marginBottom: 3 }}>{mod.practice.name}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: accentColor + "70" }}>{mod.practice.duration}</div>
+              <div style={{ marginBottom: 16, padding: "14px 16px", background: `${accentColor}0C`, border: `1px solid ${accentColor}28`, borderRadius: 14 }}>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.45em", textTransform: "uppercase" as const, color: accentColor + "85", marginBottom: 6 }}>SADHANA PROTOCOL</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.93)", marginBottom: 4, lineHeight: 1.3 }}>{mod.practice.name}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: accentColor + "75" }}>{mod.practice.duration}</div>
               </div>
               {mod.practice.elements.map((el, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${accentColor}18`, border: `1px solid ${accentColor}38`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, fontWeight: 800, color: accentColor }}>{i + 1}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, paddingTop: 2 }}>{el}</div>
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${accentColor}20`, border: `1px solid ${accentColor}45`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 8, fontWeight: 800, color: accentColor, minWidth: 22 }}>{i + 1}</div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, paddingTop: 2 }}>{el}</div>
                 </div>
               ))}
-              <div style={{ background: `${accentColor}0B`, border: `1px solid ${accentColor}22`, borderRadius: 13, padding: "13px 15px", marginTop: 4 }}>
-                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase" as const, color: accentColor + "70", marginBottom: 5 }}>SIDDHA NOTE</div>
-                <div style={{ fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.52)", lineHeight: 1.7 }}>{mod.practice.sadhanaNote}</div>
+              <div style={{ background: `${accentColor}08`, border: `1px solid ${accentColor}25`, borderRadius: 14, padding: "15px 16px", marginTop: 8 }}>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase" as const, color: accentColor + "75", marginBottom: 7 }}>SIDDHA NOTE</div>
+                <div style={{ fontSize: 12.5, fontStyle: "italic", color: "rgba(255,255,255,0.55)", lineHeight: 1.75 }}>{mod.practice.sadhanaNote}</div>
               </div>
             </div>
           )}
-          {/* Outcomes */}
+          {/* OUTCOMES tab */}
           {tab === "outcomes" && (
             <div>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.45em", textTransform: "uppercase" as const, color: accentColor + "80", marginBottom: 12 }}>WHAT SHIFTS</div>
+              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.45em", textTransform: "uppercase" as const, color: accentColor + "85", marginBottom: 14 }}>WHAT SHIFTS</div>
               {mod.outcomes.map((o, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10, padding: "10px 12px", background: `${accentColor}08`, border: `1px solid ${accentColor}1e`, borderRadius: 12 }}>
-                  <span style={{ color: accentColor, fontSize: 13, lineHeight: 1.6, flexShrink: 0 }}>✦</span>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.65 }}>{o}</span>
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12, padding: "12px 14px", background: `${accentColor}09`, border: `1px solid ${accentColor}22`, borderRadius: 13 }}>
+                  <span style={{ color: accentColor, fontSize: 15, lineHeight: 1.55, flexShrink: 0 }}>✦</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.68)", lineHeight: 1.7 }}>{o}</span>
                 </div>
               ))}
             </div>
@@ -541,33 +548,42 @@ function ModuleCard({ mod, accentColor, defaultOpen, delay }: {
 function TransmitterCard({ t, accentColor }: { t: typeof TRANSMITTERS[0]; accentColor: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div onClick={() => setOpen(!open)} style={{
-      background: "rgba(255,255,255,0.02)", backdropFilter: "blur(40px)",
-      border: `1px solid ${open ? accentColor : "rgba(255,255,255,0.06)"}`,
-      borderRadius: "28px", padding: "26px", marginBottom: "14px",
-      cursor: "pointer", transition: "all 0.35s",
-      boxShadow: open ? `0 0 40px ${accentColor}20` : "none",
+    <div style={{
+      background: "rgba(255,255,255,0.02)",
+      border: `1px solid ${open ? accentColor + "60" : "rgba(255,255,255,0.07)"}`,
+      borderRadius: "24px", marginBottom: "12px",
+      transition: "border-color 0.3s",
+      boxShadow: open ? `0 0 32px ${accentColor}18` : "none",
+      overflow: "hidden",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "13px" }}>
-          <span style={{ fontSize: "22px" }}>{t.icon}</span>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "22px 22px", cursor: "pointer", border: "none",
+          background: open ? `linear-gradient(135deg, ${accentColor}10, rgba(5,5,5,0.7))` : "transparent",
+          borderBottom: open ? `1px solid ${accentColor}20` : "none",
+          textAlign: "left" as const, transition: "background 0.3s",
+        }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <span style={{ fontSize: "24px" }}>{t.icon}</span>
           <div>
-            <div style={{ fontSize: "14px", fontWeight: 900, color: accentColor, letterSpacing: "-0.02em" }}>{t.name}</div>
-            <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.32)", marginTop: 2 }}>{t.title}</div>
+            <div style={{ fontSize: "15px", fontWeight: 900, color: accentColor, letterSpacing: "-0.02em" }}>{t.name}</div>
+            <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{t.title}</div>
           </div>
         </div>
-        <div style={{ width: "27px", height: "27px", borderRadius: "50%", border: `1px solid ${accentColor}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.28s", transform: open ? "rotate(45deg)" : "none", flexShrink: 0 }}>
-          <span style={{ color: accentColor, fontSize: "14px", lineHeight: 1 }}>+</span>
+        <div style={{ width: "30px", height: "30px", borderRadius: "50%", border: `1px solid ${accentColor}60`, display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.28s", transform: open ? "rotate(45deg)" : "none", flexShrink: 0, background: open ? `${accentColor}18` : "transparent" }}>
+          <span style={{ color: accentColor, fontSize: "18px", lineHeight: 1 }}>+</span>
         </div>
-      </div>
+      </button>
       {open && (
-        <div style={{ marginTop: "22px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "22px" }}>
-          <div style={{ fontSize: "8px", fontWeight: 800, letterSpacing: "0.5em", textTransform: "uppercase" as const, color: accentColor, marginBottom: "10px" }}>◈ AKASHIC TRANSMISSION ◈</div>
-          <div style={{ fontSize: "13.5px", lineHeight: 1.9, color: "rgba(255,255,255,0.7)", fontStyle: "italic" }}>"{t.transmission}"</div>
+        <div style={{ padding: "20px 22px 22px" }}>
+          <div style={{ fontSize: "8px", fontWeight: 800, letterSpacing: "0.5em", textTransform: "uppercase" as const, color: accentColor, marginBottom: "12px" }}>◈ AKASHIC TRANSMISSION ◈</div>
+          <div style={{ fontSize: "13.5px", lineHeight: 1.9, color: "rgba(255,255,255,0.72)", fontStyle: "italic" }}>"{t.transmission}"</div>
           {t.mantra && (
-            <div style={{ marginTop: "18px", background: `linear-gradient(135deg, ${accentColor}10, transparent)`, border: `1px solid ${accentColor}28`, borderRadius: "14px", padding: "14px" }}>
-              <div style={{ fontSize: "8px", fontWeight: 800, letterSpacing: "0.5em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.35)", marginBottom: 7 }}>ACTIVATION MANTRA</div>
-              <div style={{ fontSize: "12px", fontWeight: 700, color: accentColor, letterSpacing: "0.05em" }}>{t.mantra}</div>
+            <div style={{ marginTop: "20px", background: `linear-gradient(135deg, ${accentColor}10, transparent)`, border: `1px solid ${accentColor}30`, borderRadius: "14px", padding: "15px 16px" }}>
+              <div style={{ fontSize: "8px", fontWeight: 800, letterSpacing: "0.5em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.38)", marginBottom: 8 }}>ACTIVATION MANTRA</div>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: accentColor, letterSpacing: "0.05em" }}>{t.mantra}</div>
             </div>
           )}
         </div>
@@ -766,3 +782,4 @@ export default function YagnyaModule() {
     </div>
   );
 }
+
