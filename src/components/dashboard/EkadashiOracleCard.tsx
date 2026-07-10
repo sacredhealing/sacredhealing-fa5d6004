@@ -1,33 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
+import { getUpcomingEkadashis } from '@/lib/ekadashiEngine';
 
-// ── Verified 2026–2027 Ekadashi dates (Drik Panchang, IST) ─────────────────
-const EKADASHIS: { date: string; name: string; paksha: 'Shukla' | 'Krishna' }[] = [
-  { date: '2026-06-25', name: 'Nirjala Ekadashi',      paksha: 'Shukla'  },
-  { date: '2026-07-10', name: 'Yogini Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-07-25', name: 'Devshayani Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-08-08', name: 'Kamika Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-08-23', name: 'Shravana Putrada Ekadashi', paksha: 'Shukla' },
-  { date: '2026-09-07', name: 'Aja Ekadashi',           paksha: 'Krishna' },
-  { date: '2026-09-21', name: 'Parsva Ekadashi',        paksha: 'Shukla'  },
-  { date: '2026-10-06', name: 'Indira Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-10-21', name: 'Papankusha Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-11-05', name: 'Rama Ekadashi',          paksha: 'Krishna' },
-  { date: '2026-11-19', name: 'Devutthana Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-12-05', name: 'Utpanna Ekadashi',       paksha: 'Krishna' },
-  { date: '2026-12-19', name: 'Mokshada Ekadashi',      paksha: 'Shukla'  },
-  { date: '2027-01-03', name: 'Saphala Ekadashi',       paksha: 'Krishna' },
-  { date: '2027-01-17', name: 'Putrada Ekadashi',       paksha: 'Shukla'  },
-];
+// Default location: Uddevalla, Sweden. Silently overridden by browser
+// geolocation on mount if the user grants it; falls back here otherwise.
+const DEFAULT_LAT = 58.3498;
+const DEFAULT_LON = 11.9423;
+
+type Tradition = 'vaishnava' | 'smarta';
+const TRADITION_KEY = 'sqi_ekadashi_tradition';
+
+function useLocation() {
+  const [coords, setCoords] = useState({ lat: DEFAULT_LAT, lon: DEFAULT_LON });
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => { /* silent fallback to default */ },
+      { maximumAge: 3600000, timeout: 4000 }
+    );
+  }, []);
+  return coords;
+}
 
 function daysFromNow(dateStr: string): number {
   const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00'); d.setHours(0,0,0,0);
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
 function fmtDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function doshaGuidance(dosha?: string): string {
   const d = (dosha || '').toLowerCase();
@@ -44,8 +47,29 @@ export const EkadashiOracleCard: React.FC = () => {
   const [open, setOpen] = useState(false);
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
+  const { lat, lon } = useLocation();
 
-  const upcoming = EKADASHIS.filter(e => daysFromNow(e.date) >= -1);
+  // Bhakti Marga follows the Gaudiya Vaishnava (Suddha Ekadashi / Arunodaya)
+  // calculation by default — see ekadashiEngine.ts for the full rationale.
+  const [tradition, setTradition] = useState<Tradition>(() => {
+    if (typeof window === 'undefined') return 'vaishnava';
+    return (localStorage.getItem(TRADITION_KEY) as Tradition) || 'vaishnava';
+  });
+  const setTraditionPersist = (t: Tradition) => {
+    setTradition(t);
+    try { localStorage.setItem(TRADITION_KEY, t); } catch { /* noop */ }
+  };
+
+  const resolved = getUpcomingEkadashis(lat, lon, new Date(), 8);
+  const upcoming = resolved
+    .map(e => ({
+      date: tradition === 'vaishnava' ? e.vaishnavaDate : e.smartaDate,
+      name: e.name,
+      paksha: e.paksha,
+      isSplit: e.isSplit,
+      isEdgeCase: e.isEdgeCase,
+    }))
+    .filter(e => daysFromNow(e.date) >= -1);
   const next = upcoming[0];
   const daysAway = next ? daysFromNow(next.date) : null;
 
@@ -149,9 +173,9 @@ export const EkadashiOracleCard: React.FC = () => {
                   <div style={s.countRow}>
                     {[
                       { num: Math.abs(daysAway ?? 0), lbl: 'Days' },
-                      { num: new Date(next.date).getDate(), lbl: 'Date' },
-                      { num: new Date(next.date).toLocaleString('en',{month:'short'}), lbl: 'Month' },
-                      { num: new Date(next.date).getFullYear(), lbl: 'Year' },
+                      { num: new Date(next.date + 'T00:00:00').getDate(), lbl: 'Date' },
+                      { num: new Date(next.date + 'T00:00:00').toLocaleString('en',{month:'short'}), lbl: 'Month' },
+                      { num: new Date(next.date + 'T00:00:00').getFullYear(), lbl: 'Year' },
                     ].map(({ num, lbl }) => (
                       <div key={lbl} style={s.countBox}>
                         <div style={s.countNum}>{num}</div>
@@ -159,6 +183,16 @@ export const EkadashiOracleCard: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                  {next.isSplit && (
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(34,211,238,0.65)', marginTop: -6, marginBottom: 10, lineHeight: 1.5 }}>
+                      🔀 Smarta and Vaishnava traditions differ this month — showing the {tradition === 'vaishnava' ? 'Vaishnava' : 'Smarta'} date.
+                    </div>
+                  )}
+                  {next.isEdgeCase && (
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(255,180,80,0.75)', marginTop: -6, marginBottom: 10, lineHeight: 1.5 }}>
+                      ⚠️ Rare calendar configuration this cycle — worth a quick cross-check with your local panchang.
+                    </div>
+                  )}
                 </>
               )}
               <div style={s.lbl}>Upcoming</div>
@@ -170,6 +204,24 @@ export const EkadashiOracleCard: React.FC = () => {
                       <div style={s.itemDate}>{fmtDate(e.date)} · {e.paksha === 'Shukla' ? 'Waxing' : 'Waning'} Moon</div>
                     </div>
                     <span style={badge(e.paksha)}>{e.paksha}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={s.lbl}>Tradition</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                {(['vaishnava', 'smarta'] as Tradition[]).map(t => (
+                  <div
+                    key={t}
+                    onClick={() => setTraditionPersist(t)}
+                    style={{
+                      flex: 1, textAlign: 'center' as const, padding: '8px 6px', borderRadius: 12, cursor: 'pointer',
+                      fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 700,
+                      background: tradition === t ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${tradition === t ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.05)'}`,
+                      color: tradition === t ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    {t === 'vaishnava' ? 'Vaishnava' : 'Smarta'}
                   </div>
                 ))}
               </div>
@@ -226,12 +278,12 @@ export const EkadashiOracleCard: React.FC = () => {
               <div style={s.learnBox}>
                 <div style={s.learnTitle}>🌑 What is Ekadashi?</div>
                 <div style={s.learnBody}>
-                  <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Ekadashi</strong> ("eleven") is the 11th lunar day of both the waxing and waning fortnights — twice per month, 24 times per year.
+                  <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Ekadashi</strong> ("eleven") is the 11th lunar day (tithi) of both the waxing and waning fortnights — twice per month, 24 times per year.
                   <br /><br />
                   On Ekadashi the moon's gravitational pull draws prana upward. Fasting removes Ama (toxins), rests digestive fire and opens space for{' '}
                   <strong style={{ color: '#D4AF37' }}>higher states of consciousness</strong>.
                   <br /><br />
-                  The Siddhas called it the <strong style={{ color: '#D4AF37' }}>portal of prana</strong> — mantras carry 11× power on this day.
+                  <strong style={{ color: '#D4AF37' }}>Why dates sometimes differ:</strong> a tithi runs 21–26h, not a fixed 24h day, so it drifts relative to sunrise. <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Smarta</strong> observance follows whichever tithi rules local sunrise. <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Vaishnava</strong> observance (Bhakti Marga) additionally requires Ekadashi to have begun before Arunodaya — the dawn twilight ~96 min before sunrise — to keep the fast free of contact with the preceding Dashami tithi. Dates are computed live for your location, not from a fixed list.
                 </div>
               </div>
             </div>
