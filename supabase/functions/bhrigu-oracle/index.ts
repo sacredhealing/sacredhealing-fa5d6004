@@ -244,7 +244,8 @@ ${leafConfirmed ?
 // ── Full structured reading prompt ───────────────────────────────────────────
 function buildFullReadingPrompt(
   name: string, dob: string, tob: string, pob: string,
-  dosha: string, dasha: string, readingType: string, question: string
+  dosha: string, dasha: string, readingType: string, question: string,
+  ephemerisBlock: string = ''
 ): string {
   const firstName = name ? name.split(" ")[0] : "Seeker";
 
@@ -255,7 +256,7 @@ DATE OF BIRTH: ${dob}
 TIME OF BIRTH: ${tob}
 PLACE OF BIRTH: ${pob}
 ${dosha ? `DOSHA: ${dosha}` : ""}
-${dasha ? `CURRENT DASHA: ${dasha}` : ""}
+${dasha ? `CURRENT DASHA: ${dasha}` : ""}${ephemerisBlock}
 READING FOCUS: ${readingType}
 ${question ? `SEEKER'S QUESTION: "${question}"` : ""}
 
@@ -310,6 +311,33 @@ serve(async (req) => {
     const chatHistory = (body.history as {role: string; content: string}[]) ?? [];
     const isOpening = Boolean(body.is_opening);
     const leafConfirmed = Boolean(body.leaf_confirmed);
+    const isStudentReading = Boolean(body.is_student_reading);
+
+    // Calculated ephemeris fields (from jyotish-ephemeris, VedAstro Swiss Ephemeris)
+    // — extracted here, BEFORE the full_reading branch, so both the full
+    // structured reading AND the conversational chat can use real data
+    // instead of letting the model invent nakshatra/dasha from nothing.
+    const calcLagna      = body.calculated_lagna      ? String(body.calculated_lagna)      : '';
+    const calcNakshatra  = body.calculated_nakshatra  ? String(body.calculated_nakshatra)  : '';
+    const calcMahadasha  = body.calculated_mahadasha  ? String(body.calculated_mahadasha)  : '';
+    const mahaStart      = body.mahadasha_start       ? String(body.mahadasha_start)       : '';
+    const mahaEnd        = body.mahadasha_end         ? String(body.mahadasha_end)         : '';
+    const calcAntardasha = body.calculated_antardasha ? String(body.calculated_antardasha) : '';
+    const antarStart     = body.antardasha_start      ? String(body.antardasha_start)      : '';
+    const antarEnd       = body.antardasha_end        ? String(body.antardasha_end)        : '';
+
+    const ephemerisBlock = calcMahadasha ? `
+━━━ CALCULATED EPHEMERIS (VedAstro Swiss Ephemeris — Lahiri — AUTHORITATIVE) ━━━
+Lagna (Ascendant): ${calcLagna || 'see birth data'}
+Moon Nakshatra: ${calcNakshatra || 'see birth data'}
+Current Mahadasha: ${calcMahadasha} (${mahaStart} → ${mahaEnd})
+Current Antardasha: ${calcAntardasha} (${antarStart} → ${antarEnd})
+ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha dates. Never approximate or guess dasha end years.` : '';
+    console.log('[bhrigu-oracle] ephemeris check:', {
+      mode, isStudentReading, dob, hasCalcMahadasha: !!calcMahadasha,
+      calcLagna, calcNakshatra, calcMahadasha, calcAntardasha,
+      willFabricate: !calcMahadasha,
+    });
 
     // ── Opening message — no API call needed ───────────────────────────────
     if (isOpening) {
@@ -330,7 +358,7 @@ serve(async (req) => {
 
     // ── FULL STRUCTURED READING (sections JSON) ────────────────────────────
     if (mode === "full_reading" && dob) {
-      const cacheKey = hashKey("v6fr", dob, tob, pob, readingType, dosha, dasha, question.slice(0, 60));
+      const cacheKey = hashKey("v7fr-eph", dob, tob, pob, readingType, dosha, dasha, question.slice(0, 60), calcMahadasha, calcNakshatra, calcLagna, calcAntardasha);
 
       const { data: cached } = await supabase
         .from("ai_response_cache").select("response_text, id, hit_count")
@@ -344,7 +372,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      const prompt = buildFullReadingPrompt(name, dob, tob, pob, dosha, dasha, readingType, question);
+      const prompt = buildFullReadingPrompt(name, dob, tob, pob, dosha, dasha, readingType, question, ephemerisBlock);
 
       const res = await callAI({
         messages: [{ role: "user", content: prompt }],
@@ -391,26 +419,6 @@ serve(async (req) => {
         .limit(40);
       return new Response(JSON.stringify({ messages: logs || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
-    const isStudentReading = Boolean(body.is_student_reading);
-
-    // Calculated ephemeris fields (from jyotish-ephemeris, VedAstro Swiss Ephemeris)
-    const calcLagna      = body.calculated_lagna      ? String(body.calculated_lagna)      : '';
-    const calcNakshatra  = body.calculated_nakshatra  ? String(body.calculated_nakshatra)  : '';
-    const calcMahadasha  = body.calculated_mahadasha  ? String(body.calculated_mahadasha)  : '';
-    const mahaStart      = body.mahadasha_start       ? String(body.mahadasha_start)       : '';
-    const mahaEnd        = body.mahadasha_end         ? String(body.mahadasha_end)         : '';
-    const calcAntardasha = body.calculated_antardasha ? String(body.calculated_antardasha) : '';
-    const antarStart     = body.antardasha_start      ? String(body.antardasha_start)      : '';
-    const antarEnd       = body.antardasha_end        ? String(body.antardasha_end)        : '';
-
-    const ephemerisBlock = calcMahadasha ? `
-━━━ CALCULATED EPHEMERIS (VedAstro Swiss Ephemeris — Lahiri — AUTHORITATIVE) ━━━
-Lagna (Ascendant): ${calcLagna || 'see birth data'}
-Moon Nakshatra: ${calcNakshatra || 'see birth data'}
-Current Mahadasha: ${calcMahadasha} (${mahaStart} → ${mahaEnd})
-Current Antardasha: ${calcAntardasha} (${antarStart} → ${antarEnd})
-ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha dates. Never approximate or guess dasha end years.` : '';
 
     // ── LOAD BHRIGU MEMORY (skip for student readings — use clean context) ──
     let bhriguMemory = null;
