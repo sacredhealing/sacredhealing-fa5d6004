@@ -2759,10 +2759,22 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
       if (studentContext) fieldParts.unshift(studentContext);
-      if (voiceScanBlock) fieldParts.push(voiceScanBlock);
-      if (liveScanContext) fieldParts.push(liveScanContext);
-      if (stableCompiledContext) fieldParts.push(stableCompiledContext);
-      if (stableJyotishContext) fieldParts.push(stableJyotishContext);
+      // Voice/biometric scans are captured live from the practitioner's own
+      // device mic/camera mid-session — they cannot represent a remote
+      // student and must not be presented as if they do.
+      if (!studentContext) {
+        if (voiceScanBlock) fieldParts.push(voiceScanBlock);
+        if (liveScanContext) fieldParts.push(liveScanContext);
+      }
+      // The practitioner's own natal chart and live biometric/Ayurveda field
+      // data must NEVER be sent during a student reading — it was unlabeled
+      // as to whose data it was, and the model was picking it over the
+      // student's (sometimes incomplete) block, misattributing the
+      // practitioner's real chart to the student.
+      if (!studentContext) {
+        if (stableCompiledContext) fieldParts.push(stableCompiledContext);
+        if (stableJyotishContext) fieldParts.push(stableJyotishContext);
+      }
       if (activeTransmissionContext) fieldParts.push(activeTransmissionContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
