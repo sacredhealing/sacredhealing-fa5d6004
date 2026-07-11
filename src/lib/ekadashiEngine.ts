@@ -54,13 +54,23 @@
 import * as SunCalc from 'suncalc';
 import { EKADASHI_TITHI_TABLE, TithiPeriod } from '@/data/ekadashiTithiTable';
 
+// Anchored so table index 11 (2026-06-24 Shukla) = Nirjala Ekadashi and index
+// 12 (2026-07-10 Krishna) = Yogini Ekadashi, matching the verified Drik
+// Panchang names for 2026. (A previous version of this list was off by two
+// positions — e.g. showing "Kamika" for what was actually Yogini Ekadashi.)
+// NOTE: this fixed 24-name cycle assumes no Adhika Maas (leap lunar month)
+// falls in the covered range — an inserted leap month adds an extra
+// Ekadashi pair and would shift names for everything after it. None fall in
+// 2026–2028, but re-verify against a panchang before extending this table
+// further, or before trusting names (not dates, which stay correct
+// regardless) past that point.
 const EKADASHI_NAMES: string[] = [
-  'Shattila Ekadashi', 'Jaya Ekadashi', 'Vijaya Ekadashi', 'Amalaki Ekadashi',
-  'Papmochani Ekadashi', 'Kamada Ekadashi', 'Varuthini Ekadashi', 'Mohini Ekadashi',
-  'Apara Ekadashi', 'Nirjala Ekadashi', 'Yogini Ekadashi', 'Devshayani Ekadashi',
-  'Kamika Ekadashi', 'Shravana Putrada Ekadashi', 'Aja Ekadashi', 'Parsva Ekadashi',
-  'Indira Ekadashi', 'Papankusha Ekadashi', 'Rama Ekadashi', 'Devutthana Ekadashi',
-  'Utpanna Ekadashi', 'Mokshada Ekadashi', 'Saphala Ekadashi', 'Putrada Ekadashi',
+  'Saphala Ekadashi', 'Putrada Ekadashi', 'Shattila Ekadashi', 'Jaya Ekadashi',
+  'Vijaya Ekadashi', 'Amalaki Ekadashi', 'Papmochani Ekadashi', 'Kamada Ekadashi',
+  'Varuthini Ekadashi', 'Mohini Ekadashi', 'Apara Ekadashi', 'Nirjala Ekadashi',
+  'Yogini Ekadashi', 'Devshayani Ekadashi', 'Kamika Ekadashi', 'Shravana Putrada Ekadashi',
+  'Aja Ekadashi', 'Parsva Ekadashi', 'Indira Ekadashi', 'Papankusha Ekadashi',
+  'Rama Ekadashi', 'Devutthana Ekadashi', 'Utpanna Ekadashi', 'Mokshada Ekadashi',
 ];
 
 const ARUNODAYA_MINUTES = 96;   // ~1h36m before sunrise

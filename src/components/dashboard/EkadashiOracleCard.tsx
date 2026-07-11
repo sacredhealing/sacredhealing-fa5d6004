@@ -3,25 +3,73 @@ import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { getUpcomingEkadashis } from '@/lib/ekadashiEngine';
 
-// Default location: Uddevalla, Sweden. Silently overridden by browser
-// geolocation on mount if the user grants it; falls back here otherwise.
+// Default location: Uddevalla, Sweden. Used only until the person sets their
+// own via the Location field (saved to localStorage) or grants GPS.
 const DEFAULT_LAT = 58.3498;
 const DEFAULT_LON = 11.9423;
+const DEFAULT_LABEL = 'Uddevalla, Sweden';
 
 type Tradition = 'vaishnava' | 'smarta';
 const TRADITION_KEY = 'sqi_ekadashi_tradition';
+const LOCATION_KEY = 'sqi_ekadashi_location';
+
+interface SavedLocation { lat: number; lon: number; label: string; }
+
+function loadSavedLocation(): SavedLocation | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(LOCATION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
 
 function useLocation() {
-  const [coords, setCoords] = useState({ lat: DEFAULT_LAT, lon: DEFAULT_LON });
+  const [loc, setLoc] = useState<SavedLocation>(
+    () => loadSavedLocation() || { lat: DEFAULT_LAT, lon: DEFAULT_LON, label: DEFAULT_LABEL }
+  );
+  const [isDefault, setIsDefault] = useState(!loadSavedLocation());
+
+  // Only reach for silent GPS if the person hasn't set (or been given) a
+  // location yet — a manual/geocoded choice always wins and is never
+  // silently overwritten.
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (loadSavedLocation() || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      pos => setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => { /* silent fallback to default */ },
+      pos => {
+        const next = { lat: pos.coords.latitude, lon: pos.coords.longitude, label: 'Current GPS location' };
+        setLoc(next);
+        setIsDefault(false);
+        try { localStorage.setItem(LOCATION_KEY, JSON.stringify(next)); } catch { /* noop */ }
+      },
+      () => { /* denied/unavailable — keep default, Location field still lets them set it */ },
       { maximumAge: 3600000, timeout: 4000 }
     );
   }, []);
-  return coords;
+
+  const setLocation = (next: SavedLocation) => {
+    setLoc(next);
+    setIsDefault(false);
+    try { localStorage.setItem(LOCATION_KEY, JSON.stringify(next)); } catch { /* noop */ }
+  };
+
+  return { ...loc, isDefault, setLocation };
+}
+
+interface GeocodeResult { name: string; lat: number; lon: number; admin1?: string; country?: string; }
+
+async function searchLocations(query: string): Promise<GeocodeResult[]> {
+  if (query.trim().length < 2) return [];
+  try {
+    const res = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`
+    );
+    const data = await res.json();
+    return (data.results || []).map((r: any) => ({
+      name: r.name, lat: r.latitude, lon: r.longitude, admin1: r.admin1, country: r.country,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 function daysFromNow(dateStr: string): number {
@@ -47,7 +95,7 @@ export const EkadashiOracleCard: React.FC = () => {
   const [open, setOpen] = useState(false);
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
-  const { lat, lon } = useLocation();
+  const { lat, lon, label: locationLabel, isDefault: isDefaultLocation, setLocation } = useLocation();
 
   // Bhakti Marga follows the Gaudiya Vaishnava (Suddha Ekadashi / Arunodaya)
   // calculation by default — see ekadashiEngine.ts for the full rationale.
@@ -59,6 +107,18 @@ export const EkadashiOracleCard: React.FC = () => {
     setTradition(t);
     try { localStorage.setItem(TRADITION_KEY, t); } catch { /* noop */ }
   };
+
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState<GeocodeResult[]>([]);
+  const [locationSearching, setLocationSearching] = useState(false);
+  useEffect(() => {
+    if (locationQuery.trim().length < 2) { setLocationResults([]); return; }
+    setLocationSearching(true);
+    const t = setTimeout(() => {
+      searchLocations(locationQuery).then(r => { setLocationResults(r); setLocationSearching(false); });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [locationQuery]);
 
   const resolved = getUpcomingEkadashis(lat, lon, new Date(), 8);
   const upcoming = resolved
@@ -75,8 +135,8 @@ export const EkadashiOracleCard: React.FC = () => {
   const daysAway = next ? daysFromNow(next.date) : null;
 
   const isToday  = daysAway === 0;
-  const isEve    = daysAway === -1;
-  const isAfter  = daysAway === 1;
+  const isEve    = daysAway === 1;   // fast day is tomorrow
+  const isAfter  = daysAway === -1;  // fast day was yesterday — today is Dwadashi/break-fast
 
   const pillText =
     isEve   ? `Tomorrow — ${next?.name}` :
@@ -230,6 +290,61 @@ export const EkadashiOracleCard: React.FC = () => {
                     <span style={badge(e.paksha)}>{e.paksha}</span>
                   </div>
                 ))}
+              </div>
+              <div style={s.lbl}>Location</div>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12 }}>📍</span>
+                <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                  {locationLabel}
+                </span>
+              </div>
+              {isDefaultLocation && (
+                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(255,180,80,0.75)', marginBottom: 8, lineHeight: 1.5 }}>
+                  ⚠️ Using a default location — sunrise, Arunodaya and Parana times above won't be accurate for you until you set your own city below.
+                </div>
+              )}
+              <div style={{ position: 'relative', marginBottom: 14 }}>
+                <input
+                  value={locationQuery}
+                  onChange={e => setLocationQuery(e.target.value)}
+                  placeholder="Search your city…"
+                  style={{
+                    width: '100%', boxSizing: 'border-box' as const, padding: '10px 12px', borderRadius: 12,
+                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.85)', fontFamily: 'Montserrat,sans-serif', fontSize: 12, outline: 'none',
+                  }}
+                />
+                {(locationSearching || locationResults.length > 0) && locationQuery.trim().length >= 2 && (
+                  <div style={{
+                    position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 5,
+                    background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12,
+                    overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  }}>
+                    {locationSearching && (
+                      <div style={{ padding: '10px 12px', fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Searching…</div>
+                    )}
+                    {!locationSearching && locationResults.map((r, i) => (
+                      <div
+                        key={i}
+                        onClick={() => {
+                          const label = [r.name, r.admin1, r.country].filter(Boolean).join(', ');
+                          setLocation({ lat: r.lat, lon: r.lon, label });
+                          setLocationQuery('');
+                          setLocationResults([]);
+                        }}
+                        style={{
+                          padding: '10px 12px', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontSize: 12,
+                          color: 'rgba(255,255,255,0.75)', borderBottom: i < locationResults.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                        }}
+                      >
+                        {[r.name, r.admin1, r.country].filter(Boolean).join(', ')}
+                      </div>
+                    ))}
+                    {!locationSearching && locationResults.length === 0 && (
+                      <div style={{ padding: '10px 12px', fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>No matches</div>
+                    )}
+                  </div>
+                )}
               </div>
               <div style={s.lbl}>Tradition</div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
