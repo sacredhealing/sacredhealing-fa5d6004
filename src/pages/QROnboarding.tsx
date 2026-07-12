@@ -127,11 +127,12 @@ export default function QROnboarding() {
 
   /* ── social OAuth ── */
   const signInWithProvider = async (provider: "google" | "apple") => {
+    const returnPath = `/join?ref=${encodeURIComponent(refCode)}`;
     try {
-      sessionStorage.setItem('postLoginRedirect', `/join?ref=${refCode}`);
+      sessionStorage.setItem('postLoginRedirect', returnPath);
     } catch {}
     const result = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     if (result.error) {
       toast({ title: "Login failed", description: result.error.message, variant: "destructive" });
