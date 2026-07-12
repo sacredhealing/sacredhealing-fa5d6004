@@ -706,7 +706,7 @@ const Dashboard: React.FC = () => {
 
             <LivingPortalTile
               portal={PORTAL_CONFIGS.ayurveda}
-              onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda) ? navigate('/ayurveda') : navigate('/prana-flow')}
+              onClick={() => navigate('/ayurveda')}
               doshaBorderColor={
                 (() => {
                   const dosha = doshaProfile?.primary?.toLowerCase() || jyotish.primaryDosha?.toLowerCase();
