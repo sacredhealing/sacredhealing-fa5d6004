@@ -278,7 +278,7 @@ const SiddhaQuantum: React.FC = () => {
         <section className="sq-section">
           <div className="sq-section-label">◈ Portals You Enter</div>
           <div className="sq-portal-grid">
-            {['Vedic Astrology', 'Agni Protocols', 'Vayu Protocol 1km', 'Siddhi Acceleration', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
+            {['Vedic Astrology', 'Agni Protocols', 'Siddha Portal', 'Siddhi Acceleration', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
               <div key={title} className="sq-portal-card">
                 <div className="sq-icon-wrap" style={{ margin: '0 auto' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5">
