@@ -11,7 +11,7 @@ const corsHeaders = {
 // FIX: Added actual Stripe Price IDs from env vars + AKASHA as subscription not payment
 const TIER_CONFIG: Record<
   string,
-  { priceIdEnv: string; price: number; mode: "subscription" | "payment"; displayName: string }
+  { priceIdEnv: string; price: number; mode: "subscription" | "payment"; displayName: string; fallbackPriceId?: string }
 > = {
   ATMA_SEED: { priceIdEnv: "", price: 0, mode: "subscription", displayName: "Atma-Seed (Free)" },
   PRANA_FLOW: { priceIdEnv: "STRIPE_PRICE_PRANA_19", price: 19, mode: "subscription", displayName: "Prana-Flow Membership" },
