@@ -285,7 +285,13 @@ ${error.stack}` : ''}
 // Root route: send signed-in users directly into the app, otherwise show landing
 function RootEntry() {
   const { user, isLoading } = useAuth();
-  if (isLoading) {
+  // If OAuth returned us here with auth params in the URL, wait for the
+  // Supabase client to exchange them before deciding to show the landing page.
+  const hasAuthParams =
+    typeof window !== 'undefined' &&
+    (/[?&](code|access_token|refresh_token|error)=/.test(window.location.hash) ||
+      /[?&](code|access_token|refresh_token|error)=/.test(window.location.search));
+  if (isLoading || (hasAuthParams && !user)) {
     return <PageLoader />;
   }
   if (user) {
