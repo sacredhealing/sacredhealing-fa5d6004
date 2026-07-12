@@ -3695,6 +3695,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_teachings: {
+        Row: {
+          body_text: string
+          created_at: string
+          id: string
+          is_active: boolean
+          source_note: string | null
+          theme: string
+          title: string
+        }
+        Insert: {
+          body_text: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          source_note?: string | null
+          theme: string
+          title: string
+        }
+        Update: {
+          body_text?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          source_note?: string | null
+          theme?: string
+          title?: string
+        }
+        Relationships: []
+      }
       email_unsubscribe_tokens: {
         Row: {
           created_at: string
@@ -9262,6 +9292,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_teaching_log: {
+        Row: {
+          email_context: string | null
+          id: string
+          sent_at: string
+          teaching_id: string
+          user_id: string
+        }
+        Insert: {
+          email_context?: string | null
+          id?: string
+          sent_at?: string
+          teaching_id: string
+          user_id: string
+        }
+        Update: {
+          email_context?: string | null
+          id?: string
+          sent_at?: string
+          teaching_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_teaching_log_teaching_id_fkey"
+            columns: ["teaching_id"]
+            isOneToOne: false
+            referencedRelation: "email_teachings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_vedic_astrology_access: {
         Row: {
           expires_at: string | null
@@ -9731,6 +9793,25 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       generate_sqi_affiliate_code: { Args: never; Returns: string }
+      get_featured_content: {
+        Args: { p_category?: string; p_kind?: string }
+        Returns: {
+          duration_label: string
+          kind: string
+          title: string
+          url_path: string
+        }[]
+      }
+      get_next_teaching: {
+        Args: { p_theme?: string; p_user_id: string }
+        Returns: {
+          body_text: string
+          id: string
+          source_note: string
+          theme: string
+          title: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -9751,6 +9832,10 @@ export type Database = {
       is_codex_admin: { Args: { uid: string }; Returns: boolean }
       is_room_member: { Args: { _room_id: string }; Returns: boolean }
       is_user_blocked: { Args: { check_user_id: string }; Returns: boolean }
+      log_teaching_sent: {
+        Args: { p_context: string; p_teaching_id: string; p_user_id: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
