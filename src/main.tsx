@@ -1,3 +1,13 @@
+// Redirect legacy lovable.app host to the primary custom domain (preserve path + query + hash).
+if (typeof window !== "undefined" && window.location.hostname === "sacredhealing.lovable.app") {
+  window.location.replace(
+    "https://siddhaquantumnexus.com" +
+      window.location.pathname +
+      window.location.search +
+      window.location.hash
+  );
+}
+
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
