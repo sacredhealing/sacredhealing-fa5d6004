@@ -529,6 +529,7 @@ function WisdomCard({ icon, title, body, accentColor, index }: { icon: string; t
 }
 
 // ─── LESSON ROW ───────────────────────────────────────────────────────────────
+type Lesson = { title: string; duration: string; body?: string; objectives: string[] };
 function LessonRow({ lesson, accentColor, idx }: { lesson: Lesson; accentColor: string; idx: number }) {
   const [open, setOpen] = useState(false);
   return (
@@ -580,7 +581,7 @@ function LessonRow({ lesson, accentColor, idx }: { lesson: Lesson; accentColor: 
 
 // ─── MODULE CARD ─────────────────────────────────────────────────────────────
 function ModuleCard({ mod, accentColor, defaultOpen, delay }: {
-  mod: typeof FREE_MODULES[0]; accentColor: string; defaultOpen?: boolean; delay?: number;
+  mod: any; accentColor: string; defaultOpen?: boolean; delay?: number;
 }) {
   const [open, setOpen] = useState(!!defaultOpen);
   const [tab, setTab] = useState<"lessons" | "practice" | "outcomes">("lessons");
