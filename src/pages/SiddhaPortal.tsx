@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useEffect } from 'react';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { ChevronDown, Lock } from 'lucide-react';
 import { useAyurvedaProgress } from '@/hooks/useAyurvedaProgress';
 
@@ -514,11 +512,13 @@ export default function SiddhaPortal() {
       }
     : undefined;
 
-  useEffect(() => {
-    if (!loading && settled && !adminLoading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
-      navigate('/siddha-quantum');
-    }
-  }, [isAdmin, tier, loading, settled, adminLoading, navigate]);
+  // Previously this redirected anyone below Siddha-Quantum straight to the
+  // sales page before they could see anything. Removed: every academy card
+  // here is unconditionally clickable (HeroCard has no lock of its own), and
+  // every individual academy page already has its own real free-tier content
+  // (confirmed in MudraAcademy, KayakalpaAcademy, KriyaYogaMastery, Ayurveda,
+  // and others — each does its own getTierRank check per module). This portal
+  // page itself should just be a menu; the academies handle their own gating.
 
   return (
     <div style={{ background:'#050505', minHeight:'100vh', paddingBottom:104, maxWidth:430, margin:'0 auto' }}>
