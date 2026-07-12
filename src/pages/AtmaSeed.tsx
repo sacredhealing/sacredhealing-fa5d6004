@@ -297,6 +297,7 @@ const AtmaSeed: React.FC = () => {
             { icon: 'clock', title: 'Free Breathing Protocols', status: 'Active' },
             { icon: 'signal', title: 'Community Chat & Live', status: 'Active' },
             { icon: 'eye', title: 'Basic Ayurveda & Jyotish', status: hasBirthData ? 'Active' : 'Needs Data', statusColor: hasBirthData ? '#D4AF37' : 'rgba(255,255,255,0.2)' },
+            { icon: 'eye', title: 'Siddha Portal — 25 Academies, Free Modules in Each', status: 'Active' },
           ].map((item) => (
             <div key={item.title} className="as-glass-card">
               <div className="as-card-icon">
