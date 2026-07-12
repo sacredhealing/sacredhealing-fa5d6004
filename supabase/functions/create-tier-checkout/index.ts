@@ -11,12 +11,12 @@ const corsHeaders = {
 // FIX: Added actual Stripe Price IDs from env vars + AKASHA as subscription not payment
 const TIER_CONFIG: Record<
   string,
-  { priceIdEnv: string; price: number; mode: "subscription" | "payment"; displayName: string }
+  { priceIdEnv: string; price: number; mode: "subscription" | "payment"; displayName: string; fallbackPriceId?: string }
 > = {
   ATMA_SEED: { priceIdEnv: "", price: 0, mode: "subscription", displayName: "Atma-Seed (Free)" },
   PRANA_FLOW: { priceIdEnv: "STRIPE_PRICE_PRANA_19", price: 19, mode: "subscription", displayName: "Prana-Flow Membership" },
   SIDDHA_QUANTUM: { priceIdEnv: "STRIPE_PRICE_SIDDHA_45", price: 45, mode: "subscription", displayName: "Siddha-Quantum Membership" },
-  AKASHA_INFINITY: { priceIdEnv: "STRIPE_PRICE_AKASHA_1111", price: 2997, mode: "payment", displayName: "Akasha-Infinity Lifetime Access" },
+  AKASHA_INFINITY: { priceIdEnv: "STRIPE_PRICE_AKASHA_2997", price: 2997, mode: "payment", displayName: "Akasha-Infinity Lifetime Access", fallbackPriceId: "price_1TsTQbAPsnbrivP0X0Obb5YN" },
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) =>
@@ -40,7 +40,7 @@ serve(async (req) => {
     const tier = TIER_CONFIG[tierName];
     if (tierName === "ATMA_SEED" || tier.price === 0) throw new Error("ATMA_SEED is free; no checkout required.");
 
-    const priceId = tier.priceIdEnv ? Deno.env.get(tier.priceIdEnv) : null;
+    const priceId = (tier.priceIdEnv ? Deno.env.get(tier.priceIdEnv) : null) || tier.fallbackPriceId || null;
     if (!priceId) throw new Error(`Stripe price not configured for tier: ${tierName}. Set env var: ${tier.priceIdEnv}`);
 
     const authHeader = req.headers.get("Authorization");
