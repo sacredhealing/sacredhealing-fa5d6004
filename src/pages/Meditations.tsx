@@ -1178,7 +1178,7 @@ const Meditations: React.FC = () => {
               <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem', color: 'white', marginBottom: 6 }}>Unlock the Full Meditation Library</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 14 }}>Complete guided meditations · Yoga Nidra · Mantra library · Sacred frequencies</div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: '#050505', borderRadius: 100, padding: '10px 22px', fontWeight: 800, fontSize: 8, letterSpacing: '0.35em', textTransform: 'uppercase' }}>
-                ◈ Activate Prana–Flow
+                ◈ Start Free — 7 Days
               </div>
             </div>
           </div>

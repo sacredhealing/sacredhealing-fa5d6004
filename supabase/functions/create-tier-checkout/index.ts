@@ -79,6 +79,10 @@ serve(async (req) => {
       success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}&tier=${tierName.toLowerCase()}`,
       cancel_url: `${origin}/membership?cancelled=true`,
       ...(tier.mode === "subscription" && { allow_promotion_codes: true }),
+      // Growth: 7-day free trial on the entry-level paid tier only. Siddha-Quantum
+      // stays trial-free (higher-commitment tier); Akasha-Infinity is one-time payment,
+      // trials don't apply to payment mode anyway.
+      ...(tierName === "PRANA_FLOW" && { subscription_data: { trial_period_days: 7 } }),
       // FIX: Tax collection — auto-detect based on customer location
       automatic_tax: { enabled: true },
     });

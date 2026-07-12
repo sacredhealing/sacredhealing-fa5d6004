@@ -6,7 +6,8 @@ import { useFreeTrial } from '@/hooks/useFreeTrial';
 import { MembershipHub } from '@/features/membership/MembershipHub';
 import { toast } from 'sonner';
 
-// ◈ SQI 2050 — Only 3 tiers:
+// ◈ SQI 2050 — 4 tiers:
+//   /atma-seed       → Free       (entry tier)
 //   /prana-flow      → 19€/mo   (prana-monthly)
 //   /siddha-quantum  → 45€/mo   (siddha-quantum-monthly)
 //   /akasha-infinity → €2997    (lifetime)
@@ -25,6 +26,7 @@ const CSS = `
 .mem-tiers { padding: 40px 20px 0; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto; }
 .mem-card { border-radius: 28px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
 .mem-card:hover { transform: translateY(-3px); }
+.mem-card-atma { background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.1); }
 .mem-card-prana { background: rgba(212,175,55,0.03); border: 1px solid rgba(212,175,55,0.18); }
 .mem-card-prana:hover { box-shadow: 0 0 40px rgba(212,175,55,0.12); border-color: rgba(212,175,55,0.35); }
 .mem-card-siddha { background: linear-gradient(140deg, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.98) 55%); border: 1px solid rgba(212,175,55,0.32); box-shadow: 0 0 30px rgba(212,175,55,0.08); }
@@ -32,6 +34,7 @@ const CSS = `
 .mem-card-akasha { background: linear-gradient(140deg, rgba(139,92,246,0.06) 0%, rgba(212,175,55,0.04) 50%, rgba(5,5,5,0.99) 100%); border: 1px solid rgba(212,175,55,0.22); }
 .mem-card-akasha:hover { box-shadow: 0 0 50px rgba(139,92,246,0.12), 0 0 80px rgba(212,175,55,0.06); border-color: rgba(212,175,55,0.45); }
 .mem-card-top-line { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 50%; height: 1px; }
+.mem-card-atma .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent); }
 .mem-card-prana .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(212,175,55,0.2), transparent); }
 .mem-card-siddha .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(212,175,55,0.5), transparent); }
 .mem-card-akasha .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(139,92,246,0.4), transparent); }
@@ -51,6 +54,8 @@ const CSS = `
 .mem-feature { font-size: 10px; color: rgba(255,255,255,0.38); padding: 4px 0; display: flex; align-items: center; gap: 7px; }
 .mem-feature::before { content: '◈'; color: #D4AF37; font-size: 6px; flex-shrink: 0; }
 .mem-cta { width: 100%; border: none; border-radius: 100px; padding: 15px 24px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 8.5px; letter-spacing: 0.38em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.mem-cta-atma { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.18) !important; color: rgba(255,255,255,0.8); }
+.mem-cta-atma:hover { background: rgba(255,255,255,0.09); }
 .mem-cta-prana { background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.25) !important; color: #D4AF37; }
 .mem-cta-prana:hover { background: rgba(212,175,55,0.14); }
 .mem-cta-siddha { background: #D4AF37; color: #050505; box-shadow: 0 0 28px rgba(212,175,55,0.45); }
@@ -137,9 +142,32 @@ const Membership = () => {
         <div className="mem-hero">
           <div className="mem-eyebrow">◈ Siddha–Quantum Intelligence · 2050</div>
           <h1 className="mem-title">Choose Your<br /><span className="gold">Field</span></h1>
-          <div className="mem-subtitle">Three Tiers · One Path · Infinite Depth</div>
+          <div className="mem-subtitle">Four Tiers · One Path · Infinite Depth</div>
         </div>
         <div className="mem-tiers">
+          {/* TIER 0 — Atma-Seed (Free) */}
+          <div className="mem-card mem-card-atma" onClick={() => navigate('/atma-seed')}>
+            <div className="mem-card-top-line" />
+            <div className="mem-card-inner">
+              <div className="mem-tier-label">◈ Begin Here · Free Forever</div>
+              <div className="mem-tier-name">Atma–<span className="gold">Seed</span></div>
+              <div className="mem-tier-tagline">Meditations, mantras, healing audios, community — no card required</div>
+              <div className="mem-price-row">
+                <span className="mem-price">€0</span>
+                <span className="mem-price-period">forever</span>
+              </div>
+              <div className="mem-features">
+                {['Free Meditations & Mantras','Free Healing Audios','Free Divine Transmission Audios',
+                  'Free Breathing Protocols','Community Chat & Live','Basic Ayurveda & Jyotish'].map(f => (
+                  <div key={f} className="mem-feature">{f}</div>
+                ))}
+              </div>
+              <button className="mem-cta mem-cta-atma" type="button">◈ Enter Atma–Seed</button>
+            </div>
+          </div>
+
+          <div className="mem-divider"><span>◈ or go deeper still</span></div>
+
           {/* TIER 1 — Prana-Flow */}
           <div className="mem-card mem-card-prana" onClick={() => navigate('/prana-flow')}>
             <div className="mem-card-top-line" />

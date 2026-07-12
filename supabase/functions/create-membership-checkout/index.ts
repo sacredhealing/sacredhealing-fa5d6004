@@ -105,6 +105,13 @@ serve(async (req) => {
       sessionConfig.allow_promotion_codes = true;
     }
 
+    // Growth: 7-day free trial on Prana-Flow monthly only — the entry-level paid
+    // tier. Siddha-Quantum and any other subscription tier routed through this
+    // same function stay trial-free (higher-commitment tiers).
+    if (isSubscription && tierSlug === "prana-monthly") {
+      sessionConfig.subscription_data = { trial_period_days: 7 };
+    }
+
     const session = await stripe.checkout.sessions.create(sessionConfig);
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 

@@ -13,8 +13,24 @@ const AkashaInfinity: React.FC = () => {
   const { tier, refresh: refreshMembership } = useMembership();
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
 
   const isLifetime = tier === 'akasha-infinity' || tier === 'lifetime';
+
+  useEffect(() => {
+    // Real, live count — not a fabricated scarcity number. Counts both the
+    // legacy €1111 price ID and the current €2997 one, since both grant the
+    // same tier.
+    (async () => {
+      try {
+        const { data: tierRow } = await supabase.from('membership_tiers').select('id').eq('slug', 'akasha-infinity').maybeSingle();
+        if (tierRow?.id) {
+          const { count } = await supabase.from('user_memberships').select('*', { count: 'exact', head: true }).eq('tier_id', tierRow.id).eq('status', 'active');
+          if (typeof count === 'number') setMemberCount(count);
+        }
+      } catch { /* social proof is best-effort, never block the page */ }
+    })();
+  }, []);
 
   useEffect(() => {
     const ref = searchParams.get('ref');
@@ -374,7 +390,12 @@ const AkashaInfinity: React.FC = () => {
               ) : (
                 <>
                   <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '0.1em', color: '#D4AF37', marginBottom: 4 }}>2997€</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>One time · All 15 modules · No renewals</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>One time · All 15 modules · No renewals</div>
+                  {memberCount !== null && memberCount > 0 && (
+                    <div style={{ fontSize: 10, color: '#D4AF37', marginBottom: 20, letterSpacing: '0.05em' }}>
+                      ◈ {memberCount} sovereign {memberCount === 1 ? 'member has' : 'members have'} already entered
+                    </div>
+                  )}
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                     <li style={{ marginBottom: 6 }}>◈ Akashic Decoder</li>
                     <li style={{ marginBottom: 6 }}>◈ Quantum Apothecary + Virtual Pilgrimage</li>

@@ -112,7 +112,7 @@ const PranaFlow: React.FC = () => {
   };
 
   const faqItems: [string, string][] = [
-    ['What happens when I subscribe?', 'All five modules open instantly — Vedic Jyotish, Ayurvedic Scan, Vastu Guide, Healing Music Library, and Meditation & Mantra Library. There is no waiting period. You can navigate to any module from the dashboard the moment the payment is confirmed.'],
+    ['What happens when I subscribe?', 'All five modules open instantly — Vedic Jyotish, Ayurvedic Scan, Vastu Guide, Healing Music Library, and Meditation & Mantra Library. Your 7-day free trial starts immediately and full access unlocks the moment checkout completes — no waiting, and nothing is charged until the trial ends.'],
     ['Does Prana–Flow include Nadi scanning?', 'No — the Digital Nadi Scanner and Siddha Portal Access are part of the Siddha-Quantum tier at 45€/month. Prana-Flow focuses on Vedic intelligence, sound healing, and Ayurveda. You can upgrade at any time.'],
     ['Can I cancel anytime?', 'Yes, completely. Cancel directly from your profile — no emails, no forms, no waiting. Access continues until the end of your billing cycle, and you can reactivate with one tap anytime.'],
     ['How personalised is the Jyotish Guru?', "The Guru reads your full natal chart — all 12 houses, planetary positions, Nakshatra placements, and current Dasha period — before it answers any question. It is not a generic horoscope. It understands the specific geometry of your soul's map."],
@@ -446,7 +446,7 @@ const PranaFlow: React.FC = () => {
                       <span className="pf-p-price">19€</span>
                       <span className="pf-p-mo">/ month</span>
                     </div>
-                    <div className="pf-p-tagline">Full access. Cancel anytime. No lock-in.</div>
+                    <div className="pf-p-tagline">7 days free, then 19€/mo. Cancel anytime, no lock-in.</div>
                     <ul className="pf-p-features">
                       <li>Full Vedic Jyotish Oracle</li><li>Guru Chat</li><li>Full Ayurvedic Scan</li><li>Vaidya Chat</li>
                       <li>Vastu Home Analysis</li><li>All Healing Music</li><li>Divine Transmission Audios</li><li>Full Mantra Library</li>
@@ -459,11 +459,11 @@ const PranaFlow: React.FC = () => {
                           Activating...
                         </span>
                       ) : (
-                        <>◈ Activate Prana–Flow · 19€/mo</>
+                        <>◈ Start Free — 7 Days, Then 19€/mo</>
                       )}
                     </button>
                     <button type="button" className="pf-cta-secondary" onClick={() => navigate('/siddha-quantum')}>Or upgrade to Siddha–Quantum · 45€/mo</button>
-                    <div className="pf-cta-note">◈ Cancel anytime · Full access from day one · Affiliate 30% on referrals</div>
+                    <div className="pf-cta-note">◈ Free for 7 days · Cancel anytime before trial ends to pay nothing · Full access from day one</div>
                   </>
                 )}
               </div>
