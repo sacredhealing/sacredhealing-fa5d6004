@@ -144,8 +144,8 @@ const AkashaInfinity: React.FC = () => {
   };
 
   const faqItems: [string, string][] = [
-    ['Is 1111€ really a one-time payment?', 'Yes. One payment and every tool is yours permanently including all future modules. No subscriptions, no renewals.'],
-    ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month. Akasha–Infinity adds the four exclusive portals, unlimited Vayu field, future modules, and zero recurring cost. At 45€/mo, Siddha-Quantum costs 1111€ in just over 2 years — with none of those extras.'],
+    ['Is 2997€ really a one-time payment?', 'Yes. One payment and every tool is yours permanently including all future modules. No subscriptions, no renewals.'],
+    ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month. Akasha–Infinity adds the four exclusive portals, unlimited Vayu field, every future module, and zero recurring cost — one payment, held forever, with none of those extras included in the monthly tier.'],
     ['What is the Akashic Record Decoder exactly?', "A personalised 15-page soul manuscript using your birth data and Jyotish chart as entry coordinates — past lives, soul contracts, karmic patterns, and your soul's highest trajectory."],
     ['Can I pay in instalments?', 'You can start with Siddha–Quantum at 45€/month and upgrade to Akasha–Infinity at any time with the difference honoured. Contact us directly for instalment arrangements.'],
     ['Is there a refund policy?', 'Once an Akashic reading is opened the transmission cannot be reversed, so the Decoder is non-refundable. All other modules carry a 14-day satisfaction guarantee.'],
@@ -187,7 +187,7 @@ const AkashaInfinity: React.FC = () => {
     ['Palm Reading Portal', '—', 'Included'],
     ['Vayu field', '1 km', 'Unlimited'],
     ['Future modules', '—', 'Included'],
-    ['Price', 'Free / 45€ mo', '1111€ once'],
+    ['Price', 'Free / 45€ mo', '2997€ once'],
   ];
 
   const testimonials = [
@@ -373,7 +373,7 @@ const AkashaInfinity: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '0.1em', color: '#D4AF37', marginBottom: 4 }}>1111€</div>
+                  <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '0.1em', color: '#D4AF37', marginBottom: 4 }}>2997€</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>One time · All 15 modules · No renewals</div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                     <li style={{ marginBottom: 6 }}>◈ Akashic Decoder</li>
@@ -387,7 +387,7 @@ const AkashaInfinity: React.FC = () => {
                     ◈ Opening Field...
                       </span>
                     ) : (
-                      '◈ Activate Akasha–Infinity · 1111€'
+                      '◈ Activate Akasha–Infinity · 2997€'
                     )}
                   </button>
                   <button type="button" className="ai-cta-secondary" onClick={() => navigate('/siddha-quantum')}>
@@ -454,7 +454,7 @@ const AkashaInfinity: React.FC = () => {
           <h2 className="ai-final-title">Your soul&apos;s complete record is waiting.</h2>
           <p className="ai-final-desc">Every portal. Every transmission. Every sacred tool. One payment. This moment. Forever.</p>
           <div style={{ marginBottom: 24 }}>
-            <span className="ai-final-price">1111€</span>
+            <span className="ai-final-price">2997€</span>
             <span className="ai-final-price-once">one time · eternal access</span>
           </div>
           <button type="button" className="ai-cta-btn" onClick={handleCheckout} disabled={loading} style={{ maxWidth: 400, margin: '0 auto 14px', display: 'block' }}>

@@ -30,12 +30,13 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
 const MEMBERSHIP_PRICE_TO_SLUG: Record<string, string> = {
   "price_1T8o3YAPsnbrivP056UJqOP7": "prana-flow",
   "price_1T8o3jAPsnbrivP0uZKR33EY": "siddha-quantum",
-  "price_1T8o3kAPsnbrivP0m8bOzl3M": "akasha-infinity",
+  "price_1T8o3kAPsnbrivP0m8bOzl3M": "akasha-infinity",  // legacy €1111 — keep for existing lifetime members
+  "price_1TsTQbAPsnbrivP0X0Obb5YN": "akasha-infinity",  // current €2997
 };
 const MEMBERSHIP_SLUG_TO_NAME: Record<string, string> = {
   "prana-flow": "Prana-Flow Membership (€19/mo)",
   "siddha-quantum": "Siddha-Quantum Membership (€45/mo)",
-  "akasha-infinity": "Akasha-Infinity Lifetime Access (€1,111)",
+  "akasha-infinity": "Akasha-Infinity Lifetime Access (€2,997)",
 };
 
 // Maps checkout metadata types to purchase category

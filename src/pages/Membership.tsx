@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 // ◈ SQI 2050 — Only 3 tiers:
 //   /prana-flow      → 19€/mo   (prana-monthly)
 //   /siddha-quantum  → 45€/mo   (siddha-quantum-monthly)
-//   /akasha-infinity → €1111    (lifetime)
+//   /akasha-infinity → €2997    (lifetime)
 // Annual and old premium-monthly/premium-annual plans REMOVED from hub marketing.
 
 const CSS = `
@@ -196,7 +196,7 @@ const Membership = () => {
               <div className="mem-tier-name">Akasha–<span className="gold">Infinity</span></div>
               <div className="mem-tier-tagline">Everything, forever. One sacred investment — unlimited access across all dimensions of the SQI ecosystem</div>
               <div className="mem-price-row">
-                <span className="mem-price">€1111</span>
+                <span className="mem-price">€2997</span>
                 <span className="mem-price-period">one-time</span>
               </div>
               <div className="mem-features">

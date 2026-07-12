@@ -8,7 +8,7 @@
  *   0 = Free (Atma-Seed)
  *   1 = Prana-Flow (€19/mo)
  *   2 = Siddha-Quantum (€45/mo)
- *   3 = Akasha-Infinity (€1111 lifetime)
+ *   3 = Akasha-Infinity (€2997 lifetime)
  *
  * Legacy aliases (premium-monthly, premium-annual, lifetime, prana-monthly,
  * siddha-quantum-monthly) are still recognized for backwards-compat parsing.
