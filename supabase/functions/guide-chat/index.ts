@@ -55,7 +55,7 @@ serve(async (req) => {
     if (userId) {
       const { data: prof } = await supabase.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle();
       const tierSlug = (prof?.membership_tier || "free").toLowerCase();
-      const { data: limitCheck } = await supabase.rpc("check_daily_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
+      const { data: limitCheck } = await supabase.rpc("check_daily_community_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
       const result = limitCheck?.[0];
       if (!result?.allowed) {
         return new Response(JSON.stringify({

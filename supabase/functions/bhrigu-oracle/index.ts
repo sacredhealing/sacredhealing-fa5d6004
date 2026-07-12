@@ -356,6 +356,24 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
       user = data.user ?? null;
     }
 
+    // Tier-aware daily chat cap — shared across ayurveda-chat, vastu-chat,
+    // bhrigu-oracle (the real Jyotish chat; vedic-guru-chat, which the limit
+    // was originally added to, turned out to have zero callers).
+    if (user?.id) {
+      const { data: prof } = await supabase.from("profiles").select("membership_tier").eq("user_id", user.id).maybeSingle();
+      const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+      const { data: limitCheck } = await supabase.rpc("check_daily_chat_limit", { p_user_id: user.id, p_tier_slug: tierSlug });
+      const result = limitCheck?.[0];
+      if (!result?.allowed) {
+        return new Response(JSON.stringify({
+          error: result?.daily_limit
+            ? `Daily chat limit reached (${result.daily_limit}/day on your plan). Resets at midnight UTC, or upgrade for a higher limit.`
+            : "Chat requires a paid membership.",
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await supabase.from("rate_limit_log").insert({ user_id: user.id, function_name: "bhrigu-oracle" });
+    }
+
     // ── FULL STRUCTURED READING (sections JSON) ────────────────────────────
     if (mode === "full_reading" && dob) {
       const cacheKey = hashKey("v7fr-eph", dob, tob, pob, readingType, dosha, dasha, question.slice(0, 60), calcMahadasha, calcNakshatra, calcLagna, calcAntardasha);
