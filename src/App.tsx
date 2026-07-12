@@ -285,13 +285,19 @@ ${error.stack}` : ''}
 // Root route: send signed-in users directly into the app, otherwise show landing
 function RootEntry() {
   const { user, isLoading } = useAuth();
-  // If OAuth returned us here with auth params in the URL, wait for the
-  // Supabase client to exchange them before deciding to show the landing page.
+  const [waitedForOAuth, setWaitedForOAuth] = React.useState(false);
   const hasAuthParams =
     typeof window !== 'undefined' &&
-    (/[?&](code|access_token|refresh_token|error)=/.test(window.location.hash) ||
+    (/[?&#](code|access_token|refresh_token|error)=/.test(window.location.hash) ||
       /[?&](code|access_token|refresh_token|error)=/.test(window.location.search));
-  if (isLoading || (hasAuthParams && !user)) {
+
+  React.useEffect(() => {
+    if (!hasAuthParams) return;
+    const t = window.setTimeout(() => setWaitedForOAuth(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [hasAuthParams]);
+
+  if (isLoading || (hasAuthParams && !user && !waitedForOAuth)) {
     return <PageLoader />;
   }
   if (user) {
