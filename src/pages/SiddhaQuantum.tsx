@@ -256,10 +256,10 @@ const SiddhaQuantum: React.FC = () => {
           <div className="sq-section-label">◈ Everything in the Universal Field</div>
           {[
             { title: 'Digital Soul Scan', desc: 'Real camera + voice biometric scan (rPPG) — before and after your practice. See your actual heart rate, HRV, and stress index shift.' },
-            { title: 'Siddha Portal Access', desc: 'Deep access across all 25 academies — most modules in each, with the very deepest reserved for Akasha-Infinity' },
+            { title: 'Siddha Portal Access', desc: 'Comprehensive, advanced teaching across all 25 academies — Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa and more. Real curriculum depth, not a preview — most modules in every academy, with only the deepest reserved for Akasha-Infinity.' },
             { title: 'Full Healing Audios & Transmissions', desc: 'All frequencies and transmissions unlocked' },
             { title: 'Sri Yantra Universal Shield', desc: 'EMF coherence & fear-field protection across the app' },
-            { title: 'Palm Oracle — Module 3: Navagraha Temple of the Hand', desc: 'Mounts, minor lines & sacred marks — 9 transmissions, 9 hours. Master Practitioner certification (reading for others, teaching) unlocks at Akasha-Infinity.' },
+            { title: 'Palm Oracle — Module 3: Navagraha Temple of the Hand', desc: 'Mounts, minor lines & sacred marks — 9 transmissions, 9 hours. Scan your own palm or someone else\'s. Master Practitioner certification (reading for others, teaching) unlocks at Akasha-Infinity.' },
           ].map((item) => (
             <div key={item.title} className="sq-included-card">
               <div className="sq-icon-wrap">
@@ -278,7 +278,7 @@ const SiddhaQuantum: React.FC = () => {
         <section className="sq-section">
           <div className="sq-section-label">◈ Portals You Enter</div>
           <div className="sq-portal-grid">
-            {['Vedic Astrology', 'Digital Soul Scan', 'Siddha Portal', 'Siddhi Acceleration', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
+            {['Vedic Astrology', 'Digital Soul Scan', 'Siddha Portal', 'Palm Oracle', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
               <div key={title} className="sq-portal-card">
                 <div className="sq-icon-wrap" style={{ margin: '0 auto' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5">
