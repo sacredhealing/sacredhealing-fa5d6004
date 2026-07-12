@@ -37,7 +37,35 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body: GuideChatRequest = await req.json();
-    const { messages, userId, guideId } = body;
+    const { messages, userId: bodyUserId, guideId } = body;
+
+    // Verify the caller actually owns this session rather than trusting the
+    // body-supplied userId outright. Falls back to the body value only if no
+    // valid session is present, to avoid breaking any existing caller — but
+    // logs/rate-limits are keyed off the verified id when we have one.
+    let userId: string | null = bodyUserId ?? null;
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const { data } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        if (data?.user?.id) userId = data.user.id;
+      } catch { /* fall back to body userId */ }
+    }
+
+    if (userId) {
+      const { data: prof } = await supabase.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle();
+      const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+      const { data: limitCheck } = await supabase.rpc("check_daily_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
+      const result = limitCheck?.[0];
+      if (!result?.allowed) {
+        return new Response(JSON.stringify({
+          error: result?.daily_limit
+            ? `Daily chat limit reached (${result.daily_limit}/day on your plan). Resets at midnight UTC, or upgrade for a higher limit.`
+            : "Chat requires a paid membership.",
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await supabase.from("rate_limit_log").insert({ user_id: userId, function_name: "guide-chat" });
+    }
 
     if (!messages || messages.length === 0) {
       return new Response(

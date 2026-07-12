@@ -718,8 +718,25 @@ serve(async (req) => {
         userId = user?.id ?? null;
       } catch { /* non-fatal */ }
     }
-    // Rate limit: only for authenticated users (userId non-null)
-    // Unauthenticated requests skip rate limit to avoid null FK crash on rate_limit_log
+
+    // Tier-aware daily chat cap — shared across ayurveda-chat, guide-chat,
+    // vastu-chat, vedic-guru-chat (total AI cost per member, not per chat type).
+    if (userId) {
+      const { data: prof } = await supabase.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle();
+      const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+      const { data: limitCheck } = await supabase.rpc("check_daily_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
+      const result = limitCheck?.[0];
+      if (!result?.allowed) {
+        return new Response(JSON.stringify({
+          error: result?.daily_limit
+            ? `Daily chat limit reached (${result.daily_limit}/day on your plan). Resets at midnight UTC, or upgrade for a higher limit.`
+            : "Chat requires a paid membership.",
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await supabase.from("rate_limit_log").insert({ user_id: userId, function_name: "ayurveda-chat" });
+    }
+    // Unauthenticated requests skip the limit entirely (no user_id to attribute cost to,
+    // and rate_limit_log has a NOT NULL FK to auth.users).
 
     let consultationTimeline = "";
     const now = new Date();

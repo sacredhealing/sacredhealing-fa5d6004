@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -91,6 +92,40 @@ serve(async (req) => {
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
+
+    // This function had NO authentication or rate limiting at all before this
+    // check — anyone, including unauthenticated requests, could call it
+    // unlimited times. It also accepts images, likely the most expensive of
+    // the four chat functions per call. Verify the caller and enforce the
+    // same shared daily cap as the other chats.
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    let userId: string | null = null;
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const { data } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+        userId = data?.user?.id ?? null;
+      } catch { /* non-fatal */ }
+    }
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Please sign in to use Vastu chat.' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { data: prof } = await supabase.from('profiles').select('membership_tier').eq('user_id', userId).maybeSingle();
+    const tierSlug = (prof?.membership_tier || 'free').toLowerCase();
+    const { data: limitCheck } = await supabase.rpc('check_daily_chat_limit', { p_user_id: userId, p_tier_slug: tierSlug });
+    const limitResult = limitCheck?.[0];
+    if (!limitResult?.allowed) {
+      return new Response(JSON.stringify({
+        error: limitResult?.daily_limit
+          ? `Daily chat limit reached (${limitResult.daily_limit}/day on your plan). Resets at midnight UTC, or upgrade for a higher limit.`
+          : 'Chat requires a paid membership.',
+      }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    await supabase.from('rate_limit_log').insert({ user_id: userId, function_name: 'vastu-chat' });
 
     // Build OpenAI-compatible message history
     const chatMessages: any[] = [
