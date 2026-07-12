@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const Auth: React.FC = () => {
