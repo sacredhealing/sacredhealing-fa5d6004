@@ -161,7 +161,7 @@ const AkashaInfinity: React.FC = () => {
 
   const faqItems: [string, string][] = [
     ['Is 2997€ really a one-time payment?', 'Yes. One payment and every tool is yours permanently including all future modules. No subscriptions, no renewals.'],
-    ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month. Akasha–Infinity adds the four exclusive portals, unlimited Vayu field, every future module, and zero recurring cost — one payment, held forever, with none of those extras included in the monthly tier.'],
+    ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month with deep access across the Siddha Portal academies. Akasha–Infinity completes it — every module in all 25 academies, the four exclusive portals, every future module, and zero recurring cost — one payment, held forever.'],
     ['What is the Akashic Record Decoder exactly?', "A personalised 15-page soul manuscript using your birth data and Jyotish chart as entry coordinates — past lives, soul contracts, karmic patterns, and your soul's highest trajectory."],
     ['Can I pay in instalments?', 'You can start with Siddha–Quantum at 45€/month and upgrade to Akasha–Infinity at any time with the difference honoured. Contact us directly for instalment arrangements.'],
     ['Is there a refund policy?', 'Once an Akashic reading is opened the transmission cannot be reversed, so the Decoder is non-refundable. All other modules carry a 14-day satisfaction guarantee.'],
@@ -173,9 +173,8 @@ const AkashaInfinity: React.FC = () => {
     'Quantum Apothecary (€888 value)',
     'Virtual Pilgrimage (€888 value)',
     'Palm Reading Portal',
-    'Siddha Portal Access',
+    'Siddha Portal — Complete Access, All 25 Academies',
     'Sri Yantra Universal Protection Shield',
-    'Unlimited Vayu field (beyond 1 km)',
     'All future modules included',
     'Soul Community & Live transmissions',
     'Zero renewals — eternal access',
@@ -197,11 +196,11 @@ const AkashaInfinity: React.FC = () => {
 
   const compareRows: [string, string, string][] = [
     ['Universal Field', '—', 'Included'],
+    ['Siddha Portal (25 Academies)', 'Entry modules', 'Complete'],
     ['Akashic Decoder', '—', 'Included'],
     ['Quantum Apothecary', '—', 'Included'],
     ['Virtual Pilgrimage', '—', 'Included'],
     ['Palm Reading Portal', '—', 'Included'],
-    ['Vayu field', '1 km', 'Unlimited'],
     ['Future modules', '—', 'Included'],
     ['Price', 'Free / 45€ mo', '2997€ once'],
   ];
