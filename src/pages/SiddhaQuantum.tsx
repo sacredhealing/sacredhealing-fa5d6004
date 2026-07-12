@@ -260,6 +260,7 @@ const SiddhaQuantum: React.FC = () => {
             { title: 'Siddha Portal Access', desc: 'Deep access across all 25 academies — most modules in each, with the very deepest reserved for Akasha-Infinity' },
             { title: 'Full Healing Audios & Transmissions', desc: 'All frequencies and transmissions unlocked' },
             { title: 'Sri Yantra Universal Shield', desc: 'EMF coherence & fear-field protection across the app' },
+            { title: 'Palm Oracle — Module 3: Navagraha Temple of the Hand', desc: 'Mounts, minor lines & sacred marks — 9 transmissions, 9 hours. Master Practitioner certification (reading for others, teaching) unlocks at Akasha-Infinity.' },
           ].map((item) => (
             <div key={item.title} className="sq-included-card">
               <div className="sq-icon-wrap">

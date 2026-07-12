@@ -172,7 +172,7 @@ const AkashaInfinity: React.FC = () => {
     'Akashic Record Decoder (15-page soul manuscript)',
     'Quantum Apothecary (€888 value)',
     'Virtual Pilgrimage (€888 value)',
-    'Palm Reading Portal',
+    'Palm Oracle Master Practitioner — Read, Heal, Transmit, Certify',
     'Siddha Portal — Complete Access, All 25 Academies',
     'Sri Yantra Universal Protection Shield',
     'All future modules included',
@@ -200,7 +200,7 @@ const AkashaInfinity: React.FC = () => {
     ['Akashic Decoder', '—', 'Included'],
     ['Quantum Apothecary', '—', 'Included'],
     ['Virtual Pilgrimage', '—', 'Included'],
-    ['Palm Reading Portal', '—', 'Included'],
+    ['Palm Oracle Master Practitioner', '—', 'Included'],
     ['Future modules', '—', 'Included'],
     ['Price', 'Free / 45€ mo', '2997€ once'],
   ];
