@@ -126,6 +126,7 @@ const PranaFlow: React.FC = () => {
     { title: 'All Healing Music — Full Library', desc: 'Every sacred frequency in the library — Solfeggio tones, Raga healing sessions, Binaural Theta states, and planetary sound sequences composed for each dosha and moon phase.', badge: 'Full Library' },
     { title: 'Divine Transmission Audios', desc: 'Sacred transmissions encoded with high-frequency healing intelligence — channelled sound sequences that activate dormant Nadi pathways and open the Anahata field.', badge: 'Full Access' },
     { title: 'Full Meditation & Mantra Library', desc: 'Guided meditations for every state — morning Sadhana, mid-day grounding, sleep Yoga Nidra. Plus the complete Mantra library with pronunciation guides and planetary correlations.', badge: 'Full Library' },
+    { title: 'Siddha Portal — 25 Academies, Deeper Access', desc: 'Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa and more — every academy unlocks further than the free tier, module by module.', badge: 'Extended' },
   ];
 
   const modulesList = [
@@ -151,6 +152,7 @@ const PranaFlow: React.FC = () => {
     ['Vastu Guide', '—', '◈', '◈'],
     ['Healing Music Library', '—', '◈', '◈'],
     ['Mantra Library', '—', '◈', '◈'],
+    ['Siddha Portal (25 Academies)', 'Entry modules', 'Extended', 'Advanced'],
     ['Digital Nadi Scanner', '—', '—', '◈'],
     ['Sri Yantra Shield · EMF', '—', '—', '◈'],
     ['Vedic Siddhis', '3 free', '3 free', '◈'],
