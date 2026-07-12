@@ -137,10 +137,12 @@ const SiddhaQuantum: React.FC = () => {
   };
 
   const faqItems = [
-    { q: 'What is the Universal Field?', a: 'The Siddha–Quantum tier unlocks the full 72,000 Nadi scanner, practice scantions, Siddha Portal, healing audios, and the Sri Yantra EMF & fear-field protection shield across all modules.' },
+    { q: 'What is the Universal Field?', a: 'The Siddha–Quantum tier unlocks the full 72,000 Nadi scanner, practice scantions, deep access across all 25 Siddha Portal academies, healing audios, and the Sri Yantra EMF & fear-field protection shield.' },
     { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from your account or Stripe customer portal. No lock-in. Access continues until the end of your billing period.' },
     { q: 'How does the Nadi Scanner work?', a: 'The Digital Nadi Scanner uses bio-sync technology to map your nadis and generate practice scantions. Results sync to your Soul Vault and Jyotish profile.' },
     { q: 'What is the Sri Yantra Shield?', a: 'The Sri Yantra Universal Protection Shield is active across the app — it supports EMF coherence and fear-field dissolution as you practice.' },
+    { q: 'Do I get full access to all 25 Siddha Portal academies?', a: 'Most modules in every academy, yes. The very deepest modules in a handful of academies (Mudra, Kriya Yoga, and others) are reserved for Akasha-Infinity. Siddha-Quantum unlocks substantially more than Prana-Flow in each one.' },
+    { q: 'Is there a chat limit?', a: '25 questions a day, shared across the Jyotish Guru, Ayurveda Vaidya, and Vastu chat combined — up from 15/day on Prana-Flow. Resets at midnight UTC.' },
     { q: 'Is there an annual option?', a: 'Yes. For better value, check the main Membership page for annual and lifetime options.' },
   ];
 
@@ -235,7 +237,7 @@ const SiddhaQuantum: React.FC = () => {
           <div className="sq-badge">◈ Universal Path</div>
           <h1>Siddha–Quantum</h1>
           <div className="sq-hero-sub">Universal Field Node</div>
-          <p className="sq-hero-desc">Full Nadi Scanner, Practice Scantions, Siddha Portal, Healing Audios & Transmissions, and the Sri Yantra Universal Protection Shield. One subscription, every module unlocked.</p>
+          <p className="sq-hero-desc">Full Nadi Scanner, Practice Scantions, deep Siddha Portal access, Healing Audios & Transmissions, and the Sri Yantra Universal Protection Shield. One subscription, the whole field open.</p>
           <div className="sq-mandala">
             <div className="sq-ring sq-ring-1" />
             <div className="sq-ring sq-ring-2" />
@@ -255,7 +257,7 @@ const SiddhaQuantum: React.FC = () => {
           {[
             { title: 'Digital Nadi Scanner', desc: '72,000 Nadi bio-sync, practice-based scantions' },
             { title: 'Practice Scantions', desc: 'Printed results that sync to your Soul Vault' },
-            { title: 'Siddha Portal Access', desc: 'Full access to Siddha teachings and protocols' },
+            { title: 'Siddha Portal Access', desc: 'Deep access across all 25 academies — most modules in each, with the very deepest reserved for Akasha-Infinity' },
             { title: 'Full Healing Audios & Transmissions', desc: 'All frequencies and transmissions unlocked' },
             { title: 'Sri Yantra Universal Shield', desc: 'EMF coherence & fear-field protection across the app' },
           ].map((item) => (
@@ -368,12 +370,11 @@ const SiddhaQuantum: React.FC = () => {
                   ['Meditations & Mantras', 'Limited', 'Full library'],
                   ['Healing Audios', 'Limited', 'Full library'],
                   ['Breathing Protocols', 'Limited', 'Full library'],
-                  ['Vayu Scrubber', '1 km', '1 km'],
                   ['Community Chat & Live', 'Access', 'Access'],
                   ['Ayurveda & Jyotish', 'Basic', 'Full + Chat'],
                   ['Digital Nadi Scanner', '—', 'Included'],
                   ['Practice Scantions', '—', 'Included'],
-                  ['Siddha Portal', '—', 'Included'],
+                  ['Siddha Portal', 'Entry modules', 'Deep access'],
                   ['Sri Yantra Shield', '—', 'Active'],
                   ['Price', 'Free', '45€/mo'],
                 ].map((row, i) => (
