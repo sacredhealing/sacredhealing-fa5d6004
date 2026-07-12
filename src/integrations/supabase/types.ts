@@ -9778,6 +9778,30 @@ export type Database = {
       }
     }
     Functions: {
+      check_daily_apothecary_limit: {
+        Args: { p_tier_slug: string; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          remaining: number
+        }[]
+      }
+      check_daily_chat_limit: {
+        Args: { p_tier_slug: string; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          remaining: number
+        }[]
+      }
+      check_daily_community_chat_limit: {
+        Args: { p_tier_slug: string; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          remaining: number
+        }[]
+      }
       clawbot_fee_for_tier: { Args: { tier_name: string }; Returns: number }
       cleanup_qr_pairing_tokens: { Args: never; Returns: undefined }
       cleanup_rate_limit_events: { Args: never; Returns: undefined }
