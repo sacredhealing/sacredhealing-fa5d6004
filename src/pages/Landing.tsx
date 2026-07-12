@@ -250,7 +250,7 @@ export default function Landing() {
       </div>
 
       <div className="founder-line reveal">
-        <p>Founded by <strong>Kritagya Das</strong> and <strong>Karaveera Nivasini Dasi</strong>, householder Yogis and devotees of Paramahamsa Vishwananda in the Bhakti Marga tradition — sharing Ancient Siddha and Vedic wisdom into people's everyday life.</p>
+        <p>Founded by <strong>Kritagya Das</strong> and <strong>Karaveera Nivasini Dasi</strong>, householder Yogis and devotees of Paramahamsa Vishwananda in the Bhakti Marga tradition — sharing ancient Siddha and Vedic wisdom in people's everyday life.</p>
       </div>
 
       {/* WHAT'S FREE */}
