@@ -23,6 +23,42 @@ const AtmaSeed: React.FC = () => {
   const [hasBirthData, setHasBirthData] = useState(false);
   const [showForm, setShowForm] = useState(true);
 
+  // Pick up birth data captured on /free-chart before this account existed.
+  // That page can't write to `profiles` directly (no authorized session yet
+  // during email confirmation), so it stashes the data and hands off here.
+  useEffect(() => {
+    if (!user) return;
+    let pending: { birth_name?: string; birth_date?: string; birth_time?: string; birth_place?: string } | null = null;
+    try {
+      const raw = sessionStorage.getItem('pending_birth_data');
+      if (raw) pending = JSON.parse(raw);
+    } catch { /* ignore malformed/absent stash */ }
+    if (!pending?.birth_date || !pending?.birth_time || !pending?.birth_place) return;
+
+    (supabase as any)
+      .from('profiles')
+      .upsert(
+        {
+          user_id: user.id,
+          birth_name: pending.birth_name?.trim() || '',
+          birth_date: pending.birth_date,
+          birth_time: pending.birth_time,
+          birth_place: pending.birth_place?.trim() || '',
+        },
+        { onConflict: 'user_id' }
+      )
+      .then(({ error }: { error: unknown }) => {
+        if (!error) {
+          try { sessionStorage.removeItem('pending_birth_data'); } catch { /* ignore */ }
+          setHasBirthData(true);
+          setBirthData((d) => ({ ...d, ...pending }));
+          setIsSaved(true);
+          setShowForm(false);
+          toast.success('Your free chart is ready');
+        }
+      });
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     supabase

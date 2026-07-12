@@ -49,6 +49,7 @@ const Mastering = React.lazy(() => import("./pages/Mastering"));
 const Wallet = React.lazy(() => import("./pages/Wallet"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const AtmaSeed = React.lazy(() => import("./pages/AtmaSeed"));
+const FreeChart = React.lazy(() => import("./pages/FreeChart"));
 const SiddhaQuantum = React.lazy(() => import("./pages/SiddhaQuantum"));
 const PranaFlow = React.lazy(() => import("./pages/PranaFlow"));
 const AkashaInfinity = React.lazy(() => import("./pages/AkashaInfinity"));
@@ -362,6 +363,7 @@ function AppRoutes() {
                   <Route path="/wallet" element={<Wallet />} />
           <Route path="/profile" element={<Profile />} />
                   <Route path="/atma-seed" element={<AtmaSeed />} />
+                  <Route path="/free-chart" element={<FreeChart />} />
                   <Route path="/siddha-quantum" element={<SiddhaQuantum />} />
                   <Route path="/prana-flow" element={<PranaFlow />} />
                   <Route path="/akasha-infinity" element={<AkashaInfinity />} />
