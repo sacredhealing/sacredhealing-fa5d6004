@@ -16,7 +16,7 @@ const TIER_CONFIG: Record<
   ATMA_SEED: { priceIdEnv: "", price: 0, mode: "subscription", displayName: "Atma-Seed (Free)" },
   PRANA_FLOW: { priceIdEnv: "STRIPE_PRICE_PRANA_19", price: 19, mode: "subscription", displayName: "Prana-Flow Membership" },
   SIDDHA_QUANTUM: { priceIdEnv: "STRIPE_PRICE_SIDDHA_45", price: 45, mode: "subscription", displayName: "Siddha-Quantum Membership" },
-  AKASHA_INFINITY: { priceIdEnv: "STRIPE_PRICE_AKASHA_1111", price: 2997, mode: "payment", displayName: "Akasha-Infinity Lifetime Access" },
+  AKASHA_INFINITY: { priceIdEnv: "STRIPE_PRICE_AKASHA_2997", price: 2997, mode: "payment", displayName: "Akasha-Infinity Lifetime Access", fallbackPriceId: "price_1TsTQbAPsnbrivP0X0Obb5YN" },
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) =>
