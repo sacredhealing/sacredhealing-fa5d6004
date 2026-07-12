@@ -54,7 +54,8 @@ const AtmaSeed: React.FC = () => {
           setBirthData((d) => ({ ...d, ...pending }));
           setIsSaved(true);
           setShowForm(false);
-          toast.success('Your free chart is ready');
+          toast.success('Your chart is ready — opening now');
+          navigate('/vedic-astrology');
         }
       });
   }, [user]);
