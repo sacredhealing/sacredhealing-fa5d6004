@@ -72,7 +72,7 @@ serve(async (req) => {
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
     const resend = new Resend(resendApiKey);
 
-    const fromEmail = "Adam & Laila <noreply@siddhaquantumnexus.com>";
+    const fromEmail = "Kritagya Das & Karaveera Nivasini Dasi <noreply@siddhaquantumnexus.com>";
     let testEmail: string | null = null;
     try {
       if (req.method === "POST") {

@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
 `;
 
     const result = await resend.emails.send({
-      from: Deno.env.get("EMAIL_FROM") || "Adam & Laila · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>",
+      from: Deno.env.get("EMAIL_FROM") || "Kritagya Das & Karaveera Nivasini Dasi · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>",
       to: [email],
       subject: t.subject,
       html,

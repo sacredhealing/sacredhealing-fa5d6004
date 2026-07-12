@@ -338,7 +338,7 @@ serve(async (req) => {
 
     // Override sender identity in From header to match the chosen voice
     const personalFromEmail = generatedCopy.sender === "Laila"
-      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Laila Amrouche <noreply@siddhaquantumnexus.com>")
+      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Karaveera Nivasini Dasi <noreply@siddhaquantumnexus.com>")
       : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
 
     // ── TEST MODE: override recipient list ──
@@ -673,7 +673,7 @@ function buildEmail(
     subject = generated.subject.trim();
   }
 
-  const senderLabel = generated.sender === "Laila" ? "Laila Amrouche" : "Adam Kritagya Das";
+  const senderLabel = generated.sender === "Laila" ? "Karaveera Nivasini Dasi" : "Kritagya Das";
   const hasGenerated = !!(generated.opening || generated.body);
 
   // Gemini text prepends above the stats — it does not replace the segment body.
@@ -701,7 +701,7 @@ function buildEmail(
     </div>
     ${digestBlock}
     <div style="${styles.footer}">
-      <p style="${styles.footerTextStyle}">— With love, Kritagya &amp; Laila · Uddevalla</p>
+      <p style="${styles.footerTextStyle}">— With love, Kritagya Das &amp; Karaveera Nivasini Dasi · Uddevalla</p>
       <p style="${styles.footerTextStyle}">${t.footerText[L]}</p>
       <p style="${styles.footerTextStyle}"><a href="${appUrl}/dashboard?unsubscribe=true" style="color:#D4AF37;">${t.unsubscribe[L]}</a></p>
     </div>

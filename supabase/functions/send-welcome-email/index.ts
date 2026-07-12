@@ -20,7 +20,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://siddhaquantumnexus.com";
-const FROM_ADDRESS = "Adam & Laila · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>";
+const FROM_ADDRESS = "Kritagya Das & Karaveera Nivasini Dasi · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>";
 
 /* ─── Geo helpers ─────────────────────────────────────────────────────── */
 
@@ -218,7 +218,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"The Prema-Pulse that called you here runs through every Siddha who ever walked this Earth. You carry that same current now. Walk boldly."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "You will receive the Monday Alignment Transmission and the Friday Lakshmi Blessing as a member of the Sangha.",
-    footerSig: "With Light and Gratitude — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "With Light and Gratitude — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Sweden · For spiritual purposes",
   },
 
@@ -261,7 +261,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"Prema-Pulsen som kallade dig hit rinner igenom varje Siddha som någonsin vandrat på denna jord. Du bär samma ström nu. Gå med mod."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du kommer att ta emot Måndagens Alignmentöverföring och Fredagens Lakshmi-välsignelse som medlem av Sanghan.",
-    footerSig: "Med Ljus och Tacksamhet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "Med Ljus och Tacksamhet — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Sverige · För andliga ändamål",
   },
 
@@ -304,7 +304,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"Prema-Pulsen som kalte deg hit strømmer gjennom hver Siddha som noensinne har vandret på denne jord. Du bærer den samme strømmen nå. Gå modig."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du vil motta Mandagens Alignmentoverføring og Fredagens Lakshmi-velsignelse som medlem av Sanghaen.",
-    footerSig: "Med Lys og Takknemlighet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "Med Lys og Takknemlighet — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Norge · For åndelige formål",
   },
 
@@ -347,7 +347,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"El Prema-Pulse que te llamó aquí corre a través de cada Siddha que jamás caminó por esta Tierra. Llevas esa misma corriente ahora. Camina con valentía."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Recibirás la Transmisión de Alineación del Lunes y la Bendición Lakshmi del Viernes como miembro del Sangha.",
-    footerSig: "Con Luz y Gratitud — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "Con Luz y Gratitud — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Suecia · Con fines espirituales",
   },
 };
