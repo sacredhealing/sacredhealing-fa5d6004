@@ -6217,6 +6217,33 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_pairing_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          session_hash: string | null
+          status: string
+          token: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          session_hash?: string | null
+          status?: string
+          token?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          session_hash?: string | null
+          status?: string
+          token?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rate_limit_events: {
         Row: {
           created_at: string
@@ -9690,6 +9717,7 @@ export type Database = {
     }
     Functions: {
       clawbot_fee_for_tier: { Args: { tier_name: string }; Returns: number }
+      cleanup_qr_pairing_tokens: { Args: never; Returns: undefined }
       cleanup_rate_limit_events: { Args: never; Returns: undefined }
       current_user_tier_level: { Args: never; Returns: number }
       delete_email: {
