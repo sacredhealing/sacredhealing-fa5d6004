@@ -126,15 +126,15 @@ export default function QROnboarding() {
   const [checkoutLoading, setCheckoutLoading] = useState<TierKey | null>(null);
 
   /* ── social OAuth ── */
-  const signInWithProvider = async (provider: "google" | "apple" | "facebook") => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/join?ref=${refCode}`,
-      },
+  const signInWithProvider = async (provider: "google" | "apple") => {
+    try {
+      sessionStorage.setItem('postLoginRedirect', `/join?ref=${refCode}`);
+    } catch {}
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
     });
-    if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    if (result.error) {
+      toast({ title: "Login failed", description: result.error.message, variant: "destructive" });
     }
   };
 
