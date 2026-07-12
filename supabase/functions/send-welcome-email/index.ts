@@ -354,7 +354,7 @@ const COPY: Record<Lang, Copy> = {
 
 /* ─── HTML builder ────────────────────────────────────────────────────── */
 
-function buildEmail(c: Copy, displayName: string, account: { email: string; memberSince: string; planLabel: string; loginUrl: string }): string {
+function buildEmail(c: Copy, displayName: string, account: { email: string; memberSince: string; planLabel: string; loginUrl: string }, teaching: { title: string; body_text: string } | null): string {
   const name = displayName || (
     c.greeting === "Beloved" ? "Sacred One" :
     c.greeting === "Kära" ? "Kära Själ" :
@@ -391,6 +391,14 @@ function buildEmail(c: Copy, displayName: string, account: { email: string; memb
   <tr><td style="padding:36px 40px 0;">
     <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 18px;">${c.intro1}</p>
     <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 32px;">${c.intro2}</p>
+
+    ${teaching ? `<!-- TEACHING -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-left:2px solid #D4AF37;border-radius:16px;margin-bottom:32px;">
+      <tr><td style="padding:22px 26px;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.6);font-family:Arial,sans-serif;margin-bottom:10px;">${teaching.title}</div>
+        <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.85;margin:0;font-style:italic;font-family:Arial,sans-serif;">${teaching.body_text}</p>
+      </td></tr>
+    </table>` : ""}
 
     <!-- ACCOUNT DETAILS -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.18);border-radius:16px;margin-bottom:32px;">
@@ -617,7 +625,21 @@ serve(async (req: Request): Promise<Response> => {
     const lang = (countryCode ? countryToLang(countryCode) : resolveClientLang(language)) as Lang;
     const copy = COPY[lang] || COPY["en"];
     const displayName = (name && String(name).trim()) || "";
-    const html = buildEmail(copy, displayName, { email, memberSince, planLabel, loginUrl });
+    let teaching: { title: string; body_text: string } | null = null;
+    if (user_id) {
+      try {
+        const { data: teachingRows } = await supabaseAdmin.rpc("get_next_teaching", {
+          p_user_id: user_id,
+          p_theme: "general",
+        });
+        teaching = teachingRows?.[0] ? { title: teachingRows[0].title, body_text: teachingRows[0].body_text } : null;
+        if (teachingRows?.[0]?.id) {
+          await supabaseAdmin.rpc("log_teaching_sent", { p_user_id: user_id, p_teaching_id: teachingRows[0].id, p_context: "welcome" });
+        }
+      } catch { /* teaching is a nice-to-have, never block the welcome email */ }
+    }
+
+    const html = buildEmail(copy, displayName, { email, memberSince, planLabel, loginUrl }, teaching);
 
     const result = await resend.emails.send({
       from: FROM_ADDRESS,

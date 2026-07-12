@@ -228,7 +228,35 @@ function buildLakshmiHTML(
   headline: string,
   body: string,
   cta: string,
+  teaching: { title: string; body_text: string; source_note: string | null } | null,
+  featured: { kind: string; title: string; duration_label: string; url_path: string } | null,
+  tierIsFree: boolean,
 ): string {
+  const teachingBlock = teaching ? `
+    <tr><td style="padding:24px 0 0;">
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-left:2px solid #D4AF37;border-radius:16px;padding:22px 26px;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:10px;">${teaching.title}</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.85;margin:0;font-style:italic;">${teaching.body_text}</p>
+      </div>
+    </td></tr>` : "";
+
+  const featuredBlock = featured ? `
+    <tr><td style="padding:16px 0 0;">
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 20px;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:6px;">TODAY IN THE NEXUS</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;"><strong style="color:#D4AF37;">${featured.title}</strong> · ${featured.duration_label} — <a href="https://siddhaquantumnexus.com${featured.url_path}" style="color:#D4AF37;">Listen now →</a></p>
+      </div>
+    </td></tr>` : "";
+
+  const upgradeBlock = tierIsFree ? `
+    <tr><td style="padding:16px 0 0;">
+      <div style="background:linear-gradient(140deg,rgba(212,175,55,0.06) 0%,rgba(5,5,5,0.98) 60%);border:1px solid rgba(212,175,55,0.25);border-radius:20px;padding:22px 24px;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:#D4AF37;margin-bottom:8px;">FOR THOSE READY TO GO DEEPER</div>
+        <p style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;margin:0 0 12px;">Siddha-Quantum membership opens the full Abundance track — Nadi Scanning, the Sri Yantra protection field, and everything built for the Friday practice.</p>
+        <a href="https://siddhaquantumnexus.com/siddha-quantum" style="display:inline-block;padding:10px 22px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);border-radius:100px;color:#D4AF37;font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;">◈ Explore Siddha-Quantum</a>
+      </div>
+    </td></tr>` : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -256,12 +284,15 @@ function buildLakshmiHTML(
         ${body}
       </div>
       <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(212,175,55,0.1);text-align:center;">
-        <a href="https://sacredhealing.lovable.app"
+        <a href="https://siddhaquantumnexus.com"
            style="display:inline-block;background:linear-gradient(135deg,#D4AF37 0%,#B8960C 100%);color:#050505;font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;padding:18px 44px;border-radius:100px;text-decoration:none;">
           ${cta}
         </a>
       </div>
     </td></tr>
+    ${teachingBlock}
+    ${featuredBlock}
+    ${upgradeBlock}
     <tr><td style="text-align:center;padding:24px 0 16px;color:rgba(212,175,55,0.4);font-size:9px;letter-spacing:0.5em;text-transform:uppercase;">
       SACRED HEALING · SIDDHA QUANTUM NEXUS
     </td></tr>
@@ -317,7 +348,23 @@ serve(async (req) => {
           activity.membershipTier,
         );
 
-        const html = buildLakshmiHTML(firstName, headline, body, cta);
+        // Real, non-repeating teaching for this user (theme-matched to abundance/Friday)
+        const { data: teachingRows } = await supabase.rpc("get_next_teaching", {
+          p_user_id: user.user_id,
+          p_theme: "abundance",
+        });
+        const teaching = teachingRows?.[0] ?? null;
+
+        // One real, currently-active piece of content — never a made-up name
+        const { data: featuredRows } = await supabase.rpc("get_featured_content", {
+          p_kind: null,
+          p_category: null,
+        });
+        const featured = featuredRows?.[0] ?? null;
+
+        const tierIsFree = !activity.membershipTier || activity.membershipTier.toLowerCase().includes("atma") || activity.membershipTier.toLowerCase() === "free";
+
+        const html = buildLakshmiHTML(firstName, headline, body, cta, teaching, featured, tierIsFree);
 
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -326,7 +373,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Shiva · SQI <noreply@siddhaquantumnexus.com>",
+            from: "Kritagya Das & Karaveera Nivasini Dasi · SQI <noreply@siddhaquantumnexus.com>",
             to: user.email,
             subject,
             html,
@@ -335,13 +382,20 @@ serve(async (req) => {
 
         if (res.ok) {
           sentCount++;
+          if (teaching?.id) {
+            await supabase.rpc("log_teaching_sent", {
+              p_user_id: user.user_id,
+              p_teaching_id: teaching.id,
+              p_context: "friday",
+            });
+          }
           await supabase.from("email_logs").insert({
             email_type: "lakshmi_friday",
             recipient_email: user.email,
             recipient_id: user.user_id,
             subject,
             status: "sent",
-            metadata: { activity_type: activity.activityType, sessions: activity.sessionCount },
+            metadata: { activity_type: activity.activityType, sessions: activity.sessionCount, teaching_id: teaching?.id ?? null },
           });
         } else {
           errors.push(`${user.email}: ${await res.text()}`);
