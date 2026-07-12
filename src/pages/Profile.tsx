@@ -529,7 +529,7 @@ const Profile: React.FC = () => {
             <div style={{borderRadius:24,padding:20,background:'rgba(212,175,55,.04)',border:'1px solid rgba(212,175,55,.28)',boxShadow:'0 0 30px rgba(212,175,55,.06)'}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
                 <div style={{fontWeight:900,fontSize:18,color:G}}>{t('profilePage.tierAkashaInfinityName')}</div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'2.5rem',color:'#fff'}}>€1111</div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'2.5rem',color:'#fff'}}>€2997</div>
               </div>
               <ul className="tier-features" style={{marginBottom:16,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
                 {[t('profilePage.tierAkashaF1'),t('profilePage.tierAkashaF2'),t('profilePage.tierAkashaF3'),t('profilePage.tierAkashaF4'),t('profilePage.tierAkashaF5'),t('profilePage.tierAkashaF6')].map(f=><li key={f}>{f}</li>)}

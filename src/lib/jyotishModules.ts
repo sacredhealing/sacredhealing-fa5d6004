@@ -42,7 +42,7 @@ export const TIER_CONFIG = {
   akasha: {
     label: 'Portal IV',
     name: 'Akasha Infinity',
-    price: '€1111 Lifetime',
+    price: '€2997 Lifetime',
     color: '#ffffff',
     slug: 'akasha-infinity',
     moduleRange: [23, 32] as [number, number],

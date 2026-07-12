@@ -709,7 +709,7 @@ export const PALM_ORACLE_MODULES: ModuleData[] = [
   {
     id: 4,
     tier: "akasha_infinity",
-    tierLabel: "AKASHA INFINITY · €1,111",
+    tierLabel: "AKASHA INFINITY · €2,997",
     tierColor: "#F59E0B",
     title: "Siddha Palm Oracle: Master Practitioner",
     subtitle: "Read. Heal. Transmit. Certify.",

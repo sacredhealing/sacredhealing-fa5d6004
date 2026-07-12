@@ -217,7 +217,7 @@ export default function AlchemicalShiva() {
   const tierUpgradeLabel = (tier: Tier) => {
     if (tier === "prana_flow") return "Unlock with Prana Flow — €19/mo";
     if (tier === "siddha_quantum") return "Unlock with Siddha Quantum — €45/mo";
-    if (tier === "akasha_infinity") return "Unlock with Akasha Infinity — €1,111 Lifetime";
+    if (tier === "akasha_infinity") return "Unlock with Akasha Infinity — €2,997 Lifetime";
     return "";
   };
 
@@ -1113,7 +1113,7 @@ export default function AlchemicalShiva() {
               </p>
               <a className="upgrade-btn" href="/siddha-quantum" style={{ borderColor: "rgba(255,107,107,0.3)", color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}>
                 <Lock size={10} />
-                AKASHA INFINITY — €1,111 LIFETIME
+                AKASHA INFINITY — €2,997 LIFETIME
               </a>
             </div>
           ) : (

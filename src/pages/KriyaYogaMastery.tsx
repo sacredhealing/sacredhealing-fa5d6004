@@ -1680,7 +1680,7 @@ export default function KriyaYogaMastery() {
                 cursor: "pointer",
               }}
             >
-              Akasha-Infinity · €1,111
+              Akasha-Infinity · €2,997
             </button>
           </div>
         </div>

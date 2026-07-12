@@ -2645,7 +2645,7 @@ function SovereignHormonalAlchemy({
                 }}
                 onClick={() => onUpgrade?.("akasha")}
               >
-                Unlock Akasha-Infinity · €1,111
+                Unlock Akasha-Infinity · €2,997
               </button>
             </div>
           )}

@@ -40,7 +40,7 @@ const TIERS = [
   { value: 0, label: 'Free (Atma-Seed)' },
   { value: 1, label: 'Prana-Flow (€19/mo)' },
   { value: 2, label: 'Siddha-Quantum (€45/mo)' },
-  { value: 3, label: 'Akasha-Infinity (€1111)' },
+  { value: 3, label: 'Akasha-Infinity (€2997)' },
 ];
 
 const parseDuration = (str: string): number => {

@@ -109,7 +109,7 @@ const TIERS = [
     name: 'AKASHA INFINITY',
     sub: 'Eternal Sovereign',
     accent: '#D4AF37',
-    price: '€1,111 lifetime',
+    price: '€2,997 lifetime',
     badge: '✦ Highest Initiation',
     features: [
       'Everything in Siddha Quantum',

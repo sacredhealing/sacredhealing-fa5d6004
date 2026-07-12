@@ -72,7 +72,7 @@ const TIERS = [
   {
     key: "AKASHA_INFINITY" as const,
     name: "Akasha-Infinity",
-    price: "€1,111 lifetime",
+    price: "€2,997 lifetime",
     isFree: false,
     desc: "All transmissions · Eternal field access",
     glyph: "♾",

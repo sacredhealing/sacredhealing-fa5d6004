@@ -646,7 +646,7 @@ const AdminMantras = () => {
                     })}
                   </div>
                   <p style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 10, lineHeight: 1.5 }}>
-                    Free is open to everyone. Prana-Flow unlocks at Rank 1 (€19), Siddha-Quantum at Rank 2 (€45), Akasha-Infinity at Rank 3 (€1111).
+                    Free is open to everyone. Prana-Flow unlocks at Rank 1 (€19), Siddha-Quantum at Rank 2 (€45), Akasha-Infinity at Rank 3 (€2997).
                   </p>
                 </div>
 

@@ -270,7 +270,7 @@ const TIERS = [
     slug: 'akasha-infinity',
     rank: 3,
     label: 'AKASHA INFINITY',
-    subtitle: '€1,111 Lifetime',
+    subtitle: '€2,997 Lifetime',
     color: '#22D3EE',
     glow: cyan(0.08),
     border: cyan(0.22),

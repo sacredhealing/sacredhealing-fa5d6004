@@ -1,6 +1,6 @@
 // src/data/moduleContentPhase4.ts
 // ⟡ Phase 4 — Siddha Vidya: The Living Transmission (Modules 37–72) ⟡
-// Akasha Infinity tier — €1,111 lifetime
+// Akasha Infinity tier — €2,997 lifetime
 
 import { ModuleContent } from './moduleContent';
 

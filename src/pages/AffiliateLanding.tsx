@@ -76,7 +76,7 @@ const TIERS_EN = [
     ],
   },
   {
-    name:'Akasha-Infinity', price:'€1,111', psub:'one-time · lifetime access · forever',
+    name:'Akasha-Infinity', price:'€2,997', psub:'one-time · lifetime access · forever',
     tag:'Sovereign initiation — all portals, forever',
     inc:[
       'Everything in Siddha-Quantum, plus:',
@@ -206,7 +206,7 @@ const TIER_NAMES: Record<Lang, string[]> = {
   es:['Iniciación gratuita','Prana-Flow','Siddha-Quantum','Akasha-Infinity'],
 };
 const TIER_PRICES: Record<Lang, string[]> = {
-  en:['€0','€19','€45','€1,111'],
+  en:['€0','€19','€45','€2,997'],
   sv:['€0','€19','€45','€1 111'],
   no:['€0','€19','€45','€1 111'],
   es:['€0','€19','€45','€1.111'],

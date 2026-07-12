@@ -523,7 +523,7 @@ export default function About() {
                 </div>
               </TierSection>
 
-              <TierSection id="akasha" headerClass="akasha-h" dotClass="dot-akasha" name="Akasha-Infinity ♾" price="€1,111 · One-time · Everything, forever" nameClass="akasha-n">
+              <TierSection id="akasha" headerClass="akasha-h" dotClass="dot-akasha" name="Akasha-Infinity ♾" price="€2,997 · One-time · Everything, forever" nameClass="akasha-n">
                 <div style={{display:'flex',flexDirection:'column',gap:2,padding:'10px 0 6px'}}>
                   <Feat navigate={navigate} to="/quantum-apothecary" icon={<IconQA/>} iconClass="fi-akasha" title="Quantum Apothecary — Unlimited" desc="No limits. No hourly cap. The 18 Siddha council is always open."/>
                   <Feat navigate={navigate} to="/community" icon={<IconStargate/>} iconClass="fi-akasha" title="Stargate — Live Healing Sessions" desc="Weekly live transmission calls with Kritagya and Laila. Bhagavad Gita classes, healing chambers. All recordings saved."/>

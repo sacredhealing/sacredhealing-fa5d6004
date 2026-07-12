@@ -686,7 +686,7 @@ const SacredGeometryEducation: React.FC = () => {
       desc:'Modules 1–8 — All foundations + advanced field science',
       features:['Everything in Prana-Flow','Golden Ratio & Fibonacci Spiral','Torus Field & Heart Coherence','Cymatics & Mantra Geometry'],
     },
-    { name:'AKASHA_INFINITY', label:'Akasha-Infinity', price:'€1,111', period:' once',
+    { name:'AKASHA_INFINITY', label:'Akasha-Infinity', price:'€2,997', period:' once',
       desc:'All 10 modules — Complete transmission including Vastu & Merkaba',
       features:['All 10 Modules Unlocked','Vastu Shastra Complete','Quantum Merkaba Practice','Babaji Transmission Practices','Lifetime Access'],
     },

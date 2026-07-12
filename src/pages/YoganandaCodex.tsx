@@ -875,7 +875,7 @@ const BreathingGuide: React.FC<{active:boolean}> = ({active}) => {
 // ── Lock Gate
 const LockGate: React.FC<{required:TierLevel;current:TierLevel;children:React.ReactNode}> = ({required,current,children}) => {
   if(current>=required) return <>{children}</>;
-  const names: Record<TierLevel,string> = {0:"Free",1:"Prana-Flow (€19/mo)",2:"Siddha-Quantum (€45/mo)",3:"Akasha-Infinity (€1,111)"};
+  const names: Record<TierLevel,string> = {0:"Free",1:"Prana-Flow (€19/mo)",2:"Siddha-Quantum (€45/mo)",3:"Akasha-Infinity (€2,997)"};
   return(
     <div style={{position:"relative",borderRadius:18,overflow:"hidden",marginBottom:12}}>
       <div style={{filter:"blur(4px)",pointerEvents:"none",userSelect:"none",opacity:0.25}}>{children}</div>

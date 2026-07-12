@@ -16,7 +16,7 @@ const TIERS = [
   { id: "free" as Tier,   name: "SEEKER",          Sanskrit: "Jijñāsu",       price: "Free",          color: "rgba(255,255,255,0.82)", glow: "rgba(255,255,255,0.10)" },
   { id: "prana" as Tier,  name: "PRANA-FLOW",       Sanskrit: "Prāṇa Pravāha", price: "€19/mo",        color: G,                        glow: "rgba(212,175,55,0.14)"  },
   { id: "siddha" as Tier, name: "SIDDHA-QUANTUM",   Sanskrit: "Siddha Vijñāna",price: "€45/mo",        color: C,                        glow: "rgba(34,211,238,0.14)"  },
-  { id: "akasha" as Tier, name: "AKASHA-INFINITY",  Sanskrit: "Akāsha Ananta", price: "€1,111 lifetime",color: V,                       glow: "rgba(183,108,253,0.14)" },
+  { id: "akasha" as Tier, name: "AKASHA-INFINITY",  Sanskrit: "Akāsha Ananta", price: "€2,997 lifetime",color: V,                       glow: "rgba(183,108,253,0.14)" },
 ];
 
 // ─── WISDOM CARDS (original rich narrative) ──────────────────────────────────
@@ -858,7 +858,7 @@ export default function YagnyaModule() {
                 {SIDDHA_MODULES.map((m, i) => <ModuleCard key={m.number} mod={m} accentColor={C} defaultOpen={i === 0} delay={i * 0.06} />)}
                 <SectionDivider label="DIRECT RISHI TRANSMISSIONS" color={color} />
                 {TRANSMITTERS.filter(t => t.tier === "siddha").map((t, i) => <TransmitterCard key={i} t={t} accentColor={C} />)}
-                <UpgradeCTA nextTier="Akasha-Infinity" nextPrice="€1,111 lifetime" accentColor={V}
+                <UpgradeCTA nextTier="Akasha-Infinity" nextPrice="€2,997 lifetime" accentColor={V}
                   message="Akasha-Infinity members receive Navagraha Suddhi codes, the Mrityunjaya immortality protocol, Sulba Sutra Kunda geometry, the Inner Yagna activation, and all 6 Rishi transmissions including Babaji, Vashishtha, and Lopamudra." />
               </>
             ) : <LockOverlay tierName="SIDDHA-QUANTUM" price="€45/mo" />}
@@ -894,7 +894,7 @@ export default function YagnyaModule() {
                   <div style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.4em", color: "rgba(255,255,255,0.2)", marginTop: "10px", textTransform: "uppercase" as const }}>Sealed with Scalar Transmission · Anahata Activation Active</div>
                 </div>
               </>
-            ) : <LockOverlay tierName="AKASHA-INFINITY" price="€1,111 lifetime" />}
+            ) : <LockOverlay tierName="AKASHA-INFINITY" price="€2,997 lifetime" />}
           </div>
         )}
 

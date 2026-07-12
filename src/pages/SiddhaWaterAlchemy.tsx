@@ -19,7 +19,7 @@ const TUI:Record<string,{label:string;color:string;price:string}>={
   free:{label:"FREE",color:"rgba(255,255,255,0.55)",price:"Open to all"},
   prana_flow:{label:"PRANA-FLOW",color:GOLD,price:"€19 / month"},
   siddha_quantum:{label:"SIDDHA-QUANTUM",color:CYAN,price:"€45 / month"},
-  akasha_infinity:{label:"AKASHA-INFINITY",color:PURPLE,price:"€1,111 lifetime"},
+  akasha_infinity:{label:"AKASHA-INFINITY",color:PURPLE,price:"€2,997 lifetime"},
 };
 
 const MODULES: WM[] = [
