@@ -505,7 +505,7 @@ export default function QROnboarding() {
                   [
                     { provider: "google" as const, label: "Google", Icon: GoogleIcon, glow: "rgba(66,133,244,0.22)", bg: "rgba(66,133,244,0.12)" },
                     { provider: "apple" as const, label: "Apple", Icon: AppleIcon, glow: "rgba(255,255,255,0.12)", bg: "rgba(255,255,255,0.08)" },
-                    { provider: "facebook" as const, label: "Facebook", Icon: FacebookIcon, glow: "rgba(24,119,242,0.22)", bg: "rgba(24,119,242,0.12)" },
+                    
                   ] as const
                 ).map(({ provider, label, Icon, glow, bg }) => (
                   <button
