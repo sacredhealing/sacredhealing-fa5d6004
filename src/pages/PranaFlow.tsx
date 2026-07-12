@@ -157,14 +157,6 @@ const PranaFlow: React.FC = () => {
     ['Price', 'Free', '19€/mo', '45€/mo'],
   ];
 
-  const testimonials = [
-    { text: "The Guru knows my chart better than any human astrologer I've paid hundreds of euros to. I ask it about my week every Monday morning.", name: 'Mia K. · Helsinki' },
-    { text: "The Ayurveda scan told me something I had suspected for 10 years — I am a Vata-dominant constitution and I had been living as if I were Pitta. Three weeks of adjustments changed everything.", name: 'Lucas R. · Berlin' },
-    { text: "I fall asleep to the Yoga Nidra recordings every night. I haven't needed sleeping pills since I subscribed. That alone is worth 19€.", name: 'Ingrid H. · Oslo' },
-    { text: "The Vastu analysis told me my workspace was in the Rahu zone of my flat. I moved my desk — it sounds crazy but my concentration doubled.", name: 'Thomas W. · Amsterdam' },
-    { text: "19€ for a full Vedic astrology system, Ayurveda coach, Vastu guide AND a sound library? I was paying 120€/month between different apps for less.", name: 'Sofia M. · Stockholm' },
-  ];
-
   const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
   .pf-wrap *,:root{--gold:#D4AF37;--black:#050505}
@@ -491,19 +483,6 @@ const PranaFlow: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="pf-section-wrap" style={{ marginTop: 56 }}>
-          <div className="pf-section-label">◈ From the field</div>
-        </div>
-        <div className="pf-t-scroll">
-          {testimonials.map((t, i) => (
-            <div key={i} className="pf-t-card">
-              <div className="pf-t-stars">★★★★★</div>
-              <p className="pf-t-text">&ldquo;{t.text}&rdquo;</p>
-              <div className="pf-t-name">{t.name}</div>
-            </div>
-          ))}
         </div>
 
         <div className="pf-section-wrap">

@@ -206,13 +206,6 @@ const AkashaInfinity: React.FC = () => {
     ['Price', 'Free / 45€ mo', '2997€ once'],
   ];
 
-  const testimonials = [
-    { text: 'The Akashic Decoder was the most precise soul map I have ever received. Worth every euro.', name: 'Elena' },
-    { text: 'One payment and I have everything. No more subscription anxiety. Infinity is real.', name: 'Marcus' },
-    { text: 'Quantum Apothecary + Virtual Pilgrimage alone would cost more. This is a gift.', name: 'Priya' },
-    { text: 'I referred three friends. The 30% commission is transparent and fair.', name: 'Thomas' },
-  ];
-
   const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
   .ai-wrap *,:root{--gold:#D4AF37;--purple:139,92,246;--black:#050505}
@@ -438,18 +431,6 @@ const AkashaInfinity: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-        </section>
-
-        <section className="ai-section">
-          <div className="ai-section-label">◈ What Others Say</div>
-          <div className="ai-testimonials">
-            {testimonials.map((t, i) => (
-              <div key={i} className="ai-test-card">
-                <div className="text">&ldquo;{t.text}&rdquo;</div>
-                <div className="name">— {t.name}</div>
-              </div>
-            ))}
           </div>
         </section>
 

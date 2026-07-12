@@ -144,13 +144,6 @@ const SiddhaQuantum: React.FC = () => {
     { q: 'Is there an annual option?', a: 'Yes. For better value, check the main Membership page for annual and lifetime options.' },
   ];
 
-  const testimonials = [
-    { text: 'The Nadi Scanner changed how I see my practice. The scantions are eerily accurate.', name: 'Mira' },
-    { text: 'Finally one place for Jyotish, healing audios, and community. Worth every euro.', name: 'Lars' },
-    { text: 'Sri Yantra Shield + daily readings = my morning ritual. Game changer.', name: 'Sofia' },
-    { text: 'Upgraded from free and never looked back. Full field access is real.', name: 'David' },
-  ];
-
   return (
     <div
       style={{
@@ -392,18 +385,6 @@ const SiddhaQuantum: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-        </section>
-
-        <section className="sq-section">
-          <div className="sq-section-label">◈ What Others Say</div>
-          <div className="sq-testimonials">
-            {testimonials.map((t, i) => (
-              <div key={i} className="sq-test-card">
-                <div className="text">&ldquo;{t.text}&rdquo;</div>
-                <div className="name">— {t.name}</div>
-              </div>
-            ))}
           </div>
         </section>
 
