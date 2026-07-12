@@ -274,11 +274,12 @@ const Auth: React.FC = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    const nextPath = postLoginRedirect || '/dashboard';
     try {
-      sessionStorage.setItem('postLoginRedirect', postLoginRedirect || '/dashboard');
+      sessionStorage.setItem('postLoginRedirect', nextPath);
     } catch {}
     const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     if (result.error) {
       setIsGoogleLoading(false);
@@ -291,7 +292,7 @@ const Auth: React.FC = () => {
     }
     if (result.redirected) return;
     // Session already set — navigate to intended destination
-    navigate(postLoginRedirect || '/dashboard', { replace: true });
+    navigate(nextPath, { replace: true });
   };
 
   if (authLoading) {
