@@ -137,9 +137,9 @@ const SiddhaQuantum: React.FC = () => {
   };
 
   const faqItems = [
-    { q: 'What is the Universal Field?', a: 'The Siddha–Quantum tier unlocks the full 72,000 Nadi scanner, practice scantions, deep access across all 25 Siddha Portal academies, healing audios, and the Sri Yantra EMF & fear-field protection shield.' },
+    { q: 'What is the Universal Field?', a: 'The Siddha–Quantum tier unlocks the Digital Soul Scan, deep access across all 25 Siddha Portal academies, healing audios, and the Sri Yantra EMF & fear-field protection shield.' },
     { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from your account or Stripe customer portal. No lock-in. Access continues until the end of your billing period.' },
-    { q: 'How does the Nadi Scanner work?', a: 'The Digital Nadi Scanner uses bio-sync technology to map your nadis and generate practice scantions. Results sync to your Soul Vault and Jyotish profile.' },
+    { q: 'How does the Digital Soul Scan work?', a: 'A real biometric scan using your phone camera and voice — no wearable needed. Scan before your practice, do your sadhana, then scan after. It reads your heart rate, HRV, and stress index via rPPG (a genuine, non-contact technique) and shows you the actual before/after shift.' },
     { q: 'What is the Sri Yantra Shield?', a: 'The Sri Yantra Universal Protection Shield is active across the app — it supports EMF coherence and fear-field dissolution as you practice.' },
     { q: 'Do I get full access to all 25 Siddha Portal academies?', a: 'Most modules in every academy, yes. The very deepest modules in a handful of academies (Mudra, Kriya Yoga, and others) are reserved for Akasha-Infinity. Siddha-Quantum unlocks substantially more than Prana-Flow in each one.' },
     { q: 'Is there a chat limit?', a: '25 questions a day, shared across the Jyotish Guru, Ayurveda Vaidya, and Vastu chat combined — up from 15/day on Prana-Flow. Resets at midnight UTC.' },
@@ -237,7 +237,7 @@ const SiddhaQuantum: React.FC = () => {
           <div className="sq-badge">◈ Universal Path</div>
           <h1>Siddha–Quantum</h1>
           <div className="sq-hero-sub">Universal Field Node</div>
-          <p className="sq-hero-desc">Full Nadi Scanner, Practice Scantions, deep Siddha Portal access, Healing Audios & Transmissions, and the Sri Yantra Universal Protection Shield. One subscription, the whole field open.</p>
+          <p className="sq-hero-desc">Digital Soul Scan (camera-based before/after biometrics), deep Siddha Portal access, Healing Audios & Transmissions, and the Sri Yantra Universal Protection Shield. One subscription, the whole field open.</p>
           <div className="sq-mandala">
             <div className="sq-ring sq-ring-1" />
             <div className="sq-ring sq-ring-2" />
@@ -255,8 +255,7 @@ const SiddhaQuantum: React.FC = () => {
         <section className="sq-section">
           <div className="sq-section-label">◈ Everything in the Universal Field</div>
           {[
-            { title: 'Digital Nadi Scanner', desc: '72,000 Nadi bio-sync, practice-based scantions' },
-            { title: 'Practice Scantions', desc: 'Printed results that sync to your Soul Vault' },
+            { title: 'Digital Soul Scan', desc: 'Real camera + voice biometric scan (rPPG) — before and after your practice. See your actual heart rate, HRV, and stress index shift.' },
             { title: 'Siddha Portal Access', desc: 'Deep access across all 25 academies — most modules in each, with the very deepest reserved for Akasha-Infinity' },
             { title: 'Full Healing Audios & Transmissions', desc: 'All frequencies and transmissions unlocked' },
             { title: 'Sri Yantra Universal Shield', desc: 'EMF coherence & fear-field protection across the app' },
@@ -279,7 +278,7 @@ const SiddhaQuantum: React.FC = () => {
         <section className="sq-section">
           <div className="sq-section-label">◈ Portals You Enter</div>
           <div className="sq-portal-grid">
-            {['Vedic Astrology', 'Agni Protocols', 'Siddha Portal', 'Siddhi Acceleration', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
+            {['Vedic Astrology', 'Digital Soul Scan', 'Siddha Portal', 'Siddhi Acceleration', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
               <div key={title} className="sq-portal-card">
                 <div className="sq-icon-wrap" style={{ margin: '0 auto' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5">
@@ -373,8 +372,7 @@ const SiddhaQuantum: React.FC = () => {
                   ['Breathing Protocols', 'Limited', 'Full library'],
                   ['Community Chat & Live', 'Access', 'Access'],
                   ['Ayurveda & Jyotish', 'Basic', 'Full + Chat'],
-                  ['Digital Nadi Scanner', '—', 'Included'],
-                  ['Practice Scantions', '—', 'Included'],
+                  ['Digital Soul Scan', '—', 'Included'],
                   ['Siddha Portal', 'Entry modules', 'Deep access'],
                   ['Sri Yantra Shield', '—', 'Active'],
                   ['Price', 'Free', '45€/mo'],
