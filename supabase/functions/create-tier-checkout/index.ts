@@ -40,7 +40,7 @@ serve(async (req) => {
     const tier = TIER_CONFIG[tierName];
     if (tierName === "ATMA_SEED" || tier.price === 0) throw new Error("ATMA_SEED is free; no checkout required.");
 
-    const priceId = tier.priceIdEnv ? Deno.env.get(tier.priceIdEnv) : null;
+    const priceId = (tier.priceIdEnv ? Deno.env.get(tier.priceIdEnv) : null) || tier.fallbackPriceId || null;
     if (!priceId) throw new Error(`Stripe price not configured for tier: ${tierName}. Set env var: ${tier.priceIdEnv}`);
 
     const authHeader = req.headers.get("Authorization");
