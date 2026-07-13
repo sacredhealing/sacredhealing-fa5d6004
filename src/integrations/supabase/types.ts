@@ -2121,6 +2121,48 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_abandonment_log: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+          price_label: string | null
+          recovered_at: string | null
+          recovery_email_sent_at: string | null
+          session_url: string | null
+          stripe_session_id: string
+          tier_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id?: string
+          price_label?: string | null
+          recovered_at?: string | null
+          recovery_email_sent_at?: string | null
+          session_url?: string | null
+          stripe_session_id: string
+          tier_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+          price_label?: string | null
+          recovered_at?: string | null
+          recovery_email_sent_at?: string | null
+          session_url?: string | null
+          stripe_session_id?: string
+          tier_slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       clawbot_affiliate_rates: {
         Row: {
           l1_pct: number
