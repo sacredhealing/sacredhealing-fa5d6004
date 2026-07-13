@@ -240,11 +240,12 @@ function buildLakshmiHTML(
       </div>
     </td></tr>` : "";
 
+  const isDrop = featured?.kind === 'drop';
   const featuredBlock = featured ? `
     <tr><td style="padding:16px 0 0;">
-      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 20px;">
-        <div style="font-size:8px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:6px;">TODAY IN THE NEXUS</div>
-        <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;"><strong style="color:#D4AF37;">${featured.title}</strong> · ${featured.duration_label} — <a href="https://siddhaquantumnexus.com${featured.url_path}" style="color:#D4AF37;">Listen now →</a></p>
+      <div style="background:${isDrop ? 'rgba(212,175,55,0.06)' : 'rgba(255,255,255,0.03)'};border:1px solid ${isDrop ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.08)'};border-radius:14px;padding:16px 20px;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:6px;">${isDrop ? '◈ THIS WEEK — EXCLUSIVE DROP' : 'TODAY IN THE NEXUS'}</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0;"><strong style="color:#D4AF37;">${featured.title}</strong> · ${featured.duration_label} — <a href="https://siddhaquantumnexus.com${featured.url_path}" style="color:#D4AF37;">${isDrop ? 'See it now →' : 'Listen now →'}</a></p>
       </div>
     </td></tr>` : "";
 
