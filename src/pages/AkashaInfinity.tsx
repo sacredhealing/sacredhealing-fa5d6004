@@ -181,7 +181,7 @@ const AkashaInfinity: React.FC = () => {
   const portals = [
     'Quantum Apothecary',
     'Virtual Pilgrimage',
-    'Palm Reading Portal',
+    'Palm Oracle Master Practitioner',
   ];
 
   const truthItems = [
