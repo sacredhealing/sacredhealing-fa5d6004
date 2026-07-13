@@ -13,6 +13,7 @@ import { SriYantra } from '@/components/dashboard/SriYantra';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
+import { MONTHS as CERT_MONTHS } from '@/data/practitionerCertificationData';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { IntentionThreshold } from '@/components/meditation/IntentionThreshold';
@@ -432,6 +433,7 @@ const Healing: React.FC = () => {
   const [pathDays, setPathDays] = React.useState<PathDay[]>([]);
   const [pathDaysLoading, setPathDaysLoading] = React.useState(false);
   const [expandedPath, setExpandedPath] = React.useState<string | null>(null);
+  const [expandedCertMonth, setExpandedCertMonth] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     if (selectedPath) {
@@ -1121,6 +1123,99 @@ const Healing: React.FC = () => {
             })}
           </div>
         )}
+      </section>
+
+      <div className="h-divider" />
+
+      {/* ══ THE SIDDHA HEALER'S SOVEREIGN PATH — FULL 12-MONTH CERTIFICATION ══ */}
+      {/* Moved here from the standalone /practitioner-certification page, additive to */}
+      {/* the tracker section above (which stays exactly as it was) — this is the full */}
+      {/* educational curriculum itself: 12 months, initiation, teaching, mantra, */}
+      {/* exercises, reflections per month. English content shown here (the data */}
+      {/* supports sv/no/es too — full page keeps multi-language via lang toggle). */}
+      <section style={{ padding: '0 22px 40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>12-Month Certification · Full Curriculum</div>
+          <div className="h-section-title h-shimmer">The Siddha Healer's Sovereign Path</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 8, lineHeight: 1.7 }}>
+            The complete practitioner certification — initiation, teaching, mantra, and practice for each of the 12 months.
+          </div>
+          <Link to="/practitioner-certification" style={{ display: 'inline-block', marginTop: 10, fontSize: 11, color: '#D4AF37', textDecoration: 'underline' }}>
+            Open full certification page →
+          </Link>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {CERT_MONTHS.map((mo) => {
+            const isOpen = expandedCertMonth === mo.n;
+            const title = mo.title.en;
+            const sub = mo.sub.en;
+            return (
+              <div key={mo.n} style={{
+                background: 'rgba(255,255,255,0.018)',
+                border: `1px solid ${isOpen ? 'rgba(212,175,55,0.38)' : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: 22,
+                overflow: 'hidden',
+                transition: 'border-color .3s',
+              }}>
+                <div
+                  onClick={() => setExpandedCertMonth(isOpen ? null : mo.n)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', cursor: 'pointer' }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, background: `${mo.color}18`, border: `1px solid ${mo.color}55`, color: mo.color,
+                  }}>
+                    {mo.glyph}
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)' }}>Month {mo.n} · {mo.theme.join(' · ')}</div>
+                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.88)', marginTop: 2 }}>{title}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{sub}</div>
+                  </div>
+                  {isOpen ? <ChevronUp size={16} color="rgba(212,175,55,0.6)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.3)" />}
+                </div>
+
+                {isOpen && (
+                  <div style={{ padding: '0 18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>Initiation</div>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>{mo.initiation}</p>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>Teaching</div>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{mo.teaching}</p>
+                    </div>
+                    <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.12)' }}>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 5 }}>Mantra — {mo.mantra.text}</div>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 6 }}><em>{mo.mantra.pronunciation}</em></p>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 6 }}>{mo.mantra.meaning}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>{mo.mantra.practice}</p>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 6 }}>Exercises</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {mo.exercises.map((ex, i) => (
+                          <p key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.65 }}>◈ {ex}</p>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 6 }}>Reflections</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {mo.reflections.map((r, i) => (
+                          <p key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', lineHeight: 1.65 }}>{r}</p>
+                        ))}
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.6)', lineHeight: 1.7, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>{mo.outcome}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <div className="h-divider" />
