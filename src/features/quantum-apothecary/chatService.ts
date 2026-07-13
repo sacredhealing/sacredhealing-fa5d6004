@@ -1,4 +1,5 @@
 import type { Message } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 const CHAT_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/quantum-apothecary-chat";
 
@@ -56,6 +57,11 @@ function supabaseAnonHeader(): string {
           import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
 }
 
+async function supabaseAuthHeader(): Promise<string> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token || supabaseAnonHeader();
+}
+
 export interface UserImagePayload {
   base64: string;
   mimeType: string;
@@ -100,7 +106,7 @@ export async function streamSQIResponse({
   onError,
 }: StreamSQIParams): Promise<void> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseKey = supabaseAnonHeader();
+  const supabaseKey = await supabaseAuthHeader();
 
   const controller = new AbortController();
 
@@ -225,7 +231,7 @@ export async function scanNadiFromPalm(options: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${supabaseAnonHeader()}`,
+      Authorization: `Bearer ${await supabaseAuthHeader()}`,
     },
     body: JSON.stringify({
       scanMode: true,
