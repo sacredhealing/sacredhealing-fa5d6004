@@ -4,6 +4,7 @@ import { Star, Calendar, Heart, Users, MessageCircle, Sparkles, Check, Loader2, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useStargateAccess } from '@/hooks/useStargateAccess';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -35,6 +36,10 @@ const StargateMembership = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { tier } = useMembership();
+  const isPayingMember = ['prana-flow', 'siddha-quantum'].includes((tier || '').toLowerCase());
+  const isAkashaInfinity = (tier || '').toLowerCase() === 'akasha-infinity';
+  const stargatePriceLabel = isAkashaInfinity ? 'Included Free' : isPayingMember ? '€6/mo' : '€25/mo';
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { isStargateMember, loading: stargateLoading } = useStargateAccess();
   const [searchParams] = useSearchParams();
@@ -86,6 +91,10 @@ const StargateMembership = () => {
     }
     if (isAdmin) {
       toast.info(t('stargate.adminCheckoutSkipped'));
+      return;
+    }
+    if (isAkashaInfinity) {
+      toast.success('Stargate is included free with Akasha-Infinity — no checkout needed.');
       return;
     }
 
@@ -147,7 +156,7 @@ const StargateMembership = () => {
   const SubscribeButton: React.FC<{ full?: boolean }> = ({ full }) => (
     <button
       onClick={handleSubscribe}
-      disabled={loading || (isAdmin && !!user)}
+      disabled={loading || (isAdmin && !!user) || (isAkashaInfinity && !!user)}
       className={`btn-siddha disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 ${
         full ? 'w-full sm:w-auto' : ''
       }`}
@@ -161,6 +170,11 @@ const StargateMembership = () => {
         <span className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
           {t('stargate.adminFullAccessBadge')}
+        </span>
+      ) : isAkashaInfinity && user ? (
+        <span className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          Included with Akasha-Infinity
         </span>
       ) : (
         <span className="flex items-center gap-2">
@@ -251,8 +265,7 @@ const StargateMembership = () => {
           </p>
 
           <div className="flex items-center justify-center gap-2 mb-8">
-            <span className="text-4xl font-black gold-glow">$25</span>
-            <span className="text-white/40">/månad</span>
+            <span className="text-4xl font-black gold-glow">{stargatePriceLabel}</span>
           </div>
 
           <SubscribeButton />
@@ -366,8 +379,7 @@ const StargateMembership = () => {
           </p>
 
           <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-3xl font-black gold-glow">$25</span>
-            <span className="text-white/40">/månad</span>
+            <span className="text-3xl font-black gold-glow">{stargatePriceLabel}</span>
           </div>
 
           <SubscribeButton />

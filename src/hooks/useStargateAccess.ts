@@ -2,10 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useMembership } from '@/hooks/useMembership';
 
 /**
  * True if user can access Stargate Community:
  * - Admin (always has access)
+ * - Akasha-Infinity member (included free — consistent with that tier's
+ *   "complete access, everything included" positioning)
  * - Has active Stargate subscription (NOT regular premium)
  * - Was manually added to stargate_community_members by admin
  * - Has active admin_granted_access row: program + access_id stargate, or access_type stargate
@@ -13,6 +16,8 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 export const useStargateAccess = () => {
   const { user } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { tier } = useMembership();
+  const isAkashaInfinity = (tier || '').toLowerCase() === 'akasha-infinity';
   const [isManualAdd, setIsManualAdd] = useState(false);
   const [hasAdminGrant, setHasAdminGrant] = useState(false);
   const [hasStargateSubscription, setHasStargateSubscription] = useState(false);
@@ -95,10 +100,10 @@ export const useStargateAccess = () => {
     check();
   }, [check]);
 
-  // Access granted if: admin OR subscription OR manual table OR admin_granted_access Stargate row
-  // NOTE: Regular premium members (tier !== 'stargate') do NOT get access
+  // Access granted if: admin OR Akasha-Infinity OR subscription OR manual table OR admin_granted_access Stargate row
+  // NOTE: Regular premium members (tier !== 'stargate' and tier !== 'akasha-infinity') do NOT get access
   const isStargateMember =
-    isAdmin || hasStargateSubscription || isManualAdd || hasAdminGrant;
+    isAdmin || isAkashaInfinity || hasStargateSubscription || isManualAdd || hasAdminGrant;
 
   /** True until Stargate checks AND admin RPC finish — avoids showing "locked" while has_role is still loading. */
   const loading = checksLoading || (!!user && adminLoading);

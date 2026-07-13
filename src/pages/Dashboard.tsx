@@ -154,7 +154,7 @@ const LifeBookNexusBlock: React.FC<{ userId: string }> = ({ userId }) => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div>
           <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)', marginBottom: 3 }}>
-            Akasha Archive
+            Divine Transmissions
           </div>
           <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>
             Your LifeBook
