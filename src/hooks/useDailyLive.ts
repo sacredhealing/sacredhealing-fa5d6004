@@ -145,7 +145,14 @@ export function useDailyLive() {
       .order('started_at', { ascending: false });
     if (channelId) query = query.eq('channel_id', channelId);
     const { data } = await query;
-    return ((data as unknown) as DailySession[] | null) || [];
+    const rows = ((data as unknown) as DailySession[] | null) || [];
+    // Daily.co rooms are created with a 4-hour exp. A DB row stuck on
+    // status='active' past that point is a ghost session (host never hit
+    // END LIVE, or the app crashed/lost connection) — the room itself is
+    // already gone. Hide these instead of showing viewers a dead "JOIN LIVE".
+    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+    const now = Date.now();
+    return rows.filter((s) => now - new Date(s.started_at).getTime() < FOUR_HOURS_MS);
   }, []);
 
   return useMemo(

@@ -1429,7 +1429,18 @@ const Community = () => {
             else console.error("Failed to create chat room:", error);
           }
         }
-        if (room?.id) setRoomIds((prev) => ({ ...prev, [channelId]: room!.id }));
+        if (room?.id) {
+          setRoomIds((prev) => ({ ...prev, [channelId]: room!.id }));
+          // CRITICAL: RLS on chat_messages only allows SELECT for rows in chat_members.
+          // Without this, users can send messages (INSERT is open) but nobody —
+          // including the sender after a refresh — can read them back. This upsert
+          // makes every user who opens a channel they already have UI access to a
+          // real room member, restoring two-way group chat.
+          const { error: joinError } = await supabase
+            .from("chat_members")
+            .upsert({ room_id: room.id, user_id: user.id }, { onConflict: "room_id,user_id" });
+          if (joinError) console.warn("Could not join chat room as member:", channelId, joinError);
+        }
       } catch (e) {
         console.warn("Could not ensure room for channel:", channelId, e);
       }
@@ -1686,6 +1697,21 @@ const Community = () => {
     if (!user) return;
     setShowGoLiveOptions(false);
     setShowGoLiveDialog(false);
+    // Clean up any of this host's stale active sessions in this channel first,
+    // so a crashed/forgotten previous session can never leave a ghost "live" pill.
+    try {
+      const { data: stale } = await supabase
+        .from("community_live_sessions" as any)
+        .select("id")
+        .eq("channel_id", channelId)
+        .eq("host_user_id", user.id)
+        .eq("status", "active");
+      for (const row of ((stale as any[]) || [])) {
+        await daily.endSession(row.id);
+      }
+    } catch (e) {
+      console.warn("Could not clean up stale sessions before going live:", e);
+    }
     const meetingTitle = customTitle?.trim() || `Live in ${channelName}`;
     const allowNonAdmin = channelId === "stargate" && isStargateMember && !isAdmin;
     const extras = channelId === "stargate"
