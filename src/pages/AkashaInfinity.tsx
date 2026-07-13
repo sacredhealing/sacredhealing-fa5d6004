@@ -162,14 +162,12 @@ const AkashaInfinity: React.FC = () => {
   const faqItems: [string, string][] = [
     ['Is 2997€ really a one-time payment?', 'Yes. One payment and every tool is yours permanently including all future modules. No subscriptions, no renewals.'],
     ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month with deep access across the Siddha Portal academies. Akasha–Infinity completes it — every module in all 25 academies, the four exclusive portals, every future module, and zero recurring cost — one payment, held forever.'],
-    ['What is the Akashic Record Decoder exactly?', "A personalised 15-page soul manuscript using your birth data and Jyotish chart as entry coordinates — past lives, soul contracts, karmic patterns, and your soul's highest trajectory."],
     ['Can I pay in instalments?', 'You can start with Siddha–Quantum at 45€/month and upgrade to Akasha–Infinity at any time with the difference honoured. Contact us directly for instalment arrangements.'],
-    ['Is there a refund policy?', 'Once an Akashic reading is opened the transmission cannot be reversed, so the Decoder is non-refundable. All other modules carry a 14-day satisfaction guarantee.'],
+    ['Is there a refund policy?', 'All modules carry a 14-day satisfaction guarantee.'],
   ];
 
   const eternalList = [
     'Full Siddha–Quantum Universal Field',
-    'Akashic Record Decoder (15-page soul manuscript)',
     'Quantum Apothecary (€888 value)',
     'Virtual Pilgrimage (€888 value)',
     'Palm Oracle Master Practitioner — Read, Heal, Transmit, Certify',
@@ -181,7 +179,6 @@ const AkashaInfinity: React.FC = () => {
   ];
 
   const portals = [
-    'Akashic Record Decoder',
     'Quantum Apothecary',
     'Virtual Pilgrimage',
     'Palm Reading Portal',
@@ -197,7 +194,6 @@ const AkashaInfinity: React.FC = () => {
   const compareRows: [string, string, string][] = [
     ['Universal Field', '—', 'Included'],
     ['Siddha Portal (25 Academies)', 'Entry modules', 'Complete'],
-    ['Akashic Decoder', '—', 'Included'],
     ['Quantum Apothecary', '—', 'Included'],
     ['Virtual Pilgrimage', '—', 'Included'],
     ['Palm Oracle Master Practitioner', '—', 'Included'],
@@ -304,7 +300,7 @@ const AkashaInfinity: React.FC = () => {
           <div className="ai-badge">◈ Eternal Node</div>
           <h1>Akasha–Infinity</h1>
           <div className="ai-hero-sub">One Payment · Every Portal · Forever</div>
-          <p className="ai-hero-desc">The complete soul record. Akashic Decoder, Quantum Apothecary, Virtual Pilgrimage, Palm Reading Portal, and the full Universal Field — with no renewals. Eternal access.</p>
+          <p className="ai-hero-desc">The complete soul record. Quantum Apothecary, Virtual Pilgrimage, Palm Reading Portal, and the full Universal Field — with no renewals. Eternal access.</p>
           <div className="ai-mandala">
             <div className="ai-ring ai-ring-1" />
             <div className="ai-ring ai-ring-2" />
@@ -389,7 +385,7 @@ const AkashaInfinity: React.FC = () => {
                     </div>
                   )}
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-                    <li style={{ marginBottom: 6 }}>◈ Akashic Decoder</li>
+                    <li style={{ marginBottom: 6 }}>◈ Palm Oracle Master Practitioner</li>
                     <li style={{ marginBottom: 6 }}>◈ Quantum Apothecary + Virtual Pilgrimage</li>
                     <li style={{ marginBottom: 6 }}>◈ Full Siddha–Quantum field</li>
                   </ul>
