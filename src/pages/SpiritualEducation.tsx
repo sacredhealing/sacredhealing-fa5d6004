@@ -181,7 +181,7 @@ const SpiritualEducation: React.FC = () => {
       if (data.alreadyWatched) {
         toast.info(data.message);
       } else {
-        toast.success(`🎉 You earned ${SHC_REWARD} SHC for watching this video!`);
+        toast.success(`🎉 You earned +${SHC_REWARD} points for watching this video!`);
         setWatchedVideos(prev => new Set([...prev, selectedVideo.id]));
         setSessionRewardedVideos(prev => new Set([...prev, selectedVideo.id]));
         addOptimisticBalance(SHC_REWARD);
@@ -200,7 +200,7 @@ const SpiritualEducation: React.FC = () => {
     }
 
     if (watchedVideos.has(selectedVideo.id) || sessionRewardedVideos.has(selectedVideo.id)) {
-      toast.info('You already earned SHC for this video');
+      toast.info('You already earned points for this video');
       return;
     }
 
@@ -218,7 +218,7 @@ const SpiritualEducation: React.FC = () => {
       if (data.alreadyWatched) {
         toast.info(data.message);
       } else {
-        toast.success(`🎉 You earned ${SHC_REWARD} SHC!`);
+        toast.success(`🎉 You earned +${SHC_REWARD} points!`);
         setWatchedVideos(prev => new Set([...prev, selectedVideo.id]));
         setSessionRewardedVideos(prev => new Set([...prev, selectedVideo.id]));
         addOptimisticBalance(SHC_REWARD);
@@ -265,7 +265,7 @@ const SpiritualEducation: React.FC = () => {
       {/* Header */}
       <header className="mb-6 animate-fade-in">
         <h1 className="text-3xl font-heading font-bold text-foreground">Spiritual Education</h1>
-        <p className="text-muted-foreground mt-1">Watch videos & earn {SHC_REWARD} SHC each</p>
+        <p className="text-muted-foreground mt-1">Watch videos & earn {SHC_REWARD} points each</p>
       </header>
 
       {/* Search Bar */}
@@ -295,7 +295,7 @@ const SpiritualEducation: React.FC = () => {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold text-accent">{watchedVideos.size * SHC_REWARD} SHC</p>
+            <p className="text-lg font-bold text-accent">{watchedVideos.size * SHC_REWARD} pts</p>
             <p className="text-xs text-muted-foreground">Total earned</p>
           </div>
         </div>
@@ -341,7 +341,7 @@ const SpiritualEducation: React.FC = () => {
                   <p className="text-xs text-muted-foreground mt-1">{video.channelTitle}</p>
                   <div className="flex items-center gap-1 mt-2">
                     <Award className="w-3 h-3 text-accent" />
-                    <span className="text-xs text-accent">+{SHC_REWARD} SHC</span>
+                    <span className="text-xs text-accent">+{SHC_REWARD} pts</span>
                   </div>
                 </div>
               </div>
@@ -429,7 +429,7 @@ const SpiritualEducation: React.FC = () => {
                       ) : (
                         <>
                           <Award className="w-4 h-4" />
-                          {videoEnded ? `Claim ${SHC_REWARD} SHC Reward` : `Watch to Earn ${SHC_REWARD} SHC`}
+                          {videoEnded ? `Claim ${SHC_REWARD} Points` : `Watch to Earn ${SHC_REWARD} Points`}
                         </>
                       )}
                     </Button>
@@ -442,7 +442,7 @@ const SpiritualEducation: React.FC = () => {
                   </div>
                 ) : (
                   <p className="text-center text-sm text-muted-foreground mt-4">
-                    Sign in to earn SHC rewards for watching videos
+                    Sign in to earn rewards for watching videos
                   </p>
                 )}
 

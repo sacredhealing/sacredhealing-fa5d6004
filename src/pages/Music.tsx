@@ -979,7 +979,6 @@ const Music: React.FC = () => {
               <li>Full streaming — all {tracks.length} tracks unlimited</li>
               <li>Nadi Scanner — unlimited daily scans</li>
               <li>Jyotish frequency prescription (full depth)</li>
-              <li>33 SHC Vedic coins per track streamed</li>
               <li className="dim">Downloads (Siddha-Quantum+)</li>
             </ul>
             <button className="cta-gold" onClick={handleUpgrade}>Start Free — 7 Days, Then €19/mo</button>

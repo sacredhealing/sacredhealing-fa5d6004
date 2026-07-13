@@ -351,7 +351,7 @@ const CreativeSoulStore = () => {
                       ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                       : <div className="text-xl font-bold text-white">€149</div>}
                     <div className="text-[11px] text-white/55 mt-0.5">Lifetime Access</div>
-                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
+                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">New</Badge>
                   </button>
                   <button
                     onClick={() => handleMeditationPurchase('monthly')}
@@ -362,7 +362,7 @@ const CreativeSoulStore = () => {
                       ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                       : <div className="text-xl font-bold text-white">€14.99</div>}
                     <div className="text-[11px] text-white/55 mt-0.5">/ month</div>
-                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
+                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">New</Badge>
                   </button>
                   <button
                     onClick={() => handleMeditationPurchase('single')}
@@ -373,7 +373,7 @@ const CreativeSoulStore = () => {
                       ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                       : <div className="text-xl font-bold text-white">€9.99</div>}
                     <div className="text-[11px] text-white/55 mt-0.5">One Meditation</div>
-                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
+                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">New</Badge>
                   </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -450,7 +450,7 @@ const CreativeSoulStore = () => {
                         ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                         : <div className="text-xl font-bold text-white">€144</div>}
                       <div className="text-[11px] text-white/55 mt-0.5">Lifetime Access</div>
-                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+2000 SHC</Badge>
+                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">New</Badge>
                     </button>
                     <button
                       onClick={() => handleOraclePurchase('monthly')}
@@ -461,7 +461,7 @@ const CreativeSoulStore = () => {
                         ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                         : <div className="text-xl font-bold text-white">€22</div>}
                       <div className="text-[11px] text-white/55 mt-0.5">/ month</div>
-                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
+                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">New</Badge>
                     </button>
                     <button
                       onClick={() => handleOraclePurchase('single')}
@@ -472,7 +472,7 @@ const CreativeSoulStore = () => {
                         ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                         : <div className="text-xl font-bold text-white">€11</div>}
                       <div className="text-[11px] text-white/55 mt-0.5">One Reading</div>
-                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+500 SHC</Badge>
+                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">New</Badge>
                     </button>
                   </div>
                 )}
