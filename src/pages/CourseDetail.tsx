@@ -582,20 +582,9 @@ const CourseDetail: React.FC = () => {
                         )}
                         Pay with Card
                       </Button>
-                      {course.price_shc > 0 && (
-                        <Button
-                          onClick={() => handleEnroll('crypto')}
-                          disabled={isEnrolling}
-                          className="bg-primary"
-                        >
-                          {isEnrolling ? (
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          ) : (
-                            <Wallet className="w-4 h-4 mr-2" />
-                          )}
-                          Pay with SHC
-                        </Button>
-                      )}
+                      {/* 'Pay with SHC' button intentionally not rendered
+                          anymore (SHC hidden from users) — handleEnroll('crypto')
+                          left intact as infrastructure. */}
                     </>
                   )}
                 </div>
