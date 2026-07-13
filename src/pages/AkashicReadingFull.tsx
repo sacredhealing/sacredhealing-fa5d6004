@@ -24,6 +24,13 @@ function houseFromBirthDate(birthDate: string | null): number {
 /** Full 15-page manuscript after purchase — Deep Siddha Logic + Certificate of Origin PDF. */
 const AkashicReadingFull: React.FC = () => {
   const navigate = useNavigate();
+  // HIDDEN (temporary) — matches AkashicRecords.tsx, same reason. Hook
+  // declared unconditionally here; the actual early-return happens right
+  // before the JSX render below, after every other hook in this component.
+  const HIDDEN = true;
+  useEffect(() => {
+    if (HIDDEN) navigate('/dashboard', { replace: true });
+  }, [navigate]);
   const { user } = useAuth();
   const { reading } = useAIVedicReading();
   const { hasAccess, isLoading } = useAkashicAccess(user?.id);
@@ -181,6 +188,7 @@ const AkashicReadingFull: React.FC = () => {
     );
   }
 
+  if (HIDDEN) return null;
   if (!hasAccess) return null;
 
   const houseLabel = record.title;
