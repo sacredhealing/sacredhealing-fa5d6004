@@ -3432,6 +3432,41 @@ export type Database = {
           },
         ]
       }
+      divine_transmission_purchases: {
+        Row: {
+          amount_usd: number
+          id: string
+          purchased_at: string
+          stripe_session_id: string | null
+          transmission_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_usd: number
+          id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          transmission_id: string
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          transmission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "divine_transmission_purchases_transmission_id_fkey"
+            columns: ["transmission_id"]
+            isOneToOne: false
+            referencedRelation: "divine_transmissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       divine_transmissions: {
         Row: {
           audio_url_en: string | null
@@ -3443,6 +3478,7 @@ export type Database = {
           duration_seconds: number
           id: string
           is_free: boolean
+          price_usd: number | null
           published: boolean
           required_tier: number
           series_name: string | null
@@ -3460,6 +3496,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           is_free?: boolean
+          price_usd?: number | null
           published?: boolean
           required_tier?: number
           series_name?: string | null
@@ -3477,6 +3514,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           is_free?: boolean
+          price_usd?: number | null
           published?: boolean
           required_tier?: number
           series_name?: string | null
