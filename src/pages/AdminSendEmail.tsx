@@ -9,12 +9,16 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 const AdminSendEmail = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeCount, setActiveCount] = useState(0);
   const [sending, setSending] = useState(false);
+  const [testSending, setTestSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
 
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -26,11 +30,11 @@ const AdminSendEmail = () => {
     return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f1ec;font-family:Georgia,serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
 <div style="background:linear-gradient(135deg,#8B5E3C,#A0522D);padding:30px;text-align:center;">
-<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;letter-spacing:1px;">Siddha Quantum Nexus</h1>
+<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;letter-spacing:1px;">Sacred Healing</h1>
 </div>
 <div style="padding:30px 35px;">${paragraphs}</div>
 <div style="background:#f4f1ec;padding:20px;text-align:center;font-size:12px;color:#999;">
-<p style="margin:0;">Siddha Quantum Nexus &bull; Spiritual Growth &amp; Wellness</p>
+<p style="margin:0;">Sacred Healing &bull; Spiritual Growth &amp; Wellness</p>
 </div></div></body></html>`;
   };
 
@@ -44,6 +48,34 @@ const AdminSendEmail = () => {
     };
     fetchCount();
   }, []);
+
+  useEffect(() => {
+    if (user?.email && !testEmail) setTestEmail(user.email);
+  }, [user, testEmail]);
+
+  const handleTestSend = async () => {
+    if (!testEmail.trim()) {
+      toast.error('Enter an email address to send the test to');
+      return;
+    }
+    if (!subject.trim() || !message.trim()) {
+      toast.error('Subject and message are required');
+      return;
+    }
+    setTestSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-bulk-email', {
+        body: { subject: `[TEST] ${subject}`, plainText: message, testEmail: testEmail.trim() },
+      });
+      if (error) throw error;
+      toast.success(`Test email sent to ${testEmail}`);
+    } catch (error) {
+      console.error('Send test email error:', error);
+      toast.error('Test send failed — check the console for details');
+    } finally {
+      setTestSending(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!subject.trim() || !message.trim()) {
@@ -150,6 +182,31 @@ const AdminSendEmail = () => {
             )}
           </div>
         )}
+
+        <Card className="p-4 space-y-3 border-dashed">
+          <div>
+            <p className="text-sm font-medium text-foreground">Send a test first</p>
+            <p className="text-xs text-muted-foreground">Verify delivery and branding before sending to everyone — doesn't touch your subscriber list.</p>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="your@email.com"
+              type="email"
+              className="text-sm"
+            />
+            <Button
+              variant="outline"
+              onClick={handleTestSend}
+              disabled={testSending || !subject.trim() || !message.trim()}
+            >
+              {testSending ? 'Sending...' : 'Send Test'}
+            </Button>
+          </div>
+        </Card>
+
+        <Separator />
 
         <Button onClick={handleSend} disabled={sending || !subject.trim() || !message.trim()} className="w-full h-12 text-base">
           {sending ? 'Sending...' : `Send to ${activeCount} Subscribers`}

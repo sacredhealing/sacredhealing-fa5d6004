@@ -28,6 +28,7 @@ interface BulkEmailRequest {
   subject: string;
   plainText?: string;
   htmlContent?: string;
+  testEmail?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -61,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { subject, plainText, htmlContent }: BulkEmailRequest = await req.json();
+    const { subject, plainText, htmlContent, testEmail }: BulkEmailRequest = await req.json();
 
     if (!subject || (!plainText && !htmlContent)) {
       throw new Error("Subject and content are required");
@@ -69,6 +70,38 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Use plainText wrapped in template, or fall back to raw htmlContent
     const finalHtml = plainText ? wrapInTemplate(plainText) : htmlContent!;
+
+    // Test mode: send exactly one email, never touch the real subscriber list.
+    if (testEmail) {
+      console.log(`Sending TEST email to ${testEmail} only (real subscribers untouched)`);
+      const personalizedHtml = finalHtml
+        .replace(/{{name}}/g, "Test")
+        .replace(/{{email}}/g, testEmail);
+
+      // IMPORTANT: resend-node does NOT throw on API failure — it returns
+      // { data, error }. A try/catch here would silently miss real failures
+      // (bad API key, unverified domain, invalid recipient, etc).
+      const { data: sendData, error: sendError } = await resend.emails.send({
+        from: "Sacred Healing <noreply@mail.siddhaquantumnexus.com>",
+        to: [testEmail],
+        subject,
+        html: personalizedHtml,
+      });
+
+      if (sendError) {
+        console.error("Test send failed:", sendError);
+        return new Response(
+          JSON.stringify({ success: false, error: sendError.message ?? JSON.stringify(sendError) }),
+          { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log("Test send succeeded, Resend id:", sendData?.id);
+      return new Response(
+        JSON.stringify({ success: true, sent: 1, test: true, resendId: sendData?.id }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     console.log("Fetching active subscribers...");
 
@@ -100,25 +133,39 @@ const handler = async (req: Request): Promise<Response> => {
       const batch = subscribers.slice(i, i + batchSize);
 
       const emailPromises = batch.map(async (subscriber) => {
-        try {
-          const personalizedHtml = finalHtml
-            .replace(/{{name}}/g, subscriber.name || "Friend")
-            .replace(/{{email}}/g, subscriber.email);
+        const personalizedHtml = finalHtml
+          .replace(/{{name}}/g, subscriber.name || "Friend")
+          .replace(/{{email}}/g, subscriber.email);
 
-          await resend.emails.send({
+        // IMPORTANT: resend-node does NOT throw on API failure — it returns
+        // { data, error }. The previous version of this code wrapped this in
+        // try/catch and never actually checked `error`, so every send was
+        // counted as successful even if Resend rejected it (unverified
+        // domain, bad recipient, rate limit, etc). Fixed to check explicitly.
+        try {
+          const { error: sendError } = await resend.emails.send({
             from: "Sacred Healing <noreply@mail.siddhaquantumnexus.com>",
             to: [subscriber.email],
             subject: subject,
             html: personalizedHtml,
           });
 
+          if (sendError) {
+            errorCount++;
+            const errorMsg = sendError.message ?? JSON.stringify(sendError);
+            errors.push(`${subscriber.email}: ${errorMsg}`);
+            console.error(`Resend rejected send to ${subscriber.email}:`, sendError);
+            return;
+          }
+
           sentCount++;
           console.log(`Email sent to: ${subscriber.email}`);
         } catch (err) {
+          // Still keep this for genuinely unexpected errors (network, etc).
           errorCount++;
           const errorMsg = err instanceof Error ? err.message : "Unknown error";
           errors.push(`${subscriber.email}: ${errorMsg}`);
-          console.error(`Failed to send to ${subscriber.email}:`, err);
+          console.error(`Unexpected error sending to ${subscriber.email}:`, err);
         }
       });
 
