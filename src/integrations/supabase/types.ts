@@ -3472,6 +3472,7 @@ export type Database = {
           audio_url_en: string | null
           audio_url_sv: string | null
           category: string
+          content_type: string
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -3483,13 +3484,17 @@ export type Database = {
           required_tier: number
           series_name: string | null
           series_order: number | null
+          thumbnail_url: string | null
           title: string
           updated_at: string
+          video_url_en: string | null
+          video_url_sv: string | null
         }
         Insert: {
           audio_url_en?: string | null
           audio_url_sv?: string | null
           category?: string
+          content_type?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -3501,13 +3506,17 @@ export type Database = {
           required_tier?: number
           series_name?: string | null
           series_order?: number | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
+          video_url_en?: string | null
+          video_url_sv?: string | null
         }
         Update: {
           audio_url_en?: string | null
           audio_url_sv?: string | null
           category?: string
+          content_type?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -3519,8 +3528,11 @@ export type Database = {
           required_tier?: number
           series_name?: string | null
           series_order?: number | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          video_url_en?: string | null
+          video_url_sv?: string | null
         }
         Relationships: []
       }
