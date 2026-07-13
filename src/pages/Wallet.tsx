@@ -19,7 +19,7 @@ type TabType = 'overview' | 'affiliate' | 'send' | 'convert';
 
 const Wallet: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>('affiliate');
   const [hideBalance, setHideBalance] = useState(false);
   const { walletAddress } = usePhantomWallet();
   const { balance, profile } = useSHC();
@@ -35,93 +35,22 @@ const Wallet: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'overview' as TabType, label: t('wallet.overview', 'Overview'), icon: Sparkles },
     { id: 'affiliate' as TabType, label: t('wallet.affiliate', 'Affiliate'), icon: TrendingUp },
-    { id: 'send' as TabType, label: t('wallet.send', 'Send'), icon: Send },
-    { id: 'convert' as TabType, label: t('wallet.convert', 'Convert'), icon: ArrowRightLeft },
   ];
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24">
       {/* Header */}
-      <header className="mb-6 animate-fade-in flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">{t('wallet.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('wallet.subtitle')}</p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setHideBalance(!hideBalance)}
-          className="text-muted-foreground"
-        >
-          {hideBalance ? <EyeOff size={20} /> : <Eye size={20} />}
-        </Button>
+      <header className="mb-6 animate-fade-in">
+        <h1 className="text-3xl font-heading font-bold text-foreground">{t('wallet.title')}</h1>
+        <p className="text-muted-foreground mt-1">{t('wallet.subtitle')}</p>
       </header>
 
-      {/* Wallet Connection */}
-      <WalletConnectCard />
-
-      {/* Balance Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-spiritual p-6 mb-6 animate-slide-up">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/20 rounded-full blur-2xl" />
-        
-        <div className="relative">
-          <p className="text-foreground/70 text-sm mb-1">{t('wallet.totalBalance')}</p>
-          <div className="flex items-baseline gap-2 mb-1">
-            {hideBalance ? (
-              <span className="text-5xl font-heading font-bold text-foreground">••••••</span>
-            ) : (
-              <AnimatedCounter 
-                value={balance?.balance ?? 0}
-                className="text-5xl font-heading font-bold text-foreground"
-              />
-            )}
-            <span className="text-xl text-accent font-medium">SHC</span>
-          </div>
-          {!hideBalance && (
-            <p className="text-secondary text-sm mb-4">
-              ≈ {formatEur(convertShcToEur(balance?.balance ?? 0))}
-            </p>
-          )}
-
-          <div className="flex gap-3">
-            <Button 
-              variant="glass" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleWithdraw}
-              disabled={!walletAddress || !balance || balance.balance <= 0 || isWithdrawing}
-            >
-              <ArrowUpRight size={16} />
-              {isWithdrawing ? t('wallet.sending') : t('wallet.withdraw')}
-            </Button>
-            <Button variant="glass" size="sm" className="flex-1" disabled>
-              <ArrowDownLeft size={16} />
-              {t('wallet.deposit')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="flex gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-primary">{hideBalance ? '••' : profile?.streak_days ?? 0}</p>
-          <p className="text-xs text-muted-foreground">{t('wallet.dayStreak')}</p>
-        </div>
-        <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-secondary">{hideBalance ? '••' : transactions.length}</p>
-          <p className="text-xs text-muted-foreground">{t('wallet.transactions')}</p>
-        </div>
-        <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-accent">
-            {hideBalance ? '••' : <AnimatedCounter value={balance?.total_earned ?? 0} />}
-          </p>
-          <p className="text-xs text-muted-foreground">{t('wallet.earned')}</p>
-        </div>
-      </div>
+      {/* SHC balance hero, stats, and wallet-connect intentionally not rendered
+          here anymore (SHC removed from user-facing pages). The hooks above
+          (useSHC, useSHCBalance, useSHCPrice, usePhantomWallet) are still
+          called and still fetch data — infrastructure preserved if this is
+          ever turned back on, just not shown. */}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-4 overflow-x-auto pb-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
