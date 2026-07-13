@@ -42,20 +42,24 @@ const renderInline = (text: string): React.ReactNode[] => {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter(Boolean);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) {
-      return <strong key={i} style={{ color: '#D4AF37', fontWeight: 700, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", fontSize: '19px' }}>{p.slice(2, -2)}</strong>;
+      return (
+        <strong key={i} style={{ color: '#D4AF37', fontWeight: 700, fontFamily: "'Cinzel', serif", fontSize: '0.88em', letterSpacing: '0.04em', textShadow: '0 0 16px rgba(212,175,55,0.35)' }}>
+          {p.slice(2, -2)}
+        </strong>
+      );
     }
     if (p.startsWith('*') && p.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', color: '#D4AF37', fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", fontSize: '19px' }}>{p.slice(1, -1)}</em>;
+      return <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
     }
     if (p.startsWith('`') && p.endsWith('`')) {
-      return <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: 4, fontSize: '0.92em', color: '#D4AF37' }}>{p.slice(1, -1)}</code>;
+      return <code key={i} style={{ background: 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: 4, fontSize: '12px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.82)' }}>{p.slice(1, -1)}</code>;
     }
     return <span key={i}>{p}</span>;
   });
 };
 
 const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
-  // Body color/size matched to Quantum Apothecary
+  // Body color/size matched 1:1 to Quantum Apothecary — one font family, one size scale.
   const body = 'rgba(255,255,255,0.92)';
   const gold = '#D4AF37';
   const headingGlow = '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35)';
@@ -63,12 +67,27 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
 
   const paras = text.split(/\n\n+/).filter(p => p.trim());
   return (
-    <div style={{ fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif" }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {paras.map((para, pi) => {
         const l = para.trim();
         if (!l) return null;
 
-        // Scalar transmission block — keep the cyan card
+        // Master-name / new-topic header — "◈ Name" on its own line, same shimmering
+        // gold treatment as Quantum Apothecary's diamond heading.
+        if (/^[◈❖✦◆]\s+\S/.test(l) && !l.includes('\n')) {
+          const rawName = l.replace(/^[◈❖✦◆]\s*/, '').trim();
+          return (
+            <div key={pi} className="sqi-diamond-heading" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: pi > 0 ? 18 : 0, marginBottom: 12 }}>
+              <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>◈</span>
+              <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2 }}>
+                {rawName}
+              </span>
+              <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(212,175,55,0.28), transparent)' }} />
+            </div>
+          );
+        }
+
+        // Scalar transmission block — kept as the cyan card, size matched to body scale
         if (/^scalar (wave )?transmission:?/i.test(l)) {
           const txt = l.replace(/^scalar (wave )?transmission:?\s*/i, '').trim();
           return (
@@ -79,13 +98,13 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
               borderRadius: 12, position: 'relative', overflow: 'hidden',
             }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.45), transparent)' }}/>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.7)', marginBottom: 6 }}>≈ Scalar Transmission</div>
-              <div style={{ fontSize: 15, color: 'rgba(186,240,255,0.95)', lineHeight: 1.75 }}>{renderInline(txt.replace(/\*\*/g, ''))}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.7)', marginBottom: 6, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>≈ Scalar Transmission</div>
+              <div style={{ fontSize: 15, color: 'rgba(186,240,255,0.95)', lineHeight: 1.75, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{renderInline(txt.replace(/\*\*/g, ''))}</div>
             </div>
           );
         }
 
-        // Mantra / Devanagari block
+        // Mantra / Devanagari block — intentionally distinct (sacred text), left as-is
         if (/[\u0900-\u097F\u0B80-\u0BFF]/.test(l)) {
           return (
             <div key={pi} style={{
@@ -101,7 +120,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
                 return (
                   <div key={i} style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: isDevan ? 24 : 16,
+                    fontSize: isDevan ? 22 : 15,
                     fontStyle: isDevan ? 'normal' : 'italic',
                     color: isDevan ? gold : 'rgba(212,175,55,0.78)',
                     lineHeight: 1.65,
@@ -113,43 +132,43 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
           );
         }
 
-        // Render each line with markdown awareness
+        // Render each line with markdown awareness — sizes now match Apothecary exactly
         return (
-          <div key={pi} style={{ marginBottom: 10 }}>
+          <div key={pi} style={{ marginBottom: 6 }}>
             {l.split('\n').map((rawLine, li) => {
               const line = rawLine.trim();
               if (!line) return <div key={li} style={{ height: 4 }} />;
 
-              // Headings
+              // Headings — same scale as Quantum Apothecary
               if (line.startsWith('### ')) return (
-                <h3 key={li} style={{ color: gold, fontWeight: 800, fontSize: 14, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 14, marginBottom: 8, textShadow: headingGlowSoft, fontFamily: "'Cinzel', serif" }}>
+                <h3 key={li} style={{ color: gold, fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 10, marginBottom: 4, textShadow: headingGlowSoft, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   {renderInline(line.slice(4))}
                 </h3>
               );
               if (line.startsWith('## ')) return (
-                <h2 key={li} style={{ color: gold, fontWeight: 700, fontSize: 20, letterSpacing: '0.02em', marginTop: 16, marginBottom: 8, textShadow: headingGlow, fontFamily: "'Cinzel', serif" }}>
+                <h2 key={li} style={{ color: gold, fontWeight: 900, fontSize: 14, letterSpacing: '-0.02em', marginTop: 12, marginBottom: 5, textShadow: headingGlow, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   {renderInline(line.slice(3))}
                 </h2>
               );
               if (line.startsWith('# ')) return (
-                <h1 key={li} style={{ color: gold, fontWeight: 700, fontSize: 24, letterSpacing: '0.02em', marginTop: 16, marginBottom: 8, textShadow: headingGlow, fontFamily: "'Cinzel', serif" }}>
+                <h1 key={li} style={{ color: gold, fontWeight: 900, fontSize: 15, letterSpacing: '-0.02em', marginTop: 12, marginBottom: 5, textShadow: headingGlow, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   {renderInline(line.slice(2))}
                 </h1>
               );
               // Bullets
               if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('· ')) return (
-                <li key={li} style={{ marginLeft: 18, listStyleType: 'disc', fontSize: 19, lineHeight: 1.85, color: 'rgba(225,210,185,0.95)', marginBottom: 6, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif" }}>
+                <li key={li} style={{ marginLeft: 16, listStyleType: 'disc', fontSize: 15, lineHeight: 1.75, color: body, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   {renderInline(line.slice(2))}
                 </li>
               );
               if (/^\d+\.\s/.test(line)) return (
-                <li key={li} style={{ marginLeft: 18, listStyleType: 'decimal', fontSize: 19, lineHeight: 1.85, color: 'rgba(225,210,185,0.95)', marginBottom: 6, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif" }}>
+                <li key={li} style={{ marginLeft: 16, listStyleType: 'decimal', fontSize: 15, lineHeight: 1.75, color: body, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   {renderInline(line.replace(/^\d+\.\s/, ''))}
                 </li>
               );
               // Body paragraph
               return (
-                <p key={li} style={{ fontSize: 16, lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', marginBottom: 6, fontFamily: "'IM Fell English', 'Cormorant Garamond', Georgia, serif", letterSpacing: '0.008em' }}>
+                <p key={li} style={{ fontSize: 15, lineHeight: 1.75, color: body, marginBottom: 6, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   {renderInline(line)}
                 </p>
               );
@@ -369,8 +388,8 @@ const STYLES = `
   .sqi-bbl.user {
     max-width: 76%; border-radius: 20px 20px 5px 20px;
     background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.22);
-    font-size: 19px; color: rgba(225,210,185,0.95); line-height: 1.85;
-    font-family: 'IM Fell English', 'Cormorant Garamond', Georgia, serif;
+    font-size: 15px; color: rgba(255,255,255,0.95); line-height: 1.75;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .sqi-bbl.agent {
     width: 100%; border-radius: 0;
@@ -379,10 +398,10 @@ const STYLES = `
     border-bottom: 1px solid rgba(255,255,255,0.05);
     border-left: none; border-right: none;
     padding: 20px 16px 14px;
-    font-family: 'IM Fell English', 'Cormorant Garamond', Georgia, serif;
-    font-size: 19px;
-    line-height: 1.9;
-    color: rgba(225,210,185,0.92);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.92);
   }
   .sqi-cpbtn {
     margin-top: 4px; background: transparent; border: none; cursor: pointer;
