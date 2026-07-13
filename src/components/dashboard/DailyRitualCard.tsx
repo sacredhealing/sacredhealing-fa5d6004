@@ -177,8 +177,8 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
                 isClaimed ? (
                   <div className="sq-gate-state">{t('dashboard.gateComplete')}</div>
                 ) : (
-                  <button type="button" className="sq-shc-btn" onClick={() => setSomaDialogPhase(phase.id)}>
-                    {t('dashboard.somaHarmonicCredits', { amount: phase.reward })}
+                  <button type="button" className="sq-shc-btn" onClick={() => persistClaim(phase.id)}>
+                    {t('dashboard.somaHarmonicCredits')}
                   </button>
                 )
               ) : phase.status === 'closed' ? (

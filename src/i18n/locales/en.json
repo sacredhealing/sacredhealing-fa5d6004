@@ -935,7 +935,7 @@
     "sadhanaPhaseEvening": "Lunar Integration",
     "sadhanaCompleteProgress": "{{count}} / {{total}} COMPLETE",
     "gateComplete": "Complete",
-    "somaHarmonicCredits": "+ {{amount}} SOMA-HARMONIC CREDITS",
+    "somaHarmonicCredits": "Mark Complete",
     "hero": {
       "greeting": "Namaste, {{name}}",
       "tagline": "Your Akashic field is active",

@@ -76,11 +76,9 @@ export const CompletionResponse: React.FC<CompletionResponseProps> = ({
             </p>
           </div>
 
-          {variant === 'standard' && shcGift != null && shcGift > 0 && (
-            <div className="w-full rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-500/[0.12] to-amber-950/20 px-5 py-5 shadow-[0_0_28px_rgba(212,175,55,0.08)]">
-              <SomaHealingCoinPanel shcAmount={shcGift} />
-            </div>
-          )}
+          {/* SomaHealingCoinPanel intentionally not rendered here anymore
+              (SHC hidden from users) — component and shcGift calculation
+              elsewhere left intact as infrastructure. */}
 
           {recommendations.length > 0 && (
             <SessionRecommendationCards recommendations={recommendations} />
