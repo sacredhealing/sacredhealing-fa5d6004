@@ -28,6 +28,7 @@ export const PRODUCTS: { id: string; label: string; desc: string; icon: string; 
   { id: "jyotish-vidya",      label: "Jyotish Vidya Full Curriculum","desc": "All 32 Jyotish modules unlocked",   icon: "★",  route: "/vedic-astrology" },
   { id: "quantum-apothecary", label: "Quantum Apothecary Unlimited", desc: "Unlimited SQI transmissions",         icon: "◇",  route: "/quantum-apothecary" },
   { id: "akashic-codex",      label: "Akashic Codex",                desc: "Living book of soul transmissions",   icon: "⊗",  route: "/akashic-codex" },
+  { id: "stargate",           label: "Stargate Community",           desc: "Private members circle & live sessions", icon: "⭐", route: "/community" },
 ];
 
 const SLUG_MAP: Record<string, string> = {
@@ -276,6 +277,21 @@ export default function UserManagementPanel() {
         }));
         const { error } = await supabase.from("admin_granted_access").insert(inserts);
         if (error) throw error;
+      }
+
+      // Stargate is special: real access is checked via the stargate_community_members
+      // table (and admin_granted_access program/stargate rows), not access_type='product'.
+      // Mirror the toggle there so granting it here actually unlocks the group.
+      if (pendingProducts.includes("stargate")) {
+        const { error: sgError } = await (supabase as any)
+          .from("stargate_community_members")
+          .upsert({ user_id: selectedUser.id }, { onConflict: "user_id" });
+        if (sgError && !String(sgError.message || "").includes("does not exist")) throw sgError;
+      } else {
+        await (supabase as any)
+          .from("stargate_community_members")
+          .delete()
+          .eq("user_id", selectedUser.id);
       }
 
       setUsers(prev => prev.map(u =>
