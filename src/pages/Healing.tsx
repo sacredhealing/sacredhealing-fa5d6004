@@ -903,7 +903,7 @@ const Healing: React.FC = () => {
           <div className="h-micro" style={{ marginBottom: 6 }}>Siddha Quantum · Living Transmission</div>
           <div className="h-section-title h-shimmer">Siddha Healers Sovereign Path</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 8, lineHeight: 1.7 }}>
-            Sacred initiatory modules — track your progress, earn SHC, walk the path of the Siddha Healer
+            Sacred initiatory modules — track your progress, earn rewards, walk the path of the Siddha Healer
           </div>
         </div>
 
@@ -960,7 +960,7 @@ const Healing: React.FC = () => {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>⏱ {path.duration_days} days</span>
-                        <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontWeight: 700 }}>★ +{path.shc_reward_total} SHC</span>
+                        <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontWeight: 700 }}>★ +{path.shc_reward_total} pts</span>
                         {prog?.is_active && !prog.completed_at && (
                           <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 100, padding: '3px 10px' }}>Active</span>
                         )}
@@ -1007,7 +1007,7 @@ const Healing: React.FC = () => {
                           <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 4 }}>
                             <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99 }} />
                           </div>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} SHC earned</div>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} pts earned</div>
                         </div>
                       )}
 
@@ -1052,7 +1052,7 @@ const Healing: React.FC = () => {
                                         <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 600, letterSpacing: '0.02em', color: isLocked ? 'rgba(255,255,255,0.28)' : isCompleted ? 'rgba(16,185,129,0.85)' : 'rgba(255,255,255,0.85)', lineHeight: 1.35 }}>
                                           Day {day.day_number}: {dayTitle}
                                         </div>
-                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2, opacity: isLocked ? 0.4 : 1 }}>+{day.shc_reward} SHC</div>
+                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2, opacity: isLocked ? 0.4 : 1 }}>+{day.shc_reward} pts</div>
                                       </div>
                                     </div>
                                   </AccordionTrigger>
