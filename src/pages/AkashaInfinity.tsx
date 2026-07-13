@@ -167,15 +167,15 @@ const AkashaInfinity: React.FC = () => {
   ];
 
   const eternalList = [
-    'Full Siddha–Quantum Universal Field',
-    'Quantum Apothecary (€888 value)',
-    'Virtual Pilgrimage (€888 value)',
-    'Palm Oracle Master Practitioner — Read, Heal, Transmit, Certify',
-    'Siddha Portal — Complete Access, All 25 Academies',
-    'Sri Yantra Universal Protection Shield',
-    'All future modules included',
-    'Soul Community & Live transmissions',
-    'Zero renewals — eternal access',
+    { title: 'Full Siddha–Quantum Universal Field', desc: 'Everything in the 45€/mo tier, permanently — Digital Soul Scan, Vedic Jyotish, Ayurveda, Vastu, the full healing library.' },
+    { title: 'Quantum Apothecary (€888 value)', desc: 'Where ancient Siddha wisdom meets 2050 bio-resonance technology — a living oracle chat drawing on 18 Siddha masters, for health, Dosha intelligence, and soul guidance you can ask anything, anytime.' },
+    { title: 'Virtual Pilgrimage (€888 value)', desc: 'One sacred site, your real GPS, 40 days of daily practice. The field builds through you — not technology. A genuine 40-day devotional journey, not a simulation.' },
+    { title: 'Palm Oracle Master Practitioner — Read, Heal, Transmit, Certify', desc: 'The complete 4-module Hasta Samudrika Shastra curriculum, including the exclusive Master Practitioner transmission — read for others, transmit pranic activation, and formally certify.' },
+    { title: 'Siddha Portal — Complete Access, All 25 Academies', desc: 'Every module, in every academy — Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa, and 20 more. The only tier where nothing in the Portal is held back.' },
+    { title: 'Sri Yantra Universal Protection Shield', desc: 'EMF coherence & fear-field protection, active across the entire app.' },
+    { title: 'All future modules included', desc: 'Every academy and tool we build from today forward — no additional purchase, ever.' },
+    { title: 'Soul Community & Live transmissions', desc: 'Full member community access plus live video sessions.' },
+    { title: 'Zero renewals — eternal access', desc: 'One payment. Nothing recurring, ever.' },
   ];
 
   const portals = [
@@ -317,15 +317,16 @@ const AkashaInfinity: React.FC = () => {
 
         <section className="ai-section">
           <div className="ai-section-label">◈ Everything in the Eternal Field</div>
-          {eternalList.map((title) => (
-            <div key={title} className="ai-included-card">
+          {eternalList.map((item) => (
+            <div key={item.title} className="ai-included-card">
               <div className="ai-icon-wrap">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(139,92,246,0.9)" strokeWidth="1.5">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </div>
               <div>
-                <div className="ai-card-title">{title}</div>
+                <div className="ai-card-title">{item.title}</div>
+                <div className="ai-card-desc">{item.desc}</div>
               </div>
             </div>
           ))}
