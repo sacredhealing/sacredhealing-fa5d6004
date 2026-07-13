@@ -35,6 +35,26 @@ serve(async (req) => {
     }
     logStep("User authenticated", { email: user.email });
 
+    // Tier-aware pricing: free (Atma-Seed) members pay the full standalone
+    // rate; existing paying members (Prana-Flow, Siddha-Quantum, Akasha-
+    // Infinity) get a discounted add-on rate since they're already
+    // customers. NOT explicitly specified for Akasha-Infinity — applying
+    // the same discount logic as Prana-Flow/Siddha-Quantum ("already
+    // paying members"), flag if that's wrong.
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const { data: prof } = await supabaseAdmin.from("profiles").select("membership_tier").eq("user_id", user.id).maybeSingle();
+    const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+    const isExistingPayingMember = ["prana-flow", "siddha-quantum", "akasha-infinity"].includes(tierSlug);
+
+    // STRIPE_PRICE_STARGATE_DISCOUNT must be created in Stripe first — this
+    // is a placeholder env var reference, not confirmed to exist yet.
+    const priceId = isExistingPayingMember
+      ? (Deno.env.get("STRIPE_PRICE_STARGATE_DISCOUNT") || "price_1SZqNuAPsnbrivP0ZygF4M88")
+      : "price_1SZqNuAPsnbrivP0ZygF4M88";
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
@@ -53,7 +73,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SZqNuAPsnbrivP0ZygF4M88", // Stargate Membership $25/month
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -64,6 +84,7 @@ serve(async (req) => {
         user_id: user.id,
         type: "stargate_membership", // Matches webhook getPurchaseType logic
         membership_type: "stargate", // Keep for backward compatibility
+        tier_at_purchase: tierSlug,
       },
     });
 
