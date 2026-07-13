@@ -525,6 +525,17 @@ serve(async (req) => {
         userId = await resolveUserByEmail(supabaseAdmin, customerEmail);
       }
 
+      // Mark any pending win-back sequence resolved — they're back, no need
+      // to keep sending "we miss you" emails. Best-effort, non-blocking.
+      if (userId) {
+        try {
+          await supabaseAdmin.from("cancellation_winback_log")
+            .update({ resubscribed_at: new Date().toISOString() })
+            .eq("user_id", userId)
+            .is("resubscribed_at", null);
+        } catch { /* non-fatal */ }
+      }
+
       // Record revenue
       const revenueOk = await recordRevenue(supabaseAdmin, {
         productType: purchaseType,
@@ -836,6 +847,21 @@ serve(async (req) => {
                 if (p?.full_name) buyerName = p.full_name;
               }
               await sendCancellationEmail({ toEmail: email, toName: buyerName, productName, accessUntil: accessDate });
+
+              // Track for the delayed win-back sequence (separate from this
+              // immediate confirmation email) — best-effort, non-blocking.
+              if (userId) {
+                try {
+                  await supabaseAdmin.from("cancellation_winback_log").insert({
+                    user_id: userId,
+                    email,
+                    tier_slug: tierSlug,
+                    access_until: currentPeriodEnd,
+                  });
+                } catch (wbErr) {
+                  logStep("Winback log insert failed (non-blocking)", { error: String(wbErr) });
+                }
+              }
             }
           } catch (emailErr) {
             logStep("Cancellation email failed (non-blocking)", { error: String(emailErr) });
