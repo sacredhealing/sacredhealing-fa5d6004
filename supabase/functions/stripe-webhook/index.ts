@@ -716,6 +716,32 @@ serve(async (req) => {
         notes: invoice.billing_reason === 'subscription_cycle' ? `Recurring (${currency})` : `Initial subscription (${currency})`,
       });
 
+      // Recurring affiliate commission — only on actual renewals
+      // (subscription_cycle), never the first payment, which
+      // checkout.session.completed already pays commission on separately.
+      // Resolved via the permanent affiliate_attribution table, not session
+      // metadata (invoices don't carry that) — this is what makes a
+      // referral "always linked" for as long as the person stays
+      // subscribed, not just their first month.
+      if (invoice.billing_reason === 'subscription_cycle' && userId && productInfo.type === 'membership') {
+        try {
+          const { data: attribution } = await supabaseAdmin
+            .from('affiliate_attribution').select('ref_code').eq('user_id', userId).maybeSingle();
+          if (attribution?.ref_code && attribution.ref_code !== 'direct') {
+            await processAffiliateCommission(supabaseAdmin, {
+              stripeSessionId: `invoice_${invoice.id}`, // distinct idempotency key from the initial checkout session
+              affiliateCode: attribution.ref_code,
+              grossAmount: amountPaid,
+              currency,
+              paymentIntentId: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : null,
+              referredUserId: userId,
+            });
+          }
+        } catch (e) {
+          logStep("Recurring commission (best-effort) failed", String(e));
+        }
+      }
+
       // Send email
       if (customerEmail) {
         await sendPurchaseEmail({

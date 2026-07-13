@@ -44,22 +44,39 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const affiliateRef = (affiliateId ?? extraMetadata?.affiliate_id ?? "direct") as string;
-    if (affiliateRef && affiliateRef !== "direct") {
-      try {
-        await supabaseClient.from("affiliate_attribution").upsert(
-          { user_id: user.id, ref_code: affiliateRef, last_seen_at: new Date().toISOString() },
-          { onConflict: "user_id" }
+    // Resolve the permanent referrer BEFORE deciding what to attribute this
+    // purchase to. A user's first-ever referral link sets this once; every
+    // future purchase (including tier upgrades where no ?ref= is present)
+    // credits that same referrer, not just the purchase that happens to
+    // carry a fresh URL parameter.
+    const requestRef = (affiliateId ?? extraMetadata?.affiliate_id ?? null) as string | null;
+    let resolvedAffiliateRef = "direct";
+    try {
+      const { data: existingAttribution } = await supabaseClient
+        .from("affiliate_attribution").select("ref_code").eq("user_id", user.id).maybeSingle();
+
+      if (existingAttribution?.ref_code) {
+        // Permanent attribution already exists — always wins, regardless of
+        // what (if anything) this specific checkout call carries.
+        resolvedAffiliateRef = existingAttribution.ref_code;
+      } else if (requestRef && requestRef !== "direct") {
+        // First-ever referral for this user — set it, permanently.
+        resolvedAffiliateRef = requestRef;
+        await supabaseClient.from("affiliate_attribution").insert(
+          { user_id: user.id, ref_code: requestRef, last_seen_at: new Date().toISOString() }
         );
+      }
+
+      if (resolvedAffiliateRef !== "direct") {
         await supabaseClient.from("affiliate_events").insert({
-          ref_code: affiliateRef,
+          ref_code: resolvedAffiliateRef,
           user_id: user.id,
           tool_slug: "sqi_membership",
           event_type: "checkout",
         });
-      } catch (e) {
-        logStep("Affiliate attribution (best-effort) failed", String(e));
       }
+    } catch (e) {
+      logStep("Affiliate attribution (best-effort) failed", String(e));
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -94,7 +111,7 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         tier_slug: tierSlug ?? "",
-        affiliate_id: (affiliateId ?? extraMetadata?.affiliate_id ?? "direct") as string,
+        affiliate_id: resolvedAffiliateRef,
         tier_name: (extraMetadata?.tier_name ?? tierSlug ?? "") as string,
         protection_shield: (extraMetadata?.protection_shield ?? "inactive") as string,
       },
