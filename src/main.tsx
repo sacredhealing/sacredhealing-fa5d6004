@@ -1,12 +1,7 @@
-// Redirect legacy lovable.app host to the primary custom domain (preserve path + query + hash).
-if (typeof window !== "undefined" && window.location.hostname === "sacredhealing.lovable.app") {
-  window.location.replace(
-    "https://siddhaquantumnexus.com" +
-      window.location.pathname +
-      window.location.search +
-      window.location.hash
-  );
-}
+// Note: sacredhealing.lovable.app is kept live as a secondary login surface for legacy users
+// (the ~90 users who signed up before the custom-domain switch). siddhaquantumnexus.com remains
+// the primary URL for all new promotion. No forced redirect between the two — each domain owns
+// its own auth session in localStorage, and users log in on whichever host they land on.
 
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
