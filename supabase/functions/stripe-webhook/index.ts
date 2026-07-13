@@ -592,6 +592,42 @@ serve(async (req) => {
         } catch { /* non-fatal */ }
       }
 
+      // FIX: individual content purchases (music, healing audio, divine
+      // transmission) — the checkout session creation worked correctly for
+      // all of these, but NOTHING ever actually wrote the purchase record
+      // after Stripe confirmed payment. The success redirect param existed
+      // in each edge function but was never consumed by the frontend
+      // either. Real customers could have paid via Stripe and never
+      // received access. Neither purchase-music nor purchase-healing-audio
+      // tag a purchase_type in metadata, so detect by field presence.
+      if (userId) {
+        try {
+          const trackId = session.metadata?.track_id;
+          const audioId = session.metadata?.audio_id;
+          const transmissionId = session.metadata?.transmission_id;
+          const amountPaid = (session.amount_total ?? 0) / 100;
+
+          if (trackId) {
+            await supabaseAdmin.from("music_purchases").upsert(
+              { user_id: userId, track_id: trackId, payment_method: "stripe", amount_paid: amountPaid, stripe_payment_id: session.id },
+              { onConflict: "user_id,track_id" }
+            );
+          } else if (audioId) {
+            await supabaseAdmin.from("healing_audio_purchases").upsert(
+              { user_id: userId, audio_id: audioId, payment_method: "stripe", amount_paid: amountPaid },
+              { onConflict: "user_id,audio_id" }
+            );
+          } else if (transmissionId) {
+            await supabaseAdmin.from("divine_transmission_purchases").upsert(
+              { user_id: userId, transmission_id: transmissionId, stripe_session_id: session.id, amount_usd: amountPaid },
+              { onConflict: "user_id,transmission_id" }
+            );
+          }
+        } catch (contentPurchaseErr) {
+          logStep("Content purchase recording failed (non-blocking)", { error: String(contentPurchaseErr) });
+        }
+      }
+
       // Record revenue
       const revenueOk = await recordRevenue(supabaseAdmin, {
         productType: purchaseType,
