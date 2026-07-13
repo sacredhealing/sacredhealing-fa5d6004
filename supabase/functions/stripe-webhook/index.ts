@@ -356,7 +356,7 @@ async function processAffiliateCommission(supabaseAdmin: any, params: {
   // Find affiliate profile by code
   const { data: affiliateProfile, error: profileError } = await supabaseAdmin
     .from('affiliate_profiles')
-    .select('user_id, total_earnings, pending_balance')
+    .select('user_id, total_earnings, pending_balance, recruited_by_user_id')
     .eq('affiliate_code', affiliateCode)
     .maybeSingle();
 
@@ -381,6 +381,7 @@ async function processAffiliateCommission(supabaseAdmin: any, params: {
       commission_rate: COMMISSION_RATE,
       currency: currency.toUpperCase(),
       status: 'approved', // Auto-approve: Stripe confirmed payment
+      level: 1,
     });
 
   if (insertError) {
@@ -398,6 +399,61 @@ async function processAffiliateCommission(supabaseAdmin: any, params: {
     .eq('user_id', affiliateProfile.user_id);
 
   logStep("Commission recorded", { affiliateCode, commissionAmount, currency, newPending });
+
+  // ── Tier 2 (MLM override) ──────────────────────────────────────────────
+  // If this Tier-1 affiliate was themselves recruited by another affiliate,
+  // that upline earns an override on this same sale too — separate record,
+  // separate idempotency key (same stripeSessionId would violate the
+  // unique constraint on a second insert). Rate NOT confirmed with
+  // Kritagya/Laila — 10% default, adjust below if a different number is
+  // wanted. Applies to every commission event this function handles,
+  // meaning renewals cascade to the upline too, same as Tier 1.
+  if (affiliateProfile.recruited_by_user_id) {
+    const TIER2_RATE = 0.10;
+    const tier2SessionId = `${stripeSessionId}_tier2`;
+
+    const { data: tier2Existing } = await supabaseAdmin
+      .from('affiliate_commissions').select('id').eq('stripe_session_id', tier2SessionId).maybeSingle();
+
+    if (!tier2Existing) {
+      const { data: uplineProfile } = await supabaseAdmin
+        .from('affiliate_profiles')
+        .select('user_id, total_earnings, pending_balance')
+        .eq('user_id', affiliateProfile.recruited_by_user_id)
+        .maybeSingle();
+
+      if (uplineProfile) {
+        const tier2Amount = parseFloat((grossAmount * TIER2_RATE).toFixed(2));
+
+        const { error: tier2InsertError } = await supabaseAdmin
+          .from('affiliate_commissions')
+          .insert({
+            affiliate_user_id: uplineProfile.user_id,
+            referred_user_id: referredUserId,
+            stripe_session_id: tier2SessionId,
+            stripe_payment_intent_id: paymentIntentId,
+            gross_amount: grossAmount,
+            commission_amount: tier2Amount,
+            commission_rate: TIER2_RATE,
+            currency: currency.toUpperCase(),
+            status: 'approved',
+            level: 2,
+          });
+
+        if (!tier2InsertError) {
+          const uplineNewTotal = parseFloat(((uplineProfile.total_earnings || 0) + tier2Amount).toFixed(2));
+          const uplineNewPending = parseFloat(((uplineProfile.pending_balance || 0) + tier2Amount).toFixed(2));
+          await supabaseAdmin
+            .from('affiliate_profiles')
+            .update({ total_earnings: uplineNewTotal, pending_balance: uplineNewPending, updated_at: new Date().toISOString() })
+            .eq('user_id', uplineProfile.user_id);
+          logStep("Tier 2 override commission recorded", { uplineUserId: uplineProfile.user_id, tier2Amount, currency });
+        } else {
+          logStep("Failed to insert Tier 2 commission", { error: tier2InsertError.message });
+        }
+      }
+    }
+  }
 
   // Send notification email to affiliate
   try {
