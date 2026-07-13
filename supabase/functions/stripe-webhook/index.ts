@@ -492,6 +492,16 @@ serve(async (req) => {
     // ═══════════════════════════════════════════════════════════════
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+
+      // Mark abandonment-recovery row as recovered regardless of downstream
+      // logic below — best-effort, never blocks webhook processing.
+      try {
+        await supabaseAdmin.from("checkout_abandonment_log")
+          .update({ recovered_at: new Date().toISOString() })
+          .eq("stripe_session_id", session.id)
+          .is("recovered_at", null);
+      } catch { /* non-fatal */ }
+
       if (session.payment_status !== "paid") {
         await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'skipped', 'Not paid');
         return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

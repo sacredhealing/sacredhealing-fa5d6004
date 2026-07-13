@@ -115,6 +115,27 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionConfig);
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
+    // Log for abandonment recovery — best-effort, never blocks checkout.
+    try {
+      const tierDisplay: Record<string, { name: string; price: string }> = {
+        "prana-monthly": { name: "Prana-Flow", price: "19€/mo (7 days free)" },
+        "siddha-quantum-monthly": { name: "Siddha-Quantum", price: "45€/mo" },
+        "akasha-infinity": { name: "Akasha-Infinity", price: "2997€ once" },
+      };
+      const display = tierDisplay[tierSlug] ?? { name: tierSlug, price: "" };
+      await supabaseClient.from("checkout_abandonment_log").insert({
+        stripe_session_id: session.id,
+        session_url: session.url,
+        user_id: user.id,
+        email: user.email,
+        tier_slug: tierSlug,
+        display_name: display.name,
+        price_label: display.price,
+      });
+    } catch (e) {
+      logStep("Abandonment log insert failed (non-fatal)", { error: String(e) });
+    }
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
