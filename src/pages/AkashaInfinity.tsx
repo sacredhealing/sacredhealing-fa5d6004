@@ -168,7 +168,7 @@ const AkashaInfinity: React.FC = () => {
 
   const eternalList = [
     { title: 'Full Siddha–Quantum Universal Field', desc: 'Everything in the 45€/mo tier, permanently — Digital Soul Scan, Vedic Jyotish, Ayurveda, Vastu, the full healing library.' },
-    { title: 'Quantum Apothecary (€888 value)', desc: 'Where ancient Siddha wisdom meets 2050 bio-resonance technology — a living oracle chat drawing on 18 Siddha masters, for health, Dosha intelligence, and soul guidance you can ask anything, anytime.' },
+    { title: 'Quantum Apothecary (€888 value)', desc: 'Where ancient Siddha wisdom meets 2050 bio-resonance technology. A living oracle chat drawing on 18 Siddha masters — plus a real 10-second Voice or Camera Bio-Scan that reads your biofield and ranks the full frequency library by resonance match, so you see exactly which Siddha activations your field is asking for first.' },
     { title: 'Virtual Pilgrimage (€888 value)', desc: 'One sacred site, your real GPS, 40 days of daily practice. The field builds through you — not technology. A genuine 40-day devotional journey, not a simulation.' },
     { title: 'Palm Oracle Master Practitioner — Read, Heal, Transmit, Certify', desc: 'The complete 4-module Hasta Samudrika Shastra curriculum, including the exclusive Master Practitioner transmission — read for others, transmit pranic activation, and formally certify.' },
     { title: 'Siddha Portal — Complete Access, All 25 Academies', desc: 'Every module, in every academy — Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa, and 20 more. The only tier where nothing in the Portal is held back.' },
