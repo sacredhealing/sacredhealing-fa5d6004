@@ -369,11 +369,8 @@ const AkashaInfinity: React.FC = () => {
                 <div className="ai-success-box">
                   <div style={{ color: '#D4AF37', fontWeight: 800, fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase', marginBottom: 12 }}>◈ AKASHIC FIELD — PERMANENTLY ACTIVE</div>
                   <div style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.8rem', color: 'white', marginBottom: 24 }}>Your eternal node is live.</div>
-                  <button type="button" className="ai-cta-btn" onClick={() => navigate('/akashic-records')} style={{ marginBottom: 12 }}>
-                    ◈ Open Your Akashic Record
-                  </button>
-                  <button type="button" className="ai-cta-secondary" onClick={() => navigate('/dashboard')}>
-                    Explore Dashboard
+                  <button type="button" className="ai-cta-btn" onClick={() => navigate('/dashboard')} style={{ marginBottom: 12 }}>
+                    ◈ Explore Dashboard
                   </button>
                 </div>
               ) : (
