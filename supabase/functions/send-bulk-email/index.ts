@@ -16,11 +16,12 @@ function wrapInTemplate(text: string): string {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f1ec;font-family:Georgia,serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
 <div style="background:linear-gradient(135deg,#8B5E3C,#A0522D);padding:30px;text-align:center;">
-<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;letter-spacing:1px;">Sacred Healing</h1>
+<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;letter-spacing:1px;">Siddha Quantum Nexus</h1>
+<p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:0.5px;">Kritagya Das &amp; Karaveera Nivasini Dasi</p>
 </div>
 <div style="padding:30px 35px;">${paragraphs}</div>
 <div style="background:#f4f1ec;padding:20px;text-align:center;font-size:12px;color:#999;">
-<p style="margin:0;">Sacred Healing &bull; Spiritual Growth &amp; Wellness</p>
+<p style="margin:0;">Siddha Quantum Nexus &bull; Kritagya Das &amp; Karaveera Nivasini Dasi</p>
 </div></div></body></html>`;
 }
 
@@ -82,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
       // { data, error }. A try/catch here would silently miss real failures
       // (bad API key, unverified domain, invalid recipient, etc).
       const { data: sendData, error: sendError } = await resend.emails.send({
-        from: "Sacred Healing <noreply@mail.siddhaquantumnexus.com>",
+        from: "Kritagya Das & Karaveera Nivasini Dasi | Siddha Quantum Nexus <noreply@mail.siddhaquantumnexus.com>",
         to: [testEmail],
         subject,
         html: personalizedHtml,
@@ -144,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
         // domain, bad recipient, rate limit, etc). Fixed to check explicitly.
         try {
           const { error: sendError } = await resend.emails.send({
-            from: "Sacred Healing <noreply@mail.siddhaquantumnexus.com>",
+            from: "Kritagya Das & Karaveera Nivasini Dasi | Siddha Quantum Nexus <noreply@mail.siddhaquantumnexus.com>",
             to: [subscriber.email],
             subject: subject,
             html: personalizedHtml,
