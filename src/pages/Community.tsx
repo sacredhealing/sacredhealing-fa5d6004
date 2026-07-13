@@ -48,31 +48,32 @@ const CHANNELS = [
     id: "sacred-mantras",
     name: "Sacred Mantras",
     icon: "ॐ",
-    description: "Mantra questions & discussion",
-    access: "public",
+    description: "Mantra questions & discussion — Prana-Flow and up",
+    access: "tiered",
+    minTierRank: 1, // Prana-Flow
   },
   {
     id: "healing-circle",
-    name: "Healing Circle",
+    name: "Healing Blessings",
     icon: "✦",
-    description: "Healing questions & updates",
+    description: "Open to everyone seeking healing blessings",
     access: "public",
   },
   {
     id: "siddha-masters",
     name: "Siddha Masters",
     icon: "☀",
-    description: "Siddha Quantum members",
-    access: "sacred",
-    tiers: ["siddha_quantum", "akasha_infinity"],
+    description: "Akasha-Infinity members",
+    access: "tiered",
+    minTierRank: 3, // Akasha-Infinity only
   },
   {
     id: "bhakti-algorithm-lab",
     name: "Bhakti Algorithm Lab",
     icon: "⚡",
-    description: "Akasha Infinity members",
-    access: "sacred",
-    tiers: ["akasha_infinity"],
+    description: "Siddha-Quantum and up",
+    access: "tiered",
+    minTierRank: 2, // Siddha-Quantum and Akasha-Infinity
   },
   {
     id: "stargate",
@@ -82,11 +83,11 @@ const CHANNELS = [
     access: "private",
   },
   {
-    id: "andlig-transformation",
-    name: "Andlig Transformation",
-    icon: "🌸",
-    description: "Monthly live — invite only",
-    access: "private",
+    id: "sadhana",
+    name: "Sadhana",
+    icon: "🪔",
+    description: "Special invite from admin only",
+    access: "invite",
   },
 ];
 
@@ -947,6 +948,7 @@ const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { isStargateMember } = useStargateAccess();
+  const [hasSadhanaInvite, setHasSadhanaInvite] = useState(false);
   const navigate = useNavigate();
   const daily = useDailyLive();
   console.log("[Community] isAdmin:", isAdmin);
@@ -1332,7 +1334,7 @@ const Community = () => {
       rooms.forEach((room: any) => {
         const matched = CHANNELS.find((ch) => ch.name === room.name);
         if (matched) map[matched.id] = room.id;
-        if (room.type === "andlig") map["andlig-transformation"] = room.id;
+        if (room.type === "sadhana" || room.name === "Sadhana") map["sadhana"] = room.id;
         if (room.type === "stargate") map["stargate"] = room.id;
         if (room.name === "Community Lounge" && !map["divine-sangha"]) map["divine-sangha"] = room.id;
         if (room.name?.includes("Divine Sangha") && !map["divine-sangha"]) map["divine-sangha"] = room.id;
@@ -1451,6 +1453,24 @@ const Community = () => {
   useEffect(() => {
     fetchFeedPosts();
   }, [fetchFeedPosts]);
+
+  // Sadhana is invite-only: check whether admin has already added this user
+  // as a chat_members row for the Sadhana room (admin grants access via
+  // Supabase directly — see chat_rooms/chat_members tables).
+  useEffect(() => {
+    if (!user?.id || isAdmin) return;
+    (async () => {
+      const { data: room } = await supabase.from("chat_rooms").select("id").eq("name", "Sadhana").maybeSingle();
+      if (!room?.id) return;
+      const { data: membership } = await supabase
+        .from("chat_members")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setHasSadhanaInvite(!!membership);
+    })();
+  }, [user?.id, isAdmin]);
 
   // Fetch notifications + realtime subscription
   useEffect(() => {
@@ -2432,11 +2452,12 @@ const Community = () => {
                 ))}
 
                 <div className="c-section-label">SACRED SPACES</div>
-                {CHANNELS.filter((c) => c.access === "sacred").map((ch) => {
-                  // Sacred channels require Siddha Quantum (rank 2) or higher
+                {CHANNELS.filter((c) => c.access === "tiered").map((ch) => {
                   const userTier = members.find((m) => m.id === user?.id)?.subscription_tier;
                   const userRank = getTierRank(userTier);
-                  const hasAccess = isAdmin || userRank >= 2;
+                  const requiredRank = ch.minTierRank ?? 2;
+                  const hasAccess = isAdmin || userRank >= requiredRank;
+                  const requiredLabel = requiredRank >= 3 ? "Akasha-Infinity" : requiredRank >= 2 ? "Siddha-Quantum" : "Prana-Flow";
                   return (
                     <button
                       key={ch.id}
@@ -2447,7 +2468,7 @@ const Community = () => {
                           setActiveChannel(ch.id);
                           setMobileTab("chat");
                         } else {
-                          toast.error("This space requires Siddha Quantum or Akasha Infinity membership.");
+                          toast.error(`This space requires ${requiredLabel} or higher.`);
                         }
                       }}
                     >
@@ -2455,7 +2476,7 @@ const Community = () => {
                       <div className="c-ch-info">
                         <div className="c-ch-name">{ch.name}</div>
                         <div className="c-ch-desc">{ch.description}</div>
-                        <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>{members.filter(m => getTierRank(m.subscription_tier) >= 2).length + (isAdmin ? 1 : 0)} members</div>
+                        <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>{members.filter(m => getTierRank(m.subscription_tier) >= requiredRank).length + (isAdmin ? 1 : 0)} members</div>
                       </div>
                       {hasAccess ? <div className="c-ch-arrow">›</div> : <span className="c-lock-badge">🔒</span>}
                     </button>
@@ -2463,8 +2484,12 @@ const Community = () => {
                 })}
 
                 <div className="c-section-label">PRIVATE</div>
-                {CHANNELS.filter((c) => c.access === "private").map((ch) => {
-                  const locked = ch.id === "stargate" ? !isAdmin && !isStargateMember : !isAdmin;
+                {CHANNELS.filter((c) => c.access === "private" || c.access === "invite").map((ch) => {
+                  const locked = ch.id === "stargate"
+                    ? !isAdmin && !isStargateMember
+                    : ch.access === "invite"
+                      ? !isAdmin && !hasSadhanaInvite
+                      : !isAdmin;
                   return (
                     <button
                       key={ch.id}

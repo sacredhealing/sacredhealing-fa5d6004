@@ -153,11 +153,11 @@ async function assertCanCreateSession(params: {
     return { ok: true };
   }
 
-  if (channelId === "andlig-transformation") {
+  if (channelId === "sadhana") {
     return {
       ok: false,
       error: "Admin only",
-      details: "This private group only allows admin-hosted live sessions.",
+      details: "Sadhana is an invite-only group — only admin-hosted live sessions are allowed here.",
     };
   }
 
@@ -180,7 +180,7 @@ async function assertCanCreateSession(params: {
         };
   }
 
-  const requiredRank = channelId === "bhakti-algorithm-lab" ? 3 : channelId === "siddha-masters" ? 2 : 0;
+  const requiredRank = channelId === "siddha-masters" ? 3 : channelId === "bhakti-algorithm-lab" ? 2 : 0;
   if (requiredRank === 0) {
     return { ok: true };
   }
