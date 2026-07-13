@@ -16,6 +16,8 @@ const logStep = (step: string, details?: unknown) => {
 const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
   'price_1Os1suAPsnbrivP0PxsynQAO': { type: 'stargate', name: 'Stargate Transformation Online' },
   'price_1SZqNuAPsnbrivP0ZygF4M88': { type: 'stargate', name: 'Stargate Membership' },
+  'price_1TsrsRAPsnbrivP01XgmFoev': { type: 'stargate', name: 'Stargate Membership' },
+  'price_1TsrleAPsnbrivP0bjQZ2son': { type: 'stargate', name: 'Stargate Membership (Member Discount)' },
   'price_1SaGNbAPsnbrivP0DBsBGh9V': { type: 'meditation', name: 'Meditation Membership Monthly' },
   'price_1SaGG4APsnbrivP0nnavK58y': { type: 'music', name: 'Music Membership Monthly' },
 };

@@ -12,8 +12,13 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-STARGATE-MEMBERSHIP] ${step}${detailsStr}`);
 };
 
-// Stargate Membership Price ID
-const STARGATE_PRICE_ID = 'price_1SZqNuAPsnbrivP0ZygF4M88';
+// Stargate Membership Price IDs — all three: legacy USD (existing
+// subscribers only), new EUR base (€25/mo), new EUR discount (€6/mo)
+const STARGATE_PRICE_IDS = new Set([
+  'price_1SZqNuAPsnbrivP0ZygF4M88', // legacy USD, existing subscribers
+  'price_1TsrsRAPsnbrivP01XgmFoev', // EUR base €25/mo
+  'price_1TsrleAPsnbrivP0bjQZ2son', // EUR discount €6/mo
+]);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -110,7 +115,7 @@ serve(async (req) => {
 
     for (const sub of subscriptions.data) {
       const priceId = sub.items.data[0]?.price?.id;
-      if (priceId === STARGATE_PRICE_ID) {
+      if (STARGATE_PRICE_IDS.has(priceId)) {
         hasStargateMembership = true;
         subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
         logStep("Active Stargate membership found", { subscriptionId: sub.id, subscriptionEnd });

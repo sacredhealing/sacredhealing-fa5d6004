@@ -19,6 +19,8 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
   // Legacy
   'price_1Os1suAPsnbrivP0PxsynQAO': { type: 'stargate', name: 'Stargate Transformation Online' },
   'price_1SZqNuAPsnbrivP0ZygF4M88': { type: 'stargate', name: 'Stargate Membership' },
+  'price_1TsrsRAPsnbrivP01XgmFoev': { type: 'stargate', name: 'Stargate Membership' },
+  'price_1TsrleAPsnbrivP0bjQZ2son': { type: 'stargate', name: 'Stargate Membership (Member Discount)' },
   'price_1SaGNbAPsnbrivP0DBsBGh9V': { type: 'meditation', name: 'Meditation Membership Monthly' },
   'price_1SaGG4APsnbrivP0nnavK58y': { type: 'music', name: 'Music Membership Monthly' },
   // SQI Membership Tiers (env-driven — resolved at runtime below)
@@ -988,7 +990,7 @@ serve(async (req) => {
       }
 
       // ── Stargate subscription sync ────────────────────────────────────────
-      if (priceId === 'price_1SZqNuAPsnbrivP0ZygF4M88' && userId) {
+      if (['price_1SZqNuAPsnbrivP0ZygF4M88', 'price_1TsrsRAPsnbrivP01XgmFoev', 'price_1TsrleAPsnbrivP0bjQZ2son'].includes(priceId) && userId) {
         const hasActiveAccess = status === "active" || status === "trialing";
         if (hasActiveAccess) {
           const { data: existingMember } = await supabaseAdmin.from('stargate_community_members').select('id').eq('user_id', userId).maybeSingle();

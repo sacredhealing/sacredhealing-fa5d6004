@@ -49,11 +49,17 @@ serve(async (req) => {
     const tierSlug = (prof?.membership_tier || "free").toLowerCase();
     const isExistingPayingMember = ["prana-flow", "siddha-quantum", "akasha-infinity"].includes(tierSlug);
 
-    // STRIPE_PRICE_STARGATE_DISCOUNT must be created in Stripe first — this
-    // is a placeholder env var reference, not confirmed to exist yet.
+    // Both Stripe prices are confirmed real and EUR-denominated:
+    //   STRIPE_PRICE_STARGATE_BASE     = price_1TsrsRAPsnbrivP01XgmFoev (€25/mo)
+    //   STRIPE_PRICE_STARGATE_DISCOUNT = price_1TsrleAPsnbrivP0bjQZ2son (€6/mo)
+    // Both live on the same product (prod_TWuCuWU5Vdr9Fx). The old USD price
+    // (price_1SZqNuAPsnbrivP0ZygF4M88) is deliberately no longer used for
+    // NEW checkouts — anyone already subscribed on it keeps working
+    // normally, Stripe prices are immutable and existing subscriptions
+    // aren't affected by this change.
     const priceId = isExistingPayingMember
-      ? (Deno.env.get("STRIPE_PRICE_STARGATE_DISCOUNT") || "price_1SZqNuAPsnbrivP0ZygF4M88")
-      : "price_1SZqNuAPsnbrivP0ZygF4M88";
+      ? (Deno.env.get("STRIPE_PRICE_STARGATE_DISCOUNT") || "price_1TsrleAPsnbrivP0bjQZ2son")
+      : (Deno.env.get("STRIPE_PRICE_STARGATE_BASE") || "price_1TsrsRAPsnbrivP01XgmFoev");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
