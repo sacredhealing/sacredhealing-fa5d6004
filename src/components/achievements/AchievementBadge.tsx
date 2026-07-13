@@ -118,7 +118,7 @@ export const AchievementBadge = ({
               "text-xs mt-1",
               unlocked ? "text-primary" : "text-muted-foreground"
             )}>
-              +{shcReward} SHC
+              +{shcReward} pts
             </p>
           )}
 

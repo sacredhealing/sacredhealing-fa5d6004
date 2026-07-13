@@ -214,7 +214,7 @@ const PathDayEditor: React.FC<PathDayEditorProps> = ({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="shc_reward">SHC Reward</Label>
+            <Label htmlFor="shc_reward">Reward Points</Label>
             <Input
               id="shc_reward"
               type="number"

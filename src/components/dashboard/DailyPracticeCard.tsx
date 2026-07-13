@@ -74,7 +74,7 @@ export const DailyPracticeCard: React.FC = () => {
             {practice.shc_reward && (
               <span className="flex items-center gap-1 text-accent">
                 <Sparkles className="w-4 h-4" />
-                +{practice.shc_reward} SHC
+                +{practice.shc_reward} pts
               </span>
             )}
           </div>

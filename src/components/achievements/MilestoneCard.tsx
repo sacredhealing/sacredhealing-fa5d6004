@@ -106,7 +106,7 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
               reached ? "text-amber-400" : "text-primary"
             )}>
               <Sparkles className="w-4 h-4" />
-              +{shcReward} SHC
+              +{shcReward} pts
             </div>
           )}
 

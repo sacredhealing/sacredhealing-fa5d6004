@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowUpRight, ArrowDownLeft, Gift, Clock, CheckCircle, Calendar, Play, Users, Crown, Eye, EyeOff, TrendingUp, Send, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
@@ -18,6 +19,7 @@ import { useSHCPrice } from '@/hooks/useSHCPrice';
 type TabType = 'overview' | 'affiliate' | 'send' | 'convert';
 
 const Wallet: React.FC = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('affiliate');
   const [hideBalance, setHideBalance] = useState(false);
@@ -107,14 +109,25 @@ const Wallet: React.FC = () => {
 
         {activeTab === 'affiliate' && (
           <div className="space-y-4">
-            <AffiliateEarningsCard />
-            <BankWithdrawalCard />
+            {/* AffiliateEarningsCard and BankWithdrawalCard intentionally not
+                rendered here anymore. Found while removing SHC: both pull
+                from the legacy useAffiliate() hook (commission_shc,
+                SHC-denominated), a completely separate, disconnected system
+                from the real affiliate_profiles/affiliate_commissions
+                (EUR, Stripe Connect) system built this session. Someone
+                could have seen a wrong "available earnings" figure here and
+                attempted a withdrawal based on incorrect data - a real bug,
+                not just an SHC-label issue. Pointing to the verified real
+                dashboard instead of attempting a blind fix of the legacy
+                cards' data source. */}
+            <div className="text-center py-8 space-y-3">
+              <p className="text-muted-foreground text-sm">View your real affiliate earnings and request payouts here:</p>
+              <Button onClick={() => navigate('/affiliate/dashboard')} className="bg-primary">
+                Open Affiliate Dashboard
+              </Button>
+            </div>
           </div>
         )}
-
-        {activeTab === 'send' && <SendSHCCard />}
-
-        {activeTab === 'convert' && <ConvertGuideCard />}
       </div>
     </div>
   );
