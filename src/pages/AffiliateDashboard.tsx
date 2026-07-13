@@ -253,11 +253,13 @@ const AffiliateDashboard: React.FC = () => {
   const earned = profile?.total_earnings || 0;
   const pending = profile?.pending_balance || 0;
   const paidOut = profile?.paid_out || 0;
+  const downlineEarned = commissions.filter((c) => c.level === 2).reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
 
   const stats = [
     { label: 'Quantum Dividends', value: formatMoney(earned, cur, localeTag), sub: 'Total earned', color: '#D4AF37' },
     { label: 'Pending Balance', value: formatMoney(pending, cur, localeTag), sub: 'Available to withdraw', color: '#22D3EE' },
     { label: 'Transmitted Out', value: formatMoney(paidOut, cur, localeTag), sub: 'Paid to your account', color: '#4ade80' },
+    { label: 'Downline Override', value: formatMoney(downlineEarned, cur, localeTag), sub: 'From people your affiliates recruited', color: '#8b5cf6' },
   ];
 
   const tabs = [
@@ -781,7 +783,10 @@ const AffiliateDashboard: React.FC = () => {
                 {commissions.map((c) => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 16, padding: '12px 16px' }}>
                     <div>
-                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', margin: 0 }}>{c.source === 'trading_l1' ? '⚡ Trading — Level 1 Referral' : c.source === 'trading_l2' ? '🔗 Trading — Level 2 Referral' : 'Initiation Quantum Dividend'}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', margin: 0 }}>
+                        {c.source === 'trading_l1' ? '⚡ Trading — Level 1 Referral' : c.source === 'trading_l2' ? '🔗 Trading — Level 2 Referral' : 'Initiation Quantum Dividend'}
+                        {c.level === 2 && <span style={{ marginLeft: 8, fontSize: '8px', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 100, padding: '2px 8px' }}>Downline Override</span>}
+                      </p>
                       <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginTop: 2 }}>
                         {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short', year: 'numeric' })}
                         {' · Gross: '}{formatMoney(Number(c.gross_amount), c.currency || cur, localeTag)}
