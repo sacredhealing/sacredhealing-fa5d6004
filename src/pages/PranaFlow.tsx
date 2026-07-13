@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { toast } from 'sonner';
 import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/metaPixel';
 
 const PranaFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const PranaFlow: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       toast.success('◈ Prana Field Activated — Welcome to Sonic Vibration');
+      trackPurchase('prana-flow', 19, 'EUR');
       refreshMembership();
       navigate('/prana-flow', { replace: true });
     }
@@ -100,6 +102,7 @@ const PranaFlow: React.FC = () => {
           /* ignore */
         }
       }
+      trackInitiateCheckout('prana-flow', 19, 'EUR');
       await startPranaMonthlyCheckout({
         successPath: '/prana-flow',
         sourcePage: 'prana-flow',

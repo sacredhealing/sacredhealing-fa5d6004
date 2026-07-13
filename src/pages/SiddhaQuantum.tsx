@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/metaPixel';
 
 const SiddhaQuantum: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const SiddhaQuantum: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       toast.success('◈ Universal Field Activated — Welcome to Siddha–Quantum');
+      trackPurchase('siddha-quantum', 45, 'EUR');
       refreshMembership();
       navigate('/siddha-quantum', { replace: true });
     }
@@ -114,6 +116,7 @@ const SiddhaQuantum: React.FC = () => {
         return;
       }
 
+      trackInitiateCheckout('siddha-quantum', 45, 'EUR');
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tierData.stripe_price_id,

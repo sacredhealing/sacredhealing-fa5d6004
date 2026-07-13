@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { trackSignup } from '@/lib/metaPixel';
 
 /**
  * FreeChart — dedicated cold-traffic ad landing page.
@@ -73,6 +74,7 @@ const FreeChart: React.FC = () => {
         body: { email, name: birthData.birth_name, language: navigator.language },
       }).catch(() => { /* best-effort */ });
 
+      trackSignup('free-chart');
       setStep('sent');
     } catch (e: any) {
       const msg = e?.message || 'Something went wrong';

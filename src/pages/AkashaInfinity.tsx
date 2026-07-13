@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/metaPixel';
 
 const AkashaInfinity: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const AkashaInfinity: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       toast.success('◈ Akashic Field Permanently Activated — Welcome to Infinity');
+      trackPurchase('akasha-infinity', 2997, 'EUR');
       refreshMembership();
       navigate('/akasha-infinity', { replace: true });
     }
@@ -138,6 +140,7 @@ const AkashaInfinity: React.FC = () => {
         return;
       }
 
+      trackInitiateCheckout('akasha-infinity', 2997, 'EUR');
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tierData.stripe_price_id,
