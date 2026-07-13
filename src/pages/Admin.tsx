@@ -36,7 +36,7 @@ const ADMIN_SECTIONS = [
   { icon: "🎧", label: "Meditations",          desc: "Upload and manage meditation audio files",        path: "/admin/meditations"       },
   { icon: "✨", label: "Healing Audio",        desc: "Manage healing space audio content",             path: "/admin/healing-audio"     },
   { icon: "🎵", label: "Music Store",          desc: "Upload and manage music tracks for sale",         path: "/admin/music-store"       },
-  { icon: "👑", label: "Mantras",             desc: "Manage sacred mantras — 111 SHC per earn",        path: "/admin/mantras"           },
+  { icon: "👑", label: "Mantras",             desc: "Manage sacred mantras & reward points",        path: "/admin/mantras"           },
   { icon: "🛍️", label: "Shop Products",       desc: "Manage Laila's clothing and art for sale",        path: "/admin/shop"              },
   { icon: "🔮", label: "Private Sessions",     desc: "Session types, packages, and Calendly links",    path: "/admin/private-sessions"  },
   { icon: "🌀", label: "Transformation",       desc: "Program details, variations, and pricing",       path: "/admin/transformation"    },
@@ -94,7 +94,7 @@ export default function AdminHealingNexus() {
   const [stats] = useState([
     { label: "Total Members",     value: "37",   icon: "◎" },
     { label: "Active This Month", value: "1",    icon: "✦" },
-    { label: "SHC Distributed",   value: "1.0K", icon: "⬡" },
+    { label: "Points Distributed", value: "1.0K", icon: "⬡" },
     { label: "Nadi Sessions",     value: "12",   icon: "∿" },
   ]);
 

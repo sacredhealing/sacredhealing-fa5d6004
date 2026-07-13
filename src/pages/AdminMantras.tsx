@@ -619,7 +619,7 @@ const AdminMantras = () => {
                     />
                   </div>
                   <div>
-                    <div className="am-kicker" style={{ marginBottom: 6 }}>SHC Reward</div>
+                    <div className="am-kicker" style={{ marginBottom: 6 }}>Reward Points</div>
                     <Input className="am-input h-11" type="number" value={formData.shc_reward} onChange={(e) => setFormData({ ...formData, shc_reward: parseInt(e.target.value) || 111 })} />
                   </div>
                 </div>
@@ -742,7 +742,7 @@ const AdminMantras = () => {
                             <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.35)', display: 'flex', gap: 8 }}>
                               <span>{fmtDur(mantra.duration_seconds)}</span>
                               <span>·</span>
-                              <span>{mantra.shc_reward} SHC</span>
+                              <span>{mantra.shc_reward} pts</span>
                               {!mantra.is_active && <span style={{ color: 'rgba(251,146,60,.7)' }}>· Inactive</span>}
                             </div>
                           </div>

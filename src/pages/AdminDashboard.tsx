@@ -304,7 +304,7 @@ const adminSections = [
   },
   {
     title: 'Mantras',
-    description: 'Manage sacred mantras for users to earn 111 SHC',
+    description: 'Manage sacred mantras & reward points',
     icon: Crown,
     href: '/admin/mantras',
     color: 'text-amber-500',
@@ -501,7 +501,7 @@ const AdminDashboard: React.FC = () => {
                 <AdminSigilIcon icon={Sparkles} variant="gold" size="sm" />
               </div>
               <p className="text-2xl font-black tracking-tight text-[#D4AF37] tabular-nums">{(stats.totalSHC / 1000).toFixed(1)}K</p>
-              <p className="ad-stat-lbl mt-2">SHC Distributed</p>
+              <p className="ad-stat-lbl mt-2">Points Distributed</p>
             </Card>
           </div>
 
