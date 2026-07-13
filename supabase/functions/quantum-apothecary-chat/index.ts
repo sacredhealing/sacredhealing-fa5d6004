@@ -5451,9 +5451,11 @@ serve(async (req) => {
     // present; falls back to body.userId only if not, matching this
     // function's existing trust pattern elsewhere in the file.
     {
-      const sbLimit = createClient(SUPABASE_URL, SUPABASE_ANON);
       let limitUserId: string | null = body.userId ?? null;
       const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+      const sbLimit = createClient(SUPABASE_URL, SUPABASE_ANON, {
+        global: { headers: authHeader ? { Authorization: authHeader } : {} },
+      });
       if (authHeader?.startsWith("Bearer ")) {
         try {
           const { data } = await sbLimit.auth.getUser(authHeader.replace("Bearer ", ""));
