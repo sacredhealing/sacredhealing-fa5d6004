@@ -17,6 +17,10 @@ interface Transmission {
   category: string;
   audio_url_en: string | null;
   audio_url_sv: string | null;
+  video_url_en: string | null;
+  video_url_sv: string | null;
+  content_type: 'audio' | 'video';
+  price_usd: number | null;
   cover_image_url: string | null;
   duration_seconds: number;
   is_free: boolean;
@@ -70,6 +74,10 @@ const AdminDivineTransmissions: React.FC = () => {
   const [category, setCategory] = useState('divine_transmissions');
   const [audioUrlEn, setAudioUrlEn] = useState('');
   const [audioUrlSv, setAudioUrlSv] = useState('');
+  const [contentType, setContentType] = useState<'audio' | 'video'>('audio');
+  const [videoUrlEn, setVideoUrlEn] = useState('');
+  const [videoUrlSv, setVideoUrlSv] = useState('');
+  const [priceUsd, setPriceUsd] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [durationInput, setDurationInput] = useState('0:00');
   const [isFree, setIsFree] = useState(false);
@@ -96,6 +104,7 @@ const AdminDivineTransmissions: React.FC = () => {
   const resetForm = () => {
     setTitle(''); setDescription(''); setCategory('divine_transmissions');
     setAudioUrlEn(''); setAudioUrlSv(''); setCoverUrl('');
+    setContentType('audio'); setVideoUrlEn(''); setVideoUrlSv(''); setPriceUsd('');
     setDurationInput('0:00'); setIsFree(false); setRequiredTier(0);
     setSeriesName(''); setSeriesOrder(''); setPublished(false);
     setEditingId(null);
@@ -108,6 +117,10 @@ const AdminDivineTransmissions: React.FC = () => {
     setCategory(t.category);
     setAudioUrlEn(t.audio_url_en || '');
     setAudioUrlSv(t.audio_url_sv || '');
+    setContentType(t.content_type || 'audio');
+    setVideoUrlEn(t.video_url_en || '');
+    setVideoUrlSv(t.video_url_sv || '');
+    setPriceUsd(t.price_usd != null ? String(t.price_usd) : '');
     setCoverUrl(t.cover_image_url || '');
     setDurationInput(formatDuration(t.duration_seconds));
     setIsFree(t.is_free);
@@ -124,8 +137,12 @@ const AdminDivineTransmissions: React.FC = () => {
       toast({ title: 'Missing title', variant: 'destructive' });
       return;
     }
-    if (!audioUrlEn && !audioUrlSv) {
+    if (contentType === 'audio' && !audioUrlEn && !audioUrlSv) {
       toast({ title: 'Upload at least one audio file (English or Swedish)', variant: 'destructive' });
+      return;
+    }
+    if (contentType === 'video' && !videoUrlEn && !videoUrlSv) {
+      toast({ title: 'Add at least one video URL (English or Swedish)', variant: 'destructive' });
       return;
     }
 
@@ -136,6 +153,10 @@ const AdminDivineTransmissions: React.FC = () => {
       category,
       audio_url_en: audioUrlEn || null,
       audio_url_sv: audioUrlSv || null,
+      content_type: contentType,
+      video_url_en: videoUrlEn.trim() || null,
+      video_url_sv: videoUrlSv.trim() || null,
+      price_usd: priceUsd.trim() ? parseFloat(priceUsd) : null,
       cover_image_url: coverUrl || null,
       duration_seconds: parseDuration(durationInput),
       is_free: isFree,
@@ -251,10 +272,41 @@ const AdminDivineTransmissions: React.FC = () => {
               <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="A deep exploration of..." rows={3} className="bg-muted/50" />
             </div>
 
+            {/* Content type */}
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">Content Type</label>
+              <div className="flex gap-2">
+                <Button type="button" variant={contentType === 'audio' ? 'default' : 'outline'} size="sm" onClick={() => setContentType('audio')}>🎧 Audio</Button>
+                <Button type="button" variant={contentType === 'video' ? 'default' : 'outline'} size="sm" onClick={() => setContentType('video')}>🎬 Video</Button>
+              </div>
+            </div>
+
             {/* Audio uploads (EN + SV) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AudioUpload value={audioUrlEn} onChange={setAudioUrlEn} folder="divine-transmissions/en" label="🇬🇧 English Audio" />
-              <AudioUpload value={audioUrlSv} onChange={setAudioUrlSv} folder="divine-transmissions/sv" label="🇸🇪 Swedish Audio" />
+            {contentType === 'audio' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AudioUpload value={audioUrlEn} onChange={setAudioUrlEn} folder="divine-transmissions/en" label="🇬🇧 English Audio" />
+                <AudioUpload value={audioUrlSv} onChange={setAudioUrlSv} folder="divine-transmissions/sv" label="🇸🇪 Swedish Audio" />
+              </div>
+            )}
+
+            {/* Video URLs (EN + SV) — paste a hosted link (R2, etc). No upload widget for video yet. */}
+            {contentType === 'video' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-1">🇬🇧 English Video URL</label>
+                  <Input value={videoUrlEn} onChange={e => setVideoUrlEn(e.target.value)} placeholder="https://pub-xxxx.r2.dev/video.mp4" className="bg-muted/50" />
+                </div>
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-1">🇸🇪 Swedish Video URL</label>
+                  <Input value={videoUrlSv} onChange={e => setVideoUrlSv(e.target.value)} placeholder="https://pub-xxxx.r2.dev/video-sv.mp4" className="bg-muted/50" />
+                </div>
+              </div>
+            )}
+
+            {/* Individual purchase price — leave blank for tier-gated only, no individual purchase option */}
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">Individual Unlock Price (€, optional)</label>
+              <Input type="number" step="0.01" min="0" value={priceUsd} onChange={e => setPriceUsd(e.target.value)} placeholder="Leave blank = tier-gated only, no individual purchase" className="bg-muted/50" />
             </div>
 
             {/* Cover image */}
@@ -325,6 +377,8 @@ const AdminDivineTransmissions: React.FC = () => {
                   <div className="flex items-center gap-2 mt-1">
                     {t.is_free && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Free</span>}
                     {!t.is_free && <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">{TIERS.find(x => x.value === t.required_tier)?.label}</span>}
+                    {!!t.price_usd && <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">€{Number(t.price_usd).toFixed(2)} unlock</span>}
+                    {t.content_type === 'video' && <span className="text-xs text-muted-foreground">🎬</span>}
                     {t.audio_url_en && <span className="text-xs text-muted-foreground">🇬🇧</span>}
                     {t.audio_url_sv && <span className="text-xs text-muted-foreground">🇸🇪</span>}
                     {!t.published && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">Draft</span>}
