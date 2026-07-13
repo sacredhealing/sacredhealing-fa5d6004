@@ -6095,6 +6095,7 @@ export type Database = {
           last_activity_date: string | null
           last_login_date: string | null
           last_period_date: string | null
+          membership_tier: string | null
           midday_reminder_time: string
           morning_reminder_time: string
           notification_style: string
@@ -6131,6 +6132,7 @@ export type Database = {
           last_activity_date?: string | null
           last_login_date?: string | null
           last_period_date?: string | null
+          membership_tier?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
           notification_style?: string
@@ -6167,6 +6169,7 @@ export type Database = {
           last_activity_date?: string | null
           last_login_date?: string | null
           last_period_date?: string | null
+          membership_tier?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
           notification_style?: string
@@ -6289,6 +6292,27 @@ export type Database = {
           created_at?: string
           id?: string
           identifier?: string
+        }
+        Relationships: []
+      }
+      rate_limit_log: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
