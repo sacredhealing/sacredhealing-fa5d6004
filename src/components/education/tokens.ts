@@ -93,6 +93,25 @@ export interface RailModule {
   href: string;
 }
 
+/**
+ * A "Module" in the Kajabi/Thinkific sense — a named group (e.g. an
+ * academy phase) containing individual lessons. When an academy's content
+ * has a real grouping field (like Agastyar's `phase`), pass railGroups to
+ * ModuleReaderShell instead of a flat railItems list, and the sidebar
+ * renders as a proper collapsible Module → Lesson accordion.
+ */
+export interface RailGroup {
+  id: string;
+  title: string;
+  /** e.g. "4 / 21 lessons complete" */
+  meta: string;
+  /** true = every lesson in this group is done */
+  done: boolean;
+  /** true = the active lesson is inside this group (keeps it expanded, highlights the ring) */
+  current: boolean;
+  items: RailModule[];
+}
+
 export interface ContentBlock {
   label: string;       // e.g. "TEACHING", "PRACTICE", "REFLECTION"
   title?: string;

@@ -133,27 +133,49 @@ const AgastyarModule: React.FC = () => {
   }, [nextModule, isAdmin, tier]);
 
   /** Rail list for the unified ModuleReaderShell — same shape every academy will build. */
-  const railItems = useMemo(() => {
-    return sortedCourses.map((c) => {
-      const done = Boolean(progressByModuleId[c.id]?.completed);
-      const isCurrentModule = module ? c.id === module.id : false;
-      const courseAllowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(c.tier_required));
-      const state: 'done' | 'current' | 'available' | 'locked' = done
-        ? 'done'
-        : isCurrentModule
-          ? 'current'
-          : courseAllowed
-            ? 'available'
-            : 'locked';
+  /**
+   * Kajabi/Thinkific-style Module → Lesson accordion, built from the
+   * existing `phase` field (1-5) already on every ayurveda_courses row —
+   * no new data needed. Phase names come from the existing
+   * academy.modulePlayer.phaseNames.p1-p5 translation keys.
+   */
+  const railGroups = useMemo(() => {
+    const phases = [1, 2, 3, 4, 5] as const;
+    return phases.map((phase) => {
+      const items = sortedCourses.filter((c) => c.phase === phase);
+      const doneCount = items.filter((c) => progressByModuleId[c.id]?.completed).length;
+      const containsCurrent = module ? items.some((c) => c.id === module.id) : false;
+
+      const lessonItems = items.map((c) => {
+        const done = Boolean(progressByModuleId[c.id]?.completed);
+        const isCurrentModule = module ? c.id === module.id : false;
+        const courseAllowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(c.tier_required));
+        const state: 'done' | 'current' | 'available' | 'locked' = done
+          ? 'done'
+          : isCurrentModule
+            ? 'current'
+            : courseAllowed
+              ? 'available'
+              : 'locked';
+        return {
+          id: c.id,
+          number: c.module_number,
+          title: c.title,
+          state,
+          href: `/agastyar-academy/module/${c.id}`,
+        };
+      });
+
       return {
-        id: c.id,
-        number: c.module_number,
-        title: c.title,
-        state,
-        href: `/agastyar-academy/module/${c.id}`,
+        id: `phase-${phase}`,
+        title: `${phase}. ${t(`academy.modulePlayer.phaseNames.p${phase}`)}`,
+        meta: `${doneCount} / ${items.length} lessons${doneCount === items.length && items.length > 0 ? ' complete' : ''}`,
+        done: items.length > 0 && doneCount === items.length,
+        current: containsCurrent,
+        items: lessonItems,
       };
     });
-  }, [sortedCourses, progressByModuleId, module, isAdmin, tier]);
+  }, [sortedCourses, progressByModuleId, module, isAdmin, tier, t]);
 
 
   const fetchModule = useCallback(async () => {
@@ -419,7 +441,9 @@ const AgastyarModule: React.FC = () => {
       thesis={module.subtitle || undefined}
       progressLabel={progressLabel}
       progressPercent={progressPercent}
-      railItems={railItems}
+      courseTitle="Ayurveda Mastery Path"
+      courseIcon="🪷"
+      railGroups={railGroups}
       contentBlocks={richModuleContent ? [] : [{ label: t('academy.modules.moduleMeta', { num: module.module_number, phase: module.phase }), body: fallbackBody }]}
       locked={!allowed}
       lockedCta={

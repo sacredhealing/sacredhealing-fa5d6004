@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronDown, Lock, Check } from 'lucide-react';
-import { fade, white, teal, READER_TYPE, type RailModule, type ContentBlock } from './tokens';
+import { fade, white, teal, READER_TYPE, type RailModule, type RailGroup, type ContentBlock } from './tokens';
 import EducationKeyframes from './EducationKeyframes';
 
 export interface ModuleReaderShellProps {
@@ -9,6 +9,9 @@ export interface ModuleReaderShellProps {
   accent: string;
   academyName: string;
   academyHref: string;
+  /** One-line course title shown at the top of the sidebar, Kajabi-style */
+  courseTitle?: string;
+  courseIcon?: string; // emoji/icon shown in the sidebar thumbnail block
   moduleNumber: number;
   totalModules: number;
   moduleTitle: string;
@@ -16,7 +19,10 @@ export interface ModuleReaderShellProps {
   thesis?: string;
   progressLabel: string;   // "68 / 108 modules · 63%"
   progressPercent: number; // 0-100, academy-wide (not this module alone)
-  railItems: RailModule[];
+  /** Flat rail (used when the academy has no natural module→lesson grouping) */
+  railItems?: RailModule[];
+  /** Grouped Module→Lesson accordion (Kajabi/Thinkific pattern) — takes priority over railItems when provided */
+  railGroups?: RailGroup[];
   contentBlocks: ContentBlock[];
   /** True if this module is beyond the user's current tier */
   locked?: boolean;
@@ -44,6 +50,8 @@ export default function ModuleReaderShell({
   accent,
   academyName,
   academyHref,
+  courseTitle,
+  courseIcon = '◆',
   moduleNumber,
   totalModules,
   moduleTitle,
@@ -51,6 +59,7 @@ export default function ModuleReaderShell({
   progressLabel,
   progressPercent,
   railItems,
+  railGroups,
   contentBlocks,
   locked = false,
   lockedCta,
@@ -64,12 +73,22 @@ export default function ModuleReaderShell({
 }: ModuleReaderShellProps) {
   const navigate = useNavigate();
   const [railOpen, setRailOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(
+    () => new Set((railGroups || []).filter((g) => g.current).map((g) => g.id))
+  );
+
+  const toggleGroup = (id: string) =>
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   const acFaint = fade(accent, 0.1);
   const acGlow = fade(accent, 0.22);
   const acBorder = fade(accent, 0.42);
 
-  const rail = (
+  const flatRail = railItems && (
     <>
       {railItems.map((m) => {
         const isDone = m.state === 'done';
@@ -103,6 +122,77 @@ export default function ModuleReaderShell({
       })}
     </>
   );
+
+  /** Kajabi/Thinkific pattern: collapsible Module -> Lesson accordion */
+  const groupedRail = railGroups && (
+    <>
+      {railGroups.map((g) => {
+        const isOpen = openGroups.has(g.id);
+        const ringBg = g.done ? teal(0.16) : g.current ? fade(accent, 0.12) : 'rgba(255,255,255,.04)';
+        const ringBorder = g.done ? teal(0.5) : g.current ? accent : 'rgba(255,255,255,.12)';
+        const ringColor = g.done ? teal(0.95) : g.current ? accent : white(0.4);
+        return (
+          <div key={g.id} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+            <div
+              onClick={() => toggleGroup(g.id)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 10px', cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{
+                  width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 800, background: ringBg, border: `1.5px solid ${ringBorder}`, color: ringColor,
+                  boxShadow: g.current ? `0 0 0 3px ${fade(accent, 0.1)}` : 'none',
+                }}>
+                  {g.done ? <Check size={12} /> : g.current ? '●' : ''}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: white(0.88), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.title}</div>
+                  <div style={{ fontSize: 9.5, color: white(0.35), marginTop: 1 }}>{g.meta}</div>
+                </div>
+              </div>
+              <ChevronDown size={14} style={{ color: white(0.3), flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
+            </div>
+            {isOpen && (
+              <div>
+                {g.items.map((m) => {
+                  const isDone = m.state === 'done';
+                  const isCurrent = m.state === 'current';
+                  const isLocked = m.state === 'locked';
+                  const dotBg = isDone ? teal(0.16) : isCurrent ? fade(accent, 0.14) : 'transparent';
+                  const dotBorder = isDone ? teal(0.5) : isCurrent ? accent : 'rgba(255,255,255,.15)';
+                  const dotColor = isDone ? teal(0.95) : isCurrent ? accent : white(0.3);
+                  return (
+                    <div
+                      key={m.id}
+                      onClick={() => !isLocked && navigate(m.href)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 8px 34px',
+                        background: isCurrent ? fade(accent, 0.06) : 'transparent',
+                        cursor: isLocked ? 'default' : 'pointer', position: 'relative',
+                      }}
+                    >
+                      {isCurrent && <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 2, background: accent }} />}
+                      <div style={{
+                        width: 17, height: 17, borderRadius: '50%', flexShrink: 0, border: `1.5px solid ${dotBorder}`,
+                        background: dotBg, color: dotColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8,
+                      }}>
+                        {isDone ? <Check size={9} /> : isLocked ? <Lock size={8} /> : null}
+                      </div>
+                      <span style={{ fontSize: 12, color: isCurrent ? white(0.95) : isLocked ? white(0.3) : white(0.62), fontWeight: isCurrent ? 700 : 500, lineHeight: 1.3 }}>
+                        {m.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+
+  const rail = railGroups ? groupedRail : flatRail;
 
   return (
     <div style={{ minHeight: '100vh', background: '#050505', color: white(0.9), paddingBottom: 120 }}>
@@ -178,13 +268,37 @@ export default function ModuleReaderShell({
 
           {/* DESKTOP RAIL */}
           <div className="reader-rail-desktop" style={{
-            flex: '0 0 220px', position: 'sticky', top: 76,
+            flex: '0 0 260px', position: 'sticky', top: 76,
             background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)',
-            borderRadius: 20, padding: '14px 10px', display: 'none',
+            borderRadius: 20, padding: '16px 0 10px', display: 'none', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto',
           }}>
-            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: white(0.35), padding: '4px 10px 10px' }}>
-              This Academy
-            </div>
+            {courseTitle && (
+              <div style={{ padding: '0 14px 14px', borderBottom: '1px solid rgba(255,255,255,.06)', marginBottom: 10 }}>
+                <div style={{
+                  width: '100%', aspectRatio: '16/9', borderRadius: 14, marginBottom: 12, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: 26,
+                  background: `radial-gradient(120% 120% at 20% 20%, ${fade(accent, 0.3)}, rgba(5,5,5,.9))`,
+                  border: `1px solid ${acBorder}`,
+                }}>
+                  {courseIcon}
+                </div>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: accent, marginBottom: 4 }}>
+                  {academyName}
+                </div>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '1.15rem', fontWeight: 600, marginBottom: 10 }}>{courseTitle}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, marginBottom: 5 }}>
+                  <b style={{ color: accent, fontWeight: 800 }}>{progressLabel}</b>
+                </div>
+                <div style={{ height: 3, borderRadius: 10, background: 'rgba(255,255,255,.08)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${progressPercent}%`, borderRadius: 10, background: `linear-gradient(90deg,${accent},${fade(accent, 0.6)})` }} />
+                </div>
+              </div>
+            )}
+            {!courseTitle && (
+              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: white(0.35), padding: '4px 14px 10px' }}>
+                This Academy
+              </div>
+            )}
             {rail}
           </div>
 
@@ -203,7 +317,7 @@ export default function ModuleReaderShell({
                   fontSize: 10, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: accent,
                 }}
               >
-                Module list — tap to browse
+                {courseTitle || 'Module list'} — tap to browse
                 <ChevronDown size={14} style={{ transform: railOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
               </button>
               {railOpen && <div style={{ marginTop: 10 }}>{rail}</div>}
