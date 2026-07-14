@@ -147,7 +147,7 @@ const PathDetail: React.FC = () => {
             </div>
             <div className="flex items-center gap-1 text-accent">
               <Star className="w-4 h-4" />
-              <span>+{path.shc_reward_total} SHC</span>
+              <span>+{path.shc_reward_total} pts</span>
             </div>
           </div>
 
@@ -206,7 +206,7 @@ const PathDetail: React.FC = () => {
                         <span className="font-medium text-foreground">
                           {t('spiritualPath.day')} {day.day_number}: {pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.title`, day.title) : day.title}
                         </span>
-                        <span className="text-xs text-accent ml-2">+{day.shc_reward} SHC</span>
+                        <span className="text-xs text-accent ml-2">+{day.shc_reward} pts</span>
                       </div>
                     </div>
                   </AccordionTrigger>

@@ -2121,6 +2121,48 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_abandonment_log: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+          price_label: string | null
+          recovered_at: string | null
+          recovery_email_sent_at: string | null
+          session_url: string | null
+          stripe_session_id: string
+          tier_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id?: string
+          price_label?: string | null
+          recovered_at?: string | null
+          recovery_email_sent_at?: string | null
+          session_url?: string | null
+          stripe_session_id: string
+          tier_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+          price_label?: string | null
+          recovered_at?: string | null
+          recovery_email_sent_at?: string | null
+          session_url?: string | null
+          stripe_session_id?: string
+          tier_slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       clawbot_affiliate_rates: {
         Row: {
           l1_pct: number
@@ -3390,57 +3432,107 @@ export type Database = {
           },
         ]
       }
+      divine_transmission_purchases: {
+        Row: {
+          amount_usd: number
+          id: string
+          purchased_at: string
+          stripe_session_id: string | null
+          transmission_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_usd: number
+          id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          transmission_id: string
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          transmission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "divine_transmission_purchases_transmission_id_fkey"
+            columns: ["transmission_id"]
+            isOneToOne: false
+            referencedRelation: "divine_transmissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       divine_transmissions: {
         Row: {
           audio_url_en: string | null
           audio_url_sv: string | null
           category: string
+          content_type: string
           cover_image_url: string | null
           created_at: string
           description: string | null
           duration_seconds: number
           id: string
           is_free: boolean
+          price_usd: number | null
           published: boolean
           required_tier: number
           series_name: string | null
           series_order: number | null
+          thumbnail_url: string | null
           title: string
           updated_at: string
+          video_url_en: string | null
+          video_url_sv: string | null
         }
         Insert: {
           audio_url_en?: string | null
           audio_url_sv?: string | null
           category?: string
+          content_type?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number
           id?: string
           is_free?: boolean
+          price_usd?: number | null
           published?: boolean
           required_tier?: number
           series_name?: string | null
           series_order?: number | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
+          video_url_en?: string | null
+          video_url_sv?: string | null
         }
         Update: {
           audio_url_en?: string | null
           audio_url_sv?: string | null
           category?: string
+          content_type?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number
           id?: string
           is_free?: boolean
+          price_usd?: number | null
           published?: boolean
           required_tier?: number
           series_name?: string | null
           series_order?: number | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          video_url_en?: string | null
+          video_url_sv?: string | null
         }
         Relationships: []
       }
@@ -3695,6 +3787,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_teachings: {
+        Row: {
+          body_text: string
+          created_at: string
+          id: string
+          is_active: boolean
+          source_note: string | null
+          theme: string
+          title: string
+        }
+        Insert: {
+          body_text: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          source_note?: string | null
+          theme: string
+          title: string
+        }
+        Update: {
+          body_text?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          source_note?: string | null
+          theme?: string
+          title?: string
+        }
+        Relationships: []
+      }
       email_unsubscribe_tokens: {
         Row: {
           created_at: string
@@ -3776,6 +3898,7 @@ export type Database = {
           preview_url: string | null
           price_shc: number
           price_usd: number
+          required_tier: string
           script_text: string | null
           tags: string[] | null
           title: string
@@ -3794,6 +3917,7 @@ export type Database = {
           preview_url?: string | null
           price_shc?: number
           price_usd?: number
+          required_tier?: string
           script_text?: string | null
           tags?: string[] | null
           title: string
@@ -3812,6 +3936,7 @@ export type Database = {
           preview_url?: string | null
           price_shc?: number
           price_usd?: number
+          required_tier?: string
           script_text?: string | null
           tags?: string[] | null
           title?: string
@@ -6065,6 +6190,7 @@ export type Database = {
           last_activity_date: string | null
           last_login_date: string | null
           last_period_date: string | null
+          membership_tier: string | null
           midday_reminder_time: string
           morning_reminder_time: string
           notification_style: string
@@ -6101,6 +6227,7 @@ export type Database = {
           last_activity_date?: string | null
           last_login_date?: string | null
           last_period_date?: string | null
+          membership_tier?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
           notification_style?: string
@@ -6137,6 +6264,7 @@ export type Database = {
           last_activity_date?: string | null
           last_login_date?: string | null
           last_period_date?: string | null
+          membership_tier?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
           notification_style?: string
@@ -6217,6 +6345,33 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_pairing_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          session_hash: string | null
+          status: string
+          token: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          session_hash?: string | null
+          status?: string
+          token?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          session_hash?: string | null
+          status?: string
+          token?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rate_limit_events: {
         Row: {
           created_at: string
@@ -6232,6 +6387,27 @@ export type Database = {
           created_at?: string
           id?: string
           identifier?: string
+        }
+        Relationships: []
+      }
+      rate_limit_log: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -9235,6 +9411,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_teaching_log: {
+        Row: {
+          email_context: string | null
+          id: string
+          sent_at: string
+          teaching_id: string
+          user_id: string
+        }
+        Insert: {
+          email_context?: string | null
+          id?: string
+          sent_at?: string
+          teaching_id: string
+          user_id: string
+        }
+        Update: {
+          email_context?: string | null
+          id?: string
+          sent_at?: string
+          teaching_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_teaching_log_teaching_id_fkey"
+            columns: ["teaching_id"]
+            isOneToOne: false
+            referencedRelation: "email_teachings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_vedic_astrology_access: {
         Row: {
           expires_at: string | null
@@ -9689,7 +9897,32 @@ export type Database = {
       }
     }
     Functions: {
+      check_daily_apothecary_limit: {
+        Args: { p_tier_slug: string; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          remaining: number
+        }[]
+      }
+      check_daily_chat_limit: {
+        Args: { p_tier_slug: string; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          remaining: number
+        }[]
+      }
+      check_daily_community_chat_limit: {
+        Args: { p_tier_slug: string; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          remaining: number
+        }[]
+      }
       clawbot_fee_for_tier: { Args: { tier_name: string }; Returns: number }
+      cleanup_qr_pairing_tokens: { Args: never; Returns: undefined }
       cleanup_rate_limit_events: { Args: never; Returns: undefined }
       current_user_tier_level: { Args: never; Returns: number }
       delete_email: {
@@ -9703,6 +9936,25 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       generate_sqi_affiliate_code: { Args: never; Returns: string }
+      get_featured_content: {
+        Args: { p_category?: string; p_kind?: string }
+        Returns: {
+          duration_label: string
+          kind: string
+          title: string
+          url_path: string
+        }[]
+      }
+      get_next_teaching: {
+        Args: { p_theme?: string; p_user_id: string }
+        Returns: {
+          body_text: string
+          id: string
+          source_note: string
+          theme: string
+          title: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -9723,6 +9975,10 @@ export type Database = {
       is_codex_admin: { Args: { uid: string }; Returns: boolean }
       is_room_member: { Args: { _room_id: string }; Returns: boolean }
       is_user_blocked: { Args: { check_user_id: string }; Returns: boolean }
+      log_teaching_sent: {
+        Args: { p_context: string; p_teaching_id: string; p_user_id: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string

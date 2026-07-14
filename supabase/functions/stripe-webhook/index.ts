@@ -19,6 +19,8 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
   // Legacy
   'price_1Os1suAPsnbrivP0PxsynQAO': { type: 'stargate', name: 'Stargate Transformation Online' },
   'price_1SZqNuAPsnbrivP0ZygF4M88': { type: 'stargate', name: 'Stargate Membership' },
+  'price_1TsrsRAPsnbrivP01XgmFoev': { type: 'stargate', name: 'Stargate Membership' },
+  'price_1TsrleAPsnbrivP0bjQZ2son': { type: 'stargate', name: 'Stargate Membership (Member Discount)' },
   'price_1SaGNbAPsnbrivP0DBsBGh9V': { type: 'meditation', name: 'Meditation Membership Monthly' },
   'price_1SaGG4APsnbrivP0nnavK58y': { type: 'music', name: 'Music Membership Monthly' },
   // SQI Membership Tiers (env-driven — resolved at runtime below)
@@ -30,12 +32,13 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
 const MEMBERSHIP_PRICE_TO_SLUG: Record<string, string> = {
   "price_1T8o3YAPsnbrivP056UJqOP7": "prana-flow",
   "price_1T8o3jAPsnbrivP0uZKR33EY": "siddha-quantum",
-  "price_1T8o3kAPsnbrivP0m8bOzl3M": "akasha-infinity",
+  "price_1T8o3kAPsnbrivP0m8bOzl3M": "akasha-infinity",  // legacy €1111 — keep for existing lifetime members
+  "price_1TsTQbAPsnbrivP0X0Obb5YN": "akasha-infinity",  // current €2997
 };
 const MEMBERSHIP_SLUG_TO_NAME: Record<string, string> = {
   "prana-flow": "Prana-Flow Membership (€19/mo)",
   "siddha-quantum": "Siddha-Quantum Membership (€45/mo)",
-  "akasha-infinity": "Akasha-Infinity Lifetime Access (€1,111)",
+  "akasha-infinity": "Akasha-Infinity Lifetime Access (€2,997)",
 };
 
 // Maps checkout metadata types to purchase category
@@ -355,7 +358,7 @@ async function processAffiliateCommission(supabaseAdmin: any, params: {
   // Find affiliate profile by code
   const { data: affiliateProfile, error: profileError } = await supabaseAdmin
     .from('affiliate_profiles')
-    .select('user_id, total_earnings, pending_balance')
+    .select('user_id, total_earnings, pending_balance, recruited_by_user_id')
     .eq('affiliate_code', affiliateCode)
     .maybeSingle();
 
@@ -380,6 +383,7 @@ async function processAffiliateCommission(supabaseAdmin: any, params: {
       commission_rate: COMMISSION_RATE,
       currency: currency.toUpperCase(),
       status: 'approved', // Auto-approve: Stripe confirmed payment
+      level: 1,
     });
 
   if (insertError) {
@@ -397,6 +401,61 @@ async function processAffiliateCommission(supabaseAdmin: any, params: {
     .eq('user_id', affiliateProfile.user_id);
 
   logStep("Commission recorded", { affiliateCode, commissionAmount, currency, newPending });
+
+  // ── Tier 2 (MLM override) ──────────────────────────────────────────────
+  // If this Tier-1 affiliate was themselves recruited by another affiliate,
+  // that upline earns an override on this same sale too — separate record,
+  // separate idempotency key (same stripeSessionId would violate the
+  // unique constraint on a second insert). Rate NOT confirmed with
+  // Kritagya/Laila — 10% default, adjust below if a different number is
+  // wanted. Applies to every commission event this function handles,
+  // meaning renewals cascade to the upline too, same as Tier 1.
+  if (affiliateProfile.recruited_by_user_id) {
+    const TIER2_RATE = 0.10;
+    const tier2SessionId = `${stripeSessionId}_tier2`;
+
+    const { data: tier2Existing } = await supabaseAdmin
+      .from('affiliate_commissions').select('id').eq('stripe_session_id', tier2SessionId).maybeSingle();
+
+    if (!tier2Existing) {
+      const { data: uplineProfile } = await supabaseAdmin
+        .from('affiliate_profiles')
+        .select('user_id, total_earnings, pending_balance')
+        .eq('user_id', affiliateProfile.recruited_by_user_id)
+        .maybeSingle();
+
+      if (uplineProfile) {
+        const tier2Amount = parseFloat((grossAmount * TIER2_RATE).toFixed(2));
+
+        const { error: tier2InsertError } = await supabaseAdmin
+          .from('affiliate_commissions')
+          .insert({
+            affiliate_user_id: uplineProfile.user_id,
+            referred_user_id: referredUserId,
+            stripe_session_id: tier2SessionId,
+            stripe_payment_intent_id: paymentIntentId,
+            gross_amount: grossAmount,
+            commission_amount: tier2Amount,
+            commission_rate: TIER2_RATE,
+            currency: currency.toUpperCase(),
+            status: 'approved',
+            level: 2,
+          });
+
+        if (!tier2InsertError) {
+          const uplineNewTotal = parseFloat(((uplineProfile.total_earnings || 0) + tier2Amount).toFixed(2));
+          const uplineNewPending = parseFloat(((uplineProfile.pending_balance || 0) + tier2Amount).toFixed(2));
+          await supabaseAdmin
+            .from('affiliate_profiles')
+            .update({ total_earnings: uplineNewTotal, pending_balance: uplineNewPending, updated_at: new Date().toISOString() })
+            .eq('user_id', uplineProfile.user_id);
+          logStep("Tier 2 override commission recorded", { uplineUserId: uplineProfile.user_id, tier2Amount, currency });
+        } else {
+          logStep("Failed to insert Tier 2 commission", { error: tier2InsertError.message });
+        }
+      }
+    }
+  }
 
   // Send notification email to affiliate
   try {
@@ -491,6 +550,16 @@ serve(async (req) => {
     // ═══════════════════════════════════════════════════════════════
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+
+      // Mark abandonment-recovery row as recovered regardless of downstream
+      // logic below — best-effort, never blocks webhook processing.
+      try {
+        await supabaseAdmin.from("checkout_abandonment_log")
+          .update({ recovered_at: new Date().toISOString() })
+          .eq("stripe_session_id", session.id)
+          .is("recovered_at", null);
+      } catch { /* non-fatal */ }
+
       if (session.payment_status !== "paid") {
         await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'skipped', 'Not paid');
         return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -512,6 +581,53 @@ serve(async (req) => {
       let userId: string | null = session.metadata?.user_id || null;
       if (!userId && customerEmail) {
         userId = await resolveUserByEmail(supabaseAdmin, customerEmail);
+      }
+
+      // Mark any pending win-back sequence resolved — they're back, no need
+      // to keep sending "we miss you" emails. Best-effort, non-blocking.
+      if (userId) {
+        try {
+          await supabaseAdmin.from("cancellation_winback_log")
+            .update({ resubscribed_at: new Date().toISOString() })
+            .eq("user_id", userId)
+            .is("resubscribed_at", null);
+        } catch { /* non-fatal */ }
+      }
+
+      // FIX: individual content purchases (music, healing audio, divine
+      // transmission) — the checkout session creation worked correctly for
+      // all of these, but NOTHING ever actually wrote the purchase record
+      // after Stripe confirmed payment. The success redirect param existed
+      // in each edge function but was never consumed by the frontend
+      // either. Real customers could have paid via Stripe and never
+      // received access. Neither purchase-music nor purchase-healing-audio
+      // tag a purchase_type in metadata, so detect by field presence.
+      if (userId) {
+        try {
+          const trackId = session.metadata?.track_id;
+          const audioId = session.metadata?.audio_id;
+          const transmissionId = session.metadata?.transmission_id;
+          const amountPaid = (session.amount_total ?? 0) / 100;
+
+          if (trackId) {
+            await supabaseAdmin.from("music_purchases").upsert(
+              { user_id: userId, track_id: trackId, payment_method: "stripe", amount_paid: amountPaid, stripe_payment_id: session.id },
+              { onConflict: "user_id,track_id" }
+            );
+          } else if (audioId) {
+            await supabaseAdmin.from("healing_audio_purchases").upsert(
+              { user_id: userId, audio_id: audioId, payment_method: "stripe", amount_paid: amountPaid },
+              { onConflict: "user_id,audio_id" }
+            );
+          } else if (transmissionId) {
+            await supabaseAdmin.from("divine_transmission_purchases").upsert(
+              { user_id: userId, transmission_id: transmissionId, stripe_session_id: session.id, amount_usd: amountPaid },
+              { onConflict: "user_id,transmission_id" }
+            );
+          }
+        } catch (contentPurchaseErr) {
+          logStep("Content purchase recording failed (non-blocking)", { error: String(contentPurchaseErr) });
+        }
       }
 
       // Record revenue
@@ -694,6 +810,32 @@ serve(async (req) => {
         notes: invoice.billing_reason === 'subscription_cycle' ? `Recurring (${currency})` : `Initial subscription (${currency})`,
       });
 
+      // Recurring affiliate commission — only on actual renewals
+      // (subscription_cycle), never the first payment, which
+      // checkout.session.completed already pays commission on separately.
+      // Resolved via the permanent affiliate_attribution table, not session
+      // metadata (invoices don't carry that) — this is what makes a
+      // referral "always linked" for as long as the person stays
+      // subscribed, not just their first month.
+      if (invoice.billing_reason === 'subscription_cycle' && userId && productInfo.type === 'membership') {
+        try {
+          const { data: attribution } = await supabaseAdmin
+            .from('affiliate_attribution').select('ref_code').eq('user_id', userId).maybeSingle();
+          if (attribution?.ref_code && attribution.ref_code !== 'direct') {
+            await processAffiliateCommission(supabaseAdmin, {
+              stripeSessionId: `invoice_${invoice.id}`, // distinct idempotency key from the initial checkout session
+              affiliateCode: attribution.ref_code,
+              grossAmount: amountPaid,
+              currency,
+              paymentIntentId: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : null,
+              referredUserId: userId,
+            });
+          }
+        } catch (e) {
+          logStep("Recurring commission (best-effort) failed", String(e));
+        }
+      }
+
       // Send email
       if (customerEmail) {
         await sendPurchaseEmail({
@@ -825,6 +967,21 @@ serve(async (req) => {
                 if (p?.full_name) buyerName = p.full_name;
               }
               await sendCancellationEmail({ toEmail: email, toName: buyerName, productName, accessUntil: accessDate });
+
+              // Track for the delayed win-back sequence (separate from this
+              // immediate confirmation email) — best-effort, non-blocking.
+              if (userId) {
+                try {
+                  await supabaseAdmin.from("cancellation_winback_log").insert({
+                    user_id: userId,
+                    email,
+                    tier_slug: tierSlug,
+                    access_until: currentPeriodEnd,
+                  });
+                } catch (wbErr) {
+                  logStep("Winback log insert failed (non-blocking)", { error: String(wbErr) });
+                }
+              }
             }
           } catch (emailErr) {
             logStep("Cancellation email failed (non-blocking)", { error: String(emailErr) });
@@ -833,7 +990,7 @@ serve(async (req) => {
       }
 
       // ── Stargate subscription sync ────────────────────────────────────────
-      if (priceId === 'price_1SZqNuAPsnbrivP0ZygF4M88' && userId) {
+      if (['price_1SZqNuAPsnbrivP0ZygF4M88', 'price_1TsrsRAPsnbrivP01XgmFoev', 'price_1TsrleAPsnbrivP0bjQZ2son'].includes(priceId) && userId) {
         const hasActiveAccess = status === "active" || status === "trialing";
         if (hasActiveAccess) {
           const { data: existingMember } = await supabaseAdmin.from('stargate_community_members').select('id').eq('user_id', userId).maybeSingle();

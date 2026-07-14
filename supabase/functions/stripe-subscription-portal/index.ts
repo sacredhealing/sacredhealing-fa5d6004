@@ -46,7 +46,7 @@ serve(async (req) => {
       );
     }
 
-    const origin = req.headers.get("origin") ?? "https://sacredhealing.lovable.app";
+    const origin = req.headers.get("origin") ?? "https://siddhaquantumnexus.com";
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: origin + "/profile",

@@ -338,7 +338,7 @@ serve(async (req) => {
 
     // Override sender identity in From header to match the chosen voice
     const personalFromEmail = generatedCopy.sender === "Laila"
-      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Laila Amrouche <noreply@siddhaquantumnexus.com>")
+      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Karaveera Nivasini Dasi <noreply@siddhaquantumnexus.com>")
       : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
 
     // ── TEST MODE: override recipient list ──
@@ -358,8 +358,17 @@ serve(async (req) => {
 
     for (const user of userStates) {
       try {
-        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy);
+        const { data: teachingRows } = await supabase.rpc("get_next_teaching", {
+          p_user_id: user.userId,
+          p_theme: null,
+        });
+        const teaching = teachingRows?.[0] ?? null;
+
+        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy, teaching);
         await resend.emails.send({ from: personalFromEmail, to: [user.email], subject, html, text });
+        if (teaching?.id && !testEmail) {
+          await supabase.rpc("log_teaching_sent", { p_user_id: user.userId, p_teaching_id: teaching.id, p_context: "monday" });
+        }
         if (!testEmail) {
           await supabase.from("user_weekly_email_log").insert({
             user_id: user.userId, week_start: weekStartStr,
@@ -611,7 +620,8 @@ function buildEmail(
   user: UserState,
   appUrl: string,
   newContent: ContentItem[],
-  generated: { subject: string; opening: string; body: string; sender: "Kritagya" | "Laila" }
+  generated: { subject: string; opening: string; body: string; sender: "Kritagya" | "Laila" },
+  teaching: { title: string; body_text: string } | null
 ): { subject: string; html: string; text: string } {
   const name = user.fullName || t.seeker[user.language];
   const L = user.language;
@@ -673,7 +683,7 @@ function buildEmail(
     subject = generated.subject.trim();
   }
 
-  const senderLabel = generated.sender === "Laila" ? "Laila Amrouche" : "Adam Kritagya Das";
+  const senderLabel = generated.sender === "Laila" ? "Karaveera Nivasini Dasi" : "Kritagya Das";
   const hasGenerated = !!(generated.opening || generated.body);
 
   // Gemini text prepends above the stats — it does not replace the segment body.
@@ -687,6 +697,12 @@ function buildEmail(
 
   const digestBlock = buildContentDigest(newContent, L, appUrl);
 
+  const teachingBlock = teaching ? `
+    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-left:2px solid #D4AF37;border-radius:8px;padding:20px 24px;margin-top:16px;">
+      <div style="font-size:8px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.6);margin-bottom:8px;">${teaching.title}</div>
+      <p style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.8;margin:0;font-style:italic;">${teaching.body_text}</p>
+    </div>` : "";
+
   const html = `<!DOCTYPE html>
 <html lang="${L}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -698,10 +714,11 @@ function buildEmail(
     </div>
     <div style="${styles.content}">
       ${fullBodyHtml}
+      ${teachingBlock}
     </div>
     ${digestBlock}
     <div style="${styles.footer}">
-      <p style="${styles.footerTextStyle}">— With love, Kritagya &amp; Laila · Uddevalla</p>
+      <p style="${styles.footerTextStyle}">— With love, Kritagya Das &amp; Karaveera Nivasini Dasi · Uddevalla</p>
       <p style="${styles.footerTextStyle}">${t.footerText[L]}</p>
       <p style="${styles.footerTextStyle}"><a href="${appUrl}/dashboard?unsubscribe=true" style="color:#D4AF37;">${t.unsubscribe[L]}</a></p>
     </div>

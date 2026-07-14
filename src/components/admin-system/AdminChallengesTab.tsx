@@ -297,7 +297,7 @@ const AdminChallengesTab: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>SHC Reward</Label>
+                  <Label>Reward Points</Label>
                   <Input
                     type="number"
                     value={formData.shc_reward}
@@ -415,7 +415,7 @@ const AdminChallengesTab: React.FC = () => {
                       <p className="text-muted-foreground">Reward</p>
                       <p className="font-semibold flex items-center gap-1">
                         <Trophy className="w-4 h-4" />
-                        +{challenge.shc_reward} SHC
+                        +{challenge.shc_reward} pts
                       </p>
                     </div>
                   </div>

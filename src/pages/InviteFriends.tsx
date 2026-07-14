@@ -52,7 +52,7 @@ const InviteFriends: React.FC = () => {
           <Card className="p-4 bg-muted/30 border-border/30">
             <div className="flex flex-col items-center text-center space-y-2">
               <Sparkles className="w-6 h-6 text-amber-500" />
-              <p className="text-sm text-muted-foreground">Earn SHC rewards</p>
+              <p className="text-sm text-muted-foreground">Earn rewards</p>
             </div>
           </Card>
         </div>
@@ -64,7 +64,7 @@ const InviteFriends: React.FC = () => {
           </h3>
           <SocialShare 
             title="Siddha Quantum Nexus App"
-            text="Join me on Siddha Quantum Nexus - Transform your spiritual journey and earn SHC tokens! 🧘‍♀️✨"
+            text="Join me on Siddha Quantum Nexus - Transform your spiritual journey and earn rewards! 🧘‍♀️✨"
           />
         </Card>
       </div>

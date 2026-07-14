@@ -1,33 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
+import { getUpcomingEkadashis } from '@/lib/ekadashiEngine';
 
-// ── Verified 2026–2027 Ekadashi dates (Drik Panchang, IST) ─────────────────
-const EKADASHIS: { date: string; name: string; paksha: 'Shukla' | 'Krishna' }[] = [
-  { date: '2026-06-25', name: 'Nirjala Ekadashi',      paksha: 'Shukla'  },
-  { date: '2026-07-10', name: 'Yogini Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-07-25', name: 'Devshayani Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-08-08', name: 'Kamika Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-08-23', name: 'Shravana Putrada Ekadashi', paksha: 'Shukla' },
-  { date: '2026-09-07', name: 'Aja Ekadashi',           paksha: 'Krishna' },
-  { date: '2026-09-21', name: 'Parsva Ekadashi',        paksha: 'Shukla'  },
-  { date: '2026-10-06', name: 'Indira Ekadashi',        paksha: 'Krishna' },
-  { date: '2026-10-21', name: 'Papankusha Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-11-05', name: 'Rama Ekadashi',          paksha: 'Krishna' },
-  { date: '2026-11-19', name: 'Devutthana Ekadashi',    paksha: 'Shukla'  },
-  { date: '2026-12-05', name: 'Utpanna Ekadashi',       paksha: 'Krishna' },
-  { date: '2026-12-19', name: 'Mokshada Ekadashi',      paksha: 'Shukla'  },
-  { date: '2027-01-03', name: 'Saphala Ekadashi',       paksha: 'Krishna' },
-  { date: '2027-01-17', name: 'Putrada Ekadashi',       paksha: 'Shukla'  },
-];
+// Default location: Uddevalla, Sweden. Used only until the person sets their
+// own via the Location field (saved to localStorage) or grants GPS.
+const DEFAULT_LAT = 58.3498;
+const DEFAULT_LON = 11.9423;
+const DEFAULT_LABEL = 'Uddevalla, Sweden';
+
+type Tradition = 'vaishnava' | 'smarta';
+const TRADITION_KEY = 'sqi_ekadashi_tradition';
+const LOCATION_KEY = 'sqi_ekadashi_location';
+
+interface SavedLocation { lat: number; lon: number; label: string; }
+
+function loadSavedLocation(): SavedLocation | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(LOCATION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function useLocation() {
+  const [loc, setLoc] = useState<SavedLocation>(
+    () => loadSavedLocation() || { lat: DEFAULT_LAT, lon: DEFAULT_LON, label: DEFAULT_LABEL }
+  );
+  const [isDefault, setIsDefault] = useState(!loadSavedLocation());
+
+  // Only reach for silent GPS if the person hasn't set (or been given) a
+  // location yet — a manual/geocoded choice always wins and is never
+  // silently overwritten.
+  useEffect(() => {
+    if (loadSavedLocation() || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const next = { lat: pos.coords.latitude, lon: pos.coords.longitude, label: 'Current GPS location' };
+        setLoc(next);
+        setIsDefault(false);
+        try { localStorage.setItem(LOCATION_KEY, JSON.stringify(next)); } catch { /* noop */ }
+      },
+      () => { /* denied/unavailable — keep default, Location field still lets them set it */ },
+      { maximumAge: 3600000, timeout: 4000 }
+    );
+  }, []);
+
+  const setLocation = (next: SavedLocation) => {
+    setLoc(next);
+    setIsDefault(false);
+    try { localStorage.setItem(LOCATION_KEY, JSON.stringify(next)); } catch { /* noop */ }
+  };
+
+  return { ...loc, isDefault, setLocation };
+}
+
+interface GeocodeResult { name: string; lat: number; lon: number; admin1?: string; country?: string; }
+
+async function searchLocations(query: string): Promise<GeocodeResult[]> {
+  if (query.trim().length < 2) return [];
+  try {
+    const res = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`
+    );
+    const data = await res.json();
+    return (data.results || []).map((r: any) => ({
+      name: r.name, lat: r.latitude, lon: r.longitude, admin1: r.admin1, country: r.country,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 function daysFromNow(dateStr: string): number {
   const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00'); d.setHours(0,0,0,0);
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
 function fmtDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function doshaGuidance(dosha?: string): string {
   const d = (dosha || '').toLowerCase();
@@ -44,14 +95,48 @@ export const EkadashiOracleCard: React.FC = () => {
   const [open, setOpen] = useState(false);
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
+  const { lat, lon, label: locationLabel, isDefault: isDefaultLocation, setLocation } = useLocation();
 
-  const upcoming = EKADASHIS.filter(e => daysFromNow(e.date) >= -1);
+  // Bhakti Marga follows the Gaudiya Vaishnava (Suddha Ekadashi / Arunodaya)
+  // calculation by default — see ekadashiEngine.ts for the full rationale.
+  const [tradition, setTradition] = useState<Tradition>(() => {
+    if (typeof window === 'undefined') return 'vaishnava';
+    return (localStorage.getItem(TRADITION_KEY) as Tradition) || 'vaishnava';
+  });
+  const setTraditionPersist = (t: Tradition) => {
+    setTradition(t);
+    try { localStorage.setItem(TRADITION_KEY, t); } catch { /* noop */ }
+  };
+
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState<GeocodeResult[]>([]);
+  const [locationSearching, setLocationSearching] = useState(false);
+  useEffect(() => {
+    if (locationQuery.trim().length < 2) { setLocationResults([]); return; }
+    setLocationSearching(true);
+    const t = setTimeout(() => {
+      searchLocations(locationQuery).then(r => { setLocationResults(r); setLocationSearching(false); });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [locationQuery]);
+
+  const resolved = getUpcomingEkadashis(lat, lon, new Date(), 8);
+  const upcoming = resolved
+    .map(e => ({
+      date: tradition === 'vaishnava' ? e.vaishnavaDate : e.smartaDate,
+      name: e.name,
+      paksha: e.paksha,
+      isSplit: e.isSplit,
+      isEdgeCase: e.isEdgeCase,
+      parana: tradition === 'vaishnava' ? e.vaishnavaParana : e.smartaParana,
+    }))
+    .filter(e => daysFromNow(e.date) >= -1);
   const next = upcoming[0];
   const daysAway = next ? daysFromNow(next.date) : null;
 
   const isToday  = daysAway === 0;
-  const isEve    = daysAway === -1;
-  const isAfter  = daysAway === 1;
+  const isEve    = daysAway === 1;   // fast day is tomorrow
+  const isAfter  = daysAway === -1;  // fast day was yesterday — today is Dwadashi/break-fast
 
   const pillText =
     isEve   ? `Tomorrow — ${next?.name}` :
@@ -62,6 +147,10 @@ export const EkadashiOracleCard: React.FC = () => {
   const pillBg  = isToday ? 'rgba(212,175,55,0.22)' : isAfter ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.08)';
   const pillBdr = isToday ? 'rgba(212,175,55,0.6)'  : isAfter ? 'rgba(34,211,238,0.3)' : 'rgba(212,175,55,0.22)';
   const pillClr = isAfter ? '#22D3EE' : '#D4AF37';
+
+  // Formats a UTC ISO timestamp in the device's own local timezone —
+  // exactly what Intl/Date already know, no geo-to-timezone lookup needed.
+  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 
   const dosha    = doshaProfile?.primary || jyotish.primaryDosha || undefined;
   const moonSign = jyotish.moonSign || undefined;
@@ -149,15 +238,44 @@ export const EkadashiOracleCard: React.FC = () => {
                   <div style={s.countRow}>
                     {[
                       { num: Math.abs(daysAway ?? 0), lbl: 'Days' },
-                      { num: new Date(next.date).getDate(), lbl: 'Date' },
-                      { num: new Date(next.date).toLocaleString('en',{month:'short'}), lbl: 'Month' },
-                      { num: new Date(next.date).getFullYear(), lbl: 'Year' },
+                      { num: new Date(next.date + 'T00:00:00').getDate(), lbl: 'Date' },
+                      { num: new Date(next.date + 'T00:00:00').toLocaleString('en',{month:'short'}), lbl: 'Month' },
+                      { num: new Date(next.date + 'T00:00:00').getFullYear(), lbl: 'Year' },
                     ].map(({ num, lbl }) => (
                       <div key={lbl} style={s.countBox}>
                         <div style={s.countNum}>{num}</div>
                         <div style={s.countLbl}>{lbl}</div>
                       </div>
                     ))}
+                  </div>
+                  {next.isSplit && (
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(34,211,238,0.65)', marginTop: -6, marginBottom: 10, lineHeight: 1.5 }}>
+                      🔀 Smarta and Vaishnava traditions differ this month — showing the {tradition === 'vaishnava' ? 'Vaishnava' : 'Smarta'} date.
+                    </div>
+                  )}
+                  {next.isEdgeCase && (
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(255,180,80,0.75)', marginTop: -6, marginBottom: 10, lineHeight: 1.5 }}>
+                      ⚠️ Rare calendar configuration this cycle — worth a quick cross-check with your local panchang.
+                    </div>
+                  )}
+                  <div style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.12)', borderRadius: 14, padding: '12px', marginBottom: 14 }}>
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(34,211,238,0.5)', marginBottom: 6 }}>
+                      Parana · Break Fast · {fmtDate(next.parana.paranaDate)}
+                    </div>
+                    {next.parana.isEdgeCase ? (
+                      <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: 'rgba(255,180,80,0.8)', lineHeight: 1.5 }}>
+                        Dwadashi ends before Hari Vasara clears at your location this cycle — the standard window collapses. Break the fast at sunrise on {fmtDate(next.parana.paranaDate)} and check a local panchang for the Gauna (Trayodashi-day) parana rule.
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 16, fontWeight: 900, color: '#22D3EE', letterSpacing: '-0.02em' }}>
+                          {fmtTime(next.parana.windowStartUtc)} – {fmtTime(next.parana.windowEndUtc)}
+                        </div>
+                        <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, lineHeight: 1.5 }}>
+                          Your local time, computed from your location. Avoid breaking fast before this window opens — that's Hari Vasara, the last quarter of Ekadashi bleeding into the first of Dwadashi.
+                        </div>
+                      </>
+                    )}
                   </div>
                 </>
               )}
@@ -170,6 +288,79 @@ export const EkadashiOracleCard: React.FC = () => {
                       <div style={s.itemDate}>{fmtDate(e.date)} · {e.paksha === 'Shukla' ? 'Waxing' : 'Waning'} Moon</div>
                     </div>
                     <span style={badge(e.paksha)}>{e.paksha}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={s.lbl}>Location</div>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12 }}>📍</span>
+                <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                  {locationLabel}
+                </span>
+              </div>
+              {isDefaultLocation && (
+                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: 'rgba(255,180,80,0.75)', marginBottom: 8, lineHeight: 1.5 }}>
+                  ⚠️ Using a default location — sunrise, Arunodaya and Parana times above won't be accurate for you until you set your own city below.
+                </div>
+              )}
+              <div style={{ position: 'relative', marginBottom: 14 }}>
+                <input
+                  value={locationQuery}
+                  onChange={e => setLocationQuery(e.target.value)}
+                  placeholder="Search your city…"
+                  style={{
+                    width: '100%', boxSizing: 'border-box' as const, padding: '10px 12px', borderRadius: 12,
+                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.85)', fontFamily: 'Montserrat,sans-serif', fontSize: 12, outline: 'none',
+                  }}
+                />
+                {(locationSearching || locationResults.length > 0) && locationQuery.trim().length >= 2 && (
+                  <div style={{
+                    position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 5,
+                    background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12,
+                    overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  }}>
+                    {locationSearching && (
+                      <div style={{ padding: '10px 12px', fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Searching…</div>
+                    )}
+                    {!locationSearching && locationResults.map((r, i) => (
+                      <div
+                        key={i}
+                        onClick={() => {
+                          const label = [r.name, r.admin1, r.country].filter(Boolean).join(', ');
+                          setLocation({ lat: r.lat, lon: r.lon, label });
+                          setLocationQuery('');
+                          setLocationResults([]);
+                        }}
+                        style={{
+                          padding: '10px 12px', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontSize: 12,
+                          color: 'rgba(255,255,255,0.75)', borderBottom: i < locationResults.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                        }}
+                      >
+                        {[r.name, r.admin1, r.country].filter(Boolean).join(', ')}
+                      </div>
+                    ))}
+                    {!locationSearching && locationResults.length === 0 && (
+                      <div style={{ padding: '10px 12px', fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>No matches</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div style={s.lbl}>Tradition</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                {(['vaishnava', 'smarta'] as Tradition[]).map(t => (
+                  <div
+                    key={t}
+                    onClick={() => setTraditionPersist(t)}
+                    style={{
+                      flex: 1, textAlign: 'center' as const, padding: '8px 6px', borderRadius: 12, cursor: 'pointer',
+                      fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 700,
+                      background: tradition === t ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${tradition === t ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.05)'}`,
+                      color: tradition === t ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    {t === 'vaishnava' ? 'Vaishnava' : 'Smarta'}
                   </div>
                 ))}
               </div>
@@ -226,12 +417,12 @@ export const EkadashiOracleCard: React.FC = () => {
               <div style={s.learnBox}>
                 <div style={s.learnTitle}>🌑 What is Ekadashi?</div>
                 <div style={s.learnBody}>
-                  <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Ekadashi</strong> ("eleven") is the 11th lunar day of both the waxing and waning fortnights — twice per month, 24 times per year.
+                  <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Ekadashi</strong> ("eleven") is the 11th lunar day (tithi) of both the waxing and waning fortnights — twice per month, 24 times per year.
                   <br /><br />
                   On Ekadashi the moon's gravitational pull draws prana upward. Fasting removes Ama (toxins), rests digestive fire and opens space for{' '}
                   <strong style={{ color: '#D4AF37' }}>higher states of consciousness</strong>.
                   <br /><br />
-                  The Siddhas called it the <strong style={{ color: '#D4AF37' }}>portal of prana</strong> — mantras carry 11× power on this day.
+                  <strong style={{ color: '#D4AF37' }}>Why dates sometimes differ:</strong> a tithi runs 21–26h, not a fixed 24h day, so it drifts relative to sunrise. <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Smarta</strong> observance follows whichever tithi rules local sunrise. <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Vaishnava</strong> observance (Bhakti Marga) additionally requires Ekadashi to have begun before Arunodaya — the dawn twilight ~96 min before sunrise — to keep the fast free of contact with the preceding Dashami tithi. Dates are computed live for your location, not from a fixed list.
                 </div>
               </div>
             </div>

@@ -85,7 +85,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
           {challenge.shc_reward > 0 && (
             <div className="flex items-center gap-1">
               <Trophy className="w-4 h-4" />
-              <span>+{challenge.shc_reward} SHC</span>
+              <span>+{challenge.shc_reward} pts</span>
             </div>
           )}
         </div>

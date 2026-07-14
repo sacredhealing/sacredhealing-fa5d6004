@@ -407,23 +407,6 @@ const AgastyarModule: React.FC = () => {
           fontFamily: "'Plus Jakarta Sans',sans-serif",
         }}
       />
-      {pdfUrl && (
-        <a
-          href={pdfUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8,
-            border: `1px solid ${fade(accent, 0.25)}`, background: fade(accent, 0.1),
-            borderRadius: 999, padding: '8px 16px', color: accent,
-            fontSize: 10, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase',
-          }}
-        >
-          <FileText size={13} aria-hidden />
-          {t('academy.modulePlayer.downloadPdf')}
-          <ExternalLink size={12} aria-hidden />
-        </a>
-      )}
     </section>
   );
 

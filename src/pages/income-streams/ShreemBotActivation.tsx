@@ -9,7 +9,7 @@ const TIERS = [
   { id: "atma_seeds",      label: "Atma Seeds",      adminCut: 70, userKeep: 30, price: "Free",      icon: "🌱", desc: "Begin the transmission" },
   { id: "prana_flow",      label: "Prana Flow",      adminCut: 50, userKeep: 50, price: "€19/mo",    icon: "🌊", desc: "Equal sovereign share" },
   { id: "siddha_quantum",  label: "Siddha Quantum",  adminCut: 25, userKeep: 75, price: "€45/mo",    icon: "⚡", desc: "Quantum wealth gates open" },
-  { id: "akasha_infinity", label: "Akasha Infinity", adminCut: 10, userKeep: 90, price: "€1,111",    icon: "♾️", desc: "Near-sovereign returns" },
+  { id: "akasha_infinity", label: "Akasha Infinity", adminCut: 10, userKeep: 90, price: "€2,997",    icon: "♾️", desc: "Near-sovereign returns" },
   { id: "lifetime",        label: "Bot Lifetime",    adminCut: 0,  userKeep: 100, price: "€4,997",   icon: "👑", desc: "Zero sharing. Forever." },
 ];
 

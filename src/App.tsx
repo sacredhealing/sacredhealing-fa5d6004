@@ -33,6 +33,7 @@ import "@/lib/performance"; // Initialize performance monitoring
 const Landing = React.lazy(() => import("./pages/Landing"));
 const About = React.lazy(() => import("./pages/About"));
 const Auth = React.lazy(() => import("./pages/Auth"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const QRSignIn = React.lazy(() => import("./pages/QRSignIn"));
 const PairConfirm = React.lazy(() => import("./pages/PairConfirm"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
@@ -48,6 +49,7 @@ const Mastering = React.lazy(() => import("./pages/Mastering"));
 const Wallet = React.lazy(() => import("./pages/Wallet"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const AtmaSeed = React.lazy(() => import("./pages/AtmaSeed"));
+const FreeChart = React.lazy(() => import("./pages/FreeChart"));
 const SiddhaQuantum = React.lazy(() => import("./pages/SiddhaQuantum"));
 const PranaFlow = React.lazy(() => import("./pages/PranaFlow"));
 const AkashaInfinity = React.lazy(() => import("./pages/AkashaInfinity"));
@@ -285,11 +287,28 @@ ${error.stack}` : ''}
 // Root route: send signed-in users directly into the app, otherwise show landing
 function RootEntry() {
   const { user, isLoading } = useAuth();
-  if (isLoading) {
+  const [waitedForOAuth, setWaitedForOAuth] = React.useState(false);
+  const hasPendingOAuth =
+    typeof window !== 'undefined' && !!window.sessionStorage.getItem('postLoginRedirect');
+  const hasAuthParams =
+    typeof window !== 'undefined' &&
+    (/[?&#](code|access_token|refresh_token|error)=/.test(window.location.hash) ||
+      /[?&](code|access_token|refresh_token|error)=/.test(window.location.search));
+
+  React.useEffect(() => {
+    if (!hasAuthParams && !hasPendingOAuth) return;
+    const t = window.setTimeout(() => setWaitedForOAuth(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [hasAuthParams, hasPendingOAuth]);
+
+  if (isLoading || ((hasAuthParams || hasPendingOAuth) && !user && !waitedForOAuth)) {
     return <PageLoader />;
   }
   if (user) {
     return <Navigate to="/dashboard" replace />;
+  }
+  if (hasPendingOAuth) {
+    return <Navigate to="/auth/callback" replace />;
   }
   return <Landing />;
 }
@@ -314,6 +333,7 @@ function AppRoutes() {
       <Route path="/" element={<RootEntry />} />
       <Route path="/about" element={<About />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/qr-signin" element={<QRSignIn />} />
       <Route path="/pair" element={<PairConfirm />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -343,6 +363,7 @@ function AppRoutes() {
                   <Route path="/wallet" element={<Wallet />} />
           <Route path="/profile" element={<Profile />} />
                   <Route path="/atma-seed" element={<AtmaSeed />} />
+                  <Route path="/free-chart" element={<FreeChart />} />
                   <Route path="/siddha-quantum" element={<SiddhaQuantum />} />
                   <Route path="/prana-flow" element={<PranaFlow />} />
                   <Route path="/akasha-infinity" element={<AkashaInfinity />} />

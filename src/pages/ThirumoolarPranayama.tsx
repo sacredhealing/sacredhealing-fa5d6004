@@ -8,7 +8,7 @@ const TIERS = {
   FREE: { name: "FREE", label: "SEEKER", color: "#aaaaaa", glow: "rgba(170,170,170,0.25)", icon: "◎", price: "Free" },
   PRANA: { name: "PRANA FLOW", label: "INITIATE", color: "#22D3EE", glow: "rgba(34,211,238,0.3)", icon: "◈", price: "€19/mo" },
   QUANTUM: { name: "SIDDHA QUANTUM", label: "ADEPT", color: "#D4AF37", glow: "rgba(212,175,55,0.4)", icon: "✦", price: "€45/mo" },
-  AKASHA: { name: "AKASHA INFINITY", label: "SOVEREIGN", color: "#C9A0FF", glow: "rgba(201,160,255,0.4)", icon: "⬡", price: "€1,111 lifetime" },
+  AKASHA: { name: "AKASHA INFINITY", label: "SOVEREIGN", color: "#C9A0FF", glow: "rgba(201,160,255,0.4)", icon: "⬡", price: "€2,997 lifetime" },
 };
 
 const ALL_MODULES = [

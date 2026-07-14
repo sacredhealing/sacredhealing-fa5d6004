@@ -313,7 +313,7 @@ export default function EmailManager() {
                   <option value="free">Free</option>
                   <option value="prana-flow">Prana-Flow (€19)</option>
                   <option value="siddha-quantum">Siddha-Quantum (€45)</option>
-                  <option value="akasha-infinity">Akasha-Infinity (€1,111)</option>
+                  <option value="akasha-infinity">Akasha-Infinity (€2,997)</option>
                 </select>
               </div>
             </div>

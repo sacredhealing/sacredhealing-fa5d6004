@@ -170,7 +170,7 @@ export const PathRecommendation: React.FC<PathRecommendationProps> = ({
             </div>
             <div className="flex items-center gap-1 text-[#D4AF37]">
               <Star className="w-4 h-4" />
-              <span>+{recommendedPath.shc_reward_total} SHC</span>
+              <span>+{recommendedPath.shc_reward_total} pts</span>
             </div>
             <span style={{ color: 'rgba(255,255,255,0.5)' }} className="px-2 py-0.5 rounded-full bg-white/5 capitalize">
               {recommendedPath.difficulty}

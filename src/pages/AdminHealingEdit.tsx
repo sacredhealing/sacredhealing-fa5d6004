@@ -5,11 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AudioUpload from '@/components/admin/AudioUpload';
+
+const TIER_OPTIONS: { value: 'free' | 'prana-flow' | 'siddha-quantum' | 'akasha-infinity'; label: string }[] = [
+  { value: 'free', label: 'Atma-Seed' },
+  { value: 'prana-flow', label: 'Prana-Flow' },
+  { value: 'siddha-quantum', label: 'Siddha-Quantum' },
+  { value: 'akasha-infinity', label: 'Akasha-Infinity' },
+];
 
 const AdminHealingEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +29,7 @@ const AdminHealingEdit: React.FC = () => {
     audioUrl: '',
     previewUrl: '',
     durationMinutes: 3,
-    isFree: false,
+    requiredTier: 'free' as 'free' | 'prana-flow' | 'siddha-quantum' | 'akasha-infinity',
     priceUsd: 4.99,
     category: 'healing',
     scriptText: '',
@@ -53,7 +59,7 @@ const AdminHealingEdit: React.FC = () => {
           audioUrl: data.audio_url,
           previewUrl: data.preview_url || '',
           durationMinutes: Math.floor(data.duration_seconds / 60),
-          isFree: data.is_free,
+          requiredTier: (((data as any).required_tier as string | undefined) || (data.is_free ? 'free' : 'prana-flow')) as 'free' | 'prana-flow' | 'siddha-quantum' | 'akasha-infinity',
           priceUsd: data.price_usd,
           category: data.category,
           scriptText: (data as any).script_text || '',
@@ -81,7 +87,8 @@ const AdminHealingEdit: React.FC = () => {
           audio_url: formData.audioUrl,
           preview_url: formData.previewUrl || null,
           duration_seconds: formData.durationMinutes * 60,
-          is_free: formData.isFree,
+          is_free: formData.requiredTier === 'free',
+          required_tier: formData.requiredTier,
           price_usd: formData.priceUsd,
           price_shc: 0,
           category: formData.category,
@@ -287,13 +294,21 @@ You are safe. You are loved. You are ready for peaceful sleep. Allow yourself to
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Switch
-                id="isFree"
-                checked={formData.isFree}
-                onCheckedChange={(checked) => setFormData({ ...formData, isFree: checked })}
-              />
-              <Label htmlFor="isFree">Free audio (no purchase required)</Label>
+            <div>
+              <Label htmlFor="requiredTier">Required Tier</Label>
+              <select
+                id="requiredTier"
+                value={formData.requiredTier}
+                onChange={(e) => setFormData({ ...formData, requiredTier: e.target.value as typeof formData.requiredTier })}
+                className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground mt-2"
+              >
+                {TIER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Atma-Seed plays for everyone. Anything above that requires the matching membership (or the one-time price below for people who haven't upgraded yet).
+              </p>
             </div>
 
             <div>

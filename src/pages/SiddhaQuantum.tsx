@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/metaPixel';
 
 const SiddhaQuantum: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const SiddhaQuantum: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       toast.success('◈ Universal Field Activated — Welcome to Siddha–Quantum');
+      trackPurchase('siddha-quantum', 45, 'EUR');
       refreshMembership();
       navigate('/siddha-quantum', { replace: true });
     }
@@ -114,6 +116,7 @@ const SiddhaQuantum: React.FC = () => {
         return;
       }
 
+      trackInitiateCheckout('siddha-quantum', 45, 'EUR');
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tierData.stripe_price_id,
@@ -137,18 +140,13 @@ const SiddhaQuantum: React.FC = () => {
   };
 
   const faqItems = [
-    { q: 'What is the Universal Field?', a: 'The Siddha–Quantum tier unlocks the full 72,000 Nadi scanner, practice scantions, Siddha Portal, healing audios, and the Sri Yantra EMF & fear-field protection shield across all modules.' },
+    { q: 'What is the Universal Field?', a: 'The Siddha–Quantum tier unlocks the Digital Soul Scan, deep access across all 25 Siddha Portal academies, healing audios, and the Sri Yantra EMF & fear-field protection shield.' },
     { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from your account or Stripe customer portal. No lock-in. Access continues until the end of your billing period.' },
-    { q: 'How does the Nadi Scanner work?', a: 'The Digital Nadi Scanner uses bio-sync technology to map your nadis and generate practice scantions. Results sync to your Soul Vault and Jyotish profile.' },
+    { q: 'How does the Digital Soul Scan work?', a: 'A real biometric scan using your phone camera and voice — no wearable needed. Scan before your practice, do your sadhana, then scan after. It reads your heart rate, HRV, and stress index via rPPG (a genuine, non-contact technique) and shows you the actual before/after shift.' },
     { q: 'What is the Sri Yantra Shield?', a: 'The Sri Yantra Universal Protection Shield is active across the app — it supports EMF coherence and fear-field dissolution as you practice.' },
+    { q: 'Do I get full access to all 25 Siddha Portal academies?', a: 'Most modules in every academy, yes. The very deepest modules in a handful of academies (Mudra, Kriya Yoga, and others) are reserved for Akasha-Infinity. Siddha-Quantum unlocks substantially more than Prana-Flow in each one.' },
+    { q: 'Is there a chat limit?', a: '25 questions a day, shared across the Jyotish Guru, Ayurveda Vaidya, and Vastu chat combined — up from 15/day on Prana-Flow. Resets at midnight UTC.' },
     { q: 'Is there an annual option?', a: 'Yes. For better value, check the main Membership page for annual and lifetime options.' },
-  ];
-
-  const testimonials = [
-    { text: 'The Nadi Scanner changed how I see my practice. The scantions are eerily accurate.', name: 'Mira' },
-    { text: 'Finally one place for Jyotish, healing audios, and community. Worth every euro.', name: 'Lars' },
-    { text: 'Sri Yantra Shield + daily readings = my morning ritual. Game changer.', name: 'Sofia' },
-    { text: 'Upgraded from free and never looked back. Full field access is real.', name: 'David' },
   ];
 
   return (
@@ -242,7 +240,7 @@ const SiddhaQuantum: React.FC = () => {
           <div className="sq-badge">◈ Universal Path</div>
           <h1>Siddha–Quantum</h1>
           <div className="sq-hero-sub">Universal Field Node</div>
-          <p className="sq-hero-desc">Full Nadi Scanner, Practice Scantions, Siddha Portal, Healing Audios & Transmissions, and the Sri Yantra Universal Protection Shield. One subscription, every module unlocked.</p>
+          <p className="sq-hero-desc">Digital Soul Scan (camera-based before/after biometrics), deep Siddha Portal access, Healing Audios & Transmissions, and the Sri Yantra Universal Protection Shield. One subscription, the whole field open.</p>
           <div className="sq-mandala">
             <div className="sq-ring sq-ring-1" />
             <div className="sq-ring sq-ring-2" />
@@ -260,11 +258,11 @@ const SiddhaQuantum: React.FC = () => {
         <section className="sq-section">
           <div className="sq-section-label">◈ Everything in the Universal Field</div>
           {[
-            { title: 'Digital Nadi Scanner', desc: '72,000 Nadi bio-sync, practice-based scantions' },
-            { title: 'Practice Scantions', desc: 'Printed results that sync to your Soul Vault' },
-            { title: 'Siddha Portal Access', desc: 'Full access to Siddha teachings and protocols' },
+            { title: 'Digital Soul Scan', desc: 'Real camera + voice biometric scan (rPPG) — before and after your practice. See your actual heart rate, HRV, and stress index shift.' },
+            { title: 'Siddha Portal Access', desc: 'Comprehensive, advanced teaching across all 25 academies — Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa and more. Real curriculum depth, not a preview — most modules in every academy, with only the deepest reserved for Akasha-Infinity.' },
             { title: 'Full Healing Audios & Transmissions', desc: 'All frequencies and transmissions unlocked' },
             { title: 'Sri Yantra Universal Shield', desc: 'EMF coherence & fear-field protection across the app' },
+            { title: 'Palm Oracle — Module 3: Navagraha Temple of the Hand', desc: 'Mounts, minor lines & sacred marks — 9 transmissions, 9 hours. Scan your own palm or someone else\'s. Master Practitioner certification (reading for others, teaching) unlocks at Akasha-Infinity.' },
           ].map((item) => (
             <div key={item.title} className="sq-included-card">
               <div className="sq-icon-wrap">
@@ -283,7 +281,7 @@ const SiddhaQuantum: React.FC = () => {
         <section className="sq-section">
           <div className="sq-section-label">◈ Portals You Enter</div>
           <div className="sq-portal-grid">
-            {['Vedic Astrology', 'Agni Protocols', 'Vayu Protocol 1km', 'Siddhi Acceleration', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
+            {['Vedic Astrology', 'Digital Soul Scan', 'Siddha Portal', 'Palm Oracle', 'Soul Community', 'EMF & Fear Shield'].map((title) => (
               <div key={title} className="sq-portal-card">
                 <div className="sq-icon-wrap" style={{ margin: '0 auto' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5">
@@ -375,12 +373,10 @@ const SiddhaQuantum: React.FC = () => {
                   ['Meditations & Mantras', 'Limited', 'Full library'],
                   ['Healing Audios', 'Limited', 'Full library'],
                   ['Breathing Protocols', 'Limited', 'Full library'],
-                  ['Vayu Scrubber', '1 km', '1 km'],
                   ['Community Chat & Live', 'Access', 'Access'],
                   ['Ayurveda & Jyotish', 'Basic', 'Full + Chat'],
-                  ['Digital Nadi Scanner', '—', 'Included'],
-                  ['Practice Scantions', '—', 'Included'],
-                  ['Siddha Portal', '—', 'Included'],
+                  ['Digital Soul Scan', '—', 'Included'],
+                  ['Siddha Portal', 'Entry modules', 'Deep access'],
                   ['Sri Yantra Shield', '—', 'Active'],
                   ['Price', 'Free', '45€/mo'],
                 ].map((row, i) => (
@@ -392,18 +388,6 @@ const SiddhaQuantum: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-        </section>
-
-        <section className="sq-section">
-          <div className="sq-section-label">◈ What Others Say</div>
-          <div className="sq-testimonials">
-            {testimonials.map((t, i) => (
-              <div key={i} className="sq-test-card">
-                <div className="text">&ldquo;{t.text}&rdquo;</div>
-                <div className="name">— {t.name}</div>
-              </div>
-            ))}
           </div>
         </section>
 

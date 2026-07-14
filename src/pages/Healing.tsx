@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp, Crown, Key, Flame, Eye, Waves, TreePine, Zap } from 'lucide-react';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, Crown, Key, Flame, Eye, Waves, TreePine, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,6 +38,8 @@ const H_CSS = `
   .h-glass { background: var(--h-glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 1px solid var(--h-border); border-radius: var(--r40); transition: border-color .3s; }
   .h-glass:hover { border-color: rgba(212,175,55,.12); }
   @keyframes hShimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  @keyframes rimG { 0%,100%{box-shadow:0 0 12px rgba(212,175,55,.06)} 50%{box-shadow:0 0 40px rgba(212,175,55,.22)} }
+  @keyframes shimmer { 0%{left:-110%} 60%{left:110%} 100%{left:110%} }
   .h-shimmer { background: linear-gradient(135deg,#D4AF37 0%,#F5E17A 40%,#D4AF37 60%,#A07C10 100%); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: hShimmer 5s linear infinite; }
   @keyframes hNadi { 0%,100%{opacity:.6} 50%{opacity:1;filter:drop-shadow(0 0 8px rgba(212,175,55,.7))} }
   .h-nadi { animation: hNadi 3s ease-in-out infinite; color: var(--h-gold); }
@@ -211,6 +213,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat3: 'Akashic Gateway',
     medCat3Desc: 'High-frequency transmissions for spiritual awakening.',
     medEncoded: 'Encoded with Atma Kriya frequencies and Siddha Mantras',
+    medIntro: 'Short frequency tracks you can play right now — grounding tones, heart-opening sequences, and high-frequency transmissions. A few are free to start; the full library unlocks with Prana-Flow.',
+    medFreeLabel: 'Atma-Seed',
+    medPremiumLabel: 'Prana-Flow',
     testimTitle: 'Miracle Logs',
     testimSub: 'Everyone experiences it differently.',
     testimMicro: 'Transmission Testimonials · Verified Field Reports',
@@ -279,6 +284,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat3: 'Akashisk Portal',
     medCat3Desc: 'Högfrekventa transmissioner för andligt uppvaknande.',
     medEncoded: 'Kodad med Atma Kriya-frekvenser och Siddha-Mantran',
+    medIntro: 'Korta frekvensspår du kan spela direkt — jordande toner, hjärtöppnande sekvenser och högfrekventa transmissioner. Några är gratis, hela biblioteket låses upp med Prana-Flow.',
+    medFreeLabel: 'Atma-Seed',
+    medPremiumLabel: 'Prana-Flow',
     testimTitle: 'Mirakelloggar',
     testimSub: 'Alla upplever det olika.',
     testimMicro: 'Transmissionsvittnesmål · Verifierade fältrapporter',
@@ -338,6 +346,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat2: 'Hjerte & Vann', medCat2Desc: 'Emosjonell frigjøring og relasjonsharmoni.',
     medCat3: 'Akashisk Portal', medCat3Desc: 'Høyfrekvente transmisjoner for åndelig oppvåkning.',
     medEncoded: 'Kodet med Atma Kriya-frekvenser og Siddha-Mantraer',
+    medIntro: 'Korte frekvensspor du kan spille med en gang — jordende toner, hjerteåpnende sekvenser og høyfrekvente transmisjoner. Noen er gratis, hele biblioteket låses opp med Prana-Flow.',
+    medFreeLabel: 'Atma-Seed',
+    medPremiumLabel: 'Prana-Flow',
     testimTitle: 'Mirakellogger', testimSub: 'Alle opplever det forskjellig.',
     testimMicro: 'Transmisjonst vitnesbyrd · Verifiserte feltrapporter',
     faqTitle: 'Nådens Vitenskap',
@@ -377,6 +388,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat2: 'Corazón & Agua', medCat2Desc: 'Liberación emocional y armonía relacional.',
     medCat3: 'Portal Akáshico', medCat3Desc: 'Transmisiones de alta frecuencia para el despertar espiritual.',
     medEncoded: 'Codificado con frecuencias de Atma Kriya y Mantras Siddha',
+    medIntro: 'Pistas de frecuencia cortas que puedes reproducir ahora mismo — tonos de conexión a tierra, secuencias de apertura del corazón y transmisiones de alta frecuencia. Algunas son gratuitas, la biblioteca completa se desbloquea con Prana-Flow.',
+    medFreeLabel: 'Atma-Seed',
+    medPremiumLabel: 'Prana-Flow',
     testimTitle: 'Registros de Milagros', testimSub: 'Cada uno lo experimenta de manera diferente.',
     testimMicro: 'Testimonios de transmisión · Informes de campo verificados',
     faqTitle: 'La Ciencia de la Gracia',
@@ -714,13 +728,47 @@ const Healing: React.FC = () => {
         </button>
       </section>
 
-      {/* Language toggle */}
-      <div style={{ padding: '0 22px', marginBottom: 24 }}>
-        <div className="h-glass" style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>🌐 {t('healing.langLabel', 'Meditation language')}</span>
-          <HealingLanguageToggle language={language} setLanguage={setLanguage} />
+      {/* Sonic Treatments — moved right after the hero so the actual audio library is seen */}
+      {/* before any upsell copy. Language toggle merged in here since it directly filters */}
+      {/* which tracks show below (freeSessions/premiumSessions are derived from `language`). */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Vedic Light-Code Audio · Frequency Transmissions</div>
+          <div className="h-section-title h-shimmer">{T.medTitle}</div>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.65, marginTop: 10, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>{T.medIntro}</p>
         </div>
-      </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <div className="h-glass" style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>🌐 {t('healing.langLabel', 'Meditation language')}</span>
+            <HealingLanguageToggle language={language} setLanguage={setLanguage} />
+          </div>
+        </div>
+
+        <Tabs defaultValue="free" className="space-y-4">
+          <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
+            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medFreeLabel}</TabsTrigger>
+            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>{!(isAdmin || hasHealingAccess) && <Lock size={9} />}{T.medPremiumLabel}</TabsTrigger>
+          </TabsList>
+
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
+
+          <TabsContent value="free" className="space-y-3 mt-4">
+            {freeSessions.length > 0 ? freeSessions.map((audio) => (
+              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
+            )) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+          </TabsContent>
+          <TabsContent value="premium" className="space-y-3 mt-4">
+            {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
+              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
+            )) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </section>
 
       <div style={{ padding: '0 22px 24px' }}>
         <div
@@ -821,44 +869,6 @@ const Healing: React.FC = () => {
 
       <div className="h-divider" />
 
-      {/* Sonic Treatments */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Vedic Light-Code Audio · Frequency Transmissions</div>
-          <div className="h-section-title h-shimmer">{T.medTitle}</div>
-        </div>
-
-        <Tabs defaultValue="free" className="space-y-4">
-          <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
-            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat1}</TabsTrigger>
-            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat3}</TabsTrigger>
-          </TabsList>
-
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
-
-          <TabsContent value="free" className="space-y-3 mt-4">
-            {freeSessions.length > 0 ? freeSessions.map((audio) => (
-              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
-            )) : (
-              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
-            )}
-          </TabsContent>
-          <TabsContent value="premium" className="space-y-3 mt-4">
-            {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
-              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
-            )) : (
-              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        <button type="button" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 14, marginTop: 12, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => navigate('/meditations')}>
-          {T.viewAll} →
-        </button>
-      </section>
-
-      <div className="h-divider" />
-
       {/* Miracle Logs / Testimonials */}
       <section style={{ padding: '0 22px 32px' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -895,13 +905,13 @@ const Healing: React.FC = () => {
 
       <div className="h-divider" />
 
-      {/* ══ SIDDHA HEALERS SOVEREIGN PATH — SQI 2050 ══ */}
+      {/* ══ SACRED JOURNEYS — dynamic day-by-day guided tracks, distinct from the 12-month certification above ══ */}
       <section style={{ padding: '0 22px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div className="h-micro" style={{ marginBottom: 6 }}>Siddha Quantum · Living Transmission</div>
-          <div className="h-section-title h-shimmer">Siddha Healers Sovereign Path</div>
+          <div className="h-section-title h-shimmer">Sacred Journeys</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 8, lineHeight: 1.7 }}>
-            Sacred initiatory modules — track your progress, earn SHC, walk the path of the Siddha Healer
+            Guided day-by-day practices — track your progress, earn rewards, walk each sacred journey step by step
           </div>
         </div>
 
@@ -958,7 +968,7 @@ const Healing: React.FC = () => {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>⏱ {path.duration_days} days</span>
-                        <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontWeight: 700 }}>★ +{path.shc_reward_total} SHC</span>
+                        <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontWeight: 700 }}>★ +{path.shc_reward_total} pts</span>
                         {prog?.is_active && !prog.completed_at && (
                           <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 100, padding: '3px 10px' }}>Active</span>
                         )}
@@ -1005,7 +1015,7 @@ const Healing: React.FC = () => {
                           <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 4 }}>
                             <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99 }} />
                           </div>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} SHC earned</div>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} pts earned</div>
                         </div>
                       )}
 
@@ -1050,7 +1060,7 @@ const Healing: React.FC = () => {
                                         <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 600, letterSpacing: '0.02em', color: isLocked ? 'rgba(255,255,255,0.28)' : isCompleted ? 'rgba(16,185,129,0.85)' : 'rgba(255,255,255,0.85)', lineHeight: 1.35 }}>
                                           Day {day.day_number}: {dayTitle}
                                         </div>
-                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2, opacity: isLocked ? 0.4 : 1 }}>+{day.shc_reward} SHC</div>
+                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2, opacity: isLocked ? 0.4 : 1 }}>+{day.shc_reward} pts</div>
                                       </div>
                                     </div>
                                   </AccordionTrigger>
@@ -1121,6 +1131,39 @@ const Healing: React.FC = () => {
             })}
           </div>
         )}
+      </section>
+
+      <div className="h-divider" />
+
+      {/* ══ SIDDHA HEALER CERTIFICATION BANNER — single entry card, mirrors Explore.tsx ══ */}
+      {/* One card, one source of truth. Full 12-month curriculum lives at /certification */}
+      {/* (PractitionerCertification.tsx, same MONTHS data). No flat dump here anymore. */}
+      <section style={{ padding: '0 16px 40px' }}>
+        <div onClick={() => navigate('/certification')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 50%, rgba(45,26,0,0.97) 0%, rgba(12,6,0,0.99) 55%, #050505 100%)', border: '1px solid rgba(212,175,55,0.55)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite', boxShadow: '0 0 60px rgba(212,175,55,0.1)' }}>
+          <div style={{ position: 'absolute', top: -25, right: -25, width: 180, height: 180, pointerEvents: 'none' }}>
+            <svg viewBox="0 0 180 180" width="180" height="180">
+              <defs><radialGradient id="shcg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(255,220,80,0.35)"/><stop offset="55%" stopColor="rgba(212,175,55,0.08)"/><stop offset="100%" stopColor="rgba(0,0,0,0)"/></radialGradient></defs>
+              <ellipse cx="90" cy="90" rx="85" ry="85" fill="url(#shcg2)"/>
+              <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(212,175,55,0.22)" strokeWidth="1" strokeDasharray="4 9"><animateTransform attributeName="transform" type="rotate" values="0 90 90;360 90 90" dur="40s" repeatCount="indefinite"/></circle>
+              <polygon points="90,22 146,114 34,114" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.4"><animateTransform attributeName="transform" type="rotate" values="0 90 90;360 90 90" dur="60s" repeatCount="indefinite"/></polygon>
+              <polygon points="90,158 34,66 146,66" fill="rgba(255,210,55,0.04)" stroke="rgba(255,210,60,0.5)" strokeWidth="1.3"><animateTransform attributeName="transform" type="rotate" values="360 90 90;0 90 90" dur="60s" repeatCount="indefinite"/></polygon>
+              {[0,1,2].map(i => (<circle key={i} cx="90" cy="90" r="10" fill="none" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"><animate attributeName="r" values="8;80" dur="4s" begin={`${i*1.33}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="4s" begin={`${i*1.33}s`} repeatCount="indefinite"/></circle>))}
+              {[0,60,120,180,240,300].map((angle,i) => { const rad=angle*Math.PI/180; return (<circle key={i} cx={90+Math.cos(rad)*80} cy={90+Math.sin(rad)*80} r="3.5" fill="rgba(255,240,100,0.9)"><animate attributeName="opacity" values="0.3;1;0.3" dur={`${1.8+i*0.3}s`} repeatCount="indefinite"/></circle>); })}
+              <circle cx="90" cy="90" r="18" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.4"><animate attributeName="r" values="15;22;15" dur="3s" repeatCount="indefinite"/></circle>
+              <circle cx="90" cy="90" r="6" fill="rgba(255,248,170,0.97)"><animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite"/></circle>
+            </svg>
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'shimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1, padding: '22px 20px 20px' }}>
+            <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 9 }}>SIDDHA LINEAGE · 12-MONTH LIVING TRANSMISSION</p>
+            <div style={{ fontFamily: "'Cinzel',serif", fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, fontSize: 'clamp(20px,5.5vw,26px)', marginBottom: 11, maxWidth: '65%', background: 'linear-gradient(135deg,#D4AF37 0%,#F5E17A 40%,#D4AF37 60%,#A07C10 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'hShimmer 5s linear infinite' }}>SIDDHA HEALER'S<br/>SOVEREIGN PATH</div>
+            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.68, marginBottom: 14, maxWidth: '75%' }}>12 months of mantras, initiations &amp; healing mastery — from foundation to full certification with Kritagya &amp; Laila</p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 15 }}>
+              {['Personal Diksha','12 Modules','Certification'].map(l => (<span key={l} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 20, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', color: 'rgba(212,175,55,0.85)' }}>{l}</span>))}
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); navigate('/certification'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>EXPLORE →</button>
+          </div>
+        </div>
       </section>
 
       <div className="h-divider" />
@@ -1325,12 +1368,23 @@ const Healing: React.FC = () => {
 // ============================================================
 // SESSION ROW COMPONENT
 // ============================================================
+// Track titles come straight from the DB as e.g. "Shunya-Prakash: The Pure Void_432Hz_80Hz" —
+// split the trailing frequency codes out into their own badge instead of showing raw underscores.
+function parseTrackTitle(title: string): { name: string; freq: string | null } {
+  const match = title.match(/^(.*?)((?:[\s_]*\d+(?:\.\d+)?\s*Hz)+)\s*$/i);
+  if (!match) return { name: title, freq: null };
+  const name = match[1].replace(/[_\s]+$/, '').trim();
+  const freq = match[2].split('_').map((s) => s.trim()).filter(Boolean).join(' · ');
+  return { name, freq: freq || null };
+}
+
 function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, ownedAudioIds, hasHealingAccess, onPurchase, isProcessing, T, formatEnergyExchange, isPremiumTier = false, onRequestUpgrade }: {
   audio: HealingAudio; isPlaying: boolean; onTogglePlay: (a: HealingAudio) => void; formatDuration: (s: number) => string; isAdmin: boolean; ownedAudioIds: Set<string>; hasHealingAccess: boolean; onPurchase: (a: HealingAudio, m: 'shc' | 'stripe') => void; isProcessing: boolean; T: Record<string, string>; formatEnergyExchange: (p: number) => string; isPremiumTier?: boolean; onRequestUpgrade?: () => void;
 }) {
   const hasAccess = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
   const isLockedPremium = isPremiumTier && !hasAccess;
   const priceLabel = formatEnergyExchange(audio.price_usd);
+  const { name: trackName, freq: trackFreq } = parseTrackTitle(audio.title);
 
   const live = hasAccess && isPlaying;
 
@@ -1362,10 +1416,13 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
             marginBottom: 3,
           }}
         >
-          {audio.title}
+          {trackName}
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
           <span>⏱ {formatDuration(audio.duration_seconds)}</span>
+          {trackFreq && (
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: 'rgba(212,175,55,.08)', border: '1px solid rgba(212,175,55,.2)', color: 'rgba(212,175,55,.75)' }}>{trackFreq}</span>
+          )}
           {hasAccess ? (
             <span style={{ color: '#D4AF37', fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' }}>● {T.owned}</span>
           ) : (

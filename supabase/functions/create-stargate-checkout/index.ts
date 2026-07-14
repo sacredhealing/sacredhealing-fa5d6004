@@ -35,6 +35,32 @@ serve(async (req) => {
     }
     logStep("User authenticated", { email: user.email });
 
+    // Tier-aware pricing: free (Atma-Seed) members pay the full standalone
+    // rate; existing paying members (Prana-Flow, Siddha-Quantum, Akasha-
+    // Infinity) get a discounted add-on rate since they're already
+    // customers. NOT explicitly specified for Akasha-Infinity — applying
+    // the same discount logic as Prana-Flow/Siddha-Quantum ("already
+    // paying members"), flag if that's wrong.
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const { data: prof } = await supabaseAdmin.from("profiles").select("membership_tier").eq("user_id", user.id).maybeSingle();
+    const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+    const isExistingPayingMember = ["prana-flow", "siddha-quantum", "akasha-infinity"].includes(tierSlug);
+
+    // Both Stripe prices are confirmed real and EUR-denominated:
+    //   STRIPE_PRICE_STARGATE_BASE     = price_1TsrsRAPsnbrivP01XgmFoev (€25/mo)
+    //   STRIPE_PRICE_STARGATE_DISCOUNT = price_1TsrleAPsnbrivP0bjQZ2son (€6/mo)
+    // Both live on the same product (prod_TWuCuWU5Vdr9Fx). The old USD price
+    // (price_1SZqNuAPsnbrivP0ZygF4M88) is deliberately no longer used for
+    // NEW checkouts — anyone already subscribed on it keeps working
+    // normally, Stripe prices are immutable and existing subscriptions
+    // aren't affected by this change.
+    const priceId = isExistingPayingMember
+      ? (Deno.env.get("STRIPE_PRICE_STARGATE_DISCOUNT") || "price_1TsrleAPsnbrivP0bjQZ2son")
+      : (Deno.env.get("STRIPE_PRICE_STARGATE_BASE") || "price_1TsrsRAPsnbrivP01XgmFoev");
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
@@ -53,7 +79,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SZqNuAPsnbrivP0ZygF4M88", // Stargate Membership $25/month
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -64,6 +90,7 @@ serve(async (req) => {
         user_id: user.id,
         type: "stargate_membership", // Matches webhook getPurchaseType logic
         membership_type: "stargate", // Keep for backward compatibility
+        tier_at_purchase: tierSlug,
       },
     });
 

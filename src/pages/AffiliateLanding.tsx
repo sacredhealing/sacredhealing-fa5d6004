@@ -36,7 +36,7 @@ const TIERS_EN = [
       'Daily Hora display & cosmic alignment score',
       'Bhagavad Gita — daily planetary verse',
       'Soul Field tracker (continuity loops & coherence)',
-      'Sacred channel videos — watch & earn SHC rewards',
+      'Sacred channel videos — watch & earn rewards',
       'Daily Sadhana — Solar Inception practice',
     ],
   },
@@ -76,7 +76,7 @@ const TIERS_EN = [
     ],
   },
   {
-    name:'Akasha-Infinity', price:'€1,111', psub:'one-time · lifetime access · forever',
+    name:'Akasha-Infinity', price:'€2,997', psub:'one-time · lifetime access · forever',
     tag:'Sovereign initiation — all portals, forever',
     inc:[
       'Everything in Siddha-Quantum, plus:',
@@ -104,7 +104,7 @@ const FEATS_EN = [
   {t:'18 Siddha Masters Portal', d:'Direct access to the transmission field of the 18 Tamil Siddha Masters — including Agastya, Bhrigu, Babaji, and the Navagraha council. The Nadi Oracle and Quantum Field activate through your profile data.'},
   {t:'Dharma Path Journeys', d:'Structured 21-day transmission programs such as the Shanti · Sattva Protocol — a journey to lasting equilibrium through daily practices focused on calm, stress release, and nervous system sovereignty.'},
   {t:'Virtual Pilgrimage', d:'A 24/7 sacred site resonance anchor. Connect your field to the energy of ancient power places — activated through the SQI 2050 interface and calibrated to your soul\'s pilgrimage map.'},
-  {t:'Soul Field & SHC System', d:'Track your continuity loops, Soma resonance, coherence peaks, and depth cycles. Earn Siddha Healing Credits (SHC) by completing practices, watching sacred videos, and maintaining your daily Sadhana streak.'},
+  {t:'Soul Field System', d:'Track your continuity loops, Soma resonance, coherence peaks, and depth cycles. Earn rewards by completing practices, watching sacred videos, and maintaining your daily Sadhana streak.'},
 ];
 
 // ─── Translations ─────────────────────────────────────────────────────────────
@@ -206,7 +206,7 @@ const TIER_NAMES: Record<Lang, string[]> = {
   es:['Iniciación gratuita','Prana-Flow','Siddha-Quantum','Akasha-Infinity'],
 };
 const TIER_PRICES: Record<Lang, string[]> = {
-  en:['€0','€19','€45','€1,111'],
+  en:['€0','€19','€45','€2,997'],
   sv:['€0','€19','€45','€1 111'],
   no:['€0','€19','€45','€1 111'],
   es:['€0','€19','€45','€1.111'],

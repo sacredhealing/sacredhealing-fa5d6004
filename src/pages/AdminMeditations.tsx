@@ -173,7 +173,7 @@ const AdminMeditations: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-[8px] tracking-[0.5em] uppercase text-white/60 font-extrabold mb-2">SHC Reward</label>
+                <label className="block text-[8px] tracking-[0.5em] uppercase text-white/60 font-extrabold mb-2">Reward Points</label>
                 <Input
                   type="number"
                   value={formData.shcReward}
@@ -235,7 +235,7 @@ const AdminMeditations: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-white/90 truncate">{m.title}</h3>
                   <p className="text-sm text-white/55">
-                    {m.category} · {m.duration_minutes} min · {m.shc_reward} SHC
+                    {m.category} · {m.duration_minutes} min · {m.shc_reward} pts
                     {m.is_premium && ' · Premium'}
                     {m.language === 'sv' ? ' · 🇸🇪' : ' · 🇬🇧'}
                   </p>

@@ -67,7 +67,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     
     toast({
       title: "Purchase successful!",
-      description: `You earned +${track.shcReward} SHC! Enjoy "${track.title}"`,
+      description: `Enjoy "${track.title}"`,
     });
   };
 
@@ -105,12 +105,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <span className="text-primary font-heading font-bold">${usdPrice}</span>
               </div>
             </div>
-          </div>
-          
-          {/* Reward Badge */}
-          <div className="mt-3 flex items-center gap-2 p-2 bg-accent/10 rounded-lg">
-            <Sparkles size={16} className="text-accent" />
-            <span className="text-sm text-accent">Earn +{track.shcReward} SHC reward with purchase!</span>
           </div>
         </div>
 

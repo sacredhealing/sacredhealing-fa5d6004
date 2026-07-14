@@ -517,11 +517,11 @@ const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> 
   return (
     <div onClick={() => setExpanded(!expanded)} style={{ ...gs, padding:'13px 15px', marginBottom:7, cursor:'pointer', transition:'background 0.2s' }}>
       <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom: expanded ? 8 : 0 }}>
-        <span style={{ fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>{e.term}</span>
+        <span style={{ fontSize:15.5, fontWeight:900, letterSpacing:'-0.02em' }}>{e.term}</span>
         {e.skt && <span style={{ fontSize:14, color:'rgba(212,175,55,0.6)' }}>{e.skt}</span>}
-        <span style={{ padding:'2px 8px', borderRadius:99, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', color:'#D4AF37', marginLeft:'auto' }}>{e.cat}</span>
+        <span style={{ padding:'2px 8px', borderRadius:99, fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', color:'#D4AF37', marginLeft:'auto' }}>{e.cat}</span>
       </div>
-      {expanded && <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.6)', lineHeight:1.55 }}>{e.m}</p>}
+      {expanded && <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.6)', lineHeight:1.55 }}>{e.m}</p>}
     </div>
   );
 };
@@ -652,12 +652,12 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
     <div style={{ marginBottom:24 }}>
       {/* Section header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>
+        <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>
           Your Daily Karma Guide
         </div>
         <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.1)' }} />
       </div>
-      <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontStyle:'italic', marginBottom:14, lineHeight:1.5 }}>
+      <p style={{ fontSize:14, color:'rgba(255,255,255,0.35)', fontStyle:'italic', marginBottom:14, lineHeight:1.5 }}>
         Every day the universe sends you specific guidance. These cards show what to embrace, what to release, and where to reflect — based on today's cosmic energy.
       </p>
 
@@ -669,27 +669,27 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
             {data.sym}
           </div>
           <div style={{ flex:1 }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:3 }}>Today is ruled by</div>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:3 }}>Today is ruled by</div>
             <div style={{ fontSize:19, fontWeight:900, color:data.color, marginBottom:2 }}>{data.planet} — {data.varName}</div>
-            <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)' }}>{data.theme}</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.45)' }}>{data.theme}</div>
           </div>
         </div>
-        <p style={{ fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.7, fontFamily:'Georgia,serif', marginBottom:12 }}>{data.planetDesc}</p>
+        <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.6)', lineHeight:1.7, fontFamily:'Georgia,serif', marginBottom:12 }}>{data.planetDesc}</p>
         <div style={{ padding:'9px 14px', borderRadius:12, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center' }}>
-          <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:3 }}>Today's Mantra — Chant 108 times</div>
-          <div style={{ fontSize:13, color:'#D4AF37', fontStyle:'italic', fontFamily:'Georgia,serif' }}>{data.mantra}</div>
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:3 }}>Today's Mantra — Chant 108 times</div>
+          <div style={{ fontSize:15.5, color:'#D4AF37', fontStyle:'italic', fontFamily:'Georgia,serif' }}>{data.mantra}</div>
         </div>
       </div>
 
       {/* DO card */}
       <div style={{ background:'rgba(34,197,94,0.05)', border:'1px solid rgba(34,197,94,0.18)', borderRadius:20, padding:'18px', marginBottom:10 }}>
         <div style={{ fontSize:22, marginBottom:6 }}>✅</div>
-        <div style={{ fontSize:13, fontWeight:900, color:'#4ADE80', marginBottom:6 }}>Today — Embrace & Do</div>
+        <div style={{ fontSize:15.5, fontWeight:900, color:'#4ADE80', marginBottom:6 }}>Today — Embrace & Do</div>
         <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
           {data.doItems.map((item, i) => (
             <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
-              <div style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, marginTop:1 }}>✓</div>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+              <div style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, marginTop:1 }}>✓</div>
+              <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
             </div>
           ))}
         </div>
@@ -698,12 +698,12 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
       {/* AVOID card */}
       <div style={{ background:'rgba(239,68,68,0.05)', border:'1px solid rgba(239,68,68,0.18)', borderRadius:20, padding:'18px', marginBottom:10 }}>
         <div style={{ fontSize:22, marginBottom:6 }}>🚫</div>
-        <div style={{ fontSize:13, fontWeight:900, color:'#F87171', marginBottom:6 }}>Today — Release & Avoid</div>
+        <div style={{ fontSize:15.5, fontWeight:900, color:'#F87171', marginBottom:6 }}>Today — Release & Avoid</div>
         <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
           {data.avoidItems.map((item, i) => (
             <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
-              <div style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#F87171', marginTop:1 }}>✗</div>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+              <div style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:'#F87171', marginTop:1 }}>✗</div>
+              <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
             </div>
           ))}
         </div>
@@ -712,10 +712,10 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
       {/* REFLECTION card */}
       <div style={{ background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.18)', borderRadius:20, padding:'18px', marginBottom:14 }}>
         <div style={{ fontSize:22, marginBottom:6 }}>🪞</div>
-        <div style={{ fontSize:13, fontWeight:900, color:'#D4AF37', marginBottom:8 }}>Today's Karma Mirror</div>
-        <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:10, lineHeight:1.5 }}>Sit quietly for 5 minutes and ask yourself this question. Write your answer in a journal.</p>
+        <div style={{ fontSize:15.5, fontWeight:900, color:'#D4AF37', marginBottom:8 }}>Today's Karma Mirror</div>
+        <p style={{ fontSize:14, color:'rgba(255,255,255,0.45)', marginBottom:10, lineHeight:1.5 }}>Sit quietly for 5 minutes and ask yourself this question. Write your answer in a journal.</p>
         <div style={{ background:'rgba(212,175,55,0.07)', borderRadius:14, padding:'14px 16px', borderLeft:'3px solid rgba(212,175,55,0.4)' }}>
-          <p style={{ fontSize:13, color:'#D4AF37', fontFamily:'Georgia,serif', fontStyle:'italic', lineHeight:1.7 }}>{data.reflection}</p>
+          <p style={{ fontSize:15.5, color:'#D4AF37', fontFamily:'Georgia,serif', fontStyle:'italic', lineHeight:1.7 }}>{data.reflection}</p>
         </div>
       </div>
 
@@ -723,47 +723,47 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
       {canPrana && activeMaha && (
         <>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)' }}>🔥 Your Personal Chart — Prāna Reading</div>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)' }}>🔥 Your Personal Chart — Prāna Reading</div>
             <div style={{ flex:1, height:1, background:'rgba(34,211,238,0.1)' }} />
           </div>
           {/* Dasha context */}
           <div style={{ ...gs, padding:'16px 18px', marginBottom:10, borderColor:'rgba(212,175,55,0.18)' }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:8 }}>Your Current Karmic Chapter</div>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:8 }}>Your Current Karmic Chapter</div>
             <div style={{ display:'flex', gap:12 }}>
               <div style={{ flex:1 }}>
-                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Main Period</div>
+                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Main Period</div>
                 <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
-                <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{activeMaha.start} — {activeMaha.end}</div>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{activeMaha.start} — {activeMaha.end}</div>
               </div>
               {activeAntar && (
                 <div style={{ flex:1, paddingLeft:12, borderLeft:'1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Sub-Period</div>
+                  <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Sub-Period</div>
                   <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
-                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{activeAntar.start} — {activeAntar.end}</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{activeAntar.start} — {activeAntar.end}</div>
                 </div>
               )}
             </div>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginTop:10, fontFamily:'Georgia,serif' }}>
+            <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginTop:10, fontFamily:'Georgia,serif' }}>
               <strong style={{ color:'#D4AF37' }}>{activeMaha.planet} Mahadasha</strong>{activeAntar ? ` / ${activeAntar.planet} Antardasha` : ''}: {DASHA_MEANINGS[activeMaha.planet] || 'This period brings the specific karmic curriculum of this planet into focus.'}
             </p>
           </div>
           {/* Personalised do */}
           <div style={{ background:'rgba(34,197,94,0.05)', border:'1px solid rgba(34,197,94,0.15)', borderRadius:20, padding:'16px', marginBottom:10 }}>
-            <div style={{ fontSize:12, fontWeight:900, color:'#4ADE80', marginBottom:8 }}>✨ Personalised Actions — Your Dasha Says</div>
+            <div style={{ fontSize:14.5, fontWeight:900, color:'#4ADE80', marginBottom:8 }}>✨ Personalised Actions — Your Dasha Says</div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {data.pranaDo.map((item, i) => (
                 <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:9 }}>
-                  <div style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, marginTop:2 }}>♃</div>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+                  <div style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, marginTop:2 }}>♃</div>
+                  <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
                 </div>
               ))}
             </div>
           </div>
           {/* Prana reflection */}
           <div style={{ background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:20, padding:'16px', marginBottom:14 }}>
-            <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37', marginBottom:8 }}>🔮 Your Dasha Soul Question</div>
+            <div style={{ fontSize:14.5, fontWeight:900, color:'#D4AF37', marginBottom:8 }}>🔮 Your Dasha Soul Question</div>
             <div style={{ background:'rgba(212,175,55,0.06)', borderRadius:12, padding:'13px 15px', borderLeft:'3px solid rgba(212,175,55,0.35)' }}>
-              <p style={{ fontSize:13, color:'#D4AF37', fontFamily:'Georgia,serif', fontStyle:'italic', lineHeight:1.7 }}>{data.pranaReflection}</p>
+              <p style={{ fontSize:15.5, color:'#D4AF37', fontFamily:'Georgia,serif', fontStyle:'italic', lineHeight:1.7 }}>{data.pranaReflection}</p>
             </div>
           </div>
         </>
@@ -773,23 +773,23 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
       {canSiddha && (
         <>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.7)' }}>⭐ Siddha-Level Activation</div>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.7)' }}>⭐ Siddha-Level Activation</div>
             <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.12)' }} />
           </div>
           <div style={{ background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.2)', borderRadius:20, padding:'18px', marginBottom:10 }}>
-            <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37', marginBottom:10 }}>⭐ Siddha Sadhana — Advanced Practices</div>
+            <div style={{ fontSize:14.5, fontWeight:900, color:'#D4AF37', marginBottom:10 }}>⭐ Siddha Sadhana — Advanced Practices</div>
             <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
               {data.siddhaDo.map((item, i) => (
                 <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:9 }}>
-                  <div style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'#D4AF37', marginTop:2 }}>★</div>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+                  <div style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:'#D4AF37', marginTop:2 }}>★</div>
+                  <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
                 </div>
               ))}
             </div>
           </div>
           <div style={{ ...gs, padding:'16px 18px', marginBottom:14, borderColor:'rgba(212,175,55,0.12)' }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Siddha Wisdom — Today's Teaching</div>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.7, fontFamily:'Georgia,serif', fontStyle:'italic' }}>{data.siddhaInsight}</p>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Siddha Wisdom — Today's Teaching</div>
+            <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.55)', lineHeight:1.7, fontFamily:'Georgia,serif', fontStyle:'italic' }}>{data.siddhaInsight}</p>
           </div>
         </>
       )}
@@ -798,17 +798,17 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
       {canAkasha && (
         <>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.5)' }}>∞ Ākāsha — Nadi Oracle Transmission</div>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.5)' }}>∞ Ākāsha — Nadi Oracle Transmission</div>
             <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.06)' }} />
           </div>
           <div style={{ background:'rgba(139,92,246,0.06)', border:'1px solid rgba(139,92,246,0.22)', borderRadius:20, padding:'18px', marginBottom:14 }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(139,92,246,0.7)', marginBottom:8 }}>📜 Akashic Transmission — {data.varName}</div>
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(139,92,246,0.7)', marginBottom:8 }}>📜 Akashic Transmission — {data.varName}</div>
             <div style={{ position:'relative', padding:'14px 16px', background:'rgba(139,92,246,0.04)', borderRadius:14, border:'1px solid rgba(139,92,246,0.12)' }}>
               <div style={{ position:'absolute', top:-10, left:12, fontSize:50, fontFamily:'Georgia,serif', color:'rgba(139,92,246,0.1)', lineHeight:1 }}>"</div>
-              <p style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, position:'relative' }}>
+              <p style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:15.5, color:'rgba(255,255,255,0.65)', lineHeight:1.75, position:'relative' }}>
                 The soul reading these words is in alignment with the {data.planet} frequency today. The lessons of {activeMaha?.planet || 'this period'} are preparing you for an expansion that your mind cannot yet fully comprehend. Trust the process unfolding in your life. What appears as obstacle is initiation. What appears as loss is clearing space for what your soul truly called for. Today, receive — do not just give.
               </p>
-              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(139,92,246,0.4)', marginTop:10 }}>
+              <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(139,92,246,0.4)', marginTop:10 }}>
                 — Akasha-Neural Archive · Bhrigu Transmission 2050→2026
               </div>
             </div>
@@ -819,20 +819,20 @@ const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
       {/* Unlock nudges for lower tiers */}
       {!canPrana && (
         <div style={{ ...gs, padding:'18px', borderColor:'rgba(34,211,238,0.15)', textAlign:'center', marginBottom:14 }}>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:8 }}>🔱 Unlock Personalised Guidance</div>
-          <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginBottom:12 }}>
+          <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:8 }}>🔱 Unlock Personalised Guidance</div>
+          <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginBottom:12 }}>
             Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> to receive daily karma cards personalised to your exact birth chart, Dasha timing, and Nakshatra soul blueprint.
           </p>
-          <button onClick={() => navigate('/membership')} style={{ padding:'10px 22px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.08)', color:'#22D3EE', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+          <button onClick={() => navigate('/membership')} style={{ padding:'10px 22px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.08)', color:'#22D3EE', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, cursor:'pointer' }}>
             Activate Prāna-Flow →
           </button>
         </div>
       )}
       {canPrana && !canSiddha && (
         <div style={{ ...gs, padding:'14px 16px', borderColor:'rgba(212,175,55,0.12)', textAlign:'center', marginBottom:14 }}>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>⭐ Unlock Siddha-Level Sadhana</div>
-          <p style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.55, marginBottom:10 }}>Upgrade to <strong style={{ color:'#D4AF37' }}>Siddha-Quantum (€45/mo)</strong> for advanced Siddha practices, ancient wisdom transmissions, and Akashic oracle access.</p>
-          <button onClick={() => navigate('/membership')} style={{ padding:'9px 18px', borderRadius:99, border:'1px solid rgba(212,175,55,0.25)', background:'rgba(212,175,55,0.06)', color:'#D4AF37', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>⭐ Unlock Siddha-Level Sadhana</div>
+          <p style={{ fontSize:14, color:'rgba(255,255,255,0.4)', lineHeight:1.55, marginBottom:10 }}>Upgrade to <strong style={{ color:'#D4AF37' }}>Siddha-Quantum (€45/mo)</strong> for advanced Siddha practices, ancient wisdom transmissions, and Akashic oracle access.</p>
+          <button onClick={() => navigate('/membership')} style={{ padding:'9px 18px', borderRadius:99, border:'1px solid rgba(212,175,55,0.25)', background:'rgba(212,175,55,0.06)', color:'#D4AF37', fontFamily:'inherit', fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, cursor:'pointer' }}>
             Upgrade to Siddha-Quantum →
           </button>
         </div>
@@ -946,12 +946,12 @@ const DailyInfluenceStrip: React.FC = () => {
     <div style={{ marginBottom:24 }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>
+        <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>
           Today\'s Cosmic Intelligence · {today.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })}
         </div>
         <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.1)' }} />
         {panchanga.isRahuKala && (
-          <div style={{ padding:'3px 10px', borderRadius:99, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.08)', fontSize:6, fontWeight:800, letterSpacing:'0.3em', color:'rgba(239,68,68,0.8)' }}>
+          <div style={{ padding:'3px 10px', borderRadius:99, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.08)', fontSize:10, fontWeight:800, letterSpacing:'0.22em', color:'rgba(239,68,68,0.8)' }}>
             ⚠ RĀHU KĀLA
           </div>
         )}
@@ -967,9 +967,9 @@ const DailyInfluenceStrip: React.FC = () => {
           { lbl:'Rāhu Kāla', val:panchanga.rahuKala, sub:panchanga.isRahuKala ? '⚠ Active Now' : 'Avoid New Starts', color:panchanga.isRahuKala ? '#EF4444' : 'rgba(255,255,255,0.3)' },
         ].map(s => (
           <div key={s.lbl} style={{ ...gs, padding:'10px 6px', textAlign:'center' }}>
-            <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', marginBottom:4 }}>{s.lbl}</div>
-            <div style={{ fontSize:9, fontWeight:900, color:s.color, lineHeight:1.2, marginBottom:2 }}>{s.val}</div>
-            <div style={{ fontSize:7, color:'rgba(255,255,255,0.25)', lineHeight:1.3 }}>{s.sub}</div>
+            <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', marginBottom:4 }}>{s.lbl}</div>
+            <div style={{ fontSize:13, fontWeight:900, color:s.color, lineHeight:1.2, marginBottom:2 }}>{s.val}</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', lineHeight:1.3 }}>{s.sub}</div>
           </div>
         ))}
       </div>
@@ -983,29 +983,29 @@ const DailyInfluenceStrip: React.FC = () => {
               {todayGraha.sym}
             </div>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:3 }}>Today's Ruling Graha</div>
+              <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:3 }}>Today's Ruling Graha</div>
               <div style={{ fontSize:17, fontWeight:900, color:todayGraha.color, marginBottom:3 }}>{todayGraha.name} — {panchanga.vara.name}</div>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>{todayGraha.quality}</div>
+              <div style={{ fontSize:14, color:'rgba(255,255,255,0.5)' }}>{todayGraha.quality}</div>
             </div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:10 }}>
             <div style={{ ...gs, padding:'8px 12px', borderRadius:12 }}>
-              <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:3 }}>✓ Activate</div>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontStyle:'italic' }}>{todayGraha.doKeyword}</div>
+              <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:3 }}>✓ Activate</div>
+              <div style={{ fontSize:14, color:'rgba(255,255,255,0.65)', fontStyle:'italic' }}>{todayGraha.doKeyword}</div>
             </div>
             <div style={{ ...gs, padding:'8px 12px', borderRadius:12 }}>
-              <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:3 }}>◎ Avoid</div>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontStyle:'italic' }}>{todayGraha.avoidKeyword}</div>
+              <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:3 }}>◎ Avoid</div>
+              <div style={{ fontSize:14, color:'rgba(255,255,255,0.65)', fontStyle:'italic' }}>{todayGraha.avoidKeyword}</div>
             </div>
           </div>
-          <div style={{ padding:'8px 14px', borderRadius:10, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center', fontSize:11, color:'rgba(212,175,55,0.75)', fontStyle:'italic' }}>
+          <div style={{ padding:'8px 14px', borderRadius:10, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center', fontSize:14, color:'rgba(212,175,55,0.75)', fontStyle:'italic' }}>
             🕉 {todayGraha.mantra}
           </div>
         </div>
       )}
 
       {/* 9 Graha Cards — horizontal scroll */}
-      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:8 }}>
+      <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:8 }}>
         Navagraha Daily Transmissions · Tap to Open
       </div>
       <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:6, scrollbarWidth:'none' as const, marginBottom:8, WebkitOverflowScrolling:'touch' as const }}>
@@ -1023,9 +1023,9 @@ const DailyInfluenceStrip: React.FC = () => {
                 <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:g.color, boxShadow:`0 0 6px ${g.color}` }} />
               )}
               <div style={{ fontSize:22, marginBottom:4 }}>{g.sym}</div>
-              <div style={{ fontSize:9, fontWeight:900, color: isToday ? g.color : 'rgba(255,255,255,0.7)', marginBottom:2 }}>{g.name}</div>
-              <div style={{ fontSize:7, color:'rgba(255,255,255,0.28)', lineHeight:1.3 }}>{g.element.split(' ')[0]}</div>
-              {isToday && <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:g.color, marginTop:4 }}>TODAY ●</div>}
+              <div style={{ fontSize:13, fontWeight:900, color: isToday ? g.color : 'rgba(255,255,255,0.7)', marginBottom:2 }}>{g.name}</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.28)', lineHeight:1.3 }}>{g.element.split(' ')[0]}</div>
+              {isToday && <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:g.color, marginTop:4 }}>TODAY ●</div>}
             </div>
           );
         })}
@@ -1041,26 +1041,26 @@ const DailyInfluenceStrip: React.FC = () => {
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
               <span style={{ fontSize:28 }}>{g.sym}</span>
               <div style={{ flex:1 }}>
-                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:2 }}>{g.element} Intelligence</div>
+                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:2 }}>{g.element} Intelligence</div>
                 <div style={{ fontSize:16, fontWeight:900, color:g.color }}>{g.name} — Daily Influence</div>
               </div>
               <button onClick={(e) => { e.stopPropagation(); setExpandedGraha(null); }}
                 style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:20, padding:4 }}>×</button>
             </div>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.65, marginBottom:12 }}>{g.quality}</p>
+            <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.6)', lineHeight:1.65, marginBottom:12 }}>{g.quality}</p>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:10 }}>
               <div style={{ ...gs, padding:'10px 12px', borderRadius:12 }}>
-                <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:4 }}>✓ Do Today</div>
-                <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', fontStyle:'italic' }}>{g.doKeyword}</div>
+                <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:4 }}>✓ Do Today</div>
+                <div style={{ fontSize:14, color:'rgba(255,255,255,0.7)', fontStyle:'italic' }}>{g.doKeyword}</div>
               </div>
               <div style={{ ...gs, padding:'10px 12px', borderRadius:12 }}>
-                <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:4 }}>✗ Avoid</div>
-                <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', fontStyle:'italic' }}>{g.avoidQuality}</div>
+                <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:4 }}>✗ Avoid</div>
+                <div style={{ fontSize:14, color:'rgba(255,255,255,0.7)', fontStyle:'italic' }}>{g.avoidQuality}</div>
               </div>
             </div>
             <div style={{ padding:'9px 14px', borderRadius:12, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center' }}>
-              <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:3 }}>Beej Mantra — Chant 108x</div>
-              <div style={{ fontSize:12, color:'#D4AF37', fontStyle:'italic' }}>{g.mantra}</div>
+              <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:3 }}>Beej Mantra — Chant 108x</div>
+              <div style={{ fontSize:14.5, color:'#D4AF37', fontStyle:'italic' }}>{g.mantra}</div>
             </div>
           </div>
         );
@@ -1141,7 +1141,7 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
   const phaseData = currentPhase > 0 ? PHASE_DATA[currentPhase] : null;
 
   if (!moonSign) return (
-    <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
+    <p style={{ fontSize:14.5, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
       Enter birth data to calculate Sade Sati status
     </p>
   );
@@ -1167,7 +1167,7 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
   return (
     <div>
       {/* Status badge */}
-      <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: data?.active ? 'rgba(245,158,11,0.08)' : 'rgba(74,222,128,0.06)', border:`1px solid ${data?.active ? 'rgba(245,158,11,0.3)' : 'rgba(74,222,128,0.25)'}`, color: data?.active ? '#F59E0B' : '#4ADE80', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, marginBottom:12 }}>
+      <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: data?.active ? 'rgba(245,158,11,0.08)' : 'rgba(74,222,128,0.06)', border:`1px solid ${data?.active ? 'rgba(245,158,11,0.3)' : 'rgba(74,222,128,0.25)'}`, color: data?.active ? '#F59E0B' : '#4ADE80', fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, marginBottom:12 }}>
         <div style={{ width:6, height:6, borderRadius:'50%', background: data?.active ? '#F59E0B' : '#4ADE80', boxShadow: data?.active ? '0 0 8px #F59E0B' : 'none' }}/>
         {data?.active ? `Sade Sati Active — ${phaseData?.title || `Phase ${data.phase} of 3`}` : 'Sade Sati Not Active'}
       </div>
@@ -1178,8 +1178,8 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }}>
             {[{ l:'Moon Sign', v: sign||'—' },{ l:'Period', v:`${data.start}–${data.end}` }].map(s => (
               <div key={s.l} style={{ background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:12, padding:'10px 12px' }}>
-                <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${W}0.25)`, marginBottom:3 }}>{s.l}</div>
-                <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37' }}>{s.v}</div>
+                <div style={{ fontSize:10.5, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:`${W}0.25)`, marginBottom:3 }}>{s.l}</div>
+                <div style={{ fontSize:14.5, fontWeight:900, color:'#D4AF37' }}>{s.v}</div>
               </div>
             ))}
           </div>
@@ -1188,10 +1188,10 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
               <div key={i} style={{ padding:'10px 13px', borderRadius:12, border:`1px solid ${p.active ? 'rgba(245,158,11,0.3)' : p.done ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.05)'}`, background: p.active ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.01)', display:'flex', alignItems:'center', gap:10, opacity: p.done && !p.active ? 0.5 : 1 }}>
                 <div style={{ width:8, height:8, borderRadius:'50%', background: p.active ? '#F59E0B' : p.done ? 'rgba(107,114,128,0.5)' : `${W}0.1)`, boxShadow: p.active ? '0 0 8px #F59E0B' : 'none', flexShrink:0 }}/>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:10.5, fontWeight:800, color: p.active ? '#F59E0B' : `${W}0.55)`, marginBottom:1 }}>Phase {i+1} — {p.sign}</div>
-                  <div style={{ fontSize:9, color:`${W}0.28)` }}>{p.start} – {p.end}</div>
+                  <div style={{ fontSize:13.5, fontWeight:800, color: p.active ? '#F59E0B' : `${W}0.55)`, marginBottom:1 }}>Phase {i+1} — {p.sign}</div>
+                  <div style={{ fontSize:13, color:`${W}0.28)` }}>{p.start} – {p.end}</div>
                 </div>
-                <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: p.active ? 'rgba(245,158,11,0.8)' : p.done ? 'rgba(107,114,128,0.6)' : `${W}0.2)` }}>
+                <div style={{ fontSize:11.5, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: p.active ? 'rgba(245,158,11,0.8)' : p.done ? 'rgba(107,114,128,0.6)' : `${W}0.2)` }}>
                   {p.active ? 'NOW ●' : p.done ? 'DONE ✓' : 'COMING'}
                 </div>
               </div>
@@ -1201,7 +1201,7 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
       )}
 
       {/* Surface reading */}
-      <p style={{ fontSize:13, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom:16 }}>
+      <p style={{ fontSize:15.5, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom:16 }}>
         {phaseData?.surface || NOT_ACTIVE_DATA.surface}
       </p>
 
@@ -1217,20 +1217,20 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
                 style={{ width:'100%', padding:'11px 14px', background: isOpen && hasAccess ? `${W}0.03)` : 'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess ? 'pointer' : 'default' }}
               >
                 <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
-                <span style={{ flex:1, fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : `${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
+                <span style={{ flex:1, fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : `${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
                 {!hasAccess && (
-                  <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>
+                  <span style={{ fontSize:12, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>
                     {sec.tier === 1 ? 'PRANA' : sec.tier === 2 ? 'SIDDHA' : 'ĀKĀSHA'} 🔒
                   </span>
                 )}
-                {hasAccess && <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen ? '▲' : '▼'}</span>}
+                {hasAccess && <span style={{ fontSize:13, color:`${W}0.25)` }}>{isOpen ? '▲' : '▼'}</span>}
               </button>
               {isOpen && hasAccess && (
                 <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.04)` }}>
                   {sec.key === 'transmission' ? (
                     <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12, padding:'10px 8px' }}>"{sec.content}"</p>
                   ) : (
-                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
+                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
                   )}
                 </div>
               )}
@@ -1241,9 +1241,9 @@ const SadeSatiTracker: React.FC<SadeSatiProps> = ({ moonSign, activeMaha }) => {
 
       {/* Mantra — always visible */}
       <div style={{ padding:'12px 14px', background:'rgba(245,158,11,0.04)', border:'1px solid rgba(245,158,11,0.12)', borderRadius:12 }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.5)', marginBottom:6 }}>♄ Shani Mantra — Chant Every Saturday</div>
-        <p style={{ fontFamily:"'Georgia',serif", fontSize:12.5, color:'rgba(245,158,11,0.75)', lineHeight:1.7 }}>Aum Prām Prīm Praum Sah Śanaiścharāya Namaḥ</p>
-        <p style={{ fontSize:10, color:`${W}0.3)`, marginTop:4, lineHeight:1.5 }}>108 repetitions at sunrise or dusk on Saturdays. Offer sesame oil. Light a lamp.</p>
+        <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.5)', marginBottom:6 }}>♄ Shani Mantra — Chant Every Saturday</div>
+        <p style={{ fontFamily:"'Georgia',serif", fontSize:15, color:'rgba(245,158,11,0.75)', lineHeight:1.7 }}>Aum Prām Prīm Praum Sah Śanaiścharāya Namaḥ</p>
+        <p style={{ fontSize:13, color:`${W}0.3)`, marginTop:4, lineHeight:1.5 }}>108 repetitions at sunrise or dusk on Saturdays. Offer sesame oil. Light a lamp.</p>
       </div>
     </div>
   );
@@ -1291,13 +1291,13 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
   ];
 
   if (!ascendantSign) return (
-    <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
+    <p style={{ fontSize:14.5, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
       Enter birth data to calculate Mangal Dosha
     </p>
   );
 
   if (!marsSign) return (
-    <p style={{ fontSize:12, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
+    <p style={{ fontSize:14.5, color:`${W}0.35)`, textAlign:'center' as const, padding:'16px 0', fontStyle:'italic' }}>
       Birth chart loading… Mars position calculating
     </p>
   );
@@ -1307,7 +1307,7 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
   return (
     <div>
       {/* Status */}
-      <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: hasDosha ? 'rgba(239,68,68,0.08)' : 'rgba(74,222,128,0.06)', border:`1px solid ${hasDosha ? 'rgba(239,68,68,0.3)' : 'rgba(74,222,128,0.25)'}`, color: hasDosha ? '#EF4444' : '#4ADE80', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, marginBottom:12 }}>
+      <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:99, background: hasDosha ? 'rgba(239,68,68,0.08)' : 'rgba(74,222,128,0.06)', border:`1px solid ${hasDosha ? 'rgba(239,68,68,0.3)' : 'rgba(74,222,128,0.25)'}`, color: hasDosha ? '#EF4444' : '#4ADE80', fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, marginBottom:12 }}>
         <div style={{ width:6, height:6, borderRadius:'50%', background: hasDosha ? '#EF4444' : '#4ADE80', boxShadow: hasDosha ? '0 0 8px rgba(239,68,68,0.6)' : 'none' }}/>
         {hasDosha ? `Mangal Dosha Present — ${houseData?.severity || ''}` : 'No Mangal Dosha'}
       </div>
@@ -1315,45 +1315,45 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
       {/* Mars position pills */}
       <div style={{ display:'flex', gap:8, flexWrap:'wrap' as const, marginBottom:14 }}>
         <div style={{ padding:'6px 12px', borderRadius:10, background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.18)' }}>
-          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)' }}>♂ Mars Sign</span>
-          <div style={{ fontSize:13, fontWeight:900, color:'rgba(239,68,68,0.9)', marginTop:2 }}>{marsSign}</div>
+          <span style={{ fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)' }}>♂ Mars Sign</span>
+          <div style={{ fontSize:15.5, fontWeight:900, color:'rgba(239,68,68,0.9)', marginTop:2 }}>{marsSign}</div>
         </div>
         <div style={{ padding:'6px 12px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)' }}>
-          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)' }}>House from Lagna</span>
-          <div style={{ fontSize:13, fontWeight:900, color:'rgba(255,255,255,0.8)', marginTop:2 }}>House {marsHouse}</div>
+          <span style={{ fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)' }}>House from Lagna</span>
+          <div style={{ fontSize:15.5, fontWeight:900, color:'rgba(255,255,255,0.8)', marginTop:2 }}>House {marsHouse}</div>
         </div>
         <div style={{ padding:'6px 12px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)' }}>
-          <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)' }}>Lagna</span>
-          <div style={{ fontSize:13, fontWeight:900, color:'#D4AF37', marginTop:2 }}>{ascendantSign}</div>
+          <span style={{ fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)' }}>Lagna</span>
+          <div style={{ fontSize:15.5, fontWeight:900, color:'#D4AF37', marginTop:2 }}>{ascendantSign}</div>
         </div>
       </div>
 
       {/* House reading */}
       {houseData && (
         <div style={{ marginBottom:14 }}>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasDosha?'rgba(239,68,68,0.6)':'rgba(74,222,128,0.6)', marginBottom:6 }}>{houseData.title}</div>
-          <p style={{ fontSize:13, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom: tierRank>=1?12:0 }}>{houseData.surface}</p>
+          <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color: hasDosha?'rgba(239,68,68,0.6)':'rgba(74,222,128,0.6)', marginBottom:6 }}>{houseData.title}</div>
+          <p style={{ fontSize:15.5, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom: tierRank>=1?12:0 }}>{houseData.surface}</p>
 
           {/* Deep reading — Prana+ */}
           {tierRank>=1 && (
             <div style={{ marginBottom:8, borderRadius:12, overflow:'hidden', border:`1px solid ${mdExpanded==='deep'?'rgba(239,68,68,0.22)':'rgba(255,255,255,0.05)'}` }}>
               <button onClick={()=>setMdExpanded(mdExpanded==='deep'?null:'deep')} style={{ width:'100%', padding:'9px 12px', background:mdExpanded==='deep'?'rgba(239,68,68,0.04)':'transparent', border:'none', display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-                <span style={{ fontSize:13 }}>✦</span>
-                <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', textAlign:'left' as const }}>Soul Depth — The Karmic Reading</span>
-                <span style={{ fontSize:10, color:`${W}0.25)` }}>{mdExpanded==='deep'?'▲':'▼'}</span>
+                <span style={{ fontSize:15.5 }}>✦</span>
+                <span style={{ flex:1, fontSize:12, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', textAlign:'left' as const }}>Soul Depth — The Karmic Reading</span>
+                <span style={{ fontSize:13, color:`${W}0.25)` }}>{mdExpanded==='deep'?'▲':'▼'}</span>
               </button>
-              {mdExpanded==='deep' && <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}><p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.75)`, lineHeight:1.82, marginTop:10 }}>{houseData.deep}</p></div>}
+              {mdExpanded==='deep' && <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}><p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15, color:`${W}0.75)`, lineHeight:1.82, marginTop:10 }}>{houseData.deep}</p></div>}
             </div>
           )}
-          {tierRank<1 && <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', borderRadius:10, padding:'9px 12px', marginBottom:8 }}><span>🔒</span><p style={{ fontSize:11, color:`${W}0.35)`, lineHeight:1.5 }}>Soul Depth reading available from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong></p></div>}
+          {tierRank<1 && <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', borderRadius:10, padding:'9px 12px', marginBottom:8 }}><span>🔒</span><p style={{ fontSize:14, color:`${W}0.35)`, lineHeight:1.5 }}>Soul Depth reading available from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong></p></div>}
         </div>
       )}
 
       {/* Not Dosha reading */}
       {!hasDosha && marsHouse && (
         <div style={{ padding:'12px 14px', background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.15)', borderRadius:12, marginBottom:12 }}>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.6)', marginBottom:5 }}>◈ Mars in House {marsHouse} — No Dosha</div>
-          <p style={{ fontSize:12.5, color:`${W}0.6)`, lineHeight:1.65, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>
+          <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.6)', marginBottom:5 }}>◈ Mars in House {marsHouse} — No Dosha</div>
+          <p style={{ fontSize:15, color:`${W}0.6)`, lineHeight:1.65, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>
             Mars in the {marsHouse}{marsHouse===1?'st':marsHouse===2?'nd':marsHouse===3?'rd':'th'} house from {ascendantSign} Lagna does not create Mangal Dosha. Mars energy here is channelled toward {marsHouse===3?'courage, siblings, and short journeys':marsHouse===5?'creativity, intelligence, and children':marsHouse===6?'discipline, enemies, and service — a very strong placement for overcoming obstacles':marsHouse===9?'dharma, father, and long journeys — a highly auspicious position':marsHouse===10?'career, authority, and public life — Mars excels here':marsHouse===11?'gains, networks, and the fulfilment of desires':'general life force'}.
           </p>
         </div>
@@ -1363,16 +1363,16 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
       {hasDosha && (
         <div style={{ marginBottom:12, borderRadius:12, overflow:'hidden', border:`1px solid ${mdExpanded==='except'?'rgba(245,158,11,0.22)':'rgba(255,255,255,0.05)'}` }}>
           <button onClick={()=>setMdExpanded(mdExpanded==='except'?null:'except')} style={{ width:'100%', padding:'9px 12px', background:mdExpanded==='except'?'rgba(245,158,11,0.04)':'transparent', border:'none', display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-            <span style={{ fontSize:13 }}>⚡</span>
-            <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.6)', textAlign:'left' as const }}>Exceptions That Cancel Dosha</span>
-            <span style={{ fontSize:10, color:`${W}0.25)` }}>{mdExpanded==='except'?'▲':'▼'}</span>
+            <span style={{ fontSize:15.5 }}>⚡</span>
+            <span style={{ flex:1, fontSize:12, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(245,158,11,0.6)', textAlign:'left' as const }}>Exceptions That Cancel Dosha</span>
+            <span style={{ fontSize:13, color:`${W}0.25)` }}>{mdExpanded==='except'?'▲':'▼'}</span>
           </button>
           {mdExpanded==='except' && (
             <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
               {EXCEPTIONS.map((e,i) => (
                 <div key={i} style={{ display:'flex', gap:8, padding:'6px 0', borderBottom: i<EXCEPTIONS.length-1?`1px solid ${W}0.04)`:undefined }}>
-                  <span style={{ fontSize:9, color:'rgba(245,158,11,0.5)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
-                  <span style={{ fontSize:11.5, color:`${W}0.55)`, lineHeight:1.55 }}>{e}</span>
+                  <span style={{ fontSize:13, color:'rgba(245,158,11,0.5)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+                  <span style={{ fontSize:14.5, color:`${W}0.55)`, lineHeight:1.55 }}>{e}</span>
                 </div>
               ))}
             </div>
@@ -1383,7 +1383,7 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
       {/* Sadhana — always show if Dosha present */}
       {hasDosha && (
         <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:12 }}>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.55)', marginBottom:6 }}>♂ Kuja Dosha Remedies</div>
+          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.55)', marginBottom:6 }}>♂ Kuja Dosha Remedies</div>
           {[
             'Kuja Dosha Puja at a Subrahmanya (Murugan) temple — Tuesdays specifically',
             'Aum Krām Krīm Kraum Sah Bhaumāya Namaḥ — 108x on Tuesday mornings at sunrise',
@@ -1392,8 +1392,8 @@ const MangalDoshaChecker: React.FC<MangalDoshaProps> = ({ ascendantSign, marsSig
             'Coral (moonga) in gold on right ring finger — only after qualified Jyotishi confirms',
           ].map((r,i) => (
             <div key={i} style={{ display:'flex', gap:8, padding:'5px 0', borderBottom: i<4?`1px solid ${W}0.04)`:undefined }}>
-              <span style={{ fontSize:9, color:'rgba(239,68,68,0.4)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
-              <span style={{ fontSize:11.5, color:`${W}0.55)`, lineHeight:1.55 }}>{r}</span>
+              <span style={{ fontSize:13, color:'rgba(239,68,68,0.4)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+              <span style={{ fontSize:14.5, color:`${W}0.55)`, lineHeight:1.55 }}>{r}</span>
             </div>
           ))}
         </div>
@@ -1593,13 +1593,13 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
   return (
     <div>
       {/* Header */}
-      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:13, color:`${W}0.5)`, lineHeight:1.75, marginBottom:14 }}>
+      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15.5, color:`${W}0.5)`, lineHeight:1.75, marginBottom:14 }}>
         Kala Sarpa Yoga forms when all 7 classical planets are hemmed between Rahu and Ketu on one side of the chart. The serpent of time creates intense karmic acceleration, psychic gifts, and a life of extraordinary highs and lows — the compressed karma of many lifetimes playing out in one.
       </p>
 
       {/* 12 Type Selector */}
       <div style={{ marginBottom:14 }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:8 }}>
+        <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:8 }}>
           {detectedType !== null ? `✦ Likely Yoga Type Based on Birth Year — Tap to Explore All 12` : '✦ The 12 Kala Sarpa Yoga Types — Tap to Explore'}
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
@@ -1607,9 +1607,9 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
             <button key={i}
               onClick={() => setActiveType(activeType === i ? null : i)}
               style={{ padding:'8px 6px', borderRadius:11, border:`1px solid ${displayType===i ? 'rgba(167,139,250,0.45)' : 'rgba(255,255,255,0.06)'}`, background: displayType===i ? 'rgba(167,139,250,0.1)' : 'rgba(255,255,255,0.01)', cursor:'pointer', textAlign:'left' as const, transition:'all 0.18s' }}>
-              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: displayType===i ? 'rgba(167,139,250,0.9)' : 'rgba(255,255,255,0.25)', marginBottom:2 }}>{k.houses}</div>
-              <div style={{ fontSize:11, fontWeight:700, color: displayType===i ? 'rgba(167,139,250,0.95)' : `${W}0.55)`, lineHeight:1.2 }}>{k.name}</div>
-              <div style={{ fontSize:9, color:`${W}0.3)`, marginTop:2, lineHeight:1.3 }}>{k.domain}</div>
+              <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: displayType===i ? 'rgba(167,139,250,0.9)' : 'rgba(255,255,255,0.25)', marginBottom:2 }}>{k.houses}</div>
+              <div style={{ fontSize:14, fontWeight:700, color: displayType===i ? 'rgba(167,139,250,0.95)' : `${W}0.55)`, lineHeight:1.2 }}>{k.name}</div>
+              <div style={{ fontSize:13, color:`${W}0.3)`, marginTop:2, lineHeight:1.3 }}>{k.domain}</div>
             </button>
           ))}
         </div>
@@ -1622,12 +1622,12 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
               <span style={{ fontSize:18 }}>🐍</span>
               <div>
-                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)' }}>{currentYoga.serpent} · {currentYoga.houses}</div>
+                <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)' }}>{currentYoga.serpent} · {currentYoga.houses}</div>
                 <div style={{ fontSize:16, fontWeight:900, color:'rgba(167,139,250,0.95)', letterSpacing:'-0.02em' }}>{currentYoga.name} Kala Sarpa Yoga</div>
-                <div style={{ fontSize:10, color:`${W}0.35)`, marginTop:1 }}>{currentYoga.domain}</div>
+                <div style={{ fontSize:13, color:`${W}0.35)`, marginTop:1 }}>{currentYoga.domain}</div>
               </div>
             </div>
-            <p style={{ fontSize:13, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{currentYoga.surface}</p>
+            <p style={{ fontSize:15.5, color:`${W}0.65)`, lineHeight:1.78, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{currentYoga.surface}</p>
           </div>
 
           {/* Tiered sections */}
@@ -1638,15 +1638,15 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
               <div key={sec.key} style={{ marginBottom:6, borderRadius:13, overflow:'hidden', border:`1px solid ${isOpen&&hasAccess ? sec.color.replace(/[\d.]+\)$/,'0.25)') : `${W}0.05)`}`, transition:'border-color 0.2s' }}>
                 <button onClick={() => hasAccess && setKsExpanded(isOpen ? null : sec.key)} style={{ width:'100%', padding:'10px 14px', background: isOpen&&hasAccess ? `${W}0.03)` : 'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess ? 'pointer' : 'default' }}>
                   <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
-                  <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : `${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
-                  {!hasAccess && <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
-                  {hasAccess && <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen ? '▲' : '▼'}</span>}
+                  <span style={{ flex:1, fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : `${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
+                  {!hasAccess && <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
+                  {hasAccess && <span style={{ fontSize:13, color:`${W}0.25)` }}>{isOpen ? '▲' : '▼'}</span>}
                 </button>
                 {isOpen && hasAccess && (
                   <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.04)` }}>
                     {sec.key==='transmission'
                       ? <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(167,139,250,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12, padding:'8px' }}>{sec.content}</p>
-                      : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
+                      : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
                     }
                   </div>
                 )}
@@ -1658,7 +1658,7 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
 
       {/* Universal remedies */}
       <div style={{ padding:'12px 14px', background:'rgba(167,139,250,0.04)', border:'1px solid rgba(167,139,250,0.15)', borderRadius:12 }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.55)', marginBottom:8 }}>🐍 Universal Kala Sarpa Remedies</div>
+        <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.55)', marginBottom:8 }}>🐍 Universal Kala Sarpa Remedies</div>
         {[
           'Naga Pratishtha puja — install and worship serpent deities at a Naga shrine',
           'Chant both Rahu and Ketu mantras every Saturday without fail',
@@ -1667,8 +1667,8 @@ const KalaSarpaYoga: React.FC<{ moonNakshatra?: string; birthDate?: string }> = 
           'Naga Panchami observance annually — most powerful day for all Kala Sarpa remedies',
         ].map((r,i) => (
           <div key={i} style={{ display:'flex', gap:8, padding:'5px 0', borderBottom: i<4?`1px solid ${W}0.04)`:undefined }}>
-            <span style={{ fontSize:9, color:'rgba(167,139,250,0.4)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
-            <span style={{ fontSize:11.5, color:`${W}0.55)`, lineHeight:1.55 }}>{r}</span>
+            <span style={{ fontSize:13, color:'rgba(167,139,250,0.4)', fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+            <span style={{ fontSize:14.5, color:`${W}0.55)`, lineHeight:1.55 }}>{r}</span>
           </div>
         ))}
       </div>
@@ -1936,8 +1936,8 @@ const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }
           { l:'Current Hora', v: panchanga.hora + ' Hora' },
         ].map(s => (
           <div key={s.l} style={{ background:`${W}0.02)`, border:`1px solid ${W}0.06)`, borderRadius:12, padding:'9px 10px' }}>
-            <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:`${G}0.4)`, marginBottom:2 }}>{s.l}</div>
-            <div style={{ fontSize:11, fontWeight:700, color:`${W}0.8)`, lineHeight:1.2 }}>{s.v}</div>
+            <div style={{ fontSize:10.5, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:`${G}0.4)`, marginBottom:2 }}>{s.l}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:`${W}0.8)`, lineHeight:1.2 }}>{s.v}</div>
           </div>
         ))}
       </div>
@@ -1946,44 +1946,44 @@ const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }
       {panchanga.rahuActive && (
         <div style={{ padding:'9px 12px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:10, marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontSize:14 }}>⚠️</span>
-          <p style={{ fontSize:11.5, color:'rgba(255,150,150,0.9)', lineHeight:1.5 }}>
+          <p style={{ fontSize:14.5, color:'rgba(255,150,150,0.9)', lineHeight:1.5 }}>
             <strong>Rahu Kala active now</strong> — avoid beginning any major action until {Math.floor(panchanga.rahuEnd)}:{String(Math.round((panchanga.rahuEnd%1)*60)).padStart(2,'0')}
           </p>
         </div>
       )}
 
       {/* Action type selector */}
-      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:8 }}>Select Action Type</div>
+      <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:8 }}>Select Action Type</div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:14 }}>
         {ACTIONS.map(a => (
           <button key={a.id} onClick={() => { setActionType(a.id); setMuExpanded(null); }}
-            style={{ padding:'10px 6px', borderRadius:12, border:`1px solid ${actionType===a.id ? 'rgba(212,175,55,0.38)' : `${W}0.07)`}`, background: actionType===a.id ? `${G}0.1)` : `${W}0.02)`, color: actionType===a.id ? '#D4AF37' : `${W}0.42)`, fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.2s' }}>
+            style={{ padding:'10px 6px', borderRadius:12, border:`1px solid ${actionType===a.id ? 'rgba(212,175,55,0.38)' : `${W}0.07)`}`, background: actionType===a.id ? `${G}0.1)` : `${W}0.02)`, color: actionType===a.id ? '#D4AF37' : `${W}0.42)`, fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.2s' }}>
             <span style={{ display:'block', fontSize:18, marginBottom:4 }}>{a.icon}</span>{a.label}
           </button>
         ))}
       </div>
 
       {/* Surface */}
-      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:13, color:`${W}0.6)`, lineHeight:1.75, marginBottom:14 }}>{ad.surface}</p>
+      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15.5, color:`${W}0.6)`, lineHeight:1.75, marginBottom:14 }}>{ad.surface}</p>
 
       {/* Best windows */}
-      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>✦ Auspicious Windows — Next 14 Days</div>
+      <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>✦ Auspicious Windows — Next 14 Days</div>
       <div style={{ display:'flex', flexDirection:'column' as const, gap:7, marginBottom:14 }}>
         {windows.length > 0 ? windows.map((w, i) => (
           <div key={i} style={{ background:`${W}0.02)`, border:`1px solid ${i===0 ? 'rgba(74,222,128,0.2)' : `${W}0.06)`}`, borderRadius:14, padding:'11px 14px', display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ minWidth:52 }}>
-              <div style={{ fontSize:12, fontWeight:900, color: i===0 ? 'rgba(74,222,128,0.9)' : '#D4AF37', marginBottom:1 }}>{w.day}</div>
-              <div style={{ fontSize:8, color:`${W}0.28)` }}>{w.dayName}</div>
+              <div style={{ fontSize:14.5, fontWeight:900, color: i===0 ? 'rgba(74,222,128,0.9)' : '#D4AF37', marginBottom:1 }}>{w.day}</div>
+              <div style={{ fontSize:12, color:`${W}0.28)` }}>{w.dayName}</div>
             </div>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:11, fontWeight:700, color:`${W}0.72)`, marginBottom:2 }}>{ad.bestHora}</div>
-              <div style={{ fontSize:9, color:`${W}0.35)` }}>Moon in {w.nak}{w.isBestNak ? ' ✦ Ideal Nakshatra' : ''}</div>
+              <div style={{ fontSize:14, fontWeight:700, color:`${W}0.72)`, marginBottom:2 }}>{ad.bestHora}</div>
+              <div style={{ fontSize:13, color:`${W}0.35)` }}>Moon in {w.nak}{w.isBestNak ? ' ✦ Ideal Nakshatra' : ''}</div>
             </div>
-            <div style={{ fontSize:13, fontWeight:900, color: i===0 ? 'rgba(74,222,128,0.9)' : '#D4AF37' }}>{w.score}%</div>
+            <div style={{ fontSize:15.5, fontWeight:900, color: i===0 ? 'rgba(74,222,128,0.9)' : '#D4AF37' }}>{w.score}%</div>
           </div>
         )) : (
           <div style={{ padding:'12px', background:`${W}0.02)`, borderRadius:12, border:`1px solid ${W}0.05)` }}>
-            <p style={{ fontSize:12, color:`${W}0.4)`, fontStyle:'italic', fontFamily:"'Georgia',serif" }}>No ideal windows in next 14 days — use Abhijit Muhurta (11:48–12:24) on any Thursday or Wednesday as universal fallback.</p>
+            <p style={{ fontSize:14.5, color:`${W}0.4)`, fontStyle:'italic', fontFamily:"'Georgia',serif" }}>No ideal windows in next 14 days — use Abhijit Muhurta (11:48–12:24) on any Thursday or Wednesday as universal fallback.</p>
           </div>
         )}
       </div>
@@ -1992,12 +1992,12 @@ const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }
       {tierRank >= 1 && (
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
           <div style={{ background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.12)', borderRadius:12, padding:'10px 12px' }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.6)', marginBottom:6 }}>✦ Ideal Nakshatras</div>
-            {ad.bestNakshatras.slice(0,6).map((n,i) => <div key={i} style={{ fontSize:10.5, color:`${W}0.6)`, lineHeight:1.6 }}>{n}</div>)}
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.6)', marginBottom:6 }}>✦ Ideal Nakshatras</div>
+            {ad.bestNakshatras.slice(0,6).map((n,i) => <div key={i} style={{ fontSize:13.5, color:`${W}0.6)`, lineHeight:1.6 }}>{n}</div>)}
           </div>
           <div style={{ background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.12)', borderRadius:12, padding:'10px 12px' }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:6 }}>⚠ Avoid Nakshatras</div>
-            {ad.avoidNakshatras.slice(0,6).map((n,i) => <div key={i} style={{ fontSize:10.5, color:`${W}0.5)`, lineHeight:1.6 }}>{n}</div>)}
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:6 }}>⚠ Avoid Nakshatras</div>
+            {ad.avoidNakshatras.slice(0,6).map((n,i) => <div key={i} style={{ fontSize:13.5, color:`${W}0.5)`, lineHeight:1.6 }}>{n}</div>)}
           </div>
         </div>
       )}
@@ -2005,11 +2005,11 @@ const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }
       {/* Key factors */}
       {tierRank >= 1 && (
         <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:12, padding:'12px 14px', marginBottom:12 }}>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:8 }}>✦ Muhurta Scoring Factors</div>
+          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:8 }}>✦ Muhurta Scoring Factors</div>
           {ad.keyFactors.map((f,i) => (
             <div key={i} style={{ display:'flex', gap:8, padding:'4px 0', borderBottom: i<ad.keyFactors.length-1?`1px solid ${W}0.04)`:undefined }}>
-              <span style={{ fontSize:9, color:`${G}0.4)`, fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
-              <span style={{ fontSize:11, color:`${W}0.58)`, lineHeight:1.55 }}>{f}</span>
+              <span style={{ fontSize:13, color:`${G}0.4)`, fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+              <span style={{ fontSize:14, color:`${W}0.58)`, lineHeight:1.55 }}>{f}</span>
             </div>
           ))}
         </div>
@@ -2024,15 +2024,15 @@ const MuhurtaCalculator: React.FC<{ moonNakshatra?: string; birthDate?: string }
             <div key={sec.key} style={{ borderRadius:13, overflow:'hidden', border:`1px solid ${isOpen&&hasAccess ? sec.color.replace(/[\d.]+\)$/,'0.25)') : `${W}0.05)`}`, transition:'border-color 0.2s' }}>
               <button onClick={() => hasAccess && setMuExpanded(isOpen ? null : sec.key)} style={{ width:'100%', padding:'10px 14px', background: isOpen&&hasAccess?`${W}0.03)`:'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess?'pointer':'default' }}>
                 <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
-                <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess?sec.color:`${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
-                {!hasAccess && <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
-                {hasAccess && <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen?'▲':'▼'}</span>}
+                <span style={{ flex:1, fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color: hasAccess?sec.color:`${W}0.2)`, textAlign:'left' as const }}>{sec.label}</span>
+                {!hasAccess && <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:`${W}0.2)`, background:`${W}0.03)`, border:`1px solid ${W}0.06)`, borderRadius:6, padding:'2px 7px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
+                {hasAccess && <span style={{ fontSize:13, color:`${W}0.25)` }}>{isOpen?'▲':'▼'}</span>}
               </button>
               {isOpen && hasAccess && (
                 <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.04)` }}>
                   {sec.key==='transmission'
                     ? <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12 }}>{sec.content}</p>
-                    : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
+                    : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15, color:`${W}0.72)`, lineHeight:1.82, marginTop:10 }}>{sec.content}</p>
                   }
                 </div>
               )}
@@ -2272,7 +2272,7 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
   return (
     <div>
       {/* Intro */}
-      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:13, color:`${W}0.5)`, lineHeight:1.75, marginBottom:14 }}>
+      <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15.5, color:`${W}0.5)`, lineHeight:1.75, marginBottom:14 }}>
         Ashtakoot Gun Milan — the Vedic 36-point system — calculates the compatibility of two souls across 8 dimensions: from soul evolution to physical intimacy to health and lineage. Above 18 is acceptable; above 24 is good; above 28 is exceptional.
       </p>
 
@@ -2283,10 +2283,10 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
           { label:'Partner\'s Nakshatra', value:person2, set:setPerson2, hint: undefined },
         ].map((p,i) => (
           <div key={i}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:4 }}>{p.label}</div>
-            {p.hint && <div style={{ fontSize:8, color:'rgba(212,175,55,0.5)', marginBottom:3 }}>{p.hint}</div>}
+            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase' as const, color:`${G}0.42)`, marginBottom:4 }}>{p.label}</div>
+            {p.hint && <div style={{ fontSize:12, color:'rgba(212,175,55,0.5)', marginBottom:3 }}>{p.hint}</div>}
             <select value={p.value} onChange={e => p.set(e.target.value)}
-              style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.8)`, fontSize:11.5, fontFamily:'inherit', outline:'none' }}>
+              style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:11, padding:'9px 12px', color:`${W}0.8)`, fontSize:14.5, fontFamily:'inherit', outline:'none' }}>
               {NAKSHATRAS.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
@@ -2295,9 +2295,9 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
 
       {/* Score display */}
       <div style={{ textAlign:'center', marginBottom:16, padding:'18px 16px', background:`${W}0.02)`, border:`1px solid ${verdict.border}`, borderRadius:18 }}>
-        <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Compatibility Score</div>
+        <div style={{ fontSize:11.5, fontWeight:800, letterSpacing:'0.42em', textTransform:'uppercase' as const, color:`${G}0.45)`, marginBottom:8 }}>Compatibility Score</div>
         <div style={{ fontSize:48, fontWeight:900, color:'#D4AF37', lineHeight:1, marginBottom:6 }}>{total}<span style={{ fontSize:18, opacity:0.4 }}> / 36</span></div>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 14px', borderRadius:99, background:verdict.bg, border:`1px solid ${verdict.border}`, color:verdict.color, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, marginBottom:12 }}>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 14px', borderRadius:99, background:verdict.bg, border:`1px solid ${verdict.border}`, color:verdict.color, fontSize:12, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, marginBottom:12 }}>
           {verdict.label}
         </div>
         <div style={{ height:5, borderRadius:99, background:`${W}0.05)`, overflow:'hidden' }}>
@@ -2306,8 +2306,8 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
         <div style={{ marginTop:10, display:'flex', justifyContent:'center', gap:16 }}>
           {[['Challenging','<18'],['Acceptable','18–24'],['Good','24–28'],['Exceptional','28+']].map(([l,r]) => (
             <div key={l} style={{ textAlign:'center' as const }}>
-              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', color:`${W}0.25)` }}>{l}</div>
-              <div style={{ fontSize:9, color:`${W}0.4)` }}>{r}</div>
+              <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.2em', color:`${W}0.25)` }}>{l}</div>
+              <div style={{ fontSize:13, color:`${W}0.4)` }}>{r}</div>
             </div>
           ))}
         </div>
@@ -2329,16 +2329,16 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
                 <span style={{ fontSize:15, minWidth:20 }}>{kd.icon}</span>
                 <div style={{ flex:1, textAlign:'left' as const }}>
                   <div style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:3 }}>
-                    <span style={{ fontSize:11, fontWeight:800, color: isOpen ? kd.color : `${W}0.75)` }}>{name}</span>
-                    <span style={{ fontSize:9, color:`${W}0.3)` }}>{kd.sub}</span>
+                    <span style={{ fontSize:14, fontWeight:800, color: isOpen ? kd.color : `${W}0.75)` }}>{name}</span>
+                    <span style={{ fontSize:13, color:`${W}0.3)` }}>{kd.sub}</span>
                   </div>
                   <div style={{ height:4, borderRadius:99, background:`${W}0.06)`, overflow:'hidden', width:'100%' }}>
                     <div style={{ height:'100%', width:`${pctK}%`, background:barColor, borderRadius:99, transition:'width 0.5s' }}/>
                   </div>
                 </div>
                 <div style={{ display:'flex', flexDirection:'column' as const, alignItems:'flex-end', flexShrink:0, gap:2 }}>
-                  <div style={{ fontSize:13, fontWeight:900, color:barColor }}>{score}<span style={{ fontSize:9, opacity:0.5 }}>/{max}</span></div>
-                  <span style={{ fontSize:10, color:`${W}0.25)` }}>{isOpen?'▲':'▼'}</span>
+                  <div style={{ fontSize:15.5, fontWeight:900, color:barColor }}>{score}<span style={{ fontSize:13, opacity:0.5 }}>/{max}</span></div>
+                  <span style={{ fontSize:13, color:`${W}0.25)` }}>{isOpen?'▲':'▼'}</span>
                 </div>
               </button>
 
@@ -2346,51 +2346,51 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
               {isOpen && (
                 <div style={{ padding:'0 14px 14px', borderTop:`1px solid ${W}0.05)` }}>
                   {/* What is this Koota */}
-                  <p style={{ fontSize:12, color:`${W}0.55)`, lineHeight:1.65, marginTop:10, marginBottom:10 }}>{kd.what}</p>
+                  <p style={{ fontSize:14.5, color:`${W}0.55)`, lineHeight:1.65, marginTop:10, marginBottom:10 }}>{kd.what}</p>
 
                   {/* Score-specific reading — always shown */}
                   <div style={{ padding:'11px 13px', background: score===max?'rgba(74,222,128,0.05)':score>0?`${G}0.04)`:'rgba(239,68,68,0.04)', border:`1px solid ${barColor.replace(/[\d.]+\)$/,'0.2)')}`, borderRadius:12, marginBottom:10 }}>
-                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:barColor, marginBottom:5 }}>
+                    <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:barColor, marginBottom:5 }}>
                       {score===max?'✦ Compatible':'⚠ Note'} · {score}/{max} points
                     </div>
-                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:`${W}0.75)`, lineHeight:1.75 }}>{kd.surface}</p>
+                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15, color:`${W}0.75)`, lineHeight:1.75 }}>{kd.surface}</p>
                   </div>
 
                   {/* Prana+ sections */}
                   {tierRank >= 1 && (
                     <div style={{ display:'flex', flexDirection:'column' as const, gap:6 }}>
                       <div style={{ padding:'10px 13px', background:`${W}0.02)`, border:`1px solid ${W}0.05)`, borderRadius:11 }}>
-                        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:5 }}>◎ The Pattern</div>
-                        <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12, color:`${W}0.65)`, lineHeight:1.78 }}>{kd.deep}</p>
+                        <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:5 }}>◎ The Pattern</div>
+                        <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:14.5, color:`${W}0.65)`, lineHeight:1.78 }}>{kd.deep}</p>
                       </div>
                       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
                         <div style={{ padding:'9px 11px', background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.1)', borderRadius:11 }}>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.55)', marginBottom:4 }}>🌑 Shadow</div>
-                          <p style={{ fontSize:11, color:`${W}0.55)`, lineHeight:1.6 }}>{kd.shadow}</p>
+                          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.55)', marginBottom:4 }}>🌑 Shadow</div>
+                          <p style={{ fontSize:14, color:`${W}0.55)`, lineHeight:1.6 }}>{kd.shadow}</p>
                         </div>
                         <div style={{ padding:'9px 11px', background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.1)', borderRadius:11 }}>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.55)', marginBottom:4 }}>◈ The Gift</div>
-                          <p style={{ fontSize:11, color:`${W}0.55)`, lineHeight:1.6 }}>{kd.gift}</p>
+                          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.55)', marginBottom:4 }}>◈ The Gift</div>
+                          <p style={{ fontSize:14, color:`${W}0.55)`, lineHeight:1.6 }}>{kd.gift}</p>
                         </div>
                       </div>
                     </div>
                   )}
                   {tierRank < 1 && (
                     <div style={{ display:'flex', alignItems:'center', gap:8, background:`${G}0.03)`, border:`1px solid ${G}0.08)`, borderRadius:10, padding:'9px 12px' }}>
-                      <span>🔒</span><p style={{ fontSize:11, color:`${W}0.35)` }}>Deep pattern reading from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong></p>
+                      <span>🔒</span><p style={{ fontSize:14, color:`${W}0.35)` }}>Deep pattern reading from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong></p>
                     </div>
                   )}
 
                   {/* Akasha transmission */}
                   {tierRank >= 3 && (
                     <div style={{ marginTop:8, padding:'12px 14px', background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:12 }}>
-                      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:6 }}>✦ Ākāsha Transmission</div>
+                      <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:6 }}>✦ Ākāsha Transmission</div>
                       <p style={{ fontFamily:"'IM Fell English',serif", fontStyle:'italic', fontSize:14, color:'rgba(212,175,55,0.88)', lineHeight:1.9, textAlign:'center' as const }}>{kd.transmission}</p>
                     </div>
                   )}
                   {tierRank < 3 && (
                     <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8, background:`${W}0.02)`, border:`1px solid ${W}0.05)`, borderRadius:10, padding:'8px 12px' }}>
-                      <span>🔒</span><p style={{ fontSize:11, color:`${W}0.3)` }}>Ākāsha Transmission — <strong style={{ color:'#D4AF37' }}>Ākāsha-Infinity</strong></p>
+                      <span>🔒</span><p style={{ fontSize:14, color:`${W}0.3)` }}>Ākāsha Transmission — <strong style={{ color:'#D4AF37' }}>Ākāsha-Infinity</strong></p>
                     </div>
                   )}
                 </div>
@@ -2403,7 +2403,7 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
       {/* Overall guidance */}
       {tierRank >= 1 && (
         <div style={{ marginTop:12, padding:'12px 14px', background:`${G}0.04)`, border:`1px solid ${G}0.12)`, borderRadius:12 }}>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:8 }}>✦ Reading This Score</div>
+          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:8 }}>✦ Reading This Score</div>
           {[
             'Nadi (8pts) and Gana (6pts) are the most important Kootas — if both are compatible, the relationship has a strong foundation regardless of other scores.',
             'Bhakut Dosha and Nadi Dosha are the two most serious doshas — both are remediable through specific pujas and conscious practice.',
@@ -2411,8 +2411,8 @@ const GunMilan: React.FC<{ userNakshatra?: string }> = ({ userNakshatra }) => {
             'The highest Gun Milan score does not guarantee a happy relationship — it indicates natural compatibility. Both require the willingness to grow together.',
           ].map((r,i) => (
             <div key={i} style={{ display:'flex', gap:8, padding:'4px 0', borderBottom: i<3?`1px solid ${W}0.04)`:undefined }}>
-              <span style={{ fontSize:9, color:`${G}0.4)`, fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
-              <span style={{ fontSize:11, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</span>
+              <span style={{ fontSize:13, color:`${G}0.4)`, fontWeight:800, minWidth:16 }}>{String(i+1).padStart(2,'0')}</span>
+              <span style={{ fontSize:14, color:`${W}0.58)`, lineHeight:1.55 }}>{r}</span>
             </div>
           ))}
         </div>
@@ -2470,12 +2470,12 @@ const OracleCard: React.FC<OracleCardProps> = ({ icon, label, title, glow, open,
         {/* Labels */}
         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
           <div style={{
-            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800,
+            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight: 800,
             letterSpacing: '0.42em', textTransform: 'uppercase' as const,
             color: `${G}0.45)`, marginBottom: 3,
           }}>{label}</div>
           <div style={{
-            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 12.5, fontWeight: 700,
+            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:15, fontWeight: 700,
             color: open ? '#D4AF37' : 'rgba(255,255,255,0.65)',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             transition: 'color 0.25s',
@@ -2556,24 +2556,24 @@ const GitaOraclePanel: React.FC<GitaOraclePanelProps & { inline?: boolean }> = (
         <div style={{ display:'flex', alignItems:'flex-start', gap:10, paddingBottom:14, borderBottom:`1px solid rgba(212,175,55,0.1)`, marginBottom:14 }}>
           <div style={{ width:10, height:10, borderRadius:'50%', background:planetColor, boxShadow:`0 0 8px ${planetColor}`, flexShrink:0, marginTop:4 }}/>
           <div>
-            <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:4 }}>
+            <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:11.5, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:4 }}>
               ACTIVE DASHA · {mahaName}{antarName ? ` / ${antarName}` : ''}
             </div>
-            <div style={{ fontFamily:'Georgia, serif', fontStyle:'italic', fontSize:12, color:`${W}0.5)`, lineHeight:1.6 }}>{context}</div>
+            <div style={{ fontFamily:'Georgia, serif', fontStyle:'italic', fontSize:14.5, color:`${W}0.5)`, lineHeight:1.6 }}>{context}</div>
           </div>
         </div>
       )}
       <div style={{ textAlign:'center', paddingBottom:16, borderBottom:`1px solid rgba(212,175,55,0.08)`, marginBottom:14 }}>
         <div style={{ fontFamily:'Georgia, serif', fontSize:17, color:`${G}0.92)`, lineHeight:1.8, marginBottom:8, textShadow:`0 0 20px ${G}0.25)` }}>{verse.sanskrit}</div>
-        <div style={{ fontFamily:'Georgia, serif', fontStyle:'italic', fontSize:11, color:`${W}0.4)`, lineHeight:1.6 }}>{verse.transliteration}</div>
+        <div style={{ fontFamily:'Georgia, serif', fontStyle:'italic', fontSize:14, color:`${W}0.4)`, lineHeight:1.6 }}>{verse.transliteration}</div>
       </div>
       <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.1)`, borderRadius:14, padding:'14px 16px', marginBottom:12, position:'relative' }}>
-        <div style={{ position:'absolute', top:-8, left:14, fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA TRANSMISSION</div>
-        <p style={{ fontFamily:'Georgia, serif', fontSize:13, color:`${W}0.82)`, lineHeight:1.75, margin:0, fontStyle:'italic' }}>"{verse.producersTranslation}"</p>
+        <div style={{ position:'absolute', top:-8, left:14, fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA TRANSMISSION</div>
+        <p style={{ fontFamily:'Georgia, serif', fontSize:15.5, color:`${W}0.82)`, lineHeight:1.75, margin:0, fontStyle:'italic' }}>"{verse.producersTranslation}"</p>
       </div>
       <div style={{ display:'flex', justifyContent:'space-between' }}>
-        <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.35)` }}>CH.{verse.chapter} · V.{verse.verse}</div>
-        <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.35)` }}>{mahaName ? `${mahaName} CYCLE` : 'DAILY'}</div>
+        <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:`${G}0.35)` }}>CH.{verse.chapter} · V.{verse.verse}</div>
+        <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:`${G}0.35)` }}>{mahaName ? `${mahaName} CYCLE` : 'DAILY'}</div>
       </div>
     </div>
   );
@@ -2586,10 +2586,10 @@ const GitaOraclePanel: React.FC<GitaOraclePanelProps & { inline?: boolean }> = (
             <span style={{ fontFamily: 'Georgia, serif' }}>G</span>
           </div>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: `${G}0.55)`, marginBottom: 3 }}>
+            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:12, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: `${G}0.55)`, marginBottom: 3 }}>
               BHAGAVAD GITA · JYOTISH ORACLE
             </div>
-            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 13, fontWeight: 700, color: open ? '#D4AF37' : `${W}0.7)` }}>
+            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:15.5, fontWeight: 700, color: open ? '#D4AF37' : `${W}0.7)` }}>
               {mahaName ? `${mahaName} Dasha Light-Code` : 'Daily Vedic Verse'} · Ch.{verse.chapter}:{verse.verse}
             </div>
           </div>
@@ -2609,19 +2609,19 @@ const GitaOraclePanel: React.FC<GitaOraclePanelProps & { inline?: boolean }> = (
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 0 16px', borderBottom: `1px solid ${G}0.1)`, marginBottom: 18 }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: planetColor, boxShadow: `0 0 8px ${planetColor}`, flexShrink: 0, marginTop: 4 }}/>
                   <div>
-                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: `${G}0.5)`, marginBottom: 4 }}>
+                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:11.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: `${G}0.5)`, marginBottom: 4 }}>
                       ACTIVE DASHA · {mahaName}{antarName ? ` / ${antarName}` : ''}
                     </div>
-                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: `${W}0.5)`, lineHeight: 1.6 }}>{context}</div>
+                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize:14.5, color: `${W}0.5)`, lineHeight: 1.6 }}>{context}</div>
                   </div>
                 </div>
               )}
               <div style={{ textAlign: 'center', padding: '10px 0 18px', borderBottom: `1px solid ${G}0.08)`, marginBottom: 18 }}>
                 <div style={{ fontFamily: 'Georgia, serif', fontSize: 17, color: `${G}0.92)`, lineHeight: 1.8, marginBottom: 10, textShadow: `0 0 20px ${G}0.3)` }}>{verse.sanskrit}</div>
-                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: `${W}0.4)`, lineHeight: 1.6 }}>{verse.transliteration}</div>
+                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize:14, color: `${W}0.4)`, lineHeight: 1.6 }}>{verse.transliteration}</div>
               </div>
               <div style={{ background: `${G}0.04)`, border: `1px solid ${G}0.1)`, borderRadius: 14, padding: '16px 18px', marginBottom: 16, position: 'relative' }}>
-                <div style={{ position: 'absolute', top: -8, left: 16, fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: '#D4AF37', background: '#050505', padding: '0 6px' }}>
+                <div style={{ position: 'absolute', top: -8, left: 16, fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: '#D4AF37', background: '#050505', padding: '0 6px' }}>
                   SIDDHA TRANSMISSION
                 </div>
                 <p style={{ fontFamily: 'Georgia, serif', fontSize: 13.5, color: `${W}0.82)`, lineHeight: 1.75, margin: 0, fontStyle: 'italic' }}>
@@ -2629,8 +2629,8 @@ const GitaOraclePanel: React.FC<GitaOraclePanelProps & { inline?: boolean }> = (
                 </p>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: `${G}0.38)` }}>BHAGAVAD GITA · CHAPTER {verse.chapter}, VERSE {verse.verse}</div>
-                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: `${G}0.35)` }}>{mahaName ? `${mahaName} CYCLE` : 'DAILY CODE'}</div>
+                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: `${G}0.38)` }}>BHAGAVAD GITA · CHAPTER {verse.chapter}, VERSE {verse.verse}</div>
+                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: `${G}0.35)` }}>{mahaName ? `${mahaName} CYCLE` : 'DAILY CODE'}</div>
               </div>
             </div>
           </motion.div>
@@ -3038,16 +3038,16 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
     <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
       style={{ ...g, padding:32, textAlign:'center', marginBottom:20 }}>
       <div style={{ fontSize:40, marginBottom:16 }}>🌟</div>
-      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10 }}>
+      <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10 }}>
         Begin Your Journey
       </div>
       <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:'-0.04em', marginBottom:12, color:'#D4AF37' }}>
         Activate Your Cosmic Blueprint
       </h2>
-      <p style={{ fontSize:13, color:'rgba(255,255,255,0.5)', lineHeight:1.65, maxWidth:420, margin:'0 auto 8px', fontFamily:'Georgia, serif', fontStyle:'italic' }}>
+      <p style={{ fontSize:15.5, color:'rgba(255,255,255,0.5)', lineHeight:1.65, maxWidth:420, margin:'0 auto 8px', fontFamily:'Georgia, serif', fontStyle:'italic' }}>
         "Enter your birth details once. The SQI system automatically calculates your Lagna (Rising Sign), Moon Sign, Sun Sign, and complete Dasha timeline — no Jyotish knowledge needed. The entire platform then reads your chart in every consultation."
       </p>
-      <p style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginBottom:22 }}>
+      <p style={{ fontSize:14, color:'rgba(255,255,255,0.3)', marginBottom:22 }}>
         Name · Date of Birth · Time of Birth · City of Birth
       </p>
       <Dialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen}>
@@ -3055,7 +3055,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           <button style={{
             padding:'13px 28px', borderRadius:99, border:'1px solid rgba(212,175,55,0.42)',
             background:'linear-gradient(135deg,rgba(212,175,55,0.28),rgba(212,175,55,0.10))',
-            color:'#D4AF37', fontWeight:800, fontSize:11, letterSpacing:'0.35em',
+            color:'#D4AF37', fontWeight:800, fontSize:14, letterSpacing:'0.25em',
             textTransform:'uppercase' as const, cursor:'pointer'
           }}>
             ✦ Enter Birth Details
@@ -3081,8 +3081,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         ].map(item => (
           <div key={item.title} style={{ ...gs, padding:'12px 14px' }}>
             <div style={{ fontSize:16, marginBottom:5 }}>{item.icon}</div>
-            <div style={{ fontSize:10, fontWeight:900, color:'#D4AF37', marginBottom:3 }}>{item.title}</div>
-            <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>{item.desc}</div>
+            <div style={{ fontSize:13, fontWeight:900, color:'#D4AF37', marginBottom:3 }}>{item.title}</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>{item.desc}</div>
           </div>
         ))}
       </div>
@@ -3133,7 +3133,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
         {/* ── PAGE HEADER ── */}
         <div style={{ padding:'28px 0 0', textAlign:'center', animation:'fadUp 0.4s ease both' }}>
-          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:8 }}>
+          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:8 }}>
             Bhrigu Nadi Chamber · SQI 2050 · Akasha-Neural Archive
           </div>
           <h1 className="sqi-shimmer" style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'clamp(2rem,6vw,2.6rem)', fontWeight:700, lineHeight:1, marginBottom:6, letterSpacing:'-0.02em' }}>
@@ -3143,7 +3143,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
             "The stars do not imprison you. They reveal the karma you came to transform." — Maharishi Bhrigu
           </p>
           {birthData && (
-            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 16px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:24 }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 16px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:11.5, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:24 }}>
               <div style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 8px rgba(212,175,55,0.8)', animation:'sqDotPulse 2s ease-in-out infinite' }}/>
               {birthData.birth_name} · Blueprint Active
             </div>
@@ -3172,7 +3172,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               </svg>
             </div>
             <div style={{ position:'relative', zIndex:2, padding:'28px 22px 24px' }}>
-              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.55)', marginBottom:16, display:'flex', alignItems:'center', gap:10 }}>
+              <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.55)', marginBottom:16, display:'flex', alignItems:'center', gap:10 }}>
                 <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.2)' }}/> BHAGAVAD GITA · JYOTISH ORACLE <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.2)' }}/>
               </div>
               <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'4rem', lineHeight:1, color:'#D4AF37', textAlign:'center', marginBottom:4, textShadow:'0 0 28px rgba(212,175,55,0.6), 0 0 55px rgba(212,175,55,0.2)', animation:'swP 3.5s ease-in-out infinite' }}>ॐ</div>
@@ -3189,15 +3189,15 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   { v: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign]||'') + ' ' + ephemeris.ascendantSign : '—', l:'Lagna' },
                 ].map(s => (
                   <div key={s.l} style={{ background:'rgba(5,5,5,0.96)', padding:'11px 6px', textAlign:'center' }}>
-                    <div style={{ fontSize:11, fontWeight:900, color:'#D4AF37', marginBottom:3, lineHeight:1 }}>{s.v}</div>
-                    <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.l}</div>
+                    <div style={{ fontSize:14, fontWeight:900, color:'#D4AF37', marginBottom:3, lineHeight:1 }}>{s.v}</div>
+                    <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.l}</div>
                   </div>
                 ))}
               </div>
               {/* CTA */}
               <button
                 onClick={() => { switchTab('oracle'); setTimeout(() => { document.getElementById('jc-nav')?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50); }}
-                style={{ width:'100%', padding:'15px 24px', borderRadius:99, border:'1px solid rgba(212,175,55,0.45)', background:'linear-gradient(135deg, rgba(212,175,55,0.14), rgba(212,175,55,0.05))', color:'#D4AF37', fontFamily:'inherit', fontSize:9.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10, boxShadow:'0 0 24px rgba(212,175,55,0.1)' }}
+                style={{ width:'100%', padding:'15px 24px', borderRadius:99, border:'1px solid rgba(212,175,55,0.45)', background:'linear-gradient(135deg, rgba(212,175,55,0.14), rgba(212,175,55,0.05))', color:'#D4AF37', fontFamily:'inherit', fontSize:13.5, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10, boxShadow:'0 0 24px rgba(212,175,55,0.1)' }}
               >
                 <div style={{ width:7, height:7, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 10px rgba(212,175,55,0.9)', animation:'sqDotPulse 1.5s ease-in-out infinite' }}/>
                 Enter the Oracle Chamber
@@ -3215,7 +3215,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
             <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
               <div style={{ width:50, height:50, borderRadius:'50%', background:'radial-gradient(circle, rgba(167,139,250,0.2), rgba(5,5,5,0.85))', border:'1px solid rgba(167,139,250,0.42)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:22, boxShadow:'0 0 18px rgba(167,139,250,0.18)', animation:'sqBreathe 5s ease-in-out infinite' }}>◈</div>
               <div>
-                <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:4 }}>32 Sacred Modules · Free to Akasha</div>
+                <div style={{ fontSize:11.5, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:4 }}>32 Sacred Modules · Free to Akasha</div>
                 <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.6rem', fontWeight:700, color:'rgba(255,255,255,0.95)', lineHeight:1.05 }}>Jyotish Vidya</div>
               </div>
             </div>
@@ -3223,14 +3223,22 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               From the Eye of the Veda to reading charts as Bhrigu would — a complete initiation into the sacred science of Vedic astrology across four sovereign tiers.
             </p>
             {/* Progress bar */}
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.45)', marginBottom:5 }}>Your Progress</div>
-            <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:99, height:4, overflow:'hidden', marginBottom:6 }}>
-              <div style={{ height:'100%', background:'linear-gradient(90deg, rgba(167,139,250,0.6), rgba(200,180,255,0.9))', borderRadius:99, width:'25%' }}/>
-            </div>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
-              <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.4)' }}>8 / 32 modules</span>
-              <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.4)' }}>25%</span>
-            </div>
+            <div style={{ fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.55)', marginBottom:6 }}>Your Progress</div>
+            {(() => {
+              const completedVidya = Object.values(vidyaProgress).filter(p => p.status === 'completed' || p.completion_percentage >= 100).length;
+              const pct = Math.round((completedVidya / VIDYA_MODULES.length) * 100);
+              return (
+                <>
+                  <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:99, height:5, overflow:'hidden', marginBottom:7 }}>
+                    <div style={{ height:'100%', background:'linear-gradient(90deg, rgba(167,139,250,0.6), rgba(200,180,255,0.9))', borderRadius:99, width:`${pct}%` }}/>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:14 }}>
+                    <span style={{ fontSize:13.5, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'rgba(200,180,255,0.75)' }}>{completedVidya} / {VIDYA_MODULES.length} modules</span>
+                    <span style={{ fontSize:13.5, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'rgba(200,180,255,0.75)' }}>{pct}%</span>
+                  </div>
+                </>
+              );
+            })()}
             {/* Tier pills */}
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
               {[
@@ -3239,10 +3247,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 { label:'⭐ Siddha', bg:'rgba(212,175,55,0.08)', border:'rgba(212,175,55,0.25)', color:'rgba(212,175,55,0.8)' },
                 { label:'∞ Ākāsha', bg:'rgba(255,255,255,0.06)', border:'rgba(255,255,255,0.18)', color:'rgba(255,255,255,0.75)' },
               ].map(t => (
-                <div key={t.label} style={{ padding:'3px 10px', borderRadius:99, fontSize:7, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, background:t.bg, border:`1px solid ${t.border}`, color:t.color }}>{t.label}</div>
+                <div key={t.label} style={{ padding:'3px 10px', borderRadius:99, fontSize:11, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, background:t.bg, border:`1px solid ${t.border}`, color:t.color }}>{t.label}</div>
               ))}
             </div>
-            <button onClick={() => { switchTab('vidya'); setTimeout(() => { document.getElementById('jc-nav')?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50); }} style={{ width:'100%', padding:'13px 20px', borderRadius:99, border:'1px solid rgba(167,139,250,0.4)', background:'rgba(167,139,250,0.1)', color:'rgba(200,180,255,0.9)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+            <button onClick={() => { switchTab('vidya'); setTimeout(() => { document.getElementById('jc-nav')?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50); }} style={{ width:'100%', padding:'13px 20px', borderRadius:99, border:'1px solid rgba(167,139,250,0.4)', background:'rgba(167,139,250,0.1)', color:'rgba(200,180,255,0.9)', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>
               Open Jyotish Vidya →
             </button>
           </div>
@@ -3259,7 +3267,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 border: active ? '1px solid rgba(212,175,55,0.3)' : 'none',
                 background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
                 color: active ? '#D4AF37' : 'rgba(255,255,255,0.4)',
-                fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em',
+                fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.2em',
                 textTransform:'uppercase' as const, cursor:'pointer', whiteSpace:'nowrap',
                 transition:'all 0.22s'
               }}>{labels[i]}</button>
@@ -3292,7 +3300,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   ].map(s => (
                     <div key={s.l} style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'11px 6px', textAlign:'center' }}>
                       <div style={{ fontSize:s.v.length > 8 ? 9 : 11, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:3 }}>{s.v}</div>
-                      <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)' }}>{s.l}</div>
+                      <div style={{ fontSize:10, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)' }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -3321,8 +3329,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                       <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'12px 15px', marginBottom:8, display:'flex', alignItems:'center', gap:10 }}>
                         <span style={{ fontSize:20, opacity:0.3 }}>♏</span>
                         <div>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.3)', marginBottom:2 }}>Lagna — Rising Sign</div>
-                          <div style={{ fontSize:12, color:'rgba(255,255,255,0.28)', fontStyle:'italic' }}>Calculating from birth time… refresh if this persists</div>
+                          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.3)', marginBottom:2 }}>Lagna — Rising Sign</div>
+                          <div style={{ fontSize:14.5, color:'rgba(255,255,255,0.28)', fontStyle:'italic' }}>Calculating from birth time… refresh if this persists</div>
                         </div>
                       </div>
                     );
@@ -3331,11 +3339,11 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
                           <span style={{ fontSize:20 }}>{SIGN_SYMBOLS[lagnaSign]||'♏'}</span>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Rising Sign</div>
+                            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Rising Sign</div>
                             <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{lagnaSign}</div>
                           </div>
                         </div>
-                        <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.55)', lineHeight:1.65, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom: 14 }}>{SIGN_MEANINGS[lagnaSign]||''}</p>
+                        <p style={{ fontSize:15, color:'rgba(255,255,255,0.55)', lineHeight:1.65, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom: 14 }}>{SIGN_MEANINGS[lagnaSign]||''}</p>
                         <div style={{ marginBottom: ld ? 14 : 0 }}>
                           <RasiChart
                             ascendantSign={lagnaSign}
@@ -3358,16 +3366,16 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           return (
                             <div key={sec.key} style={{ marginBottom:5, borderRadius:12, overflow:'hidden', border:`1px solid ${isOpen&&hasAccess ? sec.color.replace(/[\d.]+\)$/,'0.2)') : 'rgba(255,255,255,0.05)'}`, transition:'border-color 0.2s' }}>
                               <button onClick={() => hasAccess && setBnnExpanded(isOpen?null:'lagna_'+sec.key)} style={{ width:'100%', padding:'9px 12px', background: isOpen&&hasAccess?'rgba(255,255,255,0.03)':'transparent', border:'none', display:'flex', alignItems:'center', gap:8, cursor: hasAccess?'pointer':'default' }}>
-                                <span style={{ fontSize:13, minWidth:16 }}>{sec.icon}</span>
-                                <span style={{ flex:1, fontSize:8, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color: hasAccess?sec.color:'rgba(255,255,255,0.2)', textAlign:'left' as const }}>{sec.label}</span>
-                                {!hasAccess && <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:5, padding:'2px 6px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
-                                {hasAccess && <span style={{ fontSize:10, color:'rgba(255,255,255,0.25)' }}>{isOpen?'▲':'▼'}</span>}
+                                <span style={{ fontSize:15.5, minWidth:16 }}>{sec.icon}</span>
+                                <span style={{ flex:1, fontSize:12, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color: hasAccess?sec.color:'rgba(255,255,255,0.2)', textAlign:'left' as const }}>{sec.label}</span>
+                                {!hasAccess && <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:5, padding:'2px 6px' }}>{sec.tier===1?'PRANA':sec.tier===2?'SIDDHA':'ĀKĀSHA'} 🔒</span>}
+                                {hasAccess && <span style={{ fontSize:13, color:'rgba(255,255,255,0.25)' }}>{isOpen?'▲':'▼'}</span>}
                               </button>
                               {isOpen && hasAccess && (
                                 <div style={{ padding:'0 12px 12px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
                                   {sec.key==='transmission'
                                     ? <p style={{ fontFamily:"'IM Fell English',serif", fontStyle:'italic', fontSize:14, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:10, padding:'8px' }}>"{sec.content}"</p>
-                                    : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12, color:'rgba(255,255,255,0.7)', lineHeight:1.8, marginTop:8 }}>{sec.content}</p>
+                                    : <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:14.5, color:'rgba(255,255,255,0.7)', lineHeight:1.8, marginTop:8 }}>{sec.content}</p>
                                   }
                                 </div>
                               )}
@@ -3382,41 +3390,41 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                         <span style={{ fontSize:20 }}>☽</span>
                         <div style={{ flex:1 }}>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Birth Star · Janma Nakshatra</div>
+                          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Birth Star · Janma Nakshatra</div>
                           <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{ephemeris.moonNakshatra}</div>
                         </div>
                       </div>
                       {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra] ? (
                         <div style={{ display:'flex', flexDirection:'column' as const, gap:6 }}>
                           <div style={{ display:'flex', gap:8, flexWrap:'wrap' as const }}>
-                            <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', background:'rgba(212,175,55,0.06)', border:'1px solid rgba(212,175,55,0.12)', borderRadius:6, padding:'3px 8px' }}>
+                            <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', background:'rgba(212,175,55,0.06)', border:'1px solid rgba(212,175,55,0.12)', borderRadius:6, padding:'3px 8px' }}>
                               ✦ {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].ruling} ruled
                             </span>
-                            <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'3px 8px' }}>
+                            <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'3px 8px' }}>
                               {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].devata}
                             </span>
                           </div>
-                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.72)', lineHeight:1.65, fontStyle:'italic', fontFamily:"'Georgia', serif", margin:'2px 0 0' }}>
+                          <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.72)', lineHeight:1.65, fontStyle:'italic', fontFamily:"'Georgia', serif", margin:'2px 0 0' }}>
                             {NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].gift}
                           </p>
                           <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:8, marginTop:4 }}>
-                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.35)', marginBottom:4 }}>Shakti</div>
-                            <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', lineHeight:1.55 }}>{NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].shakti}</p>
+                            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.35)', marginBottom:4 }}>Shakti</div>
+                            <p style={{ fontSize:14, color:'rgba(255,255,255,0.45)', lineHeight:1.55 }}>{NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].shakti}</p>
                           </div>
                           <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:8, marginTop:2 }}>
-                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,80,80,0.4)', marginBottom:4 }}>Shadow</div>
-                            <p style={{ fontSize:11, color:'rgba(255,255,255,0.38)', lineHeight:1.55 }}>{NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].shadow}</p>
+                            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,80,80,0.4)', marginBottom:4 }}>Shadow</div>
+                            <p style={{ fontSize:14, color:'rgba(255,255,255,0.38)', lineHeight:1.55 }}>{NAKSHATRA_MEANINGS[ephemeris.moonNakshatra].shadow}</p>
                           </div>
                         </div>
                       ) : (
-                        <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
+                        <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
                       )}
                     </div>
                   )}
                   <div style={{ textAlign:'center', marginTop:8 }}>
                     <Dialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen}>
                       <DialogTrigger asChild>
-                        <button style={{ fontSize:11, color:'rgba(212,175,55,0.45)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+                        <button style={{ fontSize:14, color:'rgba(212,175,55,0.45)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
                           Edit · {birthData.birth_date} · {birthData.birth_place}
                         </button>
                       </DialogTrigger>
@@ -3444,22 +3452,22 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           <div
                             onClick={() => setExpandedDasha(expandedDasha==='maha' ? null : 'maha')}
                             style={{ flex:1, background: expandedDasha==='maha' ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)', border:`1px solid ${expandedDasha==='maha' ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.06)'}`, borderRadius:14, padding:'12px 14px', cursor:'pointer', transition:'all 0.2s' }}>
-                            <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:4 }}>Mahadasha · Main Period</div>
+                            <div style={{ fontSize:10.5, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:4 }}>Mahadasha · Main Period</div>
                             <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37', marginBottom:2 }}>{md?.symbol} {activeMaha.planet}</div>
-                            <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginBottom:6 }}>{activeMaha.start} — {activeMaha.end} · {md?.years}yr period</div>
-                            <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>{md?.surface}</p>
-                            <div style={{ fontSize:9, color:'rgba(212,175,55,0.4)', marginTop:6, fontWeight:700 }}>{expandedDasha==='maha' ? '▲ collapse' : '▼ deeper reading'}</div>
+                            <div style={{ fontSize:13, color:'rgba(255,255,255,0.28)', marginBottom:6 }}>{activeMaha.start} — {activeMaha.end} · {md?.years}yr period</div>
+                            <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>{md?.surface}</p>
+                            <div style={{ fontSize:13, color:'rgba(212,175,55,0.4)', marginTop:6, fontWeight:700 }}>{expandedDasha==='maha' ? '▲ collapse' : '▼ deeper reading'}</div>
                           </div>
                           {/* Antardasha pill */}
                           {activeAntar && (
                             <div
                               onClick={() => setExpandedDasha(expandedDasha==='antar' ? null : 'antar')}
                               style={{ flex:1, background: expandedDasha==='antar' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)', border:`1px solid ${expandedDasha==='antar' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`, borderRadius:14, padding:'12px 14px', cursor:'pointer', transition:'all 0.2s' }}>
-                              <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Antardasha · Sub-Period</div>
+                              <div style={{ fontSize:10.5, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Antardasha · Sub-Period</div>
                               <div style={{ fontSize:18, fontWeight:900, color:'rgba(255,255,255,0.8)', marginBottom:2 }}>{DASHA_DATA[activeAntar.planet]?.symbol} {activeAntar.planet}</div>
-                              <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginBottom:6 }}>{activeAntar.start} — {activeAntar.end}</div>
-                              <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.45)', lineHeight:1.6, margin:0 }}>{ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}</p>
-                              <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:6, fontWeight:700 }}>{expandedDasha==='antar' ? '▲ collapse' : '▼ deeper reading'}</div>
+                              <div style={{ fontSize:13, color:'rgba(255,255,255,0.28)', marginBottom:6 }}>{activeAntar.start} — {activeAntar.end}</div>
+                              <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.45)', lineHeight:1.6, margin:0 }}>{ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}</p>
+                              <div style={{ fontSize:13, color:'rgba(255,255,255,0.3)', marginTop:6, fontWeight:700 }}>{expandedDasha==='antar' ? '▲ collapse' : '▼ deeper reading'}</div>
                             </div>
                           )}
                         </div>
@@ -3468,41 +3476,41 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                         {expandedDasha === 'maha' && md && (
                           <div style={{ background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.12)', borderRadius:16, padding:'16px 16px', marginBottom:10, display:'flex', flexDirection:'column' as const, gap:12 }}>
                             <div>
-                              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>The Pattern — Prana-Flow & above</div>
-                              <p style={{ fontSize:13, color:'rgba(255,255,255,0.7)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.middle}</p>
+                              <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>The Pattern — Prana-Flow & above</div>
+                              <p style={{ fontSize:15.5, color:'rgba(255,255,255,0.7)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.middle}</p>
                             </div>
                             {isSiddha && (
                               <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
-                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Soul Depth — Siddha-Quantum & above</div>
-                                <p style={{ fontSize:13, color:'rgba(225,210,185,0.85)', lineHeight:1.8, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.deep}</p>
+                                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Soul Depth — Siddha-Quantum & above</div>
+                                <p style={{ fontSize:15.5, color:'rgba(225,210,185,0.85)', lineHeight:1.8, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.deep}</p>
                               </div>
                             )}
                             {!isSiddha && (
                               <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:10, display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', borderRadius:10, padding:'10px 12px' }}>
                                 <span style={{ fontSize:14 }}>🔒</span>
-                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Soul Depth reading available on <strong style={{ color:'#D4AF37' }}>Siddha-Quantum</strong> and above</p>
+                                <p style={{ fontSize:14, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Soul Depth reading available on <strong style={{ color:'#D4AF37' }}>Siddha-Quantum</strong> and above</p>
                               </div>
                             )}
                             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                               <div style={{ background:'rgba(255,80,80,0.04)', border:'1px solid rgba(255,80,80,0.12)', borderRadius:12, padding:12 }}>
-                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.5)', marginBottom:5 }}>Shadow</div>
-                                <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{md.shadow}</p>
+                                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.5)', marginBottom:5 }}>Shadow</div>
+                                <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{md.shadow}</p>
                               </div>
                               <div style={{ background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.12)', borderRadius:12, padding:12 }}>
-                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:5 }}>Gift</div>
-                                <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{md.gift}</p>
+                                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:5 }}>Gift</div>
+                                <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{md.gift}</p>
                               </div>
                             </div>
                             {isAkasha && (
                               <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
-                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>✦ Sadhana Prescription — Ākāsha-Infinity</div>
-                                <p style={{ fontSize:12.5, color:'rgba(212,175,55,0.8)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.sadhana}</p>
+                                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>✦ Sadhana Prescription — Ākāsha-Infinity</div>
+                                <p style={{ fontSize:15, color:'rgba(212,175,55,0.8)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{md.sadhana}</p>
                               </div>
                             )}
                             {!isAkasha && (
                               <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:10, display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', borderRadius:10, padding:'10px 12px' }}>
                                 <span style={{ fontSize:14 }}>🔒</span>
-                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Sadhana Prescription available on <strong style={{ color:'#D4AF37' }}>Ākāsha-Infinity</strong></p>
+                                <p style={{ fontSize:14, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Sadhana Prescription available on <strong style={{ color:'#D4AF37' }}>Ākāsha-Infinity</strong></p>
                               </div>
                             )}
                           </div>
@@ -3513,26 +3521,26 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, padding:'16px 16px', marginBottom:10, display:'flex', flexDirection:'column' as const, gap:12 }}>
 
                             {/* Header */}
-                            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', marginBottom:2 }}>
+                            <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', marginBottom:2 }}>
                               {activeMaha.planet} Mahadasha · {activeAntar.planet} Antardasha
                             </div>
 
                             {/* Surface — everyone */}
-                            <p style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic', margin:0 }}>
+                            <p style={{ fontSize:15.5, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic', margin:0 }}>
                               {ad?.surface || DASHA_DATA[activeAntar.planet]?.surface}
                             </p>
 
                             {/* Deep — Prana-Flow and above */}
                             {isPrana && ad?.deep && (
                               <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
-                                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:8 }}>✦ Soul Depth</div>
-                                <p style={{ fontSize:13, color:'rgba(225,210,185,0.88)', lineHeight:1.85, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{ad.deep}</p>
+                                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:8 }}>✦ Soul Depth</div>
+                                <p style={{ fontSize:15.5, color:'rgba(225,210,185,0.88)', lineHeight:1.85, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{ad.deep}</p>
                               </div>
                             )}
                             {!isPrana && (
                               <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', borderRadius:10, padding:'10px 12px' }}>
                                 <span style={{ fontSize:14 }}>🔒</span>
-                                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Soul Depth reading available from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong> — <span style={{ color:'rgba(212,175,55,0.6)', cursor:'pointer', textDecoration:'underline' }}>Upgrade →</span></p>
+                                <p style={{ fontSize:14, color:'rgba(255,255,255,0.35)', lineHeight:1.5 }}>Soul Depth reading available from <strong style={{ color:'#D4AF37' }}>Prana-Flow</strong> — <span style={{ color:'rgba(212,175,55,0.6)', cursor:'pointer', textDecoration:'underline' }}>Upgrade →</span></p>
                               </div>
                             )}
 
@@ -3543,12 +3551,12 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                               return (
                                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                                   <div style={{ background:'rgba(255,80,80,0.04)', border:'1px solid rgba(255,80,80,0.1)', borderRadius:12, padding:'10px 12px' }}>
-                                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.5)', marginBottom:4 }}>Shadow</div>
-                                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.6 }}>{antarData.shadow}</p>
+                                    <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(255,100,100,0.5)', marginBottom:4 }}>Shadow</div>
+                                    <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', lineHeight:1.6 }}>{antarData.shadow}</p>
                                   </div>
                                   <div style={{ background:'rgba(74,222,128,0.04)', border:'1px solid rgba(74,222,128,0.1)', borderRadius:12, padding:'10px 12px' }}>
-                                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:4 }}>Gift</div>
-                                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.6 }}>{antarData.gift}</p>
+                                    <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:4 }}>Gift</div>
+                                    <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', lineHeight:1.6 }}>{antarData.gift}</p>
                                   </div>
                                 </div>
                               );
@@ -3560,8 +3568,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                               if (!antarData?.sadhana) return null;
                               return (
                                 <div style={{ borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:12 }}>
-                                  <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>✦ Antardasha Sadhana — Ākāsha-Infinity</div>
-                                  <p style={{ fontSize:12.5, color:'rgba(212,175,55,0.8)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{antarData.sadhana}</p>
+                                  <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>✦ Antardasha Sadhana — Ākāsha-Infinity</div>
+                                  <p style={{ fontSize:15, color:'rgba(212,175,55,0.8)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic' }}>{antarData.sadhana}</p>
                                 </div>
                               );
                             })()}
@@ -3593,10 +3601,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                       <OracleCard icon={planetInfo?.sym||'◈'} label="BHRIGU NANDI NADI" title={`Age ${age} · ${bnn.title}`} glow="rgba(212,175,55,0.14)" open={openCards.bnn} onToggle={() => toggleCard('bnn')}>
                         {/* Age window badge + surface */}
                         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' as const }}>
-                          <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.6)', background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:8, padding:'3px 10px' }}>{bnn.ageWindow}</span>
-                          <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'3px 10px' }}>{planetInfo?.sym} {activeBNNAge.planet} Intelligence</span>
+                          <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.6)', background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:8, padding:'3px 10px' }}>{bnn.ageWindow}</span>
+                          <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'3px 10px' }}>{planetInfo?.sym} {activeBNNAge.planet} Intelligence</span>
                         </div>
-                        <p style={{ fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom:16 }}>{bnn.surface}</p>
+                        <p style={{ fontSize:15.5, color:'rgba(255,255,255,0.65)', lineHeight:1.75, fontFamily:"'Georgia',serif", fontStyle:'italic', marginBottom:16 }}>{bnn.surface}</p>
 
                         {/* Expandable sections */}
                         {[
@@ -3619,20 +3627,20 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                                 style={{ width:'100%', padding:'11px 14px', background: isOpen && hasAccess ? 'rgba(255,255,255,0.03)' : 'transparent', border:'none', display:'flex', alignItems:'center', gap:10, cursor: hasAccess ? 'pointer' : 'default' }}
                               >
                                 <span style={{ fontSize:14, minWidth:18 }}>{sec.icon}</span>
-                                <span style={{ flex:1, fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : 'rgba(255,255,255,0.2)', textAlign:'left' as const }}>{sec.label}</span>
+                                <span style={{ flex:1, fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color: hasAccess ? sec.color : 'rgba(255,255,255,0.2)', textAlign:'left' as const }}>{sec.label}</span>
                                 {!hasAccess && (
-                                  <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'2px 7px' }}>
+                                  <span style={{ fontSize:12, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'2px 7px' }}>
                                     {sec.tier === 1 ? 'PRANA' : sec.tier === 2 ? 'SIDDHA' : 'ĀKĀSHA'} 🔒
                                   </span>
                                 )}
-                                {hasAccess && <span style={{ fontSize:10, color:'rgba(255,255,255,0.25)' }}>{isOpen ? '▲' : '▼'}</span>}
+                                {hasAccess && <span style={{ fontSize:13, color:'rgba(255,255,255,0.25)' }}>{isOpen ? '▲' : '▼'}</span>}
                               </button>
                               {isOpen && hasAccess && (
                                 <div style={{ padding:'0 14px 14px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
                                   {sec.key === 'transmission' ? (
                                     <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontStyle:'italic', fontSize:15, color:'rgba(212,175,55,0.9)', lineHeight:1.9, textAlign:'center' as const, marginTop:12, padding:'10px 8px' }}>"{sec.content}"</p>
                                   ) : (
-                                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:12.5, color:'rgba(255,255,255,0.7)', lineHeight:1.8, marginTop:10 }}>{sec.content}</p>
+                                    <p style={{ fontFamily:"'Georgia',serif", fontStyle:'italic', fontSize:15, color:'rgba(255,255,255,0.7)', lineHeight:1.8, marginTop:10 }}>{sec.content}</p>
                                   )}
                                 </div>
                               )}
@@ -3642,8 +3650,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
                         {/* Mantra always visible */}
                         <div style={{ marginTop:10, padding:'10px 14px', background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:12 }}>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:5 }}>Graha Mantra</div>
-                          <p style={{ fontFamily:"'Georgia',serif", fontSize:12, color:'rgba(212,175,55,0.7)', lineHeight:1.6 }}>{planetInfo?.mantra}</p>
+                          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:5 }}>Graha Mantra</div>
+                          <p style={{ fontFamily:"'Georgia',serif", fontSize:14.5, color:'rgba(212,175,55,0.7)', lineHeight:1.6 }}>{planetInfo?.mantra}</p>
                         </div>
                       </OracleCard>
                     );
@@ -3672,9 +3680,9 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
                 {membershipTier === 'free' && (
                   <div onClick={() => navigate('/membership')} style={{ background:'rgba(34,211,238,0.04)', border:'1px solid rgba(34,211,238,0.14)', borderRadius:20, padding:'16px 18px', cursor:'pointer', textAlign:'center' }}>
-                    <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:6 }}>🔱 Unlock Deeper Guidance</div>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', lineHeight:1.6, marginBottom:10 }}>Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> for personalised daily karma cards, Dasha timing &amp; Nakshatra blueprint.</p>
-                    <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'#22D3EE' }}>Activate Prāna-Flow →</span>
+                    <div style={{ fontSize:11.5, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:6 }}>🔱 Unlock Deeper Guidance</div>
+                    <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.45)', lineHeight:1.6, marginBottom:10 }}>Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> for personalised daily karma cards, Dasha timing &amp; Nakshatra blueprint.</p>
+                    <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'#22D3EE' }}>Activate Prāna-Flow →</span>
                   </div>
                 )}
               </div>
@@ -3689,11 +3697,11 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               <>
                 <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:24, padding:22, marginBottom:14 }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, flexWrap:'wrap', gap:8 }}>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>Rasi Chart · Lagna & Grahas</div>
+                    <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>Rasi Chart · Lagna & Grahas</div>
                     <button
                       onClick={() => birthData && calculateEphemeris(birthData, true)}
                       disabled={calcLoading}
-                      style={{ padding:'6px 12px', borderRadius:99, border:'1px solid rgba(212,175,55,0.25)', background: calcLoading ? 'rgba(255,255,255,0.03)' : 'rgba(212,175,55,0.06)', color:'#D4AF37', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, cursor: calcLoading ? 'default' : 'pointer' }}
+                      style={{ padding:'6px 12px', borderRadius:99, border:'1px solid rgba(212,175,55,0.25)', background: calcLoading ? 'rgba(255,255,255,0.03)' : 'rgba(212,175,55,0.06)', color:'#D4AF37', fontFamily:'inherit', fontSize:12, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, cursor: calcLoading ? 'default' : 'pointer' }}
                     >
                       {calcLoading ? 'Recalculating…' : '↻ Recalculate Now'}
                     </button>
@@ -3704,7 +3712,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     planetLongitudes={ephemeris?.planetLongitudes}
                     loading={calcLoading && !ephemeris?.ascendantSign}
                   />
-                  <div style={{ textAlign:'center', marginTop:12, fontSize:10, color:'rgba(255,255,255,0.3)' }}>
+                  <div style={{ textAlign:'center', marginTop:12, fontSize:13, color:'rgba(255,255,255,0.3)' }}>
                     {ephemeris?.calculatedAt ? (
                       <>Last calculated {new Date(ephemeris.calculatedAt).toLocaleString()} · source: {ephemeris.calcSource === 'cache' ? 'cached (from a prior calculation)' : ephemeris?.calcSource || 'unknown'}</>
                     ) : ephemeris?.ascendantSign ? (
@@ -3715,7 +3723,12 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   </div>
                 </div>
                 <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:22, marginBottom:14 }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>Vimshottari Dasha Tree · Your Complete Life Timeline</div>
+                  <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:8 }}>Vimshottari Dasha Tree · Your Complete Life Timeline</div>
+                  <p style={{ fontSize:13, color:'rgba(255,255,255,0.42)', lineHeight:1.6, marginBottom:16, fontStyle:'italic' }}>
+                    Vedic astrology divides your whole life into planetary periods (<b style={{ color:'rgba(212,175,55,0.7)', fontStyle:'normal' }}>Mahadasha</b>),
+                    each broken into smaller sub-periods (<b style={{ color:'rgba(212,175,55,0.7)', fontStyle:'normal' }}>Antardasha</b>).
+                    Tap any period below to see its own sub-periods and dates.
+                  </p>
                   {ephemeris?.dashaData?.dashaTree ? (
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       {ephemeris.dashaData.dashaTree.map(d => (
@@ -3724,22 +3737,22 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                               <span style={{ fontSize:18 }}>{PLANET_INFO[d.planet]?.sym}</span>
                               <div>
-                                <div style={{ fontSize:13, fontWeight:900, color: d.active ? '#D4AF37' : 'rgba(255,255,255,0.8)' }}>{d.planet} {d.active && '● Active'}</div>
-                                <div style={{ fontSize:9, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{d.start} — {d.end} · {d.years} years</div>
+                                <div style={{ fontSize:15.5, fontWeight:900, color: d.active ? '#D4AF37' : 'rgba(255,255,255,0.8)' }}>{d.planet} {d.active && '● Active'}</div>
+                                <div style={{ fontSize:13, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{d.start} — {d.end} · {d.years} years</div>
                               </div>
                             </div>
                           </div>
                           {d.active && (
                             <div style={{ padding:'0 16px 14px' }}>
-                              <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.55, marginBottom:8 }}>{DASHA_MEANINGS[d.planet]}</p>
+                              <p style={{ fontSize:14, color:'rgba(255,255,255,0.5)', lineHeight:1.55, marginBottom:8 }}>{DASHA_MEANINGS[d.planet]}</p>
                               <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
                                 {d.antardashas.map(a => (
                                   <div key={a.planet} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 12px', borderRadius:10, border: a.active ? '1px solid rgba(212,175,55,0.2)' : '1px solid rgba(255,255,255,0.04)', background: a.active ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.01)' }}>
                                     <div style={{ display:'flex', alignItems:'center', gap:7 }}>
                                       <span style={{ fontSize:14 }}>{PLANET_INFO[a.planet]?.sym}</span>
-                                      <span style={{ fontSize:11, fontWeight: a.active ? 900 : 400, color: a.active ? '#D4AF37' : 'rgba(255,255,255,0.4)' }}>{a.planet}</span>
+                                      <span style={{ fontSize:14, fontWeight: a.active ? 900 : 400, color: a.active ? '#D4AF37' : 'rgba(255,255,255,0.4)' }}>{a.planet}</span>
                                     </div>
-                                    <span style={{ fontSize:9, color:'rgba(255,255,255,0.3)' }}>{a.start} — {a.end}</span>
+                                    <span style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>{a.start} — {a.end}</span>
                                   </div>
                                 ))}
                               </div>
@@ -3749,21 +3762,21 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                       ))}
                     </div>
                   ) : (
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.35)', textAlign:'center', padding:20, fontStyle:'italic' }}>
+                    <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.35)', textAlign:'center', padding:20, fontStyle:'italic' }}>
                       {calcLoading ? 'Calculating your dasha timeline…' : 'Open Overview tab to trigger chart calculation.'}
                     </p>
                   )}
                 </div>
                 <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:22, marginBottom:14 }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>Bhrigu Nandi Nadi · Age-Planet Activations</div>
+                  <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>Bhrigu Nandi Nadi · Age-Planet Activations</div>
                   <div style={{ display:'flex', gap:7, overflowX:'auto', scrollbarWidth:'none', marginBottom:14 }}>
                     {BNN_AGES.map(a => {
                       const isActive = age !== null && age >= a.age && (BNN_AGES[BNN_AGES.indexOf(a)+1] === undefined || age < BNN_AGES[BNN_AGES.indexOf(a)+1].age);
                       return (
                         <div key={a.age} style={{ flexShrink:0, padding:'7px 13px', borderRadius:12, border: isActive ? '1px solid rgba(212,175,55,0.3)' : '1px solid rgba(255,255,255,0.07)', background: isActive ? 'rgba(212,175,55,0.07)' : 'rgba(255,255,255,0.02)', textAlign:'center' }}>
-                          <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', color:'rgba(255,255,255,0.25)', marginBottom:2 }}>AGE {a.age}</div>
+                          <div style={{ fontSize:13, fontWeight:800, letterSpacing:'0.22em', color:'rgba(255,255,255,0.25)', marginBottom:2 }}>AGE {a.age}</div>
                           <div style={{ fontSize:16 }}>{PLANET_INFO[a.planet]?.sym}</div>
-                          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.4)', marginTop:2 }}>{a.planet}</div>
+                          <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.4)', marginTop:2 }}>{a.planet}</div>
                         </div>
                       );
                     })}
@@ -3805,12 +3818,12 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ background:'rgba(255,255,255,0.025)', borderRadius:40, padding:26, textAlign:'center', marginBottom:16, border:'1px solid rgba(74,222,128,0.15)' }}>
               <div style={{ fontSize:36, marginBottom:12 }}>🌿</div>
-              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:8 }}>Ākāsha-Infinity · Sacred Nadi Leaf System</div>
+              <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:8 }}>Ākāsha-Infinity · Sacred Nadi Leaf System</div>
               <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:'-0.04em', marginBottom:10 }}>The 18 Siddhar Nadi Transmissions</h2>
-              <p style={{ fontSize:13, color:'rgba(255,255,255,0.5)', lineHeight:1.65, maxWidth:480, margin:'0 auto 16px' }}>
+              <p style={{ fontSize:15.5, color:'rgba(255,255,255,0.5)', lineHeight:1.65, maxWidth:480, margin:'0 auto 16px' }}>
                 The Siddhars of Tamil Nadu inscribed 500,000 horoscopes across millennia. Each palm leaf holds the precise karma of a soul destined to find it.
               </p>
-              <button onClick={() => navigate('/nadi-leaf')} style={{ padding:'11px 22px', borderRadius:99, border:'1px solid rgba(74,222,128,0.3)', background:'rgba(74,222,128,0.07)', color:'rgba(74,222,128,0.85)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+              <button onClick={() => navigate('/nadi-leaf')} style={{ padding:'11px 22px', borderRadius:99, border:'1px solid rgba(74,222,128,0.3)', background:'rgba(74,222,128,0.07)', color:'rgba(74,222,128,0.85)', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, cursor:'pointer' }}>
                 Access Nadi Leaf →
               </button>
             </div>
@@ -3821,14 +3834,14 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         {(activeTab === 'vidya' || builtTabs.has('vidya')) && builtTabs.has('vidya') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 18px', marginBottom:14, borderRadius:20, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.01)' }}>
-              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', flexShrink:0 }}>Your Path</div>
+              <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', flexShrink:0 }}>Your Path</div>
               {(() => {
                 const completedVidya = Object.values(vidyaProgress).filter(p => p.status === 'completed' || p.completion_percentage >= 100).length;
                 const pct = Math.round((completedVidya / VIDYA_MODULES.length) * 100);
                 return (
                   <>
                     <div style={{ flex:1, height:3, borderRadius:99, background:'rgba(255,255,255,0.05)', overflow:'hidden' }}><div style={{ height:'100%', background:'#D4AF37', borderRadius:99, width:`${pct}%` }}/></div>
-                    <div style={{ fontSize:9, color:'rgba(255,255,255,0.25)' }}>{completedVidya} / {VIDYA_MODULES.length}</div>
+                    <div style={{ fontSize:13, color:'rgba(255,255,255,0.25)' }}>{completedVidya} / {VIDYA_MODULES.length}</div>
                   </>
                 );
               })()}
@@ -3840,7 +3853,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 { id:'siddha', icon:'⭐', label:'Siddha', col:'#D4AF37' },
                 { id:'akasha', icon:'∞', label:'Ākāsha', col:'#fff' },
               ].map(t => (
-                <button key={t.id} onClick={() => setActiveTierTab(t.id)} style={{ flex:1, padding:'11px 4px', borderRadius:14, border: activeTierTab === t.id ? `1px solid ${t.col}44` : '1px solid rgba(255,255,255,0.06)', background: activeTierTab === t.id ? `${t.col}18` : 'rgba(255,255,255,0.02)', color: activeTierTab === t.id ? t.col : 'rgba(255,255,255,0.4)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.25s' }}>
+                <button key={t.id} onClick={() => setActiveTierTab(t.id)} style={{ flex:1, padding:'11px 4px', borderRadius:14, border: activeTierTab === t.id ? `1px solid ${t.col}44` : '1px solid rgba(255,255,255,0.06)', background: activeTierTab === t.id ? `${t.col}18` : 'rgba(255,255,255,0.02)', color: activeTierTab === t.id ? t.col : 'rgba(255,255,255,0.4)', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.25s' }}>
                   <span style={{ display:'block', fontSize:18, marginBottom:4 }}>{t.icon}</span>{t.label}
                 </button>
               ))}
@@ -3852,43 +3865,43 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               return (
                 <div key={m.id} style={{ background: isOpen ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border: isOpen ? '1px solid rgba(212,175,55,0.22)' : '1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55, transition:'all 0.2s', boxShadow: isOpen ? '0 0 18px rgba(212,175,55,0.08)' : 'none' }}>
                   <div onClick={() => ok && toggleModule(m.id)} style={{ display:'flex', alignItems:'flex-start', gap:10, cursor: ok ? 'pointer' : 'default' }}>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
+                    <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.28em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
                     <div style={{ flex:1 }}>
-                      {m.isSecret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
-                      <div style={{ fontSize:12.5, fontWeight:900, letterSpacing:'-0.02em', lineHeight:1.3, marginBottom:2 }}>{m.title}</div>
-                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.35 }}>{m.subtitle}</div>
+                      {m.isSecret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
+                      <div style={{ fontSize:15, fontWeight:900, letterSpacing:'-0.02em', lineHeight:1.3, marginBottom:2 }}>{m.title}</div>
+                      <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', lineHeight:1.35 }}>{m.subtitle}</div>
                     </div>
-                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{ok ? (isOpen ? '▲' : '▼') : '🔒'}</span>
+                    <span style={{ fontSize:14, color:'rgba(255,255,255,0.4)' }}>{ok ? (isOpen ? '▲' : '▼') : '🔒'}</span>
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:7, flexWrap:'wrap' as const }}>
-                    <span style={{ padding:'3px 9px', borderRadius:99, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, background:`${tierCol}18`, border:`1px solid ${tierCol}33`, color:tierCol }}>
+                    <span style={{ padding:'3px 9px', borderRadius:99, fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, background:`${tierCol}18`, border:`1px solid ${tierCol}33`, color:tierCol }}>
                       { {free:'Free',prana:'Prāna-Flow',siddha:'Siddha-Quantum',akasha:'Ākāsha-Infinity'}[m.tier] }
                     </span>
-                    <span style={{ fontSize:9.5, color:'rgba(255,255,255,0.25)' }}>{m.duration}</span>
+                    <span style={{ fontSize:13.5, color:'rgba(255,255,255,0.25)' }}>{m.duration}</span>
                   </div>
                   {ok && isOpen && (
                     <div onClick={e => e.stopPropagation()} style={{ paddingTop:15, borderTop:'1px solid rgba(255,255,255,0.04)', marginTop:13 }}>
                       {m.description && (
-                        <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.55)', lineHeight:1.55, marginBottom:12, fontStyle:'italic' }}>{m.description}</p>
+                        <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.55)', lineHeight:1.55, marginBottom:12, fontStyle:'italic' }}>{m.description}</p>
                       )}
-                      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Curriculum</div>
+                      <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Curriculum</div>
                       <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:6 }}>
                         {m.topics.map(tp => (
-                          <li key={tp} style={{ display:'flex', gap:7, fontSize:11, color:'rgba(255,255,255,0.6)', lineHeight:1.45 }}>
+                          <li key={tp} style={{ display:'flex', gap:7, fontSize:14, color:'rgba(255,255,255,0.6)', lineHeight:1.45 }}>
                             <span style={{ color:'rgba(212,175,55,0.35)', flexShrink:0 }}>◈</span>{tp}
                           </li>
                         ))}
                       </ul>
-                      <button onClick={() => navigate(`/jyotish-vidya/module/${m.id}`)} style={{ width:'100%', marginTop:14, padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
+                      <button onClick={() => navigate(`/jyotish-vidya/module/${m.id}`)} style={{ width:'100%', marginTop:14, padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
                     </div>
                   )}
                   {!ok && (
                     <div onClick={e => e.stopPropagation()} style={{ display:'flex', alignItems:'center', gap:9, padding:'10px 13px', borderRadius:14, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)', marginTop:10 }}>
                       <span>🔒</span>
-                      <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.4)', flex:1 }}>
-                        Requires { {prana:'Prāna-Flow (€19/mo)',siddha:'Siddha-Quantum (€45/mo)',akasha:'Ākāsha-Infinity (€1,111 lifetime)'}[m.tier as 'prana'|'siddha'|'akasha'] }
+                      <p style={{ fontSize:13.5, color:'rgba(255,255,255,0.4)', flex:1 }}>
+                        Requires { {prana:'Prāna-Flow (€19/mo)',siddha:'Siddha-Quantum (€45/mo)',akasha:'Ākāsha-Infinity (€2,997 lifetime)'}[m.tier as 'prana'|'siddha'|'akasha'] }
                       </p>
-                      <button onClick={() => navigate('/membership')} style={{ padding:'6px 13px', borderRadius:99, border:'1px solid rgba(212,175,55,0.22)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer', flexShrink:0 }}>Upgrade</button>
+                      <button onClick={() => navigate('/membership')} style={{ padding:'6px 13px', borderRadius:99, border:'1px solid rgba(212,175,55,0.22)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, cursor:'pointer', flexShrink:0 }}>Upgrade</button>
                     </div>
                   )}
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Star, MessageSquare, Gift, Trash2, User, Feather } from 'lucide-react';
+import { Star, MessageSquare, Trash2, User, Feather } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -97,37 +97,24 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
         </div>
       </div>
 
-      {/* Reward Banner */}
+      {/* Write Review CTA (SHC reward incentive removed) */}
       {user && !userReview && (
-        <Card className="bg-[#D4AF37]/5 border-[#D4AF37]/20 overflow-hidden">
-          <CardContent className="py-4 px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="shrink-0 w-10 h-10 rounded-full bg-[#D4AF37]/15 flex items-center justify-center">
-                  <Gift className="w-5 h-5 text-[#D4AF37]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground">{t('reviews.earnReward')}</p>
-                  <p className="text-sm text-muted-foreground">{t('reviews.rewardDescription')}</p>
-                </div>
-              </div>
-              <Button 
-                size="sm"
-                className="shrink-0 w-full sm:w-auto bg-[#D4AF37] text-[#050505] font-semibold hover:bg-[#c9a227] border border-[#D4AF37]/35 !shadow-none hover:!shadow-[0_4px_18px_rgba(212,175,55,0.22)] hover:!scale-[1.01] active:!scale-100"
-                onClick={() => setShowForm(true)}
-              >
-                {contentType === 'healing' ? (
-                  <>
-                    <Feather className="w-4 h-4 mr-2 shrink-0" />
-                    {t('reviews.shareTransmission')}
-                  </>
-                ) : (
-                  t('reviews.writeReview')
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            className="bg-[#D4AF37] text-[#050505] font-semibold hover:bg-[#c9a227] border border-[#D4AF37]/35 !shadow-none hover:!shadow-[0_4px_18px_rgba(212,175,55,0.22)] hover:!scale-[1.01] active:!scale-100"
+            onClick={() => setShowForm(true)}
+          >
+            {contentType === 'healing' ? (
+              <>
+                <Feather className="w-4 h-4 mr-2 shrink-0" />
+                {t('reviews.shareTransmission')}
+              </>
+            ) : (
+              t('reviews.writeReview')
+            )}
+          </Button>
+        </div>
       )}
 
       {/* Review Form */}

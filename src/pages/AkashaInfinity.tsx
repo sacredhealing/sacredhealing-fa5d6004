@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/metaPixel';
 
 const AkashaInfinity: React.FC = () => {
   const navigate = useNavigate();
@@ -13,8 +14,24 @@ const AkashaInfinity: React.FC = () => {
   const { tier, refresh: refreshMembership } = useMembership();
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
 
   const isLifetime = tier === 'akasha-infinity' || tier === 'lifetime';
+
+  useEffect(() => {
+    // Real, live count — not a fabricated scarcity number. Counts both the
+    // legacy €1111 price ID and the current €2997 one, since both grant the
+    // same tier.
+    (async () => {
+      try {
+        const { data: tierRow } = await supabase.from('membership_tiers').select('id').eq('slug', 'akasha-infinity').maybeSingle();
+        if (tierRow?.id) {
+          const { count } = await supabase.from('user_memberships').select('*', { count: 'exact', head: true }).eq('tier_id', tierRow.id).eq('status', 'active');
+          if (typeof count === 'number') setMemberCount(count);
+        }
+      } catch { /* social proof is best-effort, never block the page */ }
+    })();
+  }, []);
 
   useEffect(() => {
     const ref = searchParams.get('ref');
@@ -28,6 +45,7 @@ const AkashaInfinity: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       toast.success('◈ Akashic Field Permanently Activated — Welcome to Infinity');
+      trackPurchase('akasha-infinity', 2997, 'EUR');
       refreshMembership();
       navigate('/akasha-infinity', { replace: true });
     }
@@ -122,6 +140,7 @@ const AkashaInfinity: React.FC = () => {
         return;
       }
 
+      trackInitiateCheckout('akasha-infinity', 2997, 'EUR');
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tierData.stripe_price_id,
@@ -144,32 +163,28 @@ const AkashaInfinity: React.FC = () => {
   };
 
   const faqItems: [string, string][] = [
-    ['Is 1111€ really a one-time payment?', 'Yes. One payment and every tool is yours permanently including all future modules. No subscriptions, no renewals.'],
-    ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month. Akasha–Infinity adds the four exclusive portals, unlimited Vayu field, future modules, and zero recurring cost. At 45€/mo, Siddha-Quantum costs 1111€ in just over 2 years — with none of those extras.'],
-    ['What is the Akashic Record Decoder exactly?', "A personalised 15-page soul manuscript using your birth data and Jyotish chart as entry coordinates — past lives, soul contracts, karmic patterns, and your soul's highest trajectory."],
+    ['Is 2997€ really a one-time payment?', 'Yes. One payment and every tool is yours permanently including all future modules. No subscriptions, no renewals.'],
+    ['What makes this different from Siddha–Quantum?', 'Siddha-Quantum gives you the core healing field at 45€/month with deep access across the Siddha Portal academies. Akasha–Infinity completes it — every module in all 25 academies, the four exclusive portals, every future module, and zero recurring cost — one payment, held forever.'],
     ['Can I pay in instalments?', 'You can start with Siddha–Quantum at 45€/month and upgrade to Akasha–Infinity at any time with the difference honoured. Contact us directly for instalment arrangements.'],
-    ['Is there a refund policy?', 'Once an Akashic reading is opened the transmission cannot be reversed, so the Decoder is non-refundable. All other modules carry a 14-day satisfaction guarantee.'],
+    ['Is there a refund policy?', 'All modules carry a 14-day satisfaction guarantee.'],
   ];
 
   const eternalList = [
-    'Full Siddha–Quantum Universal Field',
-    'Akashic Record Decoder (15-page soul manuscript)',
-    'Quantum Apothecary (€888 value)',
-    'Virtual Pilgrimage (€888 value)',
-    'Palm Reading Portal',
-    'Siddha Portal Access',
-    'Sri Yantra Universal Protection Shield',
-    'Unlimited Vayu field (beyond 1 km)',
-    'All future modules included',
-    'Soul Community & Live transmissions',
-    'Zero renewals — eternal access',
+    { title: 'Full Siddha–Quantum Universal Field', desc: 'Everything in the 45€/mo tier, permanently — Digital Soul Scan, Vedic Jyotish, Ayurveda, Vastu, the full healing library.' },
+    { title: 'Quantum Apothecary (€888 value)', desc: 'Where ancient Siddha wisdom meets 2050 bio-resonance technology. A living oracle chat drawing on 18 Siddha masters — plus a real 10-second Voice or Camera Bio-Scan that reads your biofield and ranks the full frequency library by resonance match, so you see exactly which Siddha activations your field is asking for first.' },
+    { title: 'Virtual Pilgrimage (€888 value)', desc: 'One sacred site, your real GPS, 40 days of daily practice. The field builds through you — not technology. A genuine 40-day devotional journey, not a simulation.' },
+    { title: 'Palm Oracle Master Practitioner — Read, Heal, Transmit, Certify', desc: 'The complete 4-module Hasta Samudrika Shastra curriculum, including the exclusive Master Practitioner transmission — read for others, transmit pranic activation, and formally certify.' },
+    { title: 'Siddha Portal — Complete Access, All 25 Academies', desc: 'Every module, in every academy — Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa, and 20 more. The only tier where nothing in the Portal is held back.' },
+    { title: 'Sri Yantra Universal Protection Shield', desc: 'EMF coherence & fear-field protection, active across the entire app.' },
+    { title: 'All future modules included', desc: 'Every academy and tool we build from today forward — no additional purchase, ever.' },
+    { title: 'Soul Community & Live transmissions', desc: 'Full member community access plus live video sessions.' },
+    { title: 'Zero renewals — eternal access', desc: 'One payment. Nothing recurring, ever.' },
   ];
 
   const portals = [
-    'Akashic Record Decoder',
     'Quantum Apothecary',
     'Virtual Pilgrimage',
-    'Palm Reading Portal',
+    'Palm Oracle Master Practitioner',
   ];
 
   const truthItems = [
@@ -181,20 +196,12 @@ const AkashaInfinity: React.FC = () => {
 
   const compareRows: [string, string, string][] = [
     ['Universal Field', '—', 'Included'],
-    ['Akashic Decoder', '—', 'Included'],
+    ['Siddha Portal (25 Academies)', 'Entry modules', 'Complete'],
     ['Quantum Apothecary', '—', 'Included'],
     ['Virtual Pilgrimage', '—', 'Included'],
-    ['Palm Reading Portal', '—', 'Included'],
-    ['Vayu field', '1 km', 'Unlimited'],
+    ['Palm Oracle Master Practitioner', '—', 'Included'],
     ['Future modules', '—', 'Included'],
-    ['Price', 'Free / 45€ mo', '1111€ once'],
-  ];
-
-  const testimonials = [
-    { text: 'The Akashic Decoder was the most precise soul map I have ever received. Worth every euro.', name: 'Elena' },
-    { text: 'One payment and I have everything. No more subscription anxiety. Infinity is real.', name: 'Marcus' },
-    { text: 'Quantum Apothecary + Virtual Pilgrimage alone would cost more. This is a gift.', name: 'Priya' },
-    { text: 'I referred three friends. The 30% commission is transparent and fair.', name: 'Thomas' },
+    ['Price', 'Free / 45€ mo', '2997€ once'],
   ];
 
   const CSS = `
@@ -296,7 +303,7 @@ const AkashaInfinity: React.FC = () => {
           <div className="ai-badge">◈ Eternal Node</div>
           <h1>Akasha–Infinity</h1>
           <div className="ai-hero-sub">One Payment · Every Portal · Forever</div>
-          <p className="ai-hero-desc">The complete soul record. Akashic Decoder, Quantum Apothecary, Virtual Pilgrimage, Palm Reading Portal, and the full Universal Field — with no renewals. Eternal access.</p>
+          <p className="ai-hero-desc">The complete soul record. Quantum Apothecary, Virtual Pilgrimage, Palm Reading Portal, and the full Universal Field — with no renewals. Eternal access.</p>
           <div className="ai-mandala">
             <div className="ai-ring ai-ring-1" />
             <div className="ai-ring ai-ring-2" />
@@ -313,15 +320,16 @@ const AkashaInfinity: React.FC = () => {
 
         <section className="ai-section">
           <div className="ai-section-label">◈ Everything in the Eternal Field</div>
-          {eternalList.map((title) => (
-            <div key={title} className="ai-included-card">
+          {eternalList.map((item) => (
+            <div key={item.title} className="ai-included-card">
               <div className="ai-icon-wrap">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(139,92,246,0.9)" strokeWidth="1.5">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </div>
               <div>
-                <div className="ai-card-title">{title}</div>
+                <div className="ai-card-title">{item.title}</div>
+                <div className="ai-card-desc">{item.desc}</div>
               </div>
             </div>
           ))}
@@ -364,19 +372,21 @@ const AkashaInfinity: React.FC = () => {
                 <div className="ai-success-box">
                   <div style={{ color: '#D4AF37', fontWeight: 800, fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase', marginBottom: 12 }}>◈ AKASHIC FIELD — PERMANENTLY ACTIVE</div>
                   <div style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.8rem', color: 'white', marginBottom: 24 }}>Your eternal node is live.</div>
-                  <button type="button" className="ai-cta-btn" onClick={() => navigate('/akashic-records')} style={{ marginBottom: 12 }}>
-                    ◈ Open Your Akashic Record
-                  </button>
-                  <button type="button" className="ai-cta-secondary" onClick={() => navigate('/dashboard')}>
-                    Explore Dashboard
+                  <button type="button" className="ai-cta-btn" onClick={() => navigate('/dashboard')} style={{ marginBottom: 12 }}>
+                    ◈ Explore Dashboard
                   </button>
                 </div>
               ) : (
                 <>
-                  <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '0.1em', color: '#D4AF37', marginBottom: 4 }}>1111€</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>One time · All 15 modules · No renewals</div>
+                  <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '0.1em', color: '#D4AF37', marginBottom: 4 }}>2997€</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>One time · All 15 modules · No renewals</div>
+                  {memberCount !== null && memberCount > 0 && (
+                    <div style={{ fontSize: 10, color: '#D4AF37', marginBottom: 20, letterSpacing: '0.05em' }}>
+                      ◈ {memberCount} sovereign {memberCount === 1 ? 'member has' : 'members have'} already entered
+                    </div>
+                  )}
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-                    <li style={{ marginBottom: 6 }}>◈ Akashic Decoder</li>
+                    <li style={{ marginBottom: 6 }}>◈ Palm Oracle Master Practitioner</li>
                     <li style={{ marginBottom: 6 }}>◈ Quantum Apothecary + Virtual Pilgrimage</li>
                     <li style={{ marginBottom: 6 }}>◈ Full Siddha–Quantum field</li>
                   </ul>
@@ -387,7 +397,7 @@ const AkashaInfinity: React.FC = () => {
                     ◈ Opening Field...
                       </span>
                     ) : (
-                      '◈ Activate Akasha–Infinity · 1111€'
+                      '◈ Activate Akasha–Infinity · 2997€'
                     )}
                   </button>
                   <button type="button" className="ai-cta-secondary" onClick={() => navigate('/siddha-quantum')}>
@@ -421,18 +431,6 @@ const AkashaInfinity: React.FC = () => {
         </section>
 
         <section className="ai-section">
-          <div className="ai-section-label">◈ What Others Say</div>
-          <div className="ai-testimonials">
-            {testimonials.map((t, i) => (
-              <div key={i} className="ai-test-card">
-                <div className="text">&ldquo;{t.text}&rdquo;</div>
-                <div className="name">— {t.name}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="ai-section">
           <div className="ai-section-label">◈ FAQ</div>
           <div className="ai-glass">
             {faqItems.map(([q, a], i) => (
@@ -454,7 +452,7 @@ const AkashaInfinity: React.FC = () => {
           <h2 className="ai-final-title">Your soul&apos;s complete record is waiting.</h2>
           <p className="ai-final-desc">Every portal. Every transmission. Every sacred tool. One payment. This moment. Forever.</p>
           <div style={{ marginBottom: 24 }}>
-            <span className="ai-final-price">1111€</span>
+            <span className="ai-final-price">2997€</span>
             <span className="ai-final-price-once">one time · eternal access</span>
           </div>
           <button type="button" className="ai-cta-btn" onClick={handleCheckout} disabled={loading} style={{ maxWidth: 400, margin: '0 auto 14px', display: 'block' }}>

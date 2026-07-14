@@ -49,19 +49,9 @@ export const PositiveMeCard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="space-y-4">
-        <StatItem
-          icon={Sparkles}
-          label={t('dashboard.energyCollected')}
-          value={
-            <span className="flex items-baseline gap-1">
-              <AnimatedCounter value={balance?.balance ?? 0} className="text-sm font-semibold" />
-              <span className="text-xs text-accent">SHC</span>
-            </span>
-          }
-          color="bg-accent/20 text-accent"
-          delay={0}
-        />
-
+        {/* Energy Collected (SHC balance) stat intentionally removed - showed
+            an actual coin quantity, not a rankable score. useSHC hook above
+            still called, left as infrastructure. */}
         <StatItem
           icon={Heart}
           label={t('dashboard.momentsOfPresence')}

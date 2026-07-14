@@ -582,7 +582,7 @@ export default function RamayanaCodex() {
           <p style={{ fontSize: 12, color: white(0.4), lineHeight: 1.75, maxWidth: 360, margin: "0 auto 20px" }}>The 24,000 śloka breath-revelation, Sītā's sovereignty teaching, Rāma's Jala-Samādhi, and the complete Akasha-Infinity transmission.</p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             {userRank < 1 && <button onClick={() => navigate("/prana-flow")} style={{ background: "#10B98120", border: "1px solid #10B98150", borderRadius: 40, padding: "10px 20px", color: "#10B981", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", cursor: "pointer" }}>PRANA-FLOW · €19/mo</button>}
-            <button onClick={() => navigate("/akasha-infinity")} style={{ background: `linear-gradient(135deg, ${gold(0.25)}, ${gold(0.08)})`, border: `1px solid ${gold(0.5)}`, borderRadius: 40, padding: "10px 20px", color: G, fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", cursor: "pointer" }}>AKASHA-INFINITY · €1,111</button>
+            <button onClick={() => navigate("/akasha-infinity")} style={{ background: `linear-gradient(135deg, ${gold(0.25)}, ${gold(0.08)})`, border: `1px solid ${gold(0.5)}`, borderRadius: 40, padding: "10px 20px", color: G, fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", cursor: "pointer" }}>AKASHA-INFINITY · €2,997</button>
           </div>
         </div>
       )}

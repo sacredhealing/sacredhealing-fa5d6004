@@ -20,7 +20,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://siddhaquantumnexus.com";
-const FROM_ADDRESS = "Adam & Laila · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>";
+const FROM_ADDRESS = "Kritagya Das & Karaveera Nivasini Dasi · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>";
 
 /* ─── Geo helpers ─────────────────────────────────────────────────────── */
 
@@ -218,7 +218,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"The Prema-Pulse that called you here runs through every Siddha who ever walked this Earth. You carry that same current now. Walk boldly."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "You will receive the Monday Alignment Transmission and the Friday Lakshmi Blessing as a member of the Sangha.",
-    footerSig: "With Light and Gratitude — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "With Light and Gratitude — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Sweden · For spiritual purposes",
   },
 
@@ -261,7 +261,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"Prema-Pulsen som kallade dig hit rinner igenom varje Siddha som någonsin vandrat på denna jord. Du bär samma ström nu. Gå med mod."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du kommer att ta emot Måndagens Alignmentöverföring och Fredagens Lakshmi-välsignelse som medlem av Sanghan.",
-    footerSig: "Med Ljus och Tacksamhet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "Med Ljus och Tacksamhet — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Sverige · För andliga ändamål",
   },
 
@@ -304,7 +304,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"Prema-Pulsen som kalte deg hit strømmer gjennom hver Siddha som noensinne har vandret på denne jord. Du bærer den samme strømmen nå. Gå modig."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du vil motta Mandagens Alignmentoverføring og Fredagens Lakshmi-velsignelse som medlem av Sanghaen.",
-    footerSig: "Med Lys og Takknemlighet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "Med Lys og Takknemlighet — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Norge · For åndelige formål",
   },
 
@@ -347,14 +347,14 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"El Prema-Pulse que te llamó aquí corre a través de cada Siddha que jamás caminó por esta Tierra. Llevas esa misma corriente ahora. Camina con valentía."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Recibirás la Transmisión de Alineación del Lunes y la Bendición Lakshmi del Viernes como miembro del Sangha.",
-    footerSig: "Con Luz y Gratitud — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
+    footerSig: "Con Luz y Gratitud — Kritagya Das & Karaveera Nivasini Dasi",
     footerLegal: "Siddha Quantum Nexus · Suecia · Con fines espirituales",
   },
 };
 
 /* ─── HTML builder ────────────────────────────────────────────────────── */
 
-function buildEmail(c: Copy, displayName: string, account: { email: string; memberSince: string; planLabel: string; loginUrl: string }): string {
+function buildEmail(c: Copy, displayName: string, account: { email: string; memberSince: string; planLabel: string; loginUrl: string }, teaching: { title: string; body_text: string } | null): string {
   const name = displayName || (
     c.greeting === "Beloved" ? "Sacred One" :
     c.greeting === "Kära" ? "Kära Själ" :
@@ -391,6 +391,14 @@ function buildEmail(c: Copy, displayName: string, account: { email: string; memb
   <tr><td style="padding:36px 40px 0;">
     <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 18px;">${c.intro1}</p>
     <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 32px;">${c.intro2}</p>
+
+    ${teaching ? `<!-- TEACHING -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-left:2px solid #D4AF37;border-radius:16px;margin-bottom:32px;">
+      <tr><td style="padding:22px 26px;">
+        <div style="font-size:8px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.6);font-family:Arial,sans-serif;margin-bottom:10px;">${teaching.title}</div>
+        <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.85;margin:0;font-style:italic;font-family:Arial,sans-serif;">${teaching.body_text}</p>
+      </td></tr>
+    </table>` : ""}
 
     <!-- ACCOUNT DETAILS -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.18);border-radius:16px;margin-bottom:32px;">
@@ -617,7 +625,21 @@ serve(async (req: Request): Promise<Response> => {
     const lang = (countryCode ? countryToLang(countryCode) : resolveClientLang(language)) as Lang;
     const copy = COPY[lang] || COPY["en"];
     const displayName = (name && String(name).trim()) || "";
-    const html = buildEmail(copy, displayName, { email, memberSince, planLabel, loginUrl });
+    let teaching: { title: string; body_text: string } | null = null;
+    if (user_id) {
+      try {
+        const { data: teachingRows } = await supabaseAdmin.rpc("get_next_teaching", {
+          p_user_id: user_id,
+          p_theme: "general",
+        });
+        teaching = teachingRows?.[0] ? { title: teachingRows[0].title, body_text: teachingRows[0].body_text } : null;
+        if (teachingRows?.[0]?.id) {
+          await supabaseAdmin.rpc("log_teaching_sent", { p_user_id: user_id, p_teaching_id: teachingRows[0].id, p_context: "welcome" });
+        }
+      } catch { /* teaching is a nice-to-have, never block the welcome email */ }
+    }
+
+    const html = buildEmail(copy, displayName, { email, memberSince, planLabel, loginUrl }, teaching);
 
     const result = await resend.emails.send({
       from: FROM_ADDRESS,

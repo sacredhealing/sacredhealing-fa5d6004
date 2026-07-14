@@ -788,7 +788,7 @@ const SupremeMeditationCard: React.FC<{ navigate: (path: string) => void }> = ({
                 <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.9)', marginBottom: 5 }}>AKASHA-INFINITY</div>
                 <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.92)', marginBottom: 3, lineHeight: 1.3 }}>Deathlessness & Liberation</div>
                 <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>4 modules · Maha Samadhi · Babaji · Siddha Body</div>
-                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', padding: '4px 9px', background: 'rgba(212,175,55,.15)', border: '1px solid rgba(212,175,55,.6)', borderRadius: 100, display: 'inline-block' }}>€1,111 Lifetime ›</div>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', padding: '4px 9px', background: 'rgba(212,175,55,.15)', border: '1px solid rgba(212,175,55,.6)', borderRadius: 100, display: 'inline-block' }}>€2,997 Lifetime ›</div>
               </div>
             </div>
           </div>
@@ -1178,7 +1178,7 @@ const Meditations: React.FC = () => {
               <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem', color: 'white', marginBottom: 6 }}>Unlock the Full Meditation Library</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 14 }}>Complete guided meditations · Yoga Nidra · Mantra library · Sacred frequencies</div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: '#050505', borderRadius: 100, padding: '10px 22px', fontWeight: 800, fontSize: 8, letterSpacing: '0.35em', textTransform: 'uppercase' }}>
-                ◈ Activate Prana–Flow
+                ◈ Start Free — 7 Days
               </div>
             </div>
           </div>

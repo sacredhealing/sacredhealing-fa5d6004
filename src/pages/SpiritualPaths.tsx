@@ -103,7 +103,7 @@ const SpiritualPaths: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-1 text-accent">
                         <Star className="w-4 h-4" />
-                        <span>+{path.shc_reward_total} SHC</span>
+                        <span>+{path.shc_reward_total} pts</span>
                       </div>
                       <Badge variant="secondary" className="capitalize">
                         {t(`pathDetail.difficulty.${path.difficulty.toLowerCase()}`, path.difficulty)}

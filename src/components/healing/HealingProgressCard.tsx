@@ -127,7 +127,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-xl font-bold text-foreground">{progress.totalSHCEarned}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{tSafe('healing.shcEarnedLabel', 'SHC Earned')}</p>
+          <p className="text-xs text-muted-foreground">{tSafe('healing.shcEarnedLabel', 'Points Earned')}</p>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
             {nextRecommendation.reward != null && (
               <span className="flex items-center gap-1 text-[#D4AF37]/90">
                 <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                {t('healing.shcRewardShort', { count: nextRecommendation.reward, defaultValue: '+{{count}} SHC' })}
+                {t('healing.shcRewardShort', { count: nextRecommendation.reward, defaultValue: '+{{count}} pts' })}
               </span>
             )}
           </div>

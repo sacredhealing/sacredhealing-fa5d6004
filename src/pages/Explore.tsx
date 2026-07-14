@@ -587,7 +587,7 @@ export default function Explore() {
               </div>
               <div>
                 <div style={{ fontFamily: "'Cinzel',serif", fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: 3 }}>Sacred Channel</div>
-                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Watch & earn 100 SHC per transmission</div>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Watch to unlock</div>
               </div>
               <span style={{ marginLeft: 'auto', color: 'rgba(212,175,55,0.3)', fontSize: 13 }}>→</span>
             </div>
@@ -607,7 +607,7 @@ export default function Explore() {
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.95)"/></svg>
                     </div>
                     {/* SHC badge */}
-                    <div style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.18)', border: '1px solid rgba(212,175,55,0.4)', color: '#D4AF37' }}>+100 SHC</div>
+                    <div style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 20, background: 'rgba(212,175,55,0.18)', border: '1px solid rgba(212,175,55,0.4)', color: '#D4AF37' }}>New</div>
                     {/* Title overlay */}
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 12px' }}>
                       <div style={{ fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.92)', lineHeight: 1.35, marginBottom: 2 }}>
@@ -638,7 +638,7 @@ export default function Explore() {
                           <div style={{ fontFamily: "'Cinzel',serif", fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>
                             {displayTitle.length > 34 ? displayTitle.slice(0,34)+'…' : displayTitle}
                           </div>
-                          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.15em', color: 'rgba(212,175,55,0.45)', marginTop: 4, textTransform: 'uppercase' as const }}>+100 SHC</div>
+                          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.15em', color: 'rgba(212,175,55,0.45)', marginTop: 4, textTransform: 'uppercase' as const }}>New</div>
                         </div>
                       </a>
                     );

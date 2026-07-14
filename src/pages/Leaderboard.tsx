@@ -163,9 +163,9 @@ const Leaderboard: React.FC = () => {
   };
 
   const getRewardBadge = (rank: number) => {
-    if (rank === 1) return { icon: Crown, color: 'text-yellow-500', reward: '5,000 SHC', bg: 'bg-yellow-500/20' };
-    if (rank === 2) return { icon: Medal, color: 'text-gray-400', reward: '3,000 SHC', bg: 'bg-gray-400/20' };
-    if (rank === 3) return { icon: Medal, color: 'text-amber-600', reward: '1,500 SHC', bg: 'bg-amber-600/20' };
+    if (rank === 1) return { icon: Crown, color: 'text-yellow-500', reward: '5,000 pts', bg: 'bg-yellow-500/20' };
+    if (rank === 2) return { icon: Medal, color: 'text-gray-400', reward: '3,000 pts', bg: 'bg-gray-400/20' };
+    if (rank === 3) return { icon: Medal, color: 'text-amber-600', reward: '1,500 pts', bg: 'bg-amber-600/20' };
     return null;
   };
 
@@ -184,7 +184,7 @@ const Leaderboard: React.FC = () => {
           <Trophy className="text-secondary" />
           Leaderboard
         </h1>
-        <p className="text-muted-foreground mt-1">Top SHC earners & monthly rewards</p>
+        <p className="text-muted-foreground mt-1">Top earners & monthly rewards</p>
       </header>
 
       {/* Stats Cards */}
@@ -202,7 +202,7 @@ const Leaderboard: React.FC = () => {
         <Card className="p-4 text-center bg-gradient-card border-border/50">
           <Sparkles className="w-6 h-6 mx-auto text-secondary mb-2" />
           <p className="text-2xl font-heading font-bold text-foreground">{(stats.totalSHCDistributed / 1000).toFixed(0)}K</p>
-          <p className="text-xs text-muted-foreground">SHC Earned</p>
+          <p className="text-xs text-muted-foreground">Points Earned</p>
         </Card>
       </div>
 
@@ -213,7 +213,7 @@ const Leaderboard: React.FC = () => {
           <div>
             <p className="font-semibold text-foreground">Monthly Rewards</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Top 3 earners each month receive: 🥇 5,000 SHC • 🥈 3,000 SHC • 🥉 1,500 SHC
+              Top 3 earners each month receive: 🥇 5,000 pts • 🥈 3,000 pts • 🥉 1,500 pts
             </p>
           </div>
         </div>
@@ -254,7 +254,7 @@ const Leaderboard: React.FC = () => {
         <Card className="p-8 text-center bg-gradient-card border-border/50">
           <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">No activity yet this month</p>
-          <p className="text-sm text-muted-foreground mt-1">Start earning SHC to climb the leaderboard!</p>
+          <p className="text-sm text-muted-foreground mt-1">Start earning points to climb the leaderboard!</p>
         </Card>
       ) : (
         <div className="space-y-3 animate-fade-in">
@@ -302,7 +302,7 @@ const Leaderboard: React.FC = () => {
                     <p className="font-heading font-bold text-secondary">
                       {(activeTab === 'monthly' ? entry.monthly_earned : entry.total_earned).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">SHC</p>
+                    <p className="text-xs text-muted-foreground">Points</p>
                   </div>
                 </div>
               </Card>

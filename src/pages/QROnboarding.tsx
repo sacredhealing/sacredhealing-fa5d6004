@@ -15,6 +15,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { createCheckoutSession } from "@/config/tierCheckout";
 import { navigateToStripeCheckout } from "@/lib/stripeCheckoutNavigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,7 +72,7 @@ const TIERS = [
   {
     key: "AKASHA_INFINITY" as const,
     name: "Akasha-Infinity",
-    price: "€1,111 lifetime",
+    price: "€2,997 lifetime",
     isFree: false,
     desc: "All transmissions · Eternal field access",
     glyph: "♾",
@@ -125,15 +126,16 @@ export default function QROnboarding() {
   const [checkoutLoading, setCheckoutLoading] = useState<TierKey | null>(null);
 
   /* ── social OAuth ── */
-  const signInWithProvider = async (provider: "google" | "apple" | "facebook") => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/join?ref=${refCode}`,
-      },
+  const signInWithProvider = async (provider: "google" | "apple") => {
+    const returnPath = `/join?ref=${encodeURIComponent(refCode)}`;
+    try {
+      sessionStorage.setItem('postLoginRedirect', returnPath);
+    } catch {}
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
-    if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    if (result.error) {
+      toast({ title: "Login failed", description: result.error.message, variant: "destructive" });
     }
   };
 
@@ -504,7 +506,7 @@ export default function QROnboarding() {
                   [
                     { provider: "google" as const, label: "Google", Icon: GoogleIcon, glow: "rgba(66,133,244,0.22)", bg: "rgba(66,133,244,0.12)" },
                     { provider: "apple" as const, label: "Apple", Icon: AppleIcon, glow: "rgba(255,255,255,0.12)", bg: "rgba(255,255,255,0.08)" },
-                    { provider: "facebook" as const, label: "Facebook", Icon: FacebookIcon, glow: "rgba(24,119,242,0.22)", bg: "rgba(24,119,242,0.12)" },
+                    
                   ] as const
                 ).map(({ provider, label, Icon, glow, bg }) => (
                   <button

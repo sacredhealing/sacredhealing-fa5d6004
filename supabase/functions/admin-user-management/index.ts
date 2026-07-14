@@ -261,24 +261,56 @@ serve(async (req) => {
       case "update_membership": {
         if (!userId || !updates?.tier) throw new Error("userId and tier required");
 
-        const validTiers = ["free", "prana_flow", "siddha_quantum", "akasha_infinity"];
-        if (!validTiers.includes(updates.tier)) throw new Error("Invalid tier");
+        const tierSlugMap: Record<string, string> = {
+          free: "atma-seed",
+          atma_seed: "atma-seed",
+          prana_flow: "prana-flow",
+          siddha_quantum: "siddha-quantum",
+          akasha_infinity: "akasha-infinity",
+        };
+        const slug = tierSlugMap[updates.tier];
+        if (!slug) throw new Error("Invalid tier");
+
+        const { data: tierRow, error: tierErr } = await adminClient
+          .from("membership_tiers").select("id").eq("slug", slug).maybeSingle();
+        if (tierErr || !tierRow?.id) throw new Error(`Tier '${slug}' not found in membership_tiers`);
+
+        // Lifetime tiers (akasha-infinity) never expire unless explicitly overridden.
+        const isLifetimeTier = slug === "akasha-infinity";
+        const expiresAt = updates.expires_at ?? (isLifetimeTier ? null : undefined);
 
         const { error } = await adminClient
           .from("user_memberships")
           .upsert({
             user_id: userId,
-            tier: updates.tier,
+            tier_id: tierRow.id,
+            status: "active",
             updated_at: new Date().toISOString(),
-            ...(updates.expires_at ? { expires_at: updates.expires_at } : {}),
+            ...(expiresAt !== undefined ? { expires_at: expiresAt } : {}),
+            ...(updates.manual_grant ? {
+              stripe_subscription_id: null,
+              stripe_customer_id: null,
+            } : {}),
           }, { onConflict: "user_id" });
 
         if (error) throw error;
 
-        const hyphenTier = updates.tier.replace(/_/g, "-");
+        const hyphenTier = slug;
         await adminClient.from("profiles").update({ membership_tier: hyphenTier }).eq("id", userId);
 
-        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        // Log manual grants distinctly from Stripe purchases so revenue reporting
+        // and support history can tell the two apart later.
+        if (updates.manual_grant) {
+          try {
+            await adminClient.from("admin_action_log").insert({
+              action: "manual_membership_grant",
+              target_user_id: userId,
+              details: { tier: slug, note: updates.note ?? null, granted_amount: updates.granted_amount ?? null },
+            });
+          } catch { /* audit log is best-effort, never block the actual grant */ }
+        }
+
+        return new Response(JSON.stringify({ success: true, tier_id: tierRow.id, slug }), { headers: corsHeaders });
       }
 
       case "ban_user": {

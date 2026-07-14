@@ -7591,5 +7591,5 @@ export const TIER_CONFIG = {
   free:   { label: 'Nada Bija',       price: 'Free',   color: '#6B7280', modules: [1,2,3,4,5,6] },
   prana:  { label: 'Prana-Flow',      price: '€19/mo', color: '#10B981', modules: [7,8,9,10,11,12] },
   siddha: { label: 'Siddha-Quantum',  price: '€45/mo', color: '#D4AF37', modules: [13,14,15,16,17,18] },
-  akasha: { label: 'Akasha-Infinity', price: '€1,111', color: '#A78BFA', modules: [19,20,21,22,23,24] },
+  akasha: { label: 'Akasha-Infinity', price: '€2,997', color: '#A78BFA', modules: [19,20,21,22,23,24] },
 };

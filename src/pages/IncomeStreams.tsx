@@ -443,10 +443,8 @@ const IncomeStreams: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-24 w-full max-w-full overflow-x-hidden bg-[#050505]">
-      {/* SHC Balance Banner */}
-      <div className="px-4 pt-6 pb-4">
-        <SHCBalanceCard />
-      </div>
+      {/* SHCBalanceCard intentionally not rendered here anymore (SHC hidden
+          from users) — component file left intact as infrastructure. */}
 
       {/* Wallet Button */}
       <div className="px-4 pb-4">

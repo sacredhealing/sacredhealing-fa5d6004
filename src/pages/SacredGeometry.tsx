@@ -31,7 +31,7 @@ const TIER_CONFIG: Record<TierKey, { label: string; color: string; bg: string; p
   free:    { label: "FREE ACCESS",          color: "rgba(255,255,255,0.7)", bg: "rgba(255,255,255,0.05)" },
   prana:   { label: "PRANA-FLOW",           color: "#22D3EE",              bg: "rgba(34,211,238,0.08)",    price: "€19/mo",          priceId: "prana_flow" },
   quantum: { label: "SIDDHA-QUANTUM",       color: "#D4AF37",              bg: "rgba(212,175,55,0.08)",   price: "€45/mo",          priceId: "siddha_quantum" },
-  akasha:  { label: "AKASHA-INFINITY",      color: "#A855F7",              bg: "rgba(168,85,247,0.08)",   price: "€1,111 lifetime", priceId: "akasha_infinity" },
+  akasha:  { label: "AKASHA-INFINITY",      color: "#A855F7",              bg: "rgba(168,85,247,0.08)",   price: "€2,997 lifetime", priceId: "akasha_infinity" },
 };
 
 const TIER_ORDER: TierKey[] = ["free", "prana", "quantum", "akasha"];

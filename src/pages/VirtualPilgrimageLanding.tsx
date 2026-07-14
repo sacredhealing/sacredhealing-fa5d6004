@@ -182,7 +182,7 @@ export default function VirtualPilgrimageLanding() {
               <button onClick={() => navigate("/akasha-infinity")} style={{ display: "block", width: "100%", maxWidth: 340, margin: "0 auto 12px", padding: "18px 32px", background: "linear-gradient(135deg,#D4AF37,#8B7A28)", border: "none", borderRadius: 16, fontFamily: F.montserrat, fontSize: 12, fontWeight: 800, letterSpacing: ".2em", textTransform: "uppercase", color: "#050505", cursor: "pointer" }}>
                 ✦ Unlock — Akasha Infinity
               </button>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", letterSpacing: ".15em", textTransform: "uppercase" }}>LIFETIME ACCESS · €1,111 ONCE</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", letterSpacing: ".15em", textTransform: "uppercase" }}>LIFETIME ACCESS · €2,997 ONCE</div>
             </div>
           )}
         </div>
@@ -280,7 +280,7 @@ export default function VirtualPilgrimageLanding() {
                 Lifetime access to every SQI tool.<br/>One payment. No subscription.
               </div>
               <button onClick={() => navigate("/akasha-infinity")} style={{ width: "100%", padding: "20px 32px", background: "linear-gradient(135deg,#D4AF37,#8B7A28)", border: "none", borderRadius: 18, fontFamily: F.montserrat, fontSize: 13, fontWeight: 800, letterSpacing: ".2em", textTransform: "uppercase", color: "#050505", cursor: "pointer", marginBottom: 14 }}>
-                ✦ Unlock Akasha Infinity — €1,111
+                ✦ Unlock Akasha Infinity — €2,997
               </button>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,.2)", letterSpacing: ".1em", lineHeight: 1.65 }}>
                 One lifetime payment · Full access to all 40+ sites<br/>Scalar GPS · Sacred geometry · 40-day field lock

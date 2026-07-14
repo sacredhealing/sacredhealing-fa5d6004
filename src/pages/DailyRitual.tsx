@@ -99,7 +99,7 @@ const DailyRitual: React.FC = () => {
             <span className="text-sm font-medium">
               +{(journeyData.morning.completed ? 15 : 0) + 
                 (journeyData.midday.completed ? 10 : 0) + 
-                (journeyData.evening.completed ? 20 : 0)} SHC
+                (journeyData.evening.completed ? 20 : 0)} pts
             </span>
           </div>
         </div>
@@ -143,7 +143,7 @@ const DailyRitual: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-accent flex items-center gap-1">
                         <Sparkles className="w-4 h-4" />
-                        +{ritual.shcReward} SHC
+                        +{ritual.shcReward} pts
                       </span>
                       
                       {ritual.completed ? (
@@ -234,7 +234,7 @@ const DailyRitual: React.FC = () => {
                   Daily Journal
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Reflect on your journey and earn +10 SHC
+                  Reflect on your journey and earn +10 points
                 </p>
               </div>
             </div>

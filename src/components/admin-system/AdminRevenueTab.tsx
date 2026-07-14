@@ -367,7 +367,7 @@ const AdminRevenueTab = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Amount (SHC)</Label>
+                  <Label>Amount (pts)</Label>
                   <Input 
                     type="number"
                     placeholder="0"
@@ -558,7 +558,7 @@ const AdminRevenueTab = () => {
                         ${Number(record.amount_usd).toFixed(2)}
                         {record.amount_shc && (
                           <span className="text-xs text-muted-foreground ml-1">
-                            ({record.amount_shc} SHC)
+                            ({record.amount_shc} pts)
                           </span>
                         )}
                       </TableCell>

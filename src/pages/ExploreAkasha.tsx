@@ -15,10 +15,15 @@ interface Transmission {
   category: string;
   audio_url_en: string | null;
   audio_url_sv: string | null;
+  video_url_en?: string | null;
+  video_url_sv?: string | null;
+  content_type?: 'audio' | 'video';
+  thumbnail_url?: string | null;
   cover_image_url: string | null;
   duration_seconds: number;
   is_free: boolean;
   required_tier: number;
+  price_usd?: number | null;
   series_name: string | null;
   series_order: number | null;
   published: boolean;
@@ -49,6 +54,8 @@ export default function ExploreAkasha() {
 
   const [items, setItems] = useState<Transmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [purchasedIds, setPurchasedIds] = useState<Set<string>>(new Set());
+  const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const [lang, setLang] = useState<'en' | 'sv'>('en');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -69,6 +76,38 @@ export default function ExploreAkasha() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await (supabase
+        .from('divine_transmission_purchases' as any)
+        .select('transmission_id')
+        .eq('user_id', user.id) as any);
+      if (data) setPurchasedIds(new Set(data.map((r: { transmission_id: string }) => r.transmission_id)));
+    })();
+  }, [user]);
+
+  const handleUnlock = useCallback(async (t: Transmission) => {
+    if (!user) { navigate('/auth'); return; }
+    if (!t.price_usd) return;
+    setUnlockingId(t.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('purchase-divine-transmission', {
+        body: { transmissionId: t.id },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else if (data?.alreadyOwned) {
+        setPurchasedIds(prev => new Set(prev).add(t.id));
+      }
+    } catch {
+      // best-effort; a failed unlock attempt just leaves the item locked
+    } finally {
+      setUnlockingId(null);
+    }
+  }, [user, navigate]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, Transmission[]>();
     items.forEach(t => {
@@ -80,8 +119,23 @@ export default function ExploreAkasha() {
 
   const canAccess = useCallback((t: Transmission): boolean => {
     if (t.is_free) return true;
+    if (purchasedIds.has(t.id)) return true;
     return hasFeatureAccess(isAdmin, tier, t.required_tier);
-  }, [isAdmin, tier]);
+  }, [isAdmin, tier, purchasedIds]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('transmission_success') === 'true' && user) {
+      (async () => {
+        const { data } = await (supabase
+          .from('divine_transmission_purchases' as any)
+          .select('transmission_id')
+          .eq('user_id', user.id) as any);
+        if (data) setPurchasedIds(new Set(data.map((r: { transmission_id: string }) => r.transmission_id)));
+      })();
+      navigate('/explore-akasha', { replace: true });
+    }
+  }, [user, navigate]);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
@@ -90,10 +144,21 @@ export default function ExploreAkasha() {
     setProgress(0);
   }, []);
 
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
   const playAudio = useCallback((t: Transmission) => {
     if (!canAccess(t)) {
       if (!user) { navigate('/auth'); return; }
+      if (t.price_usd) return; // buy button handles this case in the card UI
       navigate(getSalesPageForRank(t.required_tier));
+      return;
+    }
+
+    if (t.content_type === 'video') {
+      const vUrl = lang === 'sv' && t.video_url_sv ? t.video_url_sv
+        : t.video_url_en ? t.video_url_en
+        : t.video_url_sv;
+      if (vUrl) setVideoUrl(vUrl);
       return;
     }
 
@@ -273,12 +338,35 @@ export default function ExploreAkasha() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                         <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 9, color: white(0.3) }}>{fmtDuration(item.duration_seconds)}</span>
                         {item.is_free && <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', background: 'rgba(80,200,120,0.15)', color: 'rgba(80,200,120,0.85)', padding: '1px 6px', borderRadius: 8 }}>{t('exploreAkasha.free')}</span>}
+                        {locked && !!item.price_usd && (
+                          <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', background: 'rgba(212,175,55,0.15)', color: gold(0.85), padding: '1px 6px', borderRadius: 8 }}>
+                            €{Number(item.price_usd).toFixed(2)}
+                          </span>
+                        )}
+                        {item.content_type === 'video' && (
+                          <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', color: white(0.3) }}>VIDEO</span>
+                        )}
                         {!hasLangAudio && fallbackAvailable && (
                           <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, color: gold(0.4) }}>
                             {lang === 'sv' ? t('exploreAkasha.audioEnglishOnly') : t('exploreAkasha.audioSwedishOnly')}
                           </span>
                         )}
                       </div>
+                      {locked && !!item.price_usd && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleUnlock(item); }}
+                          disabled={unlockingId === item.id}
+                          style={{
+                            marginTop: 6, alignSelf: 'flex-start',
+                            fontFamily: "'Montserrat',sans-serif", fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                            background: 'rgba(212,175,55,0.1)', border: `1px solid ${gold(0.4)}`, color: gold(0.9),
+                            borderRadius: 100, padding: '6px 14px', cursor: 'pointer',
+                          }}
+                        >
+                          {unlockingId === item.id ? '...' : `◈ Unlock for €${Number(item.price_usd).toFixed(2)}`}
+                        </button>
+                      )}
                     </div>
 
                     {/* Play button */}
@@ -304,6 +392,21 @@ export default function ExploreAkasha() {
             </div>
           </div>
         ))
+      )}
+
+      {videoUrl && (
+        <div
+          onClick={() => setVideoUrl(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <video
+            src={videoUrl}
+            controls
+            autoPlay
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: 12, boxShadow: '0 0 60px rgba(212,175,55,0.15)' }}
+          />
+        </div>
       )}
 
       <style>{`

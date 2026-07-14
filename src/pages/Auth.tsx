@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const Auth: React.FC = () => {
@@ -273,19 +274,25 @@ const Auth: React.FC = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}${postLoginRedirect || '/dashboard'}` },
+    const nextPath = postLoginRedirect || '/dashboard';
+    try {
+      sessionStorage.setItem('postLoginRedirect', nextPath);
+    } catch {}
+    const result = await lovable.auth.signInWithOAuth('google', {
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
-    if (error) {
+    if (result.error) {
       setIsGoogleLoading(false);
       toast({
         title: 'Google sign-in unavailable',
-        description: error.message,
+        description: result.error.message,
         variant: 'destructive',
       });
+      return;
     }
-    // On success the browser redirects to Google, so no further state change here.
+    if (result.redirected) return;
+    // Session already set — navigate to intended destination
+    navigate(nextPath, { replace: true });
   };
 
   if (authLoading) {

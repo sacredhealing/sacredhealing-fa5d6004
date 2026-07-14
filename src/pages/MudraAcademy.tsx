@@ -576,7 +576,7 @@ const TIER_CONFIG = {
 const UPGRADE_CTA: Record<string, { price: string; label: string }> = {
   "prana-flow": { price: "€19/month", label: "Activate Prana-Flow — Unlock 14 Advanced Mudras" },
   "siddha-quantum": { price: "€45/month", label: "Enter Siddha-Quantum — Receive Secret Initiatory Mudras" },
-  "akasha-infinity": { price: "€1,111 lifetime", label: "Claim Akasha-Infinity — The Living Initiation" },
+  "akasha-infinity": { price: "€2,997 lifetime", label: "Claim Akasha-Infinity — The Living Initiation" },
 };
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
@@ -814,7 +814,7 @@ export default function MudraAcademy() {
         </p>
         <button onClick={() => navigate(STRIPE_LINKS["akasha-infinity"])}
           style={{ background: `linear-gradient(135deg, ${C.gold} 0%, #B8960C 100%)`, border: "none", borderRadius: "16px", padding: "18px 40px", color: C.black, fontWeight: 900, fontSize: "15px", cursor: "pointer", letterSpacing: "0.05em", boxShadow: `0 0 40px rgba(212,175,55,0.3)` }}>
-          CLAIM AKASHA-INFINITY · €1,111 LIFETIME
+          CLAIM AKASHA-INFINITY · €2,997 LIFETIME
         </button>
       </div>
     </div>

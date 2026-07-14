@@ -1103,12 +1103,12 @@ What fasting should never be: a substitute for medical diagnosis; a reason to de
   },
 
   /* ═══════════════════════════════════════════════════════════
-     TIER 3 — AKASHA INFINITY: €1,111 Lifetime
+     TIER 3 — AKASHA INFINITY: €2,997 Lifetime
      6 modules · 44 lessons
   ═══════════════════════════════════════════════════════════ */
   {
     tier: 3,
-    label: 'AKASHA INFINITY — €1,111 Lifetime',
+    label: 'AKASHA INFINITY — €2,997 Lifetime',
     subtitle: 'You Eat Light. You Breathe Akasha. You Become the Fast.',
     icon: '∞',
     color: '#A78BFA',

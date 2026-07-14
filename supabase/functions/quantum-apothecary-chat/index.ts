@@ -5445,6 +5445,39 @@ serve(async (req) => {
     }
     console.log("[SQI] API key present:", LOVABLE_API_KEY.length > 0, "| key prefix:", LOVABLE_API_KEY.slice(0,6));
 
+    // Tier-aware daily limit — this chat is Akasha-Infinity exclusive
+    // (FEATURE_TIER.quantumApothecary = 3), separate pool from the other
+    // three chats. Verifies the session when an Authorization header is
+    // present; falls back to body.userId only if not, matching this
+    // function's existing trust pattern elsewhere in the file.
+    {
+      let limitUserId: string | null = body.userId ?? null;
+      const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+      const sbLimit = createClient(SUPABASE_URL, SUPABASE_ANON, {
+        global: { headers: authHeader ? { Authorization: authHeader } : {} },
+      });
+      if (authHeader?.startsWith("Bearer ")) {
+        try {
+          const { data } = await sbLimit.auth.getUser(authHeader.replace("Bearer ", ""));
+          if (data?.user?.id) limitUserId = data.user.id;
+        } catch { /* fall back to body userId */ }
+      }
+      if (limitUserId) {
+        const { data: prof } = await sbLimit.from("profiles").select("membership_tier").eq("user_id", limitUserId).maybeSingle();
+        const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+        const { data: limitCheck } = await sbLimit.rpc("check_daily_apothecary_limit", { p_user_id: limitUserId, p_tier_slug: tierSlug });
+        const result = limitCheck?.[0];
+        if (!result?.allowed) {
+          return new Response(JSON.stringify({
+            error: result?.daily_limit
+              ? `Daily chat limit reached (${result.daily_limit}/day). Resets at midnight UTC.`
+              : "Quantum Apothecary requires Akasha-Infinity membership.",
+          }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        await sbLimit.from("rate_limit_log").insert({ user_id: limitUserId, function_name: "quantum-apothecary-chat" });
+      }
+    }
+
     // ── SCAN MODE ──────────────────────────────────────
     if (body.scanMode === true) {
       const { imageBase64, imageMimeType, userId, planetaryAlign, herbOfToday, jyotishContext, activeTransmissions } = body;

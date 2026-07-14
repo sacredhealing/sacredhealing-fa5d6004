@@ -707,7 +707,7 @@ const SnippetModal: React.FC<{
         Activate <strong style={{ color: '#D4AF37' }}>Prana-Flow</strong> to stream every track in full — unlimited, forever.
       </p>
       <button className="cta-gold" style={{ maxWidth: 340, margin: '0 auto', display: 'block' }} onClick={onUpgrade}>
-        Activate Prana-Flow · €19/mo
+        Start Free — 7 Days, Then €19/mo
       </button>
       <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 14, cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }} onClick={onClose}>
         Continue with free access
@@ -979,10 +979,9 @@ const Music: React.FC = () => {
               <li>Full streaming — all {tracks.length} tracks unlimited</li>
               <li>Nadi Scanner — unlimited daily scans</li>
               <li>Jyotish frequency prescription (full depth)</li>
-              <li>33 SHC Vedic coins per track streamed</li>
               <li className="dim">Downloads (Siddha-Quantum+)</li>
             </ul>
-            <button className="cta-gold" onClick={handleUpgrade}>Activate Prana-Flow · €19/mo</button>
+            <button className="cta-gold" onClick={handleUpgrade}>Start Free — 7 Days, Then €19/mo</button>
           </div>
 
           <div className="up-card up-siddha">
@@ -1003,7 +1002,7 @@ const Music: React.FC = () => {
             <div className="up-tier c">Akasha-Infinity · Eternal</div>
             <div className="up-name">Akasha Master</div>
             <div className="up-price" style={{ background: 'linear-gradient(90deg,#D4AF37,#22D3EE)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              €1111 <span style={{ fontSize: 13, fontWeight: 500, WebkitTextFillColor: 'var(--muted)' }}>/ lifetime</span>
+              €2997 <span style={{ fontSize: 13, fontWeight: 500, WebkitTextFillColor: 'var(--muted)' }}>/ lifetime</span>
             </div>
             <ul className="up-feats">
               <li>Everything — unlocked eternally</li>
@@ -1011,7 +1010,7 @@ const Music: React.FC = () => {
               <li>Custom mantra + healing beat co-creation</li>
               <li>Zero cost on all future releases — forever</li>
             </ul>
-            <button className="cta-akasha" onClick={handleUpgrade}>Activate Akasha-Infinity · €1111</button>
+            <button className="cta-akasha" onClick={handleUpgrade}>Activate Akasha-Infinity · €2997</button>
           </div>
         </div>
 

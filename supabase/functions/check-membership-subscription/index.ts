@@ -17,7 +17,8 @@ const logStep = (step: string, details?: any) => {
 const PRICE_TO_TIER: Record<string, string> = {
   'price_1T8o3YAPsnbrivP056UJqOP7': 'prana-flow',        // Prana-Flow €19/mo
   'price_1T8o3jAPsnbrivP0uZKR33EY': 'siddha-quantum',    // Siddha-Quantum €45/mo
-  'price_1T8o3kAPsnbrivP0m8bOzl3M': 'akasha-infinity',   // Akasha-Infinity €1111
+  'price_1T8o3kAPsnbrivP0m8bOzl3M': 'akasha-infinity',   // legacy €1111 — keep for existing lifetime members
+  'price_1TsTQbAPsnbrivP0X0Obb5YN': 'akasha-infinity',   // current €2997
 };
 
 // Map Stripe product IDs → canonical tier slug (fallback)

@@ -298,7 +298,7 @@ When you're ready, gently open your eyes, carrying this clarity and focus with y
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="shcReward">SHC Reward</Label>
+                <Label htmlFor="shcReward">Reward Points</Label>
                 <Input
                   id="shcReward"
                   type="number"

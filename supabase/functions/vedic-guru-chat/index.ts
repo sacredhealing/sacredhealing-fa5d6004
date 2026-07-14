@@ -511,6 +511,24 @@ serve(async (req) => {
 
     const userId = await resolveUserId(req);
 
+    // Tier-aware daily chat cap — shared across ayurveda-chat, guide-chat,
+    // vastu-chat, vedic-guru-chat (total AI cost per member, not per chat type).
+    if (userId) {
+      const sbCheck = createClient(SUPABASE_URL, SUPABASE_SRK);
+      const { data: prof } = await sbCheck.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle();
+      const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+      const { data: limitCheck } = await sbCheck.rpc("check_daily_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
+      const result = limitCheck?.[0];
+      if (!result?.allowed) {
+        return new Response(JSON.stringify({
+          error: result?.daily_limit
+            ? `Daily chat limit reached (${result.daily_limit}/day on your plan). Resets at midnight UTC, or upgrade for a higher limit.`
+            : "Chat requires a paid membership.",
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await sbCheck.from("rate_limit_log").insert({ user_id: userId, function_name: "vedic-guru-chat" });
+    }
+
     // Pull fresh profile (overrides any stale data the client sent)
     const fresh = userId ? await getFreshProfile(userId) : {};
     const u = user || {};

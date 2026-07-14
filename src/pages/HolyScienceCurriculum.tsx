@@ -38,7 +38,7 @@ const TIER_CONFIG: Record<TierSlug, { label: string; color: string; glow: string
   'free':             { label: 'Free',            color: '#6B7280', glow: 'rgba(107,114,128,0.3)', rank: 0, price: 'Free',            upgradeUrl: '/prana-flow'      },
   'prana-flow':       { label: 'Prana-Flow',       color: '#22D3EE', glow: 'rgba(34,211,238,0.3)',  rank: 1, price: '€19/mo',          upgradeUrl: '/prana-flow'      },
   'siddha-quantum':   { label: 'Siddha-Quantum',   color: '#D4AF37', glow: 'rgba(212,175,55,0.3)',  rank: 2, price: '€45/mo',          upgradeUrl: '/siddha-quantum'  },
-  'akasha-infinity':  { label: 'Akasha-Infinity',  color: '#A78BFA', glow: 'rgba(167,139,250,0.3)', rank: 3, price: '€1,111 lifetime', upgradeUrl: '/akasha-infinity' },
+  'akasha-infinity':  { label: 'Akasha-Infinity',  color: '#A78BFA', glow: 'rgba(167,139,250,0.3)', rank: 3, price: '€2,997 lifetime', upgradeUrl: '/akasha-infinity' },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

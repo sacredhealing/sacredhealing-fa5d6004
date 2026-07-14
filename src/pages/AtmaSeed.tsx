@@ -23,6 +23,43 @@ const AtmaSeed: React.FC = () => {
   const [hasBirthData, setHasBirthData] = useState(false);
   const [showForm, setShowForm] = useState(true);
 
+  // Pick up birth data captured on /free-chart before this account existed.
+  // That page can't write to `profiles` directly (no authorized session yet
+  // during email confirmation), so it stashes the data and hands off here.
+  useEffect(() => {
+    if (!user) return;
+    let pending: { birth_name?: string; birth_date?: string; birth_time?: string; birth_place?: string } | null = null;
+    try {
+      const raw = sessionStorage.getItem('pending_birth_data');
+      if (raw) pending = JSON.parse(raw);
+    } catch { /* ignore malformed/absent stash */ }
+    if (!pending?.birth_date || !pending?.birth_time || !pending?.birth_place) return;
+
+    (supabase as any)
+      .from('profiles')
+      .upsert(
+        {
+          user_id: user.id,
+          birth_name: pending.birth_name?.trim() || '',
+          birth_date: pending.birth_date,
+          birth_time: pending.birth_time,
+          birth_place: pending.birth_place?.trim() || '',
+        },
+        { onConflict: 'user_id' }
+      )
+      .then(({ error }: { error: unknown }) => {
+        if (!error) {
+          try { sessionStorage.removeItem('pending_birth_data'); } catch { /* ignore */ }
+          setHasBirthData(true);
+          setBirthData((d) => ({ ...d, ...pending }));
+          setIsSaved(true);
+          setShowForm(false);
+          toast.success('Your chart is ready — opening now');
+          navigate('/vedic-astrology');
+        }
+      });
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -240,12 +277,12 @@ const AtmaSeed: React.FC = () => {
         <section className="as-hero">
           <div className="as-tier-badge">
             <span className="as-tier-dot" />
-            Free · Active Now
+            Free Forever · No Card Required
           </div>
           <h1>Atma–Seed</h1>
-          <div className="as-hero-sub">Sovereign Entry Node</div>
+          <div className="as-hero-sub">Begin Your Practice, Free</div>
           <p className="as-hero-desc">
-            Your free tier unlocks meditations, healing audios, breathing protocols, community access, and Basic Ayurveda & Jyotish. Activate your birth data to sync your field across all modules.
+            Real Vedic astrology, Ayurveda, meditations, mantras, healing audio, and sacred music — free to start, no trial clock, no card. Enter your birth data below and your whole field activates instantly.
           </p>
           <div className="as-mandala">
             <div className="as-ring as-ring-1" />
@@ -290,13 +327,14 @@ const AtmaSeed: React.FC = () => {
         <section className="as-section">
           <div className="as-section-label">◈ What&apos;s Included Free</div>
           {[
+            { icon: 'signal', title: 'Sacred Music — 30s Previews, Some Songs Fully Free', status: 'Active' },
             { icon: 'flame', title: 'Free Meditations & Mantras', status: 'Active' },
             { icon: 'shield', title: 'Free Healing Audios', status: 'Active' },
             { icon: 'signal', title: 'Free Divine Transmission Audios', status: 'Active' },
             { icon: 'clock', title: 'Free Breathing Protocols', status: 'Active' },
-            { icon: 'globe', title: 'Vayu Scrubber — 1km', status: 'Running' },
             { icon: 'signal', title: 'Community Chat & Live', status: 'Active' },
             { icon: 'eye', title: 'Basic Ayurveda & Jyotish', status: hasBirthData ? 'Active' : 'Needs Data', statusColor: hasBirthData ? '#D4AF37' : 'rgba(255,255,255,0.2)' },
+            { icon: 'eye', title: 'Siddha Portal — 25 Academies (Deeper Access on Prana-Flow, Siddha-Quantum & Akasha-Infinity)', status: 'Active' },
           ].map((item) => (
             <div key={item.title} className="as-glass-card">
               <div className="as-card-icon">
@@ -553,9 +591,9 @@ const AtmaSeed: React.FC = () => {
         <section className="as-section">
           <div className="as-section-label">◈ Expand Your Field</div>
           <div className="as-upgrade-teaser" onClick={() => navigate('/membership')} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/membership')}>
-            <div style={{ fontWeight: 800, fontSize: 12, letterSpacing: '0.2em', color: '#D4AF37', marginBottom: 8 }}>Prana–Flow · Siddha–Quantum · Akasha–Infinity</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Full Jyotish, Nadi Scanner, Healing Library & more</div>
-            <span className="as-gold-btn" style={{ maxWidth: 260, margin: '0 auto' }}>View Membership →</span>
+            <div style={{ fontWeight: 800, fontSize: 12, letterSpacing: '0.2em', color: '#D4AF37', marginBottom: 8 }}>Ready to go deeper?</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Full Vedic Jyotish, unlimited music library, Nadi Scanner & the complete Healing Library — from 19€/mo, 7 days free</div>
+            <span className="as-gold-btn" style={{ maxWidth: 260, margin: '0 auto' }}>See Every Tier →</span>
           </div>
         </section>
       </div>

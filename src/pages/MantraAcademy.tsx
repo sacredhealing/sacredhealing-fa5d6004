@@ -11,7 +11,7 @@ const T = {
   free:   { accent: '#6B7280', gold: 'rgba(107,114,128,0.6)', bg: 'rgba(107,114,128,0.07)', border: 'rgba(107,114,128,0.25)', label: 'FREE',           price: 'Free',           icon: '◎', modules: '1–6'  },
   prana:  { accent: '#10B981', gold: 'rgba(16,185,129,0.6)',  bg: 'rgba(16,185,129,0.07)',  border: 'rgba(16,185,129,0.25)',  label: 'PRANA-FLOW',     price: '€19/mo',         icon: '◈', modules: '7–12' },
   siddha: { accent: '#D4AF37', gold: 'rgba(212,175,55,0.6)',  bg: 'rgba(212,175,55,0.07)',  border: 'rgba(212,175,55,0.25)',  label: 'SIDDHA-QUANTUM', price: '€45/mo',         icon: '✦', modules: '13–18'},
-  akasha: { accent: '#A78BFA', gold: 'rgba(167,139,250,0.6)', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.25)', label: 'AKASHA-INFINITY',price: '€1,111 lifetime', icon: '⬡', modules: '19–24'},
+  akasha: { accent: '#A78BFA', gold: 'rgba(167,139,250,0.6)', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.25)', label: 'AKASHA-INFINITY',price: '€2,997 lifetime', icon: '⬡', modules: '19–24'},
 };
 type Tier = keyof typeof T;
 const TIER_ORDER: Tier[] = ['free','prana','siddha','akasha'];

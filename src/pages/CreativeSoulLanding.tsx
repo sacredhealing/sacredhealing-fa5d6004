@@ -250,7 +250,7 @@ export default function CreativeSoulLanding() {
                   )}
                   <div className="text-sm text-white/70 mb-3">{option.label}</div>
                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-xs">
-                    +1000 SHC
+                    New
                   </Badge>
                 </button>
               );

@@ -89,7 +89,7 @@ const TIER_META: Record<
   'akasha-infinity': {
     rank: 3,
     label: 'Akasha Infinity',
-    price: '€1,111 Lifetime',
+    price: '€2,997 Lifetime',
     color: '#22D3EE',
     glow: 'rgba(34,211,238,0.08)',
     border: 'rgba(34,211,238,0.22)',

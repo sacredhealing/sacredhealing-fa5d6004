@@ -479,10 +479,9 @@ const Profile: React.FC = () => {
           <div style={{display:'flex',width:'calc(100% - 40px)',maxWidth:380,border:'1px solid rgba(255,255,255,.05)',borderRadius:18,overflow:'hidden',background:'rgba(255,255,255,.015)',marginBottom:24,animation:'fadeUp 1.1s ease both'}}>
             {[
               {val:shcProfile?.streak_days||0, lbl:t('profile.streak.label')},
-              {val:<AnimatedCounter value={balance?.balance??0}/>, lbl:t('profile.balance.label')},
               {val:badges.filter(b=>b.earned).length, lbl:t('profile.badges')},
             ].map((s,i)=>(
-              <div key={i} style={{flex:1,padding:'14px 6px',textAlign:'center',borderRight:i<2?'1px solid rgba(255,255,255,.05)':'none'}}>
+              <div key={i} style={{flex:1,padding:'14px 6px',textAlign:'center',borderRight:i<1?'1px solid rgba(255,255,255,.05)':'none'}}>
                 <div style={{fontSize:20,fontWeight:900,letterSpacing:'-.04em',color:G,textShadow:'0 0 15px rgba(212,175,55,.4)'}}>{s.val}</div>
                 <div style={{fontSize:7,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase',color:'rgba(255,255,255,.25)',marginTop:3}}>{s.lbl}</div>
               </div>
@@ -529,7 +528,7 @@ const Profile: React.FC = () => {
             <div style={{borderRadius:24,padding:20,background:'rgba(212,175,55,.04)',border:'1px solid rgba(212,175,55,.28)',boxShadow:'0 0 30px rgba(212,175,55,.06)'}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
                 <div style={{fontWeight:900,fontSize:18,color:G}}>{t('profilePage.tierAkashaInfinityName')}</div>
-                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'2.5rem',color:'#fff'}}>€1111</div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'2.5rem',color:'#fff'}}>€2997</div>
               </div>
               <ul className="tier-features" style={{marginBottom:16,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
                 {[t('profilePage.tierAkashaF1'),t('profilePage.tierAkashaF2'),t('profilePage.tierAkashaF3'),t('profilePage.tierAkashaF4'),t('profilePage.tierAkashaF5'),t('profilePage.tierAkashaF6')].map(f=><li key={f}>{f}</li>)}

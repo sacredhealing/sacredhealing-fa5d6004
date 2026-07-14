@@ -44,22 +44,39 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const affiliateRef = (affiliateId ?? extraMetadata?.affiliate_id ?? "direct") as string;
-    if (affiliateRef && affiliateRef !== "direct") {
-      try {
-        await supabaseClient.from("affiliate_attribution").upsert(
-          { user_id: user.id, ref_code: affiliateRef, last_seen_at: new Date().toISOString() },
-          { onConflict: "user_id" }
+    // Resolve the permanent referrer BEFORE deciding what to attribute this
+    // purchase to. A user's first-ever referral link sets this once; every
+    // future purchase (including tier upgrades where no ?ref= is present)
+    // credits that same referrer, not just the purchase that happens to
+    // carry a fresh URL parameter.
+    const requestRef = (affiliateId ?? extraMetadata?.affiliate_id ?? null) as string | null;
+    let resolvedAffiliateRef = "direct";
+    try {
+      const { data: existingAttribution } = await supabaseClient
+        .from("affiliate_attribution").select("ref_code").eq("user_id", user.id).maybeSingle();
+
+      if (existingAttribution?.ref_code) {
+        // Permanent attribution already exists — always wins, regardless of
+        // what (if anything) this specific checkout call carries.
+        resolvedAffiliateRef = existingAttribution.ref_code;
+      } else if (requestRef && requestRef !== "direct") {
+        // First-ever referral for this user — set it, permanently.
+        resolvedAffiliateRef = requestRef;
+        await supabaseClient.from("affiliate_attribution").insert(
+          { user_id: user.id, ref_code: requestRef, last_seen_at: new Date().toISOString() }
         );
+      }
+
+      if (resolvedAffiliateRef !== "direct") {
         await supabaseClient.from("affiliate_events").insert({
-          ref_code: affiliateRef,
+          ref_code: resolvedAffiliateRef,
           user_id: user.id,
           tool_slug: "sqi_membership",
           event_type: "checkout",
         });
-      } catch (e) {
-        logStep("Affiliate attribution (best-effort) failed", String(e));
       }
+    } catch (e) {
+      logStep("Affiliate attribution (best-effort) failed", String(e));
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -94,7 +111,7 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         tier_slug: tierSlug ?? "",
-        affiliate_id: (affiliateId ?? extraMetadata?.affiliate_id ?? "direct") as string,
+        affiliate_id: resolvedAffiliateRef,
         tier_name: (extraMetadata?.tier_name ?? tierSlug ?? "") as string,
         protection_shield: (extraMetadata?.protection_shield ?? "inactive") as string,
       },
@@ -105,8 +122,36 @@ serve(async (req) => {
       sessionConfig.allow_promotion_codes = true;
     }
 
+    // Growth: 7-day free trial on Prana-Flow monthly only — the entry-level paid
+    // tier. Siddha-Quantum and any other subscription tier routed through this
+    // same function stay trial-free (higher-commitment tiers).
+    if (isSubscription && tierSlug === "prana-monthly") {
+      sessionConfig.subscription_data = { trial_period_days: 7 };
+    }
+
     const session = await stripe.checkout.sessions.create(sessionConfig);
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
+    // Log for abandonment recovery — best-effort, never blocks checkout.
+    try {
+      const tierDisplay: Record<string, { name: string; price: string }> = {
+        "prana-monthly": { name: "Prana-Flow", price: "19€/mo (7 days free)" },
+        "siddha-quantum-monthly": { name: "Siddha-Quantum", price: "45€/mo" },
+        "akasha-infinity": { name: "Akasha-Infinity", price: "2997€ once" },
+      };
+      const display = tierDisplay[tierSlug] ?? { name: tierSlug, price: "" };
+      await supabaseClient.from("checkout_abandonment_log").insert({
+        stripe_session_id: session.id,
+        session_url: session.url,
+        user_id: user.id,
+        email: user.email,
+        tier_slug: tierSlug,
+        display_name: display.name,
+        price_label: display.price,
+      });
+    } catch (e) {
+      logStep("Abandonment log insert failed (non-fatal)", { error: String(e) });
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

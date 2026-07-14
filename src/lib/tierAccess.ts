@@ -8,7 +8,7 @@
  *   0 = Free (Atma-Seed)
  *   1 = Prana-Flow (€19/mo)
  *   2 = Siddha-Quantum (€45/mo)
- *   3 = Akasha-Infinity (€1111 lifetime)
+ *   3 = Akasha-Infinity (€2997 lifetime)
  *
  * Legacy aliases (premium-monthly, premium-annual, lifetime, prana-monthly,
  * siddha-quantum-monthly) are still recognized for backwards-compat parsing.
@@ -144,6 +144,33 @@ export const FEATURE_TIER = {
   palmOracle: 3,
   akashicDecoder: 3,
 } as const;
+
+/**
+ * Maps `healing_audio.required_tier` (admin-set) to the same numeric ranks as
+ * membership. Mirrors getMusicTrackAccessTierRankFromStoredValue exactly.
+ */
+export function getHealingAudioAccessTierRankFromStoredValue(v: string | undefined | null): number | null {
+  if (v == null || v === '') return null;
+  const n = v.toLowerCase();
+  if (n === 'free' || n === 'atma-seed' || n === 'atma_seed') return 0;
+  if (n === 'prana_flow' || n === 'prana-flow') return 1;
+  if (n === 'siddha_quantum' || n === 'siddha-quantum') return 2;
+  if (n === 'akashainfinity' || n === 'akasha_infinity' || n === 'akasha-infinity') return 3;
+  return null;
+}
+
+/**
+ * Required membership rank to stream a healing audio track.
+ * Uses admin `required_tier` when set; otherwise legacy: `is_free` boolean.
+ */
+export function getHealingAudioRequiredRank(track: {
+  is_free?: boolean;
+  required_tier?: string | null;
+}): number {
+  const stored = getHealingAudioAccessTierRankFromStoredValue(track.required_tier);
+  if (stored !== null) return stored;
+  return track.is_free ? 0 : 1;
+}
 
 /** Returns the correct sales page URL for a required tier rank */
 export function getSalesPageForRank(requiredRank: number): string {

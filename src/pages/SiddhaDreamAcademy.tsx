@@ -13,7 +13,7 @@ const TIER_META = {
   free:   { label:'FREE · SEEKER',         color: white(0.55), glow: white(0.08),   badge:'⬡', price: null },
   prana:  { label:'PRANA-FLOW',             color: '#4ADE80',   glow: 'rgba(74,222,128,0.25)', badge:'◈', price:'€19/mo' },
   siddha: { label:'SIDDHA-QUANTUM',         color: '#a78bfa',   glow: 'rgba(167,139,250,0.28)', badge:'⬟', price:'€45/mo' },
-  akasha: { label:'AKASHA-INFINITY',        color: '#D4AF37',   glow: 'rgba(212,175,55,0.35)', badge:'✦', price:'€1,111 lifetime' },
+  akasha: { label:'AKASHA-INFINITY',        color: '#D4AF37',   glow: 'rgba(212,175,55,0.35)', badge:'✦', price:'€2,997 lifetime' },
 };
 
 // Tier ordering maps to membership

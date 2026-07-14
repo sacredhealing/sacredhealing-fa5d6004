@@ -197,11 +197,6 @@ const HandAnalyzer = () => {
 
   const handleAnalysisOk = () => {
     setAnalysisResult(false);
-    setTransitioningToAkasha(true);
-    setTimeout(() => {
-      navigate('/akashic-records');
-      setTransitioningToAkasha(false);
-    }, 1500);
   };
 
   const handleScan = () => {

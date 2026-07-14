@@ -15,9 +15,9 @@ export const paymentLogic = {
     commission: 30,
   },
   AKASHA_INFINITY: {
-    price: 1111,
+    price: 2997,
     interval: 'one-time' as const,
-    stripePriceId: 'price_1T8o3kAPsnbrivP0m8bOzl3M',
+    stripePriceId: 'price_1TsTQbAPsnbrivP0X0Obb5YN',
     tierSlug: 'akasha-infinity',
     commission: 30,
   },

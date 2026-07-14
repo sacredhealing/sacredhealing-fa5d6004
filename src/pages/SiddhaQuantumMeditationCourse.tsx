@@ -339,7 +339,7 @@ const TIER_CONFIG = {
   free: { label: "FREE", color: "#8B7355", glow: "rgba(139,115,85,0.3)", badge: "Open Access" },
   "prana-flow": { label: "PRANA-FLOW", color: "#D4AF37", glow: "rgba(212,175,55,0.35)", badge: "€19 / month" },
   "siddha-quantum": { label: "SIDDHA-QUANTUM", color: "#22D3EE", glow: "rgba(34,211,238,0.35)", badge: "€45 / month" },
-  "akasha-infinity": { label: "AKASHA-INFINITY", color: "#D4AF37", glow: "rgba(212,175,55,0.5)", badge: "€1,111 Lifetime" },
+  "akasha-infinity": { label: "AKASHA-INFINITY", color: "#D4AF37", glow: "rgba(212,175,55,0.5)", badge: "€2,997 Lifetime" },
 };
 
 // User's current tier (would come from auth context in real app)

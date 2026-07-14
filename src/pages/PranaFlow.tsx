@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { toast } from 'sonner';
 import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/metaPixel';
 
 const PranaFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const PranaFlow: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       toast.success('◈ Prana Field Activated — Welcome to Sonic Vibration');
+      trackPurchase('prana-flow', 19, 'EUR');
       refreshMembership();
       navigate('/prana-flow', { replace: true });
     }
@@ -100,6 +102,7 @@ const PranaFlow: React.FC = () => {
           /* ignore */
         }
       }
+      trackInitiateCheckout('prana-flow', 19, 'EUR');
       await startPranaMonthlyCheckout({
         successPath: '/prana-flow',
         sourcePage: 'prana-flow',
@@ -112,26 +115,28 @@ const PranaFlow: React.FC = () => {
   };
 
   const faqItems: [string, string][] = [
-    ['What happens when I subscribe?', 'All five modules open instantly — Vedic Jyotish, Ayurvedic Scan, Vastu Guide, Healing Music Library, and Meditation & Mantra Library. There is no waiting period. You can navigate to any module from the dashboard the moment the payment is confirmed.'],
-    ['Does Prana–Flow include Nadi scanning?', 'No — the Digital Nadi Scanner and Siddha Portal Access are part of the Siddha-Quantum tier at 45€/month. Prana-Flow focuses on Vedic intelligence, sound healing, and Ayurveda. You can upgrade at any time.'],
+    ['What happens when I subscribe?', 'All five modules open instantly — Vedic Jyotish, Ayurvedic Scan, Vastu Guide, Healing Music Library, and Meditation & Mantra Library. Your 7-day free trial starts immediately and full access unlocks the moment checkout completes — no waiting, and nothing is charged until the trial ends.'],
+    ['Does Prana–Flow include Nadi scanning?', 'No — the Digital Nadi Scanner is part of the Siddha-Quantum tier at 45€/month. Prana-Flow focuses on Vedic intelligence, sound healing, and Ayurveda. The Siddha Portal (all 25 academies) is open at every tier, with deeper modules unlocking as you upgrade. You can upgrade at any time.'],
     ['Can I cancel anytime?', 'Yes, completely. Cancel directly from your profile — no emails, no forms, no waiting. Access continues until the end of your billing cycle, and you can reactivate with one tap anytime.'],
-    ['How personalised is the Jyotish Guru?', "The Guru reads your full natal chart — all 12 houses, planetary positions, Nakshatra placements, and current Dasha period — before it answers any question. It is not a generic horoscope. It understands the specific geometry of your soul's map."],
-    ['Is there a difference between Prana–Flow and Siddha–Quantum?', 'Prana-Flow is the Vedic intelligence and sound healing layer. Siddha-Quantum adds the bio-energetic scanning and protection tools — the Digital Nadi Scanner, Sri Yantra Universal Shield, all 6 Vedic Siddhis, and Siddha Portal Access. If you feel drawn to deeper energy work and bio-field clearing, Siddha-Quantum is the natural next step.'],
+    ['How personalised is the Jyotish Guru?', "The Guru reads your full natal chart — all 12 houses, planetary positions, Nakshatra placements, and current Dasha period — using the Bhrigu Nandi Nadi tradition before it answers any question. It is not a generic horoscope. It understands the specific geometry of your soul's map."],
+    ['Is there a limit on chat questions?', '15 questions per day, shared across the Jyotish Guru, Ayurveda Vaidya, and Vastu chat combined. Resets at midnight UTC. Siddha-Quantum members get 25/day. This keeps response quality high and pricing sustainable.'],
+    ['Is there a difference between Prana–Flow and Siddha–Quantum?', 'Prana-Flow is the Vedic intelligence and sound healing layer. Siddha-Quantum adds the bio-energetic scanning and protection tools — the Digital Nadi Scanner, Sri Yantra Universal Shield, all 6 Vedic Siddhis — plus deeper Siddha Portal access across all 25 academies (Prana-Flow already unlocks more than the free tier; Siddha-Quantum and Akasha-Infinity go further still). If you feel drawn to deeper energy work and bio-field clearing, Siddha-Quantum is the natural next step.'],
   ];
 
   const includesList = [
-    { title: 'Full Vedic Jyotish + Guru Chat', desc: 'Complete natal chart, daily planetary influences, Dasha timeline, Soul Blueprint, Yoga Activations, and a Jyotish Guru you can ask anything — available whenever you need guidance.', badge: 'Full Access' },
-    { title: 'Full Ayurvedic Scan + Chat', desc: 'Prakriti and Vikriti assessment, Dosha balance analysis, seasonal and daily protocols, personalised diet and lifestyle guidance, and a Vaidya for questions about your body.', badge: 'Full Access' },
+    { title: 'Full Vedic Jyotish + Guru Chat', desc: 'Complete natal chart, daily planetary influences, Dasha timeline, Soul Blueprint, Yoga Activations — and direct chat access to the Bhrigu Nandi Nadi intelligence, reading your chart the way Bhrigu Rishi\'s own tradition would. Not a generic horoscope app. 15 questions a day, shared across all your chats.', badge: 'Full Access' },
+    { title: 'Full Ayurvedic Scan + Chat', desc: 'Prakriti and Vikriti assessment, Dosha balance analysis, seasonal and daily protocols — and direct chat with your own Vaidya, answering in the voice of Agastya Muni himself, the father of Siddha medicine. Like having your own Ayurvedic physician on call.', badge: 'Full Access' },
     { title: 'Vastu Guide for Home', desc: 'The science of sacred space. Sacred Vastu analysis of your home — identify energy blockages, optimise room directions, harmonise your living field with cosmic forces.', badge: 'Full Access' },
-    { title: 'All Healing Music — Full Library', desc: 'Every sacred frequency in the library — Solfeggio tones, Raga healing sessions, Binaural Theta states, and planetary sound sequences composed for each dosha and moon phase.', badge: 'Full Library' },
+    { title: 'All Healing Music — Full Library', desc: 'Every sacred frequency in the library — Solfeggio tones, Raga healing sessions, Binaural Theta states, and planetary sound sequences composed for each dosha and moon phase. Including original beats, meditation music, and songs written and produced by Kritagya Das & Karaveera Nivasini Dasi themselves.', badge: 'Full Library' },
     { title: 'Divine Transmission Audios', desc: 'Sacred transmissions encoded with high-frequency healing intelligence — channelled sound sequences that activate dormant Nadi pathways and open the Anahata field.', badge: 'Full Access' },
     { title: 'Full Meditation & Mantra Library', desc: 'Guided meditations for every state — morning Sadhana, mid-day grounding, sleep Yoga Nidra. Plus the complete Mantra library with pronunciation guides and planetary correlations.', badge: 'Full Library' },
+    { title: 'Siddha Portal — 25 Academies, Deeper Access', desc: 'Mudra, Kriya Yoga, Sacred Geometry, Ojas Rasayana, Kayakalpa and more — every academy unlocks further than the free tier, module by module.', badge: 'Extended' },
   ];
 
   const modulesList = [
     { title: 'Jyotish Oracle', desc: 'Natal chart + Dasha timeline + daily planetary transits + Jyotish Guru that knows your chart. Ask anything — relationships, health, timing, career.' },
     { title: 'Ayurveda Portal', desc: 'Vata–Pitta–Kapha constitution scan, seasonal adjustment protocol, food and herb guidance, daily Dinacharya routine calibrated to your Prakriti.' },
-    { title: 'Sacred Sound Library', desc: '417Hz trauma release · 528Hz DNA repair · 639Hz heart opening · 741Hz intuition · 963Hz crown activation · Planetary Ragas for each day of the week · Moon phase ceremonies · Yoga Nidra for deep sleep · Morning Pranayama sequences. All in one living library, always expanding.', wide: true },
+    { title: 'Sacred Sound Library', desc: '417Hz trauma release · 528Hz DNA repair · 639Hz heart opening · 741Hz intuition · 963Hz crown activation · Planetary Ragas for each day of the week · Moon phase ceremonies · Yoga Nidra for deep sleep · Morning Pranayama sequences — plus original beats, meditation music, and songs from Kritagya Das & Karaveera Nivasini Dasi. All in one living library, always expanding.', wide: true },
     { title: 'Vastu Analysis', desc: "Our guide scans your home's energy map. Room-by-room guidance on colour, placement, and direction to align your space with Brahma Sthana and the five elements." },
     { title: 'Mantra Library', desc: '108 Beeja mantras, Gayatri variations, Planetary Stotras, Healing Kavachas — each with pronunciation audio, meaning, and the optimal time to chant.' },
   ];
@@ -151,18 +156,11 @@ const PranaFlow: React.FC = () => {
     ['Vastu Guide', '—', '◈', '◈'],
     ['Healing Music Library', '—', '◈', '◈'],
     ['Mantra Library', '—', '◈', '◈'],
+    ['Siddha Portal (25 Academies)', 'Entry modules', 'Extended', 'Advanced'],
     ['Digital Nadi Scanner', '—', '—', '◈'],
     ['Sri Yantra Shield · EMF', '—', '—', '◈'],
     ['Vedic Siddhis', '3 free', '3 free', '◈'],
     ['Price', 'Free', '19€/mo', '45€/mo'],
-  ];
-
-  const testimonials = [
-    { text: "The Guru knows my chart better than any human astrologer I've paid hundreds of euros to. I ask it about my week every Monday morning.", name: 'Mia K. · Helsinki' },
-    { text: "The Ayurveda scan told me something I had suspected for 10 years — I am a Vata-dominant constitution and I had been living as if I were Pitta. Three weeks of adjustments changed everything.", name: 'Lucas R. · Berlin' },
-    { text: "I fall asleep to the Yoga Nidra recordings every night. I haven't needed sleeping pills since I subscribed. That alone is worth 19€.", name: 'Ingrid H. · Oslo' },
-    { text: "The Vastu analysis told me my workspace was in the Rahu zone of my flat. I moved my desk — it sounds crazy but my concentration doubled.", name: 'Thomas W. · Amsterdam' },
-    { text: "19€ for a full Vedic astrology system, Ayurveda coach, Vastu guide AND a sound library? I was paying 120€/month between different apps for less.", name: 'Sofia M. · Stockholm' },
   ];
 
   const CSS = `
@@ -446,7 +444,7 @@ const PranaFlow: React.FC = () => {
                       <span className="pf-p-price">19€</span>
                       <span className="pf-p-mo">/ month</span>
                     </div>
-                    <div className="pf-p-tagline">Full access. Cancel anytime. No lock-in.</div>
+                    <div className="pf-p-tagline">7 days free, then 19€/mo. Cancel anytime, no lock-in.</div>
                     <ul className="pf-p-features">
                       <li>Full Vedic Jyotish Oracle</li><li>Guru Chat</li><li>Full Ayurvedic Scan</li><li>Vaidya Chat</li>
                       <li>Vastu Home Analysis</li><li>All Healing Music</li><li>Divine Transmission Audios</li><li>Full Mantra Library</li>
@@ -459,11 +457,11 @@ const PranaFlow: React.FC = () => {
                           Activating...
                         </span>
                       ) : (
-                        <>◈ Activate Prana–Flow · 19€/mo</>
+                        <>◈ Start Free — 7 Days, Then 19€/mo</>
                       )}
                     </button>
                     <button type="button" className="pf-cta-secondary" onClick={() => navigate('/siddha-quantum')}>Or upgrade to Siddha–Quantum · 45€/mo</button>
-                    <div className="pf-cta-note">◈ Cancel anytime · Full access from day one · Affiliate 30% on referrals</div>
+                    <div className="pf-cta-note">◈ Free for 7 days · Cancel anytime before trial ends to pay nothing · Full access from day one</div>
                   </>
                 )}
               </div>
@@ -491,19 +489,6 @@ const PranaFlow: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="pf-section-wrap" style={{ marginTop: 56 }}>
-          <div className="pf-section-label">◈ From the field</div>
-        </div>
-        <div className="pf-t-scroll">
-          {testimonials.map((t, i) => (
-            <div key={i} className="pf-t-card">
-              <div className="pf-t-stars">★★★★★</div>
-              <p className="pf-t-text">&ldquo;{t.text}&rdquo;</p>
-              <div className="pf-t-name">{t.name}</div>
-            </div>
-          ))}
         </div>
 
         <div className="pf-section-wrap">

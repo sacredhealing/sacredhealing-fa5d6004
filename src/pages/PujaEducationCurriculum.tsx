@@ -259,7 +259,7 @@ const TIERS = [
     label: "AKASHA-INFINITY",
     name: "Transmission",
     Sanskrit: "Ākāśa Saṃcāra",
-    price: "€1,111",
+    price: "€2,997",
     priceNote: "Lifetime — one payment",
     color: A,
     glow: `rgba(200,169,81,0.12)`,
@@ -983,7 +983,7 @@ export default function PujaEducationCurriculum() {
                 cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase" as const
               }}
             >
-              Akasha-Infinity — €1,111 Lifetime
+              Akasha-Infinity — €2,997 Lifetime
             </button>
           )}
         </div>

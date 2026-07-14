@@ -31,7 +31,7 @@ function isLocalIp(ip: string): boolean {
   return !ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.");
 }
 
-const RESET_REDIRECT = "https://sacredhealing.lovable.app/reset-password";
+const RESET_REDIRECT = "https://siddhaquantumnexus.com/reset-password";
 
 const templates: Record<string, { subject: string; greeting: string; cta: string; body: string; footer: string }> = {
   sv: {
@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
 `;
 
     const result = await resend.emails.send({
-      from: Deno.env.get("EMAIL_FROM") || "Adam & Laila · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>",
+      from: Deno.env.get("EMAIL_FROM") || "Kritagya Das & Karaveera Nivasini Dasi · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>",
       to: [email],
       subject: t.subject,
       html,

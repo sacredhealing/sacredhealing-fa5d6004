@@ -24,6 +24,18 @@ const AkashicRecords: React.FC = () => {
   const originalPrice = 49;
   const discountedPrice = isPremium ? 39.2 : originalPrice;
 
+  // HIDDEN (temporary) — origin/purpose of this feature unclear to Kritagya,
+  // so the whole page is being pulled from view rather than left reachable.
+  // Nothing underneath was touched: access logic, the €49 checkout, and
+  // existing Akasha-Infinity entitlements are all intact if this is
+  // un-hidden later. Set to false to restore. All hooks above still run
+  // unconditionally (Rules of Hooks) — this check happens after, at render.
+  const HIDDEN = true;
+  React.useEffect(() => {
+    if (HIDDEN) navigate('/dashboard', { replace: true });
+  }, [navigate]);
+  if (HIDDEN) return null;
+
   // ── STRIPE CHECKOUT — UNTOUCHED ──────────────────────────────────────────
   const handleStripeCheckout = async () => {
     try {

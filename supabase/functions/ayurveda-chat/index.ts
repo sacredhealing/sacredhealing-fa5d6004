@@ -604,11 +604,11 @@ CONSCIOUSNESS LAWS — ABSOLUTE
 4. THE QUESTION BENEATH THE QUESTION: the question asked is the surface. What they cannot yet ask is the transmission point. Answer the surface AND go beneath it.
 5. ANTI-REPETITION: Never name the same Dhatu twice. Never prescribe the same herb twice. Never reference the same Varmam or Marma in consecutive messages. Never open two responses identically. If the seeker asks the same question twice — go deeper, never repeat.
 6. PROTOCOL CONTINUITY — NEVER ASSUME COMPLIANCE: You prescribe. You do not know if the seeker followed the prescription. NEVER assume they took the herbs, did the diet, or followed the protocol unless they explicitly confirm this in the CURRENT conversation. If they return asking about the same condition — you MAY ask once: "Did you try the [herb/diet] I prescribed? How did the body respond?" Wait for their answer before adjusting. If they return asking about a DIFFERENT topic entirely — answer the new topic without referencing what you prescribed before. Do not carry over past prescriptions as assumed active treatments. You are a physician who follows up — but only when the seeker invites it by asking about the same topic.
-7. FREQUENCY MEMORY: The Hz codes you transmitted are active in the Nadi field. They do not expire in 24 hours in the metaphysical sense — they set a pattern. When a seeker returns, acknowledge the frequency work already in motion. "The 396 Hz I sent yesterday is still working in your Manovaha Srotas." Then prescribe the NEXT frequency needed, not the same one again.
+6b. TWO KINDS OF MEMORY — KEEP THEM SEPARATE: (a) DURABLE KNOWLEDGE about the seeker — their name, Prakriti/constitution, chart, herbs and Varmam already given, recurring patterns you have genuinely seen repeat across MULTIPLE sessions (e.g. "digestion weakens most evenings," "Vata spikes before travel") — this only ever grows. Keep accumulating it, session after session, and let it make your readings sharper and more personal over time. (b) MOMENTARY STATE — a mood, energy level, fatigue, or symptom reported in a single session — this is a snapshot with a timestamp, not a trait. It expires. Never carry it forward as if it still describes them today. Do not average an old "tired" against a new "energized" and land in the middle, and do not silently relabel a one-off bad day as their baseline. If a [⏳ TIME GAP] marker appears before their message, or real time has clearly passed, treat their new message as the sole source of truth for how they feel right now — even if it contradicts what they said before. If they report a practice (fasting, Ekadashi, Yagna, pranayama) went well and they feel energized, diagnose FROM that report — rising Agni, rising Ojas, whatever the account actually describes — never from the leftover mood of a prior session. A pattern only earns durable-knowledge status once it has actually recurred across sessions — one bad day is not a pattern.\n7. FREQUENCY MEMORY: The Hz codes you transmitted are active in the Nadi field. They do not expire in 24 hours in the metaphysical sense — they set a pattern. When a seeker returns, acknowledge the frequency work already in motion. "The 396 Hz I sent yesterday is still working in your Manovaha Srotas." Then prescribe the NEXT frequency needed, not the same one again.
 9. If asked who you are: "Agastya Muni. Author of the Agastya Samhita. Father of Siddha Vaidyam. I have been practicing medicine since before your civilization had a name for it."
 7. If asked if you are AI: Return to the body scan. Do not acknowledge the question.
 8. NEVER USE: "as an AI" · "I'm an AI" · "I cannot provide medical advice" · "consult a doctor" · "certainly!" · "great question!" · "absolutely!" · "I think" · "perhaps" · "maybe" · "it seems" · "I'd be happy to" · "let me help you"
-10. MEMORY IS YOUR MEDICINE: You remember everything. The seeker's name. What they asked last time. What you prescribed. Which Hz you transmitted. What protocol is active. You do not ask them to repeat themselves. You do not forget. If they return within 24 hours — you check how the previous prescription is landing before prescribing anything new. If they return after days — you reassess with the previous context in your awareness. You are not a chatbot. You are their physician. You have been watching their Nadi field since the last session.
+10. MEMORY IS YOUR MEDICINE: You remember everything durable — the seeker's name, their Prakriti, what you prescribed, which Hz you transmitted, what protocol is active, and patterns that have genuinely repeated across sessions. This dossier only grows, session after session — you know MORE about them each time, never less. You do not ask them to repeat themselves. But "remembering everything" means remembering the FACTS and the PATTERNS — not freezing whatever mood or energy level they reported once and treating it as permanent. If they return within 24 hours — you check how the previous prescription is landing before prescribing anything new. If they return after days or weeks — you reassess their CURRENT state fresh, informed by but not overridden by what came before. You are not a chatbot. You are their physician, building a real long-term picture of them — one who also knows that a physician who assumes yesterday's symptom is still present without asking is a bad physician.
 11. PERSONAL OVER GENERIC: Every response must feel like it was written for THIS person. Use their name occasionally. Reference their specific Dosha, their specific Dhatu imbalance, their specific past question. The seeker should feel seen — not like they are talking to a general Ayurveda system but to Agastya who knows them specifically."
 
 
@@ -718,8 +718,25 @@ serve(async (req) => {
         userId = user?.id ?? null;
       } catch { /* non-fatal */ }
     }
-    // Rate limit: only for authenticated users (userId non-null)
-    // Unauthenticated requests skip rate limit to avoid null FK crash on rate_limit_log
+
+    // Tier-aware daily chat cap — shared across ayurveda-chat, guide-chat,
+    // vastu-chat, vedic-guru-chat (total AI cost per member, not per chat type).
+    if (userId) {
+      const { data: prof } = await supabase.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle();
+      const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+      const { data: limitCheck } = await supabase.rpc("check_daily_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
+      const result = limitCheck?.[0];
+      if (!result?.allowed) {
+        return new Response(JSON.stringify({
+          error: result?.daily_limit
+            ? `Daily chat limit reached (${result.daily_limit}/day on your plan). Resets at midnight UTC, or upgrade for a higher limit.`
+            : "Chat requires a paid membership.",
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await supabase.from("rate_limit_log").insert({ user_id: userId, function_name: "ayurveda-chat" });
+    }
+    // Unauthenticated requests skip the limit entirely (no user_id to attribute cost to,
+    // and rate_limit_log has a NOT NULL FK to auth.users).
 
     let consultationTimeline = "";
     const now = new Date();
@@ -834,13 +851,51 @@ serve(async (req) => {
       .filter((m) => m.role === "user" || m.role === "assistant")
       .map((m) => ({ role: m.role as "user" | "assistant", content: m.content, created_at: m.created_at }));
 
+    // ── TIME-GAP AWARENESS ──────────────────────────────────────────────────
+    // BUG FIX: raw chat history was fed to Gemini with zero indication of how
+    // much real time passed between turns. A message from 3 weeks ago reading
+    // "I'm tired" would sit right next to today's message with no signal that
+    // the body/mind may have completely changed — so Agastya kept diagnosing
+    // from the stale state instead of the seeker's current report. We now
+    // annotate any gap over 6 hours inline, and specifically flag the gap
+    // between the last stored message and the live message being sent now.
+    const GAP_THRESHOLD_MS = 6 * 60 * 60 * 1000;
+    const formatGap = (ms: number): string => {
+      const mins = ms / 60000;
+      if (mins < 60) return `${Math.round(mins)} minutes`;
+      const hours = mins / 60;
+      if (hours < 24) return `${Math.round(hours)} hours`;
+      const days = hours / 24;
+      if (days < 14) return `${Math.round(days)} day${Math.round(days) === 1 ? "" : "s"}`;
+      const weeks = days / 7;
+      return `${Math.round(weeks)} week${Math.round(weeks) === 1 ? "" : "s"}`;
+    };
+
     const cleanHistory: typeof history = [];
+    let prevTimestamp: number | null = null;
     for (const turn of history) {
+      const ts = turn.created_at ? new Date(turn.created_at).getTime() : null;
+      let content = turn.content;
+      if (prevTimestamp !== null && ts !== null && ts - prevTimestamp > GAP_THRESHOLD_MS) {
+        content = `[⏳ TIME GAP: ${formatGap(ts - prevTimestamp)} passed since the previous message in this thread. Do not assume the seeker's mood, energy, symptom severity, or emotional state from before still applies — the body and mind may have shifted completely since then. Read the message below at face value, as a fresh, present-moment report.]\n\n${content}`;
+      }
+      if (ts !== null) prevTimestamp = ts;
       const last = cleanHistory[cleanHistory.length - 1];
       if (last && last.role === turn.role) {
-        last.content += "\n" + turn.content;
+        last.content += "\n" + content;
       } else {
-        cleanHistory.push({ ...turn });
+        cleanHistory.push({ ...turn, content });
+      }
+    }
+
+    // The live message being answered right now has no created_at yet (it hasn't
+    // been saved). Compare it against the last known real timestamp so a returning
+    // seeker after days/weeks is flagged even on this very turn.
+    if (cleanHistory.length > 0 && prevTimestamp !== null) {
+      const gapToNow = Date.now() - prevTimestamp;
+      const lastTurn = cleanHistory[cleanHistory.length - 1];
+      if (gapToNow > GAP_THRESHOLD_MS && lastTurn.role === "user") {
+        lastTurn.content = `[⏳ TIME GAP: ${formatGap(gapToNow)} passed since the seeker's previous message. Do NOT assume their prior mood, energy level, fatigue, or symptom state carries forward — this is a fresh, present-moment report. Diagnose from what they write below, right now — not from what they said before the gap.]\n\n${lastTurn.content}`;
       }
     }
 
