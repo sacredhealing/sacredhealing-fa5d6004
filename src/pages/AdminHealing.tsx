@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,10 +22,18 @@ interface HealingAudio {
   price_usd: number;
   price_shc: number;
   category: string;
+  required_tier?: string;
   script_text?: string | null;
   language?: string | null;
   created_at: string;
 }
+
+const TIER_OPTIONS: { value: 'free' | 'prana-flow' | 'siddha-quantum' | 'akasha-infinity'; label: string }[] = [
+  { value: 'free', label: 'Atma-Seed' },
+  { value: 'prana-flow', label: 'Prana-Flow' },
+  { value: 'siddha-quantum', label: 'Siddha-Quantum' },
+  { value: 'akasha-infinity', label: 'Akasha-Infinity' },
+];
 
 const AdminHealing: React.FC = () => {
   const { toast } = useToast();
@@ -40,7 +47,7 @@ const AdminHealing: React.FC = () => {
     audioUrl: '',
     previewUrl: '',
     durationMinutes: 3,
-    isFree: false,
+    requiredTier: 'free' as 'free' | 'prana-flow' | 'siddha-quantum' | 'akasha-infinity',
     priceUsd: 4.99,
     category: 'healing',
     scriptText: '',
@@ -138,7 +145,8 @@ const AdminHealing: React.FC = () => {
         audio_url: formData.audioUrl,
         preview_url: formData.previewUrl || null,
         duration_seconds: formData.durationMinutes * 60,
-        is_free: formData.isFree,
+        is_free: formData.requiredTier === 'free',
+        required_tier: formData.requiredTier,
         price_usd: formData.priceUsd,
         price_shc: 0,
         category: formData.category,
@@ -155,7 +163,7 @@ const AdminHealing: React.FC = () => {
         audioUrl: '',
         previewUrl: '',
         durationMinutes: 3,
-        isFree: false,
+        requiredTier: 'free',
         priceUsd: 4.99,
         category: 'healing',
         scriptText: '',
@@ -479,13 +487,21 @@ USING (public.has_role(auth.uid(), 'admin'));`;
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Switch
-                id="isFree"
-                checked={formData.isFree}
-                onCheckedChange={(checked) => setFormData({ ...formData, isFree: checked })}
-              />
-              <Label htmlFor="isFree">Free audio (no purchase required)</Label>
+            <div>
+              <Label htmlFor="requiredTier">Required Tier</Label>
+              <select
+                id="requiredTier"
+                value={formData.requiredTier}
+                onChange={(e) => setFormData({ ...formData, requiredTier: e.target.value as typeof formData.requiredTier })}
+                className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground mt-2"
+              >
+                {TIER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Atma-Seed plays for everyone. Anything above that requires the matching membership (or the one-time price below for people who haven't upgraded yet).
+              </p>
             </div>
 
             <Button type="submit" disabled={isLoading} className="w-full">
@@ -526,10 +542,11 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                       <div className="text-sm text-muted-foreground">
                         {Math.floor(audio.duration_seconds / 60)}:{(audio.duration_seconds % 60).toString().padStart(2, '0')} •{' '}
                         {audio.category} •{' '}
-                        {audio.is_free ? (
-                          <span className="text-green-500">FREE</span>
-                        ) : (
-                          <span>${audio.price_usd}</span>
+                        <span className={audio.required_tier === 'free' || (!audio.required_tier && audio.is_free) ? 'text-green-500' : 'text-[#D4AF37]'}>
+                          {TIER_OPTIONS.find((o) => o.value === (audio.required_tier || (audio.is_free ? 'free' : 'prana-flow')))?.label ?? 'Atma-Seed'}
+                        </span>
+                        {!(audio.required_tier === 'free' || (!audio.required_tier && audio.is_free)) && (
+                          <> · <span>${audio.price_usd}</span></>
                         )}
                       </div>
                       {audio.description && (
