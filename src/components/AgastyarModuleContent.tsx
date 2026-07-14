@@ -101,10 +101,10 @@ const DoshaChart: React.FC<{ section: ContentSection }> = ({ section }) => {
         <tbody>
           {section.rows?.map((row, i) => (
             <tr key={i} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
-              <td style={{ padding: '12px 20px', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>{row.label}</td>
-              <td style={{ padding: '12px 20px', fontSize: '12px', color: 'rgba(96,165,250,0.8)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>{row.vata}</td>
-              <td style={{ padding: '12px 20px', fontSize: '12px', color: 'rgba(248,113,113,0.8)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>{row.pitta}</td>
-              <td style={{ padding: '12px 20px', fontSize: '12px', color: 'rgba(74,222,128,0.8)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>{row.kapha}</td>
+              <td style={{ padding: '12px 20px', fontSize: '17px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.label}</td>
+              <td style={{ padding: '12px 20px', fontSize: '17px', color: 'rgba(96,165,250,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.vata}</td>
+              <td style={{ padding: '12px 20px', fontSize: '17px', color: 'rgba(248,113,113,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.pitta}</td>
+              <td style={{ padding: '12px 20px', fontSize: '17px', color: 'rgba(74,222,128,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.kapha}</td>
             </tr>
           ))}
         </tbody>
@@ -151,11 +151,12 @@ const TableSection: React.FC<{ section: ContentSection }> = ({ section }) => (
               {row.map((cell, j) => (
                 <td key={j} style={{
                   padding: '11px 16px',
-                  fontSize: '12px',
-                  color: j === 0 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.5)',
+                  fontSize: '17px',
+                  color: j === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.78)',
                   fontWeight: j === 0 ? 700 : 400,
                   borderBottom: '1px solid rgba(255,255,255,0.03)',
-                  lineHeight: 1.5,
+                  lineHeight: 1.6,
+                  fontFamily: "'Cormorant Garamond',serif",
                 }}>{cell}</td>
               ))}
             </tr>
@@ -202,7 +203,7 @@ const PracticeSection: React.FC<{ section: ContentSection }> = ({ section }) => 
       </div>
 
       {section.body && (
-        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '16px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.78)', marginBottom: '16px', lineHeight: 1.75, fontFamily: "'Cormorant Garamond',serif" }}>
           {section.body}
         </p>
       )}
@@ -235,7 +236,7 @@ const PracticeSection: React.FC<{ section: ContentSection }> = ({ section }) => 
               }}>
                 {step.step}
               </div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
+              <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.75, fontFamily: "'Cormorant Garamond',serif" }}>
                 {step.instruction}
               </div>
             </div>
@@ -335,7 +336,7 @@ const HerbSection: React.FC<{ section: ContentSection }> = ({ section }) => {
             }}>
               {key}
             </div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
+            <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, fontFamily: "'Cormorant Garamond',serif" }}>
               {val}
             </div>
           </div>
@@ -415,7 +416,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
                 {revealed && isSelected && !isCorrect && <XCircle size={13} color="#F87171" />}
                 {!revealed && isSelected && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D4AF37' }} />}
               </div>
-              <span style={{ fontSize: '13px', color: textColor, fontWeight: isSelected ? 700 : 400 }}>
+              <span style={{ fontSize: '18px', color: textColor, fontWeight: isSelected ? 700 : 500, fontFamily: "'Cormorant Garamond',serif" }}>
                 {opt}
               </span>
             </div>
@@ -441,7 +442,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
         </button>
       ) : (
         <div style={{
-          fontSize: '13px', color: selected === section.quizAnswer ? '#4ADE80' : '#F87171',
+          fontSize: '18px', fontFamily: "'Cormorant Garamond',serif", color: selected === section.quizAnswer ? '#4ADE80' : '#F87171',
           fontWeight: 700,
         }}>
           {selected === section.quizAnswer ? t('academy.moduleContent.quizCorrect') : t('academy.moduleContent.quizIncorrect')}
@@ -505,8 +506,8 @@ const WarningSection: React.FC<{ section: ContentSection }> = ({ section }) => (
   }}>
     <AlertTriangle size={18} color="#FCD34D" style={{ flexShrink: 0, marginTop: '2px' }} />
     <div>
-      {section.title && <div style={{ fontSize: '12px', fontWeight: 800, color: '#FCD34D', marginBottom: '6px' }}>{section.title}</div>}
-      {section.body && <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>{section.body}</div>}
+      {section.title && <div style={{ fontSize: '17px', fontWeight: 800, color: '#FCD34D', marginBottom: '6px' }}>{section.title}</div>}
+      {section.body && <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.75, fontFamily: "'Cormorant Garamond',serif" }}>{section.body}</div>}
     </div>
   </div>
 );
@@ -598,7 +599,7 @@ const KeyTakeaways: React.FC<{ items: string[] }> = ({ items }) => {
           borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
         }}>
           <CheckCircle size={14} color="#D4AF37" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>{item}</span>
+          <span style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, fontFamily: "'Cormorant Garamond',serif" }}>{item}</span>
         </li>
       ))}
     </ul>
@@ -626,46 +627,172 @@ const DailyPractice: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-// ─── MAIN RENDERER ────────────────────────────────────────────
+// ─── STEP LABELS (fallback when a section has no explicit title) ──
+const TYPE_LABEL: Record<ContentSection['type'], string> = {
+  intro: 'Wisdom',
+  teaching: 'Teaching',
+  'dosha-chart': 'Dosha Comparison',
+  table: 'Comparison',
+  practice: 'Practice',
+  ritual: 'Practice',
+  mantra: 'Mantra',
+  herb: 'Herb Profile',
+  quiz: 'Knowledge Check',
+  secret: 'Hidden Wisdom',
+  warning: 'Caution',
+};
+
+// ─── MAIN RENDERER — paginated, one section per screen ─────────
 const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }) => {
+  const { t } = useTranslation();
   let quizCount = 0;
 
+  type Step = { id: string; label: string; render: () => React.ReactNode };
+  const steps: Step[] = [];
+
+  steps.push({ id: 'opening', label: 'Agastyar Speaks', render: () => <IntroSection text={content.agastyarOpening} /> });
+
+  content.sections.forEach((section, i) => {
+    const label = section.title || TYPE_LABEL[section.type] || 'Teaching';
+    let node: React.ReactNode;
+    switch (section.type) {
+      case 'teaching':
+      case 'intro':
+        node = <TeachingSection section={section} />; break;
+      case 'dosha-chart':
+        node = <DoshaChart section={section} />; break;
+      case 'table':
+        node = <TableSection section={section} />; break;
+      case 'practice':
+      case 'ritual':
+        node = <PracticeSection section={section} />; break;
+      case 'mantra':
+        node = <MantraSection section={section} />; break;
+      case 'herb':
+        node = <HerbSection section={section} />; break;
+      case 'quiz': {
+        const qIdx = quizCount++;
+        node = <QuizSection section={section} index={qIdx} />; break;
+      }
+      case 'secret':
+        node = <SecretSection section={section} />; break;
+      case 'warning':
+        node = <WarningSection section={section} />; break;
+      default:
+        node = <TeachingSection section={section} />;
+    }
+    steps.push({ id: `s${i}`, label, render: () => node });
+  });
+
+  steps.push({ id: 'closing', label: 'Closing Wisdom', render: () => <ClosingSection text={content.agastyarClosing} /> });
+  steps.push({ id: 'takeaways', label: 'Key Takeaways', render: () => <KeyTakeaways items={content.keyTakeaways} /> });
+  steps.push({ id: 'practice-today', label: "Today's Practice", render: () => <DailyPractice text={content.dailyPractice} /> });
+
+  const [active, setActive] = React.useState(0);
+  const current = steps[Math.min(active, steps.length - 1)];
+
   return (
-    <div>
-      <IntroSection text={content.agastyarOpening} />
+    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+      {/* Desktop rail — sub-navigation within this lesson */}
+      <div
+        className="module-subnav-desktop"
+        style={{
+          flex: '0 0 210px', position: 'sticky', top: 90, display: 'none',
+          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 18, padding: '10px 8px', maxHeight: 'calc(100vh - 130px)', overflowY: 'auto',
+        }}
+      >
+        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', padding: '4px 10px 8px' }}>
+          {'In This Lesson'}
+        </div>
+        {steps.map((s, i) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => setActive(i)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+              padding: '8px 10px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: i === active ? 'rgba(52,211,153,0.09)' : 'transparent',
+            }}
+          >
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+              background: i === active ? '#34D399' : i < active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)',
+            }} />
+            <span style={{
+              fontSize: 12.5, lineHeight: 1.35, color: i === active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)',
+              fontWeight: i === active ? 700 : 500,
+            }}>
+              {s.label}
+            </span>
+          </button>
+        ))}
+      </div>
 
-      {content.sections.map((section, i) => {
-        switch (section.type) {
-          case 'teaching':
-          case 'intro':
-            return <TeachingSection key={i} section={section} />;
-          case 'dosha-chart':
-            return <DoshaChart key={i} section={section} />;
-          case 'table':
-            return <TableSection key={i} section={section} />;
-          case 'practice':
-          case 'ritual':
-            return <PracticeSection key={i} section={section} />;
-          case 'mantra':
-            return <MantraSection key={i} section={section} />;
-          case 'herb':
-            return <HerbSection key={i} section={section} />;
-          case 'quiz': {
-            const qIdx = quizCount++;
-            return <QuizSection key={i} section={section} index={qIdx} />;
-          }
-          case 'secret':
-            return <SecretSection key={i} section={section} />;
-          case 'warning':
-            return <WarningSection key={i} section={section} />;
-          default:
-            return <TeachingSection key={i} section={section} />;
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Mobile sub-nav — compact pill row, horizontally scrollable */}
+        <div className="module-subnav-mobile" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 18 }}>
+          {steps.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setActive(i)}
+              style={{
+                flex: '0 0 auto', whiteSpace: 'nowrap', padding: '7px 14px', borderRadius: 999,
+                fontSize: 10.5, fontWeight: 700, cursor: 'pointer',
+                border: `1px solid ${i === active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                background: i === active ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.03)',
+                color: i === active ? '#34D399' : 'rgba(255,255,255,0.55)',
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
+          {active + 1} / {steps.length}
+        </div>
+
+        {current.render()}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+          <button
+            type="button"
+            disabled={active === 0}
+            onClick={() => setActive((a) => Math.max(0, a - 1))}
+            style={{
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)',
+              padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: active === 0 ? 'default' : 'pointer',
+              opacity: active === 0 ? 0.35 : 1,
+            }}
+          >
+            ← {'Previous'}
+          </button>
+          <button
+            type="button"
+            disabled={active === steps.length - 1}
+            onClick={() => setActive((a) => Math.min(steps.length - 1, a + 1))}
+            style={{
+              background: active === steps.length - 1 ? 'transparent' : 'rgba(52,211,153,0.14)',
+              border: `1px solid ${active === steps.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(52,211,153,0.4)'}`,
+              color: active === steps.length - 1 ? 'rgba(255,255,255,0.3)' : '#34D399',
+              padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+              cursor: active === steps.length - 1 ? 'default' : 'pointer',
+            }}
+          >
+            {'Next'} →
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @media (min-width: 860px) {
+          .module-subnav-desktop { display: block !important; }
+          .module-subnav-mobile { display: none !important; }
         }
-      })}
-
-      <ClosingSection text={content.agastyarClosing} />
-      <KeyTakeaways items={content.keyTakeaways} />
-      <DailyPractice text={content.dailyPractice} />
+      `}</style>
     </div>
   );
 };
