@@ -3570,22 +3570,7 @@ export type Database = {
           vata_score?: number
           vikriti?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "dosha_assessments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "dosha_assessments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       email_logs: {
         Row: {
@@ -4288,22 +4273,7 @@ export type Database = {
           response?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "jyotish_oracle_queries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jyotish_oracle_queries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       jyotish_profiles: {
         Row: {
@@ -4410,20 +4380,6 @@ export type Database = {
             referencedRelation: "jyotish_modules"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "jyotish_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jyotish_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       jyotish_queries: {
@@ -4460,20 +4416,6 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "jyotish_modules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jyotish_queries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jyotish_queries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -8892,20 +8834,6 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "ayurveda_courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_course_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_course_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
