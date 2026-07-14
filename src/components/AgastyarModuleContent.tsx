@@ -840,7 +840,7 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
           .lesson-content-desktop { display: block; }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
