@@ -42,6 +42,29 @@ import { teal, fade } from '@/components/education/tokens';
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Supabase/Postgrest errors are plain objects ({message, details, hint, code}),
+ * not real Error instances, so `err instanceof Error` misses them entirely and
+ * `String(err)` collapses to the useless "[object Object]". Pull the real
+ * fields out however the error is shaped.
+ */
+function describeError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>;
+    const parts = [e.message, e.code, e.details, e.hint].filter(
+      (v): v is string => typeof v === 'string' && v.length > 0,
+    );
+    if (parts.length) return parts.join(' — ');
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'unknown error';
+    }
+  }
+  return String(err);
+}
+
 function isYoutubeUrl(url: string): boolean {
   return /youtube\.com\/watch|youtu\.be\//i.test(url);
 }
@@ -234,7 +257,7 @@ const AgastyarModule: React.FC = () => {
           await upsertProgress({ moduleId: module.id, notes: notesDraft });
           setNotesSaved(true);
         } catch (err) {
-          const detail = err instanceof Error ? err.message : String(err);
+          const detail = describeError(err);
           toast.error(`${t('academy.modulePlayer.toastNotesError')} (${detail})`);
         } finally {
           setSavingNotes(false);
@@ -429,7 +452,7 @@ const AgastyarModule: React.FC = () => {
               setNotesSaved(true);
               toast.success('Notes saved');
             } catch (err) {
-              const detail = err instanceof Error ? err.message : String(err);
+              const detail = describeError(err);
               toast.error(`${t('academy.modulePlayer.toastNotesError')} (${detail})`);
             } finally {
               setSavingNotes(false);
