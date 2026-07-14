@@ -207,7 +207,7 @@ const PracticeSection: React.FC<{ section: ContentSection }> = ({ section }) => 
       </div>
 
       {section.body && (
-        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.78)', marginBottom: '16px', lineHeight: 1.75, fontFamily: "'Cormorant Garamond',serif" }}>
+        <p style={{ fontSize: '22px', color: 'rgba(255,250,240,0.86)', marginBottom: '16px', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
           {section.body}
         </p>
       )}
@@ -240,7 +240,7 @@ const PracticeSection: React.FC<{ section: ContentSection }> = ({ section }) => 
               }}>
                 {step.step}
               </div>
-              <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.75, fontFamily: "'Cormorant Garamond',serif" }}>
+              <div style={{ fontSize: '22px', color: 'rgba(255,250,240,0.86)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
                 {step.instruction}
               </div>
             </div>
@@ -292,7 +292,7 @@ const MantraSection: React.FC<{ section: ContentSection }> = ({ section }) => (
       )}
       {section.mantraMeaning && (
         <div style={{
-          fontSize: '17px', color: 'rgba(255,255,255,0.75)',
+          fontSize: '22px', color: 'rgba(255,250,240,0.86)',
           lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
           borderTop: '1px solid rgba(167,139,250,0.15)',
           paddingTop: '16px', marginTop: '4px',
@@ -340,7 +340,7 @@ const HerbSection: React.FC<{ section: ContentSection }> = ({ section }) => {
             }}>
               {key}
             </div>
-            <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, fontFamily: "'Cormorant Garamond',serif" }}>
+            <div style={{ fontSize: '22px', color: 'rgba(255,250,240,0.86)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
               {val}
             </div>
           </div>
@@ -420,7 +420,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
                 {revealed && isSelected && !isCorrect && <XCircle size={13} color="#F87171" />}
                 {!revealed && isSelected && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D4AF37' }} />}
               </div>
-              <span style={{ fontSize: '18px', color: textColor, fontWeight: isSelected ? 600 : 400, fontFamily: "'Cormorant Garamond',serif" }}>
+              <span style={{ fontSize: '22px', color: textColor, fontWeight: isSelected ? 600 : 400, fontFamily: "'Cormorant Garamond',serif" }}>
                 {opt}
               </span>
             </div>
@@ -446,7 +446,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
         </button>
       ) : (
         <div style={{
-          fontSize: '18px', fontFamily: "'Cormorant Garamond',serif", color: selected === section.quizAnswer ? '#4ADE80' : '#F87171',
+          fontSize: '22px', fontFamily: "'Cormorant Garamond',serif", color: selected === section.quizAnswer ? '#4ADE80' : '#F87171',
           fontWeight: 700,
         }}>
           {selected === section.quizAnswer ? t('academy.moduleContent.quizCorrect') : t('academy.moduleContent.quizIncorrect')}
@@ -512,7 +512,7 @@ const WarningSection: React.FC<{ section: ContentSection }> = ({ section }) => (
     <AlertTriangle size={18} color="#FCD34D" style={{ flexShrink: 0, marginTop: '2px' }} />
     <div>
       {section.title && <div style={{ fontSize: '17px', fontWeight: 800, color: '#FCD34D', marginBottom: '6px' }}>{section.title}</div>}
-      {section.body && <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.75, fontFamily: "'Cormorant Garamond',serif" }}>{section.body}</div>}
+      {section.body && <div style={{ fontSize: '22px', color: 'rgba(255,250,240,0.86)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>{section.body}</div>}
     </div>
   </div>
 );
@@ -540,7 +540,7 @@ const IntroSection: React.FC<{ text: string }> = ({ text }) => {
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '14px' }}>
         {t('academy.moduleContent.introSpeaks')}
       </div>
-      <p style={{ fontSize: '19px', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.85, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>
+      <p style={{ fontSize: '22px', fontWeight: 600, color: 'rgba(255,250,240,0.86)', lineHeight: 1.85, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>
         "{text}"
       </p>
     </div>
@@ -604,7 +604,7 @@ const KeyTakeaways: React.FC<{ items: string[] }> = ({ items }) => {
           borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
         }}>
           <CheckCircle size={14} color="#D4AF37" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <span style={{ fontSize: '18px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, fontFamily: "'Cormorant Garamond',serif" }}>{item}</span>
+          <span style={{ fontSize: '22px', color: 'rgba(255,250,240,0.86)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>{item}</span>
         </li>
       ))}
     </ul>
