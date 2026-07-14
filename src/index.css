@@ -1095,3 +1095,19 @@ html, body, #root {
   animation: hShimmer 4s linear infinite;
   will-change: background-position;
 }
+
+/* Same live shimmer, but for any academy's accent color (set via --shimmer-1/2/3
+   inline custom properties) instead of hardcoded gold — used across the education
+   system so every academy's headers feel alive, not just the master-speaks banner. */
+.sqi-accent-shimmer {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--shimmer-1, #34D399) 0%, var(--shimmer-2, #A7F3D0) 40%, var(--shimmer-1, #34D399) 60%, var(--shimmer-3, #059669) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  -webkit-animation: hShimmer 4s linear infinite;
+  animation: hShimmer 4s linear infinite;
+  will-change: background-position;
+}

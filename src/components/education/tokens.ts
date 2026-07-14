@@ -57,7 +57,7 @@ export const READER_TYPE = {
   },
   title: {
     fontFamily: "'Cormorant Garamond',serif",
-    fontWeight: 700,
+    fontWeight: 600,          // 700 isn't a loaded weight for this font -- causes browser fake-bold, which reads harsh
     fontSize: '2rem',
     lineHeight: 1.15,
   },
@@ -73,10 +73,10 @@ export const READER_TYPE = {
   body: {
     fontFamily: "'Cormorant Garamond',serif",
     fontSize: '1.4rem',      // ~22px -- sized for someone reading at arm's length, not a design sample
-    fontWeight: 500,
+    fontWeight: 400,          // 500 isn't loaded either -- same fake-bold issue
     lineHeight: 1.75,        // above WCAG's 1.5 minimum
     maxWidth: '58ch',        // slightly tighter measure at this larger size
-    color: white(0.92),      // high contrast, not a "quiet" gray
+    color: 'rgba(255,250,240,0.86)', // warm ivory, not stark pure-white -- reads calmer
   },
   blockLabel: {
     fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",

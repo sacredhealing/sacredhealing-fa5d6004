@@ -37,17 +37,21 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
     marginBottom: '20px',
   }}>
     {section.title && (
-      <h3 style={{
-        fontSize: '15px', fontWeight: 900, color: 'rgba(52,211,153,0.92)',
-        marginBottom: '16px', letterSpacing: '-0.02em',
-        borderBottom: '1px solid rgba(212,175,55,0.15)',
-        paddingBottom: '12px',
-      }}>
+      <h3
+        className="sqi-accent-shimmer"
+        style={{
+          fontSize: '15px', fontWeight: 900,
+          ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)',
+          marginBottom: '16px', letterSpacing: '-0.02em',
+          borderBottom: '1px solid rgba(212,175,55,0.15)',
+          paddingBottom: '12px',
+        } as React.CSSProperties}
+      >
         {section.title}
       </h3>
     )}
     {section.body && (
-      <div style={{ fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, marginBottom: section.items ? '16px' : 0, fontFamily: "'Cormorant Garamond',serif" }}>
+      <div style={{ fontSize: '22px', color: 'rgba(255,250,240,0.88)', lineHeight: 1.8, marginBottom: section.items ? '16px' : 0, fontFamily: "'Cormorant Garamond',serif" }}>
         {section.body.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginBottom: '12px' }}>
             <RichText text={para} />
@@ -61,7 +65,7 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
           <li key={i} style={{
             padding: '10px 0',
             borderBottom: i < (section.items?.length ?? 0) - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-            fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
+            fontSize: '22px', color: 'rgba(255,250,240,0.88)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
             display: 'flex', gap: '10px', alignItems: 'flex-start',
           }}>
             <span style={{ color: '#D4AF37', flexShrink: 0, marginTop: '3px' }}>⟡</span>
@@ -86,7 +90,7 @@ const DoshaChart: React.FC<{ section: ContentSection }> = ({ section }) => {
     marginBottom: '20px',
   }}>
     <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      <h3 style={{ fontSize: '14px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', margin: 0 }}>{section.title}</h3>
+      <h3 className="sqi-accent-shimmer" style={{ fontSize: '14px', fontWeight: 900, margin: 0, ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)' } as React.CSSProperties}>{section.title}</h3>
     </div>
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -101,7 +105,7 @@ const DoshaChart: React.FC<{ section: ContentSection }> = ({ section }) => {
         <tbody>
           {section.rows?.map((row, i) => (
             <tr key={i} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
-              <td style={{ padding: '12px 20px', fontSize: '17px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.label}</td>
+              <td style={{ padding: '12px 20px', fontSize: '17px', fontWeight: 600, color: 'rgba(255,250,240,0.86)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.label}</td>
               <td style={{ padding: '12px 20px', fontSize: '17px', color: 'rgba(96,165,250,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.vata}</td>
               <td style={{ padding: '12px 20px', fontSize: '17px', color: 'rgba(248,113,113,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.pitta}</td>
               <td style={{ padding: '12px 20px', fontSize: '17px', color: 'rgba(74,222,128,0.9)', borderBottom: '1px solid rgba(255,255,255,0.03)', fontFamily: "'Cormorant Garamond',serif" }}>{row.kapha}</td>
@@ -126,7 +130,7 @@ const TableSection: React.FC<{ section: ContentSection }> = ({ section }) => (
   }}>
     {section.title && (
       <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', margin: 0 }}>{section.title}</h3>
+        <h3 className="sqi-accent-shimmer" style={{ fontSize: '14px', fontWeight: 900, margin: 0, ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)' } as React.CSSProperties}>{section.title}</h3>
       </div>
     )}
     <div style={{ overflowX: 'auto' }}>
@@ -198,7 +202,7 @@ const PracticeSection: React.FC<{ section: ContentSection }> = ({ section }) => 
           <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.4em', color: '#D4AF37', textTransform: 'uppercase' }}>
             {t('academy.moduleContent.livingPractice')}
           </div>
-          {section.title && <div style={{ fontSize: '14px', fontWeight: 900, color: 'rgba(52,211,153,0.92)' }}>{section.title}</div>}
+          {section.title && <div className="sqi-accent-shimmer" style={{ fontSize: '14px', fontWeight: 900, ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)' } as React.CSSProperties}>{section.title}</div>}
         </div>
       </div>
 
@@ -318,7 +322,7 @@ const HerbSection: React.FC<{ section: ContentSection }> = ({ section }) => {
         {t('academy.moduleContent.herbMonograph')}
       </div>
     </div>
-    <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', marginBottom: '16px' }}>
+    <h3 className="sqi-accent-shimmer" style={{ fontSize: '18px', fontWeight: 900, marginBottom: '16px', ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)' } as React.CSSProperties}>
       {section.herbName}
     </h3>
     {section.herbProps && (
@@ -374,7 +378,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.4em', color: '#D4AF37', textTransform: 'uppercase', marginBottom: '12px' }}>
         {t('academy.moduleContent.knowledgeCheck', { n: index + 1 })}
       </div>
-      <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(52,211,153,0.92)', marginBottom: '16px', lineHeight: 1.5 }}>
+      <div className="sqi-accent-shimmer" style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.5, ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)' } as React.CSSProperties}>
         {section.quizQuestion}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
@@ -416,7 +420,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
                 {revealed && isSelected && !isCorrect && <XCircle size={13} color="#F87171" />}
                 {!revealed && isSelected && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D4AF37' }} />}
               </div>
-              <span style={{ fontSize: '18px', color: textColor, fontWeight: isSelected ? 700 : 500, fontFamily: "'Cormorant Garamond',serif" }}>
+              <span style={{ fontSize: '18px', color: textColor, fontWeight: isSelected ? 600 : 400, fontFamily: "'Cormorant Garamond',serif" }}>
                 {opt}
               </span>
             </div>
@@ -479,12 +483,13 @@ const SecretSection: React.FC<{ section: ContentSection }> = ({ section }) => {
       </div>
     </div>
     {section.title && (
-      <h3 style={{ fontSize: '15px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', marginBottom: '14px' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: 900,
+        ['--shimmer-1' as string]: 'rgba(52,211,153,1)', ['--shimmer-2' as string]: 'rgba(52,211,153,0.5)', ['--shimmer-3' as string]: 'rgba(16,185,129,0.85)', marginBottom: '14px' }}>
         {section.title.replace('⟡ ', '')}
       </h3>
     )}
     {section.body && (
-      <div style={{ fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
+      <div style={{ fontSize: '22px', color: 'rgba(255,250,240,0.88)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
         {section.body.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginBottom: '12px' }}>
             <RichText text={para} />
@@ -565,7 +570,7 @@ const ClosingSection: React.FC<{ text: string }> = ({ text }) => {
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '14px' }}>
         {t('academy.moduleContent.closingTransmission')}
       </div>
-      <p style={{ fontSize: '22px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', lineHeight: 1.85, maxWidth: '600px', margin: '0 auto', fontFamily: "'Cormorant Garamond',serif" }}>
+      <p style={{ fontSize: '22px', fontWeight: 600, color: 'rgba(255,250,240,0.86)', lineHeight: 1.85, maxWidth: '600px', margin: '0 auto', fontFamily: "'Cormorant Garamond',serif" }}>
         "{text}"
       </p>
     </div>
@@ -622,7 +627,7 @@ const DailyPractice: React.FC<{ text: string }> = ({ text }) => {
     <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '12px' }}>
       {t('academy.moduleContent.dailyPracticeHeading')}
     </div>
-    <p style={{ fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>{text}</p>
+    <p style={{ fontSize: '22px', color: 'rgba(255,250,240,0.88)', lineHeight: 1.8, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>{text}</p>
   </div>
   );
 };

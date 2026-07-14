@@ -241,7 +241,17 @@ export default function ModuleReaderShell({
             <div style={{ ...READER_TYPE.label, color: fade(accent, 0.65), marginBottom: 6 }}>
               {academyName} · Module {moduleNumber} of {totalModules}
             </div>
-            <h1 style={{ ...READER_TYPE.title, color: fade(accent, 0.92), textShadow: `0 0 20px ${acGlow}`, margin: '0 0 10px' }}>
+            <h1
+              className="sqi-accent-shimmer"
+              style={{
+                ...READER_TYPE.title,
+                textShadow: `0 0 20px ${acGlow}`,
+                margin: '0 0 10px',
+                ['--shimmer-1' as string]: fade(accent, 1),
+                ['--shimmer-2' as string]: fade(accent, 0.5),
+                ['--shimmer-3' as string]: fade(accent, 0.8),
+              } as React.CSSProperties}
+            >
               {moduleTitle}
             </h1>
             {thesis && <p style={{ ...READER_TYPE.thesis, margin: '0 0 14px' }}>{thesis}</p>}
