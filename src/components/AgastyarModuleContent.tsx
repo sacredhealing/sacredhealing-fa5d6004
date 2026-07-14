@@ -715,7 +715,10 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
           <button
             key={s.id}
             type="button"
-            onClick={() => setActive(i)}
+            onClick={() => {
+              setActive(i);
+              document.getElementById(`lesson-anchor-${s.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
               padding: '8px 10px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -779,35 +782,49 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
           )}
         </div>
 
-        {current.render()}
+        {/* MOBILE / TABLET: one section at a time -- this is what fixed the scroll-fatigue problem there, unchanged */}
+        <div className="lesson-content-mobile">
+          {current.render()}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-          <button
-            type="button"
-            disabled={active === 0}
-            onClick={() => setActive((a) => Math.max(0, a - 1))}
-            style={{
-              background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)',
-              padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: active === 0 ? 'default' : 'pointer',
-              opacity: active === 0 ? 0.35 : 1,
-            }}
-          >
-            ← {'Previous Section'}
-          </button>
-          <button
-            type="button"
-            disabled={active === steps.length - 1}
-            onClick={() => setActive((a) => Math.min(steps.length - 1, a + 1))}
-            style={{
-              background: active === steps.length - 1 ? 'transparent' : 'rgba(52,211,153,0.14)',
-              border: `1px solid ${active === steps.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(52,211,153,0.4)'}`,
-              color: active === steps.length - 1 ? 'rgba(255,255,255,0.3)' : '#34D399',
-              padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-              cursor: active === steps.length - 1 ? 'default' : 'pointer',
-            }}
-          >
-            {'Next Section'} →
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+            <button
+              type="button"
+              disabled={active === 0}
+              onClick={() => setActive((a) => Math.max(0, a - 1))}
+              style={{
+                background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)',
+                padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: active === 0 ? 'default' : 'pointer',
+                opacity: active === 0 ? 0.35 : 1,
+              }}
+            >
+              ← {'Previous Section'}
+            </button>
+            <button
+              type="button"
+              disabled={active === steps.length - 1}
+              onClick={() => setActive((a) => Math.min(steps.length - 1, a + 1))}
+              style={{
+                background: active === steps.length - 1 ? 'transparent' : 'rgba(52,211,153,0.14)',
+                border: `1px solid ${active === steps.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(52,211,153,0.4)'}`,
+                color: active === steps.length - 1 ? 'rgba(255,255,255,0.3)' : '#34D399',
+                padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                cursor: active === steps.length - 1 ? 'default' : 'pointer',
+              }}
+            >
+              {'Next Section'} →
+            </button>
+          </div>
+        </div>
+
+        {/* DESKTOP (1024px+): the whole lesson flows continuously, "In This Lesson" is a jump-to menu, not a gate */}
+        <div className="lesson-content-desktop">
+          {steps.map((s, i) => (
+            <div key={s.id} id={`lesson-anchor-${s.id}`} style={{ marginBottom: 44, scrollMarginTop: 90 }}>
+              {i > 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 44 }} />}
+              {s.render()}
+            </div>
+          ))}
+        </div>
         </div>
       </div>
 
@@ -815,6 +832,11 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
         @media (min-width: 860px) {
           .module-subnav-desktop { display: block !important; }
           .module-subnav-mobile { display: none !important; }
+        }
+        .lesson-content-desktop { display: none; }
+        @media (min-width: 1024px) {
+          .lesson-content-mobile { display: none; }
+          .lesson-content-desktop { display: block; }
         }
       `}</style>
     </div>
