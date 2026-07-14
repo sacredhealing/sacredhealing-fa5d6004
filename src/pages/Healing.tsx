@@ -213,6 +213,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat3: 'Akashic Gateway',
     medCat3Desc: 'High-frequency transmissions for spiritual awakening.',
     medEncoded: 'Encoded with Atma Kriya frequencies and Siddha Mantras',
+    medIntro: 'Short frequency tracks you can play right now — grounding tones, heart-opening sequences, and high-frequency transmissions. A few are free to start; the full library unlocks with Prana-Flow.',
+    medFreeLabel: 'Free',
+    medPremiumLabel: 'Premium',
     testimTitle: 'Miracle Logs',
     testimSub: 'Everyone experiences it differently.',
     testimMicro: 'Transmission Testimonials · Verified Field Reports',
@@ -281,6 +284,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat3: 'Akashisk Portal',
     medCat3Desc: 'Högfrekventa transmissioner för andligt uppvaknande.',
     medEncoded: 'Kodad med Atma Kriya-frekvenser och Siddha-Mantran',
+    medIntro: 'Korta frekvensspår du kan spela direkt — jordande toner, hjärtöppnande sekvenser och högfrekventa transmissioner. Några är gratis, hela biblioteket låses upp med Prana-Flow.',
+    medFreeLabel: 'Gratis',
+    medPremiumLabel: 'Premium',
     testimTitle: 'Mirakelloggar',
     testimSub: 'Alla upplever det olika.',
     testimMicro: 'Transmissionsvittnesmål · Verifierade fältrapporter',
@@ -340,6 +346,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat2: 'Hjerte & Vann', medCat2Desc: 'Emosjonell frigjøring og relasjonsharmoni.',
     medCat3: 'Akashisk Portal', medCat3Desc: 'Høyfrekvente transmisjoner for åndelig oppvåkning.',
     medEncoded: 'Kodet med Atma Kriya-frekvenser og Siddha-Mantraer',
+    medIntro: 'Korte frekvensspor du kan spille med en gang — jordende toner, hjerteåpnende sekvenser og høyfrekvente transmisjoner. Noen er gratis, hele biblioteket låses opp med Prana-Flow.',
+    medFreeLabel: 'Gratis',
+    medPremiumLabel: 'Premium',
     testimTitle: 'Mirakellogger', testimSub: 'Alle opplever det forskjellig.',
     testimMicro: 'Transmisjonst vitnesbyrd · Verifiserte feltrapporter',
     faqTitle: 'Nådens Vitenskap',
@@ -379,6 +388,9 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat2: 'Corazón & Agua', medCat2Desc: 'Liberación emocional y armonía relacional.',
     medCat3: 'Portal Akáshico', medCat3Desc: 'Transmisiones de alta frecuencia para el despertar espiritual.',
     medEncoded: 'Codificado con frecuencias de Atma Kriya y Mantras Siddha',
+    medIntro: 'Pistas de frecuencia cortas que puedes reproducir ahora mismo — tonos de conexión a tierra, secuencias de apertura del corazón y transmisiones de alta frecuencia. Algunas son gratuitas, la biblioteca completa se desbloquea con Prana-Flow.',
+    medFreeLabel: 'Gratis',
+    medPremiumLabel: 'Premium',
     testimTitle: 'Registros de Milagros', testimSub: 'Cada uno lo experimenta de manera diferente.',
     testimMicro: 'Testimonios de transmisión · Informes de campo verificados',
     faqTitle: 'La Ciencia de la Gracia',
@@ -723,6 +735,7 @@ const Healing: React.FC = () => {
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div className="h-micro" style={{ marginBottom: 6 }}>Vedic Light-Code Audio · Frequency Transmissions</div>
           <div className="h-section-title h-shimmer">{T.medTitle}</div>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.65, marginTop: 10, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>{T.medIntro}</p>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
@@ -734,8 +747,8 @@ const Healing: React.FC = () => {
 
         <Tabs defaultValue="free" className="space-y-4">
           <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
-            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat1}</TabsTrigger>
-            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat3}</TabsTrigger>
+            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medFreeLabel}</TabsTrigger>
+            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}><Lock size={9} />{T.medPremiumLabel}</TabsTrigger>
           </TabsList>
 
           <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
@@ -1359,12 +1372,23 @@ const Healing: React.FC = () => {
 // ============================================================
 // SESSION ROW COMPONENT
 // ============================================================
+// Track titles come straight from the DB as e.g. "Shunya-Prakash: The Pure Void_432Hz_80Hz" —
+// split the trailing frequency codes out into their own badge instead of showing raw underscores.
+function parseTrackTitle(title: string): { name: string; freq: string | null } {
+  const match = title.match(/^(.*?)((?:[\s_]*\d+(?:\.\d+)?\s*Hz)+)\s*$/i);
+  if (!match) return { name: title, freq: null };
+  const name = match[1].replace(/[_\s]+$/, '').trim();
+  const freq = match[2].split('_').map((s) => s.trim()).filter(Boolean).join(' · ');
+  return { name, freq: freq || null };
+}
+
 function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, ownedAudioIds, hasHealingAccess, onPurchase, isProcessing, T, formatEnergyExchange, isPremiumTier = false, onRequestUpgrade }: {
   audio: HealingAudio; isPlaying: boolean; onTogglePlay: (a: HealingAudio) => void; formatDuration: (s: number) => string; isAdmin: boolean; ownedAudioIds: Set<string>; hasHealingAccess: boolean; onPurchase: (a: HealingAudio, m: 'shc' | 'stripe') => void; isProcessing: boolean; T: Record<string, string>; formatEnergyExchange: (p: number) => string; isPremiumTier?: boolean; onRequestUpgrade?: () => void;
 }) {
   const hasAccess = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
   const isLockedPremium = isPremiumTier && !hasAccess;
   const priceLabel = formatEnergyExchange(audio.price_usd);
+  const { name: trackName, freq: trackFreq } = parseTrackTitle(audio.title);
 
   const live = hasAccess && isPlaying;
 
@@ -1396,10 +1420,13 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
             marginBottom: 3,
           }}
         >
-          {audio.title}
+          {trackName}
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
           <span>⏱ {formatDuration(audio.duration_seconds)}</span>
+          {trackFreq && (
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: 'rgba(212,175,55,.08)', border: '1px solid rgba(212,175,55,.2)', color: 'rgba(212,175,55,.75)' }}>{trackFreq}</span>
+          )}
           {hasAccess ? (
             <span style={{ color: '#D4AF37', fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' }}>● {T.owned}</span>
           ) : (
