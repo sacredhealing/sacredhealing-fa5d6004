@@ -693,156 +693,85 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
   steps.push({ id: 'takeaways', label: 'Key Takeaways', render: () => <KeyTakeaways items={content.keyTakeaways} /> });
   steps.push({ id: 'practice-today', label: "Today's Practice", render: () => <DailyPractice text={content.dailyPractice} /> });
 
-  const [active, setActive] = React.useState(0);
-  const [subnavOpen, setSubnavOpen] = React.useState(false);
-  const current = steps[Math.min(active, steps.length - 1)];
+  // Single-open accordion: every section is a card with a green header.
+  // Clicking one opens it in place and closes whatever was open before --
+  // only one section's content is ever visible at once. This is the exact
+  // same pattern as the academy's phase list (1. Adhi Vidya, 2. Jijnasa...),
+  // reused here instead of a separate nav + flowing text.
+  const [openIndex, setOpenIndex] = React.useState<number>(0);
 
   return (
-    <>
     <div>
-      {/* Desktop: horizontal sticky nav bar ABOVE the content -- same column, not a side rail */}
-      <div
-        className="module-subnav-desktop-bar"
-        style={{
-          display: 'none', position: 'sticky', top: 66, zIndex: 5, marginBottom: 22,
-          background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.06)', borderRadius: 18, padding: '10px 12px',
-        }}
-      >
-        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8, padding: '0 4px' }}>
-          {'In This Lesson'}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {steps.map((s, i) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => {
-                setActive(i);
-                document.getElementById(`lesson-anchor-${s.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6, textAlign: 'left',
-                padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
-                border: `1px solid ${i === active ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                background: i === active ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.02)',
-              }}
-            >
-              <span style={{
-                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                background: i === active ? '#34D399' : i < active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)',
-              }} />
-              <span style={{
-                fontSize: 12, lineHeight: 1.3, whiteSpace: 'nowrap',
-                color: i === active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)',
-                fontWeight: i === active ? 700 : 500,
-              }}>
-                {s.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        {/* Mobile sub-nav — same collapsible "tap to browse" pattern as the academy module list */}
-        <div className="module-subnav-mobile" style={{ marginBottom: 18 }}>
-          <button
-            type="button"
-            onClick={() => setSubnavOpen((o) => !o)}
+      {steps.map((s, i) => {
+        const isOpen = openIndex === i;
+        return (
+          <div
+            key={s.id}
             style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
-              padding: '12px 16px', borderRadius: 16, cursor: 'pointer',
-              border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.06)',
+              marginBottom: 10, borderRadius: 20, overflow: 'hidden',
+              border: `1px solid ${isOpen ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.06)'}`,
+              background: isOpen ? 'rgba(52,211,153,0.04)' : 'rgba(255,255,255,0.012)',
             }}
           >
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#34D399', textAlign: 'left' }}>
-              {current.label} — {active + 1} of {steps.length} · tap to browse
-            </span>
-            <ChevronDown size={15} color="#34D399" style={{ flexShrink: 0, transform: subnavOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
-          </button>
-          {subnavOpen && (
-            <div style={{ marginTop: 6, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.012)', overflow: 'hidden' }}>
-              {steps.map((s, i) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => { setActive(i); setSubnavOpen(false); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
-                    padding: '11px 16px', cursor: 'pointer', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                    background: i === active ? 'rgba(52,211,153,0.08)' : 'transparent',
-                  }}
-                >
-                  <span style={{
-                    width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                    background: i === active ? '#34D399' : i < active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)',
-                  }} />
-                  <span style={{ fontSize: 13, color: i === active ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: i === active ? 700 : 500 }}>
-                    {s.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* MOBILE / TABLET: one section at a time -- this is what fixed the scroll-fatigue problem there, unchanged */}
-        <div className="lesson-content-mobile">
-          {current.render()}
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
             <button
               type="button"
-              disabled={active === 0}
-              onClick={() => setActive((a) => Math.max(0, a - 1))}
+              onClick={() => setOpenIndex(isOpen ? -1 : i)}
               style={{
-                background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)',
-                padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: active === 0 ? 'default' : 'pointer',
-                opacity: active === 0 ? 0.35 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                textAlign: 'left', padding: '16px 20px', cursor: 'pointer', background: 'none', border: 'none',
               }}
             >
-              ← {'Previous Section'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <span style={{
+                  width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800,
+                  border: `1.5px solid ${isOpen ? '#34D399' : 'rgba(255,255,255,0.15)'}`,
+                  background: isOpen ? 'rgba(52,211,153,0.14)' : 'transparent',
+                  color: isOpen ? '#34D399' : 'rgba(255,255,255,0.4)',
+                }}>
+                  {i + 1}
+                </span>
+                <span style={{
+                  fontFamily: "'Cormorant Garamond',serif", fontSize: '1.15rem', fontWeight: 700,
+                  color: isOpen ? '#34D399' : 'rgba(255,255,255,0.85)',
+                }}>
+                  {s.label}
+                </span>
+              </div>
+              <ChevronDown
+                size={16}
+                style={{
+                  flexShrink: 0, color: isOpen ? '#34D399' : 'rgba(255,255,255,0.3)',
+                  transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s',
+                }}
+              />
             </button>
-            <button
-              type="button"
-              disabled={active === steps.length - 1}
-              onClick={() => setActive((a) => Math.min(steps.length - 1, a + 1))}
-              style={{
-                background: active === steps.length - 1 ? 'transparent' : 'rgba(52,211,153,0.14)',
-                border: `1px solid ${active === steps.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(52,211,153,0.4)'}`,
-                color: active === steps.length - 1 ? 'rgba(255,255,255,0.3)' : '#34D399',
-                padding: '10px 18px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                cursor: active === steps.length - 1 ? 'default' : 'pointer',
-              }}
-            >
-              {'Next Section'} →
-            </button>
+
+            {isOpen && (
+              <div style={{ padding: '0 20px 24px' }}>
+                {s.render()}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+                  <button
+                    type="button"
+                    disabled={i === steps.length - 1}
+                    onClick={() => setOpenIndex(Math.min(steps.length - 1, i + 1))}
+                    style={{
+                      background: i === steps.length - 1 ? 'transparent' : 'rgba(52,211,153,0.14)',
+                      border: `1px solid ${i === steps.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(52,211,153,0.4)'}`,
+                      color: i === steps.length - 1 ? 'rgba(255,255,255,0.25)' : '#34D399',
+                      padding: '9px 16px', borderRadius: 999, fontSize: 10.5, fontWeight: 700,
+                      cursor: i === steps.length - 1 ? 'default' : 'pointer',
+                    }}
+                  >
+                    {i === steps.length - 1 ? 'Last section' : 'Next section →'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* DESKTOP (1024px+): the whole lesson flows continuously, "In This Lesson" is a jump-to menu, not a gate */}
-        <div className="lesson-content-desktop">
-          {steps.map((s, i) => (
-            <div key={s.id} id={`lesson-anchor-${s.id}`} style={{ marginBottom: 44, scrollMarginTop: 90 }}>
-              {i > 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 44 }} />}
-              {s.render()}
-            </div>
-          ))}
-        </div>
-        </div>
-      </div>
-
-      <style>{`
-        .lesson-content-desktop { display: none; }
-        @media (min-width: 1024px) {
-          .module-subnav-mobile { display: none !important; }
-          .lesson-content-mobile { display: none; }
-          .lesson-content-desktop { display: block; }
-          .module-subnav-desktop-bar { display: block !important; }
-        }
-      `}</style>
-    </>
+        );
+      })}
+    </div>
   );
 };
 
