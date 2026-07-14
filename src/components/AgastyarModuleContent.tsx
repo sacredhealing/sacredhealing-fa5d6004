@@ -699,48 +699,52 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
 
   return (
     <>
-    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-      {/* Desktop rail — sub-navigation within this lesson */}
+    <div>
+      {/* Desktop: horizontal sticky nav bar ABOVE the content -- same column, not a side rail */}
       <div
-        className="module-subnav-desktop"
+        className="module-subnav-desktop-bar"
         style={{
-          flex: '0 0 210px', position: 'sticky', top: 90, display: 'none',
-          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 18, padding: '10px 8px', maxHeight: 'calc(100vh - 130px)', overflowY: 'auto',
+          display: 'none', position: 'sticky', top: 66, zIndex: 5, marginBottom: 22,
+          background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.06)', borderRadius: 18, padding: '10px 12px',
         }}
       >
-        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', padding: '4px 10px 8px' }}>
+        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8, padding: '0 4px' }}>
           {'In This Lesson'}
         </div>
-        {steps.map((s, i) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => {
-              setActive(i);
-              document.getElementById(`lesson-anchor-${s.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-              padding: '8px 10px', borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: i === active ? 'rgba(52,211,153,0.09)' : 'transparent',
-            }}
-          >
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-              background: i === active ? '#34D399' : i < active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)',
-            }} />
-            <span style={{
-              fontSize: 12.5, lineHeight: 1.35, color: i === active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)',
-              fontWeight: i === active ? 700 : 500,
-            }}>
-              {s.label}
-            </span>
-          </button>
-        ))}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {steps.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => {
+                setActive(i);
+                document.getElementById(`lesson-anchor-${s.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, textAlign: 'left',
+                padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
+                border: `1px solid ${i === active ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                background: i === active ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                background: i === active ? '#34D399' : i < active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)',
+              }} />
+              <span style={{
+                fontSize: 12, lineHeight: 1.3, whiteSpace: 'nowrap',
+                color: i === active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)',
+                fontWeight: i === active ? 700 : 500,
+              }}>
+                {s.label}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div>
         {/* Mobile sub-nav — same collapsible "tap to browse" pattern as the academy module list */}
         <div className="module-subnav-mobile" style={{ marginBottom: 18 }}>
           <button
@@ -830,14 +834,12 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
       </div>
 
       <style>{`
-        @media (min-width: 860px) {
-          .module-subnav-desktop { display: block !important; }
-          .module-subnav-mobile { display: none !important; }
-        }
         .lesson-content-desktop { display: none; }
         @media (min-width: 1024px) {
+          .module-subnav-mobile { display: none !important; }
           .lesson-content-mobile { display: none; }
           .lesson-content-desktop { display: block; }
+          .module-subnav-desktop-bar { display: block !important; }
         }
       `}</style>
     </>
