@@ -241,7 +241,7 @@ export default function ModuleReaderShell({
             <div style={{ ...READER_TYPE.label, color: fade(accent, 0.65), marginBottom: 6 }}>
               {academyName} · Module {moduleNumber} of {totalModules}
             </div>
-            <h1 style={{ ...READER_TYPE.title, color: white(0.97), textShadow: `0 0 20px ${acGlow}`, margin: '0 0 10px' }}>
+            <h1 style={{ ...READER_TYPE.title, color: fade(accent, 0.92), textShadow: `0 0 20px ${acGlow}`, margin: '0 0 10px' }}>
               {moduleTitle}
             </h1>
             {thesis && <p style={{ ...READER_TYPE.thesis, margin: '0 0 14px' }}>{thesis}</p>}
@@ -346,13 +346,15 @@ export default function ModuleReaderShell({
                   <div key={i} style={{ marginBottom: 30 }}>
                     <div style={{ ...READER_TYPE.blockLabel, color: accent, marginBottom: 10 }}>{block.label}</div>
                     {block.title && (
-                      <h4 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 14, fontWeight: 800, color: white(0.9), margin: '0 0 10px' }}>
+                      <h4 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 14, fontWeight: 800, color: teal(0.9), margin: '0 0 10px' }}>
                         {block.title}
                       </h4>
                     )}
                     <p style={{ ...READER_TYPE.body }}>{block.body}</p>
                   </div>
                 ))}
+
+                {footerExtra}
 
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36,
@@ -367,7 +369,7 @@ export default function ModuleReaderShell({
                       cursor: prevHref ? 'pointer' : 'default', opacity: prevHref ? 1 : 0.35,
                     }}
                   >
-                    ← Previous
+                    ← Previous Module
                   </button>
 
                   <div style={{ display: 'flex', gap: 10 }}>
@@ -392,12 +394,11 @@ export default function ModuleReaderShell({
                           padding: '11px 18px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                         }}
                       >
-                        Next →
+                        Next Module →
                       </button>
                     )}
                   </div>
                 </div>
-                {footerExtra}
               </>
             )}
           </div>

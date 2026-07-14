@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContentSection, ModuleContent } from '@/data/moduleContent';
-import { CheckCircle, XCircle, BookOpen, Leaf, Zap, AlertTriangle, Star } from 'lucide-react';
+import { CheckCircle, XCircle, BookOpen, Leaf, Zap, AlertTriangle, Star, ChevronDown } from 'lucide-react';
 
 // ─── MARKDOWN-STYLE BOLD/ITALIC RENDERER ──────────────────────
 const RichText: React.FC<{ text: string; style?: React.CSSProperties }> = ({ text, style }) => {
@@ -38,7 +38,7 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
   }}>
     {section.title && (
       <h3 style={{
-        fontSize: '15px', fontWeight: 900, color: '#fff',
+        fontSize: '15px', fontWeight: 900, color: 'rgba(52,211,153,0.92)',
         marginBottom: '16px', letterSpacing: '-0.02em',
         borderBottom: '1px solid rgba(212,175,55,0.15)',
         paddingBottom: '12px',
@@ -86,7 +86,7 @@ const DoshaChart: React.FC<{ section: ContentSection }> = ({ section }) => {
     marginBottom: '20px',
   }}>
     <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#fff', margin: 0 }}>{section.title}</h3>
+      <h3 style={{ fontSize: '14px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', margin: 0 }}>{section.title}</h3>
     </div>
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -126,7 +126,7 @@ const TableSection: React.FC<{ section: ContentSection }> = ({ section }) => (
   }}>
     {section.title && (
       <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#fff', margin: 0 }}>{section.title}</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', margin: 0 }}>{section.title}</h3>
       </div>
     )}
     <div style={{ overflowX: 'auto' }}>
@@ -198,7 +198,7 @@ const PracticeSection: React.FC<{ section: ContentSection }> = ({ section }) => 
           <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.4em', color: '#D4AF37', textTransform: 'uppercase' }}>
             {t('academy.moduleContent.livingPractice')}
           </div>
-          {section.title && <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff' }}>{section.title}</div>}
+          {section.title && <div style={{ fontSize: '14px', fontWeight: 900, color: 'rgba(52,211,153,0.92)' }}>{section.title}</div>}
         </div>
       </div>
 
@@ -318,7 +318,7 @@ const HerbSection: React.FC<{ section: ContentSection }> = ({ section }) => {
         {t('academy.moduleContent.herbMonograph')}
       </div>
     </div>
-    <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', marginBottom: '16px' }}>
+    <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', marginBottom: '16px' }}>
       {section.herbName}
     </h3>
     {section.herbProps && (
@@ -374,7 +374,7 @@ const QuizSection: React.FC<{ section: ContentSection; index: number }> = ({ sec
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.4em', color: '#D4AF37', textTransform: 'uppercase', marginBottom: '12px' }}>
         {t('academy.moduleContent.knowledgeCheck', { n: index + 1 })}
       </div>
-      <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '16px', lineHeight: 1.5 }}>
+      <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(52,211,153,0.92)', marginBottom: '16px', lineHeight: 1.5 }}>
         {section.quizQuestion}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
@@ -479,7 +479,7 @@ const SecretSection: React.FC<{ section: ContentSection }> = ({ section }) => {
       </div>
     </div>
     {section.title && (
-      <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#fff', marginBottom: '14px' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: 900, color: 'rgba(52,211,153,0.92)', marginBottom: '14px' }}>
         {section.title.replace('⟡ ', '')}
       </h3>
     )}
@@ -689,6 +689,7 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
   steps.push({ id: 'practice-today', label: "Today's Practice", render: () => <DailyPractice text={content.dailyPractice} /> });
 
   const [active, setActive] = React.useState(0);
+  const [subnavOpen, setSubnavOpen] = React.useState(false);
   const current = steps[Math.min(active, steps.length - 1)];
 
   return (
@@ -731,28 +732,46 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Mobile sub-nav — compact pill row, horizontally scrollable */}
-        <div className="module-subnav-mobile" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 18 }}>
-          {steps.map((s, i) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setActive(i)}
-              style={{
-                flex: '0 0 auto', whiteSpace: 'nowrap', padding: '7px 14px', borderRadius: 999,
-                fontSize: 10.5, fontWeight: 700, cursor: 'pointer',
-                border: `1px solid ${i === active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.1)'}`,
-                background: i === active ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.03)',
-                color: i === active ? '#34D399' : 'rgba(255,255,255,0.55)',
-              }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
-          {active + 1} / {steps.length}
+        {/* Mobile sub-nav — same collapsible "tap to browse" pattern as the academy module list */}
+        <div className="module-subnav-mobile" style={{ marginBottom: 18 }}>
+          <button
+            type="button"
+            onClick={() => setSubnavOpen((o) => !o)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+              padding: '12px 16px', borderRadius: 16, cursor: 'pointer',
+              border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.06)',
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#34D399', textAlign: 'left' }}>
+              {current.label} — {active + 1} of {steps.length} · tap to browse
+            </span>
+            <ChevronDown size={15} color="#34D399" style={{ flexShrink: 0, transform: subnavOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
+          </button>
+          {subnavOpen && (
+            <div style={{ marginTop: 6, borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.012)', overflow: 'hidden' }}>
+              {steps.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => { setActive(i); setSubnavOpen(false); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+                    padding: '11px 16px', cursor: 'pointer', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    background: i === active ? 'rgba(52,211,153,0.08)' : 'transparent',
+                  }}
+                >
+                  <span style={{
+                    width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                    background: i === active ? '#34D399' : i < active ? 'rgba(52,211,153,0.5)' : 'rgba(255,255,255,0.15)',
+                  }} />
+                  <span style={{ fontSize: 13, color: i === active ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: i === active ? 700 : 500 }}>
+                    {s.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {current.render()}
@@ -768,7 +787,7 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
               opacity: active === 0 ? 0.35 : 1,
             }}
           >
-            ← {'Previous'}
+            ← {'Previous Section'}
           </button>
           <button
             type="button"
@@ -782,7 +801,7 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
               cursor: active === steps.length - 1 ? 'default' : 'pointer',
             }}
           >
-            {'Next'} →
+            {'Next Section'} →
           </button>
         </div>
       </div>
