@@ -22,7 +22,7 @@ export default function KayakalpaAcademy() {
   const { isAdmin } = useAdminRole();
   const { tier, loading: membershipLoading, settled } = useMembership();
   const membershipReady = !membershipLoading && settled;
-  const { courses, progressByModuleId, stats, loading: loadingData } = useKayakalpaProgress(membershipReady);
+  const { courses, progressByModuleId, stats, loading: loadingData, error: loadError } = useKayakalpaProgress(membershipReady);
 
   const syllabusGroups = useMemo(() => {
     return TIER_ORDER.map((t) => {
@@ -81,6 +81,16 @@ export default function KayakalpaAcademy() {
             >
               Begin Initiation
             </button>
+          </div>
+        )}
+
+        {loadError && (
+          <div style={{
+            marginBottom: 24, borderRadius: 16, border: '1px solid rgba(248,113,113,0.3)',
+            background: 'rgba(248,113,113,0.08)', padding: '14px 18px',
+          }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#F87171', margin: '0 0 4px' }}>Could not load this academy.</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', margin: 0 }}>{loadError}</p>
           </div>
         )}
 
