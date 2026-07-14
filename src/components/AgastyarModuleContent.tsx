@@ -698,6 +698,7 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
   const current = steps[Math.min(active, steps.length - 1)];
 
   return (
+    <>
     <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
       {/* Desktop rail — sub-navigation within this lesson */}
       <div
@@ -839,7 +840,7 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
           .lesson-content-desktop { display: block; }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
