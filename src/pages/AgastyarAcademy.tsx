@@ -5,6 +5,7 @@ import {
   Award,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
   Clock,
   FileText,
   FlaskConical,
@@ -422,110 +423,95 @@ const AgastyarAcademy: React.FC = () => {
           <h2 className="mb-4 text-[10px] font-extrabold uppercase tracking-[0.45em] text-white/35">
             {t('academy.hub.phasesOfMastery')}
           </h2>
-          <div className="flex flex-wrap gap-3">
-            {phaseStats.map(({ num, total, completed }) => {
+
+          <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.012] overflow-hidden">
+            {phaseStats.map(({ num, total, completed }, idx) => {
               const tierSlug = PHASE_TIER_SLUG[num];
               const color = PHASE_HEX[num];
               const hasAccess = phaseAccess(num);
-              const isActive = activePhase === num;
+              const isOpen = activePhase === num;
               const isDone = total > 0 && completed >= total;
               const pct = total > 0 ? (completed / total) * 100 : 0;
               const tierShort = t(tierLabelKey(tierSlug));
 
               return (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => setActivePhase(num)}
-                  className={`relative min-w-[160px] flex-1 overflow-hidden rounded-[24px] border p-5 text-left transition ${
-                    isActive ? 'border-white/[0.12]' : 'border-white/[0.06] hover:border-[#D4AF37]/15'
-                  }`}
-                  style={{
-                    background: isActive ? `rgba(${phaseHexToRgb(color)},0.09)` : 'rgba(255,255,255,0.02)',
-                    backdropFilter: 'blur(40px)',
-                    borderColor: isActive ? `${color}55` : undefined,
-                  }}
-                >
-                  {isActive && (
-                    <div
-                      className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl"
-                      style={{ background: `radial-gradient(circle, ${color}35, transparent 70%)` }}
+                <div key={num} className={idx > 0 ? 'border-t border-white/[0.05]' : ''}>
+                  <button
+                    type="button"
+                    onClick={() => setActivePhase(isOpen ? 0 : num)}
+                    className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-white/[0.02]"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black"
+                        style={{
+                          background: isDone ? 'rgba(52,211,153,0.16)' : isOpen ? `${color}22` : 'rgba(255,255,255,0.04)',
+                          border: `1.5px solid ${isDone ? 'rgba(52,211,153,0.5)' : isOpen ? `${color}88` : 'rgba(255,255,255,0.12)'}`,
+                          color: isDone ? '#34D399' : isOpen ? color : 'rgba(255,255,255,0.4)',
+                          boxShadow: isOpen ? `0 0 0 3px ${color}18` : 'none',
+                        }}
+                      >
+                        {isDone ? <CheckCircle2 size={16} aria-hidden /> : !hasAccess ? <Lock size={13} aria-hidden /> : num}
+                      </div>
+                      <div className="min-w-0">
+                        <p
+                          className="truncate text-[15px] font-bold"
+                          style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '1.15rem', color: 'rgba(255,255,255,0.92)' }}
+                        >
+                          {num}. {sanskritForPhase(num, t)}
+                        </p>
+                        <p className="mt-0.5 text-[10px]" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                          {hasAccess
+                            ? t('academy.hub.phaseModulesDone', { completed, total })
+                            : `${t('academy.hub.phaseModulesCatalog', { total })} · ${tierShort}`}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      size={16}
+                      className="shrink-0 text-white/30 transition-transform duration-200"
+                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }}
+                      aria-hidden
                     />
+                  </button>
+
+                  <div className="px-5 pb-1">
+                    <div className="h-[3px] overflow-hidden rounded-full bg-white/[0.06]">
+                      <div
+                        className="h-full rounded-full transition-[width] duration-700"
+                        style={{ width: `${hasAccess ? pct : 0}%`, backgroundColor: hasAccess ? color : 'rgba(255,255,255,0.12)' }}
+                      />
+                    </div>
+                  </div>
+
+                  {isOpen && (
+                    <div className="px-5 pb-6 pt-4">
+                      {!hasAccess ? (
+                        <UpgradeGateSection
+                          tierSlug={tierSlug}
+                          phaseLabel={sanskritForPhase(num, t)}
+                          moduleCount={total}
+                        />
+                      ) : (
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          {getPhaseModules(num).map((c) => (
+                            <HubModuleCard
+                              key={c.id}
+                              module={c}
+                              isAdmin={isAdmin}
+                              tier={tier}
+                              progress={progressByModuleId[c.id]}
+                              onNavigateModule={() => navigate(`/agastyar-academy/module/${c.id}`)}
+                              onNavigateUpgrade={(href) => navigate(href)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <div className="relative z-[1] mb-3 opacity-90">
-                    <PhaseGlyph phase={num} />
-                  </div>
-                  <p className="relative z-[1] mb-2 text-[8px] font-extrabold uppercase tracking-[0.38em]" style={{ color }}>
-                    {t('academy.hub.phaseTierLine', { n: num, tier: tierShort })}
-                  </p>
-                  <p className="relative z-[1] text-base font-black text-white">{sanskritForPhase(num, t)}</p>
-                  <p className="relative z-[1] mt-1 text-[11px] text-white/40">
-                    {t(`academy.hub.phaseTagline.p${num}` as const)}
-                  </p>
-                  <div className="relative z-[1] mt-4 h-[3px] overflow-hidden rounded-full bg-white/[0.06]">
-                    <div
-                      className="h-full rounded-full transition-[width] duration-700"
-                      style={{
-                        width: `${hasAccess ? pct : 0}%`,
-                        backgroundColor: hasAccess ? color : 'rgba(255,255,255,0.12)',
-                      }}
-                    />
-                  </div>
-                  <div className="relative z-[1] mt-2 flex items-center justify-between text-[10px] text-white/40">
-                    <span>
-                      {hasAccess
-                        ? t('academy.hub.phaseModulesDone', { completed, total })
-                        : t('academy.hub.phaseModulesCatalog', { total })}
-                    </span>
-                    {!hasAccess && <Lock size={12} className="text-white/25" aria-hidden />}
-                    {isDone && hasAccess && <CheckCircle2 size={14} style={{ color }} aria-hidden />}
-                  </div>
-                </button>
+                </div>
               );
             })}
-          </div>
-        </section>
-
-        <section className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p
-              className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.45em]"
-              style={{ color: PHASE_HEX[phaseIndex] }}
-            >
-              {t('academy.hub.activePhaseHeadline', { n: activePhase, sanskrit: sanskritName })}
-            </p>
-            <p className="text-xl font-black text-white">{t(`academy.hub.phaseTagline.p${phaseIndex}` as const)}</p>
-            <p className="mt-2 max-w-xl text-sm text-white/45">{t(`academy.hub.phaseDesc.p${phaseIndex}` as const)}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2">
-              <Search size={13} className="text-white/35" aria-hidden />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('academy.hub.searchPlaceholder')}
-                className="w-[140px] border-none bg-transparent text-xs text-white outline-none placeholder:text-white/25 sm:w-[180px]"
-              />
-            </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="rounded-xl border border-white/[0.08] bg-[#0a0a0a] px-3 py-2 text-[11px] text-white/60 outline-none"
-            >
-              <option value="all">{t('academy.hub.filterAllTypes')}</option>
-              <option value="video">{t('academy.hub.filterVideo')}</option>
-              <option value="audio">{t('academy.hub.filterAudio')}</option>
-              <option value="pdf">{t('academy.hub.filterPdf')}</option>
-              <option value="interactive">{t('academy.hub.filterInteractive')}</option>
-              <option value="live">{t('academy.hub.filterLive')}</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              className="rounded-xl border border-white/[0.08] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/45 hover:text-[#D4AF37]"
-            >
-              {t('academy.hub.refreshCatalog')}
-            </button>
           </div>
         </section>
 
@@ -536,37 +522,12 @@ const AgastyarAcademy: React.FC = () => {
           </div>
         )}
 
-        {loadingData && courses.length === 0 ? (
+        {loadingData && courses.length === 0 && (
           <div className="flex justify-center py-20">
             <div
               className="h-10 w-10 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37] animate-spin"
               aria-hidden
             />
-          </div>
-        ) : !currentPhaseAccess ? (
-          <UpgradeGateSection
-            tierSlug={currentPhaseTier}
-            phaseLabel={sanskritName}
-            moduleCount={courses.filter((c) => c.phase === activePhase).length}
-          />
-        ) : activeModules.length === 0 ? (
-          <div className="rounded-[28px] border border-white/[0.06] py-16 text-center text-white/35">
-            <BookOpen className="mx-auto mb-3 h-9 w-9 opacity-30" aria-hidden />
-            <p>{courses.length === 0 ? t('academy.modules.empty') : t('academy.hub.noMatches')}</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {activeModules.map((c) => (
-              <HubModuleCard
-                key={c.id}
-                module={c}
-                isAdmin={isAdmin}
-                tier={tier}
-                progress={progressByModuleId[c.id]}
-                onNavigateModule={() => navigate(`/agastyar-academy/module/${c.id}`)}
-                onNavigateUpgrade={(href) => navigate(href)}
-              />
-            ))}
           </div>
         )}
 
