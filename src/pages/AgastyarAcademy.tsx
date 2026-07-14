@@ -31,6 +31,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAyurvedaProgress, type AyurvedaCourseRow } from '@/hooks/useAyurvedaProgress';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
+import CourseSyllabus from '@/components/education/CourseSyllabus';
+import { teal } from '@/components/education/tokens';
 import {
   FEATURE_TIER,
   getCourseTierRequiredRank,
@@ -223,6 +225,27 @@ const AgastyarAcademy: React.FC = () => {
     });
   }, [courses, progressByModuleId]);
 
+  const syllabusGroups = useMemo(() => {
+    return PHASE_NUMBERS.map((num) => {
+      const mods = getPhaseModules(num);
+      const completed = mods.filter((c) => progressByModuleId[c.id]?.completed).length;
+      const containsCurrent = false; // Agastyar has no single "current module" concept on this overview page
+      return {
+        id: `phase-${num}`,
+        title: `${num}. ${sanskritForPhase(num, t)}`,
+        meta: `${completed} / ${mods.length} lessons${completed === mods.length && mods.length > 0 ? ' complete' : ''}`,
+        done: mods.length > 0 && completed === mods.length,
+        current: containsCurrent,
+        lessons: mods.map((m) => {
+          const done = Boolean(progressByModuleId[m.id]?.completed);
+          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required));
+          const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
+          return { id: m.id, number: m.module_number, title: m.title, state };
+        }),
+      };
+    });
+  }, [getPhaseModules, progressByModuleId, isAdmin, tier, t]);
+
   const phaseAccess = useCallback(
     (phaseNum: number) =>
       hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(PHASE_TIER_SLUG[phaseNum])),
@@ -278,158 +301,45 @@ const AgastyarAcademy: React.FC = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden pb-28 text-white/90" style={{ background: '#050505' }}>
-      {/* Compact header — title, one-line subtitle, single progress bar */}
-      <div className="relative border-b border-white/[0.05] pb-8 pt-8 sm:pt-10">
-        <div className="relative z-[1] mx-auto max-w-3xl px-4 sm:px-6">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-white/55 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
-          >
-            <ArrowLeft size={14} className="text-[#D4AF37]/80" aria-hidden />
-            {t('academy.back')}
-          </button>
+      <div className="mx-auto max-w-3xl px-4 pt-8 sm:px-6">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-white/55 transition hover:border-[#34D399]/30 hover:text-[#34D399]"
+        >
+          <ArrowLeft size={14} className="text-[#34D399]/80" aria-hidden />
+          {t('academy.back')}
+        </button>
 
-          <div className="flex items-center gap-4">
-            <div
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
-              style={{ background: 'radial-gradient(120% 120% at 20% 20%, rgba(52,211,153,0.3), rgba(5,5,5,0.9))', border: '1px solid rgba(52,211,153,0.42)' }}
+        {!user && (
+          <div className="mb-8 text-center">
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              className="rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8960C] px-10 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#050505] shadow-[0_0_40px_rgba(212,175,55,0.22)]"
             >
-              🪷
-            </div>
-            <div className="min-w-0">
-              <p
-                className="truncate text-[26px] font-semibold leading-tight"
-                style={{ fontFamily: "'Cormorant Garamond',serif" }}
-              >
-                {t('academy.title')}
-              </p>
-              {user && (
-                <p className="mt-1 text-[11px] font-extrabold" style={{ color: '#34D399' }}>
-                  {stats.completedModules} / {courses.length || 108} · {stats.completionPercent}%
-                </p>
-              )}
-            </div>
+              {t('academy.hub.beginInitiation')}
+            </button>
           </div>
+        )}
 
-          {user ? (
-            <div className="mt-4 h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
-              <div
-                className="h-full rounded-full transition-[width] duration-700"
-                style={{ width: `${stats.completionPercent}%`, background: 'linear-gradient(90deg,#34D399,rgba(52,211,153,0.6))' }}
-              />
-            </div>
-          ) : (
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => navigate('/auth')}
-                className="rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8960C] px-10 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#050505] shadow-[0_0_40px_rgba(212,175,55,0.22)]"
-              >
-                {t('academy.hub.beginInitiation')}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-
-        <section className="mb-10">
-          <h2 className="mb-4 text-[10px] font-extrabold uppercase tracking-[0.45em] text-white/35">
-            {t('academy.hub.phasesOfMastery')}
-          </h2>
-
-          <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.012] overflow-hidden">
-            {phaseStats.map(({ num, total, completed }, idx) => {
-              const tierSlug = PHASE_TIER_SLUG[num];
-              const color = PHASE_HEX[num];
-              const hasAccess = phaseAccess(num);
-              const isOpen = activePhase === num;
-              const isDone = total > 0 && completed >= total;
-              const pct = total > 0 ? (completed / total) * 100 : 0;
-              const tierShort = t(tierLabelKey(tierSlug));
-
-              return (
-                <div key={num} className={idx > 0 ? 'border-t border-white/[0.05]' : ''}>
-                  <button
-                    type="button"
-                    onClick={() => setActivePhase(isOpen ? 0 : num)}
-                    className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-white/[0.02]"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black"
-                        style={{
-                          background: isDone ? 'rgba(52,211,153,0.16)' : isOpen ? `${color}22` : 'rgba(255,255,255,0.04)',
-                          border: `1.5px solid ${isDone ? 'rgba(52,211,153,0.5)' : isOpen ? `${color}88` : 'rgba(255,255,255,0.12)'}`,
-                          color: isDone ? '#34D399' : isOpen ? color : 'rgba(255,255,255,0.4)',
-                          boxShadow: isOpen ? `0 0 0 3px ${color}18` : 'none',
-                        }}
-                      >
-                        {isDone ? <CheckCircle2 size={16} aria-hidden /> : !hasAccess ? <Lock size={13} aria-hidden /> : num}
-                      </div>
-                      <div className="min-w-0">
-                        <p
-                          className="truncate text-[15px] font-bold"
-                          style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '1.15rem', color: 'rgba(255,255,255,0.92)' }}
-                        >
-                          {num}. {sanskritForPhase(num, t)}
-                        </p>
-                        <p className="mt-0.5 text-[10px]" style={{ color: 'rgba(255,255,255,0.38)' }}>
-                          {hasAccess
-                            ? t('academy.hub.phaseModulesDone', { completed, total })
-                            : `${t('academy.hub.phaseModulesCatalog', { total })} · ${tierShort}`}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronDown
-                      size={16}
-                      className="shrink-0 text-white/30 transition-transform duration-200"
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }}
-                      aria-hidden
-                    />
-                  </button>
-
-                  <div className="px-5 pb-1">
-                    <div className="h-[3px] overflow-hidden rounded-full bg-white/[0.06]">
-                      <div
-                        className="h-full rounded-full transition-[width] duration-700"
-                        style={{ width: `${hasAccess ? pct : 0}%`, backgroundColor: hasAccess ? color : 'rgba(255,255,255,0.12)' }}
-                      />
-                    </div>
-                  </div>
-
-                  {isOpen && (
-                    <div className="px-5 pb-6 pt-4">
-                      {!hasAccess ? (
-                        <UpgradeGateSection
-                          tierSlug={tierSlug}
-                          phaseLabel={sanskritForPhase(num, t)}
-                          moduleCount={total}
-                        />
-                      ) : (
-                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                          {getPhaseModules(num).map((c) => (
-                            <HubModuleCard
-                              key={c.id}
-                              module={c}
-                              isAdmin={isAdmin}
-                              tier={tier}
-                              progress={progressByModuleId[c.id]}
-                              onNavigateModule={() => navigate(`/agastyar-academy/module/${c.id}`)}
-                              onNavigateUpgrade={(href) => navigate(href)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <CourseSyllabus
+          accent={teal(0.9)}
+          courseIcon="🪷"
+          courseTitle={t('academy.title')}
+          academyName="Agastyar Academy"
+          progressLabel={`${stats.completedModules} / ${courses.length || 108} · ${stats.completionPercent}%`}
+          progressPercent={stats.completionPercent}
+          groups={syllabusGroups}
+          onLessonClick={(lessonId, locked) => {
+            if (locked) {
+              const lesson = courses.find((c) => c.id === lessonId);
+              navigate(getSalesPageForRank(getCourseTierRequiredRank(lesson?.tier_required)));
+            } else {
+              navigate(`/agastyar-academy/module/${lessonId}`);
+            }
+          }}
+        />
 
         {loadError && (
           <div className="mb-6 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200/90">
