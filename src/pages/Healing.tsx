@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp, Crown, Key, Flame, Eye, Waves, TreePine, Zap } from 'lucide-react';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, Crown, Key, Flame, Eye, Waves, TreePine, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +13,6 @@ import { SriYantra } from '@/components/dashboard/SriYantra';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
-import { MONTHS as CERT_MONTHS } from '@/data/practitionerCertificationData';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { IntentionThreshold } from '@/components/meditation/IntentionThreshold';
@@ -433,7 +432,6 @@ const Healing: React.FC = () => {
   const [pathDays, setPathDays] = React.useState<PathDay[]>([]);
   const [pathDaysLoading, setPathDaysLoading] = React.useState(false);
   const [expandedPath, setExpandedPath] = React.useState<string | null>(null);
-  const [expandedCertMonth, setExpandedCertMonth] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     if (selectedPath) {
@@ -897,13 +895,13 @@ const Healing: React.FC = () => {
 
       <div className="h-divider" />
 
-      {/* ══ SIDDHA HEALERS SOVEREIGN PATH — SQI 2050 ══ */}
+      {/* ══ SACRED JOURNEYS — dynamic day-by-day guided tracks, distinct from the 12-month certification above ══ */}
       <section style={{ padding: '0 22px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div className="h-micro" style={{ marginBottom: 6 }}>Siddha Quantum · Living Transmission</div>
-          <div className="h-section-title h-shimmer">Siddha Healers Sovereign Path</div>
+          <div className="h-section-title h-shimmer">Sacred Journeys</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 8, lineHeight: 1.7 }}>
-            Sacred initiatory modules — track your progress, earn rewards, walk the path of the Siddha Healer
+            Guided day-by-day practices — track your progress, earn rewards, walk each sacred journey step by step
           </div>
         </div>
 
@@ -1127,94 +1125,21 @@ const Healing: React.FC = () => {
 
       <div className="h-divider" />
 
-      {/* ══ THE SIDDHA HEALER'S SOVEREIGN PATH — FULL 12-MONTH CERTIFICATION ══ */}
-      {/* Moved here from the standalone /practitioner-certification page, additive to */}
-      {/* the tracker section above (which stays exactly as it was) — this is the full */}
-      {/* educational curriculum itself: 12 months, initiation, teaching, mantra, */}
-      {/* exercises, reflections per month. English content shown here (the data */}
-      {/* supports sv/no/es too — full page keeps multi-language via lang toggle). */}
-      <section style={{ padding: '0 22px 40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>12-Month Certification · Full Curriculum</div>
-          <div className="h-section-title h-shimmer">The Siddha Healer's Sovereign Path</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 8, lineHeight: 1.7 }}>
-            The complete practitioner certification — initiation, teaching, mantra, and practice for each of the 12 months.
+      {/* ══ SIDDHA HEALER CERTIFICATION BANNER — single entry card, mirrors Explore.tsx ══ */}
+      {/* One card, one source of truth. Full 12-month curriculum lives at /certification */}
+      {/* (PractitionerCertification.tsx, same MONTHS data). No flat dump here anymore. */}
+      <section style={{ padding: '0 16px 40px' }}>
+        <div onClick={() => navigate('/certification')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 50%, rgba(45,26,0,0.97) 0%, rgba(12,6,0,0.99) 55%, #050505 100%)', border: '1px solid rgba(212,175,55,0.55)', borderRadius: 24, cursor: 'pointer', boxShadow: '0 0 60px rgba(212,175,55,0.1)' }}>
+          <div style={{ position: 'absolute', top: -25, right: -25, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,220,80,0.16), transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1, padding: '22px 20px 20px' }}>
+            <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 9 }}>SIDDHA LINEAGE · 12-MONTH LIVING TRANSMISSION</p>
+            <div style={{ fontFamily: "'Cinzel',serif", fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, fontSize: 'clamp(20px,5.5vw,26px)', marginBottom: 11, maxWidth: '65%', background: 'linear-gradient(135deg,#D4AF37 0%,#F5E17A 40%,#D4AF37 60%,#A07C10 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'hShimmer 5s linear infinite' }}>SIDDHA HEALER'S<br/>SOVEREIGN PATH</div>
+            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.68, marginBottom: 14, maxWidth: '75%' }}>12 months of mantras, initiations &amp; healing mastery — from foundation to full certification with Kritagya &amp; Laila</p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 15 }}>
+              {['Personal Diksha','12 Modules','Certification'].map(l => (<span key={l} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 20, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', color: 'rgba(212,175,55,0.85)' }}>{l}</span>))}
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); navigate('/certification'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>EXPLORE →</button>
           </div>
-          <Link to="/practitioner-certification" style={{ display: 'inline-block', marginTop: 10, fontSize: 11, color: '#D4AF37', textDecoration: 'underline' }}>
-            Open full certification page →
-          </Link>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {CERT_MONTHS.map((mo) => {
-            const isOpen = expandedCertMonth === mo.n;
-            const title = mo.title.en;
-            const sub = mo.sub.en;
-            return (
-              <div key={mo.n} style={{
-                background: 'rgba(255,255,255,0.018)',
-                border: `1px solid ${isOpen ? 'rgba(212,175,55,0.38)' : 'rgba(255,255,255,0.06)'}`,
-                borderRadius: 22,
-                overflow: 'hidden',
-                transition: 'border-color .3s',
-              }}>
-                <div
-                  onClick={() => setExpandedCertMonth(isOpen ? null : mo.n)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', cursor: 'pointer' }}
-                >
-                  <div style={{
-                    width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, background: `${mo.color}18`, border: `1px solid ${mo.color}55`, color: mo.color,
-                  }}>
-                    {mo.glyph}
-                  </div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)' }}>Month {mo.n} · {mo.theme.join(' · ')}</div>
-                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.88)', marginTop: 2 }}>{title}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{sub}</div>
-                  </div>
-                  {isOpen ? <ChevronUp size={16} color="rgba(212,175,55,0.6)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.3)" />}
-                </div>
-
-                {isOpen && (
-                  <div style={{ padding: '0 18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div>
-                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>Initiation</div>
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>{mo.initiation}</p>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>Teaching</div>
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{mo.teaching}</p>
-                    </div>
-                    <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.12)' }}>
-                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 5 }}>Mantra — {mo.mantra.text}</div>
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 6 }}><em>{mo.mantra.pronunciation}</em></p>
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 6 }}>{mo.mantra.meaning}</p>
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>{mo.mantra.practice}</p>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 6 }}>Exercises</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {mo.exercises.map((ex, i) => (
-                          <p key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.65 }}>◈ {ex}</p>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 6 }}>Reflections</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {mo.reflections.map((r, i) => (
-                          <p key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', lineHeight: 1.65 }}>{r}</p>
-                        ))}
-                      </div>
-                    </div>
-                    <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.6)', lineHeight: 1.7, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>{mo.outcome}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       </section>
 
