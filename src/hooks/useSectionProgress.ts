@@ -9,11 +9,19 @@ export interface SectionProgressRow {
 
 /**
  * Per-section completion + notes for a single module's lesson accordion.
- * Separate from module-level progress (useAyurvedaProgress) -- this tracks
- * each accordion card (section_id) independently, so marking one section
- * complete or writing a note on it doesn't touch any other section.
+ * Separate from module-level progress -- this tracks each accordion card
+ * (section_id) independently, so marking one section complete or writing
+ * a note on it doesn't touch any other section.
+ *
+ * Generalized across academies via `tableName` -- each academy gets its
+ * own section-progress table (e.g. user_kayakalpa_section_progress) with
+ * the identical shape, so this one hook covers all of them instead of a
+ * copy-pasted hook per academy.
  */
-export function useSectionProgress(moduleId: string | undefined) {
+export function useSectionProgress(
+  moduleId: string | undefined,
+  tableName: string = 'user_lesson_section_progress',
+) {
   const { user } = useAuth();
   const [rows, setRows] = useState<Record<string, SectionProgressRow>>({});
   const [loading, setLoading] = useState(true);
@@ -28,8 +36,7 @@ export function useSectionProgress(moduleId: string | undefined) {
         return;
       }
       setLoading(true);
-      const { data, error } = await supabase
-        .from('user_lesson_section_progress')
+      const { data, error } = await (supabase.from(tableName as never) as any)
         .select('section_id, completed, notes')
         .eq('user_id', user.id)
         .eq('module_id', moduleId);
@@ -48,14 +55,14 @@ export function useSectionProgress(moduleId: string | undefined) {
     return () => {
       cancelled = true;
     };
-  }, [moduleId, user?.id]);
+  }, [moduleId, user?.id, tableName]);
 
   const upsertSection = useCallback(
     async (sectionId: string, patch: Partial<SectionProgressRow>) => {
       if (!moduleId || !user?.id) throw new Error('AUTH_REQUIRED');
       const prev = rows[sectionId] ?? { completed: false, notes: null };
       const merged = { ...prev, ...patch };
-      const { error } = await supabase.from('user_lesson_section_progress').upsert(
+      const { error } = await (supabase.from(tableName as never) as any).upsert(
         {
           user_id: user.id,
           module_id: moduleId,
@@ -70,7 +77,7 @@ export function useSectionProgress(moduleId: string | undefined) {
       if (error) throw error;
       setRows((r) => ({ ...r, [sectionId]: merged }));
     },
-    [moduleId, user?.id, rows],
+    [moduleId, user?.id, rows, tableName],
   );
 
   const toggleSectionComplete = useCallback(

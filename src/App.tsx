@@ -213,6 +213,7 @@ const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
 const OjasRasayanaAcademy = React.lazy(() => import("./pages/OjasRasayanaAcademy"));
 const KayakalpaAcademy = React.lazy(() => import("./pages/KayakalpaAcademy"));
+const KayakalpaModule = React.lazy(() => import("./pages/KayakalpaModule"));
 const BrahmacharyaAcademy = React.lazy(() => import("./pages/BrahmacharyaAcademy"));
 const SiddhaDreamAcademy = React.lazy(() => import("./pages/SiddhaDreamAcademy"));
 const SiddhaMediumshipAcademy = React.lazy(() => import("./pages/SiddhaMediumshipAcademy"));
@@ -482,6 +483,7 @@ function AppRoutes() {
                   <Route path="/siddha-portal" element={<SiddhaPortal />} />
                    <Route path="/ojas-rasayana" element={<OjasRasayanaAcademy />} />
                    <Route path="/kayakalpa-academy" element={<KayakalpaAcademy />} />
+                  <Route path="/kayakalpa-academy/module/:id" element={<KayakalpaModule />} />
                    <Route path="/brahmacharya-academy" element={<BrahmacharyaAcademy />} />
                   <Route path="/dream-academy" element={<SiddhaDreamAcademy />} />
                   <Route path="/siddha-mediumship-academy" element={<SiddhaMediumshipAcademy />} />
