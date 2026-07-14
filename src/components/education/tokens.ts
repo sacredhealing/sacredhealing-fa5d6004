@@ -57,28 +57,32 @@ export const READER_TYPE = {
   },
   title: {
     fontFamily: "'Cormorant Garamond',serif",
-    fontWeight: 600,
-    fontSize: '1.9rem',
-    lineHeight: 1.1,
+    fontWeight: 700,
+    fontSize: '2rem',
+    lineHeight: 1.15,
   },
   thesis: {
+    // No italic: italic serif is measurably harder to read, especially for
+    // older or low-vision readers. Plain weight, high contrast instead.
     fontFamily: "'Cormorant Garamond',serif",
-    fontStyle: 'italic' as const,
-    fontSize: '1.05rem',
-    lineHeight: 1.7,
+    fontWeight: 600,
+    fontSize: '1.3rem',
+    lineHeight: 1.75,
+    color: white(0.82),
   },
   body: {
     fontFamily: "'Cormorant Garamond',serif",
-    fontSize: '1.25rem',     // ~20px — above the 16-18px floor, sized for long-form reading
+    fontSize: '1.4rem',      // ~22px -- sized for someone reading at arm's length, not a design sample
+    fontWeight: 500,
     lineHeight: 1.75,        // above WCAG's 1.5 minimum
-    maxWidth: '62ch',        // inside the 50-75 char research range
-    color: white(0.85),
+    maxWidth: '58ch',        // slightly tighter measure at this larger size
+    color: white(0.92),      // high contrast, not a "quiet" gray
   },
   blockLabel: {
     fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: 800,
-    letterSpacing: '0.35em',
+    letterSpacing: '0.3em',
     textTransform: 'uppercase' as const,
   },
 } as const;

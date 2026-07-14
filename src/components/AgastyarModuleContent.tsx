@@ -18,7 +18,7 @@ const RichText: React.FC<{ text: string; style?: React.CSSProperties }> = ({ tex
           return <strong key={i} style={{ color: '#D4AF37', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
         }
         if (part.startsWith('*') && part.endsWith('*')) {
-          return <em key={i} style={{ color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>{part.slice(1, -1)}</em>;
+          return <strong key={i} style={{ color: 'rgba(255,255,255,0.98)', fontWeight: 700 }}>{part.slice(1, -1)}</strong>;
         }
         return <span key={i}>{part}</span>;
       })}
@@ -47,7 +47,7 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
       </h3>
     )}
     {section.body && (
-      <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, marginBottom: section.items ? '16px' : 0, fontFamily: "'Cormorant Garamond',serif" }}>
+      <div style={{ fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, marginBottom: section.items ? '16px' : 0, fontFamily: "'Cormorant Garamond',serif" }}>
         {section.body.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginBottom: '12px' }}>
             <RichText text={para} />
@@ -61,7 +61,7 @@ const TeachingSection: React.FC<{ section: ContentSection }> = ({ section }) => 
           <li key={i} style={{
             padding: '10px 0',
             borderBottom: i < (section.items?.length ?? 0) - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-            fontSize: '18px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
+            fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
             display: 'flex', gap: '10px', alignItems: 'flex-start',
           }}>
             <span style={{ color: '#D4AF37', flexShrink: 0, marginTop: '3px' }}>⟡</span>
@@ -287,8 +287,8 @@ const MantraSection: React.FC<{ section: ContentSection }> = ({ section }) => (
       )}
       {section.mantraMeaning && (
         <div style={{
-          fontSize: '13px', color: 'rgba(255,255,255,0.5)',
-          lineHeight: 1.7, fontStyle: 'italic',
+          fontSize: '17px', color: 'rgba(255,255,255,0.75)',
+          lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif",
           borderTop: '1px solid rgba(167,139,250,0.15)',
           paddingTop: '16px', marginTop: '4px',
         }}>
@@ -483,7 +483,7 @@ const SecretSection: React.FC<{ section: ContentSection }> = ({ section }) => {
       </h3>
     )}
     {section.body && (
-      <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
+      <div style={{ fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, fontFamily: "'Cormorant Garamond',serif" }}>
         {section.body.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginBottom: '12px' }}>
             <RichText text={para} />
@@ -534,7 +534,7 @@ const IntroSection: React.FC<{ text: string }> = ({ text }) => {
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '14px' }}>
         {t('academy.moduleContent.introSpeaks')}
       </div>
-      <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, fontStyle: 'italic', margin: 0 }}>
+      <p style={{ fontSize: '19px', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.85, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>
         "{text}"
       </p>
     </div>
@@ -564,7 +564,7 @@ const ClosingSection: React.FC<{ text: string }> = ({ text }) => {
       <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '14px' }}>
         {t('academy.moduleContent.closingTransmission')}
       </div>
-      <p style={{ fontSize: '19px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, fontStyle: 'italic', maxWidth: '600px', margin: '0 auto', fontFamily: "'Cormorant Garamond',serif" }}>
+      <p style={{ fontSize: '22px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', lineHeight: 1.85, maxWidth: '600px', margin: '0 auto', fontFamily: "'Cormorant Garamond',serif" }}>
         "{text}"
       </p>
     </div>
@@ -621,7 +621,7 @@ const DailyPractice: React.FC<{ text: string }> = ({ text }) => {
     <div style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: '12px' }}>
       {t('academy.moduleContent.dailyPracticeHeading')}
     </div>
-    <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.8, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>{text}</p>
+    <p style={{ fontSize: '22px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, margin: 0, fontFamily: "'Cormorant Garamond',serif" }}>{text}</p>
   </div>
   );
 };

@@ -244,7 +244,7 @@ export default function ModuleReaderShell({
             <h1 style={{ ...READER_TYPE.title, color: white(0.97), textShadow: `0 0 20px ${acGlow}`, margin: '0 0 10px' }}>
               {moduleTitle}
             </h1>
-            {thesis && <p style={{ ...READER_TYPE.thesis, color: white(0.6), margin: '0 0 14px' }}>{thesis}</p>}
+            {thesis && <p style={{ ...READER_TYPE.thesis, margin: '0 0 14px' }}>{thesis}</p>}
 
             <div style={{ marginBottom: headerExtra ? 12 : 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -335,7 +335,7 @@ export default function ModuleReaderShell({
                 }}>
                   <Lock size={18} color={accent} />
                 </div>
-                <p style={{ ...READER_TYPE.thesis, color: white(0.55), maxWidth: '46ch', margin: '0 auto 18px' }}>
+                <p style={{ ...READER_TYPE.thesis, color: white(0.7), maxWidth: '46ch', margin: '0 auto 18px' }}>
                   This module is part of a higher tier. Unlock it to continue the path.
                 </p>
                 {lockedCta}
