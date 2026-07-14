@@ -304,7 +304,7 @@ const AgastyarAcademy: React.FC = () => {
       <div className="mx-auto max-w-3xl px-4 pt-8 sm:px-6">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/siddha-portal')}
           className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-white/55 transition hover:border-[#34D399]/30 hover:text-[#34D399]"
         >
           <ArrowLeft size={14} className="text-[#34D399]/80" aria-hidden />
