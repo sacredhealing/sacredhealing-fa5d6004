@@ -716,13 +716,50 @@ const Healing: React.FC = () => {
         </button>
       </section>
 
-      {/* Language toggle */}
-      <div style={{ padding: '0 22px', marginBottom: 24 }}>
-        <div className="h-glass" style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>🌐 {t('healing.langLabel', 'Meditation language')}</span>
-          <HealingLanguageToggle language={language} setLanguage={setLanguage} />
+      {/* Sonic Treatments — moved right after the hero so the actual audio library is seen */}
+      {/* before any upsell copy. Language toggle merged in here since it directly filters */}
+      {/* which tracks show below (freeSessions/premiumSessions are derived from `language`). */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Vedic Light-Code Audio · Frequency Transmissions</div>
+          <div className="h-section-title h-shimmer">{T.medTitle}</div>
         </div>
-      </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <div className="h-glass" style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>🌐 {t('healing.langLabel', 'Meditation language')}</span>
+            <HealingLanguageToggle language={language} setLanguage={setLanguage} />
+          </div>
+        </div>
+
+        <Tabs defaultValue="free" className="space-y-4">
+          <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
+            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat1}</TabsTrigger>
+            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat3}</TabsTrigger>
+          </TabsList>
+
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
+
+          <TabsContent value="free" className="space-y-3 mt-4">
+            {freeSessions.length > 0 ? freeSessions.map((audio) => (
+              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
+            )) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+          </TabsContent>
+          <TabsContent value="premium" className="space-y-3 mt-4">
+            {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
+              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
+            )) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <button type="button" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 14, marginTop: 12, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => navigate('/meditations')}>
+          {T.viewAll} →
+        </button>
+      </section>
 
       <div style={{ padding: '0 22px 24px' }}>
         <div
@@ -820,44 +857,6 @@ const Healing: React.FC = () => {
           </AccordionItem>
         </Accordion>
       </div>
-
-      <div className="h-divider" />
-
-      {/* Sonic Treatments */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Vedic Light-Code Audio · Frequency Transmissions</div>
-          <div className="h-section-title h-shimmer">{T.medTitle}</div>
-        </div>
-
-        <Tabs defaultValue="free" className="space-y-4">
-          <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
-            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat1}</TabsTrigger>
-            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat3}</TabsTrigger>
-          </TabsList>
-
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
-
-          <TabsContent value="free" className="space-y-3 mt-4">
-            {freeSessions.length > 0 ? freeSessions.map((audio) => (
-              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
-            )) : (
-              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
-            )}
-          </TabsContent>
-          <TabsContent value="premium" className="space-y-3 mt-4">
-            {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
-              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
-            )) : (
-              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        <button type="button" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 14, marginTop: 12, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => navigate('/meditations')}>
-          {T.viewAll} →
-        </button>
-      </section>
 
       <div className="h-divider" />
 
