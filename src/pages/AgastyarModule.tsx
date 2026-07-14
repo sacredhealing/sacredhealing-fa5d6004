@@ -233,8 +233,9 @@ const AgastyarModule: React.FC = () => {
         try {
           await upsertProgress({ moduleId: module.id, notes: notesDraft });
           setNotesSaved(true);
-        } catch {
-          toast.error(t('academy.modulePlayer.toastNotesError'));
+        } catch (err) {
+          const detail = err instanceof Error ? err.message : String(err);
+          toast.error(`${t('academy.modulePlayer.toastNotesError')} (${detail})`);
         } finally {
           setSavingNotes(false);
         }
@@ -427,8 +428,9 @@ const AgastyarModule: React.FC = () => {
               await upsertProgress({ moduleId: module.id, notes: notesDraft });
               setNotesSaved(true);
               toast.success('Notes saved');
-            } catch {
-              toast.error(t('academy.modulePlayer.toastNotesError'));
+            } catch (err) {
+              const detail = err instanceof Error ? err.message : String(err);
+              toast.error(`${t('academy.modulePlayer.toastNotesError')} (${detail})`);
             } finally {
               setSavingNotes(false);
             }
