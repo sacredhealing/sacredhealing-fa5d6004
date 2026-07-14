@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContentSection, ModuleContent } from '@/data/moduleContent';
 import { CheckCircle, XCircle, BookOpen, Leaf, Zap, AlertTriangle, Star, ChevronDown } from 'lucide-react';
+import { useSectionProgress } from '@/hooks/useSectionProgress';
 
 // ─── MARKDOWN-STYLE BOLD/ITALIC RENDERER ──────────────────────
 const RichText: React.FC<{ text: string; style?: React.CSSProperties }> = ({ text, style }) => {
@@ -648,7 +649,7 @@ const TYPE_LABEL: Record<ContentSection['type'], string> = {
 };
 
 // ─── MAIN RENDERER — paginated, one section per screen ─────────
-const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }) => {
+const AgastyarModuleContent: React.FC<{ content: ModuleContent; moduleId: string }> = ({ content, moduleId }) => {
   const { t } = useTranslation();
   let quizCount = 0;
 
@@ -699,17 +700,23 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
   // same pattern as the academy's phase list (1. Adhi Vidya, 2. Jijnasa...),
   // reused here instead of a separate nav + flowing text.
   const [openIndex, setOpenIndex] = React.useState<number>(0);
+  const { rows: sectionRows, toggleSectionComplete, setSectionNotes } = useSectionProgress(moduleId);
+  const [noteSaveStatus, setNoteSaveStatus] = React.useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
 
   return (
     <div>
       {steps.map((s, i) => {
         const isOpen = openIndex === i;
+        const sectionState = sectionRows[s.id];
+        const isDone = sectionState?.completed ?? false;
+        const noteValue = sectionState?.notes ?? '';
+        const noteStatus = noteSaveStatus[s.id] ?? 'idle';
         return (
           <div
             key={s.id}
             style={{
               marginBottom: 10, borderRadius: 20, overflow: 'hidden',
-              border: `1px solid ${isOpen ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.06)'}`,
+              border: `1px solid ${isOpen ? 'rgba(52,211,153,0.35)' : isDone ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)'}`,
               background: isOpen ? 'rgba(52,211,153,0.04)' : 'rgba(255,255,255,0.012)',
             }}
           >
@@ -725,11 +732,11 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
                 <span style={{
                   width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex',
                   alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800,
-                  border: `1.5px solid ${isOpen ? '#34D399' : 'rgba(255,255,255,0.15)'}`,
-                  background: isOpen ? 'rgba(52,211,153,0.14)' : 'transparent',
-                  color: isOpen ? '#34D399' : 'rgba(255,255,255,0.4)',
+                  border: `1.5px solid ${isDone ? '#34D399' : isOpen ? '#34D399' : 'rgba(255,255,255,0.15)'}`,
+                  background: isDone ? 'rgba(52,211,153,0.22)' : isOpen ? 'rgba(52,211,153,0.14)' : 'transparent',
+                  color: isDone || isOpen ? '#34D399' : 'rgba(255,255,255,0.4)',
                 }}>
-                  {i + 1}
+                  {isDone ? <CheckCircle size={13} /> : i + 1}
                 </span>
                 <span style={{
                   fontFamily: "'Cormorant Garamond',serif", fontSize: '1.15rem', fontWeight: 700,
@@ -750,7 +757,58 @@ const AgastyarModuleContent: React.FC<{ content: ModuleContent }> = ({ content }
             {isOpen && (
               <div style={{ padding: '0 20px 24px' }}>
                 {s.render()}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+
+                {/* Per-section notes -- separate from every other section's notes */}
+                <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                      Notes for this section
+                    </span>
+                    {noteStatus === 'saving' && (
+                      <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '.1em', color: 'rgba(255,255,255,0.35)' }}>Saving…</span>
+                    )}
+                    {noteStatus === 'saved' && (
+                      <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '.1em', color: '#34D399', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <CheckCircle size={10} /> Saved
+                      </span>
+                    )}
+                    {noteStatus === 'error' && (
+                      <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '.1em', color: '#F87171' }}>Could not save</span>
+                    )}
+                  </div>
+                  <textarea
+                    value={noteValue}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setNoteSaveStatus((m) => ({ ...m, [s.id]: 'saving' }));
+                      setSectionNotes(s.id, v, (ok) => setNoteSaveStatus((m) => ({ ...m, [s.id]: ok ? 'saved' : 'error' })));
+                    }}
+                    rows={3}
+                    placeholder="Your reflections on this section..."
+                    style={{
+                      width: '100%', resize: 'vertical', borderRadius: 14,
+                      border: '1px solid rgba(255,255,255,.1)', background: 'rgba(5,5,5,.6)',
+                      padding: '10px 12px', fontSize: 14.5, color: 'rgba(255,255,255,.85)',
+                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, flexWrap: 'wrap', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => void toggleSectionComplete(s.id)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      background: isDone ? 'rgba(52,211,153,0.14)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${isDone ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                      color: isDone ? '#34D399' : 'rgba(255,255,255,0.6)',
+                      padding: '9px 16px', borderRadius: 999, fontSize: 10.5, fontWeight: 800,
+                      letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer',
+                    }}
+                  >
+                    <CheckCircle size={13} /> {isDone ? 'Completed' : 'Mark Complete'}
+                  </button>
                   <button
                     type="button"
                     disabled={i === steps.length - 1}

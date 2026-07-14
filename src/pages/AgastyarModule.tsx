@@ -513,14 +513,11 @@ const AgastyarModule: React.FC = () => {
       nextHref={nextModule && nextModuleAllowed ? `/agastyar-academy/module/${nextModule.id}` : null}
       headerExtra={bookmarkButton}
       footerExtra={
-        <>
-          {richModuleContent && (
-            <section aria-label={t('academy.moduleContent.richTeachingAria')}>
-              <AgastyarModuleContent content={richModuleContent} />
-            </section>
-          )}
-          {notesSection}
-        </>
+        richModuleContent && (
+          <section aria-label={t('academy.moduleContent.richTeachingAria')}>
+            <AgastyarModuleContent content={richModuleContent} moduleId={module.id} />
+          </section>
+        )
       }
     />
   );
