@@ -92,6 +92,7 @@ const AgastyarModule: React.FC = () => {
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [bookmarkBusy, setBookmarkBusy] = useState(false);
   const notesSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -218,17 +219,20 @@ const AgastyarModule: React.FC = () => {
 
   useEffect(() => {
     setNotesDraft(notesBaseline);
+    setNotesSaved(Boolean(notesBaseline));
   }, [notesBaseline, module?.id]);
 
   useEffect(() => {
     if (!module?.id || !user?.id || !allowed) return;
     if (notesDraft === notesBaseline) return;
+    setNotesSaved(false);
     if (notesSaveTimer.current) clearTimeout(notesSaveTimer.current);
     notesSaveTimer.current = setTimeout(() => {
       void (async () => {
         setSavingNotes(true);
         try {
           await upsertProgress({ moduleId: module.id, notes: notesDraft });
+          setNotesSaved(true);
         } catch {
           toast.error(t('academy.modulePlayer.toastNotesError'));
         } finally {
@@ -388,11 +392,15 @@ const AgastyarModule: React.FC = () => {
         >
           {t('academy.modulePlayer.notesLabel')}
         </label>
-        {savingNotes && (
+        {savingNotes ? (
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '.1em', color: 'rgba(255,255,255,.35)' }}>
             {t('academy.modulePlayer.saving')}
           </span>
-        )}
+        ) : notesSaved ? (
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '.1em', color: '#34D399', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <CheckCircle2 size={11} /> Saved
+          </span>
+        ) : null}
       </div>
       <textarea
         id="academy-notes"
@@ -407,6 +415,35 @@ const AgastyarModule: React.FC = () => {
           fontFamily: "'Plus Jakarta Sans',sans-serif",
         }}
       />
+      <button
+        type="button"
+        disabled={savingNotes || !module?.id || !user?.id}
+        onClick={() => {
+          if (notesSaveTimer.current) clearTimeout(notesSaveTimer.current);
+          if (!module?.id) return;
+          void (async () => {
+            setSavingNotes(true);
+            try {
+              await upsertProgress({ moduleId: module.id, notes: notesDraft });
+              setNotesSaved(true);
+              toast.success('Notes saved');
+            } catch {
+              toast.error(t('academy.modulePlayer.toastNotesError'));
+            } finally {
+              setSavingNotes(false);
+            }
+          })();
+        }}
+        style={{
+          marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'rgba(52,211,153,.1)', border: '1px solid rgba(52,211,153,.3)',
+          borderRadius: 999, padding: '9px 18px', color: '#34D399',
+          fontSize: 10, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase',
+          cursor: savingNotes ? 'default' : 'pointer', opacity: savingNotes ? 0.6 : 1,
+        }}
+      >
+        {savingNotes ? 'Saving…' : 'Save Notes'}
+      </button>
     </section>
   );
 
