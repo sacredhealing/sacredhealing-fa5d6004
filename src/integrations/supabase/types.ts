@@ -3898,6 +3898,7 @@ export type Database = {
           preview_url: string | null
           price_shc: number
           price_usd: number
+          required_tier: string
           script_text: string | null
           tags: string[] | null
           title: string
@@ -3916,6 +3917,7 @@ export type Database = {
           preview_url?: string | null
           price_shc?: number
           price_usd?: number
+          required_tier?: string
           script_text?: string | null
           tags?: string[] | null
           title: string
@@ -3934,6 +3936,7 @@ export type Database = {
           preview_url?: string | null
           price_shc?: number
           price_usd?: number
+          required_tier?: string
           script_text?: string | null
           tags?: string[] | null
           title?: string
