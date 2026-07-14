@@ -325,7 +325,7 @@ const AgastyarAcademy: React.FC = () => {
 
         <CourseSyllabus
           accent={teal(0.9)}
-          courseIcon="🪷"
+          courseIcon={<Leaf size={24} />}
           courseTitle={t('academy.title')}
           academyName="Agastyar Academy"
           progressLabel={`${stats.completedModules} / ${courses.length || 108} · ${stats.completionPercent}%`}

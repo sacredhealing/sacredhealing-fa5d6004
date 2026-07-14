@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronDown, Lock, Check } from 'lucide-react';
+import { ChevronLeft, ChevronDown, Lock, Check, BookOpen } from 'lucide-react';
 import { fade, white, teal, READER_TYPE, type RailModule, type RailGroup, type ContentBlock } from './tokens';
 import EducationKeyframes from './EducationKeyframes';
 
@@ -11,7 +11,10 @@ export interface ModuleReaderShellProps {
   academyHref: string;
   /** One-line course title shown at the top of the sidebar, Kajabi-style */
   courseTitle?: string;
-  courseIcon?: string; // emoji/icon shown in the sidebar thumbnail block
+  /** A React node (ideally an SVG icon component) shown in the sidebar thumbnail.
+   * Avoid raw emoji strings here -- they render as a blank/broken glyph on some
+   * desktop OS + browser + font combinations. Pass a lucide-react icon or inline SVG. */
+  courseIcon?: React.ReactNode;
   moduleNumber: number;
   totalModules: number;
   moduleTitle: string;
@@ -51,7 +54,7 @@ export default function ModuleReaderShell({
   academyName,
   academyHref,
   courseTitle,
-  courseIcon = '◆',
+  courseIcon = <BookOpen size={22} />,
   moduleNumber,
   totalModules,
   moduleTitle,
@@ -203,7 +206,7 @@ export default function ModuleReaderShell({
         position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid rgba(255,255,255,.06)',
         background: 'rgba(5,5,5,.9)', backdropFilter: 'blur(40px)', padding: '14px 16px',
       }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div className="reader-shell-container" style={{ margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <button
             onClick={() => navigate(academyHref)}
             style={{
@@ -220,7 +223,7 @@ export default function ModuleReaderShell({
         </div>
       </div>
 
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '20px 16px 0' }}>
+      <div className="reader-shell-container" style={{ margin: '0 auto', padding: '20px 16px 0' }}>
 
         {/* MODULE HEADER — same visual grammar as the hub's HeroCard */}
         <div style={{ position: 'relative', marginBottom: 20, animation: 'sqFadeUp .45s ease both' }}>
@@ -286,7 +289,7 @@ export default function ModuleReaderShell({
               <div style={{ padding: '0 14px 14px', borderBottom: '1px solid rgba(255,255,255,.06)', marginBottom: 10 }}>
                 <div style={{
                   width: '100%', aspectRatio: '16/9', borderRadius: 14, marginBottom: 12, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', fontSize: 26,
+                  alignItems: 'center', justifyContent: 'center', color: fade(accent, 0.9),
                   background: `radial-gradient(120% 120% at 20% 20%, ${fade(accent, 0.3)}, rgba(5,5,5,.9))`,
                   border: `1px solid ${acBorder}`,
                 }}>
@@ -416,9 +419,20 @@ export default function ModuleReaderShell({
       </div>
 
       <style>{`
+        .reader-shell-container { max-width: 760px; }
         @media (min-width: 860px) {
           .reader-rail-desktop { display: block !important; }
           .reader-rail-mobile { display: none !important; }
+        }
+        /* Wider screens (laptop/desktop/iPad landscape and up): the reader was
+           built mobile-first at a fixed 760px, which leaves a lot of unused
+           space on a real monitor. Scale up gradually -- mobile and tablet
+           portrait are untouched below 860px. */
+        @media (min-width: 1024px) {
+          .reader-shell-container { max-width: 920px; }
+        }
+        @media (min-width: 1440px) {
+          .reader-shell-container { max-width: 1080px; }
         }
       `}</style>
     </div>

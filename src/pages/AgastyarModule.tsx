@@ -11,6 +11,7 @@ import {
   Clock,
   ExternalLink,
   FileText,
+  Flower2,
   Loader2,
   Lock,
   Music,
@@ -487,7 +488,7 @@ const AgastyarModule: React.FC = () => {
       progressLabel={progressLabel}
       progressPercent={progressPercent}
       courseTitle="Ayurveda Mastery Path"
-      courseIcon="🪷"
+      courseIcon={<Flower2 size={24} />}
       railGroups={railGroups}
       contentBlocks={richModuleContent ? [] : [{ label: t('academy.modules.moduleMeta', { num: module.module_number, phase: module.phase }), body: fallbackBody }]}
       locked={!allowed}

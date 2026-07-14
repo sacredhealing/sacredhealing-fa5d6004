@@ -21,7 +21,9 @@ export interface SyllabusGroup {
 export interface CourseSyllabusProps {
   /** rgba token for this academy, e.g. teal(0.9), amber(0.9) — the ONLY thing that changes per academy */
   accent: string;
-  courseIcon: string;   // emoji
+  /** A React node (lucide icon or inline SVG) -- avoid raw emoji, they can render
+   * as a blank box on some desktop OS + browser + font combinations. */
+  courseIcon: React.ReactNode;
   courseTitle: string;
   academyName: string;
   progressLabel: string;   // "0 / 108 · 0%"
@@ -66,8 +68,8 @@ export default function CourseSyllabus({
       {/* Course header — identical anatomy every time, only accent/icon/title change */}
       <div className="flex items-center gap-4 mb-2">
         <div
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
-          style={{ background: `radial-gradient(120% 120% at 20% 20%, ${fade(accent, 0.3)}, rgba(5,5,5,0.9))`, border: `1px solid ${acBorder}` }}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
+          style={{ background: `radial-gradient(120% 120% at 20% 20%, ${fade(accent, 0.3)}, rgba(5,5,5,0.9))`, border: `1px solid ${acBorder}`, color: fade(accent, 0.9) }}
         >
           {courseIcon}
         </div>
