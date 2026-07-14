@@ -123,7 +123,6 @@ function getActiveNavTo(pathname: string): string | null {
         '/spiritual-transformation',
         '/sovereign-hormonal-alchemy',
         '/siddha-photonic-regeneration',
-        '/siddha-hair-growth',
         '/admin-quantum-apothecary-2045',
       ],
     },

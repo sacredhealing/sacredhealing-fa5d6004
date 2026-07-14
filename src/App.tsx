@@ -219,7 +219,6 @@ const SiddhaMediumshipAcademy = React.lazy(() => import("./pages/SiddhaMediumshi
 // WomanCode merged into Shakti Cycle Intelligence
 const AdminQuantumApothecary2045 = React.lazy(() => import("./pages/AdminQuantumApothecary2045"));
 const SiddhaPhotonicRegeneration = React.lazy(() => import("./pages/SiddhaPhotonicRegeneration"));
-const SiddhaHairGrowth = React.lazy(() => import("./pages/SiddhaHairGrowth"));
 const AethericHeliostat = React.lazy(() => import("./pages/AethericHeliostat"));
 const AtmosphericClearanceEngine = React.lazy(() => import("./pages/AtmosphericClearanceEngine"));
 const WealthBeacon = React.lazy(() => import("./pages/WealthBeacon"));
@@ -490,7 +489,6 @@ function AppRoutes() {
                   <Route path="/sovereign-hormonal-alchemy" element={<SovereignHormonalAlchemy />} />
                   <Route path="/womancode" element={<Navigate to="/sovereign-hormonal-alchemy" replace />} />
                   <Route path="/siddha-photonic-regeneration" element={<SiddhaPhotonicRegeneration />} />
-                  <Route path="/siddha-hair-growth" element={<SiddhaHairGrowth />} />
                   <Route path="/aetheric-heliostat" element={<AethericHeliostat />} />
                   <Route path="/atmospheric-clearance-engine" element={<AtmosphericClearanceEngine />} />
                   <Route path="/wealth-beacon" element={<WealthBeacon />} />

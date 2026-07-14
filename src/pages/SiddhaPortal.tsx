@@ -598,7 +598,7 @@ export default function SiddhaPortal() {
         )}
 
         {/* ══ CATEGORY 1: AYURVEDA & SIDDHA MEDICINE ══ */}
-        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Hair · Fasting" ac={teal(0.9)} count={5} delay={0.06} defaultOpen>
+        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Fasting" ac={teal(0.9)} count={4} delay={0.06} defaultOpen>
           <HeroCard SvgIcon={Icon.Herb} label="108 Modules · Agastyar Lineage · Complete Vidya" title="Agastyar Academy"
             desc="The most comprehensive Ayurveda education ever assembled — 108 modules across all four tiers, rooted entirely in Agastyar's direct transmission from the Tamil Siddha lineage."
             tiers={[{l:'Free · M1–27',c:white(0.5)},{l:'Prana · M28–54',c:green(0.85)},{l:'Siddha · M55–81',c:teal(0.9)},{l:'Akasha · M82–108',c:gold(0.95)}]}
@@ -613,10 +613,6 @@ export default function SiddhaPortal() {
             desc="The supreme Siddha science of physical immortality — the complete Kaya Kalpa protocol for radical cellular rejuvenation, mercury alchemy, and longevity beyond 200 years."
             tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–5',c:green(0.85)},{l:'Siddha · M6–9',c:teal(0.9)},{l:'Akasha · M10–12',c:gold(0.95)}]}
             cta="Enter the Academy" href="/kayakalpa-academy" ac={teal(0.9)} badge="LIVE"/>
-          <HeroCard SvgIcon={Icon.Herb} label="Siddha Hair · Bogar Protocol · Rasayana" title="Siddha Hair Growth Science"
-            desc="Bogar's complete Siddha protocol for hair regeneration — the alchemical hair oils, scalp Marma therapy, lunar timing, and the internal Rasayana for follicle revival."
-            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}
-            cta="Enter the Transmission" href="/siddha-hair-growth" ac={teal(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Flame} label="Siddha Fasting · Detox · Ojas Renewal" title="Siddha Fasting Academy"
             desc="The complete Siddha science of therapeutic fasting — from one-day Ekadashi fasts through extended Langhana protocols for disease reversal, Ojas renewal, and spiritual purification."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}

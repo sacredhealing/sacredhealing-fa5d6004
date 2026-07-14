@@ -69,7 +69,6 @@ const TIERS_EN = [
       'Agastyar Ayurveda Academy — Siddha tier (108 modules total path)',
       'Shakti Cycle Intelligence — hormonal phase protocol, dosha sync & secretion tracking',
       'Siddha-Photonic Regeneration Node — biophotonic cellular regeneration & GHK-Cu activation',
-      'SiddhaHairGrowth SQI 2050 — bio-alchemist protocols via Akasha-Neural Archive',
       'Full Vedic Ayurveda system — prakriti analysis, seasonal protocols & daily rhythm',
       'Personalised Vedic Healing Insight from your live Jyotish chart',
       'Explore Akasha — Divine Transmissions, Oracle Talks & Sacred Series (EN & SV audio)',
