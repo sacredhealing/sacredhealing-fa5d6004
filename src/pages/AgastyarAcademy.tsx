@@ -496,8 +496,12 @@ const HubModuleCard: React.FC<{
     <button
       type="button"
       onClick={() => (allowed ? onNavigateModule() : onNavigateUpgrade(upgradeHref))}
-      className={`relative w-full overflow-hidden rounded-[22px] border p-5 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/25 ${
-        completed ? 'border-[#D4AF37]/25 bg-gradient-to-br from-[#D4AF37]/08 to-transparent' : 'border-white/[0.06] bg-white/[0.02]'
+      className={`relative w-full overflow-hidden rounded-[22px] border p-5 text-left transition hover:-translate-y-0.5 ${
+        completed
+          ? 'border-[#34D399]/30 bg-gradient-to-br from-[#34D399]/10 to-transparent'
+          : !allowed
+            ? 'border-white/[0.05] bg-white/[0.015] opacity-70'
+            : 'border-white/[0.06] bg-white/[0.02] hover:border-[#34D399]/25'
       }`}
       style={{ backdropFilter: 'blur(40px)' }}
     >
@@ -505,57 +509,44 @@ const HubModuleCard: React.FC<{
         #{String(m.module_number).padStart(3, '0')}
       </span>
       <div
-        className="mb-3 inline-flex items-center gap-1 rounded-md border px-2 py-0.5"
-        style={{ background: glow, borderColor: `${tierColor}33` }}
+        className="mb-3 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1"
+        style={{ background: glow, borderColor: `${tierColor}44` }}
       >
-        {!allowed && <Lock size={9} style={{ color: tierColor }} aria-hidden />}
-        {completed && <CheckCircle2 size={9} className="text-[#D4AF37]" aria-hidden />}
-        <span className="text-[7px] font-extrabold uppercase tracking-[0.35em]" style={{ color: tierColor }}>
+        {!allowed && <Lock size={10} style={{ color: tierColor }} aria-hidden />}
+        {completed && <CheckCircle2 size={10} className="text-[#34D399]" aria-hidden />}
+        <span className="text-[8px] font-extrabold uppercase tracking-[0.3em]" style={{ color: tierColor }}>
           {t(tierLabelKey(m.tier_required || 'free'))}
         </span>
       </div>
       <h3 className={`pr-10 text-sm font-black leading-snug ${allowed ? 'text-white' : 'text-white/45'}`}>{m.title}</h3>
       {m.subtitle && (
-        <p className={`mt-1 text-[11px] ${allowed ? 'text-[#D4AF37]/75' : 'text-[#D4AF37]/35'}`}>{m.subtitle}</p>
+        <p className={`mt-1 text-[11px] ${allowed ? 'text-[#34D399]/80' : 'text-white/30'}`}>{m.subtitle}</p>
       )}
       {m.description && (
         <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-white/40">{m.description}</p>
       )}
       <div className="mt-4 flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/30">
-          {m.duration_minutes != null && (
-            <span className="inline-flex items-center gap-1">
-              <Clock size={10} aria-hidden />
-              {m.duration_minutes}m
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1 capitalize">
-            {(m.content_type || 'video').toLowerCase() === 'video' && <Play size={10} aria-hidden />}
-            {(m.content_type || '').toLowerCase() === 'audio' && <Music size={10} aria-hidden />}
-            {(m.content_type || '').toLowerCase() === 'pdf' && <FileText size={10} aria-hidden />}
-            {(m.content_type || '').toLowerCase() === 'interactive' && <Zap size={10} aria-hidden />}
-            {(m.content_type || '').toLowerCase() === 'live' && <Users size={10} aria-hidden />}
-            {!m.content_type && <Play size={10} aria-hidden />}
-            {contentTypeLabel(t, m.content_type)}
-          </span>
-        </div>
         {allowed ? (
           <span
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
-              completed ? 'border-[#D4AF37]/35 bg-[#D4AF37]/12 text-[#D4AF37]' : 'border-white/[0.1] text-white/45'
+              completed ? 'border-[#34D399]/40 bg-[#34D399]/14 text-[#34D399]' : 'border-white/[0.1] text-white/45'
             }`}
           >
-            {completed ? <CheckCircle2 size={14} aria-hidden /> : <Play size={12} className="translate-x-px" aria-hidden />}
+            {completed ? <CheckCircle2 size={14} aria-hidden /> : <BookOpen size={12} aria-hidden />}
           </span>
         ) : (
-          <span className="text-[8px] font-extrabold uppercase tracking-[0.28em]" style={{ color: tierColor }}>
-            {t('academy.modules.unlockCta')} →
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[8px] font-extrabold uppercase tracking-[0.25em]"
+            style={{ borderColor: `${tierColor}55`, color: tierColor, background: glow }}
+          >
+            <Lock size={9} aria-hidden />
+            {t('academy.modules.unlockCta')}
           </span>
         )}
       </div>
       {allowed && pct > 0 && !completed && (
         <div className="mt-3 h-0.5 overflow-hidden rounded-full bg-white/[0.06]">
-          <div className="h-full rounded-full bg-[#D4AF37]" style={{ width: `${pct}%` }} />
+          <div className="h-full rounded-full bg-[#34D399]" style={{ width: `${pct}%` }} />
         </div>
       )}
     </button>
