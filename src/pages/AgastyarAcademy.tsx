@@ -278,68 +278,49 @@ const AgastyarAcademy: React.FC = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden pb-28 text-white/90" style={{ background: '#050505' }}>
-      {/* Hero */}
-      <div className="relative border-b border-white/[0.05] pb-14 pt-16 sm:pt-20">
-        <ParticleField />
-        <div
-          className="pointer-events-none absolute left-1/2 top-[-100px] h-[400px] w-[min(600px,100vw)] -translate-x-1/2 rounded-full"
-          style={{
-            background: 'radial-gradient(ellipse, rgba(212,175,55,0.09) 0%, transparent 72%)',
-          }}
-        />
-        <div className="relative z-[1] mx-auto max-w-6xl px-4 sm:px-6">
+      {/* Compact header — title, one-line subtitle, single progress bar */}
+      <div className="relative border-b border-white/[0.05] pb-8 pt-8 sm:pt-10">
+        <div className="relative z-[1] mx-auto max-w-3xl px-4 sm:px-6">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-white/55 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-white/55 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
           >
             <ArrowLeft size={14} className="text-[#D4AF37]/80" aria-hidden />
             {t('academy.back')}
           </button>
 
-          <div className="mb-6 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-4 py-2 text-[8px] font-extrabold uppercase tracking-[0.45em] text-[#D4AF37]">
-              <Sparkles size={11} aria-hidden />
-              {t('academy.hub.heroBadge')}
-              <Sparkles size={11} aria-hidden />
-            </span>
+          <div className="flex items-center gap-4">
+            <div
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
+              style={{ background: 'radial-gradient(120% 120% at 20% 20%, rgba(52,211,153,0.3), rgba(5,5,5,0.9))', border: '1px solid rgba(52,211,153,0.42)' }}
+            >
+              🪷
+            </div>
+            <div className="min-w-0">
+              <p
+                className="truncate text-[26px] font-semibold leading-tight"
+                style={{ fontFamily: "'Cormorant Garamond',serif" }}
+              >
+                {t('academy.title')}
+              </p>
+              {user && (
+                <p className="mt-1 text-[11px] font-extrabold" style={{ color: '#34D399' }}>
+                  {stats.completedModules} / {courses.length || 108} · {stats.completionPercent}%
+                </p>
+              )}
+            </div>
           </div>
 
-          <h1 className="mb-4 bg-gradient-to-br from-white via-[#D4AF37]/95 to-[#D4AF37]/50 bg-clip-text text-center text-3xl font-black tracking-[-0.04em] text-transparent sm:text-5xl">
-            {t('academy.title')}
-          </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-center text-sm leading-relaxed text-white/45 sm:text-base">
-            {t('academy.hub.heroSubtitle')}
-          </p>
-
-          {user && (
-            <div className="mx-auto mb-4 flex max-w-4xl flex-wrap justify-center gap-3">
-              <StatCard
-                label={t('academy.hub.statsModulesComplete')}
-                value={stats.completedModules}
-                icon={<CheckCircle2 size={18} aria-hidden />}
-              />
-              <StatCard
-                label={t('academy.hub.statsCurrentPhase')}
-                value={stats.currentPhase}
-                icon={<TrendingUp size={18} aria-hidden />}
-              />
-              <StatCard
-                label={t('academy.hub.statsHoursLearned')}
-                value={Math.round(stats.totalMinutesLearned / 60)}
-                icon={<Clock size={18} aria-hidden />}
-              />
-              <StatCard
-                label={t('academy.hub.statsCompletion')}
-                value={`${stats.completionPercent}%`}
-                icon={<Award size={18} aria-hidden />}
-                accent="#A78BFA"
+          {user ? (
+            <div className="mt-4 h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
+              <div
+                className="h-full rounded-full transition-[width] duration-700"
+                style={{ width: `${stats.completionPercent}%`, background: 'linear-gradient(90deg,#34D399,rgba(52,211,153,0.6))' }}
               />
             </div>
-          )}
-
-          {!user && (
-            <div className="text-center">
+          ) : (
+            <div className="mt-6 text-center">
               <button
                 type="button"
                 onClick={() => navigate('/auth')}
@@ -352,72 +333,7 @@ const AgastyarAcademy: React.FC = () => {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        {user && (
-          <div className="mb-10 rounded-[28px] border border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] p-6 backdrop-blur-xl sm:flex sm:items-center sm:justify-between sm:gap-8">
-            <div className="flex flex-1 items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10">
-                <Leaf className="text-[#D4AF37]" size={26} aria-hidden />
-              </div>
-              <div>
-                <p className="mb-1 text-[8px] font-extrabold uppercase tracking-[0.45em] text-[#D4AF37]/85">
-                  {t('academy.hub.doshaKicker')}
-                </p>
-                <p className="mb-1 text-lg font-black text-white/95">{t('academy.hub.doshaTitle')}</p>
-                <p className="text-sm text-white/45">{t('academy.hub.doshaBody')}</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/ayurveda')}
-              className="mt-5 w-full shrink-0 rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-6 py-3 text-[9px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37] transition hover:bg-[#D4AF37]/15 sm:mt-0 sm:w-auto"
-            >
-              {t('academy.hub.doshaCta')}
-            </button>
-          </div>
-        )}
-
-        <section className="mb-10">
-          <h2 className="mb-4 text-[10px] font-extrabold uppercase tracking-[0.45em] text-[#D4AF37]/70">
-            {t('academy.hub.quickLinks')}
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/jyotish-vidya"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
-            >
-              <Star size={16} aria-hidden />
-              {t('academy.links.jyotishVidya')}
-            </Link>
-            <Link
-              to="/quantum-apothecary"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37]"
-            >
-              <BookOpen size={16} aria-hidden />
-              {t('academy.links.apothecary')}
-              {!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary) && (
-                <Lock size={12} className="text-white/35" aria-hidden />
-              )}
-            </Link>
-            <Link
-              to="/temple-home"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
-            >
-              <Home size={16} aria-hidden />
-              {t('academy.links.temple')}
-              {!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.templeHome) && (
-                <Lock size={12} className="text-white/35" aria-hidden />
-              )}
-            </Link>
-            <Link
-              to="/nadi-scanner"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
-            >
-              <Radio size={16} aria-hidden />
-              {t('academy.links.nadi')}
-            </Link>
-          </div>
-        </section>
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
 
         <section className="mb-10">
           <h2 className="mb-4 text-[10px] font-extrabold uppercase tracking-[0.45em] text-white/35">
@@ -531,84 +447,8 @@ const AgastyarAcademy: React.FC = () => {
           </div>
         )}
 
-        <section className="glass-card mt-14 rounded-[32px] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.04] p-8 text-center backdrop-blur-[40px] sm:p-10">
-          <GraduationCap className="mx-auto mb-4 text-[#D4AF37]/60" size={32} aria-hidden />
-          <p className="mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-[#D4AF37]/70">
-            {t('academy.hub.closingQuoteTitle')}
-          </p>
-          <p className="mx-auto mb-4 max-w-3xl text-[15px] italic leading-relaxed text-white/70">{t('academy.quote')}</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]/55">{t('academy.quoteAttribution')}</p>
-        </section>
-
-        <section className="mt-12">
-          <h2 className="mb-6 text-center text-[10px] font-extrabold uppercase tracking-[0.45em] text-white/35">
-            {t('academy.hub.pathToMastery')}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {PAID_TIER_SLUGS.map((slug) => {
-              const conv = paidSlugToConversionKey(slug);
-              const label = t(`conversion.tiers.${conv}.label`);
-              const price = t(`conversion.tiers.${conv}.price`);
-              const accent =
-                slug === 'prana-flow' ? '#4ADE80' : slug === 'siddha-quantum' ? '#D4AF37' : '#A78BFA';
-              const userR = getTierRank(tier);
-              const needR = getCourseTierRequiredRank(slug);
-              const isYours = !isAdmin && canonicalPaidSlug(tier) === slug;
-
-              return (
-                <div
-                  key={slug}
-                  className="relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-white/[0.02] p-6 backdrop-blur-xl"
-                  style={{
-                    borderColor: isYours ? `${accent}44` : undefined,
-                    boxShadow: isYours ? `0 0 40px ${accent}12` : undefined,
-                  }}
-                >
-                  {isYours && (
-                    <span
-                      className="absolute right-3 top-3 rounded px-2 py-0.5 text-[7px] font-extrabold uppercase tracking-[0.25em]"
-                      style={{ border: `1px solid ${accent}44`, color: accent }}
-                    >
-                      {t('academy.hub.yourTierBadge')}
-                    </span>
-                  )}
-                  <p className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.4em]" style={{ color: accent }}>
-                    {label}
-                  </p>
-                  <p className="text-lg font-black text-white">{price}</p>
-                  {!isAdmin && userR < needR ? (
-                    <button
-                      type="button"
-                      onClick={() => navigate(getSalesPageForRank(needR))}
-                      className="mt-5 w-full rounded-xl border py-2.5 text-[8px] font-extrabold uppercase tracking-[0.28em] transition hover:bg-white/[0.05]"
-                      style={{ borderColor: `${accent}55`, color: accent }}
-                    >
-                      {t('academy.hub.tierExploreCta')}
-                    </button>
-                  ) : !isAdmin ? (
-                    <p className="mt-5 text-[10px] text-white/35">{t('academy.hub.tierIncluded')}</p>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="mt-10 rounded-[28px] border border-[#D4AF37]/15 bg-[#D4AF37]/[0.06] px-5 py-4">
-          <p className="text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">{t('academy.progress.title')}</p>
-          <p className="mt-1 text-sm text-white/70">
-            {t('academy.progress.summary', {
-              completed: progressSummary.completed,
-              unlocked: progressSummary.unlocked,
-            })}
-          </p>
-          <p className="mt-2 text-[10px] text-white/35">
-            {t('academy.progress.catalog')}: <span className="font-black text-[#D4AF37]">{progressSummary.total}</span>
-          </p>
-        </section>
-
-        <footer className="mt-12 pb-8 text-center">
-          <p className="text-[9px] font-extrabold uppercase tracking-[0.45em] text-white/35">{t('academy.footer')}</p>
+        <footer className="mt-10 pb-8 text-center">
+          <p className="text-[9px] font-extrabold uppercase tracking-[0.45em] text-white/25">{t('academy.footer')}</p>
         </footer>
       </div>
     </div>
