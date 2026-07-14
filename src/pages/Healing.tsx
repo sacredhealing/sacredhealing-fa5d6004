@@ -748,7 +748,7 @@ const Healing: React.FC = () => {
         <Tabs defaultValue="free" className="space-y-4">
           <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
             <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medFreeLabel}</TabsTrigger>
-            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}><Lock size={9} />{T.medPremiumLabel}</TabsTrigger>
+            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>{!(isAdmin || hasHealingAccess) && <Lock size={9} />}{T.medPremiumLabel}</TabsTrigger>
           </TabsList>
 
           <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
@@ -768,10 +768,6 @@ const Healing: React.FC = () => {
             )}
           </TabsContent>
         </Tabs>
-
-        <button type="button" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 14, marginTop: 12, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => navigate('/meditations')}>
-          {T.viewAll} →
-        </button>
       </section>
 
       <div style={{ padding: '0 22px 24px' }}>
