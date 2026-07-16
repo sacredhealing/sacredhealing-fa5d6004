@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { computeCurrentTransitLongitudes } from "../_shared/current-transits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -351,6 +352,47 @@ serve(async (req) => {
     // previously felt generic/agreeable rather than grounded in the
     // specific, multidimensional chart.
     const chartAnalysis = body.chart_analysis ? String(body.chart_analysis) : '';
+    const natalMoonLongitude = typeof body.natal_moon_longitude === 'number' ? body.natal_moon_longitude : null;
+
+    // ── Current transits (Gochar) + Sade Sati — the one piece of this
+    // system that depends on TODAY's date, not birth data. Uses the same
+    // verified orbital-mechanics formula as the natal chart (see
+    // _shared/current-transits.ts), so transit signs are computed with
+    // the same methodology/ayanamsha as everything else here. ──
+    let transitBlock = '';
+    {
+      const TRANSIT_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+      const signIdxFromLon = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
+      const transitLons = computeCurrentTransitLongitudes();
+      const lagnaSignIdx = calcLagna ? TRANSIT_SIGNS.findIndex(s => s.toLowerCase() === calcLagna.toLowerCase()) : -1;
+      if (transitLons && lagnaSignIdx !== -1) {
+        const lines: string[] = [];
+        const order = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'] as const;
+        for (const p of order) {
+          const lon = transitLons[p];
+          if (lon == null) continue;
+          const signIdx = signIdxFromLon(lon);
+          const house = ((signIdx - lagnaSignIdx + 12) % 12) + 1;
+          lines.push(`${p.charAt(0).toUpperCase() + p.slice(1)}: transiting ${TRANSIT_SIGNS[signIdx]}, natal House ${house}`);
+        }
+        let sadeSatiLine = '';
+        if (natalMoonLongitude != null && transitLons.saturn != null) {
+          const moonSignIdx = signIdxFromLon(natalMoonLongitude);
+          const saturnSignIdx = signIdxFromLon(transitLons.saturn);
+          const houseFromMoon = ((saturnSignIdx - moonSignIdx + 12) % 12) + 1;
+          if (houseFromMoon === 12 || houseFromMoon === 1 || houseFromMoon === 2) {
+            const phase = houseFromMoon === 12 ? 'first phase (rising — House 12 from natal Moon)'
+              : houseFromMoon === 1 ? 'peak phase (Saturn transiting the natal Moon sign itself — House 1 from Moon)'
+              : 'final phase (setting — House 2 from natal Moon)';
+            sadeSatiLine = `Sade Sati: ACTIVE — Saturn is transiting the ${phase}.`;
+          } else {
+            sadeSatiLine = 'Sade Sati: not currently active (Saturn is not within one sign of natal Moon).';
+          }
+        }
+        const dateLabel = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        transitBlock = `\n── CURRENT TRANSITS (GOCHAR) — as of ${dateLabel} ──\n${lines.join('\n')}\n${sadeSatiLine}\n\nFor any "when will this happen" or "is now a good time" question, cross-reference each transiting planet's CURRENT sign against that same planet's own Bhinnashtakavarga spread already given above in the ASHTAKAVARGA section — the bindu count in the sign it's transiting through (5+ delivers, 0-3 underperforms) is the classical way to judge whether a transit will actually produce results, alongside the current Mahadasha/Antardasha.`;
+      }
+    }
 
     const ephemerisBlock = calcMahadasha ? `
 ━━━ CALCULATED EPHEMERIS (VedAstro Swiss Ephemeris — Lahiri — AUTHORITATIVE) ━━━
@@ -359,7 +401,7 @@ Moon Nakshatra: ${calcNakshatra || 'see birth data'}
 Current Mahadasha: ${calcMahadasha} (${mahaStart} → ${mahaEnd})
 Current Antardasha: ${calcAntardasha} (${antarStart} → ${antarEnd})
 ${chartAnalysis ? `\n${chartAnalysis}\n\nUSE THIS DATA for any domain-specific question — not just the dasha lord. Start from HOUSE LORDSHIP: identify which house governs the domain being asked about (examples: 3rd = short journeys/courage, 9th = long journeys/dharma/fortune, 12th = foreign travel/loss/liberation, 7th = partnership/marriage, 10th = career, 2nd/11th = wealth), find that house's lord and where the lord currently sits, then read: the planet(s) placed in the house itself, their dignity (exalted/debilitated/own/moolatrikona changes the strength of a placement significantly), whether they are combust, whether they are retrograde (Vakri — traditionally read as intensifying or internalizing that planet's effect, and in some houses/questions delaying an outcome rather than denying it), what conjoins them, and what aspects (drishti) reach that house from elsewhere in the chart. Check the YOGAS list for anything directly relevant — a Raja Yoga or Dhana Yoga touching the relevant houses strengthens an answer, a Kemadruma or an unresolved Mangal/Kaal Sarp Dosha should be named honestly, not glossed over. Check ASHTAKAVARGA for house-strength context — a house's Sarvashtakavarga (30+ strong, below 25 weak, 28 average) tells you how much structural support that house has independent of any single placement, and a planet's own Bhinnashtakavarga count in a sign matters directly whenever the seeker's question involves timing (when will this happen, is this a good period) — low bindus there means even a favorable dasha or transit will underperform, high bindus means it delivers. The JAIMINI CHARA KARAKAS reframe the same chart by soul-function (Darakaraka for spouse-quality questions, Amatyakaraka for career direction, etc.) and can add a layer D1 alone won't show. For marriage/spouse questions specifically, weigh UPAPADA LAGNA (UL) alongside the Darakaraka and the 7th house rather than any one alone — UL speaks to the marriage as a social institution and the spouse's visible qualities, which is a different angle than the 7th house's "desire and interaction" or the Darakaraka's soul-level pull; when they agree, say so with more confidence, when they diverge, name the different angle each is describing rather than picking one and ignoring the rest. Then cross-check against the divisional charts, each with its own Lagna and houses: NAVAMSA (D9) for marriage, dharma, and the true inner strength of any D1 placement — D9 frequently overrides what D1 alone suggests, especially for relationship and long-term-outcome questions; DASAMSA (D10) for career and public-life questions; SAPTAMSA (D7) for questions about children. SHASHTIAMSA (D60) is supplementary only, flagged separately for birth-time sensitivity — texture, not a primary basis. A single well-placed or well-aspected planet can override an otherwise weak house, a strong D1 house can be undone by an afflicting aspect or debilitation, and a difficult D1 placement can be redeemed by a strong divisional-chart placement or vice versa — read the full layered picture across everything provided, not one data point in isolation, and say so explicitly when different layers point in different directions. Answer from what this data actually shows. Do not default to a favorable answer because it is what the seeker wants to hear, and do not invent a relationship the data doesn't support. And regardless of how much is given to you here: speak as Bhrigu, in prose, weaving in only what matters for this seeker's actual question — never as a recitation of the data itself.` : `\nNo full chart-analysis data was provided for this reading. You do NOT have the individual planetary house placements, lordship, dignity, aspects, yogas, karakas, or divisional charts — only Lagna, Moon Nakshatra, and current dasha. Do not fabricate specific house-lord relationships, yogas, or divisional-chart placements you cannot see. For domain-specific yes/no questions, answer only from what the dasha planet and Lagna genuinely indicate, and say plainly that a complete reading would require the full chart data if the seeker is asking something that depends on placements you don't have.`}
-ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha dates. Never approximate or guess dasha end years.` : '';
+ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha dates. Never approximate or guess dasha end years.${transitBlock}` : '';
     console.log('[bhrigu-oracle] ephemeris check:', {
       mode, isStudentReading, dob, hasCalcMahadasha: !!calcMahadasha,
       calcLagna, calcNakshatra, calcMahadasha, calcAntardasha,

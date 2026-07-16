@@ -823,6 +823,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
           antardasha_start:   studentEphemeris.dashaData?.activeAntar?.start,
           antardasha_end:     studentEphemeris.dashaData?.activeAntar?.end,
           chart_analysis: buildChartAnalysisBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes, studentEphemeris.ascendantLongitude, studentEphemeris.retrogradeFlags),
+          natal_moon_longitude: studentEphemeris.planetLongitudes?.moon ?? null,
         } : {}),
       },
     });
