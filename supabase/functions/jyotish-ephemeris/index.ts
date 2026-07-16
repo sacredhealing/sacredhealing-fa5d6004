@@ -393,6 +393,44 @@ function computeAllPlanetLongitudesFallback(
   }
 }
 
+// Retrograde detection: samples the same fallback formula at birth date and
+// birth date + 1 day, then checks the SIGN of daily motion (not the fallback
+// formula's absolute position, which is lower-precision than VedAstro).
+// Using two samples from the same formula keeps any systematic offset in
+// the fallback's absolute position from corrupting the velocity direction —
+// only the difference between two same-formula samples matters here, so
+// it's safe to use even when the primary chart came from VedAstro.
+// Sun and Moon are never retrograde (excluded). Rahu/Ketu are always
+// retrograde by definition of lunar node motion — no computation needed.
+function computeRetrogradeFlags(
+  birthDate: string, birthTime: string, utcOffsetHours: number
+): Record<string, boolean> | null {
+  try {
+    const day0 = computeAllPlanetLongitudesFallback(birthDate, birthTime, utcOffsetHours);
+    if (!day0) return null;
+    const [yr, mo, dy] = birthDate.split('-').map(Number);
+    const next = new Date(Date.UTC(yr, mo - 1, dy + 1));
+    const nextDateStr = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+    const day1 = computeAllPlanetLongitudesFallback(nextDateStr, birthTime, utcOffsetHours);
+    if (!day1) return null;
+
+    const flags: Record<string, boolean> = { rahu: true, ketu: true };
+    for (const planet of ['mars', 'mercury', 'jupiter', 'venus', 'saturn'] as const) {
+      const l0 = day0[planet], l1 = day1[planet];
+      if (l0 == null || l1 == null) continue;
+      // Normalize the difference to [-180, 180] to correctly handle the
+      // 0°/360° wraparound (e.g. 359° -> 1° is +2° forward motion, not -358°).
+      let diff = l1 - l0;
+      diff = ((diff + 180) % 360 + 360) % 360 - 180;
+      flags[planet] = diff < 0;
+    }
+    return flags;
+  } catch (e) {
+    console.error('computeRetrogradeFlags error:', e);
+    return null;
+  }
+}
+
 function guessBirthCoords(place: string): { lat: number; lon: number } {
   const p = place.toLowerCase();
   const locs: { keys: string[]; lat: number; lon: number }[] = [
@@ -648,7 +686,7 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("jyotish_profiles")
       .select(
-        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes"
+        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes, retrograde_flags"
       )
       .eq("user_id", userId)
       .single();
@@ -673,6 +711,7 @@ serve(async (req) => {
           marsSign: existing.mars_sign || '',
           ephemerisData: existing.ephemeris_data,
           planetLongitudes: existing.planet_longitudes || {},
+          retrogradeFlags: existing.retrograde_flags || null,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -971,6 +1010,19 @@ serve(async (req) => {
       );
     }
 
+    // ── Retrograde flags — computed once here, independent of whether the
+    // primary chart came from VedAstro or the local fallback (see function
+    // comment for why mixing sources is safe for direction-only checks). ──
+    let retrogradeFlags: Record<string, boolean> | null = null;
+    if (birthDate) {
+      const tzOffsetMatch = resolvedLoc.timezone.match(/([+-])(\d{2}):?(\d{2})/);
+      const tzOffsetHours = tzOffsetMatch
+        ? (tzOffsetMatch[1] === '-' ? -1 : 1) *
+          (parseInt(tzOffsetMatch[2]) + parseInt(tzOffsetMatch[3]) / 60)
+        : 0;
+      retrogradeFlags = computeRetrogradeFlags(birthDate, birthTime, tzOffsetHours);
+    }
+
     // ── Vimshottari Dasha ──
     const dashaResult = calcVimshottari(moonNakshatra, nakProgress, birthDate);
 
@@ -1015,6 +1067,7 @@ serve(async (req) => {
         sun_sign: sunSign || null,
         mars_sign: marsSign || null,
         planet_longitudes: planetLongitudes || null,
+        retrograde_flags: retrogradeFlags,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }
@@ -1035,6 +1088,7 @@ serve(async (req) => {
         acgLines,
         parans,
         planetLongitudes,
+        retrogradeFlags,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

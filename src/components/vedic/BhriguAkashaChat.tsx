@@ -49,6 +49,7 @@ interface Props {
     // actually check house lords/placements for domain-specific questions
     // (e.g. travel = 3rd/9th/12th houses) instead of answering blind.
     planetLongitudes?: Record<string, number> | null;
+    retrogradeFlags?: Record<string, boolean> | null;
     dashaData: {
       activeMaha?: { planet: string; start: string; end: string };
       activeAntar?: { planet: string; start: string; end: string };
@@ -213,7 +214,8 @@ function isKaalSarpDosha(classicalLongitudes: number[], rahuLon: number, ketuLon
 function buildChartAnalysisBlock(
   ascendantSign: string | undefined,
   planetLongitudes: Record<string, number> | null | undefined,
-  ascendantLongitude?: number | null
+  ascendantLongitude?: number | null,
+  retrogradeFlags?: Record<string, boolean> | null
 ): string {
   if (!ascendantSign || !planetLongitudes) return '';
   const lagnaIdx = ZODIAC_SIGNS.findIndex(s => s.toLowerCase() === ascendantSign.toLowerCase());
@@ -243,8 +245,9 @@ function buildChartAnalysisBlock(
     const dignity = dignityLabel(e.planet, e.signIdx, e.deg);
     if (dignity) parts.push(dignity);
     if (e.planet !== 'sun' && sunEntry && COMBUSTION_ORB[e.planet] !== undefined) {
-      if (angularDistance(e.lon, sunEntry.lon) <= COMBUSTION_ORB[e.planet]) parts.push('Combust (approx. — retrograde-adjusted orb not available)');
+      if (angularDistance(e.lon, sunEntry.lon) <= COMBUSTION_ORB[e.planet]) parts.push('Combust (orb used is the standard direct-motion figure; retrograde combustion orbs run tighter in some classical sources and are not separately applied here)');
     }
+    if (retrogradeFlags && retrogradeFlags[e.planet]) parts.push('Retrograde (Vakri)');
     return parts.join(' — ');
   });
 
@@ -721,7 +724,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
           calculated_antardasha: studentEphemeris.dashaData?.activeAntar?.planet,
           antardasha_start:   studentEphemeris.dashaData?.activeAntar?.start,
           antardasha_end:     studentEphemeris.dashaData?.activeAntar?.end,
-          chart_analysis: buildChartAnalysisBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes, studentEphemeris.ascendantLongitude),
+          chart_analysis: buildChartAnalysisBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes, studentEphemeris.ascendantLongitude, studentEphemeris.retrogradeFlags),
         } : {}),
       },
     });

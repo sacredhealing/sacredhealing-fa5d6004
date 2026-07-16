@@ -40,6 +40,7 @@ interface EphemerisData {
   sunSign: string;
   marsSign: string;
   planetLongitudes?: Record<string, number>;
+  retrogradeFlags?: Record<string, boolean> | null;
   calcSource?: string | null;
   calculatedAt?: string | null;
   dashaData: {
@@ -2742,6 +2743,7 @@ const JyotishChamber: React.FC = () => {
             sunSign: data.sunSign || '',
             marsSign: data.marsSign || '',
             planetLongitudes: data.planetLongitudes || undefined,
+            retrogradeFlags: data.retrogradeFlags || null,
             dashaData: data.dashaData || null,
           });
         }
@@ -2818,7 +2820,7 @@ const JyotishChamber: React.FC = () => {
     // Try cache
     const { data: cached } = await supabase
       .from('jyotish_profiles')
-      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes')
+      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes, retrograde_flags')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -2833,6 +2835,7 @@ const JyotishChamber: React.FC = () => {
         sunSign: c.sun_sign || eph.sun_sign || '',
         marsSign: c.mars_sign,
         planetLongitudes: c.planet_longitudes || undefined,
+        retrogradeFlags: c.retrograde_flags || null,
         dashaData: cached.dasha_data as any,
         calcSource: 'cache',
         calculatedAt: eph.calculatedAt || null,
@@ -2869,6 +2872,7 @@ const JyotishChamber: React.FC = () => {
           sunSign: data.sunSign || '',
           marsSign: data.marsSign || '',
           planetLongitudes: data.planetLongitudes || undefined,
+          retrogradeFlags: data.retrogradeFlags || null,
           dashaData: data.dashaData || null,
           calcSource: data.source || null,
           calculatedAt: data.ephemerisData?.calculatedAt || null,
