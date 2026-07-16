@@ -342,6 +342,13 @@ serve(async (req) => {
     const calcAntardasha = body.calculated_antardasha ? String(body.calculated_antardasha) : '';
     const antarStart     = body.antardasha_start      ? String(body.antardasha_start)      : '';
     const antarEnd       = body.antardasha_end        ? String(body.antardasha_end)        : '';
+    // Full graha/house table (sign + whole-sign house per planet, computed
+    // client-side from real sidereal longitudes). Without this, Bhrigu has
+    // no way to check actual house lords for domain-specific questions
+    // (travel, marriage, career, etc.) and can only speak from Lagna +
+    // current dasha — which is why answers previously felt generic/agreeable
+    // rather than grounded in the specific chart.
+    const grahaPositions = body.graha_positions ? String(body.graha_positions) : '';
 
     const ephemerisBlock = calcMahadasha ? `
 ━━━ CALCULATED EPHEMERIS (VedAstro Swiss Ephemeris — Lahiri — AUTHORITATIVE) ━━━
@@ -349,6 +356,7 @@ Lagna (Ascendant): ${calcLagna || 'see birth data'}
 Moon Nakshatra: ${calcNakshatra || 'see birth data'}
 Current Mahadasha: ${calcMahadasha} (${mahaStart} → ${mahaEnd})
 Current Antardasha: ${calcAntardasha} (${antarStart} → ${antarEnd})
+${grahaPositions ? `\nGRAHA POSITIONS (sign + whole-sign house, computed from real sidereal longitude — AUTHORITATIVE):\n${grahaPositions}\n\nUSE THIS TABLE for any domain-specific question. Identify which house(s) govern the domain being asked about (examples: 3rd = short journeys/courage, 9th = long journeys/dharma/fortune, 12th = foreign travel/loss/liberation, 7th = partnership/marriage, 10th = career, 2nd/11th = wealth) and read the actual lord of that house, any planet placed in it, and whether the current Mahadasha/Antardasha planet has any relationship to it. Answer from what this table actually shows — do not default to a favorable answer because it is what the seeker wants to hear, and do not invent a house lord relationship the table doesn't support.` : `\nNo full graha-position table was provided for this reading. You do NOT have the individual planetary house placements — only Lagna, Moon Nakshatra, and current dasha. Do not fabricate specific house-lord relationships you cannot see. For domain-specific yes/no questions, answer only from what the dasha planet and Lagna genuinely indicate, and say plainly that a complete house-by-house reading would require the full chart if the seeker is asking something that depends on placements you don't have.`}
 ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha dates. Never approximate or guess dasha end years.` : '';
     console.log('[bhrigu-oracle] ephemeris check:', {
       mode, isStudentReading, dob, hasCalcMahadasha: !!calcMahadasha,

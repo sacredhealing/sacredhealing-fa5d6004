@@ -2739,6 +2739,7 @@ const JyotishChamber: React.FC = () => {
             ascendantSign: data.ascendantSign || '',
             sunSign: data.sunSign || '',
             marsSign: data.marsSign || '',
+            planetLongitudes: data.planetLongitudes || undefined,
             dashaData: data.dashaData || null,
           });
         }

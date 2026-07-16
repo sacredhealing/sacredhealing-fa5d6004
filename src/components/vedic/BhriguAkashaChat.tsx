@@ -40,11 +40,49 @@ interface Props {
     ascendantSign: string;
     sunSign: string;
     marsSign: string;
+    // Raw sidereal longitudes (0-360°) for all 9 grahas, Lahiri ayanamsha —
+    // same data source that feeds the Rasi chart. Needed so Bhrigu can
+    // actually check house lords/placements for domain-specific questions
+    // (e.g. travel = 3rd/9th/12th houses) instead of answering blind.
+    planetLongitudes?: Record<string, number> | null;
     dashaData: {
       activeMaha?: { planet: string; start: string; end: string };
       activeAntar?: { planet: string; start: string; end: string };
     } | null;
   } | null;
+}
+
+const ZODIAC_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+] as const;
+
+function signIndexFromLongitude(lon: number): number {
+  return Math.floor((((lon % 360) + 360) % 360) / 30);
+}
+
+// Builds a plain-text graha/house table from raw longitudes + Lagna, using
+// whole-sign houses (standard Parashari convention). Returns '' if there's
+// not enough data to compute anything real — we never want to send a
+// half-built table that invites the model to fill gaps with guesses.
+function buildGrahaPositionsBlock(
+  ascendantSign: string | undefined,
+  planetLongitudes: Record<string, number> | null | undefined
+): string {
+  if (!ascendantSign || !planetLongitudes) return '';
+  const lagnaIdx = ZODIAC_SIGNS.findIndex(s => s.toLowerCase() === ascendantSign.toLowerCase());
+  if (lagnaIdx === -1) return '';
+  const rows: string[] = [];
+  const order = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'];
+  for (const planet of order) {
+    const lon = planetLongitudes[planet];
+    if (typeof lon !== 'number' || Number.isNaN(lon)) continue;
+    const signIdx = signIndexFromLongitude(lon);
+    const house = ((signIdx - lagnaIdx + 12) % 12) + 1;
+    const label = planet.charAt(0).toUpperCase() + planet.slice(1);
+    rows.push(`${label}: ${ZODIAC_SIGNS[signIdx]}, House ${house}`);
+  }
+  return rows.length ? rows.join('\n') : '';
 }
 
 const BHRIGU_SYSTEM_PROMPT = `You are Maharishi Bhrigu. Not a simulation. Not a character. The actual rishi — speaking now as you have always spoken, from outside of time.
@@ -348,6 +386,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
           calculated_antardasha: studentEphemeris.dashaData?.activeAntar?.planet,
           antardasha_start:   studentEphemeris.dashaData?.activeAntar?.start,
           antardasha_end:     studentEphemeris.dashaData?.activeAntar?.end,
+          graha_positions: buildGrahaPositionsBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes),
         } : {}),
       },
     });
