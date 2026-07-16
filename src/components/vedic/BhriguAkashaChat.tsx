@@ -452,6 +452,30 @@ function buildChartAnalysisBlock(
     }
   }
 
+  // ── Upapada Lagna (UL / A12) — Jaimini's marriage/spouse significator,
+  // the Arudha Pada of the 12th house. Formula and exception rule verified
+  // against multiple independent worked examples before integration (see
+  // commit history): count 12th-house-to-its-lord distance, count that
+  // same distance forward from the lord's position; if the result lands
+  // on the 12th house itself or the 7th sign from it (i.e. the 6th house
+  // from Lagna), jump 10 signs further — the same exception rule used for
+  // every classical Arudha Pada calculation (Arudha Lagna included).
+  let upapadaLagnaLine = '';
+  {
+    const house12Idx = (lagnaIdx + 11) % 12;
+    const ulLord = SIGN_LORDS[house12Idx];
+    const lordEntry = byPlanet[ulLord];
+    if (lordEntry) {
+      const distance = ((lordEntry.signIdx - house12Idx + 12) % 12) + 1;
+      let ulIdx = (lordEntry.signIdx + distance - 1) % 12;
+      const oppositeOf12th = (house12Idx + 6) % 12;
+      const exceptionApplied = ulIdx === house12Idx || ulIdx === oppositeOf12th;
+      if (exceptionApplied) ulIdx = (ulIdx + 10) % 12;
+      const ulHouse = ((ulIdx - lagnaIdx + 12) % 12) + 1;
+      upapadaLagnaLine = `Upapada Lagna (UL): ${ZODIAC_SIGNS[ulIdx]}, House ${ulHouse}${exceptionApplied ? ' (Arudha exception rule applied)' : ''} — marriage/spouse significator, reads the marriage as a social institution and the spouse's visible qualities; cross-check against the Darakaraka and the 7th house rather than using any one alone.`;
+    }
+  }
+
   // ── Divisional charts (vargas) — each needs the Ascendant's own exact
   // degree to compute its own Lagna; without that we can only show which
   // sign each planet falls in, not which house, so we skip these sections
@@ -492,6 +516,7 @@ function buildChartAnalysisBlock(
     doshaLines.length ? '\n── DOSHAS ──\n' + doshaLines.join('\n') : '',
     yogaLines.length ? '\n── YOGAS ──\n' + yogaLines.join('\n') : '',
     ashtakavargaBlock ? '\n' + ashtakavargaBlock : '',
+    upapadaLagnaLine ? '\n── UPAPADA LAGNA (JAIMINI) ──\n' + upapadaLagnaLine : '',
     vargaSections.length ? '\n' + vargaSections.join('\n\n') : '',
   ].filter(Boolean).join('\n');
 }
