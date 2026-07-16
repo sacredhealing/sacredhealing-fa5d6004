@@ -24,7 +24,8 @@ const MeditationModuleContent: React.FC<{ moduleId: string; dbModuleId: string }
   const cards: Card[] = [
     { sectionId: 'intro', title: `Transmission from ${mModule.siddha}`, render: () => (
       <>
-        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{mModule.siddhaTitle}</p>
+        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>{mModule.siddhaTitle}</p>
+        <p style={{ ...bodyStyle, marginBottom: 20 }}>{mModule.intro}</p>
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 600, color: GOLD, marginBottom: 16 }}>{mModule.mantra}</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {mModule.element && <span style={{ fontSize: 11, padding: '5px 12px', borderRadius: 999, border: '1px solid rgba(212,175,55,0.25)', color: 'rgba(255,255,255,0.6)' }}>{mModule.element}</span>}

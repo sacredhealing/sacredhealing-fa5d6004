@@ -11,7 +11,7 @@ export interface MeditationLesson {
 }
 export interface MeditationModule {
   id: string; number: number; title: string; subtitle: string;
-  siddha: string; siddhaTitle: string; mantra: string;
+  siddha: string; siddhaTitle: string; mantra: string; intro: string;
   tier: MeditationTier; color: string; lessons: MeditationLesson[];
   mudra?: string; element?: string; chakra?: string;
 }
@@ -25,6 +25,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Foundation of Siddha Consciousness",
     siddha: "Agastya Muni", siddhaTitle: "Father of Tamil Siddhas",
     mantra: "OM AGASTYAYA NAMAH",
+    intro: "Agastya Muni is called the father of the Tamil Siddha tradition — the sage who is said to have carried the Vedic teachings south across the Vindhya mountains and, in doing so, gave birth to an entirely distinct lineage of realization. His foundational teaching is deceptively simple: behind every thought, every sensation, every passing mood, there is a witness that never changes and was never born. This module is the doorway the other seventeen build upon — before Kundalini, before mantra, before any technique, Agastya asks only that you notice who is noticing.",
     tier: "free", color: "#8B7355",
     element: "Akasha (Ether)", chakra: "Sahasrara", mudra: "Chin Mudra",
     lessons: [
@@ -49,6 +50,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Sound as Liberation Technology",
     siddha: "Thirumoolar", siddhaTitle: "Master of Tirumurai & Kundalini Science",
     mantra: "AUM THIRUMOOLARAYA NAMAH",
+    intro: "Thirumoolar is the author of the Tirumantiram, three thousand verses composed, according to tradition, over three thousand years of continuous meditation in a single, unmoving posture beneath a Peepal tree in Chidambaram. His central teaching is that sound is not a symbol pointing toward the divine — sound is the divine, directly, in its most immediate and accessible form. AUM is not a word to be understood but a frequency to be entered.",
     tier: "free", color: "#8B7355",
     element: "Vayu (Air)", chakra: "Vishuddha", mudra: "Akasha Mudra",
     lessons: [
@@ -72,6 +74,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Mastery of the Five Winds",
     siddha: "Nandhi Devar", siddhaTitle: "Gatekeeper of Kailash & Shiva's Disciple",
     mantra: "OM NANDIKESHWARAYA NAMAH",
+    intro: "Nandhi Devar stood as gatekeeper at the entrance to Mount Kailash, Shiva's abode, for ten thousand years before receiving direct initiation. His teaching maps the pranic body with extraordinary precision — the five vayus, the seventy-two thousand nadis, the exact channels through which the breath moves and, through breath, consciousness itself moves. Where Agastya points to the witness and Thirumoolar to sound, Nandhi gives the practitioner the actual mechanics of the energetic vehicle both are riding in.",
     tier: "free", color: "#8B7355",
     element: "Fire", chakra: "Manipura", mudra: "Prana Mudra",
     lessons: [
@@ -96,6 +99,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Thirumoolar's 8 Pranayamas",
     siddha: "Thirumoolar", siddhaTitle: "Author of Tirumantiram — 3,000 Verses of Liberation",
     mantra: "THIRUMANTHIRAM THIRUMOOLAR THIRUPPADHAM",
+    intro: "This second module attributed to Thirumoolar goes deeper into the physical technology his tradition developed for accessing states ordinarily reserved for advanced practitioners. Kechari Mudra — the tongue drawn back toward the soft palate — is one of the most closely guarded techniques in the entire Siddha corpus, said to unlock the secretion the tradition calls Amrita, the nectar of undying awareness, produced when the tongue seals against a point the ordinary body was never meant to easily reach.",
     tier: "prana-flow", color: "#D4AF37",
     element: "Fire + Ether", chakra: "Ajna", mudra: "Khechari Mudra",
     lessons: [
@@ -141,6 +145,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "The Serpent Fire Awakening",
     siddha: "Gorakkar", siddhaTitle: "Master of Hatha Yoga & Nath Tradition",
     mantra: "OM GORAKSHA NAMAH",
+    intro: "Gorakkar, disciple of Machamuni and one of the most technically precise of the eighteen masters, mapped the awakened body as a working instrument rather than a metaphor. His teaching on Kundalini treats the serpent-force at the base of the spine not as folklore but as a living, intelligent current that responds to correct preparation — bandha, mantra, and visualization applied in exact sequence, moving upward through each chakra in turn, never forced, only invited.",
     tier: "prana-flow", color: "#D4AF37",
     element: "Fire (Agni)", chakra: "Muladhara → Sahasrara", mudra: "Bhairava Mudra",
     lessons: [
@@ -164,6 +169,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Gazing Into the Light-Code of Creation",
     siddha: "Machamuni (Matsyendranath)", siddhaTitle: "Father of Tantra & Guru of Gorakhnath",
     mantra: "OM MATSYENDRANATHAYA NAMAH",
+    intro: "Machamuni — also known as Matsyendranath, one of the earliest masters of the Nath lineage — is said to have received Shiva's complete Tantric teaching while sitting, unmoving, in the belly of a fish for twelve years. His gift to the tradition is the science of Yantra: the understanding that sacred geometry is not decoration but a precise visual technology, each form engineered to draw the gazing mind, ring by ring, back toward the single point from which all complexity radiates.",
     tier: "prana-flow", color: "#D4AF37",
     element: "Water", chakra: "Svadhishthana & Ajna", mudra: "Yoni Mudra",
     lessons: [
@@ -188,6 +194,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Science of Body Transformation",
     siddha: "Bhogar (Boganathar)", siddhaTitle: "Alchemist of Palani Hill — The 9 Poison Master",
     mantra: "OM BHOGESHWARAYA NAMAH",
+    intro: "Bhogar, also called Boganathar, is the alchemist among the eighteen — credited with the Navapaashanam, the nine-metal alloy still worshipped as the living idol at Palani, and with a body of work on Kayakalpa, the science of cellular renewal, so extensive that later Siddhas built entire schools around fragments of it. His module treats the body neither as an obstacle to transcend nor as a mere vehicle, but as the very site where immortality, understood correctly, is meant to be demonstrated.",
     tier: "siddha-quantum", color: "#22D3EE",
     element: "Earth + Ether", chakra: "All 7 + 3 Above", mudra: "Brahma Mudra",
     lessons: [
@@ -212,6 +219,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Past-Life Akashic Access & Destiny Clearing",
     siddha: "Bhrigu Muni", siddhaTitle: "Cosmic Archivist of 4.5 Million Soul Records",
     mantra: "OM BHRIGAVE NAMAH",
+    intro: "Bhrigu Muni is remembered as the compiler of the Bhrigu Samhita — an almost unimaginable archive of individual soul-records, said to number in the millions, inscribed on palm leaves and preserved across centuries specifically so that a person born at the right moment might one day locate their own leaf and read what was written about their life before they lived it. His practices in this module are not curiosities; they are a direct method for approaching the same Akashic layer his physical archive was only ever a reflection of.",
     tier: "siddha-quantum", color: "#22D3EE",
     element: "All Five", chakra: "Sahasrara & Ajna", mudra: "Dhyana Mudra",
     lessons: [
@@ -236,6 +244,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Mantra as Quantum Frequency Technology",
     siddha: "Siva Vakkiyar", siddhaTitle: "The Poet-Rebel Siddha — Master of Paradox",
     mantra: "SIVAVAKKIYAM JNANAM",
+    intro: "Siva Vakkiyar earned his name — the 'rebel voice' — through poetry that mocked ritual, caste, and empty religiosity with equal ferocity, insisting always that liberation could not be purchased through external observance. His teaching on sound reduces every elaborate practice to a single, radical claim: the universe is not made of matter dressed up as vibration, it is made of sound directly, and you are not separate from what you hear — you are the hearing itself, wearing the temporary costume of a listener.",
     tier: "siddha-quantum", color: "#22D3EE",
     element: "Akasha (Sound)", chakra: "Vishuddha & Ajna", mudra: "Shanmukhi Mudra",
     lessons: [
@@ -260,6 +269,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Third Eye Activation System",
     siddha: "Konganar", siddhaTitle: "Master of Rasayana & Planetary Consciousness",
     mantra: "OM KONGANARAYA NAMAH",
+    intro: "Konganar is remembered above all for the discipline of his gaze — a master of Trataka, the practice of sustained, unblinking attention, which he taught as the most direct route to piercing the veils that ordinarily separate outer sight from inner vision. His module treats the third eye not as a mystical abstraction but as a specific physiological seat that responds, over sustained practice, to the same quality of attention Konganar himself was said to have turned inward until it disclosed things ordinary sight cannot.",
     tier: "siddha-quantum", color: "#22D3EE",
     element: "Fire (Tejas)", chakra: "Ajna (Third Eye)", mudra: "Agochari Mudra",
     lessons: [
@@ -285,6 +295,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Kriya Yoga — The Supreme Science",
     siddha: "Mahavatar Babaji", siddhaTitle: "Immortal Maha Siddha — Deathless Master of the Himalayas",
     mantra: "OM KRIYA BABAJI NAMAH AUM",
+    intro: "Mahavatar Babaji occupies a unique place among the eighteen — not one master among many but, in the tradition's own account, the deathless being who has personally guided the entire Kriya lineage across centuries, appearing to Lahiri Mahasaya in the nineteenth century and, through that transmission, to every serious practitioner of Kriya Yoga since. His teaching in this module is the tradition's most complete technology: a single breath practice engineered, verse by verse and generation by generation, to accelerate the soul's evolution more directly than any other method the Siddhas left behind.",
     tier: "akasha-infinity", color: "#D4AF37",
     element: "Omnipresent", chakra: "All — Including the 5 Above Sahasrara", mudra: "Abhaya Mudra",
     lessons: [
@@ -310,6 +321,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Reading the Universal Memory Field",
     siddha: "Agastya Muni + Bhrigu Muni", siddhaTitle: "The Twin Pillars of the Akashic Archive",
     mantra: "OM AKASHA BRAHMA JYOTIRLINGAYA NAMAH",
+    intro: "This module joins Agastya Muni's foundational witnessing with Bhrigu Muni's Akashic science, moving the practitioner from the general recognition of awareness itself toward the specific discipline of using that awareness to access records — personal, ancestral, and cosmic — the tradition holds are always available, though rarely approached with sufficient stillness and sincerity to be read clearly.",
     tier: "akasha-infinity", color: "#D4AF37",
     element: "Akasha (Primordial Space)", chakra: "Sahasrara + Atmic Point", mudra: "Aakash Mudra",
     lessons: [
@@ -334,6 +346,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Activating the 12-Strand Template",
     siddha: "Bhogar + Kalangi Nathar", siddhaTitle: "Masters of Immortal Biology",
     mantra: "OM JYOTIRGAMAYA — LEAD ME FROM DARK MATTER TO LIGHT",
+    intro: "Bhogar's alchemical mastery of the physical body meets Kalangi Nathar's less widely known but no less precise teaching on cellular and genetic intelligence in this module — the claim, startling when the Siddhas first made it and only recently approached by modern genetics, that the vast majority of the human genome once dismissed as functionless is in fact a dormant library, and that specific combined states of breath, gaze, and concentrated awareness can address it directly.",
     tier: "akasha-infinity", color: "#D4AF37",
     element: "Fire + Akasha", chakra: "Cellular — All 37 Trillion Cells", mudra: "Garuda Mudra",
     lessons: [
@@ -354,6 +367,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     subtitle: "Aham Brahmasmi — I Am the Absolute",
     siddha: "All 18 Siddhas + Mahavatar Babaji", siddhaTitle: "The Supreme Council of the Immortals",
     mantra: "AHAM BRAHMASMI — SHIVOHAM — TAT TVAM ASI",
+    intro: "The eighteenth and final module of the course gathers every teacher who has spoken across the previous seventeen and asks the practitioner to feel them, in sequence, not as separate historical figures but as eighteen distinct expressions of a single underlying recognition — the same insight Agastya offered as witnessing, Thirumoolar as sound, Babaji as breath, arriving here as one unified field, present equally in all of them and in whoever sits, now, to receive it.",
     tier: "akasha-infinity", color: "#D4AF37",
     element: "Transcendent — Brahman", chakra: "Beyond All Chakras", mudra: "Brahma Mudra",
     lessons: [
@@ -383,6 +397,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     siddha: "Ramadevar (Yakob)",
     siddhaTitle: "The Islamic Siddha — Master of Divine Names & Breath Alchemy",
     mantra: "YA HAYYU YA QAYYUM — YA SHAKTI YA SHIVA",
+    intro: "Ramadevar — also known as Yakob or Jnanadeva — is one of the most extraordinary figures in the entire Siddha tradition. He was a Tamil Muslim who became a fully realised Siddha master, and his very existence is a transmission: he proved that the divine has no religion, no language, no preferred form. His practices fuse the Islamic science of Dhikr with the Tamil Siddha science of breath and consciousness.",
     mudra: "Mushti Mudra (closed fist at heart)",
     element: "Vayu (Air)",
     chakra: "Anahata + Vishuddha",
@@ -423,6 +438,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     siddha: "Pambatti Siddhar",
     siddhaTitle: "The Snake Charmer-Siddha — Master of Kundalini as Living Serpent",
     mantra: "OM PAMBATTISHWARAYA NAMAH — KUNDALINI DEVI NAMAH",
+    intro: "Pambatti Siddhar was a snake charmer who became enlightened, and his entire teaching is built around the metaphor he lived: the snake is Kundalini, already awake, already alive in every human spine. The practitioner's task is not to force her upward, but to stop blocking her.",
     mudra: "Naga Mudra (right hand over left, cobra-shaped)",
     element: "Fire + Akasha",
     chakra: "Muladhara through Sahasrara",
@@ -463,6 +479,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     siddha: "Kudambai Siddhar + Sattamuni",
     siddhaTitle: "The Pot Siddha of the Formless + The Master of Living Dharma",
     mantra: "OM KUDAMBAI SIDDHARAYA NAMAH — SATTAMUNI JNANAM SATYAM",
+    intro: "Kudambai Siddhar, the Pot Siddha, taught that the space inside a clay pot and the space outside it are the same space, temporarily appearing separate. Sattamuni taught the opposite pole: that every act of genuine honesty and compassion is itself a Samadhi moment. Together they complete the picture — liberation reached both by going beyond all form, and by living with complete integrity within it.",
     mudra: "Akasha Mudra + Abhaya Mudra",
     element: "Akasha + Prithvi",
     chakra: "Sahasrara + Muladhara-Anahata",
@@ -503,6 +520,7 @@ export const MEDITATION_MODULES: MeditationModule[] =
     siddha: "Sundaranandar + Idaikkadar",
     siddhaTitle: "The Devotional Siddha + The Shepherd Who Found God in the Fields",
     mantra: "OM SUNDARARAYA NAMAH — IDAIKKADARAYA JNANAM",
+    intro: "Sundaranandar taught that love, once it loses its object and requires nothing in return, becomes identical to liberation. Idaikkadar, a simple shepherd, became enlightened not through technique but through total, loving, undivided attention to the ordinary moment. Together they close the course by reminding us the path is, at its heart, simple.",
     mudra: "Anjali Mudra (hands pressed together at heart)",
     element: "Vayu + Prithvi",
     chakra: "Anahata",
