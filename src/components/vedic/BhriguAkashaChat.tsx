@@ -69,6 +69,32 @@ const NAKSHATRAS = [
 
 const GRAHA_ORDER = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'] as const;
 
+// Classical rashi (sign) lordship — traditional 7-planet rulership, no
+// outer planets, matching the rest of this system's Parashari conventions.
+// Index-aligned with ZODIAC_SIGNS.
+const SIGN_LORDS = ['mars', 'venus', 'mercury', 'moon', 'sun', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'saturn', 'jupiter'];
+
+const KENDRA_HOUSES = [1, 4, 7, 10];
+const TRIKONA_HOUSES = [1, 5, 9];
+const DUSTHANA_HOUSES = [6, 8, 12];
+const MANGAL_DOSHA_HOUSES = [1, 2, 4, 7, 8, 12];
+
+// Jaimini Chara Karaka labels, highest-degree-in-sign to lowest. Classical
+// 7-karaka scheme (7 non-nodal planets only) — the 8-karaka variant that
+// adds Rahu with a reversed-degree rule is a distinct, disputed convention
+// and deliberately not used here.
+const KARAKA_LABELS = ['Atmakaraka', 'Amatyakaraka', 'Bhratrikaraka', 'Matrikaraka', 'Putrakaraka', 'Gnatikaraka', 'Darakaraka'];
+const KARAKA_MEANING: Record<string, string> = {
+  Atmakaraka: 'self / soul\'s core drive', Amatyakaraka: 'career / mind',
+  Bhratrikaraka: 'siblings / courage', Matrikaraka: 'mother / emotional foundation',
+  Putrakaraka: 'children / intelligence', Gnatikaraka: 'obstacles / extended family',
+  Darakaraka: 'spouse / partnerships',
+};
+
+const PANCHA_MAHAPURUSHA_NAMES: Record<string, string> = {
+  mars: 'Ruchaka', mercury: 'Bhadra', jupiter: 'Hamsa', venus: 'Malavya', saturn: 'Sasa',
+};
+
 // Classical Parashari dignity table — sign-level (not the finer single-degree
 // "deep exaltation" point, which isn't reliable to lean on from longitude
 // alone). Rahu/Ketu dignity is tradition-dependent and disputed, so it's
@@ -149,6 +175,33 @@ function dignityLabel(planet: string, signIdx: number, deg: number): string | nu
   return null;
 }
 
+// Bhrigu Bindu: midpoint of Rahu and Moon along the shorter arc between
+// them (the naive average is wrong whenever they're on opposite sides of
+// the 0°/360° wraparound, so the >180° case is corrected explicitly).
+function bhriguBinduLongitude(moonLon: number, rahuLon: number): number {
+  let mid = (moonLon + rahuLon) / 2;
+  if (Math.abs(moonLon - rahuLon) > 180) mid = (mid + 180) % 360;
+  return mid;
+}
+
+function forwardDistance(from: number, to: number): number {
+  return (((to - from) % 360) + 360) % 360;
+}
+
+// Kaal Sarp Dosha: true if all 7 classical planets fall consistently
+// within one of the two arcs bounded by Rahu and Ketu (i.e. all planets
+// are "hemmed in" on one side of the nodal axis).
+function isKaalSarpDosha(classicalLongitudes: number[], rahuLon: number, ketuLon: number): boolean {
+  const span = forwardDistance(rahuLon, ketuLon);
+  let allArc1 = true, allArc2 = true;
+  for (const lon of classicalLongitudes) {
+    const d = forwardDistance(rahuLon, lon);
+    const inArc1 = d > 0 && d < span;
+    if (!inArc1) allArc1 = false; else allArc2 = false;
+  }
+  return allArc1 || allArc2;
+}
+
 // Builds a full multidimensional chart-analysis text block from raw
 // longitudes + Lagna: house (whole-sign), exact degree, nakshatra + pada,
 // dignity, combustion, conjunctions, planetary aspects (drishti), and the
@@ -204,13 +257,124 @@ function buildChartAnalysisBlock(
 
   // ── Aspects (drishti): every planet aspects the 7th house from itself;
   //    Mars additionally aspects 4th & 8th, Jupiter 5th & 9th, Saturn 3rd & 10th ──
+  const aspectMap: Record<string, Set<number>> = {};
   const aspectLines: string[] = [];
   for (const e of entries) {
     const targets = new Set<number>([((e.house + 5) % 12) + 1]);
     if (e.planet === 'mars') { targets.add(((e.house + 2) % 12) + 1); targets.add(((e.house + 6) % 12) + 1); }
     if (e.planet === 'jupiter') { targets.add(((e.house + 3) % 12) + 1); targets.add(((e.house + 7) % 12) + 1); }
     if (e.planet === 'saturn') { targets.add(((e.house + 1) % 12) + 1); targets.add(((e.house + 8) % 12) + 1); }
+    aspectMap[e.planet] = targets;
     aspectLines.push(`${e.label} (House ${e.house}) aspects House ${[...targets].sort((a, b) => a - b).join(', ')}`);
+  }
+  const byPlanet: Record<string, Entry> = {};
+  for (const e of entries) byPlanet[e.planet] = e;
+  // Two planets are "connected" (used for Raja/Dhana yoga detection) if
+  // they're conjunct (same house) or either aspects the other's house.
+  const connected = (planetA: string, planetB: string): boolean => {
+    if (planetA === planetB) return false;
+    const eA = byPlanet[planetA], eB = byPlanet[planetB];
+    if (!eA || !eB) return false;
+    if (eA.house === eB.house) return true;
+    if (aspectMap[planetA]?.has(eB.house)) return true;
+    if (aspectMap[planetB]?.has(eA.house)) return true;
+    return false;
+  };
+
+  // ── House lordship: which planet rules each house, and where that lord
+  // currently sits. This is the foundation every yoga check below depends
+  // on — without it, "is the 7th lord well placed" can't be answered. ──
+  const houseLords: Record<number, { sign: string; lord: string; lordHouse: number | null }> = {};
+  for (let h = 1; h <= 12; h++) {
+    const signIdx = (lagnaIdx + h - 1) % 12;
+    const lord = SIGN_LORDS[signIdx];
+    houseLords[h] = { sign: ZODIAC_SIGNS[signIdx], lord, lordHouse: byPlanet[lord]?.house ?? null };
+  }
+  const lordshipLines = Array.from({ length: 12 }, (_, i) => i + 1).map(h => {
+    const hl = houseLords[h];
+    return `House ${h} (${hl.sign}): lord ${hl.lord.charAt(0).toUpperCase() + hl.lord.slice(1)}, sitting in House ${hl.lordHouse ?? '?'}`;
+  });
+
+  // ── Jaimini Chara Karakas: the 7 classical (non-nodal) planets ranked
+  // by degree within their sign, highest to lowest. ──
+  const karakaEntries = entries.filter(e => e.planet !== 'rahu' && e.planet !== 'ketu').sort((a, b) => b.deg - a.deg);
+  const karakaLines = karakaEntries.map((e, i) => `${KARAKA_LABELS[i]} (${KARAKA_MEANING[KARAKA_LABELS[i]]}): ${e.label}`);
+
+  // ── Bhrigu Bindu: midpoint of Rahu and Moon — traditionally read as an
+  // especially sensitive point in the chart, fittingly Bhrigu's own. ──
+  let bhriguBinduLine = '';
+  if (byPlanet.moon && byPlanet.rahu) {
+    const bbLon = bhriguBinduLongitude(byPlanet.moon.lon, byPlanet.rahu.lon);
+    const bbSignIdx = signIndexFromLongitude(bbLon);
+    const bbHouse = ((bbSignIdx - lagnaIdx + 12) % 12) + 1;
+    bhriguBinduLine = `Bhrigu Bindu: ${ZODIAC_SIGNS[bbSignIdx]} ${degreeInSign(bbLon).toFixed(1)}°, House ${bbHouse}`;
+  }
+
+  // ── Doshas: computable directly from birth data (Mangal, Kaal Sarp).
+  // Sade Sati requires TODAY's Saturn transit position, which isn't part
+  // of this natal computation — deliberately not claimed here. ──
+  const doshaLines: string[] = [];
+  if (byPlanet.mars) {
+    if (MANGAL_DOSHA_HOUSES.includes(byPlanet.mars.house)) {
+      doshaLines.push(`Mangal Dosha (from Lagna): present — Mars in House ${byPlanet.mars.house}. Classical texts list several cancellation (Bhanga) conditions not evaluated here (e.g. Mars in own/exalted sign, mutual placement with certain benefics) — note the raw placement, don't assume automatic cancellation OR automatic full effect.`);
+    }
+    if (byPlanet.moon) {
+      const marsFromMoon = ((byPlanet.mars.signIdx - byPlanet.moon.signIdx + 12) % 12) + 1;
+      if (MANGAL_DOSHA_HOUSES.includes(marsFromMoon)) {
+        doshaLines.push(`Mangal Dosha (from Moon): present — Mars in House ${marsFromMoon} counted from natal Moon.`);
+      }
+    }
+  }
+  if (byPlanet.rahu && byPlanet.ketu) {
+    const classicalLons = entries.filter(e => e.planet !== 'rahu' && e.planet !== 'ketu').map(e => e.lon);
+    if (isKaalSarpDosha(classicalLons, byPlanet.rahu.lon, byPlanet.ketu.lon)) {
+      doshaLines.push('Kaal Sarp Dosha: present — all seven classical planets fall within one arc bounded by Rahu and Ketu.');
+    }
+  }
+
+  // ── Yogas: computed from lordship + placement + dignity + aspect data
+  // above. Curated to combinations that are unambiguous and classically
+  // uncontested; complex/disputed cancellation rules (full Neecha Bhanga
+  // conditions, etc.) are deliberately not asserted. ──
+  const yogaLines: string[] = [];
+  for (const kh of KENDRA_HOUSES) {
+    for (const th of TRIKONA_HOUSES) {
+      if (kh === th) continue;
+      const lordK = houseLords[kh].lord, lordT = houseLords[th].lord;
+      if (lordK !== lordT && connected(lordK, lordT)) {
+        yogaLines.push(`Raja Yoga: Kendra (House ${kh}) lord ${lordK.charAt(0).toUpperCase() + lordK.slice(1)} connected with Trikona (House ${th}) lord ${lordT.charAt(0).toUpperCase() + lordT.slice(1)}`);
+      }
+    }
+  }
+  const lord1 = houseLords[1].lord, lord2 = houseLords[2].lord, lord11 = houseLords[11].lord;
+  if (connected(lord2, lord11)) yogaLines.push(`Dhana Yoga: 2nd lord ${lord2.charAt(0).toUpperCase() + lord2.slice(1)} connected with 11th lord ${lord11.charAt(0).toUpperCase() + lord11.slice(1)}`);
+  if (connected(lord2, lord1)) yogaLines.push(`Dhana Yoga: 2nd lord ${lord2.charAt(0).toUpperCase() + lord2.slice(1)} connected with 1st lord ${lord1.charAt(0).toUpperCase() + lord1.slice(1)}`);
+  if (connected(lord11, lord1)) yogaLines.push(`Dhana Yoga: 11th lord ${lord11.charAt(0).toUpperCase() + lord11.slice(1)} connected with 1st lord ${lord1.charAt(0).toUpperCase() + lord1.slice(1)}`);
+  if (byPlanet.jupiter && byPlanet.moon) {
+    const jupFromMoon = ((byPlanet.jupiter.signIdx - byPlanet.moon.signIdx + 12) % 12) + 1;
+    if (KENDRA_HOUSES.includes(jupFromMoon)) yogaLines.push(`Gajakesari Yoga: Jupiter in House ${jupFromMoon} from natal Moon (kendra)`);
+  }
+  if (byPlanet.moon) {
+    const moonHouse = byPlanet.moon.house;
+    const adjacent = [((moonHouse - 2 + 12) % 12) + 1, moonHouse, (moonHouse % 12) + 1];
+    const support = ['mars', 'mercury', 'jupiter', 'venus', 'saturn'].some(p => byPlanet[p] && adjacent.includes(byPlanet[p].house));
+    if (!support) yogaLines.push('Kemadruma Yoga: present — Moon unsupported (no planet in the houses before, with, or after it). A cautionary yoga, not a strength; name it plainly rather than softening it.');
+  }
+  for (const d of DUSTHANA_HOUSES) {
+    const lord = houseLords[d].lord;
+    const lordHouse = byPlanet[lord]?.house;
+    if (lordHouse != null && DUSTHANA_HOUSES.includes(lordHouse)) {
+      yogaLines.push(`Vipareeta Raja Yoga: House ${d}'s lord ${lord.charAt(0).toUpperCase() + lord.slice(1)} sits in House ${lordHouse} (also dusthana)`);
+    }
+  }
+  for (const planet of ['mars', 'mercury', 'jupiter', 'venus', 'saturn']) {
+    const e = byPlanet[planet];
+    if (!e) continue;
+    const dignity = dignityLabel(planet, e.signIdx, e.deg);
+    const isStrong = dignity === 'Exalted (Uchcha)' || dignity === 'Own sign (Swakshetra)' || dignity === 'Moolatrikona';
+    if (isStrong && KENDRA_HOUSES.includes(e.house)) {
+      yogaLines.push(`${PANCHA_MAHAPURUSHA_NAMES[planet]} Yoga (Pancha Mahapurusha): ${planet.charAt(0).toUpperCase() + planet.slice(1)} ${dignity} in kendra House ${e.house}`);
+    }
   }
 
   // ── Divisional charts (vargas) — each needs the Ascendant's own exact
@@ -247,6 +411,11 @@ function buildChartAnalysisBlock(
     ...planetLines,
     conjunctions.length ? '\n── CONJUNCTIONS ──\n' + conjunctions.join('\n') : '',
     '\n── ASPECTS (DRISHTI) ──\n' + aspectLines.join('\n'),
+    '\n── HOUSE LORDSHIP ──\n' + lordshipLines.join('\n'),
+    '\n── JAIMINI CHARA KARAKAS ──\n' + karakaLines.join('\n'),
+    bhriguBinduLine ? '\n── BHRIGU BINDU ──\n' + bhriguBinduLine : '',
+    doshaLines.length ? '\n── DOSHAS ──\n' + doshaLines.join('\n') : '',
+    yogaLines.length ? '\n── YOGAS ──\n' + yogaLines.join('\n') : '',
     vargaSections.length ? '\n' + vargaSections.join('\n\n') : '',
   ].filter(Boolean).join('\n');
 }
