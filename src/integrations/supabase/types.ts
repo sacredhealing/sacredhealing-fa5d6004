@@ -6149,6 +6149,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pranayama_courses: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          module_key: string
+          module_number: number
+          subtitle: string | null
+          tier_required: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key: string
+          module_number: number
+          subtitle?: string | null
+          tier_required?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key?: string
+          module_number?: number
+          subtitle?: string | null
+          tier_required?: string
+          title?: string
+        }
+        Relationships: []
+      }
       private_messages: {
         Row: {
           content: string
@@ -9564,6 +9597,88 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_pranayama_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_pranayama_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "pranayama_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_pranayama_section_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          module_id: string
+          notes: string | null
+          section_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          notes?: string | null
+          section_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          notes?: string | null
+          section_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_pranayama_section_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "pranayama_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_quantum_sync: {
         Row: {
