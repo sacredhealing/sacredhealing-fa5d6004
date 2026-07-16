@@ -113,6 +113,17 @@ const AgastyarModule: React.FC = () => {
 
   const [module, setModule] = useState<AyurvedaCourseRow | null>(null);
   const [loadingModule, setLoadingModule] = useState(true);
+
+  // Record that this module was actually opened, so "Continue Learning" on the
+  // portal can resume the real last-viewed module -- not just when notes get
+  // saved, which is the only other thing that was touching last_accessed_at.
+  useEffect(() => {
+    if (!module?.id || !user?.id) return;
+    void upsertProgress({ moduleId: module.id }).catch(() => {
+      /* best-effort -- don't block reading over a tracking failure */
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [module?.id, user?.id]);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);

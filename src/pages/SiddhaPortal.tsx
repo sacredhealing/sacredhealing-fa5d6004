@@ -502,7 +502,8 @@ export default function SiddhaPortal() {
   const { t } = useTranslation();
   const { tier, loading, settled } = useMembership();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
-  const { stats: agastyarStats } = useAyurvedaProgress(!loading && settled);
+  const { stats: agastyarStats, courses: agastyarCourses, progressByModuleId: agastyarProgressByModuleId } =
+    useAyurvedaProgress(!loading && settled);
 
   const agastyarProgress = agastyarStats.totalModules > 0
     ? {
@@ -511,6 +512,21 @@ export default function SiddhaPortal() {
         done: agastyarStats.completionPercent >= 100,
       }
     : undefined;
+
+  // The actual module to resume: whichever incomplete module was opened most
+  // recently, not just "the academy" in general. Falls back to the academy
+  // overview if nothing has last_accessed_at yet (e.g. only notes/completion
+  // ever touched it before the view-tracking fix).
+  const agastyarResumeHref = (() => {
+    const inProgress = agastyarCourses
+      .filter((c) => !agastyarProgressByModuleId[c.id]?.completed && agastyarProgressByModuleId[c.id]?.last_accessed_at)
+      .sort((a, b) => {
+        const at = agastyarProgressByModuleId[a.id]?.last_accessed_at || '';
+        const bt = agastyarProgressByModuleId[b.id]?.last_accessed_at || '';
+        return bt.localeCompare(at);
+      });
+    return inProgress[0] ? `/agastyar-academy/module/${inProgress[0].id}` : '/agastyar-academy';
+  })();
 
   // Previously this redirected anyone below Siddha-Quantum straight to the
   // sales page before they could see anything. Removed: every academy card
@@ -592,7 +608,7 @@ export default function SiddhaPortal() {
               desc="Pick up where you left off in the 108-module Ayurveda curriculum."
               tiers={[]}
               progress={agastyarProgress}
-              cta="Resume Academy" href="/agastyar-academy" ac={teal(0.9)} delay={0.02}/>
+              cta="Resume Academy" href={agastyarResumeHref} ac={teal(0.9)} delay={0.02}/>
             <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
           </>
         )}
