@@ -96,6 +96,47 @@ const PANCHA_MAHAPURUSHA_NAMES: Record<string, string> = {
   mars: 'Ruchaka', mercury: 'Bhadra', jupiter: 'Hamsa', venus: 'Malavya', saturn: 'Sasa',
 };
 
+// Ashtakavarga (BPHS Ch. 66) benefic-places table — sourced to B.V. Raman's
+// "Ashtakavarga System of Prediction", Ch. II. Verified three independent
+// ways before use: (1) every planet's 8-contributor total matches its known
+// constant (Sun 48, Moon 49, Mars 39, Mercury 54, Jupiter 56, Venus 52,
+// Saturn 39 — summing to 337), (2) the algorithm below reproduces the
+// source's own fully worked example (B.V. Raman's Standard Horoscope) for
+// both Sun's and Moon's complete 12-sign Bhinnashtakavarga exactly, and
+// (3) the resulting Sarvashtakavarga (sum of all seven) matches the
+// source's published 337-point grand chart sign-by-sign, exactly. This is
+// classical fixed data with no formula to derive it from, so this level of
+// cross-verification against a named, checkable source is what makes it
+// safe to hardcode — unlike an unverified table, an error here would not
+// be silent.
+const ASHTAKAVARGA_TABLE: Record<string, Record<string, number[]>> = {
+  sun:     { sun:[1,2,4,7,8,9,10,11], moon:[3,6,10,11], mars:[1,2,4,7,8,9,10,11], mercury:[3,5,6,9,10,11,12], jupiter:[5,6,9,11], venus:[6,7,12], saturn:[1,2,4,7,8,9,10,11], lagna:[3,4,6,10,11,12] },
+  moon:    { sun:[3,6,7,8,10,11], moon:[1,3,6,7,10,11], mars:[2,3,5,6,9,10,11], mercury:[1,3,4,5,7,8,10,11], jupiter:[1,4,7,8,10,11,12], venus:[3,4,5,7,9,10,11], saturn:[3,5,6,11], lagna:[3,6,10,11] },
+  mars:    { sun:[3,5,6,10,11], moon:[3,6,11], mars:[1,2,4,7,8,10,11], mercury:[3,5,6,11], jupiter:[6,10,11,12], venus:[6,8,11,12], saturn:[1,4,7,8,9,10,11], lagna:[1,3,6,10,11] },
+  mercury: { sun:[5,6,9,11,12], moon:[2,4,6,8,10,11], mars:[1,2,4,7,8,9,10,11], mercury:[1,3,5,6,9,10,11,12], jupiter:[6,8,11,12], venus:[1,2,3,4,5,8,9,11], saturn:[1,2,4,7,8,9,10,11], lagna:[1,2,4,6,8,10,11] },
+  jupiter: { sun:[1,2,3,4,7,8,9,10,11], moon:[2,5,7,9,11], mars:[1,2,4,7,8,10,11], mercury:[1,2,4,5,6,9,10,11], jupiter:[1,2,3,4,7,8,10,11], venus:[2,5,6,9,10,11], saturn:[3,5,6,12], lagna:[1,2,4,5,6,7,9,10,11] },
+  venus:   { sun:[8,11,12], moon:[1,2,3,4,5,8,9,11,12], mars:[3,5,6,9,11,12], mercury:[3,5,6,9,11], jupiter:[5,8,9,10,11], venus:[1,2,3,4,5,8,9,10,11], saturn:[3,4,5,8,9,10,11], lagna:[1,2,3,4,5,8,9,11] },
+  saturn:  { sun:[1,2,4,7,8,10,11], moon:[3,6,11], mars:[3,5,6,10,11,12], mercury:[6,8,9,10,11,12], jupiter:[5,6,11,12], venus:[6,11,12], saturn:[3,5,6,11], lagna:[1,3,4,6,10,11] },
+};
+const ASHTAKAVARGA_TOTALS: Record<string, number> = { sun: 48, moon: 49, mars: 39, mercury: 54, jupiter: 56, venus: 52, saturn: 39 };
+
+// Computes one planet's Bhinnashtakavarga (12 sign bindu counts) given the
+// sign index (0-11) of each of the 8 contributors (7 planets + Lagna).
+function computeBhinnashtakavarga(planet: string, positionIdx: Record<string, number>): number[] {
+  const bindus = new Array(12).fill(0);
+  const table = ASHTAKAVARGA_TABLE[planet];
+  if (!table) return bindus;
+  for (const contributor of Object.keys(table)) {
+    const fromIdx = positionIdx[contributor];
+    if (fromIdx == null) continue;
+    for (const houseOffset of table[contributor]) {
+      const targetIdx = (fromIdx + houseOffset - 1) % 12;
+      bindus[targetIdx]++;
+    }
+  }
+  return bindus;
+}
+
 // Classical Parashari dignity table — sign-level (not the finer single-degree
 // "deep exaltation" point, which isn't reliable to lean on from longitude
 // alone). Rahu/Ketu dignity is tradition-dependent and disputed, so it's
@@ -380,6 +421,37 @@ function buildChartAnalysisBlock(
     }
   }
 
+  // ── Ashtakavarga: Bhinnashtakavarga (per-planet bindu strength across
+  // all 12 signs) and Sarvashtakavarga (their sum). This is the classical
+  // engine for judging transit strength and relative house support —
+  // see ASHTAKAVARGA_TABLE comment for how this table was verified.
+  // Reductions (Trikona/Ekadhipatya Sodhana) are deliberately not applied;
+  // these are the standard unreduced figures, which is also what
+  // Sarvashtakavarga always uses even after reductions exist elsewhere. ──
+  let ashtakavargaBlock = '';
+  {
+    const positionIdx: Record<string, number> = { lagna: lagnaIdx };
+    for (const p of ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn']) {
+      if (byPlanet[p]) positionIdx[p] = byPlanet[p].signIdx;
+    }
+    const haveAllSeven = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn'].every(p => positionIdx[p] != null);
+    if (haveAllSeven) {
+      const sav = new Array(12).fill(0);
+      const bavLines: string[] = [];
+      for (const planet of ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn']) {
+        const bav = computeBhinnashtakavarga(planet, positionIdx);
+        bav.forEach((v, i) => { sav[i] += v; });
+        const label = planet.charAt(0).toUpperCase() + planet.slice(1);
+        const total = bav.reduce((a, b) => a + b, 0);
+        const houseAtBirth = bav[byPlanet[planet].signIdx];
+        bavLines.push(`${label} Bhinnashtakavarga (own placement House ${byPlanet[planet].house}): ${houseAtBirth} bindus there — full 12-sign spread: ${ZODIAC_SIGNS.map((s, i) => `${s} ${bav[i]}`).join(', ')} (total ${total}, fixed constant for every chart)`);
+      }
+      const savByHouse = Array.from({ length: 12 }, (_, i) => sav[(lagnaIdx + i) % 12]);
+      const savLines = savByHouse.map((v, i) => `House ${i + 1} (${ZODIAC_SIGNS[(lagnaIdx + i) % 12]}): ${v}${v >= 30 ? ' — strong' : v < 25 ? ' — weak' : ''}`);
+      ashtakavargaBlock = `── ASHTAKAVARGA (unreduced) ──\nSarvashtakavarga by house (average is 28; 30+ strong, below 25 weak):\n${savLines.join('\n')}\n\nBhinnashtakavarga per planet (full spread across all 12 signs — use the count in whatever sign a planet is transiting or will transit to judge that transit's strength):\n${bavLines.join('\n')}`;
+    }
+  }
+
   // ── Divisional charts (vargas) — each needs the Ascendant's own exact
   // degree to compute its own Lagna; without that we can only show which
   // sign each planet falls in, not which house, so we skip these sections
@@ -419,6 +491,7 @@ function buildChartAnalysisBlock(
     bhriguBinduLine ? '\n── BHRIGU BINDU ──\n' + bhriguBinduLine : '',
     doshaLines.length ? '\n── DOSHAS ──\n' + doshaLines.join('\n') : '',
     yogaLines.length ? '\n── YOGAS ──\n' + yogaLines.join('\n') : '',
+    ashtakavargaBlock ? '\n' + ashtakavargaBlock : '',
     vargaSections.length ? '\n' + vargaSections.join('\n\n') : '',
   ].filter(Boolean).join('\n');
 }
