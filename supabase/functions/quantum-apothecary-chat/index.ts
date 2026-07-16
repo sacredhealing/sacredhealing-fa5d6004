@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { buildDeepJyotishAnalysis } from "../_shared/jyotish-deep-analysis.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -5582,7 +5583,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         if (studentRow?.linked_user_id) {
           const { data: jp } = await sb
             .from("jyotish_profiles")
-            .select("moon_nakshatra, moon_longitude, ascendant, sun_sign, dasha_data")
+            .select("moon_nakshatra, moon_longitude, ascendant, sun_sign, dasha_data, ascendant_longitude, planet_longitudes, retrograde_flags")
             .eq("user_id", studentRow.linked_user_id)
             .maybeSingle();
           if (jp) {
@@ -5599,12 +5600,55 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
               `Mahadasha: ${activeMaha?.planet ?? "—"} · Antardasha: ${activeAntar?.planet ?? "—"}`,
               "Apply this chart fully to ALL readings for this student in this session.",
             ].join("\n");
+            // Additive: deep chart analysis (lordship, yogas, Ashtakavarga,
+            // divisional charts, Upapada Lagna), same engine as Bhrigu
+            // Oracle. Only appended when the raw longitude data exists;
+            // everything above still works exactly as before otherwise.
+            if (jp.ascendant && jp.planet_longitudes) {
+              try {
+                const deep = buildDeepJyotishAnalysis(
+                  jp.ascendant as string,
+                  jp.planet_longitudes as Record<string, number>,
+                  jp.ascendant_longitude as number | null,
+                  jp.retrograde_flags as Record<string, boolean> | null
+                );
+                if (deep) resolvedStudentJyotish += `\n\n[STUDENT DEEP JYOTISH ANALYSIS]\n${deep}`;
+              } catch (e) { console.warn("Student deep jyotish analysis:", e); }
+            }
           }
         }
       } catch (e) { console.warn("Student jyotish fetch:", e); }
     }
 
-    const activeJyotishContext = resolvedStudentJyotish || jyotishContext;
+    // Deep Jyotish analysis for the MAIN user (non-student case) — same
+    // engine, fetched independently by userId since jyotish_profiles rows
+    // are keyed directly on the auth user id here (unlike the student
+    // path above, which goes through students.linked_user_id). Purely
+    // additive: appended to jyotishContext only when available; if this
+    // fails or the profile isn't computed yet, jyotishContext is used
+    // completely unchanged, exactly as before.
+    let resolvedSelfDeepJyotish = "";
+    if (userId && !isStudentMode) {
+      try {
+        const sbSelf = createClient(SUPABASE_URL, SUPABASE_ANON);
+        const { data: jpSelf } = await sbSelf
+          .from("jyotish_profiles")
+          .select("ascendant, ascendant_longitude, planet_longitudes, retrograde_flags")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (jpSelf?.ascendant && jpSelf?.planet_longitudes) {
+          const deep = buildDeepJyotishAnalysis(
+            jpSelf.ascendant as string,
+            jpSelf.planet_longitudes as Record<string, number>,
+            jpSelf.ascendant_longitude as number | null,
+            jpSelf.retrograde_flags as Record<string, boolean> | null
+          );
+          if (deep) resolvedSelfDeepJyotish = `\n\n[DEEP JYOTISH ANALYSIS — LIVE FROM APP PROFILE]\n${deep}`;
+        }
+      } catch (e) { console.warn("Self deep jyotish analysis fetch (non-fatal):", e); }
+    }
+
+    const activeJyotishContext = resolvedStudentJyotish || ((jyotishContext || '') + resolvedSelfDeepJyotish);
     // ── END STUDENT MODE ───────────────────────────────────────────
 
     const [livingPortrait, lifeBookArchive, nadiBaseline, recentActivity, partnerActivity, atmaSignature] = await Promise.all([

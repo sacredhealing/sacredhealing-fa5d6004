@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildDeepJyotishAnalysis } from "../_shared/jyotish-deep-analysis.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,6 +46,11 @@ interface BirthData {
   lagna: string | null;
   moon_sign: string | null;
   dasha: string | null;
+  // Deep chart analysis (lordship, yogas, Ashtakavarga, divisional charts,
+  // etc.) computed server-side when planet_longitudes is available.
+  // Purely additive — everything above still works exactly as before
+  // when this is null (e.g. profile not yet computed).
+  deepAnalysis: string | null;
 }
 
 interface ConsultationRecord {
@@ -219,7 +225,11 @@ ${lagnaLine}
 ${moonLine}
 ${dashaLine}
 ${jyMap}
-The Lagna shows constitutional tendency from birth. The Moon shows the state of Ojas and the emotional-fluid body. The current Dasha lord shows which organ is under the most pressure this month. Integrate INVISIBLY. Speak from the body field. The chart and the body tell the same story.`;
+The Lagna shows constitutional tendency from birth. The Moon shows the state of Ojas and the emotional-fluid body. The current Dasha lord shows which organ is under the most pressure this month. Integrate INVISIBLY. Speak from the body field. The chart and the body tell the same story.${birth.deepAnalysis ? `
+
+━━━ DEEP CHART DATA (house lordship, yogas, Ashtakavarga, divisional charts) — silent reasoning material, same rule as above: integrate, never recite ━━━
+${birth.deepAnalysis}
+Use this the same way a physician reads a full chart before speaking — to ground WHICH organ/dosha guidance is actually specific to this person's constitution and current planetary weather, not to explain astrology to them. A seeker should never be able to tell how much of this you were given.` : ''}`;
 }
 
 function buildSystemPrompt(
@@ -710,7 +720,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     let userId: string | null = null;
     let nadiBaseline: string | null = null;
-    let birth: BirthData = { birth_date: null, birth_time: null, birth_place: null, lagna: null, moon_sign: null, dasha: null };
+    let birth: BirthData = { birth_date: null, birth_time: null, birth_place: null, lagna: null, moon_sign: null, dasha: null, deepAnalysis: null };
 
     if (authHeader.startsWith("Bearer ")) {
       try {
@@ -780,6 +790,30 @@ serve(async (req) => {
           if (activeMaha?.planet) birth.dasha = activeMaha.planet;
         } catch { /* non-fatal */ }
       }
+
+      // Deep Jyotish analysis (house lordship, yogas, Ashtakavarga,
+      // divisional charts, Upapada Lagna) — same engine used by Bhrigu
+      // Oracle. Independent of the jyotishProfile branch above (that one
+      // only carries a summary; this needs the raw planet_longitudes,
+      // which only exists in the DB), so this always attempts its own
+      // fetch. Entirely additive: if this fails or the data isn't there
+      // yet, birth.deepAnalysis stays null and everything else in this
+      // function behaves exactly as it did before.
+      try {
+        const { data: jpDeep } = await supabase
+          .from("jyotish_profiles")
+          .select("ascendant, ascendant_longitude, planet_longitudes, retrograde_flags")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (jpDeep?.ascendant && jpDeep?.planet_longitudes) {
+          birth.deepAnalysis = buildDeepJyotishAnalysis(
+            jpDeep.ascendant,
+            jpDeep.planet_longitudes as Record<string, number>,
+            jpDeep.ascendant_longitude as number | null,
+            jpDeep.retrograde_flags as Record<string, boolean> | null
+          );
+        }
+      } catch (e) { console.warn("[ayurveda-chat] deep jyotish analysis fetch failed (non-fatal):", e); }
 
     // Frontend jyotishProfile overrides DB values (always most current)
     if (jyotishProfile && typeof jyotishProfile === 'object') {
