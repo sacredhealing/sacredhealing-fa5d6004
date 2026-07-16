@@ -87,6 +87,7 @@ const AdminSendEmail = React.lazy(() => import("./pages/AdminSendEmail"));
 const StargateMembership = React.lazy(() => import("./pages/StargateMembership"));
 const PractitionerCertification = React.lazy(() => import("./pages/PractitionerCertification"));
 const KriyaYogaMastery = React.lazy(() => import("./pages/KriyaYogaMastery"));
+const KriyaYogaModule = React.lazy(() => import("./pages/KriyaYogaModule"));
 const HolyScienceCurriculum = React.lazy(() => import("./pages/HolyScienceCurriculum"));
 const ThirumoolarPranayama = React.lazy(() => import("./pages/ThirumoolarPranayama"));
 const SiddhaWaterAlchemy = React.lazy(() => import("./pages/SiddhaWaterAlchemy"));
@@ -410,6 +411,7 @@ function AppRoutes() {
                   <Route path="/stargate" element={<StargateMembership />} />
                   <Route path="/certification" element={<PractitionerCertification />} />
                   <Route path="/kriya-yoga" element={<KriyaYogaMastery />} />
+                  <Route path="/kriya-yoga/module/:id" element={<KriyaYogaModule />} />
                   <Route path="/thirumoolar-pranayama" element={<ThirumoolarPranayama />} />
                   <Route path="/water-alchemy" element={<SiddhaWaterAlchemy />} />
                   <Route path="/mudra-academy" element={<MudraAcademy />} />
