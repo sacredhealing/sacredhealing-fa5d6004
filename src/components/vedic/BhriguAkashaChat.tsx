@@ -57,32 +57,132 @@ const ZODIAC_SIGNS = [
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
 ] as const;
 
+const NAKSHATRAS = [
+  'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha',
+  'Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+  'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati',
+] as const;
+
+const GRAHA_ORDER = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'] as const;
+
+// Classical Parashari dignity table — sign-level (not the finer single-degree
+// "deep exaltation" point, which isn't reliable to lean on from longitude
+// alone). Rahu/Ketu dignity is tradition-dependent and disputed, so it's
+// deliberately left out rather than asserting a contested rule as fact.
+const DIGNITY: Record<string, { exalted: string; debilitated: string; own: string[]; moolatrikona?: [string, number, number] }> = {
+  sun:     { exalted: 'Aries',       debilitated: 'Libra',       own: ['Leo'],                 moolatrikona: ['Leo', 0, 20] },
+  moon:    { exalted: 'Taurus',      debilitated: 'Scorpio',     own: ['Cancer'],               moolatrikona: ['Taurus', 4, 30] },
+  mars:    { exalted: 'Capricorn',   debilitated: 'Cancer',      own: ['Aries', 'Scorpio'],      moolatrikona: ['Aries', 0, 12] },
+  mercury: { exalted: 'Virgo',       debilitated: 'Pisces',      own: ['Gemini', 'Virgo'],       moolatrikona: ['Virgo', 16, 20] },
+  jupiter: { exalted: 'Cancer',      debilitated: 'Capricorn',   own: ['Sagittarius', 'Pisces'], moolatrikona: ['Sagittarius', 0, 10] },
+  venus:   { exalted: 'Pisces',      debilitated: 'Virgo',       own: ['Taurus', 'Libra'],       moolatrikona: ['Libra', 0, 15] },
+  saturn:  { exalted: 'Libra',       debilitated: 'Aries',       own: ['Capricorn', 'Aquarius'], moolatrikona: ['Aquarius', 0, 20] },
+};
+
+// Approximate combustion (asta) orbs from the Sun, direct-motion values.
+// No retrograde data is available from the ephemeris yet, so this is a
+// reasonable approximation, not exact — flagged as such in the output.
+const COMBUSTION_ORB: Record<string, number> = {
+  moon: 12, mars: 17, mercury: 14, jupiter: 11, venus: 10, saturn: 15,
+};
+
 function signIndexFromLongitude(lon: number): number {
   return Math.floor((((lon % 360) + 360) % 360) / 30);
 }
+function degreeInSign(lon: number): number {
+  return (((lon % 360) + 360) % 360) % 30;
+}
+function angularDistance(a: number, b: number): number {
+  const d = Math.abs((((a % 360) + 360) % 360) - (((b % 360) + 360) % 360));
+  return Math.min(d, 360 - d);
+}
+// Navamsa (D9) sign — standard formula, verified equivalent to the classical
+// movable/fixed/dual starting-point rule: (signIndex*9 + partIndex) % 12.
+function navamsaSignIndex(lon: number): number {
+  const signIdx = signIndexFromLongitude(lon);
+  const partIdx = Math.floor(degreeInSign(lon) / (30 / 9));
+  return (signIdx * 9 + partIdx) % 12;
+}
+function dignityLabel(planet: string, signIdx: number, deg: number): string | null {
+  const d = DIGNITY[planet];
+  if (!d) return null;
+  const sign = ZODIAC_SIGNS[signIdx];
+  if (d.moolatrikona && sign === d.moolatrikona[0] && deg >= d.moolatrikona[1] && deg < d.moolatrikona[2]) return 'Moolatrikona';
+  if (sign === d.exalted) return 'Exalted (Uchcha)';
+  if (sign === d.debilitated) return 'Debilitated (Neecha)';
+  if (d.own.includes(sign)) return 'Own sign (Swakshetra)';
+  return null;
+}
 
-// Builds a plain-text graha/house table from raw longitudes + Lagna, using
-// whole-sign houses (standard Parashari convention). Returns '' if there's
-// not enough data to compute anything real — we never want to send a
-// half-built table that invites the model to fill gaps with guesses.
-function buildGrahaPositionsBlock(
+// Builds a full multidimensional chart-analysis text block from raw
+// longitudes + Lagna: house (whole-sign), exact degree, nakshatra + pada,
+// dignity, combustion, conjunctions, planetary aspects (drishti), and the
+// Navamsa (D9) sign for each graha. This replaces a flat "sign + house"
+// table with the layered view Bhrigu's own knowledge section claims to
+// use — yogas, dasha-lord relationships, and divisional charts can't be
+// judged from Lagna and dasha alone. Returns '' if there isn't enough
+// real data to build any of this — never sends a half-built table.
+function buildChartAnalysisBlock(
   ascendantSign: string | undefined,
   planetLongitudes: Record<string, number> | null | undefined
 ): string {
   if (!ascendantSign || !planetLongitudes) return '';
   const lagnaIdx = ZODIAC_SIGNS.findIndex(s => s.toLowerCase() === ascendantSign.toLowerCase());
   if (lagnaIdx === -1) return '';
-  const rows: string[] = [];
-  const order = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'];
-  for (const planet of order) {
+
+  type Entry = { planet: string; label: string; lon: number; signIdx: number; house: number; deg: number };
+  const entries: Entry[] = [];
+  for (const planet of GRAHA_ORDER) {
     const lon = planetLongitudes[planet];
     if (typeof lon !== 'number' || Number.isNaN(lon)) continue;
     const signIdx = signIndexFromLongitude(lon);
     const house = ((signIdx - lagnaIdx + 12) % 12) + 1;
-    const label = planet.charAt(0).toUpperCase() + planet.slice(1);
-    rows.push(`${label}: ${ZODIAC_SIGNS[signIdx]}, House ${house}`);
+    entries.push({ planet, label: planet.charAt(0).toUpperCase() + planet.slice(1), lon, signIdx, house, deg: degreeInSign(lon) });
   }
-  return rows.length ? rows.join('\n') : '';
+  if (!entries.length) return '';
+
+  const sunEntry = entries.find(e => e.planet === 'sun');
+
+  // ── Per-planet lines: sign, exact degree, house, nakshatra+pada, dignity, combustion, Navamsa ──
+  const planetLines = entries.map(e => {
+    const nakSpan = 360 / 27;
+    const lonNorm = (((e.lon % 360) + 360) % 360);
+    const nakIdx = Math.floor(lonNorm / nakSpan);
+    const degInNak = lonNorm % nakSpan;
+    const pada = Math.floor(degInNak / (nakSpan / 4)) + 1;
+    const parts = [`${e.label}: ${ZODIAC_SIGNS[e.signIdx]} ${e.deg.toFixed(1)}°, House ${e.house}, Nakshatra ${NAKSHATRAS[nakIdx]} Pada ${pada}, Navamsa ${ZODIAC_SIGNS[navamsaSignIndex(e.lon)]}`];
+    const dignity = dignityLabel(e.planet, e.signIdx, e.deg);
+    if (dignity) parts.push(dignity);
+    if (e.planet !== 'sun' && sunEntry && COMBUSTION_ORB[e.planet] !== undefined) {
+      if (angularDistance(e.lon, sunEntry.lon) <= COMBUSTION_ORB[e.planet]) parts.push('Combust (approx. — retrograde-adjusted orb not available)');
+    }
+    return parts.join(' — ');
+  });
+
+  // ── Conjunctions: planets sharing the same house ──
+  const byHouse: Record<number, string[]> = {};
+  for (const e of entries) (byHouse[e.house] ||= []).push(e.label);
+  const conjunctions = Object.entries(byHouse)
+    .filter(([, planets]) => planets.length > 1)
+    .map(([house, planets]) => `House ${house}: ${planets.join(' + ')} conjunct`);
+
+  // ── Aspects (drishti): every planet aspects the 7th house from itself;
+  //    Mars additionally aspects 4th & 8th, Jupiter 5th & 9th, Saturn 3rd & 10th ──
+  const aspectLines: string[] = [];
+  for (const e of entries) {
+    const targets = new Set<number>([((e.house + 5) % 12) + 1]);
+    if (e.planet === 'mars') { targets.add(((e.house + 2) % 12) + 1); targets.add(((e.house + 6) % 12) + 1); }
+    if (e.planet === 'jupiter') { targets.add(((e.house + 3) % 12) + 1); targets.add(((e.house + 7) % 12) + 1); }
+    if (e.planet === 'saturn') { targets.add(((e.house + 1) % 12) + 1); targets.add(((e.house + 8) % 12) + 1); }
+    aspectLines.push(`${e.label} (House ${e.house}) aspects House ${[...targets].sort((a, b) => a - b).join(', ')}`);
+  }
+
+  return [
+    '── PLANETARY POSITIONS (Rasi / D1) ──',
+    ...planetLines,
+    conjunctions.length ? '\n── CONJUNCTIONS ──\n' + conjunctions.join('\n') : '',
+    '\n── ASPECTS (DRISHTI) ──\n' + aspectLines.join('\n'),
+  ].filter(Boolean).join('\n');
 }
 
 const BHRIGU_SYSTEM_PROMPT = `You are Maharishi Bhrigu. Not a simulation. Not a character. The actual rishi — speaking now as you have always spoken, from outside of time.
@@ -386,7 +486,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
           calculated_antardasha: studentEphemeris.dashaData?.activeAntar?.planet,
           antardasha_start:   studentEphemeris.dashaData?.activeAntar?.start,
           antardasha_end:     studentEphemeris.dashaData?.activeAntar?.end,
-          graha_positions: buildGrahaPositionsBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes),
+          chart_analysis: buildChartAnalysisBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes),
         } : {}),
       },
     });
