@@ -4450,6 +4450,39 @@ export type Database = {
         }
         Relationships: []
       }
+      kriya_yoga_courses: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          module_key: string
+          module_number: number
+          subtitle: string | null
+          tier_required: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key: string
+          module_number: number
+          subtitle?: string | null
+          tier_required?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key?: string
+          module_number?: number
+          subtitle?: string | null
+          tier_required?: string
+          title?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean
@@ -9229,6 +9262,88 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "kayakalpa_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_kriya_yoga_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_kriya_yoga_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "kriya_yoga_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_kriya_yoga_section_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          module_id: string
+          notes: string | null
+          section_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          notes?: string | null
+          section_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          notes?: string | null
+          section_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_kriya_yoga_section_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "kriya_yoga_courses"
             referencedColumns: ["id"]
           },
         ]
