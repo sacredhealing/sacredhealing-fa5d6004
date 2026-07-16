@@ -648,16 +648,26 @@ Read the complete field — dasha, nakshatra, planetary positions. Never fabrica
 
 // ── Sanitize chat replies that accidentally return JSON ──────────────────────
 function sanitizeChatReply(raw: string): string {
-  const trimmed = raw.replace(/```json|```/g, '').trim();
-  if (!trimmed.startsWith('{')) return raw;
+  // BUGFIX: this used to require the JSON to start at position 0
+  // (`trimmed.startsWith('{')`), so any prose before it — e.g. a model
+  // greeting like "Adam, the leaf has opened." before a leaked JSON
+  // block — made this bail out immediately and return the raw text
+  // completely unprocessed, backticks, single-line JSON formatting and
+  // all. Now finds the JSON object anywhere in the string and parses
+  // just that span, ignoring any prose wrapped around it either side.
+  const jsonStart = raw.indexOf('{');
+  const jsonEnd = raw.lastIndexOf('}');
+  if (jsonStart === -1 || jsonEnd <= jsonStart) return raw;
+  const candidate = raw.slice(jsonStart, jsonEnd + 1);
   try {
-    const obj = JSON.parse(trimmed) as Record<string, string>;
-    // Stitch the structured fields into flowing oracle prose
-    const order = ['leaf_found','graha','nakshatra','dasha','shadow','sadhana','transmission'];
-    return order
-      .filter(k => obj[k])
-      .map(k => obj[k])
-      .join('\n\n');
+    const obj = JSON.parse(candidate) as Record<string, string>;
+    // Stitch the structured fields into flowing oracle prose, one blank
+    // line between each so the chat bubble renders real paragraph breaks
+    // (see the `\n\n+` split in the message renderer) instead of one
+    // dense unbroken block.
+    const order = ['leaf_found', 'graha', 'nakshatra', 'dasha', 'shadow', 'sadhana', 'transmission'];
+    const stitched = order.filter(k => obj[k]).map(k => obj[k]).join('\n\n');
+    return stitched || raw;
   } catch {
     return raw;
   }
@@ -875,7 +885,12 @@ Return ONLY a valid JSON object. No markdown. No backticks. No text outside the 
     try {
       const raw = await callAnthropic([{ role: 'user', content: fullPrompt }]);
       let parsed: OracleSections | null = null;
-      try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch {}
+      try {
+        const cleaned = raw.replace(/```json|```/g, '').trim();
+        const jsonStart = cleaned.indexOf('{');
+        const jsonEnd = cleaned.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd > jsonStart) parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+      } catch {}
       if (parsed) { setSections(parsed); setExpandedSection('graha'); }
     } catch (err: any) {
       setChatMessages(prev => [...prev, { role: 'oracle', text: `Full reading interrupted: ${err.message}` }]);

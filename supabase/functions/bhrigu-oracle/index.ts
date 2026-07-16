@@ -287,7 +287,7 @@ READING FOCUS: ${readingType}
 ${question ? `SEEKER'S QUESTION: "${question}"` : ""}
 
 The leaf has been verified. Deliver the complete Nadi reading now.
-Return ONLY a valid JSON object. No markdown. No backticks. No text outside the JSON.
+Return ONLY a valid JSON object. No markdown. No backticks. No text outside the JSON. Do not write any greeting, introduction, or sentence like "The leaf is found" or "Adam, the leaf has opened" before the JSON — that sentence belongs INSIDE the "leaf_found" field, not before it. Your entire response must be parseable as JSON from the very first character.
 
 {
   "leaf_found": "...",
@@ -482,7 +482,21 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
       const aiData = await res.json();
       const rawText = aiData.choices?.[0]?.message?.content ?? "";
       let sections: Record<string, string> | null = null;
-      try { sections = JSON.parse(rawText.replace(/```json|```/g, "").trim()); } catch {}
+      // BUGFIX: naive strip-then-parse required the model's raw text to
+      // be pure JSON with no wrapping text at all. When the model added
+      // a greeting before the object (observed in production — e.g.
+      // "Adam, the leaf has opened." before the JSON), this failed
+      // silently and the reading was lost. Extracting the substring
+      // between the first '{' and the last '}' is robust to prose
+      // wrapped around the object on either side.
+      try {
+        const cleaned = rawText.replace(/```json|```/g, "").trim();
+        const jsonStart = cleaned.indexOf('{');
+        const jsonEnd = cleaned.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+          sections = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+        }
+      } catch {}
 
       if (sections) {
         await supabase.from("ai_response_cache").upsert({
@@ -575,36 +589,36 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
     // The model has been observed disobeying the "never output JSON in
     // chat mode" instruction by writing a normal prose opener and then
     // continuing straight into the full structured-reading JSON, all in
-    // one string. sanitizeChatReply on the client only catches replies
-    // that are ENTIRELY JSON (starts with '{') — it does nothing when
-    // JSON is glued onto the end of real prose, which is exactly what
-    // was happening. Fixed here in code rather than relying on the model
-    // to comply, since prompt wording alone has now demonstrably failed
-    // this twice.
+    // one string. Recovery PRIORITIZES actually parsing the JSON and
+    // pulling real substance from it — the earlier version of this guard
+    // just kept whatever prose came before the leak (often a throwaway
+    // greeting like "Adam, the leaf has opened.") and discarded the
+    // entire substantive reading that followed, which under-served the
+    // seeker even though it technically removed the JSON. Parsing first
+    // means a leak still ends in a short, real answer instead of a stub.
     const jsonLeakMatch = reply.match(/```json|"leaf_found"\s*:|"graha"\s*:|"nakshatra"\s*:|"transmission"\s*:/);
     if (jsonLeakMatch && jsonLeakMatch.index !== undefined) {
-      const proseBefore = reply.slice(0, jsonLeakMatch.index).replace(/```\s*$/,'').trim();
-      if (proseBefore.length >= 20) {
-        console.warn('[bhrigu-oracle] JSON leak detected and stripped, kept prose prefix', { originalLength: reply.length, keptLength: proseBefore.length });
-        reply = proseBefore;
+      let repaired = '';
+      try {
+        const jsonStart = reply.indexOf('{');
+        const jsonEnd = reply.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+          const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1));
+          // "transmission" is designed to already be short and dense
+          // ("2-3 lines only, sutra-like") — the closest thing to a
+          // proper chat-length answer already sitting in the leaked
+          // object, so it's preferred over the longer fields.
+          repaired = parsed.transmission || parsed.shadow || parsed.graha || '';
+        }
+      } catch { /* fall through to prose-prefix recovery below */ }
+      if (repaired) {
+        console.warn('[bhrigu-oracle] JSON leak detected, recovered real content from parsed fields', { originalLength: reply.length, repairedLength: repaired.length });
       } else {
-        // No usable prose before the leak — try to recover something
-        // short from the JSON itself rather than discarding the whole
-        // turn. "transmission" is designed to already be short and
-        // dense ("2-3 lines only, sutra-like"), so it's the safest
-        // single field to fall back to.
-        console.warn('[bhrigu-oracle] JSON leak detected with no usable prose prefix, attempting field recovery');
-        let recovered = '';
-        try {
-          const jsonStart = reply.indexOf('{');
-          const jsonEnd = reply.lastIndexOf('}');
-          if (jsonStart !== -1 && jsonEnd > jsonStart) {
-            const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1));
-            recovered = parsed.transmission || parsed.shadow || parsed.graha || '';
-          }
-        } catch { /* fall through to generic recovery below */ }
-        reply = recovered || "The field scattered before it settled into words. Ask me again, plainly, and I will answer.";
+        const proseBefore = reply.slice(0, jsonLeakMatch.index).replace(/```\s*$/, '').trim();
+        repaired = proseBefore.length >= 20 ? proseBefore : "The field scattered before it settled into words. Ask me again, plainly, and I will answer.";
+        console.warn('[bhrigu-oracle] JSON leak detected, parse failed, fell back to prose prefix', { originalLength: reply.length, repairedLength: repaired.length });
       }
+      reply = repaired;
     }
 
     // Detect if Bhrigu is ready to deliver the full reading
