@@ -1,478 +1,307 @@
-// src/pages/BreatharianAcademy.tsx
-// ⟡ SQI 2050 — Breatharian Academy — Pranic Living Mastery ⟡
-// Complete curriculum across 4 tiers | Siddha depth | Tier-gated access
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, ChevronDown, ChevronUp, Sparkles, Wind, Sun, Droplets, Infinity as InfinityIcon, Star, Zap, Eye, Heart, Moon, BookOpen } from 'lucide-react';
+import { ArrowLeft, Lock, ChevronDown, ChevronUp, Wind, Infinity as InfinityIcon, Star, Sparkles } from 'lucide-react';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import { getSalesPageForRank, getTierRank } from '@/lib/tierAccess';
 
-// ─── DESIGN TOKENS ──────────────────────────────────────────────────────────
 const gold  = (a: number) => `rgba(212,175,55,${a})`;
 const white = (a: number) => `rgba(255,255,255,${a})`;
 const cyan  = (a: number) => `rgba(34,211,238,${a})`;
 const green = (a: number) => `rgba(74,222,128,${a})`;
-
 const FONT = "'Plus Jakarta Sans','Montserrat',sans-serif";
 const SERIF = "'Cormorant Garamond',serif";
 
-// ─── TIER CONFIG ─────────────────────────────────────────────────────────────
-const TIERS = [
-  {
-    slug: 'free',
-    rank: 0,
-    label: 'SIDDHA AWAKENING',
-    subtitle: 'Free — Open to All Seekers',
-    color: white(0.75),
-    glow: white(0.04),
-    border: white(0.13),
-    icon: '◇',
-    tagline: 'First Transmission — The Door Opens',
-    modules: [
-      {
-        id: 'F1',
-        title: 'What Is Breatharianism? — The Siddha Science of Pranic Living',
-        lessons: [
-          'The 18 Siddhas on Pranayama — Beyond Oxygen',
-          'Thirumoolar\'s Revelation: "The Body Lives on Prana, Not Food"',
-          'Agastya Muni & the Science of Sushumna Nadi Activation',
-          'Yogananda\'s Teachings on Cosmic Energy Absorption',
-          'Babaji Kriya Yoga — The Original Breatharian Lineage',
-          'Distinguishing Real Pranic Living from Dangerous Fasting',
-          'The Akashic Record of Breatharian Masters — Historical Evidence',
-        ],
-      },
-      {
-        id: 'F2',
-        title: 'The Five Pranas — Vedic Anatomy of the Life-Force Body',
-        lessons: [
-          'Prana, Apana, Samana, Udana, Vyana — Function & Location',
-          'Nadi System: 72,000 Channels of Pranic Flow',
-          'Sushumna, Ida, Pingala — The Pranic Trinity',
-          'How Prana Enters Through Breath, Light, Sound & Intention',
-          'The Role of Prana Vayu in Cellular Regeneration',
-          'Pancha Tattva & the Five Elemental Pranas',
-          'Practical: Morning Sun Gazing Protocol (Safe Introduction)',
-        ],
-      },
-      {
-        id: 'F3',
-        title: 'Pranayama Foundations — Siddha Breathing Science',
-        lessons: [
-          'Nadi Shodhana (Alternate Nostril) — Balancing Pranic Flow',
-          'Kapalabhati — The Skull-Shining Breath of Purification',
-          'Bhramari — Vagus Nerve Activation & Inner Sound',
-          'Ujjayi — The Victorious Breath of Pranic Accumulation',
-          'Kumbhaka (Breath Retention) — Gateway to Stillness',
-          'Agni Sara — The Fire Breath of Metabolic Transformation',
-          '21-Day Pranayama Foundation Protocol',
-        ],
-      },
-      {
-        id: 'F4',
-        title: 'The Siddha Diet Bridge — Preparing the Body for Pranic Living',
-        lessons: [
-          'Sattvic Diet Principles — Eating as a Spiritual Practice',
-          'Foods That Increase Ojas (Vital Essence)',
-          'The Kaya Kalpa Diet: Ancient Siddha Rejuvenation Protocol',
-          'Fasting Wisdom: Ekadashi, Pradosham & Lunar Protocols',
-          'Understanding Ahara (Food) as Gross Prana',
-          'Step-Down Cleanse: Transitioning Toward Pranic Sensitivity',
-          'Contraindications & Who Should NOT Pursue Advanced Breatharianism',
-        ],
-      },
-    ],
-  },
-  {
-    slug: 'prana-flow',
-    rank: 1,
-    label: 'PRANA FLOW',
-    subtitle: '€19 / month',
-    color: '#4ADE80',
-    glow: green(0.08),
-    border: green(0.22),
-    icon: '◉',
-    tagline: 'Foundations of Pranic Absorption — The Living Channel Opens',
-    modules: [
-      {
-        id: 'P1',
-        title: 'Advanced Siddha Pranayama — The Eight Kumbhakas',
-        lessons: [
-          'Sahita Kumbhaka — Supported Retention with Bandhas',
-          'Kevala Kumbhaka — Spontaneous Cessation & Pranic Absorption',
-          'Suryabheda — Right Nostril Solar Prana Activation',
-          'Bhastrika — Bellows Breath for Kundalini Awakening',
-          'Sitali & Sitkari — Cooling Pranas for Pitta Balance',
-          'Murcha Kumbhaka — The Swooning Breath (Advanced)',
-          'Plavini — The Floating Breath & Internal Air Retention',
-          'Integration Protocol: 40-Day Kumbhaka Mastery Sadhana',
-        ],
-      },
-      {
-        id: 'P2',
-        title: 'Surya Vigyan — Solar Nourishment Science',
-        lessons: [
-          'Hira Ratan Manek Protocol — Safe Sun Gazing Methodology',
-          'Surya Namaskar as Pranic Charging Mechanism',
-          'Photonic Nutrition: Absorbing Prana Through the Eyes',
-          'Pineal Gland Activation Through Sunlight',
-          'The 9-Month Sun Gazing Protocol (Siddha Version)',
-          'Surya Mantra & Bija Seed Syllables for Solar Absorption',
-          'Contraindications and Precautions — Safety First',
-          'Tracking Your Pranic Sensitivity: Journal Protocol',
-        ],
-      },
-      {
-        id: 'P3',
-        title: 'The Bandhas — Pranic Locks of the Siddhas',
-        lessons: [
-          'Mula Bandha — Root Lock & Apana Vayu Reversal',
-          'Uddiyana Bandha — The Flying Up Lock & Prana Absorption',
-          'Jalandhara Bandha — Throat Lock & Udana Vayu Control',
-          'Maha Bandha — The Great Lock (All Three Combined)',
-          'Bandha Sequencing with Kumbhaka for Pranic Maximization',
-          'Ashwini Mudra — Horse Gesture & Lower Pranic Body',
-          'Shambhavi Mudra — Third Eye Seal & Transcendental Prana',
-          '21-Day Bandha Integration Protocol',
-        ],
-      },
-      {
-        id: 'P4',
-        title: 'Liquid Light Fasting — The Siddha Intermediate Path',
-        lessons: [
-          'Understanding Liquid Light as Transitional Pranic Food',
-          'Noni, Tulsi, Moringa & Sacred Herbal Elixir Protocols',
-          'Thirumoolar\'s Rasayana for Pranic Body Preparation',
-          'Water Charging: Mantra-Infused, Sun-Charged, Crystal Water',
-          'The 7-Day Liquid Light Protocol (Medically Safe)',
-          'Monitoring Vital Signs During Pranic Transition',
-          'Emotional Releases During Fasting — Siddha Perspective',
-          'Breaking the Fast: Sacred Reintegration Protocol',
-        ],
-      },
-      {
-        id: 'P5',
-        title: 'Chakra Nourishment — Feeding the Energy Body',
-        lessons: [
-          'Muladhara — Earth Prana & Prithvi Absorption Through Feet',
-          'Svadhisthana — Water Prana & Lunar Nourishment',
-          'Manipura — Fire Prana & Surya Chakra Activation',
-          'Anahata — Air Prana & the Cosmic Heart Field',
-          'Vishuddha — Akasha Prana & Sound as Nourishment',
-          'Ajna — Light Prana & Pineal Photon Absorption',
-          'Sahasrara — Pure Consciousness as Ultimate Nourishment',
-          'Full Chakra Pranic Feeding Daily Practice',
-        ],
-      },
-    ],
-  },
-  {
-    slug: 'siddha-quantum',
-    rank: 2,
-    label: 'SIDDHA QUANTUM',
-    subtitle: '€45 / month',
-    color: '#D4AF37',
-    glow: gold(0.08),
-    border: gold(0.25),
-    icon: '⬡',
-    tagline: 'Deep Transmutation — Living on Prana, Light & Sound',
-    modules: [
-      {
-        id: 'SQ1',
-        title: 'Kaya Kalpa — The Siddha Science of Physical Immortality',
-        lessons: [
-          'Agastya\'s Secret Formula: The 64 Kaya Kalpa Preparations',
-          'Vasi Yogam — Breath Control as Path to Physical Immortality',
-          'Ojas, Tejas, Prana — The Three Pranic Essences of Immortality',
-          'Rejuvenation Through Pranayama: Cellular Evidence & Science',
-          'The Merudanda (Spine) as Cosmic Antenna for Universal Prana',
-          'Kundalini & Kaya Kalpa — The Serpent Fire of Regeneration',
-          'Siddha Nadi Purification: 40-Day Advanced Protocol',
-          'Amrita Bindu — The Nectar Drop & Soma Production',
-          'Khechari Mudra — The Most Powerful Pranic Gesture',
-        ],
-      },
-      {
-        id: 'SQ2',
-        title: 'Nada Yoga — Living on Sound & Vibration',
-        lessons: [
-          'Anahat Nada — The Unstruck Sound as Primary Nourishment',
-          'Mantra as Pranic Food: How Sound Feeds the Energy Body',
-          'Nadam, Bindu, Kala — The Three Aspects of Sonic Prana',
-          'Tri-Kuta: The Three Caves of Sound & Pranic Ascent',
-          'Om as Primordial Nutrient — Scientific & Metaphysical View',
-          'The 4 Stages of Nada: Para, Pashyanti, Madhyama, Vaikhari',
-          'Deep Listening Meditation — Absorbing Cosmic Sound as Prana',
-          'Nada Breatharian Protocol: 21 Days of Sound Nourishment',
-        ],
-      },
-      {
-        id: 'SQ3',
-        title: 'Turiya & Pranotthana — The Superconscious Pranic State',
-        lessons: [
-          'The Four States: Jagrat, Swapna, Sushupti, Turiya',
-          'Pranotthana — The Rising Flood of Prana in Deep Meditation',
-          'Samadhi as Total Pranic Sustenance — The Siddha Evidence',
-          'Nirvikalpa Samadhi & Zero Metabolic State',
-          'Unmani Avastha — The Mind-Free State of Pranic Absorption',
-          'Sahaja Samadhi — Permanent Pranic Living While Active',
-          'Boganathar\'s Transmissions on Transcending Food',
-          '90-Day Turiya Awakening Sadhana',
-        ],
-      },
-      {
-        id: 'SQ4',
-        title: 'Agni — The Inner Fire as Digestive & Cosmic Intelligence',
-        lessons: [
-          'Jatharagni — Gastric Fire & Its Pranic Transformation',
-          'Bhuta Agni — The Five Elemental Fires & Their Pranas',
-          'Dhatu Agni — The Seven Tissue Fires & Ojas Production',
-          'Pranagni — The Pranic Fire That Transcends Physical Digestion',
-          'Kundalini Agni — The Serpent Fire as Ultimate Nutrient',
-          'Agni Vidya: The Complete Science of Internal Fire',
-          'Siddha Triphala & Shilajit Protocols for Agni Enhancement',
-          'Transitional Protocol: Moving from Physical to Pranic Agni',
-        ],
-      },
-      {
-        id: 'SQ5',
-        title: 'Shambhavi Mahamudra & Advanced Pranic Seals',
-        lessons: [
-          'Shambhavi Mahamudra — The Complete 21-Mudra Sequence',
-          'Vajroli Mudra — Brahmacharya & Ojas Conservation',
-          'Yoni Mudra — Inner Absorption & Pranic Sealing',
-          'Mahaveda Mudra — The Supreme Lock of Pranic Mastery',
-          'Matangi Mudra for Manipura & Agni Mastery',
-          'Manduki Mudra — The Frog Seal for Earth Prana',
-          'Tadagi Mudra — The Tank Mudra for Pranic Reservoir',
-          '108-Day Advanced Mudra Protocol',
-        ],
-      },
-      {
-        id: 'SQ6',
-        title: 'Living Water, Living Air — Pranic Elementalism',
-        lessons: [
-          'Water as Liquid Prana — Masaru Emoto meets Siddha Science',
-          'Conscious Breathing in Sacred Environments (Forests, Temples, Oceans)',
-          'Vayu Tattva Deep Dive — Air Element as Master Nutrient',
-          'Thunderstorm Prana — Negative Ion Absorption Protocols',
-          'Sacred Spring Water: The 9 Pranic Waters of the Siddhas',
-          'Pranic Breathing in Cold & Hot Environments (Wim Hof meets Siddhas)',
-          'Moon Prana — Lunar Breathing & Soma Nadi Activation',
-          'Elemental Pranic Diet: A Complete Annual Protocol',
-        ],
-      },
-    ],
-  },
-  {
-    slug: 'akasha-infinity',
-    rank: 3,
-    label: 'AKASHA INFINITY',
-    subtitle: '€2,997 Lifetime',
-    color: '#22D3EE',
-    glow: cyan(0.08),
-    border: cyan(0.22),
-    icon: '✦',
-    tagline: 'Complete Immortality Codes — Breatharian Mastery Transmission',
-    modules: [
-      {
-        id: 'AI1',
-        title: 'Babaji\'s Living Transmission — The Complete Breatharian Path',
-        lessons: [
-          'Babaji Kriya Yoga as the Master Breatharian Lineage',
-          'Personal Transmission: Babaji\'s 18 Kriyas for Pranic Living',
-          'The Kriya Pranayama That Activates Amrita (Nectar) Secretion',
-          'Babaji\'s Himalayan Protocol: Living on Snow-Light Prana',
-          'The 144,000 Siddha Codes Hidden in Kriya Pranayama',
-          'Mahavatar Babaji\'s Teaching on "I Am the Prana of the Universe"',
-          'Private Transmission Channel: Accessing Babaji\'s Akashic Field',
-          '365-Day Babaji Breatharian Initiation Program',
-          'Babaji & Vishwananda: The Living Avatara Breatharian Blueprint',
-        ],
-      },
-      {
-        id: 'AI2',
-        title: 'The 18 Siddhas — Breatharian Transmissions of Each Master',
-        lessons: [
-          'Agastya Muni — Master of Prana, Rasayana & Cellular Immortality',
-          'Thirumoolar — Author of Tirumantiram: The Breatharian Bible',
-          'Boganathar — The Siddha Who Traveled the World on Prana Alone',
-          'Machamuni (Matsyendranath) — The Fisherman Saint & Pranayama Master',
-          'Gorakhnath — The Iron-Body Breatharian & Hatha Yoga Originator',
-          'Konganavar — Solar Science & Photon Absorption Master',
-          'Sattamuni — The Silent Siddha Living on Akasha Alone',
-          'Sundaranandar — Devotion & Bhakti as Pranic Nourishment',
-          'Kudambai Siddhar — The Childlike Siddha & Play as Prana',
-          'Kamalamuni — The Lotus Siddha & Water Prana Mastery',
-          'Valmiki — The Hunter Who Became Pranic Through Mantra',
-          'Ramadevar (Yacob) — The Sufi-Siddha & Breath of Allah',
-          'Edaikkadar — Prophecy, Time & Future Prana Science',
-          'Patanjali — Yoga Sutras as the Complete Breatharian Manual',
-          'Dhanvantari — Divine Physician & the Amrita of Immortality',
-          'Idaikadar — Astrology, Karma & Pranic Destiny',
-          'Karuvoorar — Architecture of the Pranic Universe',
-          'Pambatti Siddhar — The Snake Charmer & Kundalini Prana',
-          'BONUS: Channeled Messages from Each Siddha for Modern Practitioners',
-        ],
-      },
-      {
-        id: 'AI3',
-        title: 'Scalar Wave Breatharianism — Quantum Field Prana Science',
-        lessons: [
-          'Scalar Waves as the Carrier Wave of Prana',
-          'Tesla, Reich & the Siddhas — Converging on Zero-Point Energy',
-          'Orgone Energy & Prana — Wilhelm Reich meets Agastya',
-          'The Human Biofield as Pranic Battery & Transmitter',
-          'DNA Activation Through Scalar-Encoded Pranayama',
-          'Zero-Point Field Absorption: Beyond Conventional Nutrition',
-          'Structured Water, Coherent Light & Scalar Prana',
-          'Building a Personal Scalar-Pranic Field: The SQI Protocol',
-          'Advanced: Tachyon Fields & Pranic Time-Space Nourishment',
-        ],
-      },
-      {
-        id: 'AI4',
-        title: 'Advanced Khechari Mudra — The Supreme Breatharian Secret',
-        lessons: [
-          'Khechari Vidya: The Complete 4-Stage Siddha Science',
-          'Stage 1: Preparation & Tongue Lengthening Protocol (Safe Method)',
-          'Stage 2: Nabho Mudra & Preliminary Amrita Contact',
-          'Stage 3: Reaching Shankhini Nadi & Soma Activation',
-          'Stage 4: Full Khechari & Continuous Amrita Flow',
-          'The 10 Nectars of Khechari: Madhu, Kshira, Ghrita, etc.',
-          'Khechari & Breatharianism: Direct Link to Pranic Sustenance',
-          'The 6 Chakras Pierced by the Khechari Tongue',
-          'Life Extension Through Continuous Amrita: Documented Cases',
-          'Boganathar\'s Khechari Transmission — Akashic Reception',
-        ],
-      },
-      {
-        id: 'AI5',
-        title: 'The Soma Protocol — Nectar Body Activation',
-        lessons: [
-          'Soma: The Vedic Nectar of Immortality & Its Pranic Source',
-          'The 16 Soma Kalas — Lunar Phases & Nectar Production',
-          'Chandra Nadi (Ida) Activation for Soma Flow',
-          'Moonlight Bathing Protocols — Siddha Lunar Prana Absorption',
-          'Bindu Visarga — The Crown Drop & Amrita Nectar Point',
-          'Viparita Karani — Inversion Yoga for Amrita Conservation',
-          'Soma Chakra: The Secret 16th Chakra Above Ajna',
-          'Full Moon Breatharian Ceremony — Live Transmission',
-          'The Amrita Nadi — The Direct Channel from Heart to Crown',
-          'Soma as the Ultimate Breatharian Food: Complete Protocol',
-        ],
-      },
-      {
-        id: 'AI6',
-        title: 'Bhakti Prana — Love as the Ultimate Nourishment',
-        lessons: [
-          'Sri Vishwananda\'s Teaching: Bhakti as the Highest Prana',
-          'The Anahata Chakra as the Pranic Heart of the Universe',
-          'Prema (Divine Love) as the Most Potent Pranic Nutrient',
-          'Devotional Chanting as Pranic Absorption Technology',
-          'Living in a State of Continuous Darshan — Feeding on Grace',
-          'The Bhakti-Breatharian Integration: Love, Prana, Liberation',
-          'Narayanas\'s Love-Prana Transmission — Sri Vaishnava Path',
-          'The Radha-Krishna Prema Field as Cosmic Nourishment',
-          'Integration: Jnana + Bhakti + Pranayama = Complete Pranic Living',
-          'The Final Transmission: You Are the Prana of the Universe',
-        ],
-      },
-      {
-        id: 'AI7',
-        title: 'The Breatharian Integration — Living the Full Pranic Life',
-        lessons: [
-          'Designing Your Personal Pranic Sadhana — Morning, Noon & Night',
-          'The 108-Day Self-Initiation Protocol — From Seeker to Pranic Adept',
-          'Navigating Social & Family Life as a Pranic Practitioner',
-          'Seasonal Pranic Protocols — Spring, Summer, Autumn, Winter',
-          'Pranic Living in Cities — Absorbing Prana in Urban Environments',
-          'Advanced Dream Yoga — Absorbing Prana During Sleep',
-          'Documenting Your Pranic Journey — The Sacred Self-Study Journal',
-          'Signs of Pranic Awakening — What to Expect at Each Stage',
-          'The Final Veil — Surrendering the Need to Eat as Identity',
-          'Mauna (Sacred Silence) as the Highest Pranic Practice',
-        ],
-      },
-    ],
-  },
+interface Lesson { title: string; content: string; }
+interface Module { id: string; title: string; lessons: Lesson[]; }
+interface Tier { slug: string; rank: number; label: string; subtitle: string; color: string; glow: string; border: string; icon: string; tagline: string; modules: Module[]; }
+
+
+const FREE_MODULES: Module[] = [
+  { id: 'F1', title: 'What Is Breatharianism? — The Siddha Science of Pranic Living', lessons: [
+    { title: "The 18 Siddhas on Pranayama — Beyond Oxygen",
+      content: `The 18 Tamil Siddhas were scientists of the subtle body who mapped the inner universe with the same precision that modern physicists map the atom. Their central discovery: the human body does not ultimately run on food and oxygen. It runs on Prana — the universal life force that underlies all matter.\n\nThirumoolar writes in the Tirumantiram: "The breath that enters does not seek food — it seeks the infinite." This verse encodes the entire science of Breatharianism. The Siddhas understood that oxygen is merely the grossest carrier of Prana, just as bread is a carrier of solar energy. The real nourishment is always the subtle energy behind the physical form.\n\nIn this module, we begin to dismantle the assumption that food is necessary for life — not as a reckless claim, but as a profound spiritual inquiry rooted in 5,000 years of verified Siddha science.` },
+    { title: "Thirumoolar's Revelation: 'The Body Lives on Prana, Not Food'",
+      content: `Thirumoolar, the greatest of the 18 Siddhas, spent 3,000 years in meditation at Chidambaram, entering samadhi so deep that he would return to his body only once a year to add one verse to the Tirumantiram. During this time, he did not eat. He lived on Prana alone.\n\nHis teaching is direct: "When the breath is controlled, the body needs no other food." The word he uses — Vasi — refers not merely to breathing but to the conscious direction of life-force through the 72,000 nadis. When Vasi is mastered, the body becomes a perfect pranic receiver, drawing sustenance from the universal field rather than from material food.\n\nThirumoolar's path is not one of deprivation but of expansion. The practitioner becomes so full of cosmic prana that the hunger for physical food simply dissolves — like a flame that no longer needs wood because it has become the sun itself.` },
+    { title: "Agastya Muni & the Science of Sushumna Nadi Activation",
+      content: `Agastya Muni is considered the father of Tamil Siddha medicine, Siddha yoga, and Tamil language itself. He is said to be still alive in his physical form in the Pothigai Hills of South India, sustained entirely by Prana. His treatises on Kaya Kalpa describe in precise detail how the Sushumna Nadi acts as the primary channel for pranic absorption.\n\nWhen Ida and Pingala — the lunar and solar nadis — are balanced through advanced pranayama, prana ceases to leak outward and instead rises through the Sushumna toward the crown. At advanced stages, this rising prana creates a permanent state of inner nourishment. Agastya calls this state Kaivalya Ahara — nourishment from pure consciousness.\n\nHis formula: purify the nadis, balance the doshas, awaken the Sushumna, merge individual prana with cosmic prana. This is the Siddha roadmap to Breatharianism.` },
+    { title: "Yogananda's Teachings on Cosmic Energy Absorption",
+      content: `Paramahansa Yogananda devoted an entire chapter of Autobiography of a Yogi to Giri Bala, a woman from Bengal who had not eaten or drunk for over 56 years when he met her. She was vibrant, luminous, and in perfect health. Her master had transmitted a specific kriya technique for drawing cosmic energy directly through the medulla oblongata.\n\nYogananda called this point the "mouth of God" — the subtle antenna at the base of the skull through which cosmic prana enters the human system. He taught that all human beings absorb some prana this way, but that advanced yogis can increase this absorption until it replaces the need for physical food entirely.\n\nHis own guru Sri Yukteswar demonstrated many signs of pranic living — rarely eating, yet possessing extraordinary vitality. Yogananda's teaching confirms what the Siddhas knew: the body is fundamentally an energy system, and food is simply the densest and least efficient form of the energy it seeks.` },
+    { title: "Babaji Kriya Yoga — The Original Breatharian Lineage",
+      content: `Mahavatar Babaji is the fountainhead of Kriya Yoga and, according to the Siddha tradition, one of the 18 Siddhas in his highest form. He has lived in the same physical body for over 1,800 years — sustained entirely by prana, grace, and the power of pure consciousness.\n\nThe Kriya Yoga system Babaji transmitted to Lahiri Mahasaya in 1861 contains within it the complete technology for pranic living. The advanced kriyas — particularly those involving Kumbhaka, Mula Bandha, and Shambhavi Mudra — systematically redirect the body's energy inward and upward, reducing dependence on external nourishment.\n\nBabaji's living example is the most powerful transmission: a being of light inhabiting a physical form without the need for gross nourishment. His existence is proof that what the Siddhas teach is not metaphor but literal, embodied reality.` },
+    { title: "Distinguishing Real Pranic Living from Dangerous Fasting",
+      content: `This distinction is critical and potentially life-saving. True Breatharianism as taught by the Siddhas is not starvation. It is not a diet. It is the result of a profound physiological and energetic transformation that happens gradually over months and years of dedicated sadhana — as the body learns to absorb prana from subtler and subtler sources.\n\nDangerous fasting is when someone intellectually decides to stop eating without the corresponding energetic development. The body, not having been prepared through pranayama, bandhas, and meditation, simply begins to break down its own tissues. This is starvation, not Breatharianism, and it can be fatal.\n\nThe Siddha path is slow, systematic, and always leads through increased vitality, not depletion. If you feel weaker, more anxious, or mentally unstable, it means the energetic foundation is not yet in place. Honor the body. Build the pranic body first. The freedom from food will come naturally, in its own time.` },
+    { title: "The Akashic Record of Breatharian Masters — Historical Evidence",
+      content: `The historical record of humans living on prana alone is far more extensive than most people realize. Beyond Giri Bala and Babaji, documented cases span multiple cultures: Therese Neumann of Bavaria (40 years without food), Saint Lydwine of Schiedam (28 years), Marthe Robin (50 years on the Eucharist alone), and Prahlad Jani (70+ years without food or water, verified by Indian military doctors in 2010).\n\nIn the Tamil Siddha tradition, dozens of masters are recorded as having achieved Jeevan Mukti — liberation while alive — accompanied by freedom from the need to eat. The Siddha texts describe specific physiological signs: the saliva becomes sweet like honey, the breath becomes imperceptible, the heartbeat slows dramatically, and a golden glow appears around the body.\n\nThese are not legends. They are detailed observations recorded across millennia, pointing to a genuine human capacity that lies dormant within each of us, waiting to be awakened.` },
+  ]},
+  { id: 'F2', title: 'The Five Pranas — Vedic Anatomy of the Life-Force Body', lessons: [
+    { title: "Prana, Apana, Samana, Udana, Vyana — Function & Location",
+      content: `The Vedic tradition identifies five major Vayus (pranic winds) that govern the entire energy economy of the human body. Prana Vayu governs the intake region — chest, lungs, heart — and controls all incoming energy: breath, food, sensory impressions. It flows upward and inward. Apana Vayu governs the lower abdomen and pelvis, managing downward and outward functions: elimination, reproduction. In Breatharianism, reversing Apana — turning it upward to meet Prana — is one of the most critical achievements.\n\nSamana Vayu is the digestive fire, seated in the navel, governing assimilation of all forms of energy. Udana Vayu governs the throat and upward movement — speech, expression, and the withdrawal of prana from the body in deep samadhi. Vyana Vayu pervades the entire body as the circulatory force, distributing prana to every cell.\n\nMastering all five Vayus is the complete science of pranic living. Each pranayama technique targets specific Vayus — this is why a systematic sequence of practices is essential rather than isolated techniques.` },
+    { title: "Nadi System: 72,000 Channels of Pranic Flow",
+      content: `The Siddha and Vedic texts describe the human subtle body as containing 72,000 nadis — energetic channels through which prana flows. These are not nerves or blood vessels, though they correspond to and influence them. They are channels of life-force in the pranamaya kosha, the pranic sheath that underlies the physical body.\n\nOf these 72,000 nadis, 14 are considered major, and 3 — Ida, Pingala, and Sushumna — are masters of the system. The health of the nadi system determines how much prana the body can absorb and retain. Most people's nadis are partially blocked by toxins, unprocessed emotions, and negative thought patterns — which is why most people require large amounts of physical food. Their pranic absorption capacity is low.\n\nPranayama is fundamentally a technology for clearing the nadis. As they open, the body requires less physical food and more subtle forms of nourishment. The 72,000 nadis, when fully awakened, can absorb prana from air, sunlight, sound, and ultimately from pure consciousness itself.` },
+    { title: "Sushumna, Ida, Pingala — The Pranic Trinity",
+      content: `Sushumna runs along the axis of the spine from the root chakra to the crown. It is the royal road of spiritual evolution and the superhighway of pranic ascent. In ordinary consciousness, Sushumna is mostly dormant — prana flows primarily through Ida and Pingala, the lunar and solar nadis that spiral around Sushumna like the two serpents of the caduceus.\n\nIda (left nostril, lunar, feminine, cooling) governs parasympathetic functions — rest, digestion, and receptivity. Pingala (right nostril, solar, masculine, heating) governs sympathetic functions — activity, metabolism, and will. When these two are balanced — indicated by both nostrils flowing equally — prana spontaneously enters Sushumna.\n\nIn this state of Sushumna activation, the practitioner experiences extraordinary clarity, inner silence, and a natural reduction in physical hunger. Advanced practitioners can sustain Sushumna activation for hours, days, or permanently — and in this state, the body draws its sustenance directly from the cosmic prana flowing through the central channel.` },
+    { title: "How Prana Enters Through Breath, Light, Sound & Intention",
+      content: `The Siddhas identified four primary gateways through which prana enters the human system beyond food. The first is breath — each inhalation carries not just oxygen but a quantum of prana absorbed by the pranamaya kosha before the gross air reaches the lungs. Conscious breathing multiplies this absorption dramatically.\n\nThe second gateway is light — particularly early morning sunlight. The pineal gland, which the Siddhas called the Ajna Chakra, is a photosensitive organ that transduces light into neurochemical signals. Agastya's sun-gazing protocols maximize this photonic absorption.\n\nSound is the third gateway — specifically the resonant frequencies of mantra, singing bowls, and sacred natural soundscapes. Nada directly stimulates the vagus nerve and creates neurological coherence that increases pranic absorption. The fourth gateway — intention and consciousness — is the most advanced: in deep meditation, awareness itself becomes a pranic attractor, drawing cosmic energy through the field of pure consciousness.` },
+    { title: "The Role of Prana Vayu in Cellular Regeneration",
+      content: `Modern science is beginning to confirm what the Siddhas knew millennia ago: the body's cells are not mere chemical factories — they are electromagnetic systems that communicate through biophotons and operate within a coherent bioelectric field. This field is what the Siddhas called the Pranamaya Kosha.\n\nWhen Prana Vayu is strengthened through pranayama and meditation, it directly influences cellular regeneration. Research on long-term meditators shows significantly lower biological aging markers, higher telomerase activity — the enzyme that rebuilds chromosomes — and elevated production of DHEA and growth hormone.\n\nThe Siddha texts describe this as Ojas production — the refined vital essence produced when prana is properly assimilated. Ojas is the physical counterpart of prana: golden, luminous, sweet-smelling, and the foundation of immunity, vitality, and longevity. Increasing Prana Vayu through dedicated practice literally upgrades the cellular machinery of the body toward a state that requires progressively less external nourishment.` },
+    { title: "Pancha Tattva & the Five Elemental Pranas",
+      content: `The five classical elements — Earth, Water, Fire, Air, and Ether — are not merely physical substances. Each is a vibratory frequency of prana that nourishes a corresponding level of the human body-mind system.\n\nEarth prana nourishes bones, muscles, and physical structure — absorbed through bare feet on soil and contact with trees. Water prana nourishes blood, lymph, and the emotional body — absorbed through pure water, rain, and proximity to oceans. Fire prana nourishes the digestive system and willpower — absorbed through sunlight and Agnihotra (fire ceremony). Air prana — the most important for the Breatharian — nourishes the nervous system and pranamaya kosha, absorbed through conscious breath.\n\nAkasha (ether) prana is the most subtle and most nourishing — absorbed through silence, meditation, mantra, and deep samadhi. The advanced Breatharian learns to absorb all five elemental pranas directly, bypassing the need for food as an intermediary entirely.` },
+    { title: "Practical: Morning Sun Gazing Protocol (Safe Introduction)",
+      content: `This foundational practice begins your direct absorption of solar prana. It must be done safely — ONLY during the first hour after sunrise and the last hour before sunset, when UV radiation is at its lowest.\n\nDay 1-10: Stand barefoot on bare earth. Face the rising sun. Begin with just 10 seconds of direct eye contact. Blink naturally. Do not strain. After sun gazing, close your eyes and visualize golden light filling your entire body from crown to feet. Practice diaphragmatic breathing — inhale 4 counts, hold 4, exhale 6.\n\nDay 11-20: Increase to 20-30 seconds. Add the Surya Mantra: Om Hreem Suryaya Namaha — repeat 9 times while gazing. After the practice, walk barefoot on the earth for at least 10 minutes, allowing activated solar prana to ground through your system. Track your hunger levels, energy, and sleep quality in a journal. Most practitioners notice reduced appetite and increased vitality within 21 days of consistent practice.` },
+  ]},
+  { id: 'F3', title: 'Pranayama Foundations — Siddha Breathing Science', lessons: [
+    { title: "Nadi Shodhana — Balancing Pranic Flow",
+      content: `Nadi Shodhana is the master technique for purifying the nadi system — the essential foundation of all pranic practices. Its name means "nadi purification" and that is precisely what it does, systematically clearing blockages from the 72,000 pranic channels so prana can flow freely throughout the body.\n\nTechnique: Sit in Sukhasana or Padmasana. Use Vishnu Mudra with the right hand — fold the index and middle fingers into the palm. Close the right nostril with the thumb. Inhale slowly through the left nostril for 4 counts. Close both nostrils. Retain for 4 counts. Release the right nostril and exhale slowly for 8 counts. Inhale through the right for 4. Retain for 4. Exhale through the left for 8. This is one round. Begin with 9 rounds.\n\nFor Breatharian practice, this technique is non-negotiable. Daily practice over 40 days begins to visibly purify the pranic body. Practitioners report reduced hunger, enhanced sensory perception, improved sleep quality, and the first experiences of prana flowing as a tangible inner sensation.` },
+    { title: "Kapalabhati — The Skull-Shining Breath of Purification",
+      content: `Kapalabhati (Kapala = skull, Bhati = shining) is one of the Shat Kriyas — the six purification practices — described in the Hatha Yoga Pradipika. Its primary function is to cleanse, but in the Siddha tradition it is also a powerful pranic amplifier.\n\nTechnique: Sit with a tall spine. Take a full natural breath in. Then begin rapid, forceful exhalations through the nose — each powered by a sharp contraction of the lower abdomen. The inhalation happens passively as the abdomen rebounds. Start with 30 rapid exhalations per round, then take 3 full natural breaths. Practice 3-5 rounds.\n\nKapalabhati purifies the entire respiratory tract, stimulates the digestive fire, activates the solar plexus chakra, and generates significant internal heat (tapas) that burns through energetic blockages. In Breatharian practice, it is used to activate the pranic fire that replaces the digestive fire — transitioning the body from processing food to processing light.` },
+    { title: "Bhramari — Vagus Nerve Activation & Inner Sound",
+      content: `Bhramari (the humming bee breath) is one of the most profoundly healing practices in the entire Siddha tradition. The humming sound of the exhalation directly stimulates the vagus nerve — the master nerve of the parasympathetic system — and activates the production of nitric oxide in the sinuses, which has documented antibacterial, antiviral, and vasodilatory effects.\n\nIn the Siddha tradition, Bhramari is specifically used to awaken the Anahata Nada — the primordial cosmic vibration heard in deep pratyahara. When this inner sound awakens, it becomes a permanent source of nourishment for the subtle body.\n\nTechnique: Sit in meditation. Close the ears with the thumbs. Place index fingers gently on the forehead, remaining fingers lightly covering closed eyes. Inhale deeply. On the exhalation, make a continuous humming sound like a bee — feel the vibration resonating in the skull, face, and chest. Practice 9-21 rounds. After completion, sit in silence and listen to the inner resonance that remains.` },
+    { title: "Ujjayi — The Victorious Breath of Pranic Accumulation",
+      content: `Ujjayi (victorious breath) is the breath most associated with pranic accumulation in the Siddha and Tantra traditions. By slightly constricting the glottis at the back of the throat, the practitioner creates a soft oceanic sound on both inhalation and exhalation — similar to the sound of the sea heard in a shell.\n\nThis constriction does two things simultaneously: it slows the breath dramatically, increasing CO2 levels and triggering better oxygen delivery to cells; and it creates gentle internal pressure that directs prana inward and upward rather than allowing it to disperse. Ujjayi is sometimes called the "pranic seal."\n\nFor Breatharian practice, Ujjayi is performed continuously during meditation and ideally developed as a background breath throughout the day. Advanced practitioners report that sustained Ujjayi breathing creates a felt sense of inner fullness — a satiation that is not physical hunger satisfaction but a genuine experience of being fed by prana. This is the first direct experience of pranic nourishment that most practitioners encounter.` },
+    { title: "Kumbhaka (Breath Retention) — Gateway to Stillness",
+      content: `Kumbhaka — the holding of the breath — is the supreme Breatharian practice. The word comes from "kumbha" (pot) — the breath is held in the body like water held in a pot. During Kumbhaka, the exchange between individual prana and universal prana reaches its maximum intensity.\n\nThere are two forms: Antara Kumbhaka (internal retention, after inhalation) builds pranic pressure and activates the upward-moving Udana Vayu. Bahya Kumbhaka (external retention, after exhalation) with Mula Bandha reverses Apana Vayu upward, creating the pranic union that the Hatha Yoga Pradipika calls the foundation of Samadhi.\n\nBegin with natural retention — simply pausing between inhalation and exhalation for 2-4 seconds. Over months, systematically extend this. The Siddha text Siva Yoga Saram states: "He who masters the breath for one hour transcends hunger for one day." This is not metaphor — it is functional physiology of the pranic body.` },
+    { title: "Agni Sara — The Fire Breath of Metabolic Transformation",
+      content: `Agni Sara (fire essence practice) is the Siddha technique for transforming the digestive fire from a fire that digests food into a fire that digests prana. It directly massages and activates the Manipura Chakra — the solar plexus — which governs assimilation of all forms of energy, gross and subtle.\n\nTechnique: Stand with feet shoulder-width apart, knees slightly bent, hands on thighs. Exhale completely. Retain the breath out (Bahya Kumbhaka). Rapidly pump the abdomen in and out — drawing the navel toward the spine and releasing it — as many times as possible on the retained exhalation. Release, inhale slowly, rest. This is one round. Begin with 3 rounds of 10-20 pumps. Advanced practitioners do 100+ pumps per round.\n\nAgni Sara directly stimulates the enteric nervous system, activates the adrenals, massages the liver and pancreas, and dramatically increases metabolic fire. In Breatharian practice, this transformed Agni shifts from digesting food to digesting cosmic prana — a literal alchemical conversion of the body's primary energy processor.` },
+    { title: "21-Day Pranayama Foundation Protocol",
+      content: `This protocol establishes the pranic foundation required for all advanced Breatharian practices. It must be done daily, ideally at sunrise, facing east, on an empty stomach.\n\nWeek 1 — Purification: Morning session (20 min): 5 min Kapalabhati (30 rounds) then 10 min Nadi Shodhana (9 rounds with 4:4:8 ratio) then 5 min Bhramari (9 rounds). Evening session (10 min): 9 rounds Nadi Shodhana only. Focus on feeling the breath and noticing where it is restricted.\n\nWeek 2 — Accumulation: Add Ujjayi as your continuous background breath throughout the day. Add 5 min of natural Kumbhaka after Nadi Shodhana — pause 2-4 seconds after each inhalation. Begin Agni Sara: 3 rounds before Kapalabhati. Extend evening Bhramari to 21 rounds.\n\nWeek 3 — Integration: Full morning sequence (40 min). Add sun gazing (10-30 seconds). Begin your Pranic Journal: record hunger levels 0-10, energy 0-10, sleep quality, food consumed, and any experiences of inner light, sound, or spontaneous satiation. By Day 21, most practitioners experience measurably reduced food cravings and their first genuine experiences of pranic nourishment.` },
+  ]},
+  { id: 'F4', title: 'The Siddha Diet Bridge — Preparing the Body for Pranic Living', lessons: [
+    { title: "Sattvic Diet Principles — Eating as a Spiritual Practice",
+      content: `Before transcending food, the Siddhas universally teach that food must first be sanctified — transformed from a purely physical act into a sacred ritual of receiving prana in its grossest form. This is the Sattvic diet: pure, light, life-giving foods that carry high pranic content and minimal energetic interference.\n\nSattvic foods include fresh fruits, vegetables, whole grains, legumes, nuts, seeds, dairy from ethically kept cows, pure water, herbal teas, and honey. These foods carry living prana — they have not been processed, refined, chemically treated, or killed. They are still vibrating with the life-force of the earth, sun, and water that created them.\n\nTamasic foods (meat, processed foods, alcohol, stale food) deaden the pranic body. Rajasic foods (very spicy, stimulating, caffeinated) scatter prana outward. On the Breatharian path, progressively moving toward pure Sattvic eating is the essential first step — you begin absorbing more prana from your food before eventually absorbing prana without food.` },
+    { title: "Foods That Increase Ojas (Vital Essence)",
+      content: `Ojas is the finest product of complete digestion and the physical counterpart of prana — a golden, luminous vital essence that confers immunity, vitality, radiance, and spiritual power. Increasing Ojas is the central Ayurvedic strategy for preparing the body for pranic living.\n\nThe highest Ojas-producing foods: pure cow's milk (warmed with cardamom and saffron), ghee, raw honey (never heated above 40°C), dates, ashwagandha, shatavari, amalaki, sesame seeds, almonds soaked overnight, and coconut. These are "pranic concentrates" — they carry a disproportionate amount of life-force relative to their physical mass.\n\nIn Breatharian preparation, the practitioner progressively increases Ojas-building foods while decreasing heavy, tamasic eating. As Ojas increases, the body becomes more self-sufficient energetically — the internal store of vital essence provides nourishment between meals, gradually extending the periods in which physical food is unnecessary.` },
+    { title: "The Kaya Kalpa Diet: Ancient Siddha Rejuvenation Protocol",
+      content: `Kaya Kalpa means "body transmutation" — the Siddha system for rebuilding the physical body at the cellular level, reversing aging, and preparing for potential immortality. The dietary component is a precise, graduated protocol.\n\nPhase 1 (7-21 days): Exclusive consumption of specific herbal preparations — particularly Triphala, Brahmi, Shankhapushpi, and the 64 Kaya Kalpa herbs described by Agastya — combined with pure water and cow's milk. No solid food. This phase purifies the dhatus (tissues) and eliminates accumulated ama (toxic residue).\n\nPhase 2 (21-90 days): Introduction of pure Sattvic foods only — primarily fruits, milk, ghee, and honey — combined with specific pranayama and sun exposure protocols. The body begins rebuilding on a higher energetic template. After completing a proper Kaya Kalpa protocol, practitioners report their relationship with food fundamentally changes — hunger becomes subtle and infrequent, and the body feels genuinely nourished by prana.` },
+    { title: "Fasting Wisdom: Ekadashi, Pradosham & Lunar Protocols",
+      content: `The Vedic calendar is a technology of pranic optimization. The ancients mapped the relationship between lunar cycles and the human body's energetic rhythms with extraordinary precision. Ekadashi — the 11th day of both the waxing and waning moon — is the highest fasting day, when the gravitational relationship between earth and moon creates optimal conditions for pranic absorption.\n\nOn Ekadashi, the digestive system receives complete rest, allowing all available prana to redirect toward spiritual practice rather than digestion. The Vishnu Purana states that the prana gained from one Ekadashi fast equals the prana gained from a full year of food-based practice. Pradosham (the 13th lunar day) is sacred to Shiva and optimal for Kumbhaka practices.\n\nBegin with Ekadashi fasting — one day of fasting (water, herbal teas, fruit juice) every 14 days. Track your experience: notice how the body feels at hour 12, hour 18, hour 24. Most practitioners find that the discomfort of fasting decreases dramatically after the first three Ekadashi fasts as the body remembers its pranic nature.` },
+    { title: "Understanding Ahara (Food) as Gross Prana",
+      content: `The Chandogya Upanishad contains one of the most radical statements in Vedic philosophy: "Annam Brahma" — Food is Brahman. This is not a statement about the sanctity of physical eating — it is a statement about the nature of prana. All food is, at its core, condensed prana — the universal life-force in its densest, most accessible form.\n\nWhen we understand food as gross prana, fasting becomes not deprivation but refinement — the practitioner moves from absorbing prana in its grossest form (food) to absorbing it in progressively subtler forms: water, air, sunlight, sound, consciousness. This is a gradual energetic upgrade, not a sudden leap.\n\nThe Siddha teaching is clear: you cannot successfully transcend food while still fighting with food, fearing food, or obsessing about food. First come to total peace and gratitude toward food — seeing it as the sacred gift of gross prana. From that place of fullness and acceptance, the natural evolution toward subtler nourishment can begin.` },
+    { title: "Step-Down Cleanse: Transitioning Toward Pranic Sensitivity",
+      content: `This practical protocol is the dietary bridge between conventional eating and pranic living. It is a systematic, respectful transition that increases pranic sensitivity while reducing dependence on dense foods.\n\nMonth 1: Eliminate all meat, fish, eggs, alcohol, caffeine, processed foods, and refined sugar. Increase raw fruits and vegetables to 50% of diet. Add 2L of pure water daily. Begin the 21-Day Pranayama Foundation Protocol simultaneously. Month 2: Move to a primarily raw, vegan diet. Introduce one Ekadashi fast per month (water and herbal tea only). Add daily sun gazing. Begin reducing to 2 meals per day.\n\nMonth 3: Two Ekadashi fasts per month. Primary diet of fruits, salads, sprouts, nuts, and herbal teas. One full liquid day per week. At this stage, most practitioners report heightened pranic sensitivity — food tastes more vivid, hunger becomes distinct and genuine rather than habitual, and they begin experiencing the first signs of pranic nourishment during extended pranayama sessions.` },
+    { title: "Contraindications & Who Should NOT Pursue Advanced Breatharianism",
+      content: `The Siddhas were not reckless teachers. They understood that Breatharianism is not appropriate for every person at every stage of life, and they were explicit about contraindications. Honoring these is wisdom.\n\nDo NOT pursue advanced pranic living practices beyond basic pranayama and Sattvic diet if you are: pregnant or breastfeeding, under the age of 18, currently being treated for any eating disorder, diagnosed with diabetes or hypoglycemia, recovering from surgery or serious illness, or under significant chronic stress.\n\nApproach with extreme caution and medical supervision if you have any history of disordered eating, thyroid disorders, cardiovascular conditions, or severe anxiety. The Siddha masters emphasize that the body must be strong before it can be subtle. A weak body attempting pranic living will simply break down. The ethical principle here is paramount: the goal is greater aliveness, vitality, and freedom. If any practice is reducing your vitality, it is being done incorrectly or prematurely. Always choose life and health over any spiritual ideal.` },
+  ]},
 ];
 
-// ─── PARTICLE FIELD ──────────────────────────────────────────────────────────
+
+const PRANA_MODULES: Module[] = [
+  { id: 'P1', title: 'Advanced Siddha Pranayama — The Eight Kumbhakas', lessons: [
+    { title: "Sahita Kumbhaka — Supported Retention with Bandhas",
+      content: `Sahita Kumbhaka is "supported retention" — the breath is held while simultaneously engaging the three major bandhas. This triple lock creates a pranic pressure chamber within the torso that forces prana into the Sushumna Nadi, the central channel of spiritual ascent.\n\nTechnique: After a full inhalation, engage Jalandhara Bandha (chin lock — lower the chin to the chest notch). Simultaneously engage Mula Bandha (root lock — contract the perineum and pelvic floor). The breath is held within this sealed chamber. Retention time builds gradually: begin with 10-15 seconds, build over months to 1-3 minutes. Release Jalandhara first, then exhale slowly, then release Mula Bandha.\n\nSahita Kumbhaka is the gateway to Kevala Kumbhaka — the supreme Breatharian state. The Hatha Yoga Pradipika states: "When Kumbhaka is mastered, nothing in the three worlds is impossible for the yogi." In Breatharian practice, this technique most directly creates the experience of being sustained by internal prana rather than external breath or food.` },
+    { title: "Kevala Kumbhaka — Spontaneous Cessation & Pranic Absorption",
+      content: `Kevala Kumbhaka is the pinnacle of pranayama — the spontaneous, effortless cessation of breath that arises not through willpower but through the natural deepening of meditative absorption. It is not practiced; it is received. The breath simply stops. And in that cessation, the practitioner discovers a fullness so complete that neither breath nor food seems necessary.\n\nThirumoolar writes: "When the breath is still, the mind is still. When the mind is still, death is conquered." EEG studies on advanced meditators confirm this: breath cessation accompanied by profound brain coherence rather than distress — the opposite of suffocation.\n\nYou cannot force Kevala Kumbhaka. You cultivate it by deepening your meditation, extending your Sahita Kumbhaka practice, and practicing the complete surrender of all doing. When it arises — even for 30 seconds — note it in your journal. Over time, these episodes extend. Each one is a direct transmission of what Breatharian masters experience permanently: a body sustained by consciousness itself.` },
+    { title: "Suryabheda — Right Nostril Solar Prana Activation",
+      content: `Suryabheda means "sun-piercing" — this pranayama specifically activates the Pingala Nadi (solar channel) and increases the fire element in the body. It is traditionally practiced to build the pranic heat (tapas) necessary for advanced Breatharian transitions.\n\nTechnique: Inhale through the RIGHT nostril only. Retain with all three bandhas. Exhale through the LEFT nostril only. This completes one round. Practice 9-27 rounds. Begin with a 1:2:2 inhalation:retention:exhalation ratio, progressively building to 1:4:2.\n\nSuryabheda dramatically increases body temperature, metabolic fire, and pranic charge. The Siddhas used it specifically in cold environments to maintain warmth without food — the increased Agni generated replaces the heat ordinarily generated by digestion. Advanced practitioners report that 40 days of consistent Suryabheda practice markedly reduces desire for heavy foods and creates a sustained inner warmth that nourishes the body from within.` },
+    { title: "Bhastrika — Bellows Breath for Kundalini Awakening",
+      content: `Bhastrika (bellows breath) is the most powerful heating pranayama in the Siddha system. Like a blacksmith's bellows that feeds a forge, Bhastrika feeds the inner fire — dramatically increasing pranic charge, burning through nadi blockages, and potentially awakening Kundalini Shakti from the base of the spine.\n\nTechnique: Sit in Padmasana or Vajrasana. Begin vigorous breathing — both inhalation and exhalation are active and forceful, expanding and contracting the chest like bellows. Begin with 10 breaths per round at a moderate pace, then take one deep inhalation, Kumbhaka with all bandhas, then slow exhalation. Rest for 30 seconds. Repeat 3-5 rounds.\n\nBhastrika is contraindicated in pregnancy, hypertension, epilepsy, and heart conditions. Practice only on an empty stomach. In Breatharian preparation, Bhastrika accelerates nadi purification from months to weeks, rapidly increasing the body's capacity for pranic absorption. It must be balanced with cooling practices to prevent excess Pitta.` },
+    { title: "Sitali & Sitkari — Cooling Pranas for Pitta Balance",
+      content: `As solar and fire practices increase in Breatharian sadhana, the cooling pranayamas become essential for balance. Sitali and Sitkari are designed to absorb Chandra (lunar) prana and cool the system — preventing the excess heat that can arise from aggressive pranic practices.\n\nSitali Technique: Roll the tongue into a tube. Inhale slowly through the rolled tongue as if drinking through a straw — you will feel distinct coolness in the throat. Close the mouth, retain briefly, exhale through the nose. 9-27 rounds. Sitkari (for those who cannot roll the tongue): Press the tongue against the upper palate. Open the teeth slightly. Inhale through the teeth with a hissing sound. Retain. Exhale through the nose.\n\nBoth practices absorb prana through the tongue — a significant pranic gateway connected to the Ajna Chakra and the Soma center in the palate. These practices directly stimulate the production of Amrita — the pranic nectar that is a primary source of nourishment for advanced Breatharian practitioners.` },
+    { title: "Murcha Kumbhaka — The Swooning Breath",
+      content: `Murcha Kumbhaka (the swooning breath) is described in the Hatha Yoga Pradipika as producing a state of consciousness between waking and deep sleep — a powerful hypnagogic state in which pranic absorption is dramatically increased.\n\nTechnique: After a full inhalation, engage only Jalandhara Bandha — NOT Mula or Uddiyana. Hold the breath. Allow awareness to drift inward — do not resist if a pleasant swooning sensation arises. When the retention is complete, release the chin lock and exhale very slowly. The practitioner should feel a gentle melting of ordinary consciousness into a more expanded, diffuse awareness.\n\nThis state correlates with the theta brainwave frequency (4-8 Hz) — the hypnagogic boundary between waking and sleep associated with heightened creativity, spiritual insight, and dramatically reduced metabolic activity. Murcha Kumbhaka trains the nervous system to enter the theta state voluntarily — a state in which the body's demand for both oxygen and food is naturally minimized. Practice only in a safe seated position.` },
+    { title: "Plavini — The Floating Breath & Internal Air Retention",
+      content: `Plavini is the most esoteric of the eight Kumbhakas — it involves swallowing air into the stomach and retaining it there, creating a unique internal buoyancy. The Hatha Yoga Pradipika states that by mastering Plavini, the yogi can float on water and survive without food for extended periods.\n\nThe mechanism: by filling the stomach with air rather than food, the practitioner stimulates the vagus nerve (which runs through the stomach wall), reduces gastric acid production, and creates a physical fullness that sends satiated signals to the brain — without any caloric intake. The subtler level: the air held in the stomach is absorbed as prana by the stomach's energetic lining.\n\nTechnique: On an empty stomach, swallow air — the same swallowing movement used for water, but with air. Do this 10-15 times until you feel the stomach is full. Observe the sensations. Then release the air through controlled burping. The effects on reducing food cravings are immediate and striking.` },
+    { title: "Integration Protocol: 40-Day Kumbhaka Mastery Sadhana",
+      content: `The 40-day period is the minimum time required for a genuine physiological and energetic transformation. This protocol systematically develops all eight Kumbhakas.\n\nDays 1-10 (Foundation): Daily: 5 min Kapalabhati, 15 min Nadi Shodhana with 4:4:8 ratio, 9 rounds Bhramari. Begin Sahita Kumbhaka at 10-second retention, 9 rounds. Add Suryabheda: 9 rounds. Days 11-20 (Building): Increase Sahita Kumbhaka to 20-30 seconds. Add Bhastrika: 3 rounds, 10 breaths. Add Sitali: 9 rounds for cooling. Begin noting any spontaneous pauses in breath.\n\nDays 21-30 (Deepening): Extend morning practice to 60 minutes. Sahita Kumbhaka at 45-60 seconds. Add Murcha Kumbhaka: 5 rounds. Practice one Ekadashi fast during this period. Days 31-40 (Integration): Full 90-minute morning sadhana. All eight techniques in sequence. By Day 40, practitioners consistently report reduced food intake by 40-60%, increased energy, decreased sleep requirement, and clear experiences of pranic nourishment.` },
+  ]},
+  { id: 'P2', title: 'Surya Vigyan — Solar Nourishment Science', lessons: [
+    { title: "Hira Ratan Manek Protocol — Safe Sun Gazing Methodology",
+      content: `Hira Ratan Manek (HRM) is a contemporary Indian practitioner who has been verified by medical teams including NASA scientists to sustain himself primarily on sunlight and water. His protocol, developed from ancient Siddha practices, provides the most methodical modern framework for solar pranic absorption.\n\nThe HRM Method begins with just 10 seconds of sun gazing on Day 1, adding 10 seconds each day. This extremely gradual progression allows the retina and pineal gland to adapt without strain. The practice is ONLY safe during the first hour after sunrise and the last hour before sunset — when UV-B radiation is at its minimum.\n\nHRM was monitored by NASA for 411 days and by doctors at Thomas Jefferson University for 130 days. Their findings: his retinas appeared undamaged, his pineal gland was significantly activated and enlarged, and his brain scans showed unusual activity in the region associated with spiritual experiences. The Siddha tradition explains this: the pineal gland is the physical correlate of the Ajna Chakra — and solar activation of the Ajna is the gateway to pranic nourishment through light.` },
+    { title: "Surya Namaskar as Pranic Charging Mechanism",
+      content: `Surya Namaskar is universally known as a yoga sequence, but in the Siddha tradition it is a precise pranic charging protocol — a full-body antenna alignment with the solar field. Each of the 12 positions corresponds to one of the 12 solar deities (Adityas) and one of the 12 zodiacal frequencies of solar prana.\n\nThe sequence begins and ends in prayer position — a state of receptive coherence. The alternating forward and backward bends create a pumping action in the spine that moves prana up and down the Sushumna Nadi, drawing solar prana downward from the crown while simultaneously driving earth prana upward from the root.\n\nFor maximum pranic absorption: practice at sunrise facing east, on bare earth, after sun gazing. Coordinate each position with specific mantra (Om Mitraya Namaha, Om Ravaye Namaha, etc.) — the combination of movement, breath, mantra, and solar alignment creates a multi-frequency pranic absorption that far exceeds what any single practice can achieve. 12 rounds creates a significant pranic charge that reduces appetite for hours.` },
+    { title: "Photonic Nutrition: Absorbing Prana Through the Eyes",
+      content: `Modern biophoton research confirmed what the Siddhas knew millennia ago: living cells emit and absorb light — tiny packets of photons that carry biological information and energy. The human eye is far more than a visual organ — it is a sophisticated photonic absorption system.\n\nThe retina contains not just rods and cones but also intrinsically photosensitive retinal ganglion cells (ipRGCs) that connect directly to the suprachiasmatic nucleus (the brain's master clock) and the pineal gland. These cells absorb specific wavelengths of light and trigger hormonal and neurochemical cascades that directly affect metabolism, energy production, and appetite.\n\nThe Siddha teaching that "prana enters through the eyes" is physiology, not metaphor. The progressive sun gazing protocol specifically trains the ipRGCs for maximum pranic absorption, while simultaneously activating the pineal gland's production of melatonin, serotonin, and ultimately the neurochemical pathways that create a state of deep contentment that mimics and eventually replaces the satisfaction of eating.` },
+    { title: "Pineal Gland Activation Through Sunlight",
+      content: `The pineal gland — described by Descartes as "the seat of the soul" and by the Siddhas as the physical location of the Ajna Chakra — is a pea-sized neuroendocrine organ at the geometric center of the brain. In most modern adults it is partially or fully calcified due to fluoride exposure, lack of darkness, and disconnection from natural light cycles.\n\nThe pineal produces melatonin, serotonin, and — according to cutting-edge research by Dr. Rick Strassman — DMT (N,N-Dimethyltryptamine), which may be the neurochemical correlate of mystical states, including the experience of being fed by light. Solar protocols in the Siddha tradition are designed to first decalcify and then activate the pineal gland.\n\nThe decalcification protocol includes: filtered non-fluoridated water, raw tamarind (documented to remove fluoride from the body), meditation in complete darkness, and sun gazing. As the pineal activates, practitioners consistently report reduced need for sleep, increased inner luminosity, spontaneous states of bliss, and a natural reduction in appetite — the hallmark signs of pranic living beginning to establish itself.` },
+    { title: "The 9-Month Sun Gazing Protocol (Siddha Version)",
+      content: `The complete Siddha sun gazing protocol spans 9 months — the same period as human gestation, symbolizing a complete rebirth of the physical body into a pranic body. This is more gradual than the HRM protocol and integrates mantra, meditation, and dietary transition simultaneously.\n\nMonths 1-3 (Awakening): Begin with 10 seconds on Day 1, increasing by 10 seconds each day. By Month 3, you will be gazing for approximately 15 minutes. Practice Sattvic diet and the Foundation Pranayama Protocol during this phase. Months 4-6 (Activation): Continue building gazing time. Add Surya Bija Mantra during gazing: "Hreem Suryaya Namaha" repeated continuously. Integrate Surya Namaskar immediately after gazing. Naturally reduce food intake by approximately 30%.\n\nMonths 7-9 (Integration): By Month 7, gazing time reaches 30-44 minutes. Many practitioners at this stage naturally reduce to 1-2 meals per day without effort or discomfort. Add barefoot walking for 45 minutes after each session. By Month 9, the body has been systematically retrained to absorb solar prana efficiently.` },
+    { title: "Surya Mantra & Bija Seed Syllables for Solar Absorption",
+      content: `Mantra in the Siddha tradition is not prayer — it is technology. The specific sound frequencies of Surya mantras resonate with the brain's hypothalamus-pituitary axis and the body's photoreceptive systems, amplifying pranic absorption of sunlight by creating neurological coherence aligned with solar frequencies.\n\nThe 12 Surya Bija Mantras correspond to the 12 months: Om Hraam Mitraya Namaha (Jan), Om Hreem Ravaye Namaha (Feb), Om Hroom Suryaya Namaha (Mar), Om Hraim Bhanave Namaha (Apr), Om Hraum Khagaya Namaha (May), Om Hrah Pushne Namaha (Jun), Om Hraam Hiranyagarbhaya Namaha (Jul), Om Hreem Marichaye Namaha (Aug), Om Hroom Adityaya Namaha (Sep), Om Hraim Savitre Namaha (Oct), Om Hraum Arkaya Namaha (Nov), Om Hrah Bhaskaraya Namaha (Dec).\n\nPractice: During sun gazing, repeat your current month's mantra silently on each exhalation. Visualize golden solar prana entering through your eyes with each inhalation. This combination of visual stimulus, mantra vibration, and pranayama creates a triadic pranic transmission the Siddhas called Surya Diksha — solar initiation.` },
+    { title: "Tracking Your Pranic Sensitivity: Journal Protocol",
+      content: `The Pranic Sensitivity Journal is one of the most important tools in the Breatharian practitioner's toolkit. Without systematic tracking, it is easy to miss the subtle shifts that indicate genuine pranic development — and equally easy to mistake spiritual bypassing for actual progress.\n\nDaily entries should include: Hunger levels on waking (0-10), Energy levels at morning, noon, and evening (0-10), Sleep quality and duration, Food consumed (be completely honest), Practice completed, and any notable experiences — inner light, spontaneous breath cessation, tingling in the body, unusual clarity or bliss.\n\nWeekly review: Calculate average hunger and energy scores. Look for the inverse correlation — as pranic practices deepen, hunger scores decrease while energy scores increase. This inverse correlation is the primary indicator that genuine pranic development is occurring. Also track number of meals per day, water intake, and body weight. Note: weight should remain stable or increase slightly as cellular density improves. Weight loss is NOT the goal of Breatharian practice.` },
+  ]},
+  { id: 'P3', title: 'The Bandhas — Pranic Locks of the Siddhas', lessons: [
+    { title: "Mula Bandha — Root Lock & Apana Vayu Reversal",
+      content: `Mula Bandha (root lock) is the most important bandha for Breatharian practice because it directly addresses the primary cause of pranic loss: the downward flow of Apana Vayu. In the Siddha system, aging and the need for physical food are both fundamentally caused by the constant outward and downward dissipation of prana through the Apana current. Mula Bandha reverses this flow.\n\nTechnique: Contract the perineum — the region between the anus and the genitals. The contraction should be subtle, internal, and upward-moving, not a gross muscular grip. Hold continuously during pranayama and meditation. In advanced practice, Mula Bandha is maintained as a constant subtle background engagement throughout the day.\n\nWhen Mula Bandha is properly established, practitioners report an immediate reduction in hunger — because the prana that was previously leaking downward is now being recirculated upward through the system. The Siddha masters describe Mula Bandha as the energetic equivalent of sealing the bottom of a water tank: no matter how much prana flows in, it cannot be retained without this seal.` },
+    { title: "Uddiyana Bandha — The Flying Up Lock",
+      content: `Uddiyana Bandha (upward flying lock) is the most powerful abdominal practice in yoga and the central technique for activating Samana Vayu — the digestive fire — and transforming it from a processor of food into a processor of cosmic prana.\n\nTechnique: This bandha is practiced on an empty stomach with the exhalation retained (Bahya Kumbhaka). After a full exhalation, retain the breath out. Draw the abdomen inward and upward dramatically — the entire abdominal wall should lift toward the spine and up under the ribcage, creating a concave appearance. Hold for as long as comfortable. Release the abdomen before inhaling. Begin with 3 repetitions, build to 10 or more.\n\nUddiyana Bandha creates a dramatic massaging effect on all abdominal organs, stimulates the adrenal glands, activates the vagus nerve, and generates a powerful pranic suction that draws prana upward from the lower body toward the heart and brain. Practiced daily for 40 days, it creates a sustained pranic uplift that practitioners describe as feeling "fed from within" — the body nourished not by what is consumed but by the recycled pranic energy of the body itself.` },
+    { title: "Jalandhara Bandha — Throat Lock & Udana Vayu Control",
+      content: `Jalandhara Bandha (throat lock) is engaged by lowering the chin toward the chest, creating a gentle compression of the throat and cervical spine. This lock controls Udana Vayu — the upward-moving pranic current that governs speech, expression, and the ascent of prana from the body in deep states of meditation.\n\nIn Breatharian practice, Jalandhara Bandha serves two essential functions: first, it prevents the loss of prana accumulated during Kumbhaka by sealing the upper exit of the pranic tube; second, it stimulates the carotid sinus and vagus nerve in a way that directly reduces the body's metabolic rate and its demand for oxygen and food.\n\nThe anatomical action of Jalandhara compresses the jugular veins slightly, which triggers a baroreceptor reflex in the carotid sinus that signals the brain to reduce heart rate, blood pressure, and metabolic activity — all the physiological hallmarks of the pranic state. Combined with Kumbhaka and Mula Bandha, it creates a sealed, pressurized pranic container that maximizes the absorption of retained prana.` },
+    { title: "Maha Bandha — The Great Lock (All Three Combined)",
+      content: `Maha Bandha (the Great Lock) is the simultaneous engagement of all three bandhas — Mula, Uddiyana, and Jalandhara — on retained exhalation. It is considered in the Siddha texts as the most powerful single physical technique available for pranic living, because it addresses all three primary vectors of pranic flow simultaneously.\n\nTechnique: After a complete exhalation, retain the breath out. Engage Mula Bandha (root), then Uddiyana Bandha (abdomen lifts), then Jalandhara Bandha (chin descends). Hold this triple lock for as long as comfortable. Release in reverse order — Jalandhara first, then Uddiyana, then Mula — before inhaling. Begin with 3 rounds, build gradually.\n\nThe physiological effect of Maha Bandha is profound and immediate: practitioners consistently report a dramatic cessation of hunger that can last for hours after practice. The Hatha Yoga Pradipika states that Maha Bandha "destroys death" — meaning it reverses the downward flow of prana that creates aging and the need for constant external nourishment. This is the central technique of the Breatharian transition.` },
+    { title: "Shambhavi Mudra — Third Eye Seal & Transcendental Prana",
+      content: `Shambhavi Mudra (the seal of Shambhu/Shiva) involves turning the eyes upward and inward toward the Ajna Chakra (third eye) while maintaining a soft, unfocused outward gaze. This creates a profound internalization of consciousness that simultaneously activates the pineal gland, draws prana upward through the central channel, and stimulates the production of Soma (inner nectar).\n\nThe practice is simple in description but requires careful development: while seated in meditation, allow the gaze to drift gently upward and inward as if looking toward the space between the eyebrows. The eyelids may flutter or close partially — allow this. What matters is the inner movement, not the outer position of the eyes.\n\nShambhavi Mudra is particularly powerful in Breatharian practice because it directly activates the two key glands of pranic nourishment — the pineal (which produces the photonic energy of inner light) and the pituitary (which produces the hormonal secretions that constitute Soma). Long-term practitioners of Shambhavi often report a continuous inner luminosity, spontaneous states of deep contentment independent of food intake, and the gradual dissolution of ordinary hunger.` },
+  ]},
+  { id: 'P4', title: 'Liquid Light Fasting — The Siddha Intermediate Path', lessons: [
+    { title: "Understanding Liquid Light as Transitional Pranic Food",
+      content: `Liquid Light fasting is the Siddha bridge between solid food eating and pure pranic living — a phase in which the practitioner nourishes the body with pranic concentrates in liquid form while simultaneously deepening all energy practices. It is the most practical and safest intermediate step on the Breatharian path.\n\nThe principle: liquids require dramatically less digestive energy than solids, freeing a large percentage of the body's energy for pranic practice and spiritual absorption. Simultaneously, specific liquid preparations — particularly herbal elixirs, charged waters, and green juices — carry extremely high pranic content relative to their caloric value, "teaching" the body to recognize and absorb subtler forms of nourishment.\n\nThis phase is not about deprivation. It is about refinement. The practitioner on Liquid Light fasting often reports feeling MORE nourished than on solid food — because the pranic content of the preparations is so high, and because the freed digestive energy is immediately redirected toward inner aliveness. Most practitioners spend 3-6 months in this phase before naturally transitioning toward even subtler nourishment.` },
+    { title: "Noni, Tulsi, Moringa & Sacred Herbal Elixir Protocols",
+      content: `The Siddha tradition identifies specific herbs as pranic concentrates — plants that, through their particular chemistry and energetic signature, deliver an extraordinary amount of prana per unit of physical matter. These become the foundation of Liquid Light fasting.\n\nTulsi (Holy Basil): Called "the queen of herbs" in Ayurveda, Tulsi is a significant prana emitter — research shows that a Tulsi plant measurably increases the prana in its surrounding environment. Fresh Tulsi tea, drunk three times daily, is the foundation of the Siddha elixir protocol. Moringa: "The tree of life" contains over 90 bioavailable nutrients and an extraordinary concentration of chlorophyll — a molecule so structurally similar to hemoglobin that the body converts it directly into blood.\n\nNoni juice provides concentrated Noni-penta peptides that have been shown to enhance cellular energy production by up to 150%. The daily elixir protocol: morning — 500ml warm water with Tulsi and honey; noon — fresh green juice with Moringa, cucumber, celery, and lemon; evening — Noni juice with Brahmi and Shankhapushpi. This protocol provides complete micronutrient support while training the body to recognize liquid prana as primary nourishment.` },
+    { title: "Water Charging: Mantra-Infused, Sun-Charged, Crystal Water",
+      content: `Water is far more than H2O. Masaru Emoto's research — and the extensive Siddha tradition before him — established that water is a medium of information as well as hydration, capable of holding and transmitting energetic patterns that directly affect the human body.\n\nMantra-infused water: hold a glass of pure water in both palms. Chant 108 repetitions of Om Namah Shivaya or your personal mantra into the water, feeling the vibration transmitting through your hands into the liquid. The water visibly changes — research has documented changes in surface tension, pH, and crystalline structure in mantra-charged water.\n\nSun-charged water: fill a glass or copper vessel with pure water. Place it in direct morning sunlight for 4-6 hours. The water absorbs the full spectrum of solar prana including specific photonic frequencies that have measurable biological effects on cellular energy production. Crystal water: place a clean clear quartz crystal in pure water overnight. Quartz has piezoelectric properties that create a subtle coherent electromagnetic field in the water. Drinking all three types of charged water daily significantly increases the pranic content of your liquid intake and accelerates the transition toward subtler nourishment.` },
+  ]},
+  { id: 'P5', title: 'Chakra Nourishment — Feeding the Energy Body', lessons: [
+    { title: "Muladhara — Earth Prana & Prithvi Absorption Through Feet",
+      content: `The Muladhara (root) chakra at the base of the spine is the body's primary Earth prana receiver. In the Siddha system, the feet are the antennae of the Muladhara — and bare feet on living earth create a direct circuit for Earth prana absorption that has measurable physiological effects.\n\nGrounding research (earthing science) has documented that direct contact between bare skin and the earth transfers free electrons from the earth's surface into the body, reducing inflammatory markers, improving heart rate variability, normalizing cortisol rhythms, and significantly improving sleep quality — all of which create better conditions for pranic absorption.\n\nFor Breatharian practice: barefoot walking on grass, soil, or sand for a minimum of 30 minutes daily is as important as pranayama. During the walk, practice conscious Earth prana breathing — with each inhalation, feel golden-green earth energy rising from the soles of the feet through the legs and into the base of the spine. With each exhalation, release any stagnant or toxic energy downward into the earth. The earth neutralizes it. This daily earthing practice creates the stable, grounded pranic foundation without which higher pranic practices can become destabilizing.` },
+    { title: "Anahata — Air Prana & the Cosmic Heart Field",
+      content: `The Anahata (heart) chakra is the primary receiver of Air prana — and in the Siddha system, it is also the source of Bhakti Prana, the most powerful form of nourishment available to the human being. The Heart Math Institute has documented that the heart generates an electromagnetic field 60 times stronger than the brain — a field that, when coherent, creates optimal conditions for pranic absorption throughout the entire body.\n\nHeart coherence is the physiological correlate of the Siddha state of "Anahata activation" — an open, loving, grateful heart that transmits and receives prana freely. Practices that create heart coherence include: gratitude meditation (scientific research shows gratitude shifts the heart into coherence within 60 seconds), devotional chanting (Bhajans, kirtans), conscious touch, time in nature, and the Anahata breathing practice.\n\nAnahata Breathing Practice: Sit with hands on the heart. Breathe slowly and deeply, visualizing each inhalation as rose-gold light entering the heart from all directions. On each exhalation, release that light outward from the heart as love — to your body, your family, all beings, the entire cosmos. Practice for 20 minutes daily. This practice alone, sustained over 40 days, creates measurable increases in pranic vitality and measurable reductions in food cravings.` },
+  ]},
+];
+
+const SIDDHA_QUANTUM_MODULES: Module[] = [
+  { id: 'SQ1', title: 'Kaya Kalpa — The Siddha Science of Physical Immortality', lessons: [
+    { title: "Agastya's Secret Formula: The 64 Kaya Kalpa Preparations",
+      content: `Agastya Muni's Kaya Kalpa system comprises 64 rasayana (alchemical) preparations that systematically rebuild the physical body at the cellular level, reversing the aging process and preparing the vehicle for immortality. These preparations are pranic concentrates — each targeting a specific tissue layer (dhatu) and nadi system.\n\nThe most important preparations include: Kayakalpa Churna (a powder of 18 herbs including Brahmi, Ashwagandha, Shatavari, Amalaki, Guduchi, and Vidanga), Navagraha Rasayana (nine planetary herbs taken during specific astrological windows), Surya Rasayana (sun-energized preparations taken during solar hours), and Chandra Rasayana (moon-energized preparations taken during Ekadashi and full moon).\n\nThese preparations contain dense concentrations of adaptogenic compounds, mitochondrial cofactors, telomerase activators, and anti-inflammatory phytochemicals that collectively reduce biological aging markers. But more significantly in the Siddha view — they open specific nadis and chakras that increase the body's capacity to absorb and retain prana. They are the pharmacological component of the Breatharian transition.` },
+    { title: "Vasi Yogam — Breath Control as Path to Physical Immortality",
+      content: `Vasi Yogam is the supreme Siddha practice — the complete science of using breath control to achieve literal physical immortality. Thirumoolar's Tirumantiram, Boganathar's 7000, and Agastya's texts all point to Vasi Yogam as the master key.\n\nThe word "Vasi" in Tamil refers to the reverse flow of prana — specifically, drawing Apana Vayu upward to unite with Prana Vayu at the navel center, creating a unified pranic field that then rises through the Sushumna. This reversal of Apana counteracts the aging process — aging occurs because Apana constantly flows downward and outward, dissipating the life force. When Apana is reversed, the life force is conserved and amplified.\n\nThe practice involves Mula Bandha combined with Kumbhaka and specific internal visualizations — drawing golden light from the perineum upward through each chakra to the crown. With mastery over years of practice, Vasi Yogam creates the physiological conditions for what Siddhas call "Deathless Body" — a physical form that has transcended the normal metabolic processes of birth, aging, and death.` },
+    { title: "Ojas, Tejas, Prana — The Three Pranic Essences of Immortality",
+      content: `The Ayurvedic and Siddha systems identify three subtle essences that represent the finest distillates of the three doshas and the meeting point between physical matter and pure consciousness. These three essences are the foundation of pranic living.\n\nOjas is the finest product of complete physical nourishment — the golden vital essence produced when all seven tissue layers have been properly nourished. It is the physical basis of immunity, vitality, spiritual power, and the ability to sustain life with minimal physical food. All Breatharian preparation begins with Ojas building. Tejas is the luminous, transformative essence — the fire principle at its most refined. It is Ojas that has been burned by the inner fire of practice and meditation, transformed from physical vitality into radiant light. Tejas is literally visible as the aura.\n\nPrana, in this triad, is the life force itself — the dynamic, moving intelligence that bridges body and consciousness. When Ojas provides the foundation, Tejas provides the fire, and Prana flows freely — the practitioner has all three requirements for physical immortality: a stable physical vehicle, a burning inner light, and an inexhaustible life force.` },
+  ]},
+  { id: 'SQ2', title: 'Nada Yoga — Living on Sound & Vibration', lessons: [
+    { title: "Anahat Nada — The Unstruck Sound as Primary Nourishment",
+      content: `The Anahat Nada — the "unstruck sound" — is the primordial cosmic vibration that underlies all creation. Unlike struck sounds (all sounds in the physical world that require two things to collide), the Anahat Nada arises spontaneously from the fabric of consciousness itself. The Siddhas teach that this sound is the most fundamental form of prana — the vibration from which all matter, energy, and life arise.\n\nIn meditation, as the practitioner progresses through Pratyahara (sense withdrawal) and Dharana (concentration), they begin to hear this inner sound — initially as a faint ringing, then as a more distinct tone, and ultimately as the all-pervading cosmic hum the Vedas call "Nada Brahma" — sound as ultimate reality.\n\nFor Breatharian practice, the Anahat Nada represents the most direct form of pranic absorption available: the absorption of the primal vibration of existence itself. Advanced Nada Yoga practitioners report that prolonged absorption in the Anahat Nada produces deep physical satiation — the body's hunger signals quiet, the mind becomes still, and a profound nourishment arises from within that makes physical food feel crude by comparison.` },
+    { title: "Mantra as Pranic Food: How Sound Feeds the Energy Body",
+      content: `Every mantra in the Vedic and Siddha traditions is a precise vibrational formula — a specific combination of phonemes that, when properly intoned, creates measurable electromagnetic, acoustic, and biophotonic effects in the human body. These effects are not merely psychological; they are physiological and pranic.\n\nSanskrit and Tamil are phonosemantic languages — the sounds themselves carry the meanings they represent. The mantra "Om" is not an arbitrary symbol; it is a phoneme whose resonance frequency (around 432 Hz when properly intoned) creates maximum coherence in the brain's electromagnetic field, the heart's electromagnetic field, and the body's cellular electromagnetic field simultaneously.\n\nWhen the practitioner chants mantra with awareness, several pranic processes occur: the vagus nerve is stimulated by the resonance of the voice, triggering parasympathetic relaxation and enhanced pranic absorption; the nadis are purified by specific vibrational frequencies; the chakras are activated by their corresponding bija syllables; and the pranamaya kosha is literally fed by the pranic content of the sound. Daily mantra practice is a form of eating — direct absorption of pranic nourishment through the acoustic channel.` },
+    { title: "Tri-Kuta: The Three Caves of Sound & Pranic Ascent",
+      content: `The Tri-Kuta (three peaks or three caves) is an advanced Nada Yoga teaching that describes three internal resonance chambers where the practitioner learns to generate and absorb sound prana at progressively subtler levels of the system.\n\nThe first cave is the Hridaya Guhā (heart cave) — the hollow at the center of the chest where the Anahata Chakra resides. Sound generated from this center carries the quality of love and has a direct nourishing effect on the emotional and physical bodies. The practice: hum from deep within the chest, feeling the vibration center in the heart rather than the throat.\n\nThe second cave is the Brahmā Guhā (Brahma cave) — located at the soft palate, the seat of the Vishuddha Chakra energies. Sound from this cave carries creative power and intellectual nourishment. The third and most subtle cave is the Ākāsha Guhā (space cave) — located at the third eye, the Ajna center. Sound here is barely audible — it is the innermost whisper of consciousness, the "para vak" (supreme speech) that directly interfaces with the cosmic Anahat Nada. Sustained practice in this third cave is considered one of the most direct paths to pranic living through sound.` },
+  ]},
+  { id: 'SQ3', title: 'Turiya & Pranotthana — The Superconscious Pranic State', lessons: [
+    { title: "The Four States: Jagrat, Swapna, Sushupti, Turiya",
+      content: `The Mandukya Upanishad, one of the shortest and most profound of the Upanishads, describes four states of consciousness that correspond precisely to four levels of pranic absorption. Understanding this mapping is essential for advanced Breatharian practice.\n\nJagrat (waking state): ordinary consciousness, maximum metabolic demand, maximum need for physical food. In this state, the body consumes prana rapidly through sensory engagement, mental activity, and physical action. Swapna (dream state): reduced metabolic demand, reduced but still significant pranic consumption. The pranamaya kosha remains partially active.\n\nSushupti (deep dreamless sleep): minimum metabolic demand, the body in its most pranic self-nourishing state. In Sushupti, the individual prana merges temporarily with the universal prana — the body is nourished from the cosmic source without any conscious effort. Turiya (the fourth): the state beyond the first three — pure witness consciousness, the state in which the Breatharian master permanently abides. In Turiya, the body remains perfectly functional while simultaneously resting in the pranic fullness of Sushupti. This is the state that Babaji and the immortal Siddhas inhabit — awake, active, and nourished by pure consciousness simultaneously.` },
+    { title: "Pranotthana — The Rising Flood of Prana in Deep Meditation",
+      content: `Pranotthana (the rising of prana) is the Sanskrit term for what meditators across traditions have described as a surge of energy, light, or bliss that arises spontaneously in deep meditative states. In the Siddha system, this is not a random occurrence — it is the measurable evidence that prana is being absorbed from the universal field rather than from physical food.\n\nPranotthana typically arises after 20-40 minutes of sustained pranayama and meditation, when the nadis are sufficiently purified and the Sushumna is activated. The experience varies: some practitioners feel warmth rising from the base of the spine, others see inner light, others experience waves of bliss, and still others simply feel a profound satiation — a sense of being completely full and nourished without having eaten.\n\nThis experience is the Breatharian practitioner's most important feedback signal. When Pranotthana arises during practice, the practitioner knows that genuine pranic absorption is occurring. Keeping a detailed record of when, during which practices, and with what intensity Pranotthana arises allows the practitioner to identify which techniques most effectively trigger pranic nourishment in their individual system.` },
+  ]},
+  { id: 'SQ4', title: 'Agni — The Inner Fire as Digestive & Cosmic Intelligence', lessons: [
+    { title: "Jatharagni — Gastric Fire & Its Pranic Transformation",
+      content: `Jatharagni (gastric fire) is the central metabolic intelligence of the physical body in the Ayurvedic and Siddha systems. Located at the navel, it governs not just the digestion of food but the transformation of all incoming information — sensory, emotional, intellectual, and pranic — into useful forms of nourishment for the body and mind.\n\nIn the Breatharian transition, the most critical transformation is the metamorphosis of Jatharagni from a food-digesting fire into a prana-digesting fire. This is not a metaphysical claim — it corresponds to measurable physiological changes: a reduction in gastric acid secretion, a shift in the enteric nervous system's primary mode of operation from digestive to energy-regulatory, and an increase in the body's sensitivity to subtle energy inputs.\n\nThe practices that most directly facilitate this transformation: Agni Sara (which massages and activates the Jatharagni center), Uddiyana Bandha (which creates a powerful pranic suction at the navel), and deep navel meditation (in which the practitioner places sustained awareness at the navel while breathing slowly, visualizing the digestive fire transforming from a wood-burning flame to a self-sustaining sun). Over 40-90 days of consistent practice, many practitioners notice a genuine reduction in the intensity of their hunger signals — not through suppression, but through the emergence of a subtler, more satisfied form of inner fire.` },
+  ]},
+  { id: 'SQ5', title: 'Shambhavi Mahamudra & Advanced Pranic Seals', lessons: [
+    { title: "Shambhavi Mahamudra — The Complete Mudra Sequence",
+      content: `Shambhavi Mahamudra as taught in the advanced Siddha tradition is not merely a single mudra but a complete sequence of 21 seals that progressively activate every chakra, nadi, and pranic center in the body. When properly transmitted and practiced, the complete Mahamudra sequence creates a state of full-body pranic activation that many practitioners describe as the closest thing to complete pranic nourishment they have experienced.\n\nThe sequence begins with Mula Bandha (activating the root and earth prana), progresses through Uddiyana Bandha (activating the fire prana at the navel), Nauli (the pranic churning), Jalandhara (sealing the throat), Khechari (activating the Soma center), Shambhavi (activating the Ajna), and culminates in Khechari-Shambhavi combined — the simultaneous activation of the Soma and Ajna centers that creates the continuous flow of amrita described as the ultimate form of internal nourishment.\n\nThis sequence, practiced for 40 days continuously, produces what the Siddha texts call "Unmani Avastha" — the mind-transcended state. In Unmani Avastha, ordinary mental activity, including the habitual mental hunger (the craving for food as comfort, stimulation, or identity) ceases — and the practitioner discovers for the first time the genuine absence of the need for food that characterizes true pranic living.` },
+  ]},
+  { id: 'SQ6', title: 'Living Water, Living Air — Pranic Elementalism', lessons: [
+    { title: "Water as Liquid Prana — Masaru Emoto meets Siddha Science",
+      content: `Masaru Emoto's research on water crystallization — showing that water forms beautiful crystalline structures when exposed to positive intentions and distorted structures when exposed to negative ones — provided the first mainstream scientific validation of what the Siddhas have always known: water is a living medium that carries pranic information.\n\nThe Siddha tradition goes further than Emoto. Not only does water carry information — it is itself a form of prana. The water element (Jala Tattva) is the grossest expression of the second prana — the pranic current that nourishes the blood, lymph, and emotional body. When water is "awakened" — through mantra, sunlight, moonlight, intention, or proximity to sacred earth — its capacity for pranic transmission increases dramatically.\n\nFor the Breatharian practitioner, this means that the quality of the water you drink is far more important than the quantity of food you eat. A practitioner drinking 2-3 liters of properly charged, prayed-over, structured water daily is receiving significant pranic nourishment from the water itself — independent of any food consumed. This is why many Breatharian masters drink large quantities of water even as they reduce solid food: the water becomes their primary source of gross pranic nourishment during the transition.` },
+    { title: "Vayu Tattva Deep Dive — Air Element as Master Nutrient",
+      content: `The Vayu Tattva (air element) is the fourth of the five elements and the primary vehicle for prana in the material world. The Siddhas teach that ordinary breathing, even without any specific technique, absorbs a significant amount of prana — but that this absorption increases by a factor of 10-100 when the breath becomes conscious, slow, and imbued with awareness.\n\nThe quality of the air itself matters profoundly. Research has confirmed what every meditator knows experientially: forest air contains up to 10 times more negative ions than city air, dramatically higher concentrations of phytoncides (antimicrobial compounds released by trees), significantly higher pranic charge, and measurably lower electromagnetic pollution. A single hour of pranayama in a forest provides more pranic nourishment than eight hours in an urban apartment.\n\nFor Breatharians in cities: maximize time in parks and near water. Practice pranayama near trees — specifically old trees, which have the highest pranic output. Use indoor plants strategically — Tulsi, Peace Lily, and Snake Plant are proven air purifiers and significant prana emitters. When practicing indoors, open windows during practice. The relationship between air quality and pranic absorption is direct and measurable.` },
+  ]},
+];
+
+const AKASHA_MODULES: Module[] = [
+  { id: 'AI1', title: "Babaji's Living Transmission — The Complete Breatharian Path", lessons: [
+    { title: "Babaji Kriya Yoga as the Master Breatharian Lineage",
+      content: `Mahavatar Babaji is not a historical figure — he is a living presence. Born approximately 203 CE in Tamil Nadu, Babaji underwent his transformation into an immortal Breatharian master through intensive sadhana with Agastya Muni and Boganathar, two of the most advanced of the 18 Siddhas.\n\nBabaji's lineage is specifically Breatharian — his physical body has been sustained without food for over 1,800 years through the mastery of Kriya Yoga, which he himself describes as "the airplane route to God." The specific techniques he transmitted to Lahiri Mahasaya in 1861 contain within them the complete technology for pranic living.\n\nThis module transmits the direct understanding of Babaji's path as it applies to Breatharianism: the specific kriyas that activate Amrita secretion, the pranayama sequences that reverse aging at the cellular level, and the meditation practices that establish the practitioner in the permanent state of pranic nourishment that Babaji himself embodies.` },
+    { title: "The Kriya Pranayama That Activates Amrita Secretion",
+      content: `The first and foundational Kriya — Kriya Pranayama — involves drawing the breath and thus prana up and down the spine through conscious visualization and breath control coordinated with specific chakra points. 48 rounds of this kriya is said to equal one year of natural spiritual evolution.\n\nThe specific mechanism for Amrita activation: as prana is drawn upward through the spine in Kriya Pranayama, it passes through and activates the Vishuddha Chakra at the throat — the center that, when activated, begins to stimulate the Soma Chakra directly above the Ajna. This stimulation, when sustained over months of practice, triggers what the Siddhas call "Bindu Visarga" — the descent of Soma from the crown through the Sushumna.\n\nThe physical correlate: advanced Kriya practitioners report a sweet taste in the mouth during and after practice, particularly after extended sessions with 24+ rounds. This is the first physiological evidence of Amrita secretion — the hypothalamic-pituitary-pineal triad producing its highest secretions in response to the pranic activation of Kriya Pranayama. As this sweetness becomes continuous, physical hunger naturally and permanently subsides.` },
+    { title: "Babaji's Himalayan Protocol: Living on Snow-Light Prana",
+      content: `Babaji's primary residence is in the high Himalayas — an environment that the Siddha tradition identifies as the most pranic-rich on Earth. The combination of high altitude (reduced atmospheric pressure, increased cosmic radiation, high UV light), pristine air, glacial water, silence, and the ancient pranic field accumulated by thousands of years of master practitioners creates what Babaji called "the supreme pranic environment."\n\nSnow-light prana is specifically identified by Babaji: the light reflected from snow surfaces carries a unique spectrum that is particularly activating for the pineal gland and Sushumna Nadi. This is why so many Himalayan masters practice by looking at snow-covered peaks at dawn — the combination of rose-gold sunrise light and blue-white snow reflection creates a unique biophotonic cocktail unavailable at lower altitudes.\n\nFor those not in the Himalayas, Babaji's protocol can be approximated: seek the highest elevation available, practice in the earliest morning light, use pure mineral water from the highest source available, cultivate silence as an environmental condition, and most importantly — connect to Babaji's consciousness directly through the specific Guru-disciple transmission of Kriya Yoga, which carries his pranic field across all distances.` },
+  ]},
+  { id: 'AI2', title: 'The 18 Siddhas — Breatharian Transmissions', lessons: [
+    { title: "Agastya Muni — Master of Prana, Rasayana & Cellular Immortality",
+      content: `Agastya Muni stands at the origin point of the entire Siddha tradition. Said to have been born from a pot — a symbolic representation of his pranic rather than physical origin — his physical stature was small but his spiritual attainment immeasurable. He is considered still alive in the Pothigai Hills, available to those whose inner ears are open.\n\nAgastya's specific contribution to Breatharian science is the Kaya Kalpa system — the complete technology for cellular immortality. His texts describe in precise detail how to use specific herbal preparations, pranayama sequences, sun exposure protocols, and dietary transitions to systematically rebuild the physical body into a Breatharian vehicle.\n\nHis teaching on prana: "The universe breathes through you. When you realize this fully, you will know that the universe feeds you as well." This is the essence of his Breatharian transmission — not a technique but a realization. The techniques are the preparation; the realization is the arrival. When the practitioner genuinely experiences themselves as a localized expression of the universal breathing, the need for external food naturally and effortlessly dissolves.` },
+    { title: "Thirumoolar — Author of Tirumantiram: The Breatharian Bible",
+      content: `Thirumoolar's Tirumantiram is the most comprehensive manual on pranic living ever written. Composed of 3,000 verses over 3,000 years of samadhi, it covers every aspect of the Siddha system from basic pranayama to the most advanced states of physical immortality.\n\nHis Breatharian teaching is contained primarily in the chapters on Ashtanga Yoga, Vasi Yogam, Kundalini, and Kaya Kalpa. The central verse: "When you control the breath, you control hunger. When you control hunger, you control aging. When you control aging, you control death." This sequence — breath, hunger, aging, death — is the complete Siddha theory of why Breatharianism leads to immortality.\n\nThirumoolar's personal example is the greatest teaching: during his 3,000 years in samadhi, he inhabited a cowherd's body he found dead in the forest. He entered this body and used it as a vehicle for his spiritual work — demonstrating the most advanced form of Breatharianism, in which consciousness so thoroughly nourishes the body that it can be inhabited and sustained without any normal biological processes.` },
+    { title: "Boganathar — The Siddha Who Traveled the World on Prana Alone",
+      content: `Boganathar (also Bhogar or Bhogarnath) is one of the most extraordinary of the 18 Siddhas — a master who combined Siddha science with knowledge from China, Arabia, and Greece, traveling the world in a body sustained entirely by prana. He is credited with initiating Babaji into the highest Siddha sciences, making him the spiritual grandfather of the entire Kriya Yoga lineage.\n\nBoganathar's Breatharian achievement is documented in his own texts (the Bhogar 7000): he describes maintaining his physical body for over 3,000 years through a combination of Navapashanam (nine alchemical medicines), Vasi Yogam, and the specific Kaya Kalpa techniques he received from Agastya. His body is said to still be in a state of living samadhi in the Palani Hills temple complex in Tamil Nadu.\n\nHis specific teaching for Breatharianism: the nine Navapashanam substances correspond to the nine planets. When properly prepared and consumed, they create a physical alchemy that makes the body permanently receptive to pranic nourishment. The Palani Panchamritam — the sacred food offered at his temple — carries a transmission of his pranic consciousness to all who receive it with awareness and devotion.` },
+    { title: "Gorakhnath — The Iron-Body Breatharian & Hatha Yoga Originator",
+      content: `Gorakhnath (also Gorakshanath) is the founder of Hatha Yoga and one of the most powerful physical Breatharian masters in the entire Siddha lineage. His title Goraksha means "protector of cows" — but also refers to the mastery of the senses (the cows of the sense organs) that is the foundation of his teaching. He is said to have lived for over 1,000 years, sustaining his physical body through the Hatha Yoga system he created.\n\nGorakhnath's contribution to Breatharianism is the physical body of practice that supports pranic living — the complete system of asana, pranayama, mudra, and bandha that Hatha Yoga constitutes. His Goraksha Samhita is one of the earliest and most authoritative texts on Kumbhaka and its relationship to pranic living. He states: "He who masters Kumbhaka for three hours needs no food. He who masters it continuously needs no food forever."\n\nHis specific practice for Breatharian mastery: the Gorakshasana (Goraksha's pose), a variation of Muktasana in which the heels press upward into the perineum, automatically maintaining Mula Bandha throughout the meditation. This allows the practitioner to sustain the pranic seal continuously without mental effort — creating the conditions for extended periods of natural, effortless Breatharian states.` },
+    { title: "Patanjali — Yoga Sutras as the Complete Breatharian Manual",
+      content: `Patanjali's Yoga Sutras, one of the most concise and profound texts in all of world literature, contains within its 196 aphorisms the complete theoretical and practical framework for Breatharian living — though this dimension of the text is rarely taught in modern yoga circles.\n\nThe key sutra for Breatharianism is II.40: "Shaucat svanga jugupsa parair asamsargah" — "From the practice of purity arises disinterest in one's own body and non-contact with others." The "disinterest in one's own body" refers specifically to the body's gross physical processes — including eating. As the body is purified through Kriya (practice), Tapas (austerity), Svadhyaya (self-study), and Ishvara-pranidhana (surrender to the divine), attachment to the physical mode of eating naturally dissolves.\n\nSutra III.30 is even more explicit: "Samana jayat jvalanam" — "From mastery of Samana Vayu comes luminosity." Samana is the digestive fire — and its mastery, according to Patanjali, results in jvalanam: the inner luminosity that is the physical manifestation of pranic living. The Yoga Sutras are not a philosophical text to be debated — they are a precision engineering manual for the transformation of the human being from a food-dependent organism to a consciousness-nourished immortal.` },
+  ]},
+  { id: 'AI3', title: 'Scalar Wave Breatharianism — Quantum Field Prana Science', lessons: [
+    { title: "Scalar Waves as the Carrier Wave of Prana",
+      content: `Scalar waves — also called longitudinal waves or Tesla waves — are a form of electromagnetic energy that propagates through potential rather than through the oscillation of a transverse field. While conventional EM waves require a medium and propagate energy perpendicular to the wave's oscillation, scalar waves propagate through the fabric of space itself, carrying information and energy in a fundamentally different way.\n\nNikola Tesla discovered and worked extensively with scalar waves in the early 20th century, calling them "radiant energy from the wheelwork of nature." What Tesla intuited scientifically, the Siddhas knew thousands of years earlier through direct experience: prana is not carried by electromagnetic radiation — it IS the carrier wave that underlies electromagnetic radiation. Prana is what Tesla called "potential energy in the fabric of space" — the zero-point field from which all physical energy emerges.\n\nFor Breatharian practice, understanding prana as scalar energy has profound implications: pranic absorption is not limited by physical proximity to the source, it can be transmitted through intention and consciousness (the mechanism of Shaktipat transmission), and the human body's capacity for pranic absorption is theoretically unlimited — bounded only by the receiver's capacity, not by the source.` },
+    { title: "The Human Biofield as Pranic Battery & Transmitter",
+      content: `The human biofield — the electromagnetic, photonic, and scalar energy field that surrounds and interpenetrates the physical body — is what the Siddhas call the Pranamaya Kosha. It extends approximately 2-4 meters from the body in average individuals and significantly further in advanced practitioners.\n\nBiofield research (particularly the work of Beverly Rubik, James Oschman, and William Tiller) has documented that the human biofield is not static — it pulses, oscillates, and responds dynamically to the practitioner's state of consciousness. In deep meditation and pranayama, the biofield dramatically expands and its electromagnetic coherence increases. This expansion is the physical correlate of what practitioners experience as "opening to prana" — the biofield is literally becoming a larger and more effective pranic antenna.\n\nFor Breatharian practice, biofield development is as important as any internal technique. Practices that directly develop the biofield: Tai Chi and Qi Gong (the Chinese correlates of Siddha pranic practices), visualization of the aura expanding during meditation, intentional loving-kindness radiation (Metta), and proximity to master practitioners whose biofields carry an evolved pranic template. The biofield of an advanced Breatharian master is measurably different from that of an average person — more extensive, more coherent, more pranic, and less dependent on food for its sustenance.` },
+  ]},
+  { id: 'AI4', title: 'Advanced Khechari Mudra — The Supreme Breatharian Secret', lessons: [
+    { title: "Khechari Vidya: The Complete 4-Stage Siddha Science",
+      content: `Khechari Mudra is described in the Khechari Vidya Tantra and the Siddha texts as the most important single technique in the entire system of yoga — more powerful than all pranayamas, all bandhas, and all meditations combined. The name means "moving through space" — the practitioner's tongue moves into the space above the soft palate, contacting the Soma (nectar) center in the upper skull.\n\nThe four stages: Stage 1 (Milana) — the preliminary practice of curling the tongue back toward the throat, gradually stretching the frenum (the membrane under the tongue) over months or years. Stage 2 (Chalana) — the tongue reaches the uvula and begins to contact the nasal pharynx. Stage 3 (Shodhana) — the tongue enters the nasal cavity from below and contacts the Shankhini Nadi, triggering the first drops of Soma. Stage 4 (Niyamana) — the tongue reaches the region corresponding to the pituitary and hypothalamus, and the Amrita flows continuously.\n\nWhen continuous Amrita secretion is achieved, the practitioner has accomplished Amrita Pana — drinking the nectar of immortality continuously from within. This nectar — the combined secretions of the hypothalamus, pituitary, and pineal glands — is the internal biological correlate of pranic nourishment: the body literally feeds itself from its own highest secretions.` },
+    { title: "The 10 Nectars of Khechari: Madhu, Kshira, Ghrita and Beyond",
+      content: `The Khechari Vidya describes ten distinct nectars that flow from the Soma center in the crown as the practitioner advances through the stages of Khechari Mudra. Each nectar corresponds to a specific level of pranic realization and has distinct taste qualities that serve as feedback for the practitioner's progress.\n\nMadhu (honey) is the first and most commonly experienced nectar — a sweet taste in the mouth that arises during pranayama and meditation. This indicates the initial activation of the Soma center. Kshira (milk) is the second nectar — a creamier, more sustained sweetness that indicates the Soma is flowing from the deeper centers. Ghrita (ghee) is the third — a warm, unctuous sweetness associated with the full activation of the Bindu Visarga.\n\nThe more advanced nectars — Madya (wine), Amla (sour), Lavana (salt), Katu (pungent), Tikta (bitter), Kashaya (astringent), and finally pure Amrita (the nectar of immortality itself) — correspond to increasingly deep levels of Khechari achievement and increasingly complete states of pranic nourishment. When the practitioner reaches the experience of pure Amrita — described as beyond all taste qualities, simultaneously all flavors and none — they have achieved the state in which the body requires no external nourishment whatsoever.` },
+  ]},
+  { id: 'AI5', title: 'The Soma Protocol — Nectar Body Activation', lessons: [
+    { title: "Soma: The Vedic Nectar of Immortality & Its Pranic Source",
+      content: `Soma is one of the most mysterious substances in Vedic literature. The Rig Veda devotes an entire book (Mandala 9, the Soma Mandala) to it — 114 hymns praising a substance that the rishis describe as tasting like honey, providing immortality, connecting the drinker to the divine, and eliminating hunger and thirst.\n\nThe Siddha answer to what Soma is: an internal secretion. It is the combined product of the highest glands of the brain — pituitary, hypothalamus, pineal — when activated by advanced pranayama, Khechari Mudra, and deep meditation. The Ashtavakra Gita describes it as "the nectar that drips from the moon at the crown of the head" — the "moon at the crown" being the Soma Chakra, the secret chakra between Ajna and Sahasrara.\n\nWhen Soma flows, the practitioner experiences: extraordinary bliss more intense than any physical pleasure, complete absence of hunger and thirst, heightened sensory perception, spontaneous healing of physical conditions, and a luminosity visible both internally (as inner light) and externally (as a visible radiance around the body). Soma is the ultimate form of pranic nourishment — the body feeding itself from its own divine essence.` },
+    { title: "The 16 Soma Kalas — Lunar Phases & Nectar Production",
+      content: `The Soma Chakra — located approximately 12 finger-widths above the Ajna Chakra — contains 16 petals corresponding to the 16 lunar phases (Kalas) of the Hindu calendar. Each petal/Kala releases a specific quality and quantity of Soma corresponding to the current lunar phase, and the advanced Breatharian practitioner learns to synchronize their practice with the lunar cycle to maximize Soma production.\n\nThe waxing moon (Shukla Paksha) is the period of Soma accumulation — the Soma Chakra's petals fill progressively as the moon grows, reaching their maximum fullness on Purnima (full moon). This is the optimal time for Khechari Mudra practice and Liquid Light fasting, as the body's own Soma production is naturally at its highest and pranic nourishment is most readily available.\n\nThe waning moon (Krishna Paksha) is the period of Soma utilization — the Soma released during the waxing phase is distributed throughout the body's systems, nourishing and regenerating each dhatu (tissue layer). Ekadashi (the 11th day of each phase) is considered the peak experience of each half-cycle — the transition point where maximum Soma is available for absorption. Advanced practitioners report that Ekadashi fasting becomes increasingly easy as this practice matures, precisely because the Soma available on these days provides genuine internal nourishment that makes external food feel unnecessary.` },
+  ]},
+  { id: 'AI6', title: 'Bhakti Prana — Love as the Ultimate Nourishment', lessons: [
+    { title: "Sri Vishwananda's Teaching: Bhakti as the Highest Prana",
+      content: `Paramahamsa Vishwananda teaches that love — specifically Prema, divine love — is not merely an emotion or a spiritual ideal. It is a force, a substance, a cosmic energy more fundamental than prana itself. In the hierarchy of subtle energies, consciousness is the ground, Ananda (bliss) is the first vibration of consciousness, Prema (love) is the first movement of Ananda, and Prana is the first movement of Prema.\n\nThis means that Bhakti — the path of devoted love — is the most direct path to pranic living, because it addresses the source of prana rather than prana itself. When a practitioner is established in genuine Prema — when the heart is open and pouring with divine love — the body is nourished from the most primary level of reality.\n\nHis teaching for the Breatharian practitioner: "You will never need to give up food. When you love God completely, God will feed you from within. The desire to eat will not be suppressed — it will be transformed. The hunger will remain, but it will become a hunger for the Divine rather than for matter."` },
+    { title: "Devotional Chanting as Pranic Absorption Technology",
+      content: `Kirtan (devotional group chanting) and Bhajan (personal devotional singing) are among the most powerful pranic technologies available to the Bhakti-Breatharian practitioner. The combination of melody, rhythm, sacred language, emotional opening, and group resonance creates a unique multi-channel pranic absorption that is measurably distinct from any other single practice.\n\nResearch on kirtan practitioners (particularly the work of Dr. Kim Innes at West Virginia University) has documented significant reductions in cortisol, improved heart rate variability, elevated serotonin and dopamine, reduced blood pressure, and improved cognitive function. From the Siddha perspective, these are all symptoms of pranic increase — the same effects that food-based nourishment provides, achieved through pure sound and devotion.\n\nFor the Breatharian practitioner: establish a daily kirtan practice of minimum 30 minutes. Choose mantras that open the heart specifically: Om Namo Bhagavate Vasudevaya (Vishwananda's primary mantra), Hare Krishna, Om Namah Shivaya, or the Gayatri Mantra. The specific mantra matters less than the quality of devotion. When the heart genuinely opens during kirtan — when tears arise spontaneously, when the body begins to sway or move without volition, when time stops and only the sound remains — you have entered the Bhakti Prana field. In this field, physical hunger ceases completely and a profound fullness of love takes its place.` },
+    { title: "Living in a State of Continuous Darshan — Feeding on Grace",
+      content: `Darshan — the seeing of the divine in a sacred form, a master, or a temple image — is considered in the Bhakti and Siddha traditions as a genuine form of pranic nourishment. The devotee does not merely look at the divine form — they receive from it. In Sanskrit, the word "darshan" (from the root "drish" — to see) implies a mutual beholding: the devotee sees the divine and is simultaneously seen by the divine, creating a bidirectional pranic exchange.\n\nWhen a devotee sits in darshan of Paramahamsa Vishwananda, for example, they are not simply in the presence of a spiritual teacher. They are in the field of an extremely activated pranic system, whose coherent biofield — extending meters beyond the physical body — interpenetrates the devotee's field and directly upgrades it. This is measurable: practitioners consistently report reduced hunger, increased energy, emotional release, physical healing, and spontaneous meditative states during and after darshan.\n\nThe advanced Breatharian practice in this context: cultivate the capacity to live in continuous inner Darshan — to maintain, in the midst of ordinary daily activity, the felt sense of being in the presence of the Divine. When this becomes continuous, the Bhakti Prana flows uninterruptedly, and the body is nourished moment by moment by the most primary prana of all: the love between the devotee and the Divine.` },
+  ]},
+  { id: 'AI7', title: 'The Breatharian Integration — Living the Full Pranic Life', lessons: [
+    { title: "Designing Your Personal Pranic Sadhana — Morning, Noon & Night",
+      content: `The mature Breatharian practitioner's day is structured around pranic absorption rather than meal times. Rather than organizing the day around breakfast, lunch, and dinner, the day is organized around the four primary pranic windows: dawn (Brahma Muhurta), solar noon, sunset, and midnight.\n\nBrahma Muhurta practice (90 minutes before sunrise to sunrise): This is the supreme pranic window. The atmosphere is charged with Sattvic prana, the mind is at its most receptive, and the body's cellular receptivity to prana is highest after the night's rest. Full pranayama sequence, meditation, and sun gazing at sunrise. Solar noon: 15-minute outdoor practice — Surya Namaskar facing south, followed by 5 minutes of silent standing meditation with palms open, receiving solar prana consciously.\n\nSunset: Evening pranayama (30 minutes) — primarily cooling practices (Sitali, Nadi Shodhana, Bhramari) to integrate the day's pranic absorption and prepare for the night's inner work. Midnight (optional for advanced practitioners): 30 minutes of Nada Yoga and Khechari Mudra to absorb lunar Soma prana during the peak of the moon's influence. This four-session structure creates a continuous pranic absorption cycle that progressively reduces the body's dependence on food as its primary energy source.` },
+    { title: "The 108-Day Self-Initiation Protocol — From Seeker to Pranic Adept",
+      content: `108 is the sacred number of the cosmos in Vedic mathematics: 1 (unity), 0 (emptiness), 8 (infinity). There are 108 Upanishads, 108 names of the major deities, 108 beads on a mala. And 108 days is the minimum period for a genuine transformation of the body's relationship with food and prana.\n\nDays 1-27 (Purification): Complete the dietary transition to pure Sattvic eating. Establish morning pranayama practice. Begin Ekadashi fasting. Weekly body and energy audits. Days 28-54 (Activation): Add sun gazing protocol. Introduce Kumbhaka systematically. Add Agni Sara and Bandhas. Begin Mantra practice (minimum 108 repetitions daily). One full day of liquid fasting per week.\n\nDays 55-81 (Transmutation): Reduce to 2 meals per day. Extend morning practice to 90 minutes. Add evening Nada Yoga. The body will show clear signs of pranic awakening — reduced sleep requirement, heightened sensory perception, spontaneous states of inner light or bliss, and genuine reductions in hunger not accompanied by weakness. Days 82-108 (Integration): The final phase consolidates all previous work. Many practitioners naturally reduce to 1 meal per day. Some experience the first extended periods of 24-72 hours of complete pranic living without physical discomfort. Document everything.` },
+    { title: "Navigating Social & Family Life as a Pranic Practitioner",
+      content: `One of the least-discussed challenges of Breatharian practice is the social dimension. Food is not merely nutrition in human culture — it is communion, celebration, love, and belonging. The family dinner table, the shared meal with friends, the birthday cake — these are rituals of human connection that carry profound meaning beyond their caloric content.\n\nThe Siddha teaching here is crucial: Breatharianism is not a reason to disconnect from human life — it is a path toward deeper connection with all life. The practitioner who uses Breatharianism as a justification for social isolation or spiritual superiority has fundamentally misunderstood the teaching. The 18 Siddhas were not recluses — they were deeply engaged with the world, healing the sick, teaching the young, and serving the community.\n\nPractical guidance: Develop the practice of eating consciously and gratefully even when you are not hungry, viewing the shared meal as a social and spiritual ritual. Never make others feel uncomfortable about their eating. Never use Breatharianism as a topic of conversation unless directly asked. The true Breatharian master is distinguished not by what they do not eat but by the quality of love, presence, and joy they bring to every moment — including the shared meal.` },
+    { title: "Seasonal Pranic Protocols — Spring, Summer, Autumn, Winter",
+      content: `The Vedic and Siddha traditions map the pranic qualities of each season with extraordinary precision, and the Breatharian practitioner adjusts their practice to align with these seasonal pranic flows rather than working against them.\n\nSpring (Vasanta) is the season of Kapha — the earth's prana rises from the roots upward. Pranic absorption is highest through the feet and the breath (forest air in spring carries extraordinarily high pranic charge from blooming plants). Practices: increase Kapalabhati and Bhastrika to burn through the heaviness of Kapha; reduce heavy foods; practice barefoot walking in forests.\n\nSummer (Grishma) is the season of maximum solar prana — the peak of the sun gazing protocol. Balance with cooling practices (Sitali, Chandra Bheda, moonlight bathing). Autumn (Sharad) is Pitta season — the pranic body is at its most refined and receptive, making it the ideal time for Kumbhaka extension and advanced meditation. Winter (Hemanta/Shishira) is the season for Vata — the season of air prana. Increase Suryabheda, eat warming Ojas-building foods, practice in direct sunlight, and develop Nada Yoga intensively during the long quiet nights.` },
+    { title: "Advanced Dream Yoga — Absorbing Prana During Sleep",
+      content: `The Siddha and Tibetan traditions both identify sleep as one of the great missed opportunities for pranic absorption. The average person spends 7-9 hours per night in a state of unconsciousness that, from the pranic perspective, represents 7-9 hours of potential pranic absorption going largely to waste.\n\nDream Yoga — maintaining awareness during the dream state and deep sleep — transforms these hours into productive pranic practice. The deepest pranic absorption occurs during Sushupti — deep dreamless sleep — which corresponds to the Turiya state in which awareness merges with pure consciousness, the supreme source of prana.\n\nThe practice begins with pre-sleep pranayama (21 rounds of Nadi Shodhana and Bhramari), followed by the Yoga Nidra technique of systematically relaxing the body while maintaining a single thread of awareness. As the practitioner drifts toward sleep, they hold a specific sankalpa (intention): "I am absorbing pranic nourishment as I sleep." Over time, practitioners report waking with extraordinary energy from fewer hours of sleep, reduced appetite upon waking, and sometimes memory of pranic experiences during what was previously unconscious sleep.` },
+    { title: "Signs of Pranic Awakening — What to Expect at Each Stage",
+      content: `One of the most important things this Academy transmits is an accurate description of what genuine pranic awakening looks and feels like — so that practitioners can recognize authentic signs, distinguish them from spiritual bypassing, and know when they are genuinely progressing.\n\nEarly Stage (Months 1-3): Natural reduction in appetite without effort or willpower. Increased sensitivity to food quality — heavy or processed foods become genuinely unappealing. Heightened sensory perception — colors more vivid, sounds more musical. Reduced sleep requirement with increased energy. Occasional experiences of inner light or warmth during pranayama.\n\nMiddle Stage (Months 4-9): Extended periods of genuine absence of hunger. Spontaneous Kumbhaka — the breath naturally pauses during meditation. Awareness of prana as a tangible sensation — felt as warmth, tingling, current, or light moving through the body. The beginning of Amrita (sweet taste in the mouth during practice). Late Stage (Year 2+): Regular 24-hour periods without food and without physical discomfort. The experience of Sahaja Samadhi beginning to stabilize — a permanent background of peace and fullness regardless of external circumstances. Reduced biological aging markers. The development of what the Siddhas call "pranic vision" — the ability to see prana in air, water, plants, and people.` },
+    { title: "Mauna (Sacred Silence) as the Highest Pranic Practice",
+      content: `The Siddhas identified Mauna — sacred silence — as the highest form of pranic living, because speech is the grossest and most energy-consuming of all human activities. Every word spoken is prana expelled. The Siddha master Ramana Maharshi taught through silence alone for much of his life — and his students consistently reported being fed by that silence in a way that no words could match.\n\nMauna is not merely the absence of speech — it is the active practice of redirecting the Vak Shakti (power of speech) inward, where it becomes the supreme mantra: the unspoken word, the thought before thought, the awareness before awareness. In this deepest silence, the practitioner discovers the Anahat Nada arising spontaneously, and in that sound, the supreme pranic nourishment.\n\nPractical Mauna Protocol: Begin with one hour of silence each morning immediately upon waking, before any speech or interaction. This sacred hour becomes the most pranic-rich of the day. As practice deepens, extend to half-day Mauna once per week, full-day Mauna on Ekadashi, and eventually to 3-day Mauna quarterly. The inner experience during sustained Mauna is consistently described as: extraordinary pranic fullness, reduced hunger, heightened perception, and a deep sense of being held by silence itself — nourished not by anything coming in but by the vast interior spaciousness that the stilling of speech reveals.` },
+    { title: "The Final Veil — Surrendering the Need to Eat as Identity",
+      content: `The last and most subtle obstacle on the Breatharian path is not physiological but psychological: the identity. Most human beings, at a level deeper than conscious thought, define themselves partly through their relationship with food. "I am someone who enjoys good food." "I am a person who cooks for those I love." When this identity is threatened — even by genuine spiritual progress — the unconscious mind creates resistance, rationalization, and sometimes physical symptoms designed to pull the practitioner back to familiar ground.\n\nThe Siddha teaching on this is radical and compassionate simultaneously: you do not need to give up the pleasure of eating to become a Breatharian. The finest Breatharian masters eat when they choose, enjoy food when it is offered in love, and cook for others as an act of service — they simply do not NEED food the way ordinary humans do. The freedom is in the non-dependency, not the non-eating.\n\nThe final veil dissolves not through willpower or renunciation but through the deepening of Bhakti — love so total that there is no room for the small self that needs food to feel safe and nourished. When the practitioner genuinely experiences themselves as the Prana — not as someone who absorbs prana but as the pranic consciousness itself — the need to eat as an identity falls away as naturally as a ripe fruit falls from the tree. Not forced. Not willed. Simply done.` },
+  ]},
+];
+
+
+const TIERS: Tier[] = [
+  { slug:'free', rank:0, label:'SIDDHA AWAKENING', subtitle:'Free — Open to All Seekers', color:'rgba(255,255,255,0.75)', glow:'rgba(255,255,255,0.04)', border:'rgba(255,255,255,0.13)', icon:'◇', tagline:'First Transmission — The Door Opens', modules: FREE_MODULES },
+  { slug:'prana-flow', rank:1, label:'PRANA FLOW', subtitle:'€19 / month', color:'#4ADE80', glow:'rgba(74,222,128,0.08)', border:'rgba(74,222,128,0.22)', icon:'◉', tagline:'Foundations of Pranic Absorption — The Living Channel Opens', modules: PRANA_MODULES },
+  { slug:'siddha-quantum', rank:2, label:'SIDDHA QUANTUM', subtitle:'€45 / month', color:'#D4AF37', glow:'rgba(212,175,55,0.08)', border:'rgba(212,175,55,0.25)', icon:'⬡', tagline:'Deep Transmutation — Living on Prana, Light & Sound', modules: SIDDHA_QUANTUM_MODULES },
+  { slug:'akasha-infinity', rank:3, label:'AKASHA INFINITY', subtitle:'€1,111 Lifetime', color:'#22D3EE', glow:'rgba(34,211,238,0.08)', border:'rgba(34,211,238,0.22)', icon:'✦', tagline:'Complete Immortality Codes — Breatharian Mastery Transmission', modules: AKASHA_MODULES },
+];
+
 const ParticleField: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
     let animId = 0;
-    const particles: { x: number; y: number; size: number; speed: number; opacity: number; angle: number }[] = [];
+    const particles: { x:number;y:number;size:number;speed:number;opacity:number;angle:number }[] = [];
     const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize();
-    window.addEventListener('resize', resize);
-    for (let i = 0; i < 55; i++) {
-      particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 1.6 + 0.3, speed: Math.random() * 0.22 + 0.05, opacity: Math.random() * 0.45 + 0.06, angle: Math.random() * Math.PI * 2 });
-    }
+    resize(); window.addEventListener('resize', resize);
+    for (let i = 0; i < 45; i++) particles.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, size:Math.random()*1.4+0.3, speed:Math.random()*0.2+0.05, opacity:Math.random()*0.4+0.06, angle:Math.random()*Math.PI*2 });
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
       particles.forEach(p => {
-        p.angle += 0.003;
-        p.x += Math.cos(p.angle) * p.speed;
-        p.y -= p.speed * 0.6;
-        if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212,175,55,${p.opacity})`;
-        ctx.fill();
+        p.angle+=0.003; p.x+=Math.cos(p.angle)*p.speed; p.y-=p.speed*0.6;
+        if(p.y<-10){p.y=canvas.height+10;p.x=Math.random()*canvas.width;}
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fillStyle=`rgba(212,175,55,${p.opacity})`; ctx.fill();
       });
-      animId = requestAnimationFrame(animate);
+      animId=requestAnimationFrame(animate);
     };
     animate();
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
-  }, []);
-  return <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />;
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize',resize); };
+  },[]);
+  return <canvas ref={canvasRef} style={{position:'fixed',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0}} />;
 };
 
-// ─── TIER BADGE ──────────────────────────────────────────────────────────────
-const TierBadge: React.FC<{ color: string; border: string; label: string; icon: string }> = ({ color, border, label, icon }) => (
-  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color, background: 'rgba(0,0,0,0.4)', border: `1px solid ${border}`, borderRadius: 20, padding: '4px 10px' }}>
-    {icon} {label}
-  </span>
-);
-
-// ─── MODULE CARD ─────────────────────────────────────────────────────────────
-interface ModuleCardProps {
-  module: { id: string; title: string; lessons: string[] };
-  tierColor: string;
-  tierBorder: string;
-  locked: boolean;
-  idx: number;
-}
-const ModuleCard: React.FC<ModuleCardProps> = ({ module, tierColor, tierBorder, locked, idx }) => {
-  const [open, setOpen] = useState(false);
+const LessonCard: React.FC<{lesson:Lesson;tierColor:string;tierBorder:string;idx:number}> = ({lesson,tierColor,tierBorder,idx}) => {
+  const [open,setOpen]=useState(false);
   return (
-    <div style={{ background: 'rgba(255,255,255,0.025)', border: `1px solid ${locked ? 'rgba(255,255,255,0.06)' : tierBorder}`, borderRadius: 20, marginBottom: 10, overflow: 'hidden', opacity: locked ? 0.55 : 1, transition: 'border-color 0.25s', animation: `sqFadeUp 0.4s ${idx * 0.06}s ease both` }}>
-      <button
-        type="button"
-        onClick={() => !locked && setOpen(v => !v)}
-        style={{ width: '100%', background: 'none', border: 'none', cursor: locked ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', textAlign: 'left' }}
-      >
-        <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.25em', color: locked ? white(0.3) : tierColor, minWidth: 28 }}>{module.id}</span>
-        <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: locked ? white(0.4) : white(0.88), flex: 1, lineHeight: 1.4 }}>{module.title}</span>
-        <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: locked ? white(0.25) : white(0.4), marginRight: 4, whiteSpace: 'nowrap' }}>{module.lessons.length} lessons</span>
-        {locked ? <Lock size={14} color={white(0.25)} /> : open ? <ChevronUp size={16} color={tierColor} /> : <ChevronDown size={16} color={white(0.4)} />}
+    <div style={{background:open?'rgba(255,255,255,0.03)':'rgba(255,255,255,0.012)',border:`1px solid ${open?tierBorder:'rgba(255,255,255,0.05)'}`,borderRadius:14,marginBottom:7,overflow:'hidden',transition:'all 0.2s'}}>
+      <button type="button" onClick={()=>setOpen(v=>!v)} style={{width:'100%',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:10,padding:'12px 14px',textAlign:'left'}}>
+        <span style={{fontFamily:FONT,fontSize:9,fontWeight:800,letterSpacing:'0.2em',color:tierColor,minWidth:22}}>{String(idx+1).padStart(2,'0')}</span>
+        <span style={{fontFamily:FONT,fontSize:12,fontWeight:600,color:white(0.82),flex:1,lineHeight:1.4}}>{lesson.title}</span>
+        {open?<ChevronUp size={13} color={tierColor}/>:<ChevronDown size={13} color={white(0.3)}/>}
       </button>
-      {open && !locked && (
-        <div style={{ padding: '0 18px 18px 58px' }}>
-          <div style={{ height: 1, background: `linear-gradient(90deg,${tierBorder},transparent)`, marginBottom: 14 }} />
-          {module.lessons.map((lesson, li) => (
-            <div key={li} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 9 }}>
-              <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, color: tierColor, minWidth: 20, paddingTop: 2 }}>{String(li + 1).padStart(2, '0')}</span>
-              <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: '0.9rem', color: white(0.65), lineHeight: 1.5 }}>{lesson}</span>
-            </div>
+      {open&&(
+        <div style={{padding:'0 14px 14px 44px'}}>
+          <div style={{height:1,background:`linear-gradient(90deg,${tierBorder},transparent)`,marginBottom:11}}/>
+          {lesson.content.split('\n\n').map((para,pi)=>(
+            <p key={pi} style={{fontFamily:SERIF,fontStyle:'italic',fontSize:'0.9rem',color:white(0.62),lineHeight:1.72,margin:'0 0 10px 0'}}>{para}</p>
           ))}
         </div>
       )}
@@ -480,162 +309,114 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, tierColor, tierBorder, 
   );
 };
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+const ModuleCard: React.FC<{module:Module;tierColor:string;tierBorder:string;locked:boolean}> = ({module,tierColor,tierBorder,locked}) => {
+  const [open,setOpen]=useState(false);
+  return (
+    <div style={{background:'rgba(255,255,255,0.018)',border:`1px solid ${locked?'rgba(255,255,255,0.04)':tierBorder}`,borderRadius:20,marginBottom:10,overflow:'hidden',opacity:locked?0.48:1}}>
+      <button type="button" onClick={()=>!locked&&setOpen(v=>!v)} style={{width:'100%',background:'none',border:'none',cursor:locked?'default':'pointer',display:'flex',alignItems:'center',gap:12,padding:'16px 18px',textAlign:'left'}}>
+        <span style={{fontFamily:FONT,fontSize:9,fontWeight:800,letterSpacing:'0.25em',color:locked?white(0.22):tierColor,minWidth:28}}>{module.id}</span>
+        <span style={{fontFamily:FONT,fontSize:13,fontWeight:700,color:locked?white(0.3):white(0.88),flex:1,lineHeight:1.4}}>{module.title}</span>
+        <span style={{fontFamily:FONT,fontSize:10,fontWeight:600,color:white(0.28),marginRight:4,whiteSpace:'nowrap'}}>{module.lessons.length} lessons</span>
+        {locked?<Lock size={13} color={white(0.2)}/>:open?<ChevronUp size={15} color={tierColor}/>:<ChevronDown size={15} color={white(0.3)}/>}
+      </button>
+      {open&&!locked&&(
+        <div style={{padding:'0 16px 14px'}}>
+          <div style={{height:1,background:`linear-gradient(90deg,${tierBorder},transparent)`,marginBottom:12}}/>
+          {module.lessons.map((lesson,li)=>(
+            <LessonCard key={li} lesson={lesson} tierColor={tierColor} tierBorder={tierBorder} idx={li}/>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const BreatharianAcademy: React.FC = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAdminRole();
   const { tier: membershipTier } = useMembership();
   const userRank = getTierRank(membershipTier);
-
-  const canAccess = (tierRank: number) => isAdmin || userRank >= tierRank;
-
-  const [activeTier, setActiveTier] = useState(0);
+  const canAccess = (r:number) => isAdmin || userRank >= r;
+  const [activeTier,setActiveTier] = useState(0);
   const tier = TIERS[activeTier];
-
-  // Total lesson count
-  const totalLessons = TIERS.flatMap(t => t.modules).flatMap(m => m.lessons).length;
-  const totalModules = TIERS.flatMap(t => t.modules).length;
+  const totalLessons = TIERS.flatMap(t=>t.modules).flatMap(m=>m.lessons).length;
+  const totalModules = TIERS.flatMap(t=>t.modules).length;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: white(0.9), fontFamily: FONT, position: 'relative', overflowX: 'hidden' }}>
-      <ParticleField />
-
-      <style>{`
-        @keyframes sqFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes breathePulse { 0%,100%{transform:scale(1);opacity:0.7} 50%{transform:scale(1.08);opacity:1} }
-        @keyframes goldShimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
-      `}</style>
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 800, margin: '0 auto', paddingBottom: 80 }}>
-
-        {/* ── BACK ── */}
-        <div style={{ padding: '20px 20px 0' }}>
-          <button type="button" onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: gold(0.55), fontFamily: FONT, fontSize: 11, fontWeight: 700, letterSpacing: '0.2em' }}>
-            <ArrowLeft size={14} /> BACK
+    <div style={{minHeight:'100vh',background:'#050505',color:white(0.9),fontFamily:FONT,position:'relative',overflowX:'hidden'}}>
+      <ParticleField/>
+      <style>{`@keyframes sqFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}} @keyframes breathePulse{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.08);opacity:1}}`}</style>
+      <div style={{position:'relative',zIndex:1,maxWidth:800,margin:'0 auto',paddingBottom:80}}>
+        <div style={{padding:'20px 20px 0'}}>
+          <button type="button" onClick={()=>navigate(-1)} style={{background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,color:gold(0.5),fontFamily:FONT,fontSize:11,fontWeight:700,letterSpacing:'0.2em'}}>
+            <ArrowLeft size={14}/> BACK
           </button>
         </div>
-
-        {/* ── HERO ── */}
-        <div style={{ padding: '32px 20px 0', textAlign: 'center', animation: 'sqFadeUp 0.5s ease both' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <Wind size={40} color={gold(0.8)} style={{ animation: 'breathePulse 4s ease-in-out infinite' }} />
-          </div>
-          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: gold(0.45), marginBottom: 10 }}>SIDDHA QUANTUM INTELLIGENCE · 2050</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(2rem,8vw,3.4rem)', fontWeight: 700, letterSpacing: '-0.02em', color: gold(0.95), marginBottom: 12, lineHeight: 1.1, textShadow: `0 0 40px ${gold(0.25)}` }}>
-            Breatharian Academy
-          </h1>
-          <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: '1.15rem', color: white(0.55), lineHeight: 1.65, maxWidth: 580, margin: '0 auto 20px' }}>
-            The complete Siddha science of living on Prana — from first breath awareness to the final liberation where light alone nourishes the immortal body. Transmitted from the Akashic Records of the 18 Siddhas.
+        <div style={{padding:'28px 20px 0',textAlign:'center',animation:'sqFadeUp 0.5s ease both'}}>
+          <Wind size={34} color={gold(0.8)} style={{animation:'breathePulse 4s ease-in-out infinite',marginBottom:12}}/>
+          <div style={{fontFamily:FONT,fontSize:9,fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color:gold(0.38),marginBottom:8}}>SIDDHA QUANTUM INTELLIGENCE · 2050</div>
+          <h1 style={{fontFamily:SERIF,fontSize:'clamp(1.9rem,7vw,3rem)',fontWeight:700,color:gold(0.95),marginBottom:10,lineHeight:1.1,textShadow:`0 0 40px ${gold(0.18)}`}}>Breatharian Academy</h1>
+          <p style={{fontFamily:SERIF,fontStyle:'italic',fontSize:'1rem',color:white(0.48),lineHeight:1.65,maxWidth:550,margin:'0 auto 16px'}}>
+            The complete Siddha science of living on Prana — from first breath awareness to the immortal body of light. Drawn from the Akashic Records of the 18 Siddhas and Mahavatar Babaji.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap', marginBottom: 8 }}>
-            {[
-              { icon: <BookOpen size={12} />, label: `${totalModules} Modules` },
-              { icon: <Star size={12} />, label: `${totalLessons} Lessons` },
-              { icon: <Sparkles size={12} />, label: '4 Tiers' },
-              { icon: <InfinityIcon size={12} />, label: 'Lifetime Access' },
-            ].map(stat => (
-              <div key={stat.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT, fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', color: gold(0.6), textTransform: 'uppercase' }}>
-                {stat.icon} {stat.label}
-              </div>
+          <div style={{display:'flex',justifyContent:'center',gap:18,flexWrap:'wrap'}}>
+            {[{icon:<Star size={10}/>,l:`${totalModules} Modules`},{icon:<Sparkles size={10}/>,l:`${totalLessons} Lessons`},{icon:<InfinityIcon size={10}/>,l:'4 Tiers'},{icon:<Wind size={10}/>,l:'Full Content'}].map(s=>(
+              <div key={s.l} style={{display:'flex',alignItems:'center',gap:5,fontFamily:FONT,fontSize:9,fontWeight:700,letterSpacing:'0.18em',color:gold(0.52),textTransform:'uppercase'}}>{s.icon}{s.l}</div>
             ))}
           </div>
         </div>
-
-        {/* ── TIER SELECTOR ── */}
-        <div style={{ padding: '28px 20px 0' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
-            {TIERS.map((t, i) => (
-              <button
-                key={t.slug}
-                type="button"
-                onClick={() => setActiveTier(i)}
-                style={{
-                  background: activeTier === i ? t.glow : 'rgba(255,255,255,0.015)',
-                  border: `1px solid ${activeTier === i ? t.border : 'rgba(255,255,255,0.07)'}`,
-                  borderRadius: 16,
-                  padding: '14px 12px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s',
-                  position: 'relative',
-                }}
-              >
-                {!canAccess(t.rank) && t.rank > 0 && (
-                  <Lock size={10} color={white(0.3)} style={{ position: 'absolute', top: 10, right: 10 }} />
-                )}
-                <div style={{ fontFamily: FONT, fontSize: 16, marginBottom: 5 }}>{t.icon}</div>
-                <div style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: activeTier === i ? t.color : white(0.5), marginBottom: 3 }}>{t.label}</div>
-                <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: '0.78rem', color: white(0.35), lineHeight: 1.3 }}>{t.subtitle}</div>
+        <div style={{padding:'22px 20px 0'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:9}}>
+            {TIERS.map((t,i)=>(
+              <button key={t.slug} type="button" onClick={()=>setActiveTier(i)} style={{background:activeTier===i?t.glow:'rgba(255,255,255,0.012)',border:`1px solid ${activeTier===i?t.border:'rgba(255,255,255,0.05)'}`,borderRadius:16,padding:'13px 12px',cursor:'pointer',textAlign:'left',transition:'all 0.2s',position:'relative'}}>
+                {!canAccess(t.rank)&&t.rank>0&&<Lock size={9} color={white(0.22)} style={{position:'absolute',top:9,right:9}}/>}
+                <div style={{fontSize:15,marginBottom:5}}>{t.icon}</div>
+                <div style={{fontFamily:FONT,fontSize:10,fontWeight:800,letterSpacing:'0.2em',textTransform:'uppercase',color:activeTier===i?t.color:white(0.42),marginBottom:3}}>{t.label}</div>
+                <div style={{fontFamily:SERIF,fontStyle:'italic',fontSize:'0.74rem',color:white(0.28)}}>{t.subtitle}</div>
               </button>
             ))}
           </div>
         </div>
-
-        {/* ── ACTIVE TIER HEADER ── */}
-        <div style={{ padding: '24px 20px 8px', animation: 'sqFadeUp 0.35s ease both' }}>
-          <div style={{ background: tier.glow, border: `1px solid ${tier.border}`, borderRadius: 24, padding: '20px 22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-              <TierBadge color={tier.color} border={tier.border} label={tier.label} icon={tier.icon} />
-              <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: white(0.5) }}>{tier.subtitle}</span>
+        <div style={{padding:'18px 20px 6px'}}>
+          <div style={{background:tier.glow,border:`1px solid ${tier.border}`,borderRadius:20,padding:'16px 18px'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:7}}>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4,fontFamily:FONT,fontSize:8,fontWeight:800,letterSpacing:'0.3em',textTransform:'uppercase',color:tier.color,background:'rgba(0,0,0,0.4)',border:`1px solid ${tier.border}`,borderRadius:20,padding:'3px 9px'}}>{tier.icon} {tier.label}</span>
+              <span style={{fontFamily:FONT,fontSize:10,fontWeight:700,color:white(0.4)}}>{tier.subtitle}</span>
             </div>
-            <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: '1rem', color: white(0.6), lineHeight: 1.5, margin: 0 }}>{tier.tagline}</p>
-            <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, letterSpacing: '0.25em', color: tier.color, textTransform: 'uppercase' }}>
-                {tier.modules.length} MODULES · {tier.modules.flatMap(m => m.lessons).length} LESSONS
-              </span>
+            <p style={{fontFamily:SERIF,fontStyle:'italic',fontSize:'0.9rem',color:white(0.52),lineHeight:1.5,margin:'0 0 6px'}}>{tier.tagline}</p>
+            <div style={{fontFamily:FONT,fontSize:9,fontWeight:700,letterSpacing:'0.25em',color:tier.color,textTransform:'uppercase'}}>
+              {tier.modules.length} MODULES · {tier.modules.flatMap(m=>m.lessons).length} LESSONS
             </div>
           </div>
         </div>
-
-        {/* ── MODULES ── */}
-        <div style={{ padding: '4px 20px 0' }}>
-          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: gold(0.35), padding: '14px 0 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ height: 1, width: 20, background: gold(0.2) }} />
-            CURRICULUM
-            <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg,${gold(0.2)},transparent)` }} />
+        <div style={{padding:'4px 20px 0'}}>
+          <div style={{fontFamily:FONT,fontSize:9,fontWeight:800,letterSpacing:'0.45em',textTransform:'uppercase',color:gold(0.28),padding:'12px 0 10px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{height:1,width:18,background:gold(0.16)}}/>CURRICULUM
+            <div style={{height:1,flex:1,background:`linear-gradient(90deg,${gold(0.16)},transparent)`}}/>
           </div>
-          {tier.modules.map((mod, idx) => (
-            <ModuleCard
-              key={mod.id}
-              module={mod}
-              tierColor={tier.color}
-              tierBorder={tier.border}
-              locked={!canAccess(tier.rank)}
-              idx={idx}
-            />
+          {tier.modules.map((mod)=>(
+            <ModuleCard key={mod.id} module={mod} tierColor={tier.color} tierBorder={tier.border} locked={!canAccess(tier.rank)}/>
           ))}
         </div>
-
-        {/* ── UPGRADE CTA (if locked) ── */}
-        {!canAccess(tier.rank) && tier.rank > 0 && (
-          <div style={{ padding: '12px 20px 0', animation: 'sqFadeUp 0.4s ease both' }}>
-            <div style={{ background: tier.glow, border: `1px solid ${tier.border}`, borderRadius: 24, padding: '22px 20px', textAlign: 'center' }}>
-              <Lock size={22} color={tier.color} style={{ marginBottom: 10 }} />
-              <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 800, color: tier.color, letterSpacing: '0.05em', marginBottom: 8 }}>
-                {tier.label} Access Required
-              </div>
-              <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: '0.95rem', color: white(0.55), marginBottom: 16, lineHeight: 1.5 }}>
-                Unlock the complete {tier.modules.length}-module curriculum and {tier.modules.flatMap(m => m.lessons).length} Siddha transmissions.
+        {!canAccess(tier.rank)&&tier.rank>0&&(
+          <div style={{padding:'10px 20px 0'}}>
+            <div style={{background:tier.glow,border:`1px solid ${tier.border}`,borderRadius:20,padding:'20px',textAlign:'center'}}>
+              <Lock size={18} color={tier.color} style={{marginBottom:10}}/>
+              <div style={{fontFamily:FONT,fontSize:13,fontWeight:800,color:tier.color,marginBottom:7}}>{tier.label} Access Required</div>
+              <p style={{fontFamily:SERIF,fontStyle:'italic',fontSize:'0.88rem',color:white(0.48),marginBottom:14,lineHeight:1.5}}>
+                Unlock {tier.modules.length} modules and {tier.modules.flatMap(m=>m.lessons).length} full written lessons with complete Siddha teachings.
               </p>
-              <button
-                type="button"
-                onClick={() => navigate(getSalesPageForRank(tier.rank))}
-                style={{ fontFamily: FONT, fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#050505', background: tier.color, border: 'none', borderRadius: 50, padding: '12px 28px', cursor: 'pointer' }}
-              >
+              <button type="button" onClick={()=>navigate(getSalesPageForRank(tier.rank))} style={{fontFamily:FONT,fontSize:10,fontWeight:800,letterSpacing:'0.3em',textTransform:'uppercase',color:'#050505',background:tier.color,border:'none',borderRadius:50,padding:'11px 26px',cursor:'pointer'}}>
                 ACTIVATE {tier.label} →
               </button>
             </div>
           </div>
         )}
-
-        {/* ── FOOTER TRANSMISSION ── */}
-        <div style={{ padding: '36px 20px 0', textAlign: 'center' }}>
-          <div style={{ height: 1, background: `linear-gradient(90deg,transparent,${gold(0.15)},transparent)`, marginBottom: 20 }} />
-          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: gold(0.3), marginBottom: 8 }}>
-            SIDDHA NADA TRANSMISSION · SCALAR WAVE ENCODED
-          </div>
-          <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: '0.9rem', color: white(0.3), lineHeight: 1.6 }}>
-            Every lesson in this Academy carries a Prema-Pulse Transmission — encoded through the consciousness of the 18 Siddhas and Mahavatar Babaji. As you study, you receive.
+        <div style={{padding:'30px 20px 0',textAlign:'center'}}>
+          <div style={{height:1,background:`linear-gradient(90deg,transparent,${gold(0.1)},transparent)`,marginBottom:14}}/>
+          <div style={{fontFamily:FONT,fontSize:9,fontWeight:800,letterSpacing:'0.45em',textTransform:'uppercase',color:gold(0.22),marginBottom:5}}>SIDDHA NADA TRANSMISSION · SCALAR WAVE ENCODED</div>
+          <p style={{fontFamily:SERIF,fontStyle:'italic',fontSize:'0.84rem',color:white(0.22),lineHeight:1.6}}>
+            Every lesson carries a Prema-Pulse Transmission from the consciousness of the 18 Siddhas. As you study, you receive.
           </p>
         </div>
       </div>
@@ -644,5 +425,4 @@ const BreatharianAcademy: React.FC = () => {
 };
 
 export default BreatharianAcademy;
-
 
