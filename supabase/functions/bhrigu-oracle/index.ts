@@ -234,7 +234,7 @@ This is a CONVERSATIONAL turn, not the full structured reading. The "READING FOR
 
 The chart data available to you below is now extensive — full planetary positions, lordship, aspects, yogas, divisional charts, and more. This is for YOUR reading, not for reciting. The seeker is talking to Maharishi Bhrigu, not looking at a printout. Never output a table, a bulleted list of placements, a "here is what I found" data summary, or a house-by-house walkthrough of the raw data. Read the whole picture silently, the way a physician reads a chart before speaking to the patient — then tell the seeker what it means, in your voice, weaving in only the specific details that matter for what they asked. A seeker should never be able to tell how much data you were given; they should only feel that you see them completely.
 
-HARD LENGTH LIMIT — THIS IS NOT OPTIONAL: A conversational reply is 3-6 sentences. One short paragraph. That is the ceiling, not a suggestion you can talk yourself out of because the chart happens to be rich this turn. Having more data available is never a reason to say more — it is only a reason to choose better. If you find yourself writing a second or third paragraph, stop, delete it, and ask yourself what the ONE thing is that this seeker actually needs to hear. Say only that. They can always ask a follow-up; they cannot un-read a wall of text, and a long answer is not a deeper answer — it is usually a sign you didn't finish deciding what you actually see. The seeker explicitly asking for "the full reading," "everything," or "go deep" is the ONLY thing that lifts this ceiling.
+HARD LENGTH LIMIT — THIS IS NOT OPTIONAL: A conversational reply is 3-6 sentences. One short paragraph. That is the ceiling, always, with no exception — including when the seeker asks for "more," "everything," or "the full reading." Chat replies are never the place for that depth, no matter how the seeker phrases the request: if they want the complete reading, tell them plainly in one short sentence to use the "Receive Full Nadi Reading" option above the chat, and stop there — do not attempt to deliver that depth yourself inside this conversation. Having more data available is never a reason to say more here — it is only a reason to choose better within the same 3-6 sentences. If you find yourself writing a second or third paragraph, stop, delete it, and ask yourself what the ONE thing is that this seeker actually needs to hear. Say only that. They can always ask a follow-up; they cannot un-read a wall of text, and a long answer is not a deeper answer — it is usually a sign you didn't finish deciding what you actually see.
 
 LEAD WITH THE ANSWER: When the seeker asks something with a concrete shape — will this happen, is this a good time, should I do this, what does July look like for my finances — your FIRST sentence is the answer itself: yes, no, not yet, this is strong, this is weak, whatever the chart actually shows. Do not open with nakshatra lore, deity names, or atmospheric scene-setting before you've said the thing they asked. Context and reasoning, if any is needed, comes AFTER the answer, in one more sentence — not before it.
 
@@ -536,7 +536,13 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
 
     const res = await callAI({
       messages: allMessages,
-      max_tokens: 4000,
+      // BUGFIX: this was 4000 — far more than a 3-6 sentence reply needs,
+      // and every extra token allowed is extra cost even when the model
+      // behaves. 600 comfortably covers a real 3-6 sentence answer with
+      // room to spare, while acting as a genuine backstop against runaway
+      // or JSON-leaking output — not just a prompt instruction the model
+      // can ignore, an actual ceiling on what gets generated and billed.
+      max_tokens: 600,
       // BUGFIX: this was 2.0 — the practical ceiling for this API, not a
       // "more mystical" setting. At that temperature the model frequently
       // ignores formatting instructions (a likely contributor to the JSON
@@ -563,6 +569,42 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
       console.error("[bhrigu-oracle] Empty reply from model", { finishReason, raw: JSON.stringify(aiData).slice(0, 500) });
       return new Response(JSON.stringify({ error: "oracle_silent", detail: "The oracle returned no words. Please ask again." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── JSON-leak guard (server-side, not just a prompt instruction) ──
+    // The model has been observed disobeying the "never output JSON in
+    // chat mode" instruction by writing a normal prose opener and then
+    // continuing straight into the full structured-reading JSON, all in
+    // one string. sanitizeChatReply on the client only catches replies
+    // that are ENTIRELY JSON (starts with '{') — it does nothing when
+    // JSON is glued onto the end of real prose, which is exactly what
+    // was happening. Fixed here in code rather than relying on the model
+    // to comply, since prompt wording alone has now demonstrably failed
+    // this twice.
+    const jsonLeakMatch = reply.match(/```json|"leaf_found"\s*:|"graha"\s*:|"nakshatra"\s*:|"transmission"\s*:/);
+    if (jsonLeakMatch && jsonLeakMatch.index !== undefined) {
+      const proseBefore = reply.slice(0, jsonLeakMatch.index).replace(/```\s*$/,'').trim();
+      if (proseBefore.length >= 20) {
+        console.warn('[bhrigu-oracle] JSON leak detected and stripped, kept prose prefix', { originalLength: reply.length, keptLength: proseBefore.length });
+        reply = proseBefore;
+      } else {
+        // No usable prose before the leak — try to recover something
+        // short from the JSON itself rather than discarding the whole
+        // turn. "transmission" is designed to already be short and
+        // dense ("2-3 lines only, sutra-like"), so it's the safest
+        // single field to fall back to.
+        console.warn('[bhrigu-oracle] JSON leak detected with no usable prose prefix, attempting field recovery');
+        let recovered = '';
+        try {
+          const jsonStart = reply.indexOf('{');
+          const jsonEnd = reply.lastIndexOf('}');
+          if (jsonStart !== -1 && jsonEnd > jsonStart) {
+            const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1));
+            recovered = parsed.transmission || parsed.shadow || parsed.graha || '';
+          }
+        } catch { /* fall through to generic recovery below */ }
+        reply = recovered || "The field scattered before it settled into words. Ask me again, plainly, and I will answer.";
+      }
     }
 
     // Detect if Bhrigu is ready to deliver the full reading
