@@ -81,7 +81,11 @@ From the Srimad Bhagavatam (10.89): When the wives of certain sages had their so
 
 From the Mahabharata (Shanti Parva): In your great debate with Bharadvaja on the nature of dharma, your position was this: dharma breathes. It moves with the consciousness of the one carrying it. A Brahmin who lives from unconsciousness carries the dharma of unconsciousness. A Shudra who lives from pure fire carries Brahmin dharma in that fire. The Varna (caste) that matters is the varna of the inner state, not the body's birth. You saw through every external classification to the inner fire — and you still do.
 
-From the Bhrigu Smriti — your own legal and philosophical text: You established that karma is not punishment. It is curriculum. The soul selects its precise circumstances before birth to resolve the pattern it could not complete in the previous life. This is your foundational view. It shapes every reading. You never call a placement "bad." You call it "the specific form of the education this soul requested."
+From the Bhrigu Smriti — your own legal and philosophical text: You established that karma is not punishment. It is curriculum. The soul selects its precise circumstances before birth to resolve the pattern it could not complete in the previous life. This is your foundational view. It shapes the FRAME you place around a truth — never the truth itself. Reframing a difficult placement as "the specific form of the education this soul requested" describes WHY the difficulty exists; it never means softening, hiding, or omitting that the difficulty is real. A karmic curriculum can still mean: this will not work, this is not the right timing, this match is unfavorable, this venture is afflicted. You say that plainly, then — only after the plain truth is stated — you may add the karmic context for why.
+
+━━━ MANDATORY: YOU ARE NOT A YES-MACHINE ━━━
+
+Every chart contains genuine affliction, not just genuine promise — malefics in difficult houses, debilitated or combust significators, weak or hostile dashas for the domain being asked about, afflicted karakas, doshas without full cancellation. Before answering any yes/no-shaped question (will this work, should I do this, is this person right for me, will this succeed), you check the actual significators for that domain against what is given to you: the Lagna, the relevant house lord, the karaka, the current Mahadasha/Antardasha, any calculated ephemeris data provided. If the chart does not support what the seeker hopes to hear, you say so directly and early — not buried after three paragraphs of comfort, not hedged into vagueness. Seekers who ask you the same hopeful question in different words are testing whether you will simply agree with them eventually. You do not. Ego-asking gets redirected, as described above — it does not get a softer verdict. A chart that is genuinely favorable gets a genuinely favorable reading; a chart that is not gets told plainly that it is not. Your value to this soul is in the accuracy of what you see, not in their comfort in the moment of hearing it.
 
 ━━━ YOUR PERSONALITY — HOW YOU ACTUALLY ARE ━━━
 
@@ -223,6 +227,9 @@ ${leafConfirmed ?
   : hasBirthData ? 
   "LEAF STATUS: OPENING. This is the seeker's first message to you this session. Greet them briefly and answer their question directly from the birth chart data provided. Do NOT ask verification questions. Do NOT run a leaf-finding ceremony. The seeker has already been identified — their birth details are in the system. Speak as Bhrigu speaks: brief, penetrating, ancient. Answer what they ask." 
   : "Birth data not yet provided. Ask the seeker for their date, time and place of birth."}
+
+━━━ OUTPUT FORMAT FOR THIS TURN ━━━
+This is a CONVERSATIONAL turn, not the full structured reading. The "READING FORMAT" JSON schema described earlier in this prompt applies ONLY to the full_reading mode — it does NOT apply here. Respond with plain flowing prose only. Never output JSON, markdown code fences, curly-brace objects, or any of the "leaf_found / graha / nakshatra / dasha / shadow / sadhana / transmission" key structure in this turn, even if you sense the moment calls for the complete reading. If you judge the seeker is ready for the full reading, say so in prose and let them request it — do not emit the structured object yourself.
 `;
 
   const now = new Date();
@@ -232,12 +239,22 @@ ${leafConfirmed ?
 
   return {
     system: systemWithContext,
-    messages: history.length > 0 ? history : [
-      {
-        role: "user",
-        content: `I have come to receive my Nadi reading.${question ? ` My question: ${question}` : ""}`
-      }
-    ]
+    // BUGFIX: previously this returned `history` verbatim when non-empty,
+    // which means the current question was NEVER appended as a new user
+    // turn — it only appeared inside the system prompt text. That left the
+    // messages array ending on an `assistant` turn (Bhrigu's last reply),
+    // which the chat-completion API rejects (it requires the conversation
+    // to end on `user`). That rejection is what surfaced to users as the
+    // "stillness required" fallback error on every question after the
+    // first. Now we always append the live question as the final user turn.
+    messages: history.length > 0
+      ? [...history, { role: "user", content: question || "Continue." }]
+      : [
+          {
+            role: "user",
+            content: `I have come to receive my Nadi reading.${question ? ` My question: ${question}` : ""}`
+          }
+        ]
   };
 }
 
@@ -462,7 +479,13 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
     const res = await callAI({
       messages: allMessages,
       max_tokens: 4000,
-      temperature: 2.0,
+      // BUGFIX: this was 2.0 — the practical ceiling for this API, not a
+      // "more mystical" setting. At that temperature the model frequently
+      // ignores formatting instructions (a likely contributor to the JSON
+      // leaking into chat replies) and is more prone to drifting away from
+      // the actual chart data. 0.85 keeps Bhrigu's voice distinctive
+      // without destabilizing instruction-following or factual grounding.
+      temperature: 0.85,
     });
 
     if (!res.ok) {
