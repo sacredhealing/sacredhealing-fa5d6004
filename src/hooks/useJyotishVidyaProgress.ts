@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { describeError } from '@/lib/describeError';
 import { supabase as supabaseTyped } from '@/integrations/supabase/client';
 const supabase = supabaseTyped as unknown as { from: (t: string) => any };
 import { useAuth } from '@/hooks/useAuth';
@@ -92,7 +93,7 @@ export function useJyotishVidyaProgress(enabled = true) {
         setProgressByModuleId({});
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = describeError(e);
       setError(msg);
       setModules([]);
       setProgressByModuleId({});

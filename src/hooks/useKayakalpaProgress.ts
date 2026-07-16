@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { describeError } from '@/lib/describeError';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -62,7 +63,7 @@ export function useKayakalpaProgress(enabled = true) {
         setProgressByModuleId({});
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(describeError(e));
       setCourses([]);
       setProgressByModuleId({});
     } finally {

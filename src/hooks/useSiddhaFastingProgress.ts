@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { describeError } from '@/lib/describeError';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 // Table not yet in generated types; cast to any to preserve runtime access.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +67,7 @@ export function useSiddhaFastingProgress(enabled = true) {
         setProgressByModuleId({});
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(describeError(e));
       setCourses([]);
       setProgressByModuleId({});
     } finally {

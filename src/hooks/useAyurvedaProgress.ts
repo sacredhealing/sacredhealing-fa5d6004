@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { describeError } from '@/lib/describeError';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -90,7 +91,7 @@ export function useAyurvedaProgress(enabled = true) {
         setProgressByModuleId({});
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = describeError(e);
       setError(msg);
       setCourses([]);
       setProgressByModuleId({});
