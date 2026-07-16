@@ -38,10 +38,16 @@ const MeditationModuleContent: React.FC<{ moduleId: string; dbModuleId: string }
         <>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>⏱ {l.duration}</div>
           <p style={{ ...bodyStyle, marginBottom: 16 }}>{l.description}</p>
-          <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.18)', borderRadius: 18, padding: '18px 20px', marginBottom: l.transmission ? 12 : 0 }}>
+          <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.18)', borderRadius: 18, padding: '18px 20px', marginBottom: 12 }}>
             <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>Technique</div>
             <p style={{ fontSize: 16, lineHeight: 1.75, color: 'rgba(255,255,255,0.8)', fontFamily: "'Cormorant Garamond',serif", margin: 0 }}>{l.technique}</p>
           </div>
+          {l.guidedScript && (
+            <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 18, padding: '20px', marginBottom: l.transmission ? 12 : 0 }}>
+              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>Guided Script</div>
+              <p style={{ ...bodyStyle, margin: 0 }}>{l.guidedScript}</p>
+            </div>
+          )}
           {l.transmission && (
             <div style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.18)', borderRadius: 18, padding: '14px 20px' }}>
               <p style={{ fontSize: 13, fontStyle: 'italic', color: 'rgba(167,139,250,0.85)', margin: 0 }}>{l.transmission}</p>
