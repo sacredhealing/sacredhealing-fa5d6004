@@ -3,7 +3,7 @@
 // breath ratios, knowledge-check quizzes, and transmission text).
 
 export interface PranayamaLesson { title: string; body: string; }
-export interface PranayamaTechnique { name: string; duration: string; ratio: string; rounds: number; body: string; bandha: string; }
+export interface PranayamaTechnique { name: string; duration: string; ratio: string; rounds: number | string; body: string; bandha: string; }
 export interface PranayamaQuizQ { q: string; opts: string[]; correct: number; }
 export interface PranayamaModule {
   id: number; tier: 'FREE' | 'PRANA' | 'QUANTUM' | 'AKASHA';

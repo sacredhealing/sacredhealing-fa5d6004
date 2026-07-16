@@ -5,9 +5,25 @@
 
 export type KriyaTier = 'free' | 'prana' | 'siddha' | 'akasha';
 
+export interface KriyaTechnique {
+  name: string;
+  sanskrit?: string;
+  description: string;
+  steps?: string[];
+  benefit?: string;
+}
+
+export interface KriyaMantra {
+  text: string;
+  translation?: string;
+  purpose: string;
+}
+
 export interface KriyaSection {
   title: string;
   content: string;
+  techniques?: KriyaTechnique[];
+  mantras?: KriyaMantra[];
 }
 
 export interface KriyaModule {
