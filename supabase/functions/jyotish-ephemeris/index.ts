@@ -648,7 +648,7 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("jyotish_profiles")
       .select(
-        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, sun_sign, mars_sign, planet_longitudes"
+        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes"
       )
       .eq("user_id", userId)
       .single();
@@ -656,7 +656,8 @@ serve(async (req) => {
     const cacheValid = existing?.ephemeris_confirmed && existing?.moon_nakshatra
       && existing?.birth_date === birthDate && !forceRefresh
       && existing?.mars_sign // re-fetch if mars_sign missing (legacy cache)
-      && existing?.planet_longitudes; // re-fetch if full graha data missing (pre-Rasi-chart cache)
+      && existing?.planet_longitudes // re-fetch if full graha data missing (pre-Rasi-chart cache)
+      && existing?.ascendant_longitude != null; // re-fetch if exact Lagna degree missing (pre-varga-chart cache)
 
     if (cacheValid) {
       return new Response(
@@ -667,6 +668,7 @@ serve(async (req) => {
           nakshatraProgress: existing.nakshatra_progress,
           dashaData: existing.dasha_data,
           ascendantSign: existing.ascendant || '',
+          ascendantLongitude: existing.ascendant_longitude ?? null,
           sunSign: existing.sun_sign || '',
           marsSign: existing.mars_sign || '',
           ephemerisData: existing.ephemeris_data,
@@ -701,6 +703,7 @@ serve(async (req) => {
     let calcSource: "vedastro_swiss_ephemeris" | "computed_fallback" | "date_fallback" = "date_fallback";
     let planetLongitudes: PlanetLongitudes = {};
     let ascendantSign = "";
+    let ascendantLongitude: number | null = null;
     let sunSign = "";
     let nakProgress = 0.5;
     let marsSign = "";
@@ -742,6 +745,7 @@ serve(async (req) => {
         || null;
       if (ascData) {
         ascendantSign = String(ascData.Sign || ascData.Rashi || ascData.ZodiacSign || '').trim();
+        if (ascData.Longitude != null) ascendantLongitude = parseFloat(ascData.Longitude);
         if (!ascendantSign && ascData.Longitude != null) {
           // Derive sign from longitude (0-360 → 12 signs of 30° each)
           const signIdx = Math.floor(parseFloat(ascData.Longitude) / 30) % 12;
@@ -798,6 +802,7 @@ serve(async (req) => {
         if (ascKey) {
           const asc = payload.AllPlanetData[ascKey];
           ascendantSign = String(asc?.Sign || asc?.Rashi || asc?.ZodiacSign || '').trim();
+          if (asc?.Longitude != null && ascendantLongitude == null) ascendantLongitude = parseFloat(asc.Longitude);
           if (!ascendantSign && asc?.Longitude != null) {
             const si = Math.floor(parseFloat(asc.Longitude) / 30) % 12;
             const SG = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
@@ -894,6 +899,7 @@ serve(async (req) => {
         if (tropAsc < 0) tropAsc += 360;
         // Sidereal ascendant
         const sidAsc = (tropAsc - ayanamsa + 360) % 360;
+        ascendantLongitude = sidAsc;
         const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
                        'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
         ascendantSign = SIGNS[Math.floor(sidAsc / 30)] || '';
@@ -1005,6 +1011,7 @@ serve(async (req) => {
         birth_time: birthTime || null,
         birth_place: birthPlace || null,
         ascendant: ascendantSign || null,
+        ascendant_longitude: ascendantLongitude,
         sun_sign: sunSign || null,
         mars_sign: marsSign || null,
         planet_longitudes: planetLongitudes || null,
@@ -1021,6 +1028,7 @@ serve(async (req) => {
         nakshatraProgress: nakProgress,
         dashaData: dashaResult,
         ascendantSign,
+        ascendantLongitude,
         sunSign,
         marsSign,
         ephemerisData: ephemerisData,

@@ -12,6 +12,7 @@ export interface EphemerisData {
   birth_time?: string;
   birth_place?: string;
   ascendant?: string | null;
+  ascendant_longitude?: number | null;
   sun_sign?: string | null;
   mars_sign?: string | null;
   planet_longitudes?: Record<string, number> | null;
@@ -41,13 +42,13 @@ export function useEphemerisData() {
         // Check jyotish_profiles for confirmed data
         const { data } = await (supabase as any)
           .from('jyotish_profiles')
-          .select('moon_nakshatra, moon_longitude, nakshatra_progress, dasha_data, ephemeris_confirmed, birth_date, birth_time, birth_place, ascendant, sun_sign, mars_sign, planet_longitudes')
+          .select('moon_nakshatra, moon_longitude, nakshatra_progress, dasha_data, ephemeris_confirmed, birth_date, birth_time, birth_place, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes')
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (cancelled) return;
 
-        if (data?.ephemeris_confirmed && data?.moon_nakshatra && data?.mars_sign && data?.planet_longitudes) {
+        if (data?.ephemeris_confirmed && data?.moon_nakshatra && data?.mars_sign && data?.planet_longitudes && data?.ascendant_longitude != null) {
           setEphemeris(data);
           setLoading(false);
           return;
@@ -106,6 +107,7 @@ export function useEphemerisData() {
             birth_time: birthData.birth_time,
             birth_place: birthData.birth_place,
             ascendant: result.ascendantSign || null,
+            ascendant_longitude: result.ascendantLongitude ?? null,
             sun_sign: result.sunSign || null,
             mars_sign: result.marsSign || null,
             planet_longitudes: result.planetLongitudes || null,

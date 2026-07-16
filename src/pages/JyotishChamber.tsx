@@ -36,6 +36,7 @@ interface EphemerisData {
   moonNakshatra: string;
   moonLongitude: number;
   ascendantSign: string;
+  ascendantLongitude?: number | null;
   sunSign: string;
   marsSign: string;
   planetLongitudes?: Record<string, number>;
@@ -2737,6 +2738,7 @@ const JyotishChamber: React.FC = () => {
             moonNakshatra: data.moonNakshatra || '',
             moonLongitude: data.moonLongitude || 0,
             ascendantSign: data.ascendantSign || '',
+            ascendantLongitude: data.ascendantLongitude ?? null,
             sunSign: data.sunSign || '',
             marsSign: data.marsSign || '',
             planetLongitudes: data.planetLongitudes || undefined,
@@ -2816,17 +2818,18 @@ const JyotishChamber: React.FC = () => {
     // Try cache
     const { data: cached } = await supabase
       .from('jyotish_profiles')
-      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data, ascendant, sun_sign, mars_sign, planet_longitudes')
+      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data, ascendant, ascendant_longitude, sun_sign, mars_sign, planet_longitudes')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (cached?.moon_nakshatra && cached?.ascendant && cached?.mars_sign && cached?.planet_longitudes) {
+    if (cached?.moon_nakshatra && cached?.ascendant && cached?.mars_sign && cached?.planet_longitudes && cached?.ascendant_longitude != null) {
       const c = cached as any;
       const eph = c.ephemeris_data || {};
       setEphemeris({
         moonNakshatra: cached.moon_nakshatra,
         moonLongitude: 0,
         ascendantSign: c.ascendant,
+        ascendantLongitude: c.ascendant_longitude ?? null,
         sunSign: c.sun_sign || eph.sun_sign || '',
         marsSign: c.mars_sign,
         planetLongitudes: c.planet_longitudes || undefined,
@@ -2862,6 +2865,7 @@ const JyotishChamber: React.FC = () => {
           moonNakshatra: data.moonNakshatra || '',
           moonLongitude: data.moonLongitude || 0,
           ascendantSign: data.ascendantSign || '',
+          ascendantLongitude: data.ascendantLongitude ?? null,
           sunSign: data.sunSign || '',
           marsSign: data.marsSign || '',
           planetLongitudes: data.planetLongitudes || undefined,

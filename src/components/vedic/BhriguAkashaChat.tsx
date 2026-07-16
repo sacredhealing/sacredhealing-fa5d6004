@@ -38,6 +38,10 @@ interface Props {
   studentEphemeris?: {
     moonNakshatra: string;
     ascendantSign: string;
+    // Exact sidereal Ascendant degree (0-360°) — needed to compute each
+    // divisional chart's own Lagna (Navamsa, Dasamsa, Saptamsa,
+    // Shashtiamsa), not just where planets fall relative to the D1 Lagna.
+    ascendantLongitude?: number | null;
     sunSign: string;
     marsSign: string;
     // Raw sidereal longitudes (0-360°) for all 9 grahas, Lahiri ayanamsha —
@@ -103,6 +107,37 @@ function navamsaSignIndex(lon: number): number {
   const partIdx = Math.floor(degreeInSign(lon) / (30 / 9));
   return (signIdx * 9 + partIdx) % 12;
 }
+// Dasamsa (D10, career/public life) — classical rule: odd signs (1-indexed)
+// count from themselves, even signs count from the 9th sign therefrom.
+// 10 divisions of 3° each. Verified against hand-worked examples.
+function dasamsaSignIndex(lon: number): number {
+  const signIdx = signIndexFromLongitude(lon);
+  const partIdx = Math.floor(degreeInSign(lon) / 3);
+  const start = signIdx % 2 === 0 ? signIdx : (signIdx + 8) % 12;
+  return (start + partIdx) % 12;
+}
+// Saptamsa (D7, children/creative legacy) — classical rule: odd signs count
+// from themselves, even signs count from the 7th sign therefrom (i.e. the
+// opposite sign). 7 divisions of 30/7° each. Verified against hand-worked examples.
+function saptamsaSignIndex(lon: number): number {
+  const signIdx = signIndexFromLongitude(lon);
+  const partIdx = Math.floor(degreeInSign(lon) / (30 / 7));
+  const start = signIdx % 2 === 0 ? signIdx : (signIdx + 6) % 12;
+  return (start + partIdx) % 12;
+}
+// Shashtiamsa (D60, fine-grained/karmic layer) — counted straight forward
+// from the natal sign itself (no odd/even branching), 60 divisions of 0.5°
+// each, cycling through the zodiac 5 times. NOTE: this is the least
+// certain of the four vargas here — each division is only 0.5° of arc,
+// meaning roughly 2 minutes of birth time can shift the result entirely.
+// It's included because it was asked for, but should be treated as
+// supplementary, not primary, unless birth time is confirmed precise to
+// the minute.
+function shashtiamsaSignIndex(lon: number): number {
+  const signIdx = signIndexFromLongitude(lon);
+  const partIdx = Math.floor(degreeInSign(lon) / 0.5);
+  return (signIdx + partIdx) % 12;
+}
 function dignityLabel(planet: string, signIdx: number, deg: number): string | null {
   const d = DIGNITY[planet];
   if (!d) return null;
@@ -124,7 +159,8 @@ function dignityLabel(planet: string, signIdx: number, deg: number): string | nu
 // real data to build any of this — never sends a half-built table.
 function buildChartAnalysisBlock(
   ascendantSign: string | undefined,
-  planetLongitudes: Record<string, number> | null | undefined
+  planetLongitudes: Record<string, number> | null | undefined,
+  ascendantLongitude?: number | null
 ): string {
   if (!ascendantSign || !planetLongitudes) return '';
   const lagnaIdx = ZODIAC_SIGNS.findIndex(s => s.toLowerCase() === ascendantSign.toLowerCase());
@@ -150,7 +186,7 @@ function buildChartAnalysisBlock(
     const nakIdx = Math.floor(lonNorm / nakSpan);
     const degInNak = lonNorm % nakSpan;
     const pada = Math.floor(degInNak / (nakSpan / 4)) + 1;
-    const parts = [`${e.label}: ${ZODIAC_SIGNS[e.signIdx]} ${e.deg.toFixed(1)}°, House ${e.house}, Nakshatra ${NAKSHATRAS[nakIdx]} Pada ${pada}, Navamsa ${ZODIAC_SIGNS[navamsaSignIndex(e.lon)]}`];
+    const parts = [`${e.label}: ${ZODIAC_SIGNS[e.signIdx]} ${e.deg.toFixed(1)}°, House ${e.house}, Nakshatra ${NAKSHATRAS[nakIdx]} Pada ${pada}`];
     const dignity = dignityLabel(e.planet, e.signIdx, e.deg);
     if (dignity) parts.push(dignity);
     if (e.planet !== 'sun' && sunEntry && COMBUSTION_ORB[e.planet] !== undefined) {
@@ -177,11 +213,41 @@ function buildChartAnalysisBlock(
     aspectLines.push(`${e.label} (House ${e.house}) aspects House ${[...targets].sort((a, b) => a - b).join(', ')}`);
   }
 
+  // ── Divisional charts (vargas) — each needs the Ascendant's own exact
+  // degree to compute its own Lagna; without that we can only show which
+  // sign each planet falls in, not which house, so we skip these sections
+  // entirely rather than presenting a half-built varga table. ──
+  const vargaSections: string[] = [];
+  if (typeof ascendantLongitude === 'number' && !Number.isNaN(ascendantLongitude)) {
+    const buildVarga = (
+      title: string, purpose: string,
+      signFn: (lon: number) => number
+    ): string => {
+      const vargaLagnaIdx = signFn(ascendantLongitude);
+      const lines = entries.map(e => {
+        const vSignIdx = signFn(e.lon);
+        const vHouse = ((vSignIdx - vargaLagnaIdx + 12) % 12) + 1;
+        return `${e.label}: ${ZODIAC_SIGNS[vSignIdx]}, House ${vHouse}`;
+      });
+      return `── ${title} — ${purpose} ──\nLagna: ${ZODIAC_SIGNS[vargaLagnaIdx]}\n${lines.join('\n')}`;
+    };
+    vargaSections.push(buildVarga('NAVAMSA (D9)', 'marriage, dharma, inner strength of every placement', navamsaSignIndex));
+    vargaSections.push(buildVarga('DASAMSA (D10)', 'career, public standing, achievement', dasamsaSignIndex));
+    vargaSections.push(buildVarga('SAPTAMSA (D7)', 'children, creative legacy', saptamsaSignIndex));
+    // Shashtiamsa (D60): sign only, no house — computing a Lagna-relative
+    // house on top of a 0.5°-per-division chart would compound birth-time
+    // imprecision even further. Sign placement alone is already the
+    // traditionally weaker, supplementary layer here.
+    const d60Lines = entries.map(e => `${e.label}: ${ZODIAC_SIGNS[shashtiamsaSignIndex(e.lon)]}`);
+    vargaSections.push(`── SHASHTIAMSA (D60) — fine-grained karmic layer (⚠ each division is only 0.5° of arc; treat as supplementary, not primary, unless birth time is confirmed accurate to the minute) ──\n${d60Lines.join('\n')}`);
+  }
+
   return [
     '── PLANETARY POSITIONS (Rasi / D1) ──',
     ...planetLines,
     conjunctions.length ? '\n── CONJUNCTIONS ──\n' + conjunctions.join('\n') : '',
     '\n── ASPECTS (DRISHTI) ──\n' + aspectLines.join('\n'),
+    vargaSections.length ? '\n' + vargaSections.join('\n\n') : '',
   ].filter(Boolean).join('\n');
 }
 
@@ -486,7 +552,7 @@ LEAF STATUS: FIRST OPENING. This is your first meeting with this soul. You may a
           calculated_antardasha: studentEphemeris.dashaData?.activeAntar?.planet,
           antardasha_start:   studentEphemeris.dashaData?.activeAntar?.start,
           antardasha_end:     studentEphemeris.dashaData?.activeAntar?.end,
-          chart_analysis: buildChartAnalysisBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes),
+          chart_analysis: buildChartAnalysisBlock(studentEphemeris.ascendantSign, studentEphemeris.planetLongitudes, studentEphemeris.ascendantLongitude),
         } : {}),
       },
     });
