@@ -10,7 +10,7 @@ import CourseSyllabus from '@/components/education/CourseSyllabus';
 import { cyan } from '@/components/education/tokens';
 
 const TIER_ORDER: { slug: string; label: string }[] = [
-  { slug: 'free', label: 'Seeker' },
+  { slug: 'free', label: 'Atma-Seed' },
   { slug: 'prana-flow', label: 'Prana-Flow' },
   { slug: 'siddha-quantum', label: 'Siddha-Quantum' },
   { slug: 'akasha-infinity', label: 'Akasha-Infinity' },

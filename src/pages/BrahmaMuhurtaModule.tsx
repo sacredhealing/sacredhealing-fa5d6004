@@ -36,7 +36,7 @@ export default function BrahmaMuhurtaModule() {
 
   const railGroups = useMemo(() => {
     const tierOrder: { slug: string; label: string }[] = [
-      { slug: 'free', label: 'Seeker' },
+      { slug: 'free', label: 'Atma-Seed' },
       { slug: 'prana-flow', label: 'Prana-Flow' },
       { slug: 'siddha-quantum', label: 'Siddha-Quantum' },
       { slug: 'akasha-infinity', label: 'Akasha-Infinity' },
