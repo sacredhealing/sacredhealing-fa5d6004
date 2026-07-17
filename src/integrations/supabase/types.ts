@@ -5952,6 +5952,39 @@ export type Database = {
         }
         Relationships: []
       }
+      nadi_leaf_courses: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          module_key: string
+          module_number: number
+          subtitle: string | null
+          tier_required: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key: string
+          module_number: number
+          subtitle?: string | null
+          tier_required?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key?: string
+          module_number?: number
+          subtitle?: string | null
+          tier_required?: string
+          title?: string
+        }
+        Relationships: []
+      }
       nadi_scan_results: {
         Row: {
           activated_nadi: string | null
@@ -10987,6 +11020,88 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "mudra_academy_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_nadi_leaf_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_nadi_leaf_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "nadi_leaf_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_nadi_leaf_section_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          module_id: string
+          notes: string | null
+          section_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          notes?: string | null
+          section_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          notes?: string | null
+          section_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_nadi_leaf_section_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "nadi_leaf_courses"
             referencedColumns: ["id"]
           },
         ]
