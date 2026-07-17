@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Lock, ChevronDown, ChevronUp, Star, Zap, Crown, Infinity, Hand, Eye, Flame, Waves } from "lucide-react";
+import { Lock, ChevronDown, ChevronUp, Star, Zap, Crown, Infinity, Hand, Eye, Flame, Waves, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MudraImage } from "./MudraIllustrations";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useAuth } from "@/hooks/useAuth";
 import { getTierRank } from "@/lib/tierAccess";
+import { useMudraAcademyProgress } from "@/hooks/useMudraAcademyProgress";
 
 // ─── Tier gating helper ─────────────────────────────────────────────────────
 // Replace with your real useMembershipTier hook import if available:
@@ -584,7 +586,12 @@ export default function MudraAcademy() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
+  const { user } = useAuth();
   const userTier: string = isAdmin ? "akasha-infinity" : (tier ?? "free");
+
+  const { courses, mudraProgress, toggleMudraComplete, moduleCompletionByModuleId } = useMudraAcademyProgress(true);
+  const dbIdByModuleKey: Record<string, string> = {};
+  courses.forEach((c) => { dbIdByModuleKey[c.module_key] = c.id; });
 
   const [openModule, setOpenModule] = useState<string | null>("m1");
   const [openMudra, setOpenMudra] = useState<string | null>(null);
@@ -675,7 +682,11 @@ export default function MudraAcademy() {
                         MODULE {module.number} · {tc.label}
                       </span>
                       <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: C.text40, background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: "999px" }}>
-                        {module.mudras.length} MUDRAS
+                        {(() => {
+                          const dbId = dbIdByModuleKey[module.id];
+                          const done = dbId ? (moduleCompletionByModuleId[dbId] ?? 0) : 0;
+                          return done > 0 ? `${done} / ${module.mudras.length} MUDRAS` : `${module.mudras.length} MUDRAS`;
+                        })()}
                       </span>
                     </div>
                     <div style={{ fontSize: "17px", fontWeight: 800, color: locked ? C.text40 : "white", letterSpacing: "-0.02em" }}>{module.title}</div>
@@ -714,12 +725,14 @@ export default function MudraAcademy() {
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                           {module.mudras.map(mudra => {
                             const isMudraOpen = openMudra === mudra.id;
+                            const isMudraDone = Boolean(mudraProgress[mudra.id]?.completed);
                             return (
-                              <div key={mudra.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${isMudraOpen ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.05)"}`, borderRadius: "16px", overflow: "hidden" }}>
+                              <div key={mudra.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${isMudraOpen ? "rgba(212,175,55,0.15)" : isMudraDone ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.05)"}`, borderRadius: "16px", overflow: "hidden" }}>
                                 <button onClick={() => setOpenMudra(isMudraOpen ? null : mudra.id)}
                                   style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "18px 20px", display: "flex", alignItems: "center", gap: "12px", textAlign: "left" }}>
                                   <div style={{ flex: 1 }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
+                                      {isMudraDone && <CheckCircle size={14} color={C.gold} />}
                                       <span style={{ fontSize: "16px", fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>{mudra.name}</span>
                                       <span style={{ fontSize: "11px", color: C.text40 }}>{mudra.sanskrit}</span>
                                     </div>
@@ -783,6 +796,25 @@ export default function MudraAcademy() {
                                         <div style={{ background: "rgba(192,132,252,0.06)", border: `1px solid rgba(192,132,252,0.12)`, borderRadius: "12px", padding: "16px" }}>
                                           <div style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.35em", textTransform: "uppercase", color: "#c084fc", marginBottom: "10px" }}>🌀 SIDDHA SECRET TRANSMISSION</div>
                                           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0 }}>{mudra.siddhaSecret}</p>
+                                        </div>
+                                      )}
+
+                                      {/* Mark Complete */}
+                                      {user?.id && dbIdByModuleKey[module.id] && (
+                                        <div style={{ textAlign: "center", paddingTop: "4px" }}>
+                                          <button
+                                            onClick={() => void toggleMudraComplete(dbIdByModuleKey[module.id], mudra.id)}
+                                            style={{
+                                              display: "inline-flex", alignItems: "center", gap: 8,
+                                              background: isMudraDone ? "rgba(212,175,55,0.14)" : "rgba(255,255,255,0.04)",
+                                              border: `1px solid ${isMudraDone ? "rgba(212,175,55,0.4)" : "rgba(255,255,255,0.12)"}`,
+                                              color: isMudraDone ? C.gold : "rgba(255,255,255,0.6)",
+                                              padding: "10px 24px", borderRadius: 999, fontSize: 11, fontWeight: 800,
+                                              letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer",
+                                            }}
+                                          >
+                                            <CheckCircle size={14} /> {isMudraDone ? "Completed" : "Mark Complete"}
+                                          </button>
                                         </div>
                                       )}
                                     </div>
