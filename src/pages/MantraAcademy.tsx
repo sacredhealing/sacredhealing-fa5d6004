@@ -4,8 +4,11 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useAuth } from "@/hooks/useAuth";
 import { getTierRank } from "@/lib/tierAccess";
 import { ACADEMY_CURRICULUM, TIER_CONFIG, Module, Lesson } from "@/data/mantraAcademyData";
+import { useMantraAcademyProgress } from "@/hooks/useMantraAcademyProgress";
+import { CheckCircle } from "lucide-react";
 
 const T = {
   free:   { accent: '#6B7280', gold: 'rgba(107,114,128,0.6)', bg: 'rgba(107,114,128,0.07)', border: 'rgba(107,114,128,0.25)', label: 'FREE',           price: 'Free',           icon: '◎', modules: '1–6'  },
@@ -17,7 +20,7 @@ type Tier = keyof typeof T;
 const TIER_ORDER: Tier[] = ['free','prana','siddha','akasha'];
 
 // ─── LESSON READER ───────────────────────────────────────────
-function LessonReader({ lesson, accent, onBack }: { lesson: Lesson; accent: string; onBack: () => void }) {
+function LessonReader({ lesson, accent, onBack, isComplete, onToggleComplete, canTrack }: { lesson: Lesson; accent: string; onBack: () => void; isComplete: boolean; onToggleComplete: () => void; canTrack: boolean }) {
   const topRef = useRef<HTMLDivElement>(null);
   return (
     <div ref={topRef} style={{ minHeight:'100vh', background:'#050505', color:'#fff', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
@@ -28,6 +31,7 @@ function LessonReader({ lesson, accent, onBack }: { lesson: Lesson; accent: stri
           <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent }}>LESSON {lesson.number}</div>
           <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.8)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lesson.title}</div>
         </div>
+        {isComplete && <CheckCircle size={18} color={accent} style={{ flexShrink:0 }} />}
       </div>
 
       <div style={{ padding:'24px 18px 80px' }}>
@@ -91,6 +95,24 @@ function LessonReader({ lesson, accent, onBack }: { lesson: Lesson; accent: stri
           return null;
         })}
 
+        {canTrack && (
+          <div style={{ textAlign:'center', padding:'10px 0 24px' }}>
+            <button
+              onClick={onToggleComplete}
+              style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                background: isComplete ? `${accent}22` : 'rgba(255,255,255,0.04)',
+                border:`1px solid ${isComplete ? accent+'66' : 'rgba(255,255,255,0.12)'}`,
+                color: isComplete ? accent : 'rgba(255,255,255,0.6)',
+                padding:'12px 26px', borderRadius:999, fontSize:11, fontWeight:800,
+                letterSpacing:'0.15em', textTransform:'uppercase', cursor:'pointer',
+              }}
+            >
+              <CheckCircle size={15} /> {isComplete ? 'Completed' : 'Mark Complete'}
+            </button>
+          </div>
+        )}
+
         <div style={{ textAlign:'center', padding:'20px 0' }}>
           <span style={{ fontSize:10, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:'rgba(212,175,55,0.4)' }}>OM SHANTI SHANTI SHANTI</span>
         </div>
@@ -104,20 +126,30 @@ export default function MantraAcademy() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
+  const { user } = useAuth();
   const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const canAccess = (t: Tier) => isAdmin || TIER_ORDER.indexOf(t) <= rank;
 
+  const { courses, lessonProgress, toggleLessonComplete, moduleCompletionByModuleId } = useMantraAcademyProgress(true);
+  const dbIdByModuleKey: Record<string, string> = {};
+  courses.forEach((c) => { dbIdByModuleKey[c.module_key] = c.id; });
+
   const [openTier,   setOpenTier]   = useState<Tier | null>('free');
   const [openModule, setOpenModule] = useState<string | null>(null);
-  const [activeLesson, setActiveLesson] = useState<{ lesson: Lesson; tier: Tier } | null>(null);
+  const [activeLesson, setActiveLesson] = useState<{ lesson: Lesson; tier: Tier; moduleId: string } | null>(null);
 
   // ── LESSON VIEW ──────────────────────────────────────────
   if (activeLesson) {
+    const dbModuleId = dbIdByModuleKey[activeLesson.moduleId];
+    const isComplete = Boolean(lessonProgress[activeLesson.lesson.id]?.completed);
     return (
       <LessonReader
         lesson={activeLesson.lesson}
         accent={T[activeLesson.tier].accent}
         onBack={() => setActiveLesson(null)}
+        isComplete={isComplete}
+        canTrack={Boolean(user?.id && dbModuleId)}
+        onToggleComplete={() => dbModuleId && void toggleLessonComplete(dbModuleId, activeLesson.lesson.id)}
       />
     );
   }
@@ -215,7 +247,13 @@ export default function MantraAcademy() {
                           </div>
                           <div style={{ flex:1, minWidth:0 }}>
                             <div style={{ fontSize:13, fontWeight:700, color: modOpen ? '#fff' : 'rgba(255,255,255,0.7)', lineHeight:1.3 }}>{mod.title}</div>
-                            <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:2 }}>{mod.lessons.length} lessons</div>
+                            <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:2 }}>
+                              {(() => {
+                                const dbId = dbIdByModuleKey[mod.id];
+                                const done = dbId ? (moduleCompletionByModuleId[dbId]?.done ?? 0) : 0;
+                                return done > 0 ? `${done} / ${mod.lessons.length} lessons` : `${mod.lessons.length} lessons`;
+                              })()}
+                            </div>
                           </div>
                           <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)', flexShrink:0, transition:'transform 0.2s', transform: modOpen ? 'rotate(180deg)' : 'none' }}>▼</div>
                         </button>
@@ -223,14 +261,16 @@ export default function MantraAcademy() {
                         {/* Lesson rows */}
                         {modOpen && (
                           <div style={{ background:'rgba(0,0,0,0.2)' }}>
-                            {mod.lessons.map((lesson, li) => (
+                            {mod.lessons.map((lesson, li) => {
+                              const lessonDone = Boolean(lessonProgress[lesson.id]?.completed);
+                              return (
                               <button
                                 key={lesson.id}
-                                onClick={() => setActiveLesson({ lesson, tier: tierKey })}
+                                onClick={() => setActiveLesson({ lesson, tier: tierKey, moduleId: mod.id })}
                                 style={{ width:'100%', padding:'12px 18px 12px 62px', display:'flex', alignItems:'center', gap:12, background:'none', border:'none', borderTop:'1px solid rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}
                               >
                                 <div style={{ fontSize:9, fontWeight:900, color:tc.accent, width:20, flexShrink:0 }}>
-                                  {String(li+1).padStart(2,'0')}
+                                  {lessonDone ? <CheckCircle size={14} color={tc.accent} /> : String(li+1).padStart(2,'0')}
                                 </div>
                                 <div style={{ flex:1, minWidth:0 }}>
                                   <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.75)', lineHeight:1.3 }}>{lesson.title}</div>
@@ -238,7 +278,8 @@ export default function MantraAcademy() {
                                 </div>
                                 <div style={{ fontSize:12, color:'rgba(255,255,255,0.2)', flexShrink:0 }}>→</div>
                               </button>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
