@@ -109,6 +109,7 @@ const RamayanaCodexModule = React.lazy(() => import("./pages/RamayanaCodexModule
 const HanumanCodex = React.lazy(() => import("./pages/HanumanCodex"));
 const HanumanCodexModule = React.lazy(() => import("./pages/HanumanCodexModule"));
 const SacredGeometry = React.lazy(() => import("./pages/SacredGeometry"));
+const SacredGeometryModule = React.lazy(() => import("./pages/SacredGeometryModule"));
 const AlchemicalShiva = React.lazy(() => import("./pages/AlchemicalShiva"));
 const AlchemicalShivaModule = React.lazy(() => import("./pages/AlchemicalShivaModule"));
 const SiddhaMedicineAcademy = React.lazy(() => import("./pages/SiddhaMedicineAcademy"));
@@ -445,6 +446,7 @@ function AppRoutes() {
                   <Route path="/hanuman-codex" element={<HanumanCodex />} />
                   <Route path="/hanuman-codex/section/:id" element={<HanumanCodexModule />} />
                   <Route path="/sacred-geometry" element={<SacredGeometry />} />
+                  <Route path="/sacred-geometry/module/:id" element={<SacredGeometryModule />} />
                   <Route path="/shiva-lingam" element={<AlchemicalShiva />} />
                   <Route path="/shiva-lingam/module/:id" element={<AlchemicalShivaModule />} />
                   <Route path="/siddha-medicine" element={<SiddhaMedicineAcademy />} />
