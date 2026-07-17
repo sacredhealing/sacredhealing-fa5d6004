@@ -39,6 +39,9 @@ const NarasimhaContent: React.FC<{ moduleKey: string; dbModuleId: string }> = ({
         {seal.practices.map((p, i) => <li key={i} style={{ fontSize: 16, lineHeight: 1.7, color: 'rgba(255,255,255,0.75)', fontFamily: "'Cormorant Garamond',serif", marginBottom: 8 }}>{p}</li>)}
       </ol>
     ) });
+    cards.push({ sectionId: 'guided-practice', title: 'Guided Practice — Step by Step', render: () => (
+      <p style={bodyStyle}>{seal.guidedPractice}</p>
+    ) });
     cards.push({ sectionId: 'mantra', title: 'Mantra & Affirmation', render: () => (
       <div style={{ textAlign: 'center' }}>
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 600, color: seal.color, margin: '0 0 14px' }}>{seal.mantra}</p>
