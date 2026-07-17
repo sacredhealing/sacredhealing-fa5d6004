@@ -12462,6 +12462,88 @@ export type Database = {
         }
         Relationships: []
       }
+      user_vastu_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_vastu_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "vastu_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_vastu_section_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          module_id: string
+          notes: string | null
+          section_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          notes?: string | null
+          section_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          notes?: string | null
+          section_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_vastu_section_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "vastu_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_vedic_astrology_access: {
         Row: {
           expires_at: string | null
@@ -12540,6 +12622,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_water_alchemy_module_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_water_alchemy_module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "water_alchemy_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_water_alchemy_progress: {
         Row: {
           completed: boolean
@@ -12569,6 +12692,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_water_alchemy_section_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          module_id: string
+          notes: string | null
+          section_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          notes?: string | null
+          section_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          notes?: string | null
+          section_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_water_alchemy_section_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "water_alchemy_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_weekly_email_log: {
         Row: {
@@ -12761,6 +12925,39 @@ export type Database = {
           },
         ]
       }
+      vastu_courses: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          module_key: string
+          module_number: number
+          subtitle: string | null
+          tier_required: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key: string
+          module_number: number
+          subtitle?: string | null
+          tier_required?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key?: string
+          module_number?: number
+          subtitle?: string | null
+          tier_required?: string
+          title?: string
+        }
+        Relationships: []
+      }
       vedic_astrology_tiers: {
         Row: {
           created_at: string | null
@@ -12902,6 +13099,39 @@ export type Database = {
           strength?: number | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      water_alchemy_courses: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          module_key: string
+          module_number: number
+          subtitle: string | null
+          tier_required: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key: string
+          module_number: number
+          subtitle?: string | null
+          tier_required?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key?: string
+          module_number?: number
+          subtitle?: string | null
+          tier_required?: string
+          title?: string
         }
         Relationships: []
       }
