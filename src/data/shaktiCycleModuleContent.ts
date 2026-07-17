@@ -20,7 +20,7 @@ export interface ShaktiModule {
 export const SHAKTI_PHASES =
 [
   {
-    id: "menstruation" as Phase,
+    id: "menstruation" as ShaktiPhase,
     name: "Rtumati",
     subtitle: "The Sacred Release · Days 1–5",
     siddhaName: "Rakta Shakti Kala",
@@ -61,7 +61,7 @@ export const SHAKTI_PHASES =
     ],
   },
   {
-    id: "follicular" as Phase,
+    id: "follicular" as ShaktiPhase,
     name: "Shuddha Kala",
     subtitle: "The Pure Rising · Days 6–13",
     siddhaName: "Saraswati Shakti",
@@ -101,7 +101,7 @@ export const SHAKTI_PHASES =
     ],
   },
   {
-    id: "ovulation" as Phase,
+    id: "ovulation" as ShaktiPhase,
     name: "Ritukala",
     subtitle: "The Sacred Peak · Days 14–16",
     siddhaName: "Lakshmi Shakti",
@@ -141,7 +141,7 @@ export const SHAKTI_PHASES =
     ],
   },
   {
-    id: "luteal" as Phase,
+    id: "luteal" as ShaktiPhase,
     name: "Rajah Kala",
     subtitle: "The Integration · Days 17–28",
     siddhaName: "Kali-Durga Shakti",
