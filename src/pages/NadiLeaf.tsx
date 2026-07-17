@@ -1,13 +1,13 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useMembershipTier } from '@/features/membership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { useMembership } from '@/hooks/useMembership';
+import { useNadiLeafProgress } from '@/hooks/useNadiLeafProgress';
+import { hasFeatureAccess, getCourseTierRequiredRank, getSalesPageForRank } from '@/lib/tierAccess';
+import CourseSyllabus from '@/components/education/CourseSyllabus';
 import {
-  NADI_LEAF_LESSONS,
   THUMB_SCAN_READINGS,
-  MODULE_INFO,
-  type NadiLeafLesson,
-  type NadiLeafTier,
   type ThumbScanReading,
 } from '@/data/nadiLeafData';
 
@@ -17,31 +17,6 @@ const BG = '#050505';
 const CYAN = '#22D3EE';
 const GLASS = 'rgba(255,255,255,0.02)';
 const BORDER = 'rgba(255,255,255,0.05)';
-
-const TIER_ORDER: Record<NadiLeafTier, number> = { free: 0, prana: 1, siddha: 2, akasha: 3 };
-const TIER_COLOR: Record<NadiLeafTier, string> = {
-  free: 'rgba(255,255,255,0.55)',
-  prana: CYAN,
-  siddha: GOLD,
-  akasha: '#F59E0B',
-};
-const TIER_LABEL: Record<NadiLeafTier, string> = {
-  free: 'FREE',
-  prana: 'PRANA-FLOW',
-  siddha: 'SIDDHA-QUANTUM',
-  akasha: 'AKASHA INFINITY',
-};
-
-// ── TIER RESOLVER ────────────────────────────────────────────────────────────
-function getUserTierRank(tier: string | null | undefined, isAdmin: boolean): number {
-  if (isAdmin) return 3;
-  if (!tier) return 0;
-  const t = tier.toLowerCase().replace(/[-_\s]/g, '');
-  if (t.includes('akasha') || t.includes('infinity')) return 3;
-  if (t.includes('siddha') || t.includes('quantum')) return 2;
-  if (t.includes('prana') || t.includes('flow')) return 1;
-  return 0;
-}
 
 // ── THUMB SCAN DETECTOR (vision-based) ──────────────────────────────────────
 type ScanPhase = 'idle' | 'instruction' | 'scanning' | 'analyzing' | 'result';
@@ -335,73 +310,6 @@ function renderBody(bodyText: string) {
   });
 }
 
-function LessonModal({ lesson, onClose }: { lesson: NadiLeafLesson; onClose: () => void }) {
-  const tc = TIER_COLOR[lesson.tier];
-  return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, minHeight: '100vh', background: '#050505', zIndex: 900, padding: '20px 16px 60px' }}>
-      <div style={{ maxWidth: 680, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', color: tc }}>{lesson.tierLabel} · MODULE {lesson.module}</span>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 99, padding: '8px 18px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.2em' }}>← BACK</button>
-        </div>
-
-        <div style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 32, padding: '28px 20px' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', color: tc, marginBottom: 8 }}>{lesson.siddha}</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginBottom: 8, lineHeight: 1.2 }}>{lesson.title}</div>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.3)', marginBottom: 24 }}>{lesson.duration} TRANSMISSION</div>
-
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 28 }}>{lesson.overview}</p>
-
-          {/* Quote */}
-          <div style={{ borderLeft: '2px solid ' + GOLD, paddingLeft: 20, marginBottom: 28 }}>
-            <p style={{ fontSize: 14, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, marginBottom: 8 }}>"{lesson.quote}"</p>
-            <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', color: GOLD }}>— {lesson.quoteSource}</p>
-          </div>
-
-          {/* Body */}
-          <div style={{ marginBottom: 28 }}>
-            {renderBody(lesson.bodyText)}
-          </div>
-
-          {/* Mantra */}
-          <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 24, padding: 24, marginBottom: 28 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', color: GOLD, marginBottom: 12 }}>◈ SIDDHA MANTRA TRANSMISSION</div>
-            {lesson.mantra.split('\n').map((line, i) => (
-              <div key={i} style={{ fontSize: 15, fontWeight: 700, color: GOLD, letterSpacing: '0.05em', lineHeight: 1.8, textShadow: `0 0 20px rgba(212,175,55,0.3)` }}>{line}</div>
-            ))}
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 12, fontStyle: 'italic', lineHeight: 1.6 }}>{lesson.mantraMeaning}</div>
-          </div>
-
-          {/* Practices */}
-          <div style={{ marginBottom: lesson.secrets ? 28 : 0 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', color: tc, marginBottom: 16 }}>◈ SADHANA PRACTICES</div>
-            {lesson.practices.map((p, i) => (
-              <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 16, alignItems: 'flex-start' }}>
-                <div style={{ width: 24, height: 24, borderRadius: 99, background: 'rgba(212,175,55,0.1)', border: `1px solid rgba(212,175,55,0.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                  <span style={{ fontSize: 9, fontWeight: 900, color: GOLD }}>{i + 1}</span>
-                </div>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, margin: 0 }}>{p}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Secrets (Akasha only) */}
-          {lesson.secrets && lesson.secrets.length > 0 && (
-            <div style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 24, padding: 24 }}>
-              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', color: '#F59E0B', marginBottom: 16 }}>◈ AKASHIC SECRET TRANSMISSION</div>
-              {lesson.secrets.map((s, i) => (
-                <p key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: i < lesson.secrets!.length - 1 ? 14 : 0 }}>{s}</p>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── SCAN RESULT CARD ─────────────────────────────────────────────────────────
 function ScanResultCard({ reading, pattern, gender, onRescan }: { reading: ThumbScanReading; pattern: string; gender: 'male' | 'female'; onRescan: () => void }) {
   return (
     <div style={{ background: GLASS, border: `1px solid rgba(212,175,55,0.2)`, borderRadius: 40, padding: 32, marginBottom: 32 }}>
@@ -453,30 +361,48 @@ function ScanResultCard({ reading, pattern, gender, onRescan }: { reading: Thumb
 export default function NadiLeaf() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const tier = useMembershipTier();
-
-  const isAdmin = user?.id === 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
-  const userRank = getUserTierRank(tier, isAdmin);
+  const { isAdmin } = useAdminRole();
+  const { tier, loading: membershipLoading, settled } = useMembership();
+  const membershipReady = !membershipLoading && settled;
+  const { courses, progressByModuleId, stats, loading: loadingData, error: loadError } = useNadiLeafProgress(membershipReady);
 
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState<{ reading: ThumbScanReading; pattern: string } | null>(null);
-  const [activeLesson, setActiveLesson] = useState<NadiLeafLesson | null>(null);
-  const [activeModule, setActiveModule] = useState(1);
 
   const handleScanResult = (reading: ThumbScanReading, pattern: string) => {
     setShowScanner(false);
     setScanResult({ reading, pattern });
   };
 
-  const canAccess = (lessonTier: NadiLeafTier) => userRank >= TIER_ORDER[lessonTier];
-
-  const moduleLessons = NADI_LEAF_LESSONS.filter(l => l.module === activeModule);
-
-  if (activeLesson) return <LessonModal lesson={activeLesson} onClose={() => setActiveLesson(null)} />;
+  const sortedCourses = [...courses].sort((a, b) => a.module_number - b.module_number);
+  const TIER_ORDER_LIST: { slug: string; label: string }[] = [
+    { slug: 'free', label: 'Atma-Seed' },
+    { slug: 'prana-flow', label: 'Prana-Flow' },
+    { slug: 'siddha-quantum', label: 'Siddha-Quantum' },
+    { slug: 'akasha-infinity', label: 'Akasha-Infinity' },
+  ];
+  const syllabusGroups = TIER_ORDER_LIST.map((t) => {
+    const mods = sortedCourses.filter((c) => (c.tier_required || 'free') === t.slug);
+    const completed = mods.filter((c) => progressByModuleId[c.id]?.completed).length;
+    return {
+      id: `tier-${t.slug}`,
+      title: t.label,
+      meta: `${completed} / ${mods.length} modules${completed === mods.length && mods.length > 0 ? ' complete' : ''}`,
+      done: mods.length > 0 && completed === mods.length,
+      current: false,
+      lessons: mods.map((m) => {
+        const done = Boolean(progressByModuleId[m.id]?.completed);
+        const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required));
+        const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
+        return { id: m.id, number: m.module_number, title: m.title, state };
+      }),
+    };
+  });
 
   return (
     <div style={{ background: BG, minHeight: '100vh', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
       {showScanner && gender && (
         <ThumbBiometricScanner gender={gender} onResult={handleScanResult} onClose={() => setShowScanner(false)} />
       )}
@@ -487,6 +413,22 @@ export default function NadiLeaf() {
       </div>
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 20px 60px' }}>
+
+        {!user && (
+          <div style={{ marginBottom: 32, textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              style={{
+                borderRadius: 999, padding: '14px 40px', background: 'linear-gradient(135deg,#D4AF37,#B8960C)',
+                border: 'none', color: '#050505', fontSize: 11, fontWeight: 800, letterSpacing: '.28em', textTransform: 'uppercase',
+                cursor: 'pointer', boxShadow: '0 0 40px rgba(212,175,55,0.22)',
+              }}
+            >
+              Begin Initiation
+            </button>
+          </div>
+        )}
 
         {/* ── HERO ── */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -574,82 +516,33 @@ export default function NadiLeaf() {
 
         {/* ── CURRICULUM ── */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.5em', color: GOLD, marginBottom: 8 }}>◈ AGASTIYA NADI SHASTRA ACADEMY</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginBottom: 24 }}>12 Transmissions · 4 Modules</div>
-
-          {/* Module tabs */}
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 28 }}>
-            {MODULE_INFO.map(m => {
-              const canAccModule = userRank >= TIER_ORDER[m.tier];
-              const isActive = activeModule === m.module;
-              return (
-                <button key={m.module} onClick={() => setActiveModule(m.module)} style={{
-                  background: isActive ? `rgba(212,175,55,0.12)` : GLASS,
-                  border: `1px solid ${isActive ? 'rgba(212,175,55,0.3)' : BORDER}`,
-                  borderRadius: 16,
-                  padding: '10px 18px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}>
-                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', color: isActive ? GOLD : 'rgba(255,255,255,0.25)', marginBottom: 2 }}>
-                    {canAccModule ? TIER_LABEL[m.tier] : '🔒'}
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#fff' : 'rgba(255,255,255,0.4)' }}>Module {m.module}</div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Lessons */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {moduleLessons.map(lesson => {
-              const accessible = canAccess(lesson.tier);
-              const tc = TIER_COLOR[lesson.tier];
-              return (
-                <div key={lesson.id} onClick={() => accessible && setActiveLesson(lesson)} style={{
-                  background: GLASS,
-                  border: `1px solid ${accessible ? BORDER : 'rgba(255,255,255,0.03)'}`,
-                  borderRadius: 28,
-                  padding: '20px 24px',
-                  cursor: accessible ? 'pointer' : 'default',
-                  opacity: accessible ? 1 : 0.45,
-                  transition: 'border-color 0.2s',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', color: tc, background: `${tc}14`, border: `1px solid ${tc}30`, borderRadius: 99, padding: '3px 10px' }}>
-                          {lesson.tierLabel}
-                        </span>
-                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 700, letterSpacing: '0.2em' }}>{lesson.duration}</span>
-                      </div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: accessible ? '#fff' : 'rgba(255,255,255,0.4)', letterSpacing: '-0.01em', marginBottom: 4 }}>
-                        {lesson.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{lesson.siddha}</div>
-                    </div>
-                    <div style={{ color: accessible ? GOLD : 'rgba(255,255,255,0.2)', fontSize: 16, flexShrink: 0 }}>
-                      {accessible ? '→' : '🔒'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {loadError && (
+            <div style={{
+              marginBottom: 24, borderRadius: 16, border: '1px solid rgba(248,113,113,0.3)',
+              background: 'rgba(248,113,113,0.08)', padding: '14px 18px',
+            }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#F87171', margin: '0 0 4px' }}>Could not load this academy.</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', margin: 0 }}>{loadError}</p>
+            </div>
+          )}
+          <CourseSyllabus
+            accent={GOLD}
+            courseIcon={<span style={{ fontSize: 20 }}>🍃</span>}
+            courseTitle="Nadi Leaf Oracle"
+            academyName="Nadi Leaf Oracle"
+            progressLabel={`${stats.completedModules} / ${sortedCourses.length || 4} · ${stats.completionPercent}%`}
+            progressPercent={stats.completionPercent}
+            groups={syllabusGroups}
+            onLessonClick={(lessonId, locked) => {
+              if (locked) {
+                const c = sortedCourses.find((m) => m.id === lessonId);
+                navigate(getSalesPageForRank(getCourseTierRequiredRank(c?.tier_required)));
+              } else {
+                navigate(`/nadi-leaf/module/${lessonId}`);
+              }
+            }}
+          />
         </div>
-
-        {/* Upgrade prompt if not full access */}
-        {userRank < 3 && (
-          <div style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 32, padding: 28, textAlign: 'center' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', color: '#F59E0B', marginBottom: 10 }}>AKASHA INFINITY · UNLOCK ALL</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Access the Moksha Kandam & Siddha Secrets</div>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 20 }}>Module 4 reveals the 18 Siddhas' own karmic records, Babaji's inner Nadi method, and the restricted Moksha Kandam transmission.</p>
-            <button onClick={() => navigate('/membership')} style={{ background: `linear-gradient(135deg, rgba(245,158,11,0.25), rgba(212,175,55,0.1))`, border: '1px solid rgba(245,158,11,0.3)', borderRadius: 24, padding: '14px 32px', cursor: 'pointer', fontSize: 11, fontWeight: 800, color: '#F59E0B', letterSpacing: '0.25em' }}>
-              ASCEND TO AKASHA INFINITY
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 const PolymarketOracle = React.lazy(() => import("@/pages/PolymarketOracle"));
 const NadiLeaf = React.lazy(() => import("@/pages/NadiLeaf"));
+const NadiLeafModule = React.lazy(() => import("@/pages/NadiLeafModule"));
 import { Toaster } from "@/components/ui/toaster";
 import { setNavigator } from "@/utils/navigation";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -461,6 +462,7 @@ function AppRoutes() {
                   <Route path="/yogananda-codex/chapter/:id" element={<YoganandaCodexModule />} />
                   <Route path="/sacred-water" element={<SiddhaWaterAlchemy />} />
                   <Route path="/nadi-leaf" element={<NadiLeaf />} />
+                  <Route path="/nadi-leaf/module/:id" element={<NadiLeafModule />} />
               <Route path="/palm-oracle" element={<PalmOracle />} />
                   <Route path="/shakti-alchemy" element={<SovereignHormonalAlchemy />} />
                   <Route path="/mantra-reference" element={<SiddhaMantraReference />} />
