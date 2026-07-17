@@ -4960,6 +4960,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mantra_academy_courses: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          module_key: string
+          module_number: number
+          subtitle: string | null
+          tier_required: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key: string
+          module_number: number
+          subtitle?: string | null
+          tier_required?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          module_key?: string
+          module_number?: number
+          subtitle?: string | null
+          tier_required?: string
+          title?: string
+        }
+        Relationships: []
+      }
       mantra_completions: {
         Row: {
           completed_at: string
@@ -10309,6 +10342,88 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "ayurveda_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_mantra_academy_lesson_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          lesson_id: string
+          module_id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          lesson_id: string
+          module_id: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          lesson_id?: string
+          module_id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mantra_academy_lesson_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "mantra_academy_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_mantra_academy_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mantra_academy_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "mantra_academy_courses"
             referencedColumns: ["id"]
           },
         ]
