@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useWaterAlchemyProgress } from "@/hooks/useWaterAlchemyProgress";
 import { getTierRank } from "@/lib/tierAccess";
-import { Lock, ChevronDown, ChevronUp, Droplets, Sparkles, Zap, Infinity, Search } from "lucide-react";
+import { Lock, ChevronDown, ChevronUp, Droplets, Sparkles, Zap, Infinity, Search, CheckCircle } from "lucide-react";
 
 interface WS { heading: string; body: string; }
 interface WM {
@@ -1807,8 +1809,10 @@ Om Neer Amritaya Namaha.`},
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 export default function SiddhaWaterAlchemy() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { tier: memberTier } = useMembership();
   const { isAdmin } = useAdminRole();
+  const { completedModuleIds, markComplete: markModuleComplete, touchAccessed } = useWaterAlchemyProgress(Boolean(user));
   const _rank = isAdmin ? 3 : (getTierRank(memberTier) ?? 0);
   const userTier = _rank >= 3 ? "akasha_infinity" : _rank >= 2 ? "siddha_quantum" : _rank >= 1 ? "prana_flow" : "free";
   const [search, setSearch] = useState("");
@@ -1927,8 +1931,10 @@ export default function SiddhaWaterAlchemy() {
               <button
                 onClick={() => {
                   if (locked) { navigate("/prana-flow"); return; }
-                  setOpenId(open ? null : m.id);
+                  const nowOpen = open ? null : m.id;
+                  setOpenId(nowOpen);
                   setOpenSection(null);
+                  if (nowOpen && user?.id) void touchAccessed(m.id);
                 }}
                 style={{
                   width:"100%",padding:"28px 32px",
@@ -1953,6 +1959,9 @@ export default function SiddhaWaterAlchemy() {
                     }}>
                       MODULE {m.number}
                     </span>
+                    {completedModuleIds.has(m.id) && (
+                      <CheckCircle size={13} color={cfg.color} />
+                    )}
                   </div>
                   <div style={{
                     fontSize:"clamp(17px,2.5vw,22px)",fontWeight:900,letterSpacing:"-0.03em",
@@ -2073,6 +2082,36 @@ export default function SiddhaWaterAlchemy() {
                       </p>
                     ))}
                   </div>
+
+                  {/* MARK COMPLETE */}
+                  {user?.id && (
+                    <div style={{marginTop:20,display:"flex",justifyContent:"flex-end"}}>
+                      {completedModuleIds.has(m.id) ? (
+                        <div style={{
+                          display:"inline-flex",alignItems:"center",gap:6,
+                          padding:"9px 16px",borderRadius:999,
+                          background:`${cfg.color}14`,border:`1px solid ${cfg.color}44`,
+                          color:cfg.color,fontSize:10.5,fontWeight:800,
+                          letterSpacing:"0.1em",textTransform:"uppercase"
+                        }}>
+                          <CheckCircle size={13}/> Completed
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => void markModuleComplete(m.id)}
+                          style={{
+                            display:"inline-flex",alignItems:"center",gap:6,
+                            padding:"9px 16px",borderRadius:999,cursor:"pointer",
+                            background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",
+                            color:"rgba(255,255,255,0.6)",fontSize:10.5,fontWeight:800,
+                            letterSpacing:"0.1em",textTransform:"uppercase"
+                          }}
+                        >
+                          <CheckCircle size={13}/> Mark Complete
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
