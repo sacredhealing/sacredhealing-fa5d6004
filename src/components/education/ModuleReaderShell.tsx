@@ -80,6 +80,14 @@ export default function ModuleReaderShell({
     () => new Set((railGroups || []).filter((g) => g.current).map((g) => g.id))
   );
 
+  // Navigating Prev/Next (or Mark Complete's auto-advance) is a client-side
+  // route change -- the browser does not reset scroll position on its own,
+  // so without this the new module renders with the scroll still at the
+  // bottom, right where the button that was just clicked sits.
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [moduleTitle, moduleNumber]);
+
   const toggleGroup = (id: string) =>
     setOpenGroups((prev) => {
       const next = new Set(prev);

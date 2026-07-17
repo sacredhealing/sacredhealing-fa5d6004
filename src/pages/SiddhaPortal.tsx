@@ -614,7 +614,7 @@ export default function SiddhaPortal() {
         )}
 
         {/* ══ CATEGORY 1: AYURVEDA & SIDDHA MEDICINE ══ */}
-        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Fasting" ac={teal(0.9)} count={4} delay={0.06} defaultOpen>
+        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Fasting" ac={teal(0.9)} count={4} delay={0.06}>
           <HeroCard SvgIcon={Icon.Herb} label="108 Modules · Agastyar Lineage · Complete Vidya" title="Agastyar Academy"
             desc="The most comprehensive Ayurveda education ever assembled — 108 modules across all four tiers, rooted entirely in Agastyar's direct transmission from the Tamil Siddha lineage."
             tiers={[{l:'Free · M1–27',c:white(0.5)},{l:'Prana · M28–54',c:green(0.85)},{l:'Siddha · M55–81',c:teal(0.9)},{l:'Akasha · M82–108',c:gold(0.95)}]}
@@ -636,7 +636,7 @@ export default function SiddhaPortal() {
         </LibSection>
 
         {/* ══ CATEGORY 2: YOGA, KRIYA & BREATH SCIENCE ══ */}
-        <LibSection SvgIcon={Icon.Trishul} title="Yoga, Kriya & Breath Science" subtitle="Babaji · Thirumoolar · Brahma Muhurta · Pranayama · Breatharian" ac={gold(0.9)} count={5} defaultOpen>
+        <LibSection SvgIcon={Icon.Trishul} title="Yoga, Kriya & Breath Science" subtitle="Babaji · Thirumoolar · Brahma Muhurta · Pranayama · Breatharian" ac={gold(0.9)} count={5}>
           <HeroCard SvgIcon={Icon.Flame} label="Kriya · 10 Modules · Babaji" title="Kriya Yoga Mastery"
             desc="Mahavatar Babaji's direct Kriya transmission — the 18 Kriyas of the Siddha tradition, Pranayama alchemy, Khechari Mudra, and the complete path from Mantra Yoga to Samadhi."
             tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–5',c:green(0.85)},{l:'Siddha · M6–8',c:amber(0.9)},{l:'Akasha · M9–10',c:gold(0.95)}]}
