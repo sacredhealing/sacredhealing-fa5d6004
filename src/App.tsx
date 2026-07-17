@@ -89,6 +89,7 @@ const PractitionerCertification = React.lazy(() => import("./pages/PractitionerC
 const KriyaYogaMastery = React.lazy(() => import("./pages/KriyaYogaMastery"));
 const KriyaYogaModule = React.lazy(() => import("./pages/KriyaYogaModule"));
 const HolyScienceCurriculum = React.lazy(() => import("./pages/HolyScienceCurriculum"));
+const HolyScienceModule = React.lazy(() => import("./pages/HolyScienceModule"));
 const ThirumoolarPranayama = React.lazy(() => import("./pages/ThirumoolarPranayama"));
 const PranayamaModule = React.lazy(() => import("./pages/PranayamaModule"));
 const SiddhaWaterAlchemy = React.lazy(() => import("./pages/SiddhaWaterAlchemy"));
@@ -405,6 +406,7 @@ function AppRoutes() {
                   <Route path="/sqi-chat" element={<Navigate to="/quantum-apothecary" replace />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/holy-science" element={<HolyScienceCurriculum />} />
+                  <Route path="/holy-science/module/:id" element={<HolyScienceModule />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/private-sessions" element={<PrivateSessions />} />
                   <Route path="/membership" element={<Membership />} />
