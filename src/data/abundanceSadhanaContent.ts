@@ -3,6 +3,9 @@
 // dissolution, Ashta-Lakshmi attunement, Kubera's cosmic economics, and
 // Babaji's scalar activation of the causal abundance body.
 
+const GOLD = "#D4AF37";
+const PURPLE = "#7C3AED";
+
 export interface AbundanceMantra { text: string; reps: number; desc: string; }
 export interface AbundanceLesson {
   id: string; title: string; duration: string; type: string;
