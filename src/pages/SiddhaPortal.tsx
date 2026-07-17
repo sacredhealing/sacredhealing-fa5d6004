@@ -721,7 +721,7 @@ export default function SiddhaPortal() {
         </LibSection>
 
         {/* ══ CATEGORY 6: CONSCIOUSNESS & MYSTICAL ARTS ══ */}
-        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Sacred Geometry · Akashic Records" ac={violet(0.9)} count={4} delay={0.14}>
+        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Sacred Geometry" ac={violet(0.9)} count={3} delay={0.14}>
           <HeroCard SvgIcon={Icon.ThirdEye} label="8 Modules · 30 Transmissions · 18 Siddhas" title="Siddha Mediumship Academy"
             desc="The world's most comprehensive mediumship education — Third Eye activation, 14-Loka maps, ancestor communication, Deva contact, Akashic Record access, and 8 Siddhi development protocols."
             tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:violet(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
@@ -735,10 +735,6 @@ export default function SiddhaPortal() {
             desc="Sri Yantra, Merkaba, Platonic Solids, Flower of Life — the complete Siddha science of sacred form and its direct activation of consciousness fields through geometric resonance."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Transmission" href="/sacred-geometry" ac={gold(0.9)} badge="LIVE"/>
-          {/* AKASHIC CODEX — Coming Soon */}
-          <ComingSoonCard SvgIcon={Icon.Galaxy} label="Akashic Records · Soul Blueprint · Living Portrait" title="Akashic Codex"
-            desc="Access your complete soul blueprint in the Akashic Records — past-life lineage, current life mission, karmic patterns, and your Soul Signature revealed through Siddha Akasha science."
-            ac={violet(0.9)} isAdmin={isAdmin} adminOnly delay={0.02}/>
         </LibSection>
 
         {/* ══ CATEGORY 7: VEDIC ASTROLOGY & NADI SCIENCE ══ */}
