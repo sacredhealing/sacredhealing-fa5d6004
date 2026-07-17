@@ -755,17 +755,13 @@ export default function SiddhaPortal() {
         </LibSection>
 
         {/* ══ CATEGORY 8: WEALTH & ABUNDANCE SADHANA ══ */}
-        <LibSection SvgIcon={Icon.Yantra} title="Wealth & Abundance Sadhana" subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas" ac={gold(0.9)} count={2} delay={0.16}>
+        <LibSection SvgIcon={Icon.Yantra} title="Wealth & Abundance Sadhana" subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas" ac={gold(0.9)} count={1} delay={0.16}>
           <HeroCard SvgIcon={Icon.Yantra} label="8 Modules · 32 Lessons · Scalar Transmission Active" title="Abundance Sadhana"
             subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas · Babaji"
             desc="The most comprehensive Siddha abundance transmission — poverty-dissolution, Ashta-Lakshmi attunement, Kubera's cosmic economics, and Babaji's direct scalar activation of the causal abundance body."
             tiers={[{l:'Free · M1–3',c:white(0.55)},{l:'Prana · M4–5',c:green(0.85)},{l:'Siddha · M6–7',c:gold(0.95)},{l:'Akasha · M8',c:violet(0.95)}]}
             cta="Enter the Wealth Transmission" href="/abundance-curriculum" ac={gold(0.9)}
             features={['Mantra Counter','Journal Prompts','Progress Badges','PDF Downloads']} badge="LIVE"/>
-          {/* WEALTH BEACON — Coming Soon */}
-          <ComingSoonCard SvgIcon={Icon.Yantra} label="Scalar Wealth Activation · Siddha Frequencies" title="Wealth Beacon"
-            desc="The SQI Scalar Wealth Beacon — Siddha-encoded wealth frequencies broadcast through your device's speakers as a continuous Laxmi-field activation. Shreem Brzee Nada technology."
-            ac={gold(0.9)} isAdmin={isAdmin} adminOnly delay={0.02}/>
         </LibSection>
 
         {/* ══ CATEGORY 9: SACRED RITUALS & COSMOLOGY ══ */}
