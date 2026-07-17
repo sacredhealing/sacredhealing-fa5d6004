@@ -76,7 +76,7 @@ export default function JyotishModuleViewer() {
     });
   }, [sortedModules, progressByModuleId, module, isAdmin, tier]);
 
-  if (!membershipReady || !module) {
+  if (!module) {
     return (
       <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid rgba(34,211,238,.2)', borderTopColor: '#22D3EE', animation: 'spin 0.8s linear infinite' }} />

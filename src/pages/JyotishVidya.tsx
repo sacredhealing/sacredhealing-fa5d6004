@@ -58,13 +58,8 @@ export default function JyotishVidya() {
     });
   }, [sortedModules, progressByModuleId, isAdmin, tier]);
 
-  if (!membershipReady || loadingData) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid rgba(34,211,238,.2)', borderTopColor: '#22D3EE', animation: 'spin 0.8s linear infinite' }} />
-      </div>
-    );
-  }
+  // Module list is static data — render it immediately. Only progress
+  // (badges, completion counts) needs to wait for membership/auth to settle.
 
   return (
     <div style={{ minHeight: '100vh', background: '#050505', color: 'rgba(255,255,255,0.9)', paddingBottom: 104 }}>
@@ -81,6 +76,12 @@ export default function JyotishVidya() {
         >
           <ArrowLeft size={14} color={CYAN} /> Back
         </button>
+
+        {loadingData && (
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.15em' }}>
+            Syncing your progress…
+          </p>
+        )}
 
         {!user && (
           <div style={{ marginBottom: 32, textAlign: 'center' }}>
