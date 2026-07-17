@@ -1,565 +1,137 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  Flame,
-  Infinity,
-  Lock,
-  Star,
-} from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { supabase as _supabase } from '@/integrations/supabase/client';
-const supabase: any = _supabase;
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
-import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-import {
-  getCourseTierRequiredRank,
-  getSalesPageForRank,
-  canAccessJyotishModule,
-} from '@/lib/tierAccess';
-import { cn } from '@/lib/utils';
-import {
-  JYOTISH_MODULES,
-  TIER_CONFIG,
-  getModulesByTier,
-  canAccessModule,
-  type JyotishTier,
-  type JyotishModule,
-} from '@/lib/jyotishModules';
+import { useJyotishVidyaProgress } from '@/hooks/useJyotishVidyaProgress';
+import { JYOTISH_MODULES } from '@/lib/jyotishModules';
+import { hasFeatureAccess, getCourseTierRequiredRank, getSalesPageForRank } from '@/lib/tierAccess';
+import CourseSyllabus from '@/components/education/CourseSyllabus';
 
-const TIER_ICONS = {
-  free: BookOpen,
-  prana: Flame,
-  siddha: Star,
-  akasha: Infinity,
-} as const;
+const CYAN = 'rgba(34,211,238,0.9)';
 
-const TIER_ORDER: JyotishTier[] = ['free', 'prana', 'siddha', 'akasha'];
+const TIER_ORDER: { slug: 'free' | 'prana' | 'siddha' | 'akasha'; label: string }[] = [
+  { slug: 'free', label: 'Atma-Seed' },
+  { slug: 'prana', label: 'Prana-Flow' },
+  { slug: 'siddha', label: 'Siddha-Quantum' },
+  { slug: 'akasha', label: 'Akasha-Infinity' },
+];
 
-const TIER_I18N_ROW: Record<JyotishTier, 'i' | 'ii' | 'iii' | 'iv'> = {
-  free: 'i',
-  prana: 'ii',
-  siddha: 'iii',
-  akasha: 'iv',
-};
-
-interface ProgressMap {
-  [moduleId: number]: { status: string; completion_percentage: number };
-}
-
-function tierLabelKey(tierSlug: string): string {
-  const s = (tierSlug || 'free').toLowerCase();
-  if (s.includes('akasha')) return 'conversion.tiers.akasha.label';
-  if (s.includes('siddha')) return 'conversion.tiers.siddha.label';
-  if (s.includes('prana')) return 'conversion.tiers.prana.label';
-  return 'conversion.tiers.free.label';
-}
-
-const JyotishVidya: React.FC = () => {
-  const { t } = useTranslation();
+export default function JyotishVidya() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { tier: membershipTier, loading: membershipLoading, settled } = useMembership();
-  const jyotish = useJyotishProfile();
+  const { tier, loading: membershipLoading, settled } = useMembership();
   const membershipReady = !membershipLoading && settled;
+  const { progressByModuleId, loading: loadingData, error: loadError } = useJyotishVidyaProgress(membershipReady);
 
-  const [activeTier, setActiveTier] = useState<JyotishTier>('free');
-  const [expandedModule, setExpandedModule] = useState<number | null>(null);
-  const [progress, setProgress] = useState<ProgressMap>({});
-  const [dataReady, setDataReady] = useState(false);
-
-  const refreshProgress = useCallback(async () => {
-    if (!user?.id) {
-      setProgress({});
-      setDataReady(true);
-      return;
-    }
-    const { data: prog } = await supabase
-      .from('jyotish_progress')
-      .select('module_id,status,completion_percentage')
-      .eq('user_id', user.id);
-    const map: ProgressMap = {};
-    (prog || []).forEach((r: { module_id: number; status: string; completion_percentage: number }) => {
-      map[r.module_id] = { status: r.status, completion_percentage: r.completion_percentage };
-    });
-    setProgress(map);
-    setDataReady(true);
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (!membershipReady) return;
-    setDataReady(false);
-    void refreshProgress();
-  }, [membershipReady, refreshProgress]);
-
-  const tier = membershipTier ?? 'free';
-
-  const handleModuleClick = async (module: JyotishModule) => {
-    const canAccess = canAccessModule(module, tier, { isAdmin, userId: user?.id });
-    if (!canAccess) return;
-    if (user && !progress[module.id]) {
-      await supabase.from('jyotish_progress').upsert(
-        {
-          user_id: user.id,
-          module_id: module.id,
-          status: 'in_progress',
-          completion_percentage: 0,
-          last_accessed_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id,module_id' },
-      );
-      setProgress((prev) => ({
-        ...prev,
-        [module.id]: { status: 'in_progress', completion_percentage: 0 },
-      }));
-    }
-    navigate(`/jyotish-vidya/module/${module.id}`);
-  };
+  const sortedModules = useMemo(() => [...JYOTISH_MODULES].sort((a, b) => a.id - b.id), []);
 
   const completedCount = useMemo(
-    () => Object.values(progress).filter((p) => p.status === 'completed').length,
-    [progress],
+    () => Object.values(progressByModuleId).filter((p) => p.status === 'completed' || p.completion_percentage >= 100).length,
+    [progressByModuleId],
   );
+  const completionPercent = sortedModules.length > 0 ? Math.round((completedCount / sortedModules.length) * 100) : 0;
 
-  const totalAccessible = useMemo(
-    () =>
-      JYOTISH_MODULES.filter((m) =>
-        canAccessModule(m, tier, { isAdmin, userId: user?.id }),
-      ).length,
-    [tier, isAdmin, user?.id],
-  );
+  const syllabusGroups = useMemo(() => {
+    return TIER_ORDER.map((t) => {
+      const mods = sortedModules.filter((m) => m.tier === t.slug);
+      const completed = mods.filter((m) => {
+        const p = progressByModuleId[m.id];
+        return p && (p.status === 'completed' || p.completion_percentage >= 100);
+      }).length;
+      return {
+        id: `tier-${t.slug}`,
+        title: t.label,
+        meta: `${completed} / ${mods.length} modules${completed === mods.length && mods.length > 0 ? ' complete' : ''}`,
+        done: mods.length > 0 && completed === mods.length,
+        current: false,
+        lessons: mods.map((m) => {
+          const p = progressByModuleId[m.id];
+          const done = Boolean(p && (p.status === 'completed' || p.completion_percentage >= 100));
+          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier));
+          const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
+          return { id: String(m.id), number: m.id, title: m.title, state };
+        }),
+      };
+    });
+  }, [sortedModules, progressByModuleId, isAdmin, tier]);
 
-  if (!membershipReady || !dataReady) {
+  if (!membershipReady || loadingData) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050505]">
-        <Star className="h-10 w-10 animate-pulse text-[#D4AF37]" aria-hidden />
-        <p className="text-[10px] font-extrabold uppercase tracking-[0.35em] text-white/40">
-          {t('common.loading')}
-        </p>
+      <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid rgba(34,211,238,.2)', borderTopColor: '#22D3EE', animation: 'spin 0.8s linear infinite' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] pb-28 font-sans text-white/90">
-      {/* Hero */}
-      <div className="relative border-b border-white/[0.05] px-6 pb-12 pt-16 text-center">
-        <div className="mx-auto max-w-[720px]">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="mb-8 inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#D4AF37]"
-          >
-            <ArrowLeft size={14} aria-hidden />
-            {t('jyotishVidya.back')}
-          </button>
-          <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]">
-            {t('jyotishVidya.catalog.heroEyebrow')}
-          </p>
-          <h1 className="mb-4 text-[clamp(28px,5vw,48px)] font-black leading-tight tracking-[-0.04em] text-white">
-            {t('jyotishVidya.catalog.heroTitleLine1')}
-            <br />
-            <span className="text-[#D4AF37]">{t('jyotishVidya.catalog.heroTitleAccent')}</span>
-          </h1>
-          <p className="mx-auto mb-8 max-w-[560px] text-sm leading-[1.7] text-white/50">
-            {t('jyotishVidya.catalog.heroBody')}
-          </p>
-
-          {user && (
-            <div className="mx-auto flex max-w-[400px] items-center gap-4 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-6 py-4">
-              <div className="min-w-0 flex-1">
-                <div className="mb-2 flex justify-between">
-                  <span className="text-[9px] font-extrabold uppercase tracking-[0.4em] text-white/40">
-                    {t('jyotishVidya.catalog.yourProgress')}
-                  </span>
-                  <span className="text-xs font-bold text-[#D4AF37]">
-                    {t('jyotishVidya.catalog.progressFraction', {
-                      completed: completedCount,
-                      total: totalAccessible,
-                    })}
-                  </span>
-                </div>
-                <div className="h-[3px] rounded-sm bg-white/[0.05]">
-                  <div
-                    className="h-full rounded-sm bg-[#D4AF37] transition-[width] duration-500 ease-out"
-                    style={{
-                      width: `${totalAccessible ? (completedCount / totalAccessible) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-[1100px] px-4">
-        {/* Tier selector */}
-        <div className="my-8 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {TIER_ORDER.map((tierKey) => {
-            const cfg = TIER_CONFIG[tierKey];
-            const Icon = TIER_ICONS[tierKey];
-            const isActive = activeTier === tierKey;
-            const firstMod = cfg.moduleRange[0];
-            const tierReachable = canAccessJyotishModule({
-              isAdmin,
-              userId: user?.id,
-              tier,
-              moduleId: firstMod,
-            });
-            const isLocked = (tierKey as string) !== 'free' && !tierReachable;
-            const modules = getModulesByTier(tierKey);
-            const completedInTier = modules.filter((m) => progress[m.id]?.status === 'completed').length;
-            const rowKey = TIER_I18N_ROW[tierKey];
-
-            return (
-              <button
-                key={tierKey}
-                type="button"
-                onClick={() => setActiveTier(tierKey)}
-                className={cn(
-                  'relative overflow-hidden rounded-[24px] border px-3.5 pb-4 pt-[18px] text-left transition-colors',
-                  isActive
-                    ? 'border-[#D4AF37]/30 bg-[#D4AF37]/[0.06]'
-                    : 'border-white/[0.05] bg-white/[0.02]',
-                )}
-              >
-                <div
-                  className="absolute left-0 right-0 top-0 h-0.5 rounded-t-[24px]"
-                  style={{
-                    backgroundColor: cfg.color,
-                    opacity: isActive ? 1 : 0.4,
-                  }}
-                />
-                <div className="mb-2 flex items-center gap-2">
-                  <Icon size={12} className="opacity-80" style={{ color: cfg.color }} aria-hidden />
-                  <span
-                    className="text-[8px] font-extrabold uppercase tracking-[0.4em]"
-                    style={{ color: cfg.color }}
-                  >
-                    {t(`jyotishVidya.tiers.${rowKey}.label`)}
-                  </span>
-                  {isLocked && (tierKey as string) !== 'free' && (
-                    <Lock size={9} className="ml-auto shrink-0 text-white/25" aria-hidden />
-                  )}
-                </div>
-                <div className="mb-0.5 text-[13px] font-black tracking-[-0.03em] text-white">
-                  {t(tierLabelKey(cfg.slug))}
-                </div>
-                <div className="mb-2.5 text-[10px] text-white/35">
-                  {t(`jyotishVidya.tiers.${rowKey}.price`)}
-                </div>
-                {user && (
-                  <div className="text-[9px] text-white/25">
-                    {t('jyotishVidya.catalog.tierCompleted', {
-                      completed: completedInTier,
-                      total: modules.length,
-                    })}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── Your Jyotish Profile (read-only — birth data lives in one place: Jyotish Chamber) ── */}
-        {user && (
-          <div style={{
-            background: 'rgba(212,175,55,0.04)',
-            border: '1px solid rgba(212,175,55,0.18)',
-            borderRadius: 20,
-            padding: '20px 22px',
-            marginBottom: 24,
-            position: 'relative',
-            overflow: 'hidden',
-          }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5,
-              background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <Star size={16} style={{ color: '#D4AF37', flexShrink: 0 }} />
-              <div>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 700,
-                  color: '#D4AF37', lineHeight: 1.1 }}>Your Jyotish Profile</div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
-                  color: 'rgba(212,175,55,0.4)', marginTop: 2 }}>
-                  Same chart used everywhere in the app
-                </div>
-              </div>
-            </div>
-            {jyotish.isLoading ? (
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>Calculating your chart…</div>
-            ) : jyotish.ascendant || jyotish.moonSign ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                {[
-                  { label: 'Lagna', value: jyotish.ascendant },
-                  { label: 'Moon Sign', value: jyotish.moonSign },
-                  { label: 'Dasha', value: jyotish.mahadasha ? `${jyotish.mahadasha}${jyotish.antardasha ? ` — ${jyotish.antardasha}` : ''}` : '' },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
-                      color: 'rgba(212,175,55,0.38)', marginBottom: 4 }}>{label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: value ? '#D4AF37' : 'rgba(255,255,255,0.3)' }}>
-                      {value || '—'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: 0, flex: 1, minWidth: 200 }}>
-                  Add your birth details once in Jyotish Chamber — your chart will then show here, and everywhere else in the app, automatically.
-                </p>
-                <Link
-                  to="/vedic-astrology"
-                  style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 999,
-                    border: '1px solid rgba(212,175,55,0.4)', background: 'rgba(212,175,55,0.1)',
-                    color: '#D4AF37', fontSize: 10, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase',
-                    textDecoration: 'none', whiteSpace: 'nowrap' }}
-                >
-                  Open Jyotish Chamber →
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Modules */}
-        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          {getModulesByTier(activeTier).map((module) => {
-            const canAccess = canAccessModule(module, tier, { isAdmin, userId: user?.id });
-            const prog = progress[module.id];
-            const isExpanded = expandedModule === module.id;
-            const tierCfg = TIER_CONFIG[module.tier];
-            const rowKey = TIER_I18N_ROW[module.tier];
-            const salesHref = getSalesPageForRank(getCourseTierRequiredRank(tierCfg.slug));
-
-            return (
-              <div
-                key={module.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => void handleModuleClick(module)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    void handleModuleClick(module);
-                  }
-                }}
-                className={cn(
-                  'rounded-[24px] border bg-white/[0.02] p-5 transition-all',
-                  canAccess ? 'cursor-pointer' : 'cursor-default opacity-45',
-                  isExpanded ? 'border-[#D4AF37]/20 md:col-span-2' : 'border-white/[0.05]',
-                )}
-              >
-      <div className="mb-2.5 flex items-start gap-3">
-                  <div className="shrink-0">
-                    <div className="mb-1 text-[8px] font-extrabold uppercase tracking-[0.4em] text-[#D4AF37]/50">
-                      {t('jyotishVidya.moduleMeta', { num: String(module.id).padStart(2, '0') })}
-                    </div>
-                    {module.isSecret && (
-                      <div className="inline-block rounded border border-[#D4AF37]/15 bg-[#D4AF37]/[0.08] px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]">
-                        {t('jyotishVidya.module.secretBadge')}
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="mb-1 text-sm font-black leading-snug tracking-[-0.02em] text-white">
-                      {module.title}
-                    </h3>
-                    <p className="text-[11px] leading-snug text-white/40">{module.subtitle}</p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    {!canAccess ? (
-                      <Lock size={14} className="text-white/20" aria-hidden />
-                    ) : isExpanded ? (
-                      <ChevronUp size={14} className="text-white/40" aria-hidden />
-                    ) : (
-                      <ChevronDown size={14} className="text-white/40" aria-hidden />
-                    )}
-                  </div>
-                </div>
-
-                <p className="mb-3 text-xs leading-relaxed text-white/45">{module.description}</p>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className="rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.3em]"
-                    style={{
-                      color: tierCfg.color,
-                      backgroundColor: `${tierCfg.color}18`,
-                      border: `1px solid ${tierCfg.color}25`,
-                    }}
-                  >
-                    {t(tierLabelKey(tierCfg.slug))}
-                  </span>
-                  <span className="text-[10px] text-white/30">{module.duration}</span>
-                  {prog && (
-                    <div className="ml-auto flex items-center gap-1.5">
-                      {prog.status === 'completed' ? (
-                        <span className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]">
-                          {t('jyotishVidya.catalog.completeBadge')}
-                        </span>
-                      ) : (
-                        <>
-                          <div className="h-0.5 w-[50px] rounded-sm bg-white/[0.05]">
-                            <div
-                              className="h-full rounded-sm bg-[#D4AF37]"
-                              style={{ width: `${prog.completion_percentage}%` }}
-                            />
-                          </div>
-                          <span className="text-[9px] text-white/25">{prog.completion_percentage}%</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {isExpanded && canAccess && (
-                  <div className="mt-5 border-t border-white/[0.05] pt-5">
-                    <div className="grid gap-5 md:grid-cols-2">
-                      <div>
-                        <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]">
-                          {t('jyotishVidya.catalog.curriculumHeading')}
-                        </p>
-                        <ul className="flex flex-col gap-1.5">
-                          {module.topics.map((topic, i) => (
-                            <li
-                              key={i}
-                              className="flex gap-2 text-[11px] leading-snug text-white/55"
-                            >
-                              <span className="mt-0.5 shrink-0 text-[#D4AF37]/40">◈</span>
-                              <span>{topic}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        {module.sourceText && (
-                          <div className="mb-4">
-                            <p className="mb-2 text-[9px] font-extrabold uppercase tracking-[0.5em] text-white/30">
-                              {t('jyotishVidya.module.sourceLabel')}
-                            </p>
-                            <p className="text-[11px] italic leading-relaxed text-white/40">
-                              {module.sourceText}
-                            </p>
-                          </div>
-                        )}
-                        <div className="rounded-2xl border border-[#D4AF37]/[0.08] bg-black/30 p-4">
-                          <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.5em] text-white/30">
-                            {t('jyotishVidya.catalog.markProgressHeading')}
-                          </p>
-                          <div className="flex flex-col gap-2">
-                            {(['in_progress', 'completed'] as const).map((status) => (
-                              <button
-                                key={status}
-                                type="button"
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  if (!user) return;
-                                  const pct = status === 'completed' ? 100 : 50;
-                                  await supabase.from('jyotish_progress').upsert(
-                                    {
-                                      user_id: user.id,
-                                      module_id: module.id,
-                                      status,
-                                      completion_percentage: pct,
-                                      last_accessed_at: new Date().toISOString(),
-                                      ...(status === 'completed'
-                                        ? { completed_at: new Date().toISOString() }
-                                        : {}),
-                                    },
-                                    { onConflict: 'user_id,module_id' },
-                                  );
-                                  setProgress((prev) => ({
-                                    ...prev,
-                                    [module.id]: { status, completion_percentage: pct },
-                                  }));
-                                }}
-                                className={cn(
-                                  'rounded-[10px] border px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-[0.3em]',
-                                  prog?.status === status
-                                    ? 'border-[#D4AF37]/25 bg-[#D4AF37]/[0.12] text-[#D4AF37]'
-                                    : 'border-white/[0.05] bg-white/[0.03] text-white/40',
-                                )}
-                              >
-                                {status === 'in_progress'
-                                  ? t('jyotishVidya.catalog.btnInProgress')
-                                  : t('jyotishVidya.catalog.btnMarkComplete')}
-                              </button>
-                            ))}
-                          </div>
-                          <Link
-                            to={`/jyotish-vidya/module/${module.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="mt-4 flex w-full items-center justify-center rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 py-3 text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#D4AF37] transition hover:bg-[#D4AF37]/18"
-                          >
-                            {t('jyotishVidya.openModule')}
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {!canAccess && (
-                  <div className="mt-3.5 flex items-center gap-2.5 rounded-xl border border-white/[0.04] bg-white/[0.01] px-3.5 py-3">
-                    <Lock size={12} className="shrink-0 text-white/20" aria-hidden />
-                    <span className="text-[11px] text-white/30">
-                      {t('jyotishVidya.catalog.unlockLine', {
-                        tier: t(tierLabelKey(tierCfg.slug)),
-                        price: t(`jyotishVidya.tiers.${rowKey}.price`),
-                      })}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(user ? salesHref : '/auth');
-                      }}
-                      className="ml-auto shrink-0 rounded-lg border border-[#D4AF37]/20 bg-[#D4AF37]/[0.08] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]"
-                    >
-                      {user ? t('jyotishVidya.catalog.upgradeShort') : t('jyotishVidya.loginToUnlock')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+    <div style={{ minHeight: '100vh', background: '#050505', color: 'rgba(255,255,255,0.9)', paddingBottom: 104 }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px 0' }}>
+        <button
+          type="button"
+          onClick={() => navigate('/siddha-portal')}
+          style={{
+            marginBottom: 24, display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
+            borderRadius: 999, padding: '8px 16px', color: 'rgba(255,255,255,.55)',
+            fontSize: 10, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', cursor: 'pointer',
+          }}
+        >
+          <ArrowLeft size={14} color={CYAN} /> Back
+        </button>
 
         {!user && (
-          <div className="mt-12 rounded-[32px] border border-[#D4AF37]/10 bg-white/[0.01] px-6 py-10 text-center">
-            <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]">
-              {t('jyotishVidya.catalog.guestEyebrow')}
-            </p>
-            <h2 className="mb-3 text-2xl font-black tracking-[-0.03em] text-white">
-              {t('jyotishVidya.catalog.guestTitle')}
-            </h2>
-            <p className="mx-auto mb-6 max-w-[400px] text-[13px] text-white/40">
-              {t('jyotishVidya.catalog.guestBody')}
-            </p>
+          <div style={{ marginBottom: 32, textAlign: 'center' }}>
             <button
               type="button"
               onClick={() => navigate('/auth')}
-              className="rounded-[14px] bg-[#D4AF37] px-8 py-3.5 text-xs font-black uppercase tracking-[0.1em] text-[#050505]"
+              style={{
+                borderRadius: 999, padding: '14px 40px', background: 'linear-gradient(135deg,#22D3EE,#0891B2)',
+                border: 'none', color: '#050505', fontSize: 11, fontWeight: 800, letterSpacing: '.28em', textTransform: 'uppercase',
+                cursor: 'pointer', boxShadow: '0 0 40px rgba(34,211,238,0.22)',
+              }}
             >
-              {t('jyotishVidya.catalog.guestCta')}
+              Begin Initiation
             </button>
           </div>
         )}
 
-        <p className="mt-12 pb-8 text-center text-[10px] font-medium uppercase tracking-[0.35em] text-white/25">
-          {t('jyotishVidya.footer')}
-        </p>
+        {loadError && (
+          <div style={{
+            marginBottom: 24, borderRadius: 16, border: '1px solid rgba(248,113,113,0.3)',
+            background: 'rgba(248,113,113,0.08)', padding: '14px 18px',
+          }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#F87171', margin: '0 0 4px' }}>Could not load your progress.</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', margin: 0 }}>{loadError}</p>
+          </div>
+        )}
+
+        <CourseSyllabus
+          accent={CYAN}
+          courseIcon={<Star size={24} />}
+          courseTitle="Sovereign Jyotish Vidya"
+          academyName="Sovereign Jyotish Vidya"
+          progressLabel={`${completedCount} / ${sortedModules.length} · ${completionPercent}%`}
+          progressPercent={completionPercent}
+          groups={syllabusGroups}
+          onLessonClick={(lessonId, locked) => {
+            if (locked) {
+              const m = sortedModules.find((mod) => String(mod.id) === lessonId);
+              navigate(getSalesPageForRank(getCourseTierRequiredRank(m?.tier)));
+            } else {
+              navigate(`/jyotish-vidya/module/${lessonId}`);
+            }
+          }}
+        />
+
+        <footer style={{ marginTop: 40, paddingBottom: 32, textAlign: 'center' }}>
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.45em', textTransform: 'uppercase', color: 'rgba(255,255,255,.25)' }}>
+            The Eye of the Veda
+          </p>
+        </footer>
       </div>
     </div>
   );
-};
-
-export default JyotishVidya;
+}
