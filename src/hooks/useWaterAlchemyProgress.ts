@@ -1,42 +1,71 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { describeError } from '@/lib/describeError';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export interface WaterModuleProgressRow {
+export interface WaterAlchemyCourseRow {
+  id: string;
+  module_number: number;
+  module_key: string;
+  title: string;
+  subtitle: string | null;
+  tier_required: string | null;
+  is_published: boolean | null;
+}
+
+export interface WaterAlchemyProgressSnapshot {
   module_id: string;
   completed: boolean;
+  bookmarked: boolean;
   last_accessed_at?: string | null;
 }
 
-const SELECT = 'module_id, completed, last_accessed_at';
+export interface WaterAlchemyStats {
+  totalModules: number;
+  completedModules: number;
+  completionPercent: number;
+  bookmarkedModules: number;
+}
+
+const COURSE_SELECT = 'id, module_number, module_key, title, subtitle, tier_required, is_published';
+const PROGRESS_SELECT = 'module_id, completed, bookmarked, last_accessed_at';
 
 export function useWaterAlchemyProgress(enabled = true) {
   const { user } = useAuth();
-  const [progressByModuleId, setProgressByModuleId] = useState<Record<string, WaterModuleProgressRow>>({});
+  const [courses, setCourses] = useState<WaterAlchemyCourseRow[]>([]);
+  const [progressByModuleId, setProgressByModuleId] = useState<Record<string, WaterAlchemyProgressSnapshot>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!enabled || !user?.id) {
-      setProgressByModuleId({});
-      return;
-    }
+    if (!enabled) return;
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fErr } = await supabase
-        .from('user_water_alchemy_progress')
-        .select(SELECT)
-        .eq('user_id', user.id);
-      if (fErr) throw fErr;
-      const map: Record<string, WaterModuleProgressRow> = {};
-      (data || []).forEach((row: WaterModuleProgressRow) => {
-        map[row.module_id] = row;
-      });
-      setProgressByModuleId(map);
+      const { data: courseRows, error: cErr } = await supabase
+        .from('water_alchemy_courses')
+        .select(COURSE_SELECT)
+        .order('module_number', { ascending: true });
+      if (cErr) throw cErr;
+      setCourses((courseRows || []) as WaterAlchemyCourseRow[]);
+
+      if (user?.id) {
+        const { data: progRows, error: pErr } = await supabase
+          .from('user_water_alchemy_module_progress')
+          .select(PROGRESS_SELECT)
+          .eq('user_id', user.id);
+        if (pErr) throw pErr;
+        const map: Record<string, WaterAlchemyProgressSnapshot> = {};
+        (progRows || []).forEach((row: WaterAlchemyProgressSnapshot) => {
+          map[row.module_id] = row;
+        });
+        setProgressByModuleId(map);
+      } else {
+        setProgressByModuleId({});
+      }
     } catch (e: unknown) {
       setError(describeError(e));
+      setCourses([]);
       setProgressByModuleId({});
     } finally {
       setLoading(false);
@@ -51,14 +80,15 @@ export function useWaterAlchemyProgress(enabled = true) {
     async (moduleId: string) => {
       if (!user?.id) throw new Error('AUTH_REQUIRED');
       const now = new Date().toISOString();
-      const { error: upErr } = await supabase.from('user_water_alchemy_progress').upsert(
-        { user_id: user.id, module_id: moduleId, completed: true, completed_at: now, last_accessed_at: now },
+      const prevBookmarked = progressByModuleId[moduleId]?.bookmarked ?? false;
+      const { error: upErr } = await supabase.from('user_water_alchemy_module_progress').upsert(
+        { user_id: user.id, module_id: moduleId, completed: true, bookmarked: prevBookmarked, completed_at: now, last_accessed_at: now },
         { onConflict: 'user_id,module_id' },
       );
       if (upErr) throw upErr;
-      setProgressByModuleId((m) => ({ ...m, [moduleId]: { module_id: moduleId, completed: true, last_accessed_at: now } }));
+      setProgressByModuleId((m) => ({ ...m, [moduleId]: { module_id: moduleId, completed: true, bookmarked: prevBookmarked, last_accessed_at: now } }));
     },
-    [user?.id],
+    [user?.id, progressByModuleId],
   );
 
   const touchAccessed = useCallback(
@@ -66,17 +96,43 @@ export function useWaterAlchemyProgress(enabled = true) {
       if (!user?.id) return;
       const prev = progressByModuleId[moduleId];
       const now = new Date().toISOString();
-      const { error: upErr } = await supabase.from('user_water_alchemy_progress').upsert(
-        { user_id: user.id, module_id: moduleId, completed: prev?.completed ?? false, last_accessed_at: now },
+      const { error: upErr } = await supabase.from('user_water_alchemy_module_progress').upsert(
+        { user_id: user.id, module_id: moduleId, completed: prev?.completed ?? false, bookmarked: prev?.bookmarked ?? false, last_accessed_at: now },
         { onConflict: 'user_id,module_id' },
       );
       if (upErr) return;
-      setProgressByModuleId((m) => ({ ...m, [moduleId]: { module_id: moduleId, completed: prev?.completed ?? false, last_accessed_at: now } }));
+      setProgressByModuleId((m) => ({ ...m, [moduleId]: { module_id: moduleId, completed: prev?.completed ?? false, bookmarked: prev?.bookmarked ?? false, last_accessed_at: now } }));
     },
     [user?.id, progressByModuleId],
   );
 
-  const completedModuleIds = new Set(Object.values(progressByModuleId).filter((p) => p.completed).map((p) => p.module_id));
+  const toggleBookmark = useCallback(
+    async (moduleId: string) => {
+      if (!user?.id) return;
+      const prev = progressByModuleId[moduleId];
+      const nextBookmark = !(prev?.bookmarked ?? false);
+      const now = new Date().toISOString();
+      const { error: upErr } = await supabase.from('user_water_alchemy_module_progress').upsert(
+        { user_id: user.id, module_id: moduleId, completed: prev?.completed ?? false, bookmarked: nextBookmark, last_accessed_at: now },
+        { onConflict: 'user_id,module_id' },
+      );
+      if (upErr) throw upErr;
+      setProgressByModuleId((m) => ({ ...m, [moduleId]: { module_id: moduleId, completed: prev?.completed ?? false, bookmarked: nextBookmark, last_accessed_at: now } }));
+    },
+    [user?.id, progressByModuleId],
+  );
 
-  return { progressByModuleId, completedModuleIds, loading, error, refresh, markComplete, touchAccessed };
+  const completedCount = useMemo(
+    () => Object.values(progressByModuleId).filter((p) => p.completed).length,
+    [progressByModuleId],
+  );
+
+  const stats = useMemo((): WaterAlchemyStats => ({
+    totalModules: courses.length,
+    completedModules: completedCount,
+    completionPercent: courses.length > 0 ? Math.round((completedCount / courses.length) * 100) : 0,
+    bookmarkedModules: Object.values(progressByModuleId).filter((p) => p.bookmarked).length,
+  }), [courses.length, completedCount, progressByModuleId]);
+
+  return { courses, progressByModuleId, loading, error, refresh, markComplete, touchAccessed, toggleBookmark, completedCount, stats };
 }
