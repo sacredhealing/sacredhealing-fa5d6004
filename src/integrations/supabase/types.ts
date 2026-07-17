@@ -4341,6 +4341,7 @@ export type Database = {
       jyotish_profiles: {
         Row: {
           ascendant: string | null
+          ascendant_longitude: number | null
           birth_date: string | null
           birth_place: string | null
           birth_time: string | null
@@ -4354,12 +4355,14 @@ export type Database = {
           moon_nakshatra: string | null
           nakshatra_progress: number | null
           planet_longitudes: Json | null
+          retrograde_flags: Json | null
           sun_sign: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           ascendant?: string | null
+          ascendant_longitude?: number | null
           birth_date?: string | null
           birth_place?: string | null
           birth_time?: string | null
@@ -4373,12 +4376,14 @@ export type Database = {
           moon_nakshatra?: string | null
           nakshatra_progress?: number | null
           planet_longitudes?: Json | null
+          retrograde_flags?: Json | null
           sun_sign?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           ascendant?: string | null
+          ascendant_longitude?: number | null
           birth_date?: string | null
           birth_place?: string | null
           birth_time?: string | null
@@ -4392,6 +4397,7 @@ export type Database = {
           moon_nakshatra?: string | null
           nakshatra_progress?: number | null
           planet_longitudes?: Json | null
+          retrograde_flags?: Json | null
           sun_sign?: string | null
           updated_at?: string
           user_id?: string
