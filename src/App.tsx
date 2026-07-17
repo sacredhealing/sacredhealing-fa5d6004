@@ -95,6 +95,7 @@ const PranayamaModule = React.lazy(() => import("./pages/PranayamaModule"));
 const SiddhaWaterAlchemy = React.lazy(() => import("./pages/SiddhaWaterAlchemy"));
 const PalmOracle = React.lazy(() => import("./pages/PalmOracle"));
 const SovereignHormonalAlchemy = React.lazy(() => import("./pages/SovereignHormonalAlchemy"));
+const ShaktiCycleModule = React.lazy(() => import("./pages/ShaktiCycleModule"));
 const MudraAcademy = React.lazy(() => import("./pages/MudraAcademy"));
 const PujaEducationCurriculum = React.lazy(() => import("./pages/PujaEducationCurriculum"));
 const SiddhaAbundanceCurriculum = React.lazy(() => import("./pages/SiddhaAbundanceCurriculum"));
@@ -519,6 +520,7 @@ function AppRoutes() {
                   <Route path="/siddha-mediumship-academy" element={<SiddhaMediumshipAcademy />} />
                   <Route path="/admin-quantum-apothecary-2045" element={<AdminQuantumApothecary2045 />} />
                   <Route path="/sovereign-hormonal-alchemy" element={<SovereignHormonalAlchemy />} />
+                  <Route path="/sovereign-hormonal-alchemy/module/:id" element={<ShaktiCycleModule />} />
                   <Route path="/womancode" element={<Navigate to="/sovereign-hormonal-alchemy" replace />} />
                   <Route path="/siddha-photonic-regeneration" element={<SiddhaPhotonicRegeneration />} />
                   <Route path="/aetheric-heliostat" element={<AethericHeliostat />} />
