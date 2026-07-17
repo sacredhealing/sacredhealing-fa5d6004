@@ -1,5 +1,49 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Lock } from 'lucide-react';
+
+// ─── LiveDot ─────────────────────────────────────────────────────────────
+export const LiveDot: React.FC<{ color?: string }> = ({ color = 'rgba(212,175,55,0.9)' }) => (
+  <span
+    aria-hidden
+    style={{
+      display: 'inline-block',
+      width: 6,
+      height: 6,
+      marginRight: 6,
+      borderRadius: '50%',
+      background: color,
+      boxShadow: `0 0 6px ${color}`,
+      animation: 'sqLiveDot 1.6s ease-in-out infinite',
+      verticalAlign: 'middle',
+    }}
+  />
+);
+
+// ─── TierPills ───────────────────────────────────────────────────────────
+export const TierPills: React.FC<{ tiers: { l: string; c: string }[] }> = ({ tiers }) => (
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+    {tiers.map((t, i) => (
+      <span
+        key={i}
+        style={{
+          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+          fontSize: 8,
+          fontWeight: 800,
+          letterSpacing: '0.25em',
+          textTransform: 'uppercase',
+          color: t.c,
+          border: `1px solid ${t.c.replace(/[\d.]+\)$/, '0.32)')}`,
+          background: t.c.replace(/[\d.]+\)$/, '0.06)'),
+          borderRadius: 999,
+          padding: '4px 9px',
+        }}
+      >
+        {t.l}
+      </span>
+    ))}
+  </div>
+);
 
 // ─── Shared Siddha Portal UI kit ───────────────────────────────────────────
 // Extracted from SiddhaPortal.tsx so LibSection/HeroCard/ComingSoonCard,
