@@ -24,9 +24,15 @@ const PujaEducationContent: React.FC<{ moduleKey: string; dbModuleId: string }> 
   type Card = { sectionId: string; title: string; meta?: string; render: () => React.ReactNode };
   const cards: Card[] = pModule.lessons.map((lesson, i): Card => ({
     sectionId: `l${i}`, title: lesson.title, meta: lesson.duration, render: () => (
-      <ul style={{ margin: 0, paddingLeft: 18 }}>
-        {lesson.objectives.map((o, oi) => <li key={oi} style={{ ...bodyStyle, fontSize: 15.5, marginBottom: 8 }}>{o}</li>)}
-      </ul>
+      <>
+        <p style={{ ...bodyStyle, fontSize: 15.5, whiteSpace: 'pre-line', marginBottom: 18 }}>{lesson.body}</p>
+        <div style={{ background: 'rgba(217,119,6,0.05)', border: '1px solid rgba(217,119,6,0.18)', borderRadius: 18, padding: '16px 20px' }}>
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: AMBER, marginBottom: 10 }}>Objectives</div>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {lesson.objectives.map((o, oi) => <li key={oi} style={{ ...bodyStyle, fontSize: 14, marginBottom: 6 }}>{o}</li>)}
+          </ul>
+        </div>
+      </>
     ),
   }));
 
