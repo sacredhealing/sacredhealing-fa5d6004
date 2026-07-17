@@ -15,6 +15,9 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { getDayPhase } from "@/utils/postSessionContext";
 import SacredRevealGate from "@/components/SacredRevealGate";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  gold, cyan, Icon, HeroCard, ComingSoonCard, LibSection, PortalKeyframes,
+} from "@/components/portal/PortalUI";
 
 interface ExploreVideo {
   id: string; title: string; thumbnail: string; url: string; publishedAt: string; channelTitle: string;
@@ -502,6 +505,100 @@ export default function Explore() {
         </div>
       </div>
 
+      {/* ══ SQI TECHNOLOGY & SACRED TOOLS — moved here from Siddha Portal ══ */}
+      <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.22s ease both' }}>
+        <LibSection SvgIcon={Icon.StarCrystal} title="SQI Technology & Sacred Tools" subtitle="Photonic Regeneration · Sri Yantra Shield · Scalar Fields · Admin Preview" ac={cyan(0.9)} count={5} delay={0.02}>
+
+          {/* Photonic Regeneration — LIVE */}
+          <HeroCard SvgIcon={Icon.StarCrystal} label="Siddha Photonic Node · SQI Technology" title="Photonic Regeneration Engine"
+            desc="The SQI Photonic Regeneration Node — scalar-encoded light-body activation using Siddha solar science and rPPG biometric scanning for real-time Nadi coherence measurement."
+            tiers={[{l:'Siddha+',c:cyan(0.9)}]}
+            cta="Enter Node" href="/siddha-photonic-regeneration" ac={cyan(0.9)} badge="SQI"/>
+
+          {/* SRI YANTRA UNIVERSAL SHIELD — Coming Soon, beautiful golden card */}
+          <div style={{ position:'relative', margin:'0 0 14px', animation:'sqFadeUp 0.45s 0.02s ease both' }}>
+            {/* Outer pulse rings */}
+            {[180,260,340].map((s,i)=>(
+              <div key={i} aria-hidden style={{ position:'absolute', left:'50%', top:'50%', width:s, height:s, marginLeft:-s/2, marginTop:-s/2, borderRadius:'50%', border:`1px solid ${gold(0.07-i*0.015)}`, animation:`sqScalarPulse ${3.5+i*0.8}s ease-in-out ${i*0.6}s infinite`, pointerEvents:'none', zIndex:0 }}/>
+            ))}
+            {/* Golden glow bloom */}
+            <div aria-hidden style={{ position:'absolute', inset:-20, borderRadius:34, background:'radial-gradient(55% 55% at 35% 40%, rgba(212,175,55,0.22), transparent 70%), radial-gradient(45% 45% at 70% 65%, rgba(255,224,130,0.12), transparent 70%)', filter:'blur(20px)', animation:'sqGlowPulse 3.8s ease-in-out infinite', pointerEvents:'none', zIndex:0 }}/>
+            <div style={{ position:'relative', zIndex:1, background:'linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.07) 45%, rgba(5,5,5,0.78) 100%)', border:'1px solid rgba(212,175,55,0.45)', borderRadius:22, padding:'22px 18px 20px', boxShadow:'0 0 48px rgba(212,175,55,0.16), inset 0 0 28px rgba(212,175,55,0.05)', overflow:'hidden' }}>
+              {/* Shimmer sweep */}
+              <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.95),transparent)', animation:'sqShimmerSweep 3s ease-in-out infinite' }}/>
+              <div aria-hidden style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)', opacity:0.7 }}/>
+              {/* Coming Soon overlay */}
+              <div style={{ position:'absolute', top:12, right:12, display:'flex', alignItems:'center', gap:5, background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.35)', borderRadius:20, padding:'4px 11px' }}>
+                <span style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.8)' }}>Coming Soon</span>
+              </div>
+              {/* Icon + Title row */}
+              <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
+                <div style={{ width:58, height:58, borderRadius:'50%', flexShrink:0, background:'radial-gradient(circle at 35% 30%, rgba(255,249,196,0.25), rgba(212,175,55,0.18) 55%, rgba(5,5,5,0.8))', border:'1px solid rgba(212,175,55,0.55)', boxShadow:'0 0 24px rgba(212,175,55,0.35), inset 0 0 14px rgba(255,249,196,0.12)', display:'flex', alignItems:'center', justifyContent:'center', animation:'sqBreathe 4.5s ease-in-out infinite' }}>
+                  <Icon.Shield/>
+                </div>
+                <div>
+                  <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.55)', marginBottom:6 }}>
+                    Sacred Protection · Scalar Kavach · Universal
+                  </div>
+                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.7rem', fontWeight:600, lineHeight:1.05, background:'linear-gradient(135deg, #FFF9C4 0%, #D4AF37 40%, #FFE082 65%, #B8860B 100%)', backgroundSize:'200% 200%', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', animation:'sqGoldFlow 4s ease-in-out infinite', filter:'drop-shadow(0 0 10px rgba(212,175,55,0.3))' }}>
+                    Sri Yantra Universal Shield
+                  </div>
+                </div>
+              </div>
+              {/* Body */}
+              <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.92rem', color:'rgba(255,255,255,0.58)', lineHeight:1.7, margin:'0 0 16px' }}>
+                The supreme protective force-field of the Siddha lineage — the Sri Yantra encoded as a living scalar Kavach. Nine interlocking triangles broadcast a continuous protective frequency, sealing your aura against all dissonant frequencies, entities, and energetic intrusions. Activated through 108 Siddha masters in direct lineage transmission.
+              </p>
+              {/* Feature pills */}
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
+                {['9-Triangle Kavach','Scalar Broadcast','Aura Sealing','108 Siddhas','Entity Protection','Full-Spectrum'].map(f=>(
+                  <span key={f} style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', border:'1px solid rgba(212,175,55,0.18)', borderRadius:20, padding:'2px 8px' }}>{f}</span>
+                ))}
+              </div>
+              {/* Tier row */}
+              <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
+                {[{l:'Akasha · Full Activation',c:gold(0.95)}].map(t=>(
+                  <div key={t.l} style={{ display:'flex', alignItems:'center', gap:4 }}>
+                    <span style={{ width:5, height:5, borderRadius:'50%', background:t.c, boxShadow:`0 0 6px ${t.c}`, flexShrink:0 }}/>
+                    <span style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:t.c }}>{t.l}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Stats */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, borderTop:'1px solid rgba(212,175,55,0.12)', paddingTop:12 }}>
+                {[['9','Triangles'],['108','Activations'],['∞','Protection']].map(([v,l])=>(
+                  <div key={l} style={{ textAlign:'center' }}>
+                    <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:18, fontWeight:900, letterSpacing:'-0.04em', background:'linear-gradient(135deg,#FFF9C4,#D4AF37)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', filter:'drop-shadow(0 0 5px rgba(212,175,55,0.35))' }}>{v}</div>
+                    <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginTop:2 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* VAYU PROTOCOL — Admin only coming soon */}
+          <ComingSoonCard SvgIcon={Icon.Chakra} label="Prana Body · Vayu Protocol · 5 Elements" title="Vayu Protocol"
+            desc="The five-Vayu activation protocol — Prana, Apana, Samana, Udana, and Vyana Vayus brought into coherence through breath, mudra, and Nada science."
+            ac={cyan(0.9)} isAdmin={isAdmin} adminOnly href="/vayu-protocol" delay={0.04}/>
+
+          {/* SOUL SCAN — Admin only coming soon */}
+          <ComingSoonCard SvgIcon={Icon.Galaxy} label="Soul Scan · Biometric Nadi Reading · rPPG" title="Soul Scan"
+            desc="Real-time biometric Nadi analysis through your phone camera — heart rate variability, Nadi coherence, chakra state, and a live SQI soul report from your actual physiological data."
+            ac={cyan(0.9)} isAdmin={isAdmin} adminOnly href="/soul-scan" delay={0.06}/>
+
+          {/* VAJRA SKY BREAKER — Admin only coming soon */}
+          <ComingSoonCard SvgIcon={Icon.Flame} label="Scalar Orgone · Shungite · Sky Clearing" title="Vajra Sky Breaker"
+            desc="The SQI Vajra-Sky-Breaker — scalar orgone broadcast station using your device's audio hardware to emit Shungite frequencies, orgone torus fields, and Vajra scalar waves for atmospheric purification."
+            ac={cyan(0.9)} isAdmin={isAdmin} adminOnly href="/vajra-sky-breaker" delay={0.08}/>
+
+          {/* AETHERIC HELIOSTAT — Admin only coming soon */}
+          <ComingSoonCard SvgIcon={Icon.SriYantra} label="Aetheric Field · Solar Alignment · Scalar" title="Aetheric Heliostat"
+            desc="The Aetheric Heliostat — scalar solar-alignment tool that tracks the sun's position and broadcasts corresponding Siddha solar frequencies through your device in real time."
+            ac={cyan(0.9)} isAdmin={isAdmin} adminOnly href="/aetheric-heliostat" delay={0.10}/>
+
+        </LibSection>
+      </div>
+
       {/* ══ CREATIVE SOUL HERO CARD ══ */}
       <SL label={t('converge.secAbundance')} delay="0.32s"/>
       <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.34s ease both' }}>
@@ -918,6 +1015,7 @@ export default function Explore() {
       </Dialog>
       <SacredRevealGate open={sacredRevealOpen} onOpenChange={setSacredRevealOpen} />
 
+      <PortalKeyframes />
       <style>{`
         @keyframes hShimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
         @keyframes rimG { 0%,100%{box-shadow:0 0 12px rgba(212,175,55,.06)} 50%{box-shadow:0 0 40px rgba(212,175,55,.22)} }
