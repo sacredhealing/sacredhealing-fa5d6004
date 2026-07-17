@@ -95,6 +95,7 @@ const ThirumoolarPranayama = React.lazy(() => import("./pages/ThirumoolarPranaya
 const PranayamaModule = React.lazy(() => import("./pages/PranayamaModule"));
 const SiddhaWaterAlchemy = React.lazy(() => import("./pages/SiddhaWaterAlchemy"));
 const PalmOracle = React.lazy(() => import("./pages/PalmOracle"));
+const PalmOracleModule = React.lazy(() => import("./pages/PalmOracleModule"));
 const SovereignHormonalAlchemy = React.lazy(() => import("./pages/SovereignHormonalAlchemy"));
 const ShaktiCycleModule = React.lazy(() => import("./pages/ShaktiCycleModule"));
 const MudraAcademy = React.lazy(() => import("./pages/MudraAcademy"));
@@ -464,6 +465,7 @@ function AppRoutes() {
                   <Route path="/nadi-leaf" element={<NadiLeaf />} />
                   <Route path="/nadi-leaf/module/:id" element={<NadiLeafModule />} />
               <Route path="/palm-oracle" element={<PalmOracle />} />
+                  <Route path="/palm-oracle/module/:id" element={<PalmOracleModule />} />
                   <Route path="/shakti-alchemy" element={<SovereignHormonalAlchemy />} />
                   <Route path="/mantra-reference" element={<SiddhaMantraReference />} />
                   <Route path="/practice-journal" element={<SiddhaQuantumPracticeJournal />} />

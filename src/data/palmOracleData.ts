@@ -45,6 +45,7 @@ export interface ModuleData {
 
 export const PALM_ORACLE_LESSONS: Record<string, LessonData> = {
 m1l1: {
+    id: 'm1l1',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'Origins: Why the Siddhas Read Hands',
@@ -64,6 +65,7 @@ m1l1: {
     ]
   },
   m1l2: {
+      id: 'm1l2',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'The Hand as Cosmic Map: Macrocosm in the Palm',
@@ -83,6 +85,7 @@ m1l1: {
     ]
   },
   m1l3: {
+      id: 'm1l3',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'Pancha Bhuta Hasta: The Four Hand Types',
@@ -102,6 +105,7 @@ m1l1: {
     ]
   },
   m1l4: {
+      id: 'm1l4',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'The Three Nadi Channels Visible in the Palm',
@@ -121,6 +125,7 @@ m1l1: {
     ]
   },
   m1l5: {
+      id: 'm1l5',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'How Lines Change: Karma, Sadhana & the Living Palm',
@@ -140,6 +145,7 @@ m1l1: {
     ]
   },
   m1l6: {
+      id: 'm1l6',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'The Purification Protocol: Preparing to Read a Palm',
@@ -159,6 +165,7 @@ m1l1: {
     ]
   },
   m1l7: {
+      id: 'm1l7',
     tier: 'FREE TRANSMISSION',
     tierColor: '#D4AF37',
     title: 'Special Marks: Shankha, Padma & the Siddha Signatures',
@@ -181,6 +188,8 @@ m1l1: {
   // ─── MODULE II: PRANA FLOW ─────────────────────────────────────────────────
 
   m2l1: {
+
+      id: 'm2l1',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Ayush Rekha — The Life Line: Prana, Longevity & the Pranamaya Kosha',
@@ -201,6 +210,8 @@ m1l1: {
   },
 
   m2l2: {
+
+      id: 'm2l2',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Breaks, Islands & Branches: Karmic Events Written in the Life Line',
@@ -221,6 +232,8 @@ m1l1: {
   },
 
   m2l3: {
+
+      id: 'm2l3',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Hridaya Rekha — The Heart Line: Anahata Chakra & Emotional Karma',
@@ -241,6 +254,8 @@ m1l1: {
   },
 
   m2l4: {
+
+      id: 'm2l4',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Shira Rekha — The Head Line: Manas, Buddhi & the Mind of the Siddha',
@@ -261,6 +276,8 @@ m1l1: {
   },
 
   m2l5: {
+
+      id: 'm2l5',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Bhagya Rekha — The Fate Line: Dharma, Karma & the Soul\'s Pre-Birth Contract',
@@ -281,6 +298,8 @@ m1l1: {
   },
 
   m2l6: {
+
+      id: 'm2l6',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Surya Rekha — The Sun Line: Soul Radiance & the Authentic Siddha Mission',
@@ -301,6 +320,8 @@ m1l1: {
   },
 
   m2l7: {
+
+      id: 'm2l7',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'How Lines Interact: Cross-Rekha Reading from the Siddha Texts',
@@ -321,6 +342,8 @@ m1l1: {
   },
 
   m2l8: {
+
+      id: 'm2l8',
     tier: 'PRANA FLOW',
     tierColor: '#22D3EE',
     title: 'Integration Practice: The Complete Siddha Five-Rekha Reading',
@@ -343,6 +366,8 @@ m1l1: {
   // ─── MODULE III: SIDDHA QUANTUM ───────────────────────────────────────────
 
   m3l1: {
+
+      id: 'm3l1',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Guru Parvat — Mount of Jupiter: Dharma, Authority & Guru Shakti',
@@ -363,6 +388,8 @@ m1l1: {
   },
 
   m3l2: {
+
+      id: 'm3l2',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Shani Parvat — Mount of Saturn: Karma, Tapas & the Great Lessons',
@@ -383,6 +410,8 @@ m1l1: {
   },
 
   m3l3: {
+
+      id: 'm3l3',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Surya Parvat — Mount of Apollo: Atma Prakasha & the Radiant Soul Mission',
@@ -403,6 +432,8 @@ m1l1: {
   },
 
   m3l4: {
+
+      id: 'm3l4',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Budha Parvat — Mount of Mercury: Vak Shakti, Healing & Business Dharma',
@@ -423,6 +454,8 @@ m1l1: {
   },
 
   m3l5: {
+
+      id: 'm3l5',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Shukra Parvat — Mount of Venus: Kundalini, Beauty & the Creative Life Force',
@@ -443,6 +476,8 @@ m1l1: {
   },
 
   m3l6: {
+
+      id: 'm3l6',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Chandra Parvat — Mount of Moon: Intuition, Shakti & the Psychic Field',
@@ -463,6 +498,8 @@ m1l1: {
   },
 
   m3l7: {
+
+      id: 'm3l7',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Budha Rekha & Vivah Rekhas: Mercury Line, Marriage Lines & Soul Contracts',
@@ -483,6 +520,8 @@ m1l1: {
   },
 
   m3l8: {
+
+      id: 'm3l8',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Sacred Marks of the Mounts: Stars, Crosses, Grilles, Triangles & the Ring of Solomon',
@@ -503,6 +542,8 @@ m1l1: {
   },
 
   m3l9: {
+
+      id: 'm3l9',
     tier: 'SIDDHA QUANTUM',
     tierColor: '#A855F7',
     title: 'Full Integration: Reading the Complete Navagraha Temple of the Hand',
@@ -527,6 +568,8 @@ m1l1: {
   // ─── MODULE IV: AKASHA INFINITY ───────────────────────────────────────────
 
   m4l1: {
+
+      id: 'm4l1',
     tier: 'AKASHA INFINITY',
     tierColor: '#F59E0B',
     title: 'Dermatoglyphics & Past-Life Karma: Reading the Fingerprints as Samskaric Records',
@@ -547,6 +590,8 @@ m1l1: {
   },
 
   m4l2: {
+
+      id: 'm4l2',
     tier: 'AKASHA INFINITY',
     tierColor: '#F59E0B',
     title: 'Siddha Vaidya Palmistry: Medical Diagnosis Through the Hand',
@@ -567,6 +612,8 @@ m1l1: {
   },
 
   m4l3: {
+
+      id: 'm4l3',
     tier: 'AKASHA INFINITY',
     tierColor: '#F59E0B',
     title: 'Sparsham — Healing Touch: Pranic Transmission Through Palm Contact',
@@ -591,6 +638,8 @@ This teaching comes directly from Mahavatar Babaji — the deathless Himalayan S
   },
 
   m4l4: {
+
+      id: 'm4l4',
     tier: 'AKASHA INFINITY',
     tierColor: '#F59E0B',
     title: 'Advanced Jyotish-Palm Integration: Reading Graha Transit Through the Lines',
@@ -615,6 +664,8 @@ The birth chart (Kundali) is the macro map — the soul\'s complete karmic bluep
   },
 
   m4l5: {
+
+      id: 'm4l5',
     tier: 'AKASHA INFINITY',
     tierColor: '#F59E0B',
     title: 'Certification: The Siddha Palm Oracle Reading — Ceremony, Protocol & Living Practice',

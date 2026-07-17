@@ -1,30 +1,19 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Upload, BookOpen, History, ChevronDown, Lock, Unlock, Hand, X, Star } from "lucide-react";
+import { ArrowLeft, Camera, Upload, BookOpen, History, Hand } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useMembership } from "@/hooks/useMembership";
+import { usePalmOracleProgress } from "@/hooks/usePalmOracleProgress";
+import { hasFeatureAccess, getCourseTierRequiredRank, getSalesPageForRank } from "@/lib/tierAccess";
+import CourseSyllabus from "@/components/education/CourseSyllabus";
 import { toast } from "sonner";
-import {
-  PALM_ORACLE_MODULES,
-  PALM_ORACLE_LESSONS,
-  LessonData,
-  canAccessLesson,
-} from "@/data/palmOracleData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Tab = "oracle" | "course" | "archive";
 type Mode = "self" | "other";
-
-// ─── Tier badge colours ───────────────────────────────────────────────────────
-
-const TIER_STYLES: Record<string, { bg: string; border: string; text: string }> = {
-  free:           { bg: "rgba(212,175,55,0.08)",  border: "rgba(212,175,55,0.25)",  text: "#D4AF37" },
-  prana_flow:     { bg: "rgba(34,211,238,0.08)",  border: "rgba(34,211,238,0.25)",  text: "#22D3EE" },
-  siddha_quantum: { bg: "rgba(168,85,247,0.08)",  border: "rgba(168,85,247,0.25)",  text: "#A855F7" },
-  akasha_infinity:{ bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.25)",  text: "#F59E0B" },
-};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -160,196 +149,14 @@ function ScannerFrame({ scanning, imageUrl }: { scanning: boolean; imageUrl?: st
   );
 }
 
-// ─── Lesson Modal ─────────────────────────────────────────────────────────────
-
-function LessonModal({
-  lesson,
-  onClose,
-}: {
-  lesson: LessonData | null;
-  onClose: () => void;
-}) {
-  if (!lesson) return null;
-
-  const ts = TIER_STYLES[lesson.tier];
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(10px)" }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        className="w-full max-w-[430px] overflow-y-auto pb-10"
-        style={{
-          maxHeight: "90vh",
-          background: "#080808",
-          borderTopLeftRadius: 32,
-          borderTopRightRadius: 32,
-          border: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        {/* Handle */}
-        <div className="w-9 h-1 rounded-full bg-white/10 mx-auto mt-3" />
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-[10px] flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <X size={14} color="rgba(255,255,255,0.4)" />
-        </button>
-
-        {/* Header */}
-        <div className="px-6 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <div
-            className="inline-block mb-2 px-3 py-1 rounded-full text-[8px] font-black tracking-[0.3em] uppercase"
-            style={{ background: ts.bg, border: `1px solid ${ts.border}`, color: ts.text }}
-          >
-            {lesson.tierLabel}
-          </div>
-          <h2
-            className="font-black leading-tight mb-1"
-            style={{
-              fontSize: 15,
-              color: "rgba(255,255,255,0.95)",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-            }}
-          >
-            {lesson.title}
-          </h2>
-          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>
-            {lesson.siddha} · {lesson.duration}
-          </p>
-        </div>
-
-        {/* Body */}
-        <div className="px-6 pt-5 space-y-6">
-          {/* Overview */}
-          <div>
-            <Label>THE TRANSMISSION</Label>
-            <p className="mt-2 leading-relaxed" style={{ fontSize: 12, color: "rgba(255,255,255,0.65)" }}>
-              {lesson.overview.split("\n\n").map((para, i) => (
-                <span key={i}>
-                  {para}
-                  {i < lesson.overview.split("\n\n").length - 1 && <><br /><br /></>}
-                </span>
-              ))}
-            </p>
-          </div>
-
-          {/* Quote */}
-          <div
-            className="px-4 py-3 rounded-[14px]"
-            style={{
-              borderLeft: "2px solid rgba(212,175,55,0.4)",
-              background: "rgba(212,175,55,0.03)",
-            }}
-          >
-            <p className="italic leading-relaxed" style={{ fontSize: 11, color: "rgba(212,175,55,0.85)" }}>
-              {lesson.quote}
-            </p>
-            <p className="mt-2 font-bold tracking-widest uppercase" style={{ fontSize: 8, color: "rgba(255,255,255,0.3)" }}>
-              — {lesson.quoteSource}
-            </p>
-          </div>
-
-          {/* Teaching */}
-          <div>
-            <Label>SIDDHA TEACHING</Label>
-            <div className="mt-2 leading-relaxed" style={{ fontSize: 12, color: "rgba(255,255,255,0.65)" }}>
-              {lesson.bodyText.split("\n\n").map((para, i) => (
-                <p key={i} className={i > 0 ? "mt-3" : ""}>
-                  {para}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          {/* Mantra */}
-          <div
-            className="rounded-[18px] p-4 text-center"
-            style={{
-              background: "rgba(212,175,55,0.04)",
-              border: "1px solid rgba(212,175,55,0.12)",
-            }}
-          >
-            <div className="mb-2" style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.4em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
-              SACRED MANTRA FOR THIS TRANSMISSION
-            </div>
-            <p
-              className="font-bold leading-relaxed"
-              style={{
-                fontSize: 14,
-                color: "#D4AF37",
-                textShadow: "0 0 20px rgba(212,175,55,0.3)",
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                letterSpacing: "0.06em",
-              }}
-            >
-              {lesson.mantra.split("\n").map((line, i) => (
-                <span key={i}>
-                  {line}
-                  {i < lesson.mantra.split("\n").length - 1 && <br />}
-                </span>
-              ))}
-            </p>
-            <p className="mt-2 italic" style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-              {lesson.mantraMeaning}
-            </p>
-          </div>
-
-          {/* Practices */}
-          <div>
-            <Label>SIDDHA PRACTICES</Label>
-            <div className="mt-3 space-y-2">
-              {lesson.practices.map((practice, i) => (
-                <div
-                  key={i}
-                  className="flex gap-3 p-3 rounded-[14px]"
-                  style={{ background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.05)" }}
-                >
-                  <div
-                    className="w-6 h-6 rounded-[8px] flex-shrink-0 flex items-center justify-center text-[10px] font-black"
-                    style={{ background: `${ts.bg}`, color: ts.text }}
-                  >
-                    {i + 1}
-                  </div>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.65 }}>
-                    {practice}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* CTA */}
-          <button
-            onClick={onClose}
-            className="w-full py-4 rounded-[18px] font-black tracking-[0.25em] uppercase flex items-center justify-center gap-2"
-            style={{
-              background: "linear-gradient(135deg, #D4AF37, #B8960C)",
-              color: "#050505",
-              fontSize: 10,
-            }}
-          >
-            <Star size={12} />
-            COMPLETE TRANSMISSION
-            <Star size={12} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PalmOracle() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { tier: membershipTier } = useMembership();
+  const { isAdmin } = useAdminRole();
+  const { tier: membershipTier, loading: membershipLoading, settled } = useMembership();
+  const membershipReady = !membershipLoading && settled;
+  const { courses, progressByModuleId, stats, loading: loadingCourseData, error: loadCourseError } = usePalmOracleProgress(membershipReady);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -359,8 +166,6 @@ export default function PalmOracle() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [readingResult, setReadingResult] = useState<string | null>(null);
-  const [expandedModule, setExpandedModule] = useState<number | null>(0);
-  const [activeLesson, setActiveLesson] = useState<LessonData | null>(null);
   const [history, setHistory] = useState<any[]>([]);
 
   // Load archive
@@ -421,14 +226,6 @@ export default function PalmOracle() {
     } finally {
       setScanning(false);
     }
-  };
-
-  const openLesson = (lesson: LessonData) => {
-    if (!canAccessLesson(membershipTier, lesson.tier)) {
-      toast.error(`Unlock ${lesson.tierLabel} to access this transmission`);
-      return;
-    }
-    setActiveLesson(lesson);
   };
 
   // ─── Tab: Oracle ──────────────────────────────────────────────────────────
@@ -566,8 +363,41 @@ export default function PalmOracle() {
 
   // ─── Tab: Course ──────────────────────────────────────────────────────────
 
+  const syllabusGroups = (() => {
+    const tierOrder: { slug: string; label: string }[] = [
+      { slug: 'free', label: 'Atma-Seed' },
+      { slug: 'prana-flow', label: 'Prana-Flow' },
+      { slug: 'siddha-quantum', label: 'Siddha-Quantum' },
+      { slug: 'akasha-infinity', label: 'Akasha-Infinity' },
+    ];
+    const sortedCourses = [...courses].sort((a, b) => a.module_number - b.module_number);
+    return tierOrder.map((t) => {
+      const mods = sortedCourses.filter((c) => (c.tier_required || 'free') === t.slug);
+      const completed = mods.filter((c) => progressByModuleId[c.id]?.completed).length;
+      return {
+        id: `tier-${t.slug}`,
+        title: t.label,
+        meta: `${completed} / ${mods.length} modules${completed === mods.length && mods.length > 0 ? ' complete' : ''}`,
+        done: mods.length > 0 && completed === mods.length,
+        current: false,
+        lessons: mods.map((m) => {
+          const done = Boolean(progressByModuleId[m.id]?.completed);
+          const allowed = hasFeatureAccess(isAdmin, membershipTier, getCourseTierRequiredRank(m.tier_required));
+          const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
+          return { id: m.id, number: m.module_number, title: m.title, state };
+        }),
+      };
+    });
+  })();
+
   const CourseTab = () => (
     <div className="space-y-4">
+      {loadingCourseData && (
+        <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.15em" }}>
+          Syncing your progress…
+        </p>
+      )}
+
       {/* Intro card */}
       <GlassCard style={{ border: "1px solid rgba(212,175,55,0.2)", background: "rgba(212,175,55,0.02)" }}>
         <div className="p-5">
@@ -584,155 +414,36 @@ export default function PalmOracle() {
           <p style={{ fontSize: 11, lineHeight: 1.75, color: "rgba(255,255,255,0.6)" }}>
             This curriculum flows directly from the oral and textual transmissions of the 18 Tamil Siddhas — encoded in the Agastiyar Hasta Lakshanam, Bogar 7000, Thirumantiram, and the Himalayan teachings of Mahavatar Babaji.
           </p>
-          <div className="flex flex-wrap gap-2 mt-3">
-            {["4 SACRED MODULES", "29 TRANSMISSIONS", "18 SIDDHAS"].map((label) => (
-              <span
-                key={label}
-                className="px-3 py-1 rounded-full text-[8px] font-black tracking-[0.2em]"
-                style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37" }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
         </div>
       </GlassCard>
 
-      {/* Modules */}
-      {PALM_ORACLE_MODULES.map((mod, idx) => {
-        const ts = TIER_STYLES[mod.tier];
-        const isOpen = expandedModule === idx;
-        const hasAccess = canAccessLesson(membershipTier, mod.tier);
+      {loadCourseError && (
+        <div style={{ borderRadius: 16, border: "1px solid rgba(248,113,113,0.3)", background: "rgba(248,113,113,0.08)", padding: "14px 18px" }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#F87171", margin: "0 0 4px" }}>Could not load this academy.</p>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: "monospace", margin: 0 }}>{loadCourseError}</p>
+        </div>
+      )}
 
-        return (
-          <GlassCard key={mod.id}>
-            {/* Module header */}
-            <button
-              className="w-full p-5 flex items-center gap-3 text-left"
-              style={{ borderBottom: isOpen ? "1px solid rgba(255,255,255,0.06)" : "none" }}
-              onClick={() => setExpandedModule(isOpen ? null : idx)}
-            >
-              <div
-                className="w-8 h-8 rounded-[10px] flex-shrink-0 flex items-center justify-center font-black text-sm"
-                style={{ background: ts.bg, color: ts.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                {["I", "II", "III", "IV"][idx]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  className="inline-block mb-1 px-2 py-0.5 rounded-full text-[7px] font-black tracking-[0.3em] uppercase"
-                  style={{ background: ts.bg, border: `1px solid ${ts.border}`, color: ts.text }}
-                >
-                  {mod.tierLabel}
-                </div>
-                <p
-                  className="font-black text-sm leading-tight truncate"
-                  style={{ color: "rgba(255,255,255,0.92)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                >
-                  {mod.title}
-                </p>
-                <p className="mt-0.5 text-[9px]" style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>
-                  {mod.transmissions} transmissions · {mod.hours}
-                </p>
-              </div>
-              <ChevronDown
-                size={16}
-                color="rgba(255,255,255,0.3)"
-                style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s", flexShrink: 0 }}
-              />
-            </button>
-
-            {/* Module body */}
-            {isOpen && (
-              <div className="p-5 space-y-4">
-                <p style={{ fontSize: 11, lineHeight: 1.75, color: "rgba(255,255,255,0.55)" }}>
-                  {mod.description}
-                </p>
-                <p
-                  className="text-[9px] font-bold tracking-[0.15em]"
-                  style={{ color: ts.text, opacity: 0.7 }}
-                >
-                  ✦ {mod.primarySource}
-                </p>
-
-                <div
-                  className="h-px"
-                  style={{ background: "rgba(255,255,255,0.06)" }}
-                />
-
-                {/* Lesson list */}
-                <div className="space-y-2">
-                  {mod.lessons.map((lesson) => {
-                    const accessible = canAccessLesson(membershipTier, lesson.tier);
-                    return (
-                      <button
-                        key={lesson.id}
-                        onClick={() => openLesson(lesson)}
-                        className="w-full flex items-center gap-3 p-3 rounded-[16px] text-left transition-all"
-                        style={{
-                          background: "rgba(255,255,255,0.015)",
-                          border: "1px solid rgba(255,255,255,0.05)",
-                          opacity: accessible ? 1 : 0.55,
-                          cursor: accessible ? "pointer" : "default",
-                        }}
-                      >
-                        <div
-                          className="w-7 h-7 rounded-[10px] flex-shrink-0 flex items-center justify-center text-[10px] font-black"
-                          style={{ background: ts.bg, color: ts.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                        >
-                          {lesson.lessonNum}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="font-bold text-[11px] leading-tight"
-                            style={{ color: "rgba(255,255,255,0.85)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                          >
-                            {lesson.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.35)" }}>
-                              {lesson.duration}
-                            </span>
-                            <span
-                              className="text-[7px] font-black tracking-[0.2em] uppercase px-2 py-0.5 rounded-full"
-                              style={{ background: ts.bg, color: ts.text }}
-                            >
-                              {lesson.siddha.split("·")[0].trim()}
-                            </span>
-                          </div>
-                        </div>
-                        {accessible ? (
-                          <Unlock size={12} color={ts.text} style={{ flexShrink: 0 }} />
-                        ) : (
-                          <Lock size={12} color="rgba(255,255,255,0.25)" style={{ flexShrink: 0 }} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Upgrade CTA if no access */}
-                {!hasAccess && (
-                  <button
-                    onClick={() => navigate("/siddha-quantum")}
-                    className="w-full py-3 rounded-[16px] font-black text-[9px] tracking-[0.25em] uppercase"
-                    style={{
-                      background: ts.bg,
-                      border: `1px solid ${ts.border}`,
-                      color: ts.text,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    }}
-                  >
-                    UNLOCK {mod.tierLabel} →
-                  </button>
-                )}
-              </div>
-            )}
-          </GlassCard>
-        );
-      })}
+      <CourseSyllabus
+        accent="#A855F7"
+        courseIcon={<Hand size={20} />}
+        courseTitle="Palm Oracle"
+        academyName="Palm Oracle"
+        progressLabel={`${stats.completedModules} / ${courses.length || 4} · ${stats.completionPercent}%`}
+        progressPercent={stats.completionPercent}
+        groups={syllabusGroups}
+        onLessonClick={(lessonId, locked) => {
+          if (locked) {
+            const c = courses.find((m) => m.id === lessonId);
+            navigate(getSalesPageForRank(getCourseTierRequiredRank(c?.tier_required)));
+          } else {
+            navigate(`/palm-oracle/module/${lessonId}`);
+          }
+        }}
+      />
     </div>
   );
+
 
   // ─── Tab: Archive ─────────────────────────────────────────────────────────
 
@@ -853,9 +564,6 @@ export default function PalmOracle() {
           {activeTab === "archive" && <ArchiveTab />}
         </div>
       </div>
-
-      {/* Lesson Modal */}
-      <LessonModal lesson={activeLesson} onClose={() => setActiveLesson(null)} />
     </>
   );
 }
