@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useVastuProgress } from "@/hooks/useVastuProgress";
 import { getTierRank } from "@/lib/tierAccess";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -660,6 +662,7 @@ const MODULES: Module[] = [
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SiddhaVastuCurriculum() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
   const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
@@ -668,13 +671,18 @@ export default function SiddhaVastuCurriculum() {
   const [selectedModule, setSelectedModule] = useState<Module>(MODULES[0]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(MODULES[0].lessons[0]);
   const [activeSection, setActiveSection] = useState(0);
-  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const { completedLessonIds: completedLessons, markComplete: markLessonComplete, touchAccessed } = useVastuProgress(Boolean(user));
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     // On narrow screens, close sidebar by default
     if (window.innerWidth < 768) setSidebarOpen(false);
   }, []);
+
+  useEffect(() => {
+    if (user?.id && selectedLesson?.id) void touchAccessed(selectedLesson.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, selectedLesson?.id]);
 
   const totalLessons = MODULES.reduce((sum, m) => sum + m.lessons.length, 0);
   const accessibleLessons = MODULES.reduce(
@@ -691,7 +699,8 @@ export default function SiddhaVastuCurriculum() {
   };
 
   const markComplete = () => {
-    setCompletedLessons((prev) => new Set([...prev, selectedLesson.id]));
+    if (!user?.id) return;
+    void markLessonComplete(selectedLesson.id);
     // Auto-advance to next
     const modIdx = MODULES.findIndex((m) => m.id === selectedModule.id);
     const lesIdx = selectedModule.lessons.findIndex((l) => l.id === selectedLesson.id);
