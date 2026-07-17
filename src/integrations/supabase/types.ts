@@ -12432,6 +12432,36 @@ export type Database = {
           },
         ]
       }
+      user_vastu_lesson_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          lesson_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          lesson_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          lesson_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_vedic_astrology_access: {
         Row: {
           expires_at: string | null
