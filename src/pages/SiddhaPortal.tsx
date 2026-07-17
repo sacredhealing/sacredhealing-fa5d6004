@@ -7,7 +7,7 @@ import { useAyurvedaProgress } from '@/hooks/useAyurvedaProgress';
 import {
   gold, white, cyan, green, violet, amber, teal, rose,
   LABEL, ITALIC,
-  Icon, HeroCard, LibSection, PortalKeyframes,
+  Icon, HeroCard, LibSection, PortalKeyframes, LiveDot,
 } from '@/components/portal/PortalUI';
 
 
