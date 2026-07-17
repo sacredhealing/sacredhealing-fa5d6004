@@ -229,6 +229,7 @@ const OjasRasayanaModule = React.lazy(() => import("./pages/OjasRasayanaModule")
 const KayakalpaAcademy = React.lazy(() => import("./pages/KayakalpaAcademy"));
 const KayakalpaModule = React.lazy(() => import("./pages/KayakalpaModule"));
 const BrahmacharyaAcademy = React.lazy(() => import("./pages/BrahmacharyaAcademy"));
+const BrahmacharyaModule = React.lazy(() => import("./pages/BrahmacharyaModule"));
 const SiddhaDreamAcademy = React.lazy(() => import("./pages/SiddhaDreamAcademy"));
 const SiddhaMediumshipAcademy = React.lazy(() => import("./pages/SiddhaMediumshipAcademy"));
 // WomanCode merged into Shakti Cycle Intelligence
@@ -513,6 +514,7 @@ function AppRoutes() {
                    <Route path="/kayakalpa-academy" element={<KayakalpaAcademy />} />
                   <Route path="/kayakalpa-academy/module/:id" element={<KayakalpaModule />} />
                    <Route path="/brahmacharya-academy" element={<BrahmacharyaAcademy />} />
+                  <Route path="/brahmacharya-academy/module/:id" element={<BrahmacharyaModule />} />
                   <Route path="/dream-academy" element={<SiddhaDreamAcademy />} />
                   <Route path="/siddha-mediumship-academy" element={<SiddhaMediumshipAcademy />} />
                   <Route path="/admin-quantum-apothecary-2045" element={<AdminQuantumApothecary2045 />} />

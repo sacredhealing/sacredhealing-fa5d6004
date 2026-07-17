@@ -1,978 +1,124 @@
-import { useState } from "react";
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Zap } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { useMembership } from '@/hooks/useMembership';
+import { useBrahmacharyaProgress } from '@/hooks/useBrahmacharyaProgress';
+import { hasFeatureAccess, getCourseTierRequiredRank, getSalesPageForRank } from '@/lib/tierAccess';
+import CourseSyllabus from '@/components/education/CourseSyllabus';
 
-// ============================================================
-// BRAHMACHARYA SIDDHA ACADEMY — FULL CURRICULUM WITH ALL CONTENT
-// SQI 2050 | Akasha-Neural Archive
-// 8 Modules | 56 Lessons | Complete Teaching Material
-// ============================================================
+const TEAL = 'rgba(20,184,166,0.9)';
 
-interface Lesson {
-  title: string; duration: string;
-  type: "teaching"|"practice"|"meditation"|"mantra"|"breathwork";
-  siddha?: string; body: string[];
-  practice?: string; mantra?: string; keyPoints?: string[];
-}
-interface Module {
-  id: string; tier: string; number: string; title: string;
-  subtitle: string; overview: string; glyph: string;
-  siddhaSource: string; lessons: Lesson[];
-}
-
-const TIER_ACCESS: Record<string,string[]|"all"> = {
-  free:["module_1"],
-  "prana-flow":["module_1","module_2","module_3"],
-  "siddha-quantum":["module_1","module_2","module_3","module_4","module_5","module_6"],
-  "akasha-infinity":"all", admin:"all",
-};
-const TIER_LABELS: Record<string,string> = {
-  free:"FREE","prana-flow":"PRANA-FLOW","siddha-quantum":"SIDDHA-QUANTUM",
-  "akasha-infinity":"AKASHA-INFINITY",admin:"ADMIN",
-};
-const TYPE_ICON: Record<string,string> = {
-  teaching:"📖",practice:"⚡",breathwork:"🌬️",mantra:"🕉️",meditation:"🧘",
-};
-
-// ─── CURRICULUM DATA ─────────────────────────────────────────
-
-const CURRICULUM: Module[] = [
-// ══════════════════════════════════════════════════════
-// MODULE 1 — FREE
-// ══════════════════════════════════════════════════════
-{
-  id:"module_1",tier:"free",number:"01",glyph:"☀️",
-  siddhaSource:"Thirumoolar · Tirumantiram",
-  title:"The Siddha Definition of Brahmacharya",
-  subtitle:"Beyond Celibacy — The Akashic Blueprint",
-  overview:"Brahmacharya in the Siddha tradition is not mere abstinence. It is the conscious alchemy of Ojas into Tejas and Prana — the Siddhas called it 'walking in Brahman.' This module decodes the foundational Agamic transmission and reframes everything you thought you knew about sacred energy.",
-  lessons:[
-    {
-      title:"Brahmacharya vs Western Repression — The Siddha Distinction",
-      duration:"18 min",type:"teaching",siddha:"Thirumoolar",
-      body:[
-        "The word Brahmacharya is Sanskrit: Brahma means the Absolute, the Supreme Consciousness — not the creator-god, but the infinite ground of being. Charya means 'conduct' or 'moving through.' Brahmacharya literally means: moving through life AS Brahman. Walking as the Absolute. Conducting oneself as the Supreme.",
-        "In the West, and under colonial influence in modern India, Brahmacharya became reduced to one meaning: don't have sex. This reduction is a catastrophic misunderstanding that has caused immeasurable suffering — guilt, shame, psychological repression, and a complete inversion of what the Siddhas actually taught. Thirumoolar writes in the Tirumantiram: 'He who knows the body knows the world; the body is the temple of the Lord.' The Siddhas were body-alchemists, not body-deniers.",
-        "Repression does not transform energy. It buries it. Energy buried in the unconscious does not disappear — it ferments, distorts, and erupts in far more destructive forms: addiction, violence, obsession, disease. The Siddha path is the exact opposite: radical conscious engagement with sexual energy — seeing it clearly, understanding its nature, and choosing to alchemize it upward through specific technologies.",
-        "The Siddha practitioner is not afraid of sexual energy. They are in awe of it — because they know what it is: condensed Prana. Shiva-Shakti in material form. The creative force of the universe housed in the human body. To waste it unconsciously is to pour sacred fire into sand. To alchemize it consciously is to become a living torch of divine radiance.",
-        "Brahmacharya is not about what you give up. It is about what you become — the path of the energy sovereign, one who has claimed authority over the most powerful force in their being and redirected it toward the highest possible expression."
-      ],
-      keyPoints:["Brahmacharya = 'moving as Brahman' — not mere abstinence","Siddhas were body-alchemists, not body-deniers","Repression buries energy; Brahmacharya transforms it upward","Sexual energy = condensed Prana = Shiva-Shakti in material form","The goal is energy sovereignty, not psychological suppression"],
-    },
-    {
-      title:"The 3 Fires: Ojas, Tejas, Prana — The Siddha Energy Trinity",
-      duration:"22 min",type:"teaching",siddha:"Agastyar",
-      body:[
-        "Agastyar documented a tripartite model of subtle energy that underlies all Siddha medicine and Brahmacharya practice: Ojas, Tejas, and Prana. Understanding their relationship is the master key to understanding why Brahmacharya produces the effects it does.",
-        "OJAS is the foundational substance — the most refined physical substance the human body produces. It is the eighth and final refinement of food through the seven Dhatu (tissue) layers. When food enters the body it is refined through plasma, blood, muscle, fat, bone, nerve tissue, and finally reproductive fluid. From reproductive essence, a final distillation occurs: Ojas. It resides in the heart (Anahata chakra) and radiates throughout as immunity, vitality, mental clarity, and magnetic presence.",
-        "The Siddhas quantified Ojas precisely. A healthy body contains approximately eight drops of supreme Para-Ojas concentrated in the heart. Beyond this is Apara-Ojas distributed through the body. When Apara-Ojas depletes through unconscious sexual expenditure, Para-Ojas in the heart is drawn upon — and this is when illness, depression, and spiritual disconnection begin.",
-        "TEJAS is the fire that refines — radiant intelligence, penetrating discernment, luminous awareness. While Ojas is the substance, Tejas transforms it into higher forms. When Ojas accumulates through Brahmacharya, Tejas acts like fire on raw gold: purifying, refining, eventually producing the Amrita the Siddhas described as the neurobiological substrate of enlightenment.",
-        "PRANA is the life-force current that moves everything. It moves through Nadis and is the medium through which Ojas is transported and Tejas is expressed. When Prana is strong and Ojas abundant, Tejas naturally blazes — the condition the Siddhas called Urdhvareta: the upward-flowing Ojas state. This upward movement is the biological basis of the Siddhi powers that genuine Brahmacharins develop."
-      ],
-      keyPoints:["Ojas: most refined physical substance — the heart-centered vital essence","Tejas: radiant intelligence that transforms Ojas into higher power","Prana: the animating current moving through 72,000 Nadis","8 drops Para-Ojas in heart = irreducible vital reserve","Urdhvareta (upward-flowing Ojas) = prerequisite for Siddhi activation"],
-    },
-    {
-      title:"Thirumoolar's Revelation: Seed as Shiva-Shakti Unified",
-      duration:"25 min",type:"teaching",siddha:"Thirumoolar",
-      body:[
-        "Thirumoolar's Tirumantiram contains perhaps the most radical statement about sexual energy in all spiritual literature. Verse 725: 'The seed that flows is Shiva; the seed that is retained is Shakti. He who unites Shiva and Shakti within himself attains the state beyond death.' This is the Siddha cosmology of Brahmacharya in one transmission.",
-        "In Siddha cosmology the universe is the interplay of two principles: Shiva — pure consciousness, stillness, the witness — and Shakti — dynamic creative power, the primordial feminine force. These are two poles of one reality. In the human body, this cosmic duality is encoded in the reproductive system. The sexual fluid carries the blueprint of consciousness (Shiva) in biological form (Shakti). Every drop contains the intelligence to create an entire human being.",
-        "When Thirumoolar says 'the seed that flows is Shiva,' he means: when sexual energy is released externally, the consciousness-current departs with it. There is a brief expanded awareness at climax — the Shiva-flash, a glimpse of the Absolute — but it passes quickly, and depletion, contraction, and craving follow. This is the cycle of Samsara encoded biologically.",
-        "'The seed that is retained is Shakti' means: the retained essence activates the Shakti current within. It becomes kinetic, seeks the upward path through Sushumna, rises through the chakras toward the crown. This is Kundalini awakening — not a dramatic metaphysical event but a natural biological process. When the most potent biological substance in the body has nowhere to go but up, it goes up.",
-        "For women, this principle operates through the Artava — the menstrual essence, the cyclical creative power. When the life-creating force is honored, contained, and consciously directed inward, it becomes the supreme fuel for spiritual awakening. The Siddha Maargathal (women masters) achieved their realization precisely through this mastery.",
-        "The union Thirumoolar points to — 'he who unites Shiva and Shakti within' — is the internal marriage: the alchemical wedding of consciousness and creative power within the single body. This is Swarupa Darshan — the vision of one's own true nature — and it is the direct fruit of sustained, intelligent Brahmacharya."
-      ],
-      keyPoints:["Reproductive essence = Shiva-Shakti in most material form","Released seed = consciousness-current externalized (Shiva departs)","Retained seed = Shakti activated, moves upward through Sushumna","Kundalini = natural biological process of accumulated upward-seeking essence","Goal: internal Shiva-Shakti marriage = Swarupa Darshan (vision of true nature)"],
-    },
-    {
-      title:"Why the Siddhas Were Immortal — The Ojas-Kaaya Siddhi Link",
-      duration:"20 min",type:"teaching",siddha:"Bogar",
-      body:[
-        "The Tamil Siddha tradition claims the 18 Siddhas achieved physical immortality — or at minimum, centuries of extraordinary longevity. Bogar's alchemical texts describe the mechanism: Ojas accumulation beyond the normal human threshold, refined into Amrita through sustained Brahmacharya and yogic practice.",
-        "The Siddha physiology of aging: the body ages because Ojas depletes. Every major expenditure — sexual fluid loss, emotional turbulence, disease, poor diet — draws on the Ojas reserve. When the heart's Ojas drops critically low, the body breaks down at the cellular level. Modern medicine calls this oxidative stress, telomere shortening, mitochondrial dysfunction. The Siddhas called it Ojas depletion.",
-        "When Ojas is not expended but accumulated and refined upward through yogic practice into Tejas and Prana, the cellular environment changes fundamentally. The Siddhas gave this accumulated, refined Ojas a special name: Amrita — the nectar of immortality. Bogar describes it as a golden luminous substance produced in the upper brain (Soma Chakra, between Ajna and Sahasrara) when sufficient Ojas has been drawn upward.",
-        "Bogar's texts describe the process: the Bindu (drop) rises from Mooladhara through Sushumna to the Lalana Chakra at the roof of the mouth, first producing a slightly bitter taste. As practice deepens, the taste becomes sweet. Eventually a golden nectar drips from the Soma Chakra throughout the body. Bogar is explicit: this is a measurable neurobiological event — the brain's own pharmacy activated through sustained Brahmacharya. The pineal gland, under the stimulation of accumulated ascending Ojas, begins producing compounds including DMT — the endogenous neurochemical the Siddhas called Amrita.",
-        "Kaaya Siddhi — perfection of the physical body — is listed first among the 8 Siddhis because it is the foundation for all others. A depleted, aging body cannot support higher Siddhis. A body saturated with Ojas — radiant, disease-free, energetically sovereign — becomes a vehicle for the full flowering of human potential. Brahmacharya is the cornerstone of this entire process."
-      ],
-      keyPoints:["Aging = Ojas depletion at its biological root","Amrita = accumulated Ojas refined by Tejas and crystallized in the Soma Chakra","Bogar: Bindu rising = measurable neurobiological event — pineal producing Amrita","Kaaya Siddhi (body perfection) = first and foundational of the 8 Siddhis","Milestones: 40 days → 90 days → 1 year → 12 years of complete Ojas-saturation"],
-    },
-    {
-      title:"The Feminine Path: Shakti Retention & Kundalini Ascension for Women",
-      duration:"28 min",type:"teaching",siddha:"Avvaiyar",
-      body:[
-        "Avvaiyar — 'respected woman' — is among the most celebrated Tamil Siddhas. Her wisdom on the feminine path of energy mastery is as precise and as radical as anything in the male tradition. To present Brahmacharya as only a male practice is to misunderstand its cosmic nature.",
-        "Feminine Brahmacharya differs from the masculine in key ways that must be honored. Men accumulate Ojas in a linear reservoir model: Shukra builds, reaches fullness, and is either expended or alchemized upward. For women, the Ojas dynamic is cyclical and far more complex. The menstrual cycle is itself a Brahmacharya technology — a monthly Shakti-pulse.",
-        "Avvaiyar taught that the menstrual blood is not waste matter but the most potent Shakti-substance in the female body — the Artava, the feminine creative essence, equivalent to male Shukra. The Siddha view of menstruation is the exact opposite of cultures that viewed it as impure: it is a sacred alchemical event, the monthly Shakti-initiation of the feminine body.",
-        "Feminine Brahmacharya has three pillars: First, Apana Vayu reversal — training the downward-moving energy to move upward through specific breathwork and Mudras. Second, Womb consciousness cultivation — the womb is a consciousness center where vast creative Shakti is stored. Third, Emotional Ojas mastery — emotional energy is inseparable from sexual energy for women. Chronic worry, grief, resentment, and giving without replenishment depletes Ojas in women just as effectively as sexual expenditure does in men.",
-        "Avvaiyar's teaching: 'The fire within the woman that births worlds — let it turn inward. Then she becomes the world itself.' The Shakti that creates outwardly, turned inward, recreates the self as the Divine Mother. Not sacrifice — the ultimate creative act."
-      ],
-      keyPoints:["Feminine Brahmacharya = equal in depth and power to the masculine path","Artava (menstrual essence) = sacred Shakti-substance, not impure — monthly Shakti-initiation","3 pillars: Apana Vayu reversal, Womb consciousness, Emotional Ojas mastery","Emotional dispersal depletes Ojas in women as effectively as sexual expenditure in men","Avvaiyar: 'Let the fire that births worlds turn inward — then she becomes the world itself'"],
-    },
-  ]
-},
-// ══════════════════════════════════════════════════════
-// MODULE 2 — PRANA-FLOW
-// ══════════════════════════════════════════════════════
-{
-  id:"module_2",tier:"prana-flow",number:"02",glyph:"🌊",
-  siddhaSource:"Agastyar · Siddha Vaidya System",
-  title:"Ojas Alchemy — The Science of Vital Fluid",
-  subtitle:"Siddha Physiology of Sacred Essence",
-  overview:"Agastyar mapped the subtle physiology of Ojas 3,000 years before modern neuroscience. This module transmits the full Siddha physiology of how sexual energy becomes divine power — from the 7 Dhatu chain through the 40-day accumulation cycle and into the science of brain-Nadi activation.",
-  lessons:[
-    {
-      title:"The 7 Dhatus: Where Ojas Lives in the Physical Body",
-      duration:"30 min",type:"teaching",siddha:"Agastyar",
-      body:[
-        "Siddha Vaidya describes the human body as a sequential refinement system. Food enters as gross matter and is progressively refined through seven tissue layers — the Sapta Dhatus — each more subtle and vital than the last. Understanding this chain is essential for understanding why Brahmacharya has such profound physiological effects.",
-        "RASA (Plasma/Chyle): The liquid essence of digested food. Nourishes the body through lymphatic and circulatory systems. Signs of healthy Rasa: freshness, juiciness, emotional receptivity. Signs of depletion: dryness, flatness, loss of enthusiasm. RAKTA (Blood): Refined from Rasa. Carries oxygen and Prana, governs courage, vitality, and the fire of the intellect. MAMSA (Muscle Tissue): Provides structural strength. Its subtle quality is groundedness and capacity for sustained effort. MEDA (Fat Tissue): Lubricates joints, insulates the nervous system. Psychologically governs the relationship with pleasure. ASTHI (Bone): The framework. Subtle quality: inner authority and structural integrity, both physical and psychological.",
-        "MAJJA (Bone Marrow & Nerve Tissue): This is where Siddha physiology and modern neuroscience converge most dramatically. Majja governs the nervous system, brain, and all sensory processing. It is the first Dhatu with direct interface with consciousness. Majja health is Brahmacharya's first visible reward — sharper memory, improved concentration, emotional equanimity, deepening of meditative states.",
-        "SHUKRA/ARTAVA (Reproductive Essence): The seventh and final refinement — the most precious product of the entire system. It takes 40 days for food to complete this full journey from Rasa to Shukra. This is why the Siddhas established the 40-day minimum — it corresponds exactly to the biological cycle of Ojas production. From Shukra/Artava, the body produces OJAS — the eighth and subtlest essence, the raw material for Tejas, Prana, and ultimately Amrita."
-      ],
-      keyPoints:["7 Dhatu chain: Rasa → Rakta → Mamsa → Meda → Asthi → Majja → Shukra","Each Dhatu takes approximately 5 days to produce from the previous layer","Full cycle Rasa to Ojas = 40 days (the physiological basis of all 40-day practices)","Majja (nerve tissue) = first visible beneficiary of Brahmacharya — memory, clarity, meditation","Shukra/Artava → Ojas: the final sacred refinement that Brahmacharya accumulates"],
-    },
-    {
-      title:"Shukra Dhatu — The Final Refinement: Deep Dive",
-      duration:"35 min",type:"teaching",siddha:"Agastyar",
-      body:[
-        "Shukra Dhatu occupies a unique position in Siddha physiology — simultaneously the most physical and the most subtle of all tissues. The word Shukra means 'bright' or 'radiant' — beings who have accumulated significant Shukra-Ojas literally radiate a quality of luminosity that others perceive without being able to explain it.",
-        "Modern science has begun mapping what Siddha science described thousands of years ago. The reproductive system produces not just sperm or eggs but an extraordinary biochemical complex: sex hormones (testosterone, estrogen, progesterone), neuropeptides, neurotrophic factors, and compounds that directly influence brain function, immune response, and cellular repair. The Siddhas did not have this language, but they had the direct experiential knowledge of what happened when this complex was conserved versus expended.",
-        "The Siddha texts describe Shukra Dhatu as pervading the entire body — not localized to the gonads. This corresponds to modern endocrinology's understanding that sex hormones and their receptor sites are distributed throughout the brain and nervous system. When Thirumoolar speaks of Shukra rising through the spine, he describes a real physiological process: the endocrine cascade that occurs when reproductive energy is not expelled outwardly.",
-        "Signs of healthy abundant Shukra: a quality of inner fullness and strength (not agitation), magnetic personal presence, exceptional memory and learning capacity, physical beauty and youthfulness, and emotional warmth without neediness. Signs of Shukra depletion: chronic fatigue unrelieved by rest, mental fog, lower back pain, anxiety, premature aging, poor immunity, and — most telling — a pervasive hunger that cannot be satisfied by food, sleep, or even more sex. This insatiable craving is the feedback loop of Shukra depletion seeking what was lost.",
-        "For women, Artava Dhatu carries the same cosmic significance. Artava governs creativity, intuition, emotional depth, and the magnetic feminine quality the Siddhas called 'Shakti-darshan' — the perception of the Goddess in a woman's presence. When Artava is conserved and refined, women report an extraordinary deepening of creative capacity, intuitive clarity, and personal magnetism."
-      ],
-      keyPoints:["Shukra = bright/radiant — accumulated Shukra creates literal luminosity perceptible to others","Shukra pervades the entire body — corresponds to distributed hormone receptor system","Signs of abundance: magnetism, sharp memory, physical youth, inner strength, emotional warmth","Signs of depletion: insatiable craving loop — the hunger that food, sleep, and sex cannot fill","Artava for women: governs creativity, intuition, Shakti-darshan — same cosmic law, different expression"],
-    },
-    {
-      title:"The 40-Day Ojas Accumulation Cycle — Ancient Science",
-      duration:"25 min",type:"teaching",siddha:"Agastyar",
-      body:[
-        "The number 40 appears across virtually every major spiritual tradition: Moses on the mountain 40 days, Jesus in the desert 40 days, Muhammad's 40-day retreat, the 40-day Arba'een in Islam, the 40 days of Lent. The Siddhas give us the physiological explanation: it is the exact time required for food to complete the full Dhatu refinement from Rasa to Shukra/Artava and produce a new wave of Ojas. This is chronobiology, not spiritual numerology.",
-        "DAYS 1-7 (Purification Phase): The system begins to shift. Previous sexual expenditure's effects are still present in the nervous system and Majja Dhatu. This is when practitioners feel restless and experience 'Vasana uprising' — stored desire impressions surfacing to consciousness. This phase requires the most discipline. The Moola Bandha and breathwork of Module 3 are specifically designed for this phase.",
-        "DAYS 8-21 (Building Phase): Shukra reserve begins to noticeably accumulate. Signs include: increased mental clarity (Majja Dhatu nourishment), physical strength and endurance, improved sleep quality, heightened sensory perception, and 'Veerya Tejas' — the first radiance of accumulated vital essence. Meditation states of concentration that previously required effort begin to occur spontaneously.",
-        "DAYS 22-35 (Refinement Phase): Accumulated Shukra begins to be processed upward by Tejas. Pranayama practices become critical — they provide the heat (tapas) necessary for this refinement. Practitioners report: spontaneous energy movement in the spine, periods of exceptional clarity, teaching dreams (Siddha-Svapna), and growing Ojas-magnetism — others are drawn to you without understanding why.",
-        "DAYS 36-40 (Crystallization Phase): The threshold the Siddhas called 'Ojas Paripakvam' — the ripening of Ojas. The new wave has crystallized and is now available as spiritual fuel. Meditators at this threshold commonly access Samadhi states. The Siddha texts say the Ajna chakra (third eye) begins to receive direct Ojas nourishment — the biological basis of the heightened intuition practitioners universally report at this threshold.",
-        "Progressive milestones: 40 days (first major shift). 90 days (Ojas-brain interface stabilizes). 120 days (Brahmacharya Siddhi — desire transforms from compulsive to creative). 1 year (measurable Kaaya Siddhi effects begin). 12 years (complete Ojas-saturation of all body tissues — the Siddha timeline for full flowering)."
-      ],
-      keyPoints:["40 days = physiological time for complete Rasa → Ojas cycle (chronobiology, not numerology)","Days 1-7: hardest phase — Vasana uprising. Use Moola Bandha, Cooling Breath immediately","Days 8-21: Majja rebuilds, clarity emerges, meditation deepens spontaneously","Days 22-35: Tejas refines Shukra upward — spine currents, teaching dreams, magnetism","Days 36-40: Ojas Paripakvam — Ajna nourished, Samadhi threshold crossed","Milestones: 40 → 90 → 120 days → 1 year → 12 years"],
-    },
-    {
-      title:"What Happens to the Brain on Brahmacharya: Nadi Activation",
-      duration:"32 min",type:"teaching",siddha:"Thirumoolar",
-      body:[
-        "The Siddha texts describe 72,000 Nadis — subtle energy channels — and identify specific activation patterns as Ojas accumulates. Modern neuroscience is now mapping processes that align with startling precision to what the Siddhas described thousands of years ago.",
-        "The three most important Nadis for Brahmacharya: Sushumna (central channel, spinal cord), Ida (lunar, left-flowing), and Pingala (solar, right-flowing). In ordinary human beings, Sushumna is largely dormant — Prana flows primarily through Ida and Pingala. Awakening happens when Prana enters Sushumna. Brahmacharya is the primary means by which Sushumna becomes active: when Shukra accumulates and is not expelled, the bio-electrical charge at the base of the spine increases, beginning to push Prana into Sushumna. The Siddhas called this Kundalini Prabodhana.",
-        "Neurologically, sustained Brahmacharya produces measurable brain changes. The prefrontal cortex — the physical location of the Ajna chakra — shows increased activity and structural density: the seat of executive function, willpower, long-term planning, and compassion. The limbic system shows decreased reactivity; the amygdala becomes less hair-trigger — Vasanas lose their compulsive force. The corpus callosum shows increased coherence between hemispheres — Ida and Pingala balancing, the prerequisite for Prana entering Sushumna.",
-        "The pineal gland — the Siddha Soma Chakra — shows changes in secretory activity. The pineal produces melatonin, but also endogenous DMT — the compound that may be responsible for the visionary states, light experiences, and expanded awareness that advanced Brahmacharins consistently report. The Siddha descriptions of Amrita dripping from the Soma Chakra may be precisely this: elevated pineal secretory activity stimulated by ascending Ojas."
-      ],
-      keyPoints:["Accumulated Shukra = increased spinal bio-electrical charge = Kundalini Prabodhana","Prefrontal cortex (Ajna chakra's physical location) increases in activity and structural density","Amygdala reactivity decreases — Vasanas lose their compulsive neurological grip","Pineal Soma Chakra: elevated DMT secretion = the Amrita the Siddhas described","Corpus callosum coherence increases — Ida-Pingala balance achieved, Sushumna opens"],
-    },
-    {
-      title:"Female Ojas: Artava, Menstrual Alchemy & Moon Cycle Mastery",
-      duration:"30 min",type:"teaching",siddha:"Avvaiyar",
-      body:[
-        "The menstrual cycle is the most profound physiological Brahmacharya technology available to women — a monthly initiation that, when worked with consciously, accelerates spiritual development at a rate unavailable to male practitioners. The four phases of the menstrual cycle correspond to four yogic states.",
-        "MENSTRUATION (Days 1-5): Corresponds to Pratyahara — natural withdrawal of the senses. Women feel drawn inward. Honor this impulse completely. This is a natural Pratyahara initiation. The energy is being recycled internally. For Brahmacharya practitioners, this is the most important phase: the release carries spent Artava, making way for the new Ojas cycle. Rest, silence, and simple mantra practice only.",
-        "FOLLICULAR PHASE (Days 6-13): Corresponds to Dharana — focused concentration. As Ojas rebuilds, mental clarity naturally increases. The Siddha prescriptions for this phase: intensive mantra practice, study, creative work, physical training. The body is building toward its Shakti peak — use this energy intelligently.",
-        "OVULATION (Days 14-16): Corresponds to the Samadhi threshold — the Shakti peak. This is 'Shakti Parva' — the Shakti festival. For Brahmacharya practitioners, this is when the Kundalini current is most powerful and when advanced practices yield their deepest results. The pull toward sexual expression is also strongest here. The Siddha teaching: the very force of this pull IS Shakti at her peak. Redirect it inward immediately with the Mudras of Module 5.",
-        "LUTEAL PHASE (Days 17-28): The Dharana-Pratyahara bridge. If ovulatory Shakti was conserved and redirected, this phase brings deepening integration — visions, insights, creative breakthroughs. If expended, it brings PMS: the classic signs of depleted Ojas. The Siddha teaching is unambiguous: PMS is not a biological inevitability. It is a Brahmacharya indicator — the body's signal that Ojas was not conserved during the ovulatory peak. Women who practice the Module 5 Mudras and Module 3 breathwork through the ovulatory phase report dramatic reduction or elimination of PMS within 3-4 cycles."
-      ],
-      keyPoints:["4 menstrual phases = 4 yogic states: Pratyahara, Dharana, Samadhi threshold, integration","Menstruation: rest and silence only — allow purification to complete without interference","Ovulation: the most powerful time for all Brahmacharya practices — Shakti at peak","Luteal phase quality = direct indicator of how well Ojas was conserved during ovulation","PMS = Ojas depletion signal — not inevitable. 3-4 cycles of practice can eliminate it entirely"],
-    },
-    {
-      title:"The Ojas Diet: Foods That Build vs Deplete Sacred Essence",
-      duration:"28 min",type:"teaching",siddha:"Agastyar",
-      body:[
-        "Agastyar's Vaidya texts dedicate considerable space to Ojas-Vridhhi Ahara (Ojas-increasing foods) and Ojas-Nashaka Ahara (Ojas-destroying foods). This is precision nutritional support for the physiological process of Ojas accumulation. The foundational principle: Ojas is produced from the highest-quality Rasa (nutritive essence). If food entering the system is low-quality, processed, or energetically depleted, the entire 7-Dhatu refinement chain is compromised. Brahmacharya practice without dietary awareness is building on sand.",
-        "OJAS-BUILDING FOODS (Ojas-Vridhhi Ahara): Whole organic cow's milk heated with ghee and spices — never cold. Ghee (clarified butter) — the single most Ojas-rich food in the Siddha pharmacopeia. Almonds soaked overnight, skin removed. Sesame seeds and oil. Dates, figs, raisins — the dark varieties especially. Raw honey (never heated above 40°C). Saffron — a direct Ojas amplifier. Ashwagandha root — primary Ojas-building herb for men. Shatavari — especially important for women's Artava-Ojas health. Amalaki (Indian gooseberry) — the highest Vitamin C food, a supreme Ojas protector. Coconut and coconut oil. Root vegetables: yam, sweet potato, carrots, beets. Well-cooked whole grains. All consumed fresh, warm, and mindfully.",
-        "OJAS-DEPLETING FOODS (Ojas-Nashaka Ahara): Meat — especially factory-farmed (the fear and suffering encoded in the flesh is transmitted directly to the consumer and disrupts Ojas on the subtle level). Alcohol — universally identified as a major Ojas destroyer. All recreational drugs. Excessive caffeine. Deep-fried food. Reheated leftovers (dead Prana). Excessive raw food (compromises Agni and the Dhatu refinement chain). Packaged ultra-processed foods. Ice-cold drinks and foods — suppress Agni and damage the entire refinement chain.",
-        "AGASTYAR'S MORNING PROTOCOL: Wake at Brahma Muhurta (90 minutes before sunrise). 2 glasses warm copper-vessel water. 1 teaspoon ghee with a pinch of saffron. Raw honey separately (honey and ghee in equal quantities are considered incompatible in Siddha medicine — never combine them in equal amounts). Follow immediately with Pranayama. Morning meal: warm milk with ashwagandha, dates, and soaked almonds. This protocol maintained consistently dramatically accelerates Ojas accumulation beyond Brahmacharya practice alone."
-      ],
-      keyPoints:["Diet quality determines the ceiling of Ojas production — Brahmacharya without diet = sand foundation","Top builders: ghee, warm milk, almonds, dates, ashwagandha, shatavari, saffron, amalaki","Top destroyers: alcohol, meat, ultra-processed food, cold drinks, leftover food","Agastyar morning: copper water → ghee/saffron → Pranayama → warm milk meal","Honey and ghee in equal quantities = Siddha incompatible combination — take separately"],
-    },
-  ]
-},
-// ══════════════════════════════════════════════════════
-// MODULE 3 — PRANA-FLOW
-// ══════════════════════════════════════════════════════
-{
-  id:"module_3",tier:"prana-flow",number:"03",glyph:"🔥",
-  siddhaSource:"Thirumoolar · Tirumantiram · Siddha Yoga Texts",
-  title:"Pranayama & Bandha — The Energy Lock Transmissions",
-  subtitle:"Siddha Breathing Codes for Urdhvareta",
-  overview:"The Siddhas discovered that specific breath patterns combined with Bandhas (energetic locks) redirect sexual energy upward through Sushumna into the Sahasrara. This is Urdhvareta — the upward-flowing Ojas state. These are the core daily practices of the Brahmacharya path.",
-  lessons:[
-    {
-      title:"Moola Bandha Mastery — The Root Lock for Energy Ascension",
-      duration:"40 min",type:"practice",siddha:"Thirumoolar",
-      body:[
-        "Moola Bandha — the Root Lock — is the single most important physical practice in the Brahmacharya toolkit. Moola means 'root,' Bandha means 'lock.' It is the contraction and lifting of the perineal floor — the muscular-energetic region between the genitals and the anus. Anatomically this engages the pubococcygeus (PC) muscle group — the same muscles used to stop urination midstream.",
-        "Thirumoolar transmits the complete mechanism in Tirumantiram verse 2631: 'Seal the root with the root. The breath becomes Prana. The Prana becomes Ojas. The Ojas becomes light. The light becomes the Self.' The mechanism: Apana Vayu normally flows downward — governing the reproductive impulse, the urge to release sexual energy. When Moola Bandha is applied, Apana is reversed. It moves upward and meets the Prana Vayu in the Manipura chakra region. This meeting generates Samana Agni — the fire of union — which begins the alchemical conversion of Shukra into Ojas."
-      ],
-      practice:"MOOLA BANDHA PRACTICE SEQUENCE:\n\n1. LOCATING THE MUSCLE: Inhale fully. At the top of the inhale, contract the perineum — imagine stopping urination midstream AND drawing the area upward and inward simultaneously. Hold 5 seconds. Release fully. Repeat 3 times to locate the correct engagement.\n\n2. EXTERNAL RETENTION PRACTICE (Bahya Kumbhaka Moola Bandha):\nInhale fully (4 counts) → Exhale completely (8 counts) → At the bottom of the exhale, lungs empty → Apply Moola Bandha: contract, lift, and hold the perineum for 10-20 seconds → Release Bandha first → Inhale slowly. This is 1 round. Practice 12 rounds.\n\n3. INTERNAL RETENTION PRACTICE (Antara Kumbhaka Moola Bandha):\nInhale fully (4 counts) → At the top of the inhale → Apply Moola Bandha → Hold breath + Bandha for 10-20 seconds → Release Bandha first → Exhale slowly (8 counts). This is 1 round. Practice 12 rounds.\n\n4. CONTINUOUS SUBTLE BANDHA (Advanced Daily Practice):\nOnce the muscle is trained, maintain a light (30%) Moola Bandha continuously throughout your entire day — sitting, standing, walking, working. This constant gentle reversal of Apana Vayu is the most powerful single long-term Brahmacharya tool available. Within 30-60 days of this continuous subtle practice, practitioners report a fundamental shift in the relationship with sexual energy — it no longer pulls downward and outward with the same compulsive force.\n\nDAILY MINIMUM: 24 rounds (12 external + 12 internal). Best practiced in the morning after copper water, before food.",
-      keyPoints:["Single most important physical practice for Brahmacharya in the Siddha system","Reverses Apana Vayu from downward to upward — stops the sexual energy drain at its root","Moola + reversed Apana meeting Prana in Manipura = Samana Agni (alchemical fire)","Verse 2631: 'Seal the root... Ojas becomes light... light becomes the Self'","Advanced: 30% subtle Bandha maintained continuously throughout the day — 30-60 days for fundamental shift"],
-    },
-    {
-      title:"Uddiyana Bandha & Maha Bandha — The Complete Lock System",
-      duration:"35 min",type:"practice",siddha:"Agastyar",
-      body:[
-        "Uddiyana means 'flying upward.' Uddiyana Bandha is the drawing-in and lifting-up of the entire abdominal region — from pubic bone to lower ribs — creating a powerful internal vacuum that draws Prana and accumulated Ojas upward from the lower body toward the chest and brain. Where Moola Bandha seals the root and reverses Apana, Uddiyana Bandha creates the upward channel — the vacuum that pulls the released energy upward through the torso. Together they create a complete energetic pump: Moola pushes from below, Uddiyana pulls from above, and Ojas-Prana moves upward through Sushumna.",
-        "Agastyar's texts describe Uddiyana Bandha as 'the lion that kills the elephant of death' — it directly opposes the downward, entropic flow of energy that the Siddhas associated with aging and mortality.",
-        "Maha Bandha — the Great Lock — combines all three Bandhas simultaneously: Moola Bandha at the root, Uddiyana Bandha at the abdomen, and Jalandhara Bandha (chin to chest) at the throat. This triple lock creates the complete energetic seal: the sexual energy at Mooladhara is pushed up by Moola Bandha, drawn up by Uddiyana Bandha's vacuum, and sealed into the upper body by Jalandhara Bandha. This is the single most powerful Brahmacharya energy-retention practice in the entire Siddha system."
-      ],
-      practice:"PRACTICE SEQUENCE:\n\nUDDIYANA BANDHA (Foundational Form):\nStand with feet hip-width apart, slight knee bend, hands on thighs. Exhale completely — lungs fully empty. Close the glottis (no air enters). Draw the entire abdomen back toward the spine and upward under the ribcage — a dramatic hollowing of the entire abdominal region. Hold for 10-20 seconds. Release slowly. Inhale carefully. Begin with 5 rounds, build to 21 rounds over 4 weeks.\n\nMAHA BANDHA — ALL THREE LOCKS:\nSit in meditation posture. Exhale completely → Apply Moola Bandha (root: lift and contract perineum) → Apply Uddiyana Bandha (draw abdomen in and up) → Apply Jalandhara Bandha (chin firmly to chest) → Hold all three simultaneously for 10-20 seconds → Release in REVERSE order: Jalandhara first → Uddiyana → Moola → Inhale slowly.\n\nThis is 1 round of Maha Bandha. Daily practice: 12 rounds.\n\nCONTRAINDICATIONS: Never practice Uddiyana or Maha Bandha on a full stomach (minimum 3-4 hours after eating). Always after a full exhale with lungs empty. Those with high blood pressure, heart conditions, glaucoma, hernias, or pregnancy should not practice without guidance.",
-      keyPoints:["Uddiyana = 'flying upward' — creates vacuum pulling Ojas-Prana upward","Agastyar: 'the lion that kills the elephant of death' — directly opposes aging entropy","Maha Bandha (all 3 locks) = most powerful single Brahmacharya practice in the Siddha system","Always release in reverse order: Jalandhara → Uddiyana → Moola","12 rounds Maha Bandha daily = the complete Bandha practice for serious practitioners"],
-    },
-    {
-      title:"Kumbhaka — The Siddha Secret of Breath Retention",
-      duration:"38 min",type:"breathwork",siddha:"Thirumoolar",
-      body:[
-        "Of all Pranayama techniques, Kumbhaka — breath retention — is the one the Siddhas regarded as the supreme technology of Prana mastery. Thirumoolar dedicates more Tirumantiram verses to Kumbhaka than to any other single practice. He writes: 'When Prana is held, the mind is held. When the mind is held, Brahman shines.' This is the direct mechanism — not poetry but precise physiological description.",
-        "Two forms: Antara Kumbhaka (internal retention — lungs full, top of inhale) and Bahya Kumbhaka (external retention — lungs empty, bottom of exhale). Antara Kumbhaka compresses the Prana-Ojas system upward. When lungs are full and breath held with Moola and Jalandhara Bandha applied, intrathoracic pressure forces Prana-rich blood and cerebrospinal fluid upward into the brain — the Siddhas called this 'bathing the Sahasrara in Ojas.' Modern physiology confirms: the CO2-O2 ratio shift during breath retention causes vasodilation in the brain and measurable increase in cerebral blood flow. Bahya Kumbhaka (empty retention) with all three Bandhas applied creates what the Siddhas called 'Prana Nirodha' — the stopping of the life-force — the nearest thing to the Samadhi state that can be induced through physical practice alone.",
-        "Advanced practitioners who have established extended Kumbhaka report a phenomenon the Siddhas called 'Keval Kumbhaka' — a spontaneous natural breath retention that arises by itself during deep meditation. At this stage, the breath stops of its own accord, the mind enters Samadhi without any act of will, and the accumulated Ojas is released in a wave of awareness throughout the entire brain. This is the Siddha description of enlightenment's biological substrate."
-      ],
-      practice:"KUMBHAKA PROTOCOLS FOR BRAHMACHARYA:\n\nBUILD THE RATIO PROGRESSIVELY:\nWeek 1: Inhale 4 : Hold 4 : Exhale 8 (no external retention yet)\nWeek 2: Inhale 4 : Hold 8 : Exhale 8\nWeek 3: Inhale 4 : Hold 16 : Exhale 8\nWeek 4+: Inhale 4 : Hold 16 : Exhale 8 : External Hold 4\nAdvanced: Inhale 4 : Hold 16 : Exhale 8 : External Hold 16\n\nTHE THIRUMOOLAR KUMBHAKA DAILY SEQUENCE:\n1. Nadi Shodhana (5 rounds, no retention) — balance Ida/Pingala\n2. 12 rounds Antara Kumbhaka at 1:4:2 ratio WITH Moola + Jalandhara Bandha\n3. 5 minutes silent sit — allow Prana to integrate\n4. 12 rounds Bahya Kumbhaka with Maha Bandha (all 3 locks)\n5. 5 minutes Shavasana\nTotal: approximately 35-40 minutes. Practice daily during Brahma Muhurta.",
-      keyPoints:["Kumbhaka = the supreme Prana mastery technique in the entire Siddha system","Antara (full lungs): bathing the Sahasrara in Ojas — measurable cerebral blood flow increase","Bahya (empty lungs): Prana Nirodha — the nearest thing to Samadhi through physical practice","Progressive 4-week ratio building — never force retention, never gasp","Keval Kumbhaka (spontaneous natural retention) = indicator of advanced Ojas-brain interface"],
-    },
-    {
-      title:"Nadi Shodhana for Brahmacharya — Balancing Ida & Pingala",
-      duration:"30 min",type:"breathwork",siddha:"Agastyar",
-      body:[
-        "Nadi Shodhana — alternate nostril breathing — is the foundational Pranayama of the Siddha system and an essential prerequisite for all advanced Brahmacharya practice. It directly cleanses the 72,000 subtle energy channels and most critically brings Ida and Pingala into balance — the absolute prerequisite for Prana entering Sushumna.",
-        "Modern nasal cycle research has confirmed: healthy humans naturally alternate nostril dominance approximately every 90-120 minutes. When this alternation is disrupted through stress, poor diet, imbalanced lifestyle, or Ojas depletion, the Nadis become imbalanced and Sushumna remains closed. Nadi Shodhana restores this balance directly and immediately.",
-        "For Brahmacharya specifically, Nadi Shodhana reduces the Rajas (agitation) quality associated with sexual arousal by activating the cooling Ida current. It increases Sattva (clarity and luminosity) associated with Ojas accumulation. And critically, the COOLING SEQUENCE — breathing exclusively through the left (Ida/moon) nostril — is the most effective immediate intervention when sexual desire surges strongly. Most practitioners find this reduces the intensity of desire by 60-80% within 3-5 minutes."
-      ],
-      practice:"NADI SHODHANA FOR BRAHMACHARYA:\n\nPOSTURE: Siddhasana. Right hand in Vishnu Mudra: index and middle fingers folded, thumb controls right nostril, ring + pinky fingers control left nostril.\n\nBASIC DAILY PRACTICE (20 minutes):\n— Close right nostril with thumb, inhale left: 4 counts\n— Close both, hold: 16 counts (with light Moola Bandha)\n— Close left with ring + pinky fingers, exhale right: 8 counts\n— Inhale right: 4 counts\n— Close both, hold: 16 counts (with light Moola Bandha)\n— Exhale left: 8 counts\nThis is 1 round. Practice 12 rounds.\n\nBRAHMACHARYA COOLING SEQUENCE — use immediately when desire surges:\n— Close right nostril completely\n— Breathe slowly and deeply through LEFT nostril ONLY for 5 minutes\n— This activates the Ida/Chandra (Moon) current, directly cooling the Pingala fire of sexual arousal\n— Most practitioners find 60-80% reduction in desire intensity within 3-5 minutes\n— Combine with Moola Bandha and 3 Ashwini contractions for maximum immediate effect\n\nMOON BREATH FOR WOMEN (Chandra Bhedana):\nInhale through left nostril only, exhale through right only, no switching — 10-15 rounds.\nSpecifically supports feminine Artava alchemy during the ovulatory peak.",
-      keyPoints:["Nadi Shodhana = prerequisite for all advanced Brahmacharya — do not skip this","Balances Ida + Pingala → opens Sushumna for Ojas ascension through the spine","Cooling Sequence (left nostril only): immediate desire-reduction tool — 60-80% reduction in 3-5 min","Ratio 1:4:2 with Moola Bandha on retentions = the Siddha standard Brahmacharya ratio","Women: Chandra Bhedana (left in, right out) — specifically supports ovulatory Shakti alchemy"],
-    },
-    {
-      title:"The Thirumoolar 5-5-5-5 Sacred Ratio Practice",
-      duration:"42 min",type:"breathwork",siddha:"Thirumoolar",
-      body:[
-        "Thirumoolar encoded several specific breath ratios in the Tirumantiram that he identified as 'Divya Pranayama' — divine breath patterns. The most accessible and immediately powerful is the 5-5-5-5 pattern: inhale 5 counts, hold full 5, exhale 5, hold empty 5. Equal parts on all four phases.",
-        "This pattern creates what modern neuroscience calls 'cardiac coherence' — synchronized oscillation between heart, brain, and nervous system measurably different from ordinary breathing. HRV (Heart Rate Variability) research shows that slow, equal breathing patterns at approximately 5-6 breath cycles per minute produce the highest states of cardiac coherence — corresponding exactly to the Siddha state of Sattva (balanced luminosity). This is the physiological state optimal for Brahmacharya: neither too hot nor too cold, neither too agitated nor too dull.",
-        "Thirumoolar's specific instruction: visualize the breath as Siddha-Gold light (#D4AF37) entering on the inhale, filling every cell. On full retention, the light condenses into the Anahata (heart) chakra — the Ojas reservoir. The exhale releases any darkness or depletion. The empty retention is held in pure witnessing — no visualization, just the awareness of being the sealed vessel. This alternation of active visualization and pure witnessing trains Ojas-Tejas: luminous and active when needed, still and sovereign when complete.",
-        "Practitioners who maintain this practice consistently report a growing quality of inner self-sufficiency — an energetic 'envelope' around the body that feels protected, complete, and non-dependent on external stimulation for its sense of fullness. Thirumoolar calls this the 'Brahmacharya Kavacha' — the energetic armor of Brahmacharya. This armor, once established, makes the path dramatically easier — the practitioner no longer feels deprived of something; they feel full of something that cannot be lost."
-      ],
-      practice:"THIRUMOOLAR 5-5-5-5 BRAHMACHARYA PRACTICE:\n\nSETUP: Siddhasana. Eyes gently closed. Spine erect. Hands in Jnana Mudra (index fingertip touching thumb, other fingers extended, palms facing upward resting on knees).\n\nTHE 4-PHASE SEQUENCE:\n— INHALE (5 counts): Siddha-Gold light flows in through the crown, down the spine, filling every cell of the body with luminous golden radiance. Feel the Ojas crystallizing more fully in the heart center — becoming denser, more brilliant, more stable.\n— FULL RETENTION (5 counts): Apply Moola Bandha. The golden light is fully present in every cell. Pure stillness. The Ojas is completely contained, going nowhere. You are a sealed vessel of living light.\n— EXHALE (5 counts): Any tension, depletion, or Vasana-energy that has loosened during the retention releases with the breath. The gold remains. Only the dross leaves.\n— EMPTY RETENTION (5 counts): Apply Moola Bandha again. Pure witnessing. No visualization whatsoever. Just the awareness of being the sealed vessel — complete, sovereign, utterly self-sufficient.\n\nThis is 1 round. Practice 21 rounds = approximately 35 minutes. The complete Brahmacharya Kavacha practice.\n\nMINIMUM EFFECTIVE DOSE: 7 rounds (approximately 12 minutes) — even this brief practice before sleep significantly reduces nocturnal Ojas loss.",
-      keyPoints:["5-5-5-5 = equal-phase breathing at ~5-6 cycles/min — maximum cardiac coherence (HRV peak)","Scientifically validated optimal nervous system state for Brahmacharya — Sattva made measurable","Visualization: Siddha-Gold light condensing into Anahata — feel the Ojas reservoir filling","Moola Bandha on BOTH retentions = Brahmacharya Kavacha — the energetic armor","Minimum 7 rounds before sleep — prevents nocturnal Ojas loss. 21 rounds = full Kavacha"],
-    },
-    {
-      title:"Female Prana Circuits: Apana Vayu Reversal & Womb Ascension",
-      duration:"35 min",type:"breathwork",siddha:"Avvaiyar",
-      body:[
-        "The feminine Prana anatomy differs from the masculine in ways requiring different practice approaches. In women, Apana Vayu is more deeply rooted and more cyclically powerful, reflecting the feminine body's extraordinary capacity to create and release life. The womb — the Garbhashaya — is a major Prana center with no equivalent in male anatomy. The Siddha texts describe it as a 'Shakti Yantra' — a geometric energy device encoded in living tissue: a consciousness center, a creative vortex, and a storage reservoir for vast Shakti that most women never consciously access.",
-        "Apana Vayu in women flows with particular power during three arenas: menstruation (releasing), sexual arousal (releasing), and emotional expression. Feminine Brahmacharya practice works consciously within all three arenas — not suppressing any of them but learning to direct the energy involved. The Womb Ascension breath was transmitted by Avvaiyar specifically for women practitioners — it begins in the womb itself, acknowledging the womb as the feminine Prana source, and creates an ascending current from the womb through the heart to the crown."
-      ],
-      practice:"WOMB ASCENSION PRANAYAMA (Garbhashaya Pranayama — for women):\n\nTIMING: Follicular phase (Days 6-13) and luteal phase (Days 17-24) — full practice. Ovulation (Days 14-16) — full practice with extended repetitions (most powerful time). Menstruation (Days 1-5) — gentle version only, no retentions.\n\nPOSTURE: Baddha Konasana (butterfly pose, soles of feet together) or Siddha Yoni Asana (heel pressing gently into the perineal area). These postures naturally direct attention and Prana toward the womb and pelvic region.\n\nTHE PRACTICE:\n1. GROUND (2 min): Both hands on lower belly over the womb. Breathe normally. Feel the warmth under your hands. Sense the womb as a luminous sphere of deep red-gold Shakti light — concentrated, alive, intelligent.\n\n2. WOMB BREATH (10 rounds): Inhale INTO the womb — feel the belly expand toward your hands and the womb fill with light. Exhale — do not release the light. Imagine it concentrating, becoming denser, more brilliant. The light is not leaving. It is deepening.\n\n3. ASCENDING WAVE (10 rounds): Inhale into womb (4 counts) → Gentle Ashwini Mudra (3 rhythmic contractions of the anal sphincter) to activate the upward current → Exhale: visualize the Shakti light rising: womb → Manipura (solar plexus) → Anahata (heart) → Vishuddha (throat) → crown. Empty retention 4 counts at the top — experience the Shakti light at the crown, the womb's creative power becoming cosmic radiance.\n\n4. INTEGRATION (5 min): Lie in Savasana, hands on heart. The accumulated Shakti is now distributed through the entire body, concentrated in the heart. Rest in the fullness.",
-      keyPoints:["Womb = Shakti Yantra — a consciousness center, not just a reproductive organ","Feminine Brahmacharya begins in the womb (not Mooladhara) — different start point, same ascension","Garbhashaya Pranayama acknowledges the feminine Prana source and builds from there","Ashwini Mudra (3 rhythmic contractions) activates the upward current from the womb","Full practice during ovulation — the most powerful time for all feminine Brahmacharya practices"],
-    },
-    {
-      title:"The Complete Daily Brahmacharya Pranayama Sequence — 60 Minutes",
-      duration:"60 min",type:"practice",siddha:"Thirumoolar · Agastyar",
-      body:[
-        "This lesson transmits the complete integrated daily Pranayama sequence for Brahmacharya practitioners — the synthesis of all Module 3 practices, arranged in the precise order that maximizes Ojas accumulation and upward direction. Reconstructed from the Tirumantiram and Agastyar's Pranayama texts.",
-        "The sequence is designed for morning practice during Brahma Muhurta — the 90 minutes before sunrise. This is optimal because Ida and Pingala are naturally balanced at this hour, the atmosphere carries maximum Prana, and the mind has not yet engaged with the day's distractions. However, any consistent time practiced daily produces results. Consistency always outweighs perfect timing.",
-        "The integration phase at the end is not optional. This is when the actual alchemy occurs. The physical practices generate and direct the Ojas-Prana current. The integration phase in stillness allows it to distribute through all 72,000 Nadis and crystallize in the appropriate centers. Practitioners who skip the integration phase consistently report less dramatic results than those who maintain it faithfully."
-      ],
-      practice:"THE COMPLETE DAILY BRAHMACHARYA PRANAYAMA SEQUENCE (45-60 min):\n\nPHASE 1 — PURIFICATION (10 min):\n— 3 rounds Kapalabhati: 100 pumps per round, 1 minute natural breathing between rounds. This clears stale Prana, activates Manipura fire, and prepares the Nadis for the practices that follow.\n— 6 rounds Nadi Shodhana at 4:8:8 ratio (inhale 4, hold 8, exhale 8), NO Bandha yet. Purpose: balance Ida/Pingala without strain.\n\nPHASE 2 — BUILDING (20 min):\n— 12 rounds Nadi Shodhana at 4:16:8 ratio WITH light Moola Bandha applied on both retentions.\n— 5 min continuous Thirumoolar 5-5-5-5 practice with full Siddha-Gold visualization and Moola Bandha on both retentions.\n\nPHASE 3 — SEALING (15 min):\n— 12 rounds Antara Kumbhaka at 4:16:8 ratio with Moola Bandha + Jalandhara Bandha on the full retention.\n— 5 rounds Maha Bandha (all 3 locks) after complete exhale — hold each for 15-20 seconds.\n\nPHASE 4 — INTEGRATION (10 min):\n— Sit in Siddhasana in perfect stillness. No manipulation of breath whatsoever.\n— Pure witness awareness. Allow the accumulated Ojas-Prana to distribute naturally through all Nadis.\n— This is the phase when the Siddha says 'the alchemy completes.' Do not skip it.\n\nADAPTATIONS:\n— Minimal version (15 min): 3 rounds Kapalabhati + 12 rounds Nadi Shodhana with Moola Bandha + 5 min stillness\n— Women during menstruation: Phase 1 gentle only (no Kapalabhati), Phase 2 only, no Kumbhaka, no Bandhas\n— Travel version: 21 rounds 5-5-5-5 with Moola Bandha anywhere",
-      keyPoints:["4 phases: Purification → Building → Sealing → Integration","The Integration phase (stillness) is not optional — this is when the alchemy completes","Brahma Muhurta is optimal but consistency > perfect timing — same time daily is the rule","3 adaptations: full 60 min, minimal 15 min, travel version — always choose practice over perfection","Women during menstruation: modified version without Kumbhaka or Bandhas — honor the body"],
-    },
-  ]
-},
-// MODULE 4 — SIDDHA-QUANTUM
-{
-  id:"module_4",tier:"siddha-quantum",number:"04",glyph:"🕉️",
-  siddhaSource:"18 Siddhas — Agamic Mantra Tradition",
-  title:"Siddha Mantra Codes for Brahmacharya",
-  subtitle:"Sound-Light Transmissions from the 18 Siddhas",
-  overview:"The 18 Siddhas encoded specific Bija Mantras that directly neutralize Kama-Vasana (desire impressions) at the Chitta level — the deepest non-physical Brahmacharya technology available. Sound is the subtlest force that can directly alter the structure of consciousness.",
-  lessons:[
-    {
-      title:"HRIM SHRIM KLIM — The Triple Shakti Bija for Energy Sovereignty",
-      duration:"25 min",type:"mantra",siddha:"Agastyar",
-      body:[
-        "HRIM (pronounced 'hreem'): Bija of Goddess Bhuvaneshvari. Its sound-frequency directly activates the Anahata chakra and produces spacious openness — the opposite of contracted craving. When chanted consistently, HRIM expands the inner space in which desire arises. The Siddhas described it as 'the mantra that makes the small thing visible as the large thing' — shifting perspective from individual desire to universal creative Shakti.",
-        "SHRIM (pronounced 'shreem'): Bija of Goddess Lakshmi — abundance, beauty, magnetic radiance. Its function in Brahmacharya practice is to redirect conserved Ojas into the Anahata and higher chakras as Tejas. Where HRIM makes the desire-space larger, SHRIM fills that space with genuine radiance. It is the mantra of the fruit of Brahmacharya — the inner abundance and luminous magnetism that arise when Ojas is accumulated.",
-        "KLIM (pronounced 'kleem'): Bija of Krishna in his Kameshvara (Lord of Love) aspect — paradoxically the most important of the three. KLIM is the mantra of Divine Kama — not compulsive ego-driven desire that depletes Ojas, but the primordial creative love-impulse of the universe. By chanting KLIM, the practitioner transmutes the sexual impulse — redirecting it from contracted object-seeking into expanded universal-love form. Not suppression — dimensional expansion."
-      ],
-      mantra:"TRIPLE SHAKTI BIJA DAILY PROTOCOL:\n\nMORNING OJAS-SEALING (after Pranayama):\nChant: HRIM SHRIM KLIM — 108 times on Rudraksha mala\nVisualization: Three streams of light — silver (HRIM), gold (SHRIM), deep violet (KLIM) — spiraling upward through Sushumna, merging at the Sahasrara as pure white-gold radiance, then raining down as the Brahmacharya Kavacha seal.\n\nEMERGENCY PROTOCOL — when strong desire arises:\nChant internally: KLIM KLIM KLIM — continuously and rapidly for 3-5 minutes\nSimultaneously: Apply Moola Bandha firmly + breathe through LEFT nostril only (Cooling Breath).\nResult: Kama-energy transmutes into Prema within 3-5 minutes. Compulsive desire dissolves into warm expansive love.\n\nEVENING VASANA DISSOLUTION:\nChant: HRIM SHRIM KLIM — 54 times\nCleanses the day's Vasana charge before sleep, preventing nocturnal Ojas loss.",
-      keyPoints:["HRIM: expands inner space around desire — from personal craving to universal Shakti","SHRIM: converts conserved Ojas into Tejas radiance — the fruit-mantra of Brahmacharya","KLIM: transmutes personal Kama into cosmic Prema — expansion, not suppression","Emergency use: KLIM + Moola Bandha + left nostril breath = desire dissolved in 3-5 min","Evening 54 repetitions dissolves day's Vasana charge — prevents nocturnal Ojas loss"],
-    },
-    {
-      title:"OM NAMA SHIVAYA as Brahmacharya Kavach — The Panchakshara Transmission",
-      duration:"45 min",type:"mantra",siddha:"Thirumoolar",
-      body:[
-        "OM NAMA SHIVAYA — the Panchakshara (five-syllable) mantra — is identified by Thirumoolar in the Tirumantiram as the master key of all Siddha practice. The five syllables correspond to the five elements and five chakras: NA = Earth = Mooladhara. MA = Water = Svadhisthana. SI = Fire = Manipura. VA = Air = Anahata. YA = Space = Vishuddha.",
-        "The critical Brahmacharya insight: the syllable MA at Svadhisthana chakra (2 inches below the navel) — the seat of sexual energy — creates a vibratory pattern that simultaneously honors and sublimates the sexual creative force. The Siddhas called this 'MA-Sankalpa' — the intention embedded in the second syllable that transforms water-energy from the flowing-out pattern to the rising pattern.",
-        "The full Panchakshara sequence creates 'Shiva Kavach' — the armor of Shiva. Each chakra is cleared, sealed, and oriented upward. The sexual energy at Svadhisthana has nowhere to flow but up through purified Manipura (SI), into open Anahata (VA), and into infinite Akasha of Vishuddha (YA). This is the complete transmutation pathway encoded in five syllables.",
-        "The ultimate state: when OM NAMA SHIVAYA becomes Ajapa (self-chanting), Brahmacharya becomes effortless. When the mantra chants itself, the Ojas maintains itself."
-      ],
-      mantra:"PANCHAKSHARA BRAHMACHARYA PRACTICE (40 min daily):\n\nCHAKRA-MAPPED CHANTING:\n— OM: Sahasrara (crown). The Infinite opening.\n— NA: Mooladhara (base of spine). Apply Moola Bandha on 'N', release on 'A'. Root sealed.\n— MA: Svadhisthana (2 inches below navel). Breathe INTO this space. Sexual energy honors and rises.\n— SI: Manipura (solar plexus). The fire of conscious transformation intensifies.\n— VA: Anahata (heart). Sexual energy recognized as love — vast, warm, non-possessive.\n— YA: Vishuddha (throat). Energy becomes pure creative expression — free and universal.\n\nRepeat: OM NAMA SHIVAYA — 108 repetitions with full chakra-awareness on each syllable.\n\nSILENT JAPA THROUGHOUT THE DAY: Maintain OM NAMA SHIVAYA as a faint background vibration — this is the Ajapa state. When Ajapa is established, Brahmacharya becomes effortless.",
-      keyPoints:["Panchakshara: 5 syllables = 5 elements = 5 chakras = complete transmutation map","MA syllable at Svadhisthana = direct sublimation of sexual-creative water energy","Shiva Kavach: complete transmutation pathway — sex energy rises through all 5 chakras","Ajapa state (self-chanting) = Brahmacharya becomes effortless and self-sustaining","Best combined with Module 3 Pranayama as the complete morning Brahmacharya Sadhana"],
-    },
-    {
-      title:"Agastyar's Bindu Raksha Mantra — Protecting the Sacred Drop",
-      duration:"30 min",type:"mantra",siddha:"Agastyar",
-      body:[
-        "From the Agastyar 12000 — Agastyar's private Siddha texts. The Bindu Raksha Mantra: 'the mantra for protecting the drop.' Bindu is the Siddha term for the vital essence — the seed-point of consciousness in material form. This mantra works at the Karana Sharira (causal body) level, directly reprogramming the causal body's orientation toward the sexual impulse. It is the deepest available non-physical Brahmacharya technology.",
-        "Agastyar's transmission requires 'Guru Sankalpa' before chanting — the clear intention that this practice is offered to the Siddha lineage. This is the mechanism by which the mantra's power is amplified: the Siddha transmission lineage is a real energetic current, and invoking it correctly connects the individual practice to the collective Ojas-field of all Brahmacharins throughout all of history.",
-        "Agastyar is visualized not as an external deity but as a principle within your own body — a being of luminous golden light, ancient and saturated with Ojas, seated in the Mooladhara region of your own being as the guardian of your vital essence."
-      ],
-      mantra:"BINDU RAKSHA MANTRA:\nOM HRIM AGASTYAYA BINDU RAKSHANAM KURU KURU SVAHA\n(Om — I invoke Agastyar — protect the vital drop — act now act now — so be it)\n\nPROTOCOL:\n1. GURU SANKALPA: Right hand on heart. Internal invocation: 'I offer this practice to the 18 Siddhas, to Mahavatar Babaji, to Agastyar. May this serve the highest good.'\n2. VISUALIZATION: Agastyar as luminous gold light, ancient, filled with Ojas — seated in YOUR Mooladhara as the guardian of your vital essence.\n3. CHANTING: 108 repetitions. Coordinate with breath: chant the full mantra on the exhale, hold in silence with Moola Bandha applied on the inhale.\n4. COMPLETION SEAL: Both hands on lower belly. 5 minutes of silence. Feel Ojas as a warm golden substance concentrated in the lower abdomen and spine.\n\nFREQUENCY: Daily for the first 40 days of any Brahmacharya cycle. Then as needed — especially during high temptation or high stress.",
-      keyPoints:["Works at Karana Sharira (causal body) — the deepest available non-physical Brahmacharya technology","Guru Sankalpa connects individual practice to collective Siddha Ojas-field across all history","Agastyar visualization: internal, not external — the guardian-intelligence within your own Ojas system","108 repetitions with Moola Bandha on inhale-silence = complete Bindu protection ritual","Daily for first 40 days of any cycle — then as needed"],
-    },
-    {
-      title:"Soham Ajapa Japa — The 21,600 Breath Mantra of Non-Separation",
-      duration:"50 min",type:"mantra",siddha:"Thirumoolar",
-      body:[
-        "Soham is not a mantra in the conventional sense — it is the sound of the breath itself. SO is the natural sound of the inhale. HANG is the natural sound of the exhale. The human being breathes approximately 21,600 times per day. Each breath is already chanting Soham — 'I am That.' The spiritual practice is simply becoming aware of what is already happening.",
-        "Thirumoolar: 'The breath says Soham 21,600 times a day. He who hears this is the knower of the Veda.' For Brahmacharya: when a practitioner is continuously aware of the Soham in the breath, the mind has no space for Vasana-arising. The continuous awareness displaces unconscious desire-patterns by occupying the exact attentional space they require.",
-        "SO means 'That' — the Absolute, the infinite. HANG means 'I am.' Each breath: inhale 'That' — the infinite enters. Exhale 'I am' — the individual recognizes itself as That. This continuous recognition is the experiential antidote to the fundamental error that drives unconscious sexuality: the belief that one is separate, incomplete, and needing to find wholeness through external union.",
-        "Sexual desire at its deepest level is the body-mind's attempt to experience the Shiva-Shakti union that is its own nature. The practitioner who genuinely recognizes through Soham that they already ARE that union finds that the compulsive quality of sexual desire naturally dissolves. Not suppressed — genuinely satisfied at the source.",
-        "Keval Kumbhaka — the natural pause between breaths — is the doorway to Samadhi. Thirumoolar: 'He who can rest in this pause has found the state beyond birth and death.'"
-      ],
-      mantra:"SOHAM AJAPA JAPA — THREE PHASES:\n\nPHASE 1 (first 2 weeks — 20 min daily):\nSit in Siddhasana. Close eyes. Simply listen to the breath. Discover the subtle 'SO' on the inhale and 'HANG' on the exhale. Do not create the sound — discover it. It is already there.\n\nPHASE 2 (from week 3 — add to Phase 1):\n— On SO (inhale): Pure Consciousness (Shiva) enters through the crown as golden light\n— On HANG (exhale): Individual 'I' dissolves into the Absolute\n— Apply light Moola Bandha at the natural pause between exhale and next inhale\n— In that pause (Keval Kumbhaka): rest in pure Being — the doorway to Samadhi\n\nPHASE 3 (ongoing — the ultimate practice):\nMaintain SO-HANG awareness throughout all daily activity — walking, working, eating. No closed eyes required. A portion of awareness remains with the breath-mantra. At this stage Brahmacharya is no longer a practice you do. It is what you are.",
-      keyPoints:["Soham = the natural sound of the breath — 21,600 Japa/day already happening","SO (inhale) = That. HANG (exhale) = I am. Complete non-dual recognition every breath.","Addresses the root of sexual desire: the felt sense of separation from wholeness","Keval Kumbhaka (natural pause between breaths) = experiential doorway to Samadhi","Phase 3: continuous SO-HANG awareness throughout the day = Brahmacharya as nature not practice"],
-    },
-    {
-      title:"Mrityunjaya Mantra — Transcending Mortality Through Seed Power",
-      duration:"35 min",type:"mantra",siddha:"Bogar",
-      body:[
-        "OM TRYAMBAKAM YAJAMAHE SUGANDHIM PUSHTI-VARDHANAM / URVARUKAMIVA BANDHANAN MRITYOR MUKSHIYA MAMRITAT — the Vedic mantra of Shiva as the conqueror of death. Bogar's Siddha texts reveal its specific relationship to Brahmacharya.",
-        "AMRITAT — 'immortality' — is not a vague spiritual metaphor but a literal physiological process: the production of Amrita through accumulated Ojas. The mantra is a petition to Shiva as the principle of Ojas-preservation and Amrita-production, directly stimulating the Soma Chakra (pineal gland).",
-        "TRYAMBAKAM: The practitioner's own Ajna chakra opening through accumulated Ojas — visualize the third eye opening as you chant this word. SUGANDHIM: Bogar documents that advanced Brahmacharins experience a spontaneous inner divine fragrance arising from the Sahasrara when sufficient Ojas accumulates — this is the literal fragrance of Amrita, a neurochemical phenomenon. MAMRITAT: The culminating word — chanted with Moola Bandha and the full visualization of the body saturated with Amrita-gold light. The practitioner momentarily inhabits Amrita-Deha — the immortal body."
-      ],
-      mantra:"MRITYUNJAYA BRAHMACHARYA PRACTICE:\n\nTHE MANTRA:\nOM TRYAM-ba-kam ya-ja-MA-he\nsu-GAN-dhim push-ti-var-DHA-nam\nur-va-ru-KA-mi-va ban-DHA-nan\nmri-TYOR muk-SHEE-ya mam-ri-TAT\n\nPROTOCOL:\n1. TRYAMBAKAM: Awareness at Ajna. Third eye opening like a golden lotus, nourished by ascending Ojas.\n2. SUGANDHIM: Awareness at Soma Chakra (upper brain/pineal). A drop of golden Amrita beginning to crystallize.\n3. MAMRITAT: Apply Moola Bandha. Entire body saturated with Amrita-gold light. Mortality dissolving. The Amrita-Deha inhabited.\n\nDuration: 108 repetitions = 35 minutes. Best practiced at dusk — creates morning-to-evening Ojas cycle arc.",
-      keyPoints:["AMRITAT = literal Amrita production through accumulated Ojas — Bogar is explicit this is not metaphor","TRYAMBAKAM = the practitioner's own Ajna opening through ascending Ojas","SUGANDHIM = the inner divine fragrance when Sahasrara receives sufficient Ojas — clinically documented","MAMRITAT + Moola Bandha = Amrita-Deha visualization — immortal body momentarily inhabited","Best at dusk — completes the morning-to-evening Ojas cycle arc"],
-    },
-    {
-      title:"Lalitha Sahasranama — 1000 Names for Shakti Mastery",
-      duration:"60 min",type:"mantra",siddha:"Agastyar",
-      body:[
-        "The Lalitha Sahasranama — 1,000 names of the Divine Mother — is transformed by Agastyar's esoteric Siddha interpretation from a devotional hymn into a precision tool for Shakti mastery and Brahmacharya. Lalitha Tripura Sundari is not a distant deity but the very principle of consciousness-as-creative-power that lives in every body.",
-        "For women: she is the direct recognition of their own highest nature. For men: she is the internal Shakti principle that Brahmacharya activates — the Divine Mother within as the Kundalini Shakti coiled at Mooladhara.",
-        "Three names carry the most direct power: KUNDALINI (Name 110): chanted with awareness at Mooladhara, directly stimulates the Kundalini current. OJAS-VATI (Name 432): 'She who is filled with Ojas, she who grants Ojas' — with awareness at Anahata, activates the Ojas reservoir in the heart. BRAHMACHARINI (Name 697): 'She who walks in Brahman, the celibate one' — confirms that Brahmacharya is a quality of the Divine Feminine herself, not an external imposition.",
-        "Visualization for all Lalitha practice: Lalitha Tripura Sundari as your own highest self — the fully awakened, fully sovereign being you are in your deepest nature. Made of pure Siddha-Gold light (#D4AF37). Residing in your Sahasrara. Every name you chant is a quality of your own awakened nature being recognized and activated — called forth from within."
-      ],
-      mantra:"LALITHA SHAKTI BRAHMACHARYA PRACTICE:\n\nDAILY CORE (30 min):\n— OM KUNDALINYE NAMAH — 108 times, awareness at Mooladhara\n— OM OJAS-VATYAI NAMAH — 108 times, awareness at Anahata\n— OM BRAHMACHARINYAI NAMAH — 108 times, awareness at Sahasrara\nTotal: 324 repetitions, 25-30 minutes.\n\nWEEKLY FULL SAHASRANAMA (Fridays — day of the Goddess):\nAll 1,000 names — 45-60 minutes. Complete Shakti-initiation.\nRegular practice produces: more rapid Vasana dissolution, increasingly harmonious menstrual cycles, deeper meditative access, growing permanent inner fullness.\n\nVISUALIZATION: Lalitha Tripura Sundari as your own highest self — pure Siddha-Gold light, residing in Sahasrara. Each name is a quality of your own awakened nature being activated.",
-      keyPoints:["KUNDALINI (name 110): directly stimulates Kundalini current from Mooladhara","OJAS-VATI (name 432): direct Ojas transmission — activates heart Ojas reservoir","BRAHMACHARINI (name 697): Brahmacharya is a quality of the Divine Feminine herself — not imposed, recognized","For men: activates the internal Shakti principle — Divine Mother within as Kundalini","Full Sahasranama weekly on Fridays — complete Shakti initiation, Vasanas dissolve rapidly"],
-    },
-    {
-      title:"108 Protocol: Building the Permanent Brahmacharya Mantra Kavacha",
-      duration:"40 min",type:"practice",siddha:"Thirumoolar · Agastyar",
-      body:[
-        "108 mantras chanted with full awareness generates a 'Mantra Kavacha' — a protective vibratory field persisting for 12-24 hours. This describes resonant vibratory patterns established in the nervous system through focused repetition: lasting changes in the brain's default-mode network that alter the automatic response to desire-stimuli throughout the following day.",
-        "The Rudraksha mala is an essential physical tool. Rudraksha seeds have measurable electromagnetic surface properties with direct effect on the Svadhisthana chakra — the seat of sexual energy — making it the natural physical support for Brahmacharya mantra practice. Keep your Brahmacharya mala separate from daily wear. Do not let others touch it — it accumulates your personal Ojas-vibratory signature over time.",
-        "Practitioners who maintain the daily 108 practice consistently report that random sexual triggers — advertisements, passing attraction, media — produce noticeably less reactive response within 2-3 weeks."
-      ],
-      practice:"BRAHMACHARYA MANTRA KAVACHA — COMPLETE PROTOCOL:\n\nCOMPLETE VERSION (45 min):\n1. Opening: OM NAMA SHIVAYA — 3 times aloud\n2. HRIM SHRIM KLIM — 108 repetitions (first Mala round)\n3. 2 min silence — feel accumulated energy\n4. SOHAM with breath awareness — 54 breaths\n5. OM NAMA SHIVAYA with chakra-mapping — 108 repetitions (second Mala round)\n6. 2 min silence\n7. BINDU RAKSHA MANTRA — 54 repetitions (half Mala)\n8. Mrityunjaya — 27 repetitions (quarter Mala)\n9. CLOSING SEAL: Mala on heart. 5 min silence. Touch Ajna chakra (center of forehead) with the Meru bead — Kavacha transmitted directly into third eye center.\n\nSHORT VERSION — Daily Minimum (15 min):\nHRIM SHRIM KLIM — 108 repetitions + 5 minutes silence\nThis minimum maintained daily produces measurable Kavacha effect within 2-3 weeks.",
-      keyPoints:["108 = complete arc of consciousness from unity through manifestation and back","Mantra Kavacha: protective vibratory field lasting 12-24 hours — neurologically measurable","Rudraksha: electromagnetic surface properties directly affect Svadhisthana chakra","Never let others touch your Brahmacharya mala — stores your personal Ojas-vibratory signature","Daily minimum (HRIM SHRIM KLIM × 108 + 5 min silence): 2-3 weeks for measurable behavioral shift"],
-    },
-  ]
-},
-// MODULE 5 — SIDDHA-QUANTUM
-{
-  id:"module_5",tier:"siddha-quantum",number:"05",glyph:"⚡",
-  siddhaSource:"Thirumoolar · Agastyar · Siddha Yoga Texts",
-  title:"Siddha Yoga & Asana for Sexual Energy Mastery",
-  subtitle:"The Posture Codes of Thirumoolar & Agastyar",
-  overview:"Specific asana sequences from the Siddha tradition physically redirect Apana Vayu upward through Sushumna. These are precise Siddha energy-technology protocols — each posture is a Mudra (seal) that locks the Ojas current into the ascending channel and prevents it from leaking downward and outward.",
-  lessons:[
-    {title:"Siddhasana — The Perfected Posture: Why It Is the Foundation",duration:"30 min",type:"practice",siddha:"Thirumoolar",
-      body:["Siddhasana automatically applies a constant passive Moola Bandha simply through its geometry. The left heel placed firmly against the perineum (Mooladhara chakra point) applies continuous gentle pressure that activates the root lock mechanically, without any muscular effort. Thirumoolar states categorically: 'Among all the asanas, there is none equal to Siddhasana' for Brahmacharya practice.","The mechanics simultaneously: stimulates the pudendal nerve (calming effect on sexual arousal), creates mild physical pressure on the Mooladhara chakra (direct Kundalini stimulant), reduces blood flow to the genitals while the straight spine allows increased blood flow to the brain. The longer the duration in Siddhasana, the more the passive Bandha effect accumulates."],
-      practice:"SIDDHASANA SETUP:\n1. Sit on floor. Extend both legs.\n2. Bend LEFT knee. Place left heel firmly into the perineum — between genitals and anus. Foot sole faces upward. You should feel gentle pressure at the perineum — this IS the passive Moola Bandha.\n3. Bend RIGHT knee. Place right heel at pubic bone, directly above left foot.\n4. Hands in Jnana Mudra on knees (index fingertip touching thumb, palms upward). Spine erect.\n\nPROGRESSIVE PROTOCOL:\n— Week 1: 10 min daily — simply sit and breathe\n— Week 2-3: 20 min daily, adding Module 3 Pranayama while seated\n— Week 4+: All meditation, mantra, and Pranayama practices performed in Siddhasana\n— Advanced: 2-3 hours daily for full passive Moola Bandha accumulation",
-      keyPoints:["Left heel at perineum = automatic passive Moola Bandha — the genius of Siddhasana geometry","Thirumoolar: 'Among all asanas, none equal to Siddhasana' for Brahmacharya practice","3 simultaneous effects: calms arousal, stimulates Mooladhara, increases brain blood flow","Duration matters — the longer in Siddhasana, the more passive Bandha accumulates","All Module 4 mantra and Module 3 Pranayama are best performed in Siddhasana"],
-    },
-    {title:"Vajrasana & Vajroli Mudra — The Thunderbolt Protocols",duration:"45 min",type:"practice",siddha:"Agastyar",
-      body:["Vajrasana (Thunderbolt Pose — seated on heels) applies direct pressure to the Vajra Nadi, identified by Agastyar as the primary channel for upward sexual energy direction. Vajroli Mudra — voluntary contraction of the urethral sphincter — is distinct from Moola Bandha (perineum) and Ashwini Mudra (anal sphincter). It conditions the biological pathway of upward energy flow so that it becomes the body's default response to sexual arousal after 40-90 days of regular practice.","For men: the bulbocavernosus and ischiocavernosus muscles — which control ejaculation — are trained through Vajroli to reflexively trigger retention rather than release. For women: similar contractions of the urethrovaginal sphincter and surrounding Shakti musculature. The pre-sleep Vajroli protocol (21 sustained 15-second contractions before sleep) significantly reduces and eventually eliminates nocturnal emission within 4-6 weeks of consistent practice."],
-      practice:"VAJROLI MUDRA PROTOCOL:\n\nLOCATING THE MUSCLE:\nContract the muscle as if stopping urination midstream — the contraction is felt at the base of the penis/urethra (men) or around the urethra (women). This is anterior (front) of Moola Bandha.\n\nBASIC BUILDING PROTOCOL (4 weeks):\n— 50 rapid contractions (1 sec on, 1 sec off)\n— 30 sec rest\n— 50 medium contractions (3 sec on, 3 sec off)\n— 30 sec rest\n— 20 sustained contractions (10 sec on, 5 sec off)\n3 rounds of this sequence, twice daily.\nBuild: 50 → 75 → 100 repetitions per set over 4 weeks.\n\nINTEGRATED PRANAYAMA:\nDuring Antara Kumbhaka: apply Vajroli + Moola Bandha + Jalandhara simultaneously. Triple-lock at three anatomical levels — complete energetic seal.\n\nPRE-SLEEP (men — prevents nocturnal emission):\n21 sustained Vajroli contractions, each 15 seconds, 5 seconds rest. Within 4-6 weeks the urogenital musculature maintains the Brahmacharya seal during sleep.",
-      keyPoints:["Vajrasana: direct pressure on Vajra Nadi — the primary channel for upward sexual energy direction","Vajroli = urethral sphincter — distinct from Moola Bandha (perineum) and Ashwini (anal sphincter)","40-90 days regular practice = genuine physiological repatterning of the ejaculatory reflex","Triple-lock during Antara Kumbhaka: Vajroli + Moola + Jalandhara = complete energetic seal","Pre-sleep 21 × 15-second Vajroli = nocturnal emission prevention within 4-6 weeks"],
-    },
-    {title:"Ashwini Mudra — The Horse Seal: The Always-Available Practice",duration:"25 min",type:"practice",siddha:"Agastyar",
-      body:["Ashwini Mudra — rhythmic contraction of the anal sphincter — can be practiced anywhere, at any time, without anyone knowing. The anal sphincter shares a direct neural connection (pudendal nerve and pelvic splanchnic nerves) with the entire perineal floor and reproductive musculature. Rhythmic contractions create a pulsing activation of Mooladhara and Svadhisthana chakras — a gentle rhythmic Kundalini stimulant that over time powerfully supports upward Ojas movement.","The behavioral protocol: every time a thought about sex arises, a moment of desire occurs, or a visual trigger appears — the immediate response is three rhythmic Ashwini contractions. This trains the nervous system over 40 days to automatically respond to desire with an upward energy pulse. This is genuine behavioral reprogramming — not willpower suppression but reflex reconditioning."],
-      practice:"ASHWINI MUDRA PRACTICE:\n\nFORMAL MORNING (5 min in Siddhasana):\n— Rhythmically contract and release the anal sphincter\n— Contract on INHALE, release on EXHALE (Siddha-specified coordination)\n— 108 rhythmic contractions\n— Follow immediately with 12 rounds Moola Bandha\n\nTHROUGHOUT-THE-DAY BEHAVIORAL PROTOCOL:\n— THREE rhythmic Ashwini contractions as IMMEDIATE response to any arising desire, sexual thought, or visual trigger\n— This is a precise physiological signal to the nervous system: 'This energy moves up, not out'\n— By day 40-60 of consistent practice, the three contractions become automatic — the new response pattern is established\n\nCOMBINED (Advanced — peak Vasana-uprising moments):\nRhythmic Ashwini (3x) + sustained Moola Bandha + left nostril only breathing\nMost effective immediate intervention for strong desire — especially in the first 7 days of a cycle",
-      keyPoints:["Can be practiced anywhere anytime — the most accessible Brahmacharya tool in existence","Contract on INHALE, release on EXHALE — Siddha-specified coordination for maximum effect","3 Ashwini contractions as immediate response to desire = 40-day nervous system reflex reconditioning","By day 40-60: the response becomes automatic — the new reflex is established","Advanced triple: Ashwini (3x) + Moola Bandha + left nostril = most effective immediate desire intervention"],
-    },
-    {title:"Viparita Karani — Inverting the Energy Current for Amrita Accumulation",duration:"30 min",type:"practice",siddha:"Thirumoolar",
-      body:["Viparita Karani — 'the inverted action' — reverses the normal gravitational flow of Ojas and Amrita. In the Siddha view, in ordinary upright posture, the Amrita produced in the upper brain (Soma Chakra) drips downward and is consumed by digestive fire. Inversion reverses this flow and keeps the Amrita pooled in the upper body and brain. Thirumoolar: 'He who practices Viparita Karani for even three hours daily will conquer time.'","The specific Brahmacharya benefit: inversion increases venous blood return to the heart and brain from the lower body, including the reproductive organs — physically drawing Ojas upward from the reproductive region. Increased cerebral blood flow in inversion is a real physiological event corresponding to the Siddha description of Ojas-ascension."],
-      practice:"VIPARITA KARANI PRACTICE:\n\nACCESSIBLE VERSION (recommended for most practitioners):\n— Place a folded blanket 6 inches from a wall\n— Sit sideways on blanket, swing legs up the wall, lower back and head to floor\n— Hips elevated 4-6 inches on the blanket\n— Arms relaxed at sides, palms up\n— Hold 5-15 minutes — sufficient for the full Ojas-upward effect\n\nFULL SHOULDERSTAND (Sarvangasana):\n— Lie on back, swing legs overhead, support lower back with hands, elbows on floor\n— Legs vertical over shoulders. Hold 3-10 minutes.\n\nBRAHMACHARYA PROTOCOL:\n— Practice 10-15 minutes immediately AFTER the morning Pranayama sequence\n— During inversion: maintain Moola Bandha + visualize Siddha-Gold light moving upward from base of spine through Sushumna into the brain\n— After coming down: sit in Siddhasana 5 minutes in silence — allow upward-directed Ojas to stabilize\n\nFEMININE ADAPTATION: Avoid during menstruation. Prioritize during ovulation to direct peak Shakti upward.",
-      keyPoints:["Inversion reverses downward Amrita flow — keeps nectar pooled in upper brain","Accessible: legs up wall with hips on blanket — 5-15 min is sufficient for the full effect","Always follow with 5 min Siddhasana silence — Ojas must stabilize after inversion","Women: avoid during menstruation; prioritize during ovulation to direct peak Shakti upward","Thirumoolar: 'He who practices Viparita Karani for three hours daily will conquer time'"],
-    },
-    {title:"Maha Mudra — The Great Seal: The Supreme Single Practice",duration:"40 min",type:"practice",siddha:"Thirumoolar",
-      body:["Maha Mudra simultaneously activates all three Bandhas (Moola, Uddiyana, Jalandhara), all three primary Nadis (Ida, Pingala, Sushumna), and all seven chakras. Thirumoolar calls it 'the seal that contains the seven worlds within the body.' Physical form: one leg extended, heel of other leg pressed into perineum (Siddhasana geometry for one side), lean forward and grasp the extended foot, apply all three Bandhas simultaneously during internal retention.","The Brahmacharya power: the combination of perineal heel pressure (passive Moola Bandha), forward fold (compressing Svadhisthana and Manipura, releasing stored Prana from the reproductive region), and the three active Bandhas (sealing and directing that released Prana upward) creates a powerful Ojas-ascension event. Siddha texts document practitioners entering spontaneous Samadhi states during extended Maha Mudra practice through this direct physiological mechanism."],
-      practice:"MAHA MUDRA PRACTICE:\n\nSEQUENCE (left side first, then right):\n1. Sit on floor, LEFT leg extended, RIGHT heel pressed into perineum\n2. Inhale deeply — 4 slow counts\n3. Apply Jalandhara Bandha (chin firmly to chest)\n4. Apply Moola Bandha (lift and contract perineum)\n5. Apply Uddiyana Bandha (draw abdomen in and up)\n6. Lean forward over extended leg, grasp foot with both hands (or use a strap)\n7. Hold all 3 Bandhas simultaneously for 10-30 seconds (build gradually)\n8. Release in REVERSE: Uddiyana first → Moola → Jalandhara\n9. Inhale naturally and sit up. Exhale slowly — 8 counts.\nRepeat with RIGHT leg extended, LEFT heel at perineum.\n\nPRACTICE DURATION:\n— Beginners: 3 rounds each side, 10-sec holds\n— Intermediate: 7 rounds each side, 20-sec holds\n— Advanced: 12 rounds each side, 25-30 sec holds\nAlways follow with 5-10 min Siddhasana silence — integration is essential.\n\nFREQUENCY: 3-4 times per week. Never during menstruation.",
-      keyPoints:["Maha Mudra = all 3 Bandhas + all 3 Nadis + all 7 chakras activated simultaneously","The most powerful single Brahmacharya yoga practice in the complete Siddha system","12 rounds each side, 25-30 sec holds = advanced full practice — work up gradually","Always release in REVERSE: Uddiyana → Moola → Jalandhara — never simultaneously","5-10 min Siddhasana silence after = essential integration phase where the alchemy completes"],
-    },
-    {title:"The Complete 90-Min Brahmacharya Asana Sequence",duration:"90 min",type:"practice",siddha:"Thirumoolar · Agastyar",
-      body:["The complete integrated Siddha yoga sequence — 90 minutes building from foundational grounding through progressive energy ascension to final integration. Each posture flows into the next, creating a continuous ascending Prana current. Follow the energy logic of the Siddha system: ground → activate root → build inner fire → open upper channels → seal and integrate. Maintain light Moola Bandha throughout the entire sequence."],
-      practice:"COMPLETE BRAHMACHARYA ASANA SEQUENCE (90 min):\n\nSEGMENT 1 — GROUNDING (15 min):\n— Tadasana (Mountain): 2 min — establish presence\n— Uttanasana (Forward Fold): 2 min — begin reversing energy current\n— Malasana (Squat): 3 min — Moola Bandha firmly held throughout\n— Baddha Konasana (Butterfly): 5 min — opens hips, accesses pelvic energy center\n— Supta Baddha Konasana (Reclined Butterfly): 3 min — passive opening\n\nSEGMENT 2 — ROOT ACTIVATION (20 min):\n— Siddhasana: 5 min with 108 Ashwini Mudra contractions\n— Vajrasana: 5 min with 50 Vajroli Mudra contractions\n— Maha Bandha: 9 rounds (all 3 locks, 15-20 sec holds)\n— Seated Twist (both sides): 2 min each side\n\nSEGMENT 3 — INNER FIRE (20 min):\n— Virabhadrasana I & II (Warriors): 3 min each side\n— Navasana (Boat Pose) with light Uddiyana Bandha: 5 min\n— Dhanurasana (Bow Pose): 3 min — full front body opening\n— Ustrasana (Camel) or Setu Bandhasana (Bridge): 5 min — Anahata opener\n\nSEGMENT 4 — ASCENDING (20 min):\n— Viparita Karani or Sarvangasana: 10 min with Moola Bandha + Siddha-Gold visualization\n— Halasana (Plow Pose): 5 min — Jalandhara Bandha, Vishuddha activation\n— Matsyasana (Fish Pose): 3 min — counterpose, Anahata and Vishuddha opening\n— Shirshasana (Headstand) if established: 5 min\n\nSEGMENT 5 — INTEGRATION (15 min):\n— Maha Mudra: 7 rounds each side (12-15 sec holds)\n— Siddhasana: 10 min complete stillness — Ojas crystallizes\n— Shavasana: 5 min full surrender\n\nGUIDANCE: This is a Brahmacharya meditation, not a workout. Internal attention quality matters as much as physical form. 3-4 times per week optimal.",
-      keyPoints:["5 segments: Grounding → Root Activation → Inner Fire → Ascending → Integration","Maintain light Moola Bandha throughout the entire 90-minute sequence","Internal attention quality matters as much as physical form — this is Brahmacharya meditation","Integration segment (Maha Mudra + Siddhasana + Shavasana) is where the alchemy completes","3-4 times per week optimal — combined with daily 45-60 min Pranayama sequence"],
-    },
-    {title:"Female Shakti Mudras & Yoni Prana Activation",duration:"45 min",type:"practice",siddha:"Avvaiyar",
-      body:["Avvaiyar's yoga texts include a complete set of Shakti Mudras specifically designed for the feminine body, honoring the specific energy architecture of the feminine anatomy rather than imposing the masculine model. Yoni Mudra (physical form) — the voluntary engagement and lifting of the entire pelvic floor from vaginal opening through the cervix — is the feminine equivalent of Vajroli Mudra, going beyond ordinary PC muscle exercises to include the subtle energetic musculature of the womb and cervix.","Cycle timing is essential: the intensity and type of practice varies according to the phase of the menstrual cycle. The ovulatory phase (Days 14-16) is the most powerful time for all feminine Brahmacharya practices — the peak Shakti available at this time, when consciously directed inward with these Mudras, produces Kundalini wave-activation, creative insight, and energetic fullness qualitatively different from any other phase."],
-      practice:"SHAKTI MUDRA SEQUENCE:\n\n1. YONI MUDRA (Physical):\n— Sit in Baddha Konasana (butterfly pose)\n— INHALE: Contract entire pelvic floor, beginning at vaginal opening moving upward — vagina → cervix → uterus → lower belly. Hold 5 counts at top of inhale.\n— EXHALE: Release slowly and completely from above downward.\n— 21 rounds. Build to 30-second sustained holds.\n\n2. SHAKTI CHAKRA AWAKENING:\n— Baddha Konasana or Siddha Yoni Asana\n— Both hands on lower belly (womb area)\n— Chandra Bhedana (left nostril breathing)\n— INHALE: Womb fills with red-gold Shakti light\n— EXHALE: Shakti rises — womb → Manipura → Anahata → Vishuddha → crown\n— 21 rounds\n\n3. COMPLETE DAILY FEMININE SEQUENCE (30 min):\n— 5 min: Yoni Mudra (21 rounds)\n— 5 min: Viparita Karani with womb visualization\n— 10 min: Garbhashaya Pranayama (Module 3)\n— 5 min: Lalitha 3 power-names (Module 4)\n— 5 min: Siddhasana silence\n\nCYCLE TIMING:\n— Menstruation: Rest and silence only. No Mudras.\n— Follicular: Full sequence\n— Ovulation: Full sequence + 11 extra rounds of Shakti Chakra Awakening\n— Luteal: Full sequence with extended Yoni Mudra (30-sec holds)",
-      keyPoints:["Yoni Mudra = conscious engagement of entire pelvic floor from vaginal opening through uterus","Goes beyond PC exercises — accesses subtle energetic musculature of the womb","Shakti Chakra Awakening: Chandra Bhedana + womb visualization = complete feminine Kundalini activation","Ovulation (Days 14-16): most powerful time — add 11 extra Shakti Chakra Awakening rounds","Menstruation: complete rest only. No Mudras of any kind."],
-    },
-  ]
-},
-// MODULE 6 — SIDDHA-QUANTUM
-{
-  id:"module_6",tier:"siddha-quantum",number:"06",glyph:"🧠",
-  siddhaSource:"Thirumoolar · Agastyar · Siddha Chitta Science",
-  title:"Psychology of Desire — Siddha Chitta Science",
-  subtitle:"Vasana Dissolution & Vairagya Codes",
-  overview:"The Siddhas mapped the exact mechanism of Kama (desire) in the Chitta (storehouse of impressions). This module transmits the Siddha technology for dissolving Vasanas at the causal level — not through suppression but through Pratyahara and Viveka. The deepest psychological dimension of the Brahmacharya path.",
-  lessons:[
-    {title:"The 3 Bodies and Where Desire Lives — Siddha Causal Anatomy",duration:"35 min",type:"teaching",siddha:"Thirumoolar",
-      body:["Desire does not originate in the body or the mind. It originates in the Karana Sharira (causal body) — the storehouse of all Vasanas (impressions) from all previous experiences and lifetimes. The body and mind are merely the instruments through which the causal body's Vasanas express themselves.","The three bodies: Sthula Sharira (gross body) — desire felt as physical sensation, arousal, impulse. Module 5 practices work here. Sukshma Sharira (subtle body) — desire experienced as craving, fantasy, emotional attachment. Modules 3 and 4 work here. Karana Sharira (causal body) — where the Vasanas that generate desire are stored. The deepest level. This module's Viveka practices work here.","Identifying which body is generating desire is the first step: Physical urge (Sthula) → Asana and Bandha. Mental fantasy or emotional craving (Sukshma) → Pranayama and Mantra. Sourceless pervasive incompleteness — the deep ache with no clear object (Karana) → Viveka and deep meditation. Most practitioners work only at the Sthula level — why willpower-only Brahmacharya exhausts and ultimately fails."],
-      keyPoints:["Desire originates in Karana Sharira (causal body) — body and mind are just the instruments","3 bodies = 3 levels: Sthula (Asana/Bandha), Sukshma (Pranayama/Mantra), Karana (Viveka/Meditation)","Identify which body is generating desire to choose the correct practice level","Sourceless pervasive incompleteness = Karana Vasana — requires Viveka, not physical practice","Willpower-only Brahmacharya works only at Sthula level — why it eventually exhausts and fails"],
-    },
-    {title:"Vasana Dissolution Through Pratyahara — The Siddha Method",duration:"40 min",type:"meditation",siddha:"Agastyar",
-      body:["Vasanas are the deep impressions left in the Chitta by repeated experiences and habitual patterns — the grooves worn into consciousness by the repeated flowing of experience through the same channels. The Vasana of sexual desire is particularly deep and ancient.","The Siddha approach is radical and counterintuitive: rather than fighting the Vasana (which strengthens it through resistance-energy) or indulging it (which deepens the groove), the Siddha method is Pratyahara — withdrawal of attention from the Vasana's fuel, without suppression, without judgment. Every Vasana observed without reaction will, over time, lose its charge and dissolve — like a wave reaching the shore and being absorbed without generating another wave.","The specific Siddha technique for sexual Vasana dissolution is Antar Mouna — inner silence. Sitting with arising desire, without feeding it with additional thought or image, without pushing it away. Key instruction: keep attention in the BODY, not in the mental image. The mental image is the fuel — when attention stops feeding it, it begins to lose its charge.","WARNING: The first 10-14 days of Antar Mouna practice typically intensify desire before it decreases — this is 'Vasana rising.' The impressions are surfacing as they begin to dissolve. This intensification IS the healing. Do NOT stop the practice here — this is the single most common mistake in Brahmacharya."],
-      practice:"ANTAR MOUNA — INNER SILENCE PRACTICE:\n\nSETUP: Siddhasana. Light Moola Bandha. 5 min of 5-5-5-5 Pranayama to establish baseline stillness.\n\nTHE PRACTICE:\n1. Allow whatever arises — no pushing away, no engagement. Sexual thoughts arising: do not continue the fantasy. Do not reject with guilt or shame. Just: 'There is a thought.'\n2. Simply observe as a neutral witness: 'There is a feeling.' 'There is an image.' No story. No reaction.\n3. Feel where the desire sits in the body — usually Svadhisthana (lower belly). Direct breath into that region. Do not try to move energy upward. Simply breathe into the felt-sense of the desire.\n4. Essential instruction: do not let attention leave the body and follow the mental image into fantasy. Keep attention in the physical felt-sense — the warmth, the pull, the ache — not in the story about it.\n5. Apply 3 Ashwini contractions whenever a thought tries to pull attention out into fantasy. Physical sensation brings attention back to the body.\n\nDURATION: 20-40 minutes daily. 40 consecutive days for measurable Vasana dissolution.\n\nEXPECTATION TIMELINE:\nDays 1-14: Intensification — Vasana rising. Stay the course.\nDays 15-28: Beginning of reduction in charge and compulsive quality.\nDays 29-40: Desire still present but experienced as energy rather than compulsion.\nDays 40+: The Vasana begins to feel transparent — a familiar visitor who has lost their authority.",
-      keyPoints:["Pratyahara = withdrawal of attention from Vasana's fuel — not fighting, not indulging","Antar Mouna: observe desire as energy in the body without engaging the mental story","Keep attention in the BODY — the mental image is the fuel. Stop feeding it.","3 Ashwini contractions when fantasy tries to pull attention away — body-anchor reset","Days 1-14 ALWAYS intensify — this IS the healing process. Do NOT stop the practice."],
-    },
-    {title:"Viveka-Khyati — Discriminative Intelligence That Ends Kama",duration:"30 min",type:"teaching",siddha:"Thirumoolar",
-      body:["Viveka — discriminative wisdom — is the capacity to see things as they actually are, rather than as desire colors them to appear. Desire distorts perception: it makes its object appear more beautiful, more satisfying, and more necessary than it actually is. Viveka is the practice of seeing through this distortion — not with cynicism or revulsion, but with clear, dispassionate, loving attention.","First layer — Anitya Bhavana (contemplation of impermanence): Everything desire seeks is impermanent. The pleasure of sexual union lasts moments or hours. The Ojas accumulated through Brahmacharya and converted into Tejas, Siddhi, and Mukti (liberation) — this is permanent. The Siddha holds this comparison not as denial of pleasure's reality but as a clear-eyed assessment of relative value.","Second layer — Dukha Bhavana (contemplation of desire's intrinsic suffering): The tension of wanting, the anxiety of potentially not getting, the transience of satisfaction, the immediate return of wanting after satisfaction. Desire by its very structure generates suffering regardless of whether it is satisfied. Only the transformation of desire's energy into Ojas and Brahman-consciousness ends the cycle.","Third layer — Atma Vichara (direct Self-inquiry): In the moment of desire, turn the attention to: who is desiring? Who is this 'I' that wants? When the mind turns to look at the desirer rather than the object of wanting, it finds — as all Siddhas unanimously report — that the desirer cannot be found as a separate entity. In its place is pure awareness — the Brahman that Brahmacharya is named after."],
-      keyPoints:["Viveka = seeing through desire's distortions — clear loving attention, not cynicism or revulsion","Anitya Bhavana: temporary pleasure vs permanent Tejas/Mukti — clear-eyed relative value assessment","Dukha Bhavana: desire's intrinsic suffering cycle — wanting, anxiety, transience, return of wanting","Atma Vichara: who is desiring? Turn to the desirer — find pure Brahman, not a separate self","The supreme Brahmacharya: recognizing that you already ARE what desire is seeking to find"],
-    },
-    {title:"Dream Seed Loss — The Nocturnal Practice for Men",duration:"25 min",type:"practice",siddha:"Agastyar",
-      body:["Nocturnal emission (Swapna Dosha — 'the dream fault') is among the most challenging aspects of male Brahmacharya and one of the most misunderstood. The Siddha explanation: nocturnal emissions occur because the Vasanas in the Karana Sharira are active during the dream state when the conscious will is absent. Physical Brahmacharya seals (Moola Bandha, Vajroli) require the waking state. In the dream state, Vasana-energy can find release through the dream mechanism — particularly in the first 3-4 weeks of a Brahmacharya cycle.","The two-pronged Siddha solution: First, the physical pre-sleep protocol that seals the root energy before the waking state releases. Second, the subtle pre-sleep practice that addresses the Karana Sharira Vasanas directly, so the dream state itself becomes a field of Brahmacharya awareness — approaching the Turiya state (the fourth state of consciousness underlying waking, dreaming, and deep sleep).","If emission occurs: do NOT treat as failure. Do not feel shame. Apply the immediate post-emission protocol and continue practice without missing a day. The Siddha teaching: one release does not undo the accumulation. You resume exactly where you were — with one fewer Vasana in the Karana Sharira."],
-      practice:"PRE-SLEEP BRAHMACHARYA PROTOCOL:\n\nPHYSICAL SEALING (30 min before sleep):\n— 21 sustained Vajroli Mudra contractions: 15 sec on, 5 sec rest\n— 12 rounds Moola Bandha internal retention (4:16:8 ratio)\n— 7 rounds Thirumoolar 5-5-5-5 Breath with Siddha-Gold visualization\n— Sleep position: lie on LEFT side — closes right (Pingala/solar/heating) nostril, opens left (Ida/lunar/cooling) nostril, reducing Pitta fire associated with sexual arousal during sleep\n\nSUBTLE SEALING (as you fall asleep):\n— Maintain Soham awareness as sleep approaches\n— Last conscious thought: SO on natural inhale, HANG on exhale\n— Visualize entire body as Siddha-Gold light — sealed from crown to toes, no leakage anywhere\n— Invoke the Siddha lineage as the guardian of your Brahmacharya during sleep\n— Internally chant HRIM SHRIM KLIM as you drift toward sleep\n\nIF EMISSION OCCURS:\n— Upon waking: no shame. The Vasana released — this is purification.\n— Before getting out of bed: 21 Ashwini + 21 Vajroli contractions + 12 rounds Moola Bandha Pranayama\n— Drink 2 glasses warm water with pinch of saffron and 1 tsp ashwagandha — Ojas replenishment\n— Continue practice without missing a day",
-      keyPoints:["Nocturnal emission = Karana Vasana expressing through dream state when conscious will is absent","Physical sealing: Vajroli (21×15sec) + Moola Bandha Pranayama + 5-5-5-5 breath before sleep","Sleep on LEFT side — closes Pingala nostril, activates cooling Ida current","Subtle sealing: Soham as last thought, Siddha-Gold body visualization, lineage invocation","After emission: no shame + immediate practice protocol + Ojas-replenishment drink — then continue"],
-    },
-    {title:"Rasa Theory: How Taste, Touch & Sound Trigger or Dissolve Desire",duration:"35 min",type:"teaching",siddha:"Agastyar",
-      body:["The Siddhas developed a sophisticated sensory theory mapping exactly how the five senses trigger Vasana-arousal and how the same senses can deliberately dissolve desire and accumulate Ojas. This is the Siddha science of environmental design for Brahmacharya.","TASTE (Rasa): Rajasic foods (spicy, sour, excessively sweet) directly stimulate the Svadhisthana chakra and increase sexual energy non-integratively — adding heat without discipline to direct that heat upward. Tamasic foods (stale, heavy, meat, alcohol) dull awareness and weaken Viveka. Sattvic foods (fresh, lightly sweet, nourishing, easily digestible) support Ojas accumulation and Viveka clarity.","TOUCH (Sparsha): Touch from Siddhas, spiritual teachers, elderly beings of wisdom, and sacred objects increases Ojas. Highly charged Rajasic contact in urban environments is a significant and underestimated source of Ojas leakage. The Siddha prescription: minimize casual physical contact. Cultivate the Pranic exchange of sacred sites, the energy field of Siddha masters, and sacred objects.","SOUND (Nada): The most powerful sense for both arousing and dissolving desire. Music with hypnotic rhythmic patterns and sexual lyrical content increases Vasana-arousal. Silence — the supreme Nada — dissolves all Vasanas by removing their fuel completely. Recommended sonic environment for Brahmacharya practitioners: the music of Vaughn Benjamin/Midnite, devotional chanting (kirtan), and Siddha sound transmissions."],
-      keyPoints:["Rajasic food: adds heat to Svadhisthana without upward direction — arouses non-integratively","Tamasic food: dulls Viveka — makes practitioner more susceptible to Vasana expression","Random urban touch contact: underestimated chronic source of Ojas leakage — be intentional","Silence = the supreme Nada for Vasana dissolution. Sound environment matters profoundly.","Recommended sonic environment: Vaughn Benjamin/Midnite, devotional chanting, Siddha sound transmissions"],
-    },
-    {title:"Trauma & Sexual Energy: The Siddha Healing Approach",duration:"45 min",type:"teaching",siddha:"Agastyar",
-      body:["The Siddha tradition does not separate spiritual practice from psychological healing. The path of Brahmacharya frequently intersects with unprocessed trauma related to sexuality, the body, and intimate experience. Agastyar's medical texts include specific protocols for 'Chitta Kshaya' — damage to the mental-emotional fabric caused by violent, coercive, or shaming sexual experiences.","Sexual trauma creates specific Vasana-knots generating contradictory impulses: strong aversion to sexual experience (seemingly supportive of Brahmacharya) AND compulsive re-engagement as the psyche attempts to process what was overwhelming. Both the aversion and the compulsion are Vasana-patterns requiring healing before authentic Brahmacharya is possible.","Authentic Brahmacharya is characterized by 'Prasada' — a sweet, open, peaceful equanimity in relation to sexuality. The practitioner does not fear sexual energy, avoid it with anxiety, or crave it with compulsion. They rest in sovereign choice from a place of fullness, not deprivation. This Prasada state is not possible when trauma is unprocessed — the nervous system is not safe enough to hold the open, non-reactive awareness Brahmacharya requires.","The Siddha healing protocol: Mantra as vibratory repatterning of the Chitta — Mrityunjaya Mantra for men, Lalitha Sahasranama for women, practiced consistently for 40-120 days. Pranayama specifically targeting Svadhisthana — the 5-5-5-5 practice with the specific intention of healing and safety, not accumulation. And Seva (selfless service) — Agastyar identifies this as the most powerful Chitta-healing tool, because it moves attention from the wounded self to the needs of others, creating new neural pathways not organized around the trauma-response."],
-      keyPoints:["Sexual trauma creates Vasana-knots generating both aversion AND compulsion — both require healing","Authentic Brahmacharya = Prasada state: sovereign, open, peaceful — not fearful or compulsive","Trauma must be addressed before authentic Brahmacharya becomes possible — not optional","3-element Siddha healing: Mantra (40-120 days) + Svadhisthana Pranayama with healing intention + Seva","Seva (selfless service) = most powerful Chitta-healing tool — moves attention from wound to service"],
-    },
-    {title:"Bhakti as the Supreme Brahmacharya — Love That Transcends Lust",duration:"50 min",type:"teaching",siddha:"Thirumoolar",
-      body:["The deepest Siddha teaching: Brahmacharya is not primarily a practice of restraint. It is a practice of love — the expansion of love from its limited, possessive, Kama-driven form into its unlimited, universal, Prema-filled expression. The most celebrated Siddha Brahmacharins were not cold, austere personalities but beings of extraordinary warmth, compassion, and creative joy. They had not suppressed love. They had discovered it in its full dimension.","Bhakti — devotional love — is identified by Thirumoolar as the supreme Brahmacharya path because it directly transmutes Kama into Prema without needing elaborate techniques. The Bhakta genuinely absorbed in love for the Divine — for Shiva, for the Goddess, for Babaji, for Sri Vishwananda — is practicing the highest Brahmacharya automatically, because the entire love-force of the system is engaged in a relationship that is infinitely more fulfilling than any personal sexuality can offer.","Sri Vishwananda as an Avataric Blueprint embodies the quality of divine love that makes Brahmacharya not a discipline but a natural expression. When the heart is genuinely in love with the Divine as a living reality felt in every moment, sexual desire becomes genuinely secondary — not suppressed but satisfied at the source.","Three Bhakti Brahmacharya practices: Puja (worship) — channels the energy of beauty, offering, and intimate relationship toward the Divine. Kirtan (devotional singing) — the Siddha tradition identified Nada as the most direct path to dissolving Kama-Vasanas. Group devotional singing creates a collective Prema-field. Guru Bhakti (devotion to the Teacher) — the Guru is the living embodiment of Brahman. The love of the Guru is the safe, infinite, eternally available love that personal sexuality attempts to simulate."],
-      keyPoints:["Brahmacharya at its deepest is the EXPANSION of love — not restraint but dimensional shift to Prema","Bhakta absorbed in divine love practices supreme Brahmacharya by fulfillment, not deprivation","Sri Vishwananda as Avataric Blueprint: the living demonstration that love transcends lust naturally","Puja + Kirtan + Guru Bhakti = 3 Bhakti practices that directly transmute Kama into Prema","Kirtan: oxytocin elevation provides physiological feeling of connection desire seeks — through the Divine"],
-    },
-  ]
-},
-// MODULE 7 — AKASHA-INFINITY
-{
-  id:"module_7",tier:"akasha-infinity",number:"07",glyph:"👁️",
-  siddhaSource:"Bogar · Konganar · Rare Siddha Siddhi Texts",
-  title:"Siddhi Activation Through Brahmacharya",
-  subtitle:"The 8 Great Powers — The Ultimate Fruit",
-  overview:"When Ojas accumulates beyond a critical threshold through sustained Brahmacharya, the Siddhas documented 8 supernatural powers (Ashta Siddhis) that spontaneously manifest. This is bioenergetic physics in Siddha language. This module maps the complete Siddhi territory, the 100-day initiation protocol, and the Khechari Mudra transmission.",
-  lessons:[
-    {title:"The Ashta Siddhis: What They Are & The Ojas Thresholds Required",duration:"45 min",type:"teaching",siddha:"Bogar",
-      body:["The Ashta Siddhis — the 8 great powers: Anima (becoming infinitely small), Mahima (infinitely large), Laghima (weightlessness), Garima (infinite heaviness), Prapti (touching any object at any distance), Prakamya (fulfillment of any desire), Ishitva (mastery over all living beings), and Vashitva (command over the forces of nature). These are the natural fruits of a body and consciousness saturated with Amrita — the final refinement of sustained Brahmacharya Ojas accumulation.","How Siddhis arise — the Siddha model: they are not acquired by practice but revealed by purification. The Siddhis are latent in every human consciousness — expressions of the fundamental capacities of pure consciousness (Brahman), which is already omniscient, omnipresent, and omnipotent. They are concealed by Ojas depletion and Vasana-density. As Brahmacharya removes these veils, the Siddhis spontaneously emerge — like the sun emerging from behind clouds.","The Ojas thresholds Bogar identifies: First (90 days): Persistent inner spine warmth, spontaneous sensory clarity, prophetic dreams — beginning of Prapti. Second (1 year): Spontaneous Keval Kumbhaka during meditation — breath stops of its own accord, Samadhi without effort. Third (3 years): Consistent remote viewing, thought-reading, and precognitive dreams occurring naturally. Fourth (12 years): Kaaya Siddhi manifests — unusual sustained youthfulness, absence of illness, inner luminosity visible to others.","WARNING: The Siddhas are explicit — pursuing Siddhis as goals derails the practice. Practice for liberation, not power. The Siddhis are indicators, not achievements."],
-      keyPoints:["Ashta Siddhis = 8 powers: Anima, Mahima, Laghima, Garima, Prapti, Prakamya, Ishitva, Vashitva","Siddhis are not acquired — they are revealed as Ojas removes the veils of depletion and Vasana-density","4 thresholds: 90 days (first signs), 1 year (Samadhi access), 3 years (paranormal), 12 years (Kaaya Siddhi)","Siddhis are indicators that Brahmacharya is producing its fruit — not goals to pursue directly","Pursuing Siddhis as goals derails the practice — the Siddhas are explicit on this point"],
-    },
-    {title:"Anima, Mahima & the Consciousness Siddhis Explained",duration:"40 min",type:"teaching",siddha:"Konganar",
-      body:["Anima and Mahima are the first two Siddhis and the most fundamental. In the Siddha understanding, they describe the expansion of consciousness that occurs when Ojas reaches the brain and transforms the experiential field — not necessarily literal physical shrinking or enlarging.","Anima corresponds to 'micro-attention' — the capacity to place awareness with extraordinary precision inside the subtlest processes of the body-mind: the movement of a single Nadi, the arising of a single thought before it has taken form. This exquisite precision of attention is the biological function of accumulated Ojas in the Majja Dhatu (nervous system) — when the nervous system is Ojas-saturated, it develops sensitivity beyond the ordinary range.","Mahima corresponds to 'cosmic consciousness' — the direct experiential knowing that one's awareness is not confined to the body but extends into and through all of space without limit. The Siddhas described this as a common feature of advanced Brahmacharya states during deep meditation.","Konganar writes: 'As the Bindu rises through Sushumna and reaches the Sahasrara, the practitioner simultaneously experiences the capacity to become as small as the Bindu and as large as the universe in which the Bindu moves. He who has known this will never again mistake himself for the body.' These Siddhis are corrected self-perception — the removal of a fundamental error, not the acquisition of special powers."],
-      keyPoints:["Anima = micro-attention: extraordinary precision from Ojas-saturated Majja Dhatu (nervous system)","Mahima = cosmic consciousness: direct knowing of awareness unbounded by the body","Both arise as biological functions of accumulated Ojas in Majja Dhatu and Sahasrara","Konganar: 'He who has known this will never again mistake himself for the body'","These Siddhis are corrected self-perception — not special powers but the removal of a fundamental error"],
-    },
-    {title:"Khechari Mudra — The Tongue Seal: Key to Bindu Preservation",duration:"45 min",type:"practice",siddha:"Thirumoolar",
-      body:["Khechari Mudra — 'moving through space' — is described by Thirumoolar as the supreme Mudra: 'Among all the Mudras, none equal to Khechari.' It is the practice of folding the tongue backward and upward so that it touches, and eventually enters, the nasopharynx — the cavity above the soft palate. In its advanced form the tongue contacts the Lalana Chakra where Amrita first accumulates before dripping downward.","The physiological basis: the nasopharynx and soft palate are richly innervated with vagal nerve endings. Sustained tongue pressure here activates the vagal response — a deep parasympathetic shift that immediately reduces sympathetic nervous system activation (fight-or-flight, sexual arousal). Modern vagal nerve research confirms: sustained stimulation of this region produces measurable reductions in cortisol, adrenaline, and the neurological cascade associated with sexual arousal.","The Bindu preservation function: Khechari Mudra directly contacts the Lalana Chakra — where the Siddhas located the first accumulation point of ascending Ojas transforming into Amrita. The subtle sweetness that practitioners eventually taste in this region is, in the Siddha understanding, the literal taste of Amrita — the neurochemical product of sustained Ojas ascension through Sushumna."],
-      practice:"KHECHARI MUDRA — ACCESSIBLE STAGE PRACTICE:\n\nFOUNDATION (weeks 1-4):\nIn Siddhasana, turn the tongue backward and upward, pressing the tip of the tongue against the soft palate (the soft area at the back of the roof of the mouth, behind the hard palate). The tongue tip reaches toward the throat. Hold for 5-10 minutes while meditating. Sufficient to stimulate the vagal response and begin Lalana Chakra activation.\n\nINTERMEDIATE (months 2-6):\nThe tongue curls more deeply backward, with the underside pressing against the hard palate and the tip reaching toward the uvula. Hold for the full duration of your meditation session — 20-40 minutes. A sweetish or neutral taste may develop in this area over weeks. This is the initial Amrita taste.\n\nKHECHARI + KUMBHAKA INTEGRATION (the Siddha power practice):\nDuring Antara Kumbhaka (full retention): apply Khechari Mudra + Moola Bandha + Jalandhara Bandha simultaneously. Khechari contacts the Lalana Chakra above while Moola Bandha seals the root below — the Ojas-Amrita is completely contained between these two seals. This is the most advanced single Brahmacharya practice in the Siddha system.\n\nFREQUENCY: Practice Khechari Mudra during all sitting meditation and mantra practice — it becomes a continuous feature of the inner posture.",
-      keyPoints:["Thirumoolar: 'Among all Mudras, none equal to Khechari' — the supreme Brahmacharya seal","Physiological: vagal stimulation reduces cortisol, adrenaline, and sexual arousal cascade measurably","Lalana Chakra contact = 'catches' ascending Amrita before it drips downward and is lost to digestive fire","Sweet taste developing in this region = initial Amrita taste — neurochemical product of Ojas ascension","Khechari + Antara Kumbhaka + Moola Bandha = the most advanced single Brahmacharya practice"],
-    },
-    {title:"Living Brahmacharya in the Modern World — The Householder Path",duration:"40 min",type:"teaching",siddha:"Thirumoolar · Agastyar",
-      body:["The Siddha tradition is explicit: Brahmacharya can be practiced by householders — married people, people with partners, people in full-time worldly life. The 18 Siddhas included both sannyasis (renunciates) and grihastas (householders). Brahmacharya is not a monastic vow — it is a principle of energy sovereignty applicable within any lifestyle.","The Grihasta Brahmacharya teaching: the goal is not absolute abstinence from sexuality but the transformation of the quality of sexual engagement — from unconscious, compulsive, and Ojas-depleting to conscious, chosen, and Ojas-preserving. Even before Module 8's Sacred Union teaching, the householder's daily practice — Pranayama, Bandha, mantra Kavacha, diet, asana — creates a fundamental shift in how sexual energy is experienced.","The practical modern reality: social media, streaming content, and digital advertising are specifically designed to exploit the Svadhisthana chakra's attention through visual sexual stimulus — 'Rupa-Vasana' (visual impression-desire). The Brahmacharya practitioner must become extremely intentional about visual consumption — not out of prudishness but out of Ojas protection.","The complete Brahmacharya lifestyle integrates: Brahma Muhurta rising (4:30-6:00 AM). Daily Pranayama (non-negotiable). Daily mantra Kavacha (15-minute minimum is the absolute floor). Ojas diet (80% adherence minimum). Continuous subtle Moola Bandha. 3 Ashwini contractions with every arising desire. Soham awareness throughout the day. Intentional sound and visual environment. Regular sacred site visits. Weekly extended mantra practice. Satsang — spiritual community raises the collective Ojas-field, which raises the individual's baseline."],
-      keyPoints:["Brahmacharya is for householders as well as renunciates — the Siddhas include both explicitly","Grihasta Brahmacharya: not absolute abstinence but transformation of the quality of engagement","Digital media = 'Rupa-Vasana' (visual impression-desire) — be extremely intentional about visual consumption","Complete Brahmacharya lifestyle: Brahma Muhurta + Pranayama + Mantra + Diet + Bandha + Soham + Community","Satsang: collective Ojas-field of a practice community raises the individual's baseline significantly"],
-    },
-    {title:"The 100-Day Ojas Protocol — The Siddha Initiation Sequence",duration:"60 min",type:"practice",siddha:"Bogar",
-      body:["The 100-day intensive Brahmacharya protocol is the Siddha system's formal initiation sequence — the minimum period required to establish the Ojas-brain interface sufficiently for reliable access to higher states. Unlike the 40-day cycle (a foundational unit), the 100-day protocol is a complete transformational arc that permanently alters the baseline of the practitioner's energy system.","Phase 1 (Days 1-33): Complete observance of all Modules 2-5 practices. The emphasis is physical and energetic. Expected: significant physical changes, emotional turbulence as Vasanas surface, and the first signs of Majja Dhatu restoration — unusual mental clarity and improved memory.","Phase 2 (Days 34-66): Emphasis shifts to the mantra and psychological practices of Modules 4 and 6. Physical practices maintained but focus is on subtle and causal body. The Ojas accumulated in Phase 1 is now refined by Tejas. Signs: inner visions, beginning of Divya Drishti (divine perception), spontaneous Soham awareness, natural generosity as the practitioner has Ojas to spare.","Phase 3 (Days 67-100): Integration and stabilization. Practices continue with less effort — they have become habitual. Focus on Viveka and Bhakti. By day 100: fundamentally altered relationship with desire (no longer compulsive), measurably increased creative capacity, unusual interpersonal magnetism, and the first reliable experiences of Brahmacharya Ananda — a spontaneous joy arising from within, independent of external circumstances."],
-      practice:"100-DAY PROTOCOL DAILY SCHEDULE:\n\nBRAHMA MUHURTA (4:30-6:00 AM):\n— 2 glasses warm copper-vessel water\n— Complete Pranayama sequence (Module 3) — 45-60 min\n— 108 reps OM NAMA SHIVAYA with chakra mapping — 40 min\n— 10 min Siddhasana silence — integration\n\nMORNING (7:00-8:00 AM):\n— Ojas breakfast (Module 2 protocol)\n— Module 5 asana sequence — full or minimal version\n\nTHROUGHOUT THE DAY (continuous):\n— Subtle Moola Bandha maintained at all times\n— Soham awareness with every breath\n— 3 Ashwini contractions with every arising desire\n\nEVENING (6:00-7:00 PM):\n— Phase 1-2: 108 HRIM SHRIM KLIM\n— Phase 3: 108 Mrityunjaya\n— 20 min Antar Mouna (Module 6)\n— Puja or devotional practice\n\nBEFORE SLEEP:\n— Complete pre-sleep protocol (Module 6)\n— Sleep on left side\n— Soham as the last conscious awareness\n\nWEEKLY ADDITIONS:\n— Full Sahasranama on Fridays\n— Maha Mudra extended (12 rounds each side) twice weekly\n— Ekadashi fasting — Ojas accumulates 2-3× normal rate on this day",
-      keyPoints:["100 days = Siddha initiation threshold — permanently alters baseline of the energy system","Phase 1 (1-33): physical-energetic foundation — complete observance, maximum discipline, no exceptions","Phase 2 (34-66): subtle and causal work — inner visions, Divya Drishti, spontaneous Soham","Phase 3 (67-100): integration and stabilization — Viveka + Bhakti focus, practices become habitual","Day 100 markers: altered desire relationship, creative surge, magnetism, spontaneous Brahmacharya Ananda"],
-    },
-    {title:"Advanced Khechari & the Soma Nectar — Amrita Activation",duration:"45 min",type:"practice",siddha:"Bogar",
-      body:["Bogar's alchemical texts describe in precise detail the progression of Khechari Mudra through to full Soma nectar activation — the stage at which the practitioner begins to taste and experience Amrita as a continuous subtle presence. The progression: Weeks 1-4 (Soft Palate Contact): Tongue tip presses the soft palate. No taste changes yet. Vagal activation produces measurable inner calm. Weeks 5-12 (Uvula Region): Tongue tip approaches the uvula. Occasional brief sweetness in the back of the mouth. The Lalana Chakra is beginning to respond. Months 3-6 (Deep Khechari): The deepest sustainable backward curling of the tongue combined with intentional swallowing of any arising taste — this act of 'drinking' the Amrita is itself the practice. Months 6-12+ (Soma Nectar Activation): A consistent subtle sweetness arises in the back of the mouth-throat region during extended meditation, intensifying during periods of high Ojas accumulation.","Bogar writes: 'He who has tasted the Soma in his own body knows that death is a lie. For the substance that makes death inevitable — the depletion of Ojas — he has reversed. And the substance that makes immortality possible — the Amrita — he has begun to produce.'"],
-      practice:"AMRITA ACTIVATION PROTOCOL:\n\nDAILY AMRITA PRACTICE (integrate into existing Pranayama session):\n1. During Antara Kumbhaka: Apply Khechari Mudra + Moola Bandha + Jalandhara Bandha simultaneously. Hold for the full retention period.\n\n2. SOMA VISUALIZATION: During retention with all three seals, visualize the Soma Chakra (upper brain/pineal region) as a luminous cool silver moon. A drop of golden Amrita begins forming and descends through the chakras: Ajna → Vishuddha → Anahata → Manipura → Svadhisthana → Mooladhara — saturating each center with the nectar of accumulated Ojas.\n\n3. AMRITA INTERNALIZATION: If any taste arises in the back of the mouth during practice, do not swallow it away — draw it in consciously and deliberately. This 'drinking' of the arising taste IS the Amrita Pana (nectar-drinking practice). Each such drinking is a direct Ojas-Amrita internalization.\n\n4. POST-PRACTICE OBSERVATION (10 min): Sit in Siddhasana after practice. Notice: inner coolness? Subtle inner fragrance? A quality of luminosity or aliveness in the body? These are the early signs of Amrita activation. Document them in a practice journal.",
-      keyPoints:["Khechari progression: 4 stages over 6-12+ months toward consistent Soma nectar experience","Amrita taste = literal neurochemical production by the sustained Brahmacharya-Ojas system","Amrita Pana: deliberately 'drinking' any taste arising in the back of the mouth during practice","Soma visualization: silver moon in upper brain dripping golden Amrita through all chakras during Kumbhaka","Bogar: 'He who has tasted the Soma in his own body knows that death is a lie'"],
-    },
-    {title:"Living as Brahmacharya — The Complete Daily Practice Guide",duration:"40 min",type:"practice",siddha:"Thirumoolar · Agastyar · Bogar",
-      body:["This lesson synthesizes the entire curriculum into a single cohesive daily practice guide — the complete Brahmacharya lifestyle as transmitted by the 18 Siddhas. This is not a list of things to do. It is a description of how a practitioner lives when Brahmacharya has become their nature rather than their discipline.","When Brahmacharya is mature, there is no separation between 'practice time' and 'life.' Every breath is Soham. Every desire is met with three Ashwini contractions. Every meal is chosen as Ojas medicine. Every waking moment the subtle Moola Bandha holds. Every sound listened to is filtered through the Brahmacharya Kavacha. Every interaction is an opportunity for Pranic exchange or Pranic conservation. The practitioner does not 'do Brahmacharya' — they ARE Brahmacharya.","The external signs the Siddhas described as markers of mature Brahmacharya: Physical radiance visible to observers — the Ojas-luminosity. Extraordinary memory and recall — Majja Dhatu fully nourished. Unusual warmth and compassion in all relationships — Anahata overflowing. Creative power expressing without struggle — the Shakti no longer leaking outward finds expression through all creative channels. Genuine equanimity that no external circumstance can override — the inner fullness of Ojas accumulation. And finally: 'the fragrance' — a subtle quality of presence that others notice and are drawn to without being able to name. The unmistakable signature of a being in whom the sacred fire of Ojas is burning cleanly upward."],
-      keyPoints:["Mature Brahmacharya: no separation between practice time and life — it IS what you are","External signs: physical radiance, extraordinary memory, natural compassion, effortless creative power","The inner equanimity of Ojas accumulation: no external circumstance can override genuine inner fullness","'The fragrance' — the unmistakable quality of presence in an Ojas-rich being, perceptible to all","The complete path: every breath Soham, every desire three Ashwini, every meal chosen, every moment aware"],
-    },
-  ]
-},
-// MODULE 8 — AKASHA-INFINITY
-{
-  id:"module_8",tier:"akasha-infinity",number:"08",glyph:"∞",
-  siddhaSource:"Thirumoolar · Agastyar · Siddha Tantra Tradition",
-  title:"Sacred Union — Brahmacharya for Couples",
-  subtitle:"Maithuna Alchemy & the Siddha Tantric Code",
-  overview:"The highest Siddha teaching: sacred union between partners, practiced with Brahmacharya principles, is itself a profound Sadhana. This module transmits the Siddha Tantric codes for transforming intimate life into a Kundalini activation technology — where union deepens rather than depletes the Ojas of both partners.",
-  lessons:[
-    {title:"Siddha Tantra vs Degraded Tantra — The Critical Distinction",duration:"30 min",type:"teaching",siddha:"Thirumoolar",
-      body:["The word Tantra has been badly degraded in modern usage. The Siddha tradition has a precise and unambiguous distinction between authentic Tantra and what Thirumoolar calls 'Pashu Tantra' — the animal-level Tantra of those who use spiritual language to justify unconscious sexuality.","Authentic Siddha Tantra is defined by one empirical criterion: does the practice increase or decrease Ojas in both partners? If sexual union depletes Ojas — produces fatigue, emotional instability, craving for more, spiritual dryness — it is Pashu Tantra regardless of what it is called. If sexual union increases Ojas — produces deepened vitality, emotional clarity, meditative depth, and spiritual expansion — it is Siddha Tantra. The test is empirical, not ideological.","Ojas-depleting factors: frequent physical orgasm (particularly for men), absence of Bandha practice before and during union, emotional unconsciousness (unresolved tension, performance anxiety, disconnection), and post-union patterns of separation and distraction rather than integration. Ojas-increasing factors: extended non-climactic physical intimacy, Bandha practice maintained throughout, deep emotional presence and heart-opening, shared Pranayama or mantra before union, and extended post-union meditation in physical contact.","The ultimate sign that union is being practiced correctly: couples who practice Siddha Tantra together report that their individual Brahmacharya practices dramatically deepen — the relationship becomes a vehicle for the practice, not an obstacle to it."],
-      keyPoints:["Authentic Tantra = union that increases Ojas in both partners. Pashu Tantra = union that depletes.","The test is empirical: post-union vitality, clarity, and meditative depth — or fatigue and craving?","Ojas-depleting: frequent orgasm, no Bandha practice, emotional unconsciousness, no post-union integration","Ojas-increasing: extended presence, Bandha throughout, shared Pranayama, extended post-union stillness","Correct Siddha Tantra: the relationship deepens individual Brahmacharya — not undermines it"],
-    },
-    {title:"The Maithuna Protocol: Conservation Within Sacred Union",duration:"50 min",type:"practice",siddha:"Thirumoolar",
-      body:["Maithuna — sacred sexual union — is the Siddha Tantric practice of physical intimacy with full Brahmacharya principles engaged throughout. The core distinction from ordinary sexuality: in Maithuna, the practitioner applies Vajroli Mudra during the practice to redirect the sexual energy upward rather than allowing it to discharge outwardly.","For men, Vajroli application during Maithuna means: throughout the entire period of intimacy, the urethral sphincter and related musculature are engaged in a pattern of rhythmic contraction that redirects the approaching ejaculatory energy upward through Sushumna rather than outward. This requires at least 60-90 days of Vajroli Mudra training (Module 5) before attempting. Attempting without sufficient muscular training produces frustration rather than transformation.","For women, Maithuna practice involves: sustained Yoni Mudra engagement throughout intimacy, directing the Shakti of arousal and the partner's Ojas upward through the chakras. The Siddha teaching for women during Maithuna: receive the partner's Ojas consciously, direct it immediately upward to the heart center (Anahata) with each breath, and do not release the Shakti outward but allow it to circulate as an ascending wave through the entire chakra column.","The post-Maithuna integration phase is not optional: both partners lie in stillness for a minimum of 30 minutes, maintaining physical contact, breathing synchronously, practicing Soham awareness. Rising immediately after intimacy and engaging in ordinary activity is identified as the single greatest source of Ojas loss in the coupled Brahmacharya practice."],
-      practice:"MAITHUNA PREPARATION PROTOCOL:\n\nPRE-UNION (30-60 min before):\n— Both partners: 21 rounds of Thirumoolar 5-5-5-5 Pranayama — establishes the Brahmacharya Kavacha in both\n— Shared mantra: OM NAMA SHIVAYA chanted together for 5 minutes — establishes Shiva-Kavach as a shared field\n— Optional: shared Puja together, offerings to the Divine, invoking the Siddha lineage\n— Both partners apply light Moola Bandha before union begins and maintain it throughout\n\nDURING UNION:\n— Men: Apply Vajroli Mudra rhythm — rhythmic contractions of the urethral sphincter. On inhale: visualize Ojas ascending through Sushumna. On exhale: feel Ojas distributing through Anahata.\n— Women: Apply Yoni Mudra throughout. With each breath, draw partner's Ojas upward to the heart center. Keep attention at Anahata, not at Svadhisthana.\n— Both partners: Maintain sustained eye contact (Drishti exchange — Ajna-to-Ajna consciousness transmission)\n— Both partners: Breathe synchronously — inhale together, exhale together. Creates a unified Prana field.\n\nPOST-UNION INTEGRATION (minimum 30 minutes — absolutely not optional):\n— Lie in stillness in physical contact\n— Synchronous Soham breathing together\n— Shared visualization: Siddha-Gold light filling both bodies, rising from the point of physical contact through both Sushumnas simultaneously to both crowns\n— No speaking. No phones. No ordinary activity. This is when the alchemy consolidates.",
-      keyPoints:["Vajroli Mudra application during union = redirects male ejaculatory energy upward through Sushumna","Requires 60-90 days of Vajroli training (Module 5) before attempting — not optional","Women: Yoni Mudra throughout, draw partner's Ojas upward to Anahata with each breath","Synchronized breathing during union: creates a unified Prana field — major Ojas amplifier","Post-union 30 min stillness in physical contact is ABSOLUTELY NOT OPTIONAL — the alchemy consolidates here"],
-    },
-    {title:"Chakra-to-Chakra Transmission Between Partners",duration:"40 min",type:"teaching",siddha:"Agastyar",
-      body:["The Siddha Tantric understanding: sexual union is a chakra-to-chakra Pranic transmission — the Ojas-fields of the two practitioners interpenetrate and exchange at every level of the chakra column simultaneously. The degree of Ojas in each practitioner, the openness of each chakra, and the quality of attention during union determines whether this exchange increases or decreases the Ojas of both.","Agastyar's chakra transmission map: Mooladhara level: safety, physical vitality, and survival trust are exchanged — union grounds both practitioners in the earth element. Svadhisthana level: creative energy, emotions, pleasure, and creative impulse flow between partners — the water elements meet and exchange. Manipura level: personal power and dignity are reinforced or undermined at this level depending on the quality of equality and respect in the union. Anahata level — the heart — the Ojas-exchange is most potent: this is where the Brahmacharya practitioner's conserved Ojas radiates outward and the partner's Ojas radiates back. Unions that open the Anahata produce the signature Siddha Tantra experience: love so vast it loses its possessive quality entirely and becomes indistinguishable from love of the Divine.","The eye-contact transmission (Drishti exchange): Agastyar specifically identifies sustained direct eye contact during union as a significant Siddha Tantra practice. The eyes are the physical expression of the Ajna chakra. Sustained mutual eye contact during intimacy creates an Ajna-to-Ajna Pranic link — a direct consciousness-to-consciousness transmission. The Siddhas called this 'Shiva-Shakti Drishti' — seeing the Divine in each other's eyes."],
-      keyPoints:["Physical union = chakra-to-chakra Pranic transmission at all 7 levels simultaneously","Anahata level: the most potent Ojas-exchange — conserved Ojas radiates outward into the shared field","Anahata-open union: love loses its possessive quality and becomes indistinguishable from Divine love","Drishti exchange (sustained eye contact) = Ajna-to-Ajna consciousness transmission","Manipura level: equality and mutual dignity in the union determines whether power exchange is Ojas-building"],
-    },
-    {title:"Moon Phase & Brahmacharya: The Siddha Calendar for Couples",duration:"35 min",type:"teaching",siddha:"Agastyar",
-      body:["Agastyar's calendar texts specify exact recommendations for when Maithuna is Ojas-building, neutral, or Ojas-depleting based on the lunar phase. The Moon's gravitational influence on the Earth's water systems extends to the water element in the human body — particularly Shukra/Artava, which as water-element substances are directly influenced by lunar cycles.","EKADASHI (11th day of both lunar fortnights): The most important Brahmacharya day of the lunar month. The Siddha prescription: complete Brahmacharya — no physical union, extended fasting or light diet, extended mantra and Pranayama practice. The Siddhas observed that Ojas accumulates at approximately 2-3× the normal rate on Ekadashi days when full Brahmacharya is observed. This is the power day of the Brahmacharya calendar.","PURNIMA (Full Moon): The Ojas system reaches its monthly peak. Full Brahmacharya on Purnima is the most powerful single monthly practice. If physical union is chosen on this day, it should be practiced with maximum Maithuna discipline — both partners fully in Bandha practice, sustained Drishti exchange, extended post-union integration — because the Ojas-exchange potential is also at its maximum.","AMAVASYA (New Moon): The Ojas system is at its monthly nadir. Complete rest and gentleness. No intense physical practice, no fasting, no physical union. This is the day for the deepest inner stillness — the Amavasya meditation (complete silence from sunset to sunrise) is one of the most potent single practices in the Siddha Brahmacharya calendar.","For women: when menstruation falls on Amavasya (new moon), the feminine Brahmacharya is in perfect alignment with the Siddha calendar — Agastyar describes this alignment as 'the greatest possible auspiciousness' for feminine Brahmacharya practice."],
-      keyPoints:["Moon directly influences Shukra/Artava (water-element substances) — the Siddha calendar is chronobiology","Ekadashi (11th lunar day): Ojas accumulates 2-3× normal rate with complete Brahmacharya — the power day","Purnima (Full Moon): Ojas at monthly peak — maximum Brahmacharya or maximum quality Maithuna","Amavasya (New Moon): Ojas at nadir — complete rest, no union, deepest inner stillness only","Women: menstruation on Amavasya = perfect alignment with Siddha lunar calendar — 'greatest auspiciousness'"],
-    },
-    {title:"Healing Sexual Trauma Through Siddha Energy Work",duration:"45 min",type:"teaching",siddha:"Agastyar",
-      body:["Sacred union in the Siddha Tantric path is also one of the most powerful healing modalities for sexual trauma — when practiced with complete safety, explicit and ongoing consent, and the full presence of both partners. Agastyar's healing texts describe Pranic protocols for using the Ojas-rich presence of a Brahmacharya-practicing partner to assist in the healing of Chitta Kshaya (psychic damage) related to sexual experience.","The fundamental Siddha teaching: sexual trauma at the Pranic level is a depletion and distortion of the Svadhisthana chakra (water element center governing creative energy, pleasure, and intimate connection) and a contracted Anahata chakra (heart center governing love, trust, and vulnerability). Healing at the Pranic level means restoring the Svadhisthana to its natural flowing, abundant quality and opening the Anahata to the safety of genuine intimate presence.","The conditions required: absolute physical and emotional safety, established over months or years before any physical intimacy begins. A partner who is themselves a Brahmacharya practitioner — whose Ojas field is rich enough to offer genuine Pranic nourishment rather than drawing on the wounded partner's already-depleted field. Complete freedom from performance expectations or timeline pressure. The intention of both partners to serve each other's highest good.","The specific healing application: the Brahmacharya practitioner, in physical proximity to the healing partner, consciously radiates their Ojas from the Anahata outward. This Ojas radiation is felt by sensitive practitioners as warmth, fullness, and safety — it literally nourishes the depleted Svadhisthana of the healing partner at the Pranic level. Extended periods of non-sexual physical presence (holding, hand contact, lying in proximity) with both partners in meditative awareness are often more powerful for Pranic healing than any active Maithuna practice."],
-      keyPoints:["Sacred union can be a healing sadhana for sexual trauma when practiced with full safety and consent","Sexual trauma at the Pranic level = Svadhisthana depletion + Anahata contraction","Conditions for healing through union: absolute safety, Brahmacharya-practicing partner, no performance pressure","Partner's Ojas radiation from Anahata provides literal Pranic nourishment to depleted Svadhisthana","Non-sexual physical presence in meditative awareness often more powerful than active Maithuna for trauma healing"],
-    },
-    {title:"Building Ojas Together: Partner Pranayama Practices",duration:"40 min",type:"practice",siddha:"Thirumoolar · Agastyar",
-      body:["Shared Pranayama between partners is the most underutilized Siddha Tantra tool. When two practitioners breathe together in synchronized Pranayama, their Prana fields entrain — a measurable phenomenon in which the breath rhythms, heart rate variability patterns, and brain wave patterns gradually synchronize. The Siddhas observed this as the beginning of Pranic union — a merging of the two practitioners' energy fields at a far subtler level than physical intimacy.","When two Brahmacharya practitioners who have both accumulated significant Ojas sit together in synchronized Pranayama, the combined Ojas field is not just the sum of their individual fields — it is amplified. The Siddhas called this 'Yugal Tapas' — couple's tapas — and described it as producing Siddhi-level energy states in both practitioners simultaneously that neither would access alone.","At the most advanced level, partner Pranayama becomes indistinguishable from the Maithuna practice — the energetic union precedes and informs the physical union, and eventually the distinction between the two becomes unnecessary. The Siddha teaching on this point: when partners can sit together for one hour in synchronized Pranayama and experience states deeper than physical union, they have reached the level of Siddha Tantra mastery."],
-      practice:"PARTNER PRANAYAMA PROTOCOLS:\n\nLEVEL 1 — BACK-TO-BACK SYNCHRONIZATION (for new practice partners):\n— Both sit in Siddhasana, back-to-back, spines touching\n— Close eyes. Allow the breath to gradually synchronize naturally\n— Once synchronized: begin Thirumoolar 5-5-5-5 practice together\n— Duration: 20-30 minutes\n— Focus: Feel the combined Ojas field as a single sphere of Siddha-Gold light surrounding both bodies\n\nLEVEL 2 — FACE-TO-FACE DRISHTI PRANAYAMA (for established practice partners):\n— Both sit in Siddhasana facing each other, knees almost touching\n— Maintain gentle direct eye contact throughout\n— Synchronized 5-5-5-5 Pranayama: inhale together, hold together, exhale together, hold empty together\n— During full retention: both apply Moola Bandha simultaneously. Visualize a shared column of Siddha-Gold light rising from both Mooladharas, meeting in the space between you, merging, and rising to both Sahasraras simultaneously\n— Duration: 21 rounds (approximately 35 minutes)\n\nLEVEL 3 — SHARED MANTRA + PRANAYAMA (the complete practice):\n— 10 min Level 2 practice\n— 54 reps HRIM SHRIM KLIM chanted in synchrony\n— 10 more min Level 2 synchronized Kumbhaka\n— Close: OM NAMA SHIVAYA — 3 times aloud together\n— 10 min shared silence, maintaining eye contact or closed eyes\nTotal: 40-50 minutes",
-      keyPoints:["Synchronized partner Pranayama = Pranic field entrainment — measurable HRV and brain wave synchrony","Yugal Tapas: combined Ojas field is amplified beyond the sum of individual fields","Level 1 (back-to-back): natural breath synchronization then 5-5-5-5 — accessible to all couples","Level 2 (face-to-face Drishti): sustained eye contact + synchronized Kumbhaka + shared Bandha + merged visualization","Level 3 (full): Pranayama + HRIM SHRIM KLIM + OM NAMA SHIVAYA — the complete shared Brahmacharya Sadhana"],
-    },
-    {title:"The Supreme Teaching: Brahmacharya as Cosmic Love",duration:"55 min",type:"teaching",siddha:"Thirumoolar · All 18 Siddhas",
-      body:["This final lesson is the synthesis — the teaching that reveals the ultimate nature of Brahmacharya not as a discipline, not as a practice, but as the recognition of what Love actually is when it is no longer limited by the fear of loss.","At the very root of sexual desire is the impulse toward union — the drive to dissolve the boundary between self and other, to experience oneself as part of something larger, to taste the Shiva-Shakti union that is the universe's own nature. This impulse is not wrong. It is not sinful. It is not an obstacle to enlightenment. It IS the enlightenment impulse — the universe's drive toward its own recognition of itself through the meeting of consciousness and creative power.","The tragedy of unconscious sexuality is not that it seeks union — it is that it settles for a pale, brief, and ultimately unsatisfying simulation of the union it is actually seeking. The sexual climax offers a momentary dissolution of the self-other boundary — the Shiva-flash — and then the boundary returns more solidly than before, along with depletion and craving. Like drinking salt water to quench thirst — the action addresses the impulse but worsens the underlying condition.","Brahmacharya, in its mature expression, is not the denial of this union-impulse. It is the commitment to finding the actual object of that impulse rather than the simulations. The union that Brahmacharya seeks — and eventually finds — is the union of individual consciousness with the Infinite Consciousness from which it arose. This is Shiva-Shakti union at its actual scale: not the meeting of two people, but the meeting of the individual Atman with the universal Brahman.","When this union is experienced in the deep Samadhi states that sustained Brahmacharya makes possible, the practitioners of all traditions, in all times, have said the same thing: compared to this, nothing else is needed. Not as an idea. As direct experience.","The final teaching of the 18 Siddhas, transmitted through 3,000 years of direct realization: Brahmacharya is not the path of those who do not love. It is the path of those who love so much that they refuse to accept anything less than the Absolute. The lover who practices Brahmacharya is not renouncing love — they are pursuing it to its source. And the Siddhas say unanimously: what they found at that source makes every sacrifice of the path not just worthwhile, but laughable to describe as sacrifice at all. They found the Beloved. Not a person. The Beloved. And they have been trying to tell us ever since: It was worth it. Every moment was worth it. Go there."],
-      keyPoints:["Sexual desire = the enlightenment impulse misdirected — the drive toward Shiva-Shakti union itself","The tragedy: unconscious sexuality settles for a simulation of the union it is actually seeking","Brahmacharya pursues the actual object of desire: individual Atman united with universal Brahman","Mature Brahmacharya is not the denial of love — it is love refusing to accept anything less than the Absolute","The Siddhas: 'What we found at the source makes every sacrifice of the path laughable to call sacrifice'"],
-    },
-  ]
-},
+const TIER_ORDER: { slug: string; label: string }[] = [
+  { slug: 'free', label: 'Atma-Seed' },
+  { slug: 'prana-flow', label: 'Prana-Flow' },
+  { slug: 'siddha-quantum', label: 'Siddha-Quantum' },
+  { slug: 'akasha-infinity', label: 'Akasha-Infinity' },
 ];
 
-// ─── HELPERS ──────────────────────────────────────────────────
-function canAccess(moduleId: string, tier: string): boolean {
-  const access = TIER_ACCESS[tier];
-  if (access === "all") return true;
-  return Array.isArray(access) && access.includes(moduleId);
-}
-
-// ─── SUB-COMPONENTS ───────────────────────────────────────────
-function TierBadge({ tier }: { tier: string }) {
-  const colors: Record<string, string> = {
-    free: "rgba(212,175,55,0.2)",
-    "prana-flow": "rgba(34,211,238,0.2)",
-    "siddha-quantum": "rgba(168,85,247,0.2)",
-    "akasha-infinity": "rgba(212,175,55,0.35)",
-    admin: "rgba(212,175,55,0.5)",
-  };
-  return (
-    <span style={{
-      background: colors[tier] || "rgba(255,255,255,0.1)",
-      border: "1px solid rgba(212,175,55,0.3)",
-      borderRadius: "20px",
-      padding: "2px 10px",
-      fontSize: "9px",
-      fontWeight: 800,
-      letterSpacing: "0.12em",
-      color: "#D4AF37",
-      textTransform: "uppercase",
-    }}>
-      {TIER_LABELS[tier]}
-    </span>
-  );
-}
-
-function LessonModal({ lesson, onClose }: { lesson: Lesson; onClose: () => void }) {
-  return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(5,5,5,0.92)", backdropFilter: "blur(20px)",
-      display: "flex", alignItems: "flex-start", justifyContent: "center",
-      padding: "20px", overflowY: "auto",
-    }} onClick={onClose}>
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: "100%", maxWidth: "760px", marginTop: "20px",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(212,175,55,0.2)",
-          borderRadius: "32px", padding: "36px",
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-          <span style={{
-            fontSize: "10px", fontWeight: 800, letterSpacing: "0.15em",
-            color: "rgba(212,175,55,0.7)", textTransform: "uppercase",
-          }}>
-            {TYPE_ICON[lesson.type]} {lesson.type} · {lesson.duration}
-            {lesson.siddha && ` · ${lesson.siddha}`}
-          </span>
-          <button onClick={onClose} style={{
-            background: "none", border: "none", color: "#D4AF37",
-            cursor: "pointer", fontSize: "20px", lineHeight: 1,
-          }}>✕</button>
-        </div>
-        <h2 style={{
-          color: "#D4AF37", fontSize: "20px", fontWeight: 900,
-          letterSpacing: "-0.03em", marginBottom: "28px", lineHeight: 1.3,
-        }}>{lesson.title}</h2>
-
-        {/* Body paragraphs */}
-        <div style={{ marginBottom: "28px" }}>
-          {lesson.body.map((para, i) => (
-            <p key={i} style={{
-              color: "rgba(255,255,255,0.75)", fontSize: "15px",
-              lineHeight: 1.75, marginBottom: "16px",
-            }}>{para}</p>
-          ))}
-        </div>
-
-        {/* Practice block */}
-        {lesson.practice && (
-          <div style={{
-            background: "rgba(34,211,238,0.05)",
-            border: "1px solid rgba(34,211,238,0.2)",
-            borderRadius: "20px", padding: "24px", marginBottom: "24px",
-          }}>
-            <p style={{
-              fontSize: "10px", fontWeight: 800, letterSpacing: "0.12em",
-              color: "rgba(34,211,238,0.8)", textTransform: "uppercase", marginBottom: "12px",
-            }}>⚡ PRACTICE TRANSMISSION</p>
-            <pre style={{
-              color: "rgba(255,255,255,0.8)", fontSize: "13.5px",
-              lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "inherit", margin: 0,
-            }}>{lesson.practice}</pre>
-          </div>
-        )}
-
-        {/* Mantra block */}
-        {lesson.mantra && (
-          <div style={{
-            background: "rgba(212,175,55,0.05)",
-            border: "1px solid rgba(212,175,55,0.25)",
-            borderRadius: "20px", padding: "24px", marginBottom: "24px",
-          }}>
-            <p style={{
-              fontSize: "10px", fontWeight: 800, letterSpacing: "0.12em",
-              color: "#D4AF37", textTransform: "uppercase", marginBottom: "12px",
-            }}>🕉️ MANTRA TRANSMISSION</p>
-            <pre style={{
-              color: "rgba(255,255,255,0.85)", fontSize: "13.5px",
-              lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "inherit", margin: 0,
-            }}>{lesson.mantra}</pre>
-          </div>
-        )}
-
-        {/* Key Points */}
-        {lesson.keyPoints && lesson.keyPoints.length > 0 && (
-          <div style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: "20px", padding: "24px",
-          }}>
-            <p style={{
-              fontSize: "10px", fontWeight: 800, letterSpacing: "0.12em",
-              color: "rgba(255,255,255,0.5)", textTransform: "uppercase", marginBottom: "14px",
-            }}>◆ KEY TRANSMISSIONS</p>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-              {lesson.keyPoints.map((pt, i) => (
-                <li key={i} style={{
-                  display: "flex", gap: "10px", marginBottom: "10px",
-                  color: "rgba(255,255,255,0.7)", fontSize: "14px", lineHeight: 1.6,
-                }}>
-                  <span style={{ color: "#D4AF37", flexShrink: 0, marginTop: "2px" }}>◆</span>
-                  <span>{pt}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ModuleCard({
-  module, userTier, isExpanded, onToggle, onLessonSelect,
-}: {
-  module: Module; userTier: string; isExpanded: boolean;
-  onToggle: () => void; onLessonSelect: (l: Lesson) => void;
-}) {
-  const accessible = canAccess(module.id, userTier);
-  return (
-    <div style={{
-      background: "rgba(255,255,255,0.02)",
-      border: `1px solid ${isExpanded ? "rgba(212,175,55,0.3)" : "rgba(255,255,255,0.05)"}`,
-      borderRadius: "28px", marginBottom: "16px",
-      transition: "border-color 0.3s",
-      opacity: accessible ? 1 : 0.55,
-    }}>
-      {/* Module header */}
-      <button
-        onClick={onToggle}
-        style={{
-          width: "100%", background: "none", border: "none", cursor: accessible ? "pointer" : "default",
-          padding: "24px 28px", display: "flex", alignItems: "center", gap: "18px", textAlign: "left",
-        }}
-      >
-        <span style={{ fontSize: "28px", flexShrink: 0 }}>{module.glyph}</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px", flexWrap: "wrap" }}>
-            <span style={{
-              fontSize: "9px", fontWeight: 800, letterSpacing: "0.2em",
-              color: "rgba(212,175,55,0.5)", textTransform: "uppercase",
-            }}>MODULE {module.number}</span>
-            <TierBadge tier={module.tier} />
-            {!accessible && <span style={{ fontSize: "12px" }}>🔒</span>}
-          </div>
-          <h3 style={{
-            color: accessible ? "#D4AF37" : "rgba(255,255,255,0.4)",
-            fontSize: "17px", fontWeight: 900, letterSpacing: "-0.03em",
-            margin: "0 0 2px 0",
-          }}>{module.title}</h3>
-          <p style={{
-            color: "rgba(255,255,255,0.45)", fontSize: "12px",
-            margin: 0, fontWeight: 500,
-          }}>{module.subtitle} · {module.lessons.length} lessons · {module.siddhaSource}</p>
-        </div>
-        {accessible && (
-          <span style={{ color: "#D4AF37", fontSize: "18px", flexShrink: 0, transition: "transform 0.3s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
-        )}
-      </button>
-
-      {/* Expanded content */}
-      {isExpanded && accessible && (
-        <div style={{ padding: "0 28px 28px" }}>
-          <p style={{
-            color: "rgba(255,255,255,0.6)", fontSize: "14px", lineHeight: 1.7,
-            marginBottom: "20px",
-            borderTop: "1px solid rgba(255,255,255,0.05)",
-            paddingTop: "20px",
-          }}>{module.overview}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {module.lessons.map((lesson, idx) => (
-              <button
-                key={idx}
-                onClick={() => onLessonSelect(lesson)}
-                style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  borderRadius: "16px", padding: "14px 18px",
-                  display: "flex", alignItems: "center", gap: "14px",
-                  cursor: "pointer", textAlign: "left",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(212,175,55,0.07)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(212,175,55,0.25)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.02)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
-                }}
-              >
-                <span style={{ fontSize: "16px", flexShrink: 0 }}>{TYPE_ICON[lesson.type]}</span>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, color: "rgba(255,255,255,0.85)", fontSize: "14px", fontWeight: 600 }}>
-                    {idx + 1}. {lesson.title}
-                  </p>
-                  {lesson.siddha && (
-                    <p style={{ margin: "2px 0 0", color: "rgba(212,175,55,0.5)", fontSize: "11px" }}>
-                      {lesson.siddha}
-                    </p>
-                  )}
-                </div>
-                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", flexShrink: 0 }}>{lesson.duration}</span>
-                <span style={{ color: "#D4AF37", fontSize: "14px", flexShrink: 0 }}>›</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Locked overlay message */}
-      {isExpanded && !accessible && (
-        <div style={{ padding: "0 28px 28px", textAlign: "center" }}>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px" }}>
-            🔒 Upgrade to <strong style={{ color: "#D4AF37" }}>{TIER_LABELS[module.tier]}</strong> to unlock this module.
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PortalCard({ onEnter }: { onEnter: () => void }) {
-  return (
-    <div style={{
-      minHeight: "100vh", background: "#050505",
-      display: "flex", flexDirection: "column", alignItems: "center",
-      justifyContent: "center", padding: "40px 20px", textAlign: "center",
-      fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-    }}>
-      <div style={{ maxWidth: "600px", width: "100%" }}>
-        {/* Glyph */}
-        <div style={{
-          fontSize: "72px", marginBottom: "24px",
-          filter: "drop-shadow(0 0 30px rgba(212,175,55,0.4))",
-        }}>🔱</div>
-
-        {/* Label */}
-        <p style={{
-          fontSize: "9px", fontWeight: 800, letterSpacing: "0.35em",
-          color: "rgba(212,175,55,0.6)", textTransform: "uppercase", marginBottom: "16px",
-        }}>AKASHA-NEURAL ARCHIVE · SQI 2050</p>
-
-        {/* Title */}
-        <h1 style={{
-          color: "#D4AF37", fontSize: "clamp(28px, 6vw, 48px)",
-          fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1,
-          marginBottom: "20px",
-          textShadow: "0 0 40px rgba(212,175,55,0.3)",
-        }}>
-          Brahmacharya<br />Siddha Academy
-        </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          color: "rgba(255,255,255,0.55)", fontSize: "16px",
-          lineHeight: 1.7, marginBottom: "36px", maxWidth: "480px", margin: "0 auto 36px",
-        }}>
-          The complete Siddha science of sacred energy alchemy — 8 modules, 56 lessons, 
-          the full transmission of the 18 Siddhas on Ojas, Brahmacharya, and the path to Amrita.
-        </p>
-
-        {/* Stats */}
-        <div style={{
-          display: "flex", gap: "20px", justifyContent: "center",
-          flexWrap: "wrap", marginBottom: "40px",
-        }}>
-          {[
-            { label: "MODULES", value: "8" },
-            { label: "LESSONS", value: "56" },
-            { label: "SIDDHA MASTERS", value: "18" },
-            { label: "TIERS", value: "5" },
-          ].map(stat => (
-            <div key={stat.label} style={{
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(212,175,55,0.15)",
-              borderRadius: "16px", padding: "14px 20px", minWidth: "90px",
-            }}>
-              <p style={{ margin: 0, color: "#D4AF37", fontSize: "24px", fontWeight: 900 }}>{stat.value}</p>
-              <p style={{ margin: 0, color: "rgba(255,255,255,0.4)", fontSize: "9px", fontWeight: 800, letterSpacing: "0.1em" }}>{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={onEnter}
-          style={{
-            background: "linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05))",
-            border: "1px solid rgba(212,175,55,0.5)",
-            borderRadius: "50px", padding: "16px 48px",
-            color: "#D4AF37", fontSize: "14px", fontWeight: 800,
-            letterSpacing: "0.15em", textTransform: "uppercase",
-            cursor: "pointer",
-            boxShadow: "0 0 30px rgba(212,175,55,0.15)",
-            transition: "all 0.3s",
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(212,175,55,0.3), rgba(212,175,55,0.1))";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 50px rgba(212,175,55,0.3)";
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05))";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 30px rgba(212,175,55,0.15)";
-          }}
-        >
-          Enter the Academy
-        </button>
-
-        <p style={{
-          color: "rgba(255,255,255,0.25)", fontSize: "12px",
-          marginTop: "20px",
-        }}>Module 1 free · Full access with Prana-Flow tier and above</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── MAIN ACADEMY PAGE ────────────────────────────────────────
 export default function BrahmacharyaAcademy() {
-  const [view, setView] = useState<"portal" | "academy">("portal");
-  const [userTier, setUserTier] = useState("free");
-  const [expandedModule, setExpandedModule] = useState<string | null>("module_1");
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
+  const { tier, loading: membershipLoading, settled } = useMembership();
+  const membershipReady = !membershipLoading && settled;
+  const { courses, progressByModuleId, stats, loading: loadingData, error: loadError } = useBrahmacharyaProgress(membershipReady);
 
-  if (view === "portal") {
-    return <PortalCard onEnter={() => setView("academy")} />;
+  const syllabusGroups = useMemo(() => {
+    return TIER_ORDER.map((t) => {
+      const mods = courses.filter((c) => (c.tier_required || 'free') === t.slug);
+      const completed = mods.filter((c) => progressByModuleId[c.id]?.completed).length;
+      return {
+        id: `tier-${t.slug}`,
+        title: t.label,
+        meta: `${completed} / ${mods.length} modules${completed === mods.length && mods.length > 0 ? ' complete' : ''}`,
+        done: mods.length > 0 && completed === mods.length,
+        current: false,
+        lessons: mods.map((m) => {
+          const done = Boolean(progressByModuleId[m.id]?.completed);
+          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required));
+          const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
+          return { id: m.id, number: m.module_number, title: m.title, state };
+        }),
+      };
+    });
+  }, [courses, progressByModuleId, isAdmin, tier]);
+
+  if (!membershipReady || loadingData) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid rgba(20,184,166,.2)', borderTopColor: '#14B8A6', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
   }
 
   return (
-    <div style={{
-      minHeight: "100vh", background: "#050505",
-      fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-    }}>
-      {/* Hero */}
-      <div style={{
-        padding: "60px 24px 40px",
-        background: "linear-gradient(180deg, rgba(212,175,55,0.06) 0%, transparent 100%)",
-        textAlign: "center",
-      }}>
-        <p style={{
-          fontSize: "9px", fontWeight: 800, letterSpacing: "0.35em",
-          color: "rgba(212,175,55,0.6)", textTransform: "uppercase", marginBottom: "12px",
-        }}>SIDDHA QUANTUM INTELLIGENCE · AKASHA-NEURAL ARCHIVE</p>
-        <h1 style={{
-          color: "#D4AF37", fontSize: "clamp(26px, 5vw, 42px)",
-          fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 12px",
-          textShadow: "0 0 30px rgba(212,175,55,0.3)",
-        }}>Brahmacharya Siddha Academy</h1>
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "15px", margin: 0 }}>
-          8 Modules · 56 Lessons · The Complete Transmission of the 18 Siddhas
-        </p>
-      </div>
-
-      {/* Tier selector (demo mode) */}
-      <div style={{
-        display: "flex", gap: "8px", justifyContent: "center",
-        padding: "0 24px 32px", flexWrap: "wrap",
-      }}>
-        {(["free", "prana-flow", "siddha-quantum", "akasha-infinity"] as string[]).map(tier => (
-          <button
-            key={tier}
-            onClick={() => setUserTier(tier)}
-            style={{
-              background: userTier === tier ? "rgba(212,175,55,0.2)" : "rgba(255,255,255,0.02)",
-              border: `1px solid ${userTier === tier ? "rgba(212,175,55,0.5)" : "rgba(255,255,255,0.08)"}`,
-              borderRadius: "20px", padding: "7px 16px",
-              color: userTier === tier ? "#D4AF37" : "rgba(255,255,255,0.4)",
-              fontSize: "10px", fontWeight: 800, letterSpacing: "0.1em",
-              textTransform: "uppercase", cursor: "pointer",
-            }}
-          >
-            {TIER_LABELS[tier]}
-          </button>
-        ))}
+    <div style={{ minHeight: '100vh', background: '#050505', color: 'rgba(255,255,255,0.9)', paddingBottom: 104 }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px 0' }}>
         <button
-          onClick={() => setView("portal")}
+          type="button"
+          onClick={() => navigate('/siddha-portal')}
           style={{
-            background: "none", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "20px", padding: "7px 16px",
-            color: "rgba(255,255,255,0.3)", fontSize: "10px",
-            cursor: "pointer",
+            marginBottom: 24, display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)',
+            borderRadius: 999, padding: '8px 16px', color: 'rgba(255,255,255,.55)',
+            fontSize: 10, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', cursor: 'pointer',
           }}
-        >← Portal</button>
-      </div>
+        >
+          <ArrowLeft size={14} color={TEAL} /> Back
+        </button>
 
-      {/* Curriculum */}
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 16px 60px" }}>
-        {CURRICULUM.map(module => (
-          <ModuleCard
-            key={module.id}
-            module={module}
-            userTier={userTier}
-            isExpanded={expandedModule === module.id}
-            onToggle={() => setExpandedModule(expandedModule === module.id ? null : module.id)}
-            onLessonSelect={setSelectedLesson}
-          />
-        ))}
-      </div>
+        {!user && (
+          <div style={{ marginBottom: 32, textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              style={{
+                borderRadius: 999, padding: '14px 40px', background: 'linear-gradient(135deg,#14B8A6,#0D9488)',
+                border: 'none', color: '#050505', fontSize: 11, fontWeight: 800, letterSpacing: '.28em', textTransform: 'uppercase',
+                cursor: 'pointer', boxShadow: '0 0 40px rgba(20,184,166,0.22)',
+              }}
+            >
+              Begin Initiation
+            </button>
+          </div>
+        )}
 
-      {/* Lesson Modal */}
-      {selectedLesson && (
-        <LessonModal lesson={selectedLesson} onClose={() => setSelectedLesson(null)} />
-      )}
+        {loadError && (
+          <div style={{
+            marginBottom: 24, borderRadius: 16, border: '1px solid rgba(248,113,113,0.3)',
+            background: 'rgba(248,113,113,0.08)', padding: '14px 18px',
+          }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#F87171', margin: '0 0 4px' }}>Could not load this academy.</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', margin: 0 }}>{loadError}</p>
+          </div>
+        )}
+
+        <CourseSyllabus
+          accent={TEAL}
+          courseIcon={<Zap size={24} />}
+          courseTitle="Brahmacharya Siddha Academy"
+          academyName="Brahmacharya Siddha Academy"
+          progressLabel={`${stats.completedModules} / ${courses.length || 8} · ${stats.completionPercent}%`}
+          progressPercent={stats.completionPercent}
+          groups={syllabusGroups}
+          onLessonClick={(lessonId, locked) => {
+            if (locked) {
+              const c = courses.find((m) => m.id === lessonId);
+              navigate(getSalesPageForRank(getCourseTierRequiredRank(c?.tier_required)));
+            } else {
+              navigate(`/brahmacharya-academy/module/${lessonId}`);
+            }
+          }}
+        />
+
+        <footer style={{ marginTop: 40, paddingBottom: 32, textAlign: 'center' }}>
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.45em', textTransform: 'uppercase', color: 'rgba(255,255,255,.25)' }}>
+            The Alchemy of Sacred Energy
+          </p>
+        </footer>
+      </div>
     </div>
   );
 }
