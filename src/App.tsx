@@ -100,6 +100,7 @@ const SovereignHormonalAlchemy = React.lazy(() => import("./pages/SovereignHormo
 const ShaktiCycleModule = React.lazy(() => import("./pages/ShaktiCycleModule"));
 const MudraAcademy = React.lazy(() => import("./pages/MudraAcademy"));
 const PujaEducationCurriculum = React.lazy(() => import("./pages/PujaEducationCurriculum"));
+const PujaEducationModule = React.lazy(() => import("./pages/PujaEducationModule"));
 const SiddhaAbundanceCurriculum = React.lazy(() => import("./pages/SiddhaAbundanceCurriculum"));
 const AbundanceSadhanaModule = React.lazy(() => import("./pages/AbundanceSadhanaModule"));
 const MantraAcademy = React.lazy(() => import("./pages/MantraAcademy"));
@@ -439,6 +440,7 @@ function AppRoutes() {
                   <Route path="/water-alchemy" element={<SiddhaWaterAlchemy />} />
                   <Route path="/mudra-academy" element={<MudraAcademy />} />
                   <Route path="/puja-education" element={<PujaEducationCurriculum />} />
+                  <Route path="/puja-education/module/:id" element={<PujaEducationModule />} />
                   <Route path="/abundance-curriculum" element={<SiddhaAbundanceCurriculum />} />
                   <Route path="/abundance-curriculum/module/:id" element={<AbundanceSadhanaModule />} />
                   <Route path="/mantra-academy" element={<MantraAcademy />} />
