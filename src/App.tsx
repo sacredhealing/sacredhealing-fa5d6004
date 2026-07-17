@@ -242,6 +242,7 @@ const WealthBeacon = React.lazy(() => import("./pages/WealthBeacon"));
 const VajraSkyBreaker = React.lazy(() => import("./pages/VajraSkyBreaker"));
 const SiddhaSoundAlchemyOracle = React.lazy(() => import("./pages/SiddhaSoundAlchemyOracle"));
 const SiddhaSoundAlchemy = React.lazy(() => import("./pages/SiddhaSoundAlchemy"));
+const SoundAlchemyModule = React.lazy(() => import("./pages/SoundAlchemyModule"));
 const SiddhaOracleAbout = React.lazy(() => import("./pages/SiddhaOracleAbout"));
 const CreativeSoulAbout = React.lazy(() => import("./pages/CreativeSoulAbout"));
 const ExploreAkasha = React.lazy(() => import("./pages/ExploreAkasha"));
@@ -537,6 +538,8 @@ function AppRoutes() {
                   <Route path="/creative-soul/tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul/meditation" element={<MeditationToolWithBoundary />} />
                   <Route path="/creative-soul/siddha-oracle" element={<SiddhaSoundAlchemyOracle />} />
+                  <Route path="/siddha-sound-alchemy" element={<SiddhaSoundAlchemy />} />
+                  <Route path="/siddha-sound-alchemy/module/:id" element={<SoundAlchemyModule />} />
                   <Route path="/siddha-oracle-about" element={<SiddhaOracleAbout />} />
                   <Route path="/creative-soul-about" element={<CreativeSoulAbout />} />
                   {/* Legacy routes */}
