@@ -198,16 +198,8 @@ serve(async (req) => {
 
     const weeklyNewContent: ContentItem[] = newContent || [];
     log(`Found ${weeklyNewContent.length} new content items this week`);
-
-    // ── Skip send entirely if there's nothing real to report ──
-    // (e.g. a week spent only on trading-bot infra, not user-facing SQI content)
-    if (weeklyNewContent.length === 0) {
-      log("No new content this week — skipping Monday send (no filler email).");
-      return new Response(
-        JSON.stringify({ success: true, skipped: true, reason: "no_new_content", sent: 0 }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Always send — no new content_changelog entries just means the email
+    // leans on the teaching pool + activity summary instead of a content highlight.
 
     // ── Fetch profiles ──
     const { data: profiles, error: profilesError } = await supabase
@@ -764,4 +756,5 @@ function catName(category: string, lang: Lang): string {
   const c = map[category.toLowerCase()] || map["general"];
   return c[lang];
 }
+
 
