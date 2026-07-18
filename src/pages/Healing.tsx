@@ -905,7 +905,7 @@ const Healing: React.FC = () => {
 
       <div className="h-divider" />
 
-      {/* ══ SACRED JOURNEYS — dynamic day-by-day guided tracks, distinct from the 12-month certification above ══ */}
+      {/* ══ SACRED JOURNEYS — dynamic day-by-day guided tracks (separate from the 12-month practitioner certification, which now lives only in the Siddha Portal) ══ */}
       <section style={{ padding: '0 22px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div className="h-micro" style={{ marginBottom: 6 }}>Siddha Quantum · Living Transmission</div>
@@ -1131,39 +1131,6 @@ const Healing: React.FC = () => {
             })}
           </div>
         )}
-      </section>
-
-      <div className="h-divider" />
-
-      {/* ══ SIDDHA HEALER CERTIFICATION BANNER — single entry card, mirrors Explore.tsx ══ */}
-      {/* One card, one source of truth. Full 12-month curriculum lives at /certification */}
-      {/* (PractitionerCertification.tsx, same MONTHS data). No flat dump here anymore. */}
-      <section style={{ padding: '0 16px 40px' }}>
-        <div onClick={() => navigate('/certification')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 50%, rgba(45,26,0,0.97) 0%, rgba(12,6,0,0.99) 55%, #050505 100%)', border: '1px solid rgba(212,175,55,0.55)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite', boxShadow: '0 0 60px rgba(212,175,55,0.1)' }}>
-          <div style={{ position: 'absolute', top: -25, right: -25, width: 180, height: 180, pointerEvents: 'none' }}>
-            <svg viewBox="0 0 180 180" width="180" height="180">
-              <defs><radialGradient id="shcg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(255,220,80,0.35)"/><stop offset="55%" stopColor="rgba(212,175,55,0.08)"/><stop offset="100%" stopColor="rgba(0,0,0,0)"/></radialGradient></defs>
-              <ellipse cx="90" cy="90" rx="85" ry="85" fill="url(#shcg2)"/>
-              <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(212,175,55,0.22)" strokeWidth="1" strokeDasharray="4 9"><animateTransform attributeName="transform" type="rotate" values="0 90 90;360 90 90" dur="40s" repeatCount="indefinite"/></circle>
-              <polygon points="90,22 146,114 34,114" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.4"><animateTransform attributeName="transform" type="rotate" values="0 90 90;360 90 90" dur="60s" repeatCount="indefinite"/></polygon>
-              <polygon points="90,158 34,66 146,66" fill="rgba(255,210,55,0.04)" stroke="rgba(255,210,60,0.5)" strokeWidth="1.3"><animateTransform attributeName="transform" type="rotate" values="360 90 90;0 90 90" dur="60s" repeatCount="indefinite"/></polygon>
-              {[0,1,2].map(i => (<circle key={i} cx="90" cy="90" r="10" fill="none" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"><animate attributeName="r" values="8;80" dur="4s" begin={`${i*1.33}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="4s" begin={`${i*1.33}s`} repeatCount="indefinite"/></circle>))}
-              {[0,60,120,180,240,300].map((angle,i) => { const rad=angle*Math.PI/180; return (<circle key={i} cx={90+Math.cos(rad)*80} cy={90+Math.sin(rad)*80} r="3.5" fill="rgba(255,240,100,0.9)"><animate attributeName="opacity" values="0.3;1;0.3" dur={`${1.8+i*0.3}s`} repeatCount="indefinite"/></circle>); })}
-              <circle cx="90" cy="90" r="18" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.4"><animate attributeName="r" values="15;22;15" dur="3s" repeatCount="indefinite"/></circle>
-              <circle cx="90" cy="90" r="6" fill="rgba(255,248,170,0.97)"><animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite"/></circle>
-            </svg>
-          </div>
-          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'shimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', zIndex: 1, padding: '22px 20px 20px' }}>
-            <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 9 }}>SIDDHA LINEAGE · 12-MONTH LIVING TRANSMISSION</p>
-            <div style={{ fontFamily: "'Cinzel',serif", fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, fontSize: 'clamp(20px,5.5vw,26px)', marginBottom: 11, maxWidth: '65%', background: 'linear-gradient(135deg,#D4AF37 0%,#F5E17A 40%,#D4AF37 60%,#A07C10 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'hShimmer 5s linear infinite' }}>SIDDHA HEALER'S<br/>SOVEREIGN PATH</div>
-            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.68, marginBottom: 14, maxWidth: '75%' }}>12 months of mantras, initiations &amp; healing mastery — from foundation to full certification with Kritagya &amp; Laila</p>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 15 }}>
-              {['Personal Diksha','12 Modules','Certification'].map(l => (<span key={l} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 20, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', color: 'rgba(212,175,55,0.85)' }}>{l}</span>))}
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); navigate('/certification'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>EXPLORE →</button>
-          </div>
-        </div>
       </section>
 
       <div className="h-divider" />
