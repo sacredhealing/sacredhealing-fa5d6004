@@ -20,6 +20,7 @@ jobs:
             -X POST \
             "${SUPABASE_URL}/functions/v1/weekly-alignment-email" \
             -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "apikey: ${SUPABASE_KEY}" \
             -H "Content-Type: application/json" \
             -d "{}" \
             --max-time 600)
