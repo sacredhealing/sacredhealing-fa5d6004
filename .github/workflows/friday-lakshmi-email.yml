@@ -13,14 +13,13 @@ jobs:
       - name: Trigger lakshmi-friday
         env:
           SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           echo "SQI Lakshmi Friday Transmission at $(date -u)"
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST \
             "${SUPABASE_URL}/functions/v1/lakshmi-friday" \
-            -H "Authorization: Bearer ${SUPABASE_KEY}" \
-            -H "apikey: ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
             -H "Content-Type: application/json" \
             -d "{}" \
             --max-time 600)
