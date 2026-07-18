@@ -2671,7 +2671,7 @@ function QuantumApothecaryInner() {
     setMessages([]);
     prevMsgCountRef.current = 0;
     setSessionsOpen(false);
-  }, [isTyping, clearSyncChatMessages]);
+  }, [isTyping, clearSyncChatMessages, sessionStorageKey]);
 
   const handleSendMessage = async (
     overrideText?: string,
