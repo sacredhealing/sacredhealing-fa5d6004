@@ -30,7 +30,7 @@
 // but it is not the same precision as a properly geocoded, user-linked
 // chart, and callers should not present it as such.
 
-import { computeAllPlanetLongitudesFallback, type PlanetLongitudes } from "./current-transits.ts";
+import { computeAllPlanetLongitudesFallback, computeRetrogradeFlags, type PlanetLongitudes } from "./current-transits.ts";
 
 const ZODIAC_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
   'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
@@ -102,6 +102,7 @@ export interface FullChart {
   ascendantSign: string;
   ascendantLongitude: number;
   planetLongitudes: PlanetLongitudes;
+  retrogradeFlags: Record<string, boolean> | null;
 }
 
 /**
@@ -123,7 +124,8 @@ export function computeFullChartFromBirthData(
     const planetLongitudes = computeAllPlanetLongitudesFallback(birthDate, time, tzOffsetHours);
     if (!planetLongitudes) return null;
     const { ascendantSign, ascendantLongitude } = computeAscendant(birthDate, time, tzOffsetHours, lat, lon);
-    return { ascendantSign, ascendantLongitude, planetLongitudes };
+    const retrogradeFlags = computeRetrogradeFlags(birthDate, time, tzOffsetHours);
+    return { ascendantSign, ascendantLongitude, planetLongitudes, retrogradeFlags };
   } catch (e) {
     console.error('computeFullChartFromBirthData error:', e);
     return null;

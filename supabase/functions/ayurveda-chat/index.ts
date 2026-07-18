@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildDeepJyotishAnalysis } from "../_shared/jyotish-deep-analysis.ts";
 import { computeFullChartFromBirthData } from "../_shared/natal-chart-fallback.ts";
+import { buildTransitAndSadeSatiBlock } from "../_shared/current-transits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -228,9 +229,9 @@ ${dashaLine}
 ${jyMap}
 The Lagna shows constitutional tendency from birth. The Moon shows the state of Ojas and the emotional-fluid body. The current Dasha lord shows which organ is under the most pressure this month. Integrate INVISIBLY. Speak from the body field. The chart and the body tell the same story.${birth.deepAnalysis ? `
 
-━━━ DEEP CHART DATA (house lordship, yogas, Ashtakavarga, divisional charts) — silent reasoning material, same rule as above: integrate, never recite ━━━
+━━━ DEEP CHART DATA (house lordship, yogas, Ashtakavarga, divisional charts, current transits) — silent reasoning material, same rule as above: integrate, never recite ━━━
 ${birth.deepAnalysis}
-Use this the same way a physician reads a full chart before speaking — to ground WHICH organ/dosha guidance is actually specific to this person's constitution and current planetary weather, not to explain astrology to them. A seeker should never be able to tell how much of this you were given.` : ''}`;
+Use this the same way a physician reads a full chart before speaking — to ground WHICH organ/dosha guidance is actually specific to this person's constitution and current planetary weather, not to explain astrology to them. Specifically: check house lordship and the 6th house (disease/routine) and its lord's condition before naming which system is under strain; check the YOGAS list — a affliction-forming yoga touching a health-relevant house matters more than the dasha lord alone; for "when will this improve" or "how long" questions, cross-reference the current transiting sign against that planet's own Ashtakavarga bindu count (5+ supports recovery, 0-3 means the same protocol will underperform right now) rather than giving a generic timeline; weigh dignity and combustion together, since a strong-by-sign planet that's combust reads differently than one that's simply strong. A seeker should never be able to tell how much of this you were given.` : ''}`;
 }
 
 function buildSystemPrompt(
@@ -813,6 +814,14 @@ serve(async (req) => {
             jpDeep.ascendant_longitude as number | null,
             jpDeep.retrograde_flags as Record<string, boolean> | null
           );
+          // Additive: live transits (Gochar) + Sade Sati, same engine as
+          // Bhrigu Oracle. moon_longitude already lives inside
+          // planet_longitudes, so no extra query/column needed.
+          try {
+            const natalMoonLon = (jpDeep.planet_longitudes as Record<string, number>)?.moon ?? null;
+            const transit = buildTransitAndSadeSatiBlock(jpDeep.ascendant, natalMoonLon);
+            if (transit) birth.deepAnalysis += `\n\n${transit}`;
+          } catch (e) { console.warn("[ayurveda-chat] transit block failed (non-fatal):", e); }
         }
       } catch (e) { console.warn("[ayurveda-chat] deep jyotish analysis fetch failed (non-fatal):", e); }
 
@@ -891,10 +900,12 @@ serve(async (req) => {
         );
         if (chart) {
           const deep = buildDeepJyotishAnalysis(
-            chart.ascendantSign, chart.planetLongitudes as Record<string, number>, chart.ascendantLongitude, null
+            chart.ascendantSign, chart.planetLongitudes as Record<string, number>, chart.ascendantLongitude, chart.retrogradeFlags
           );
           if (deep) {
-            studentDeepAnalysis = `\n\n[STUDENT DEEP JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]\nLagna (Ascendant): ${chart.ascendantSign}\nComputed directly from birth date/time/place — treat exact-degree precision as good-but-approximate (birth-place geocoding and timezone are both estimated), but the sign placements, dignities, and yogas below are real calculations, not guesses.\n${deep}`;
+            const natalMoonLon = (chart.planetLongitudes as Record<string, number>)?.moon ?? null;
+            const transit = buildTransitAndSadeSatiBlock(chart.ascendantSign, natalMoonLon);
+            studentDeepAnalysis = `\n\n[STUDENT DEEP JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]\nLagna (Ascendant): ${chart.ascendantSign}\nComputed directly from birth date/time/place — treat exact-degree precision as good-but-approximate (birth-place geocoding and timezone are both estimated), but the sign placements, dignities, and yogas below are real calculations, not guesses. Same usage rule as your own chart data: check house lordship and the 6th house before naming a system under strain, check YOGAS before calling anything a strength or affliction, and for timing questions cross-reference the current transiting sign against that planet's own Ashtakavarga bindu count rather than a generic timeline.\n${deep}${transit ? `\n\n${transit}` : ''}`;
           }
         }
       } catch (e) { console.warn("[ayurveda-chat] Unlinked student chart fallback:", e); }

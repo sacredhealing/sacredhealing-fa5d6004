@@ -186,3 +186,79 @@ export function computeCurrentTransitLongitudes(): PlanetLongitudes | null {
   const timeStr = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
   return computeAllPlanetLongitudesFallback(dateStr, timeStr, 0);
 }
+
+// Retrograde detection — verbatim port of computeRetrogradeFlags from
+// jyotish-ephemeris/index.ts (same function, same discipline as
+// computeAllPlanetLongitudesFallback above: mirror any fix there, don't
+// let the two copies drift). Samples the same fallback formula one day
+// apart and checks the sign of daily motion; safe even when the primary
+// chart came from a higher-precision source, since only the direction of
+// motion is used, not the fallback's absolute position.
+export function computeRetrogradeFlags(
+  birthDate: string, birthTime: string, utcOffsetHours: number
+): Record<string, boolean> | null {
+  try {
+    const day0 = computeAllPlanetLongitudesFallback(birthDate, birthTime, utcOffsetHours);
+    if (!day0) return null;
+    const [yr, mo, dy] = birthDate.split('-').map(Number);
+    const next = new Date(Date.UTC(yr, mo - 1, dy + 1));
+    const nextDateStr = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+    const day1 = computeAllPlanetLongitudesFallback(nextDateStr, birthTime, utcOffsetHours);
+    if (!day1) return null;
+
+    const flags: Record<string, boolean> = { rahu: true, ketu: true };
+    for (const planet of ['mars', 'mercury', 'jupiter', 'venus', 'saturn'] as const) {
+      const l0 = day0[planet], l1 = day1[planet];
+      if (l0 == null || l1 == null) continue;
+      let diff = l1 - l0;
+      diff = ((diff + 180) % 360 + 360) % 360 - 180;
+      flags[planet] = diff < 0;
+    }
+    return flags;
+  } catch (e) {
+    console.error('computeRetrogradeFlags error:', e);
+    return null;
+  }
+}
+
+// Transit (Gochar) + Sade Sati block — verbatim port of the logic used in
+// bhrigu-oracle/index.ts, extracted here so ayurveda-chat and
+// quantum-apothecary-chat can produce the identical block rather than a
+// re-implementation that could quietly drift from it.
+export function buildTransitAndSadeSatiBlock(
+  lagnaSign: string | null | undefined,
+  natalMoonLongitude: number | null | undefined
+): string {
+  const TRANSIT_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  const signIdxFromLon = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
+  const transitLons = computeCurrentTransitLongitudes();
+  const lagnaSignIdx = lagnaSign ? TRANSIT_SIGNS.findIndex(s => s.toLowerCase() === lagnaSign.toLowerCase()) : -1;
+  if (!transitLons || lagnaSignIdx === -1) return '';
+
+  const lines: string[] = [];
+  const order = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn', 'rahu', 'ketu'] as const;
+  for (const p of order) {
+    const lon = transitLons[p];
+    if (lon == null) continue;
+    const signIdx = signIdxFromLon(lon);
+    const house = ((signIdx - lagnaSignIdx + 12) % 12) + 1;
+    lines.push(`${p.charAt(0).toUpperCase() + p.slice(1)}: transiting ${TRANSIT_SIGNS[signIdx]}, natal House ${house}`);
+  }
+  let sadeSatiLine = '';
+  if (natalMoonLongitude != null && transitLons.saturn != null) {
+    const moonSignIdx = signIdxFromLon(natalMoonLongitude);
+    const saturnSignIdx = signIdxFromLon(transitLons.saturn);
+    const houseFromMoon = ((saturnSignIdx - moonSignIdx + 12) % 12) + 1;
+    if (houseFromMoon === 12 || houseFromMoon === 1 || houseFromMoon === 2) {
+      const phase = houseFromMoon === 12 ? 'first phase (rising — House 12 from natal Moon)'
+        : houseFromMoon === 1 ? 'peak phase (Saturn transiting the natal Moon sign itself — House 1 from Moon)'
+        : 'final phase (setting — House 2 from natal Moon)';
+      sadeSatiLine = `Sade Sati: ACTIVE — Saturn is transiting the ${phase}.`;
+    } else {
+      sadeSatiLine = 'Sade Sati: not currently active (Saturn is not within one sign of natal Moon).';
+    }
+  }
+  const dateLabel = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `── CURRENT TRANSITS (GOCHAR) — as of ${dateLabel} ──\n${lines.join('\n')}\n${sadeSatiLine}`;
+}
+

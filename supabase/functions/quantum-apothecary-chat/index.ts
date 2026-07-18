@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { buildDeepJyotishAnalysis } from "../_shared/jyotish-deep-analysis.ts";
 import { computeFullChartFromBirthData } from "../_shared/natal-chart-fallback.ts";
+import { buildTransitAndSadeSatiBlock } from "../_shared/current-transits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -5614,6 +5615,11 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
                   jp.retrograde_flags as Record<string, boolean> | null
                 );
                 if (deep) resolvedStudentJyotish += `\n\n[STUDENT DEEP JYOTISH ANALYSIS]\n${deep}`;
+                // Additive: live transits (Gochar) + Sade Sati. jp.moon_longitude
+                // is already selected above for the Rashi line, so this needs
+                // no extra query.
+                const transit = buildTransitAndSadeSatiBlock(jp.ascendant as string, jp.moon_longitude as number | null);
+                if (transit) resolvedStudentJyotish += `\n\n${transit}`;
               } catch (e) { console.warn("Student deep jyotish analysis:", e); }
             }
           }
@@ -5643,15 +5649,18 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
                 chart.ascendantSign,
                 chart.planetLongitudes as Record<string, number>,
                 chart.ascendantLongitude,
-                null
+                chart.retrogradeFlags
               );
               if (deep) {
+                const natalMoonLon = (chart.planetLongitudes as Record<string, number>)?.moon ?? null;
+                const transit = buildTransitAndSadeSatiBlock(chart.ascendantSign, natalMoonLon);
                 resolvedStudentJyotish = [
                   "[STUDENT JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]",
                   `Lagna (Ascendant): ${chart.ascendantSign}`,
                   "This chart is computed directly from birth date/time/place — the student has not linked an app account with a fully geocoded profile, so treat birth-place-dependent precision (exact Ascendant degree, house cusps near a sign boundary) as good-but-approximate rather than exact. The planetary sign placements, dasha-relevant dignities, and yogas below are still real calculations, not guesses.",
                   "",
                   deep,
+                  transit ? `\n${transit}` : '',
                 ].join("\n");
               }
             }
@@ -5683,7 +5692,12 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
             jpSelf.ascendant_longitude as number | null,
             jpSelf.retrograde_flags as Record<string, boolean> | null
           );
-          if (deep) resolvedSelfDeepJyotish = `\n\n[DEEP JYOTISH ANALYSIS — LIVE FROM APP PROFILE]\n${deep}`;
+          if (deep) {
+            resolvedSelfDeepJyotish = `\n\n[DEEP JYOTISH ANALYSIS — LIVE FROM APP PROFILE]\n${deep}`;
+            const natalMoonLon = (jpSelf.planet_longitudes as Record<string, number>)?.moon ?? null;
+            const transit = buildTransitAndSadeSatiBlock(jpSelf.ascendant as string, natalMoonLon);
+            if (transit) resolvedSelfDeepJyotish += `\n\n${transit}`;
+          }
         }
       } catch (e) { console.warn("Self deep jyotish analysis fetch (non-fatal):", e); }
     }
@@ -5728,7 +5742,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
 
     // Jyotish — always use the ACTIVE subject's chart
     if (activeJyotishContext) {
-      systemText += `\n\n${"═".repeat(55)}\n${isStudentMode ? "STUDENT" : "SEEKER"} JYOTISH SOUL BLUEPRINT — AUTHORITATIVE\n${"═".repeat(55)}\n${activeJyotishContext}\n\nThis is the ${isStudentMode ? "student's" : "soul's"} cosmic contract for this incarnation.\nYukteswar reads every symptom, emotion, and life situation through THIS chart — not the teacher's.\nReference with PRECISION — planet, house, Nakshatra, Dasha — not generically.\n${"═".repeat(55)}`;
+      systemText += `\n\n${"═".repeat(55)}\n${isStudentMode ? "STUDENT" : "SEEKER"} JYOTISH SOUL BLUEPRINT — AUTHORITATIVE\n${"═".repeat(55)}\n${activeJyotishContext}\n\nThis is the ${isStudentMode ? "student's" : "soul's"} cosmic contract for this incarnation.\nYukteswar reads every symptom, emotion, and life situation through THIS chart — not the teacher's.\nReference with PRECISION — planet, house, Nakshatra, Dasha — not generically.\nWhen the blueprint above includes the deeper layers (house lordship, yogas, Ashtakavarga, divisional charts, current transits) — use them, don't just decorate with them: check house lordship before naming which house governs a life area someone asks about; check the YOGAS list before calling any pattern a strength or an affliction; for timing questions ("when," "is now the time"), cross-reference the current transiting sign against that planet's own Ashtakavarga bindu count (5+ delivers, 0-3 underperforms) rather than reading the transit in the abstract; weigh a planet's dignity and aspects together, not either alone, since a well-placed planet under a hostile aspect and a weak planet under a strong one can read opposite to what the raw placement alone suggests. All of this stays reasoning material — reference specific findings when they matter, never recite the data structure itself.\n${"═".repeat(55)}`;
     }
 
     // Voice biofield scan
