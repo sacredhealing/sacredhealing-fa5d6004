@@ -15,8 +15,6 @@ import { AccurateHoraWatch } from '@/components/vedic/AccurateHoraWatch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
-import { canAccessJyotishModule } from '@/lib/tierAccess';
-import { JYOTISH_MODULES as VIDYA_MODULES, TIER_CONFIG as VIDYA_TIER_CONFIG } from '@/lib/jyotishModules';
 import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
 import { BhriguAkashaChat } from '@/components/vedic/BhriguAkashaChat';
 import { BhumiOraclePanel } from '@/components/vedic/BhumiOraclePanel';
@@ -2665,7 +2663,7 @@ const JyotishChamber: React.FC = () => {
   const navigate = useNavigate();
 
   // State
-  const [activeTab, setActiveTab] = useState<'overview'|'chart'|'oracle'|'nadi'|'vidya'|'hora'|'bhumi'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'chart'|'oracle'|'nadi'|'hora'|'bhumi'>('overview');
   const [birthData, setBirthData] = useState<BirthData | null>(null);
   const [ephemeris, setEphemeris] = useState<EphemerisData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -2689,9 +2687,6 @@ const JyotishChamber: React.FC = () => {
   const [oracleOpen, setOracleOpen] = useState(true);
   const [lexSearch, setLexSearch] = useState('');
   const [lexCat, setLexCat] = useState('All');
-  const [activeTierTab, setActiveTierTab] = useState('free');
-  const [vidyaProgress, setVidyaProgress] = useState<Record<number, { status: string; completion_percentage: number }>>({});
-  const [openModules, setOpenModules] = useState<Set<number>>(new Set());
   const [openNadi, setOpenNadi] = useState<string|null>(null);
   const [builtTabs, setBuiltTabs] = useState<Set<string>>(new Set(['overview']));
   const [leafConfirmed, setLeafConfirmed] = useState(false);
@@ -2705,21 +2700,6 @@ const JyotishChamber: React.FC = () => {
   const [studentEphemeris, setStudentEphemeris] = useState<typeof ephemeris>(null);
 
   // When a student is selected, calculate their ephemeris via jyotish-ephemeris
-  useEffect(() => {
-    if (!user?.id) { setVidyaProgress({}); return; }
-    supabase
-      .from('jyotish_progress')
-      .select('module_id, status, completion_percentage')
-      .eq('user_id', user.id)
-      .then(({ data }: { data: any }) => {
-        const map: Record<number, { status: string; completion_percentage: number }> = {};
-        (data || []).forEach((r: { module_id: number; status: string; completion_percentage: number }) => {
-          map[r.module_id] = { status: r.status, completion_percentage: r.completion_percentage };
-        });
-        setVidyaProgress(map);
-      });
-  }, [user?.id]);
-
   useEffect(() => {
     if (!activeStudent?.birth_date) { setStudentEphemeris(null); return; }
     const calc = async () => {
@@ -3007,15 +2987,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
     }
   };
 
-  // ── Toggle module ─────────────────────────────────────────────
-  const toggleModule = (id: number) => {
-    setOpenModules(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
   // ── Computed values ──────────────────────────────────────────
   const age = birthData?.birth_date
     ? new Date().getFullYear() - new Date(birthData.birth_date).getFullYear()
@@ -3216,59 +3187,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           </div>
         </div>
 
-        {/* ══ 2. JYOTISH VIDYA EDUCATION HERO CARD ══ */}
-        <div style={{ position:'relative', margin:'0 0 20px', animation:'fadUp 0.45s 0.08s ease both' }}>
-          <div aria-hidden style={{ position:'absolute', inset:-16, borderRadius:34, background:'radial-gradient(50% 50% at 30% 40%, rgba(167,139,250,0.16), transparent 65%)', filter:'blur(22px)', animation:'swP 4s ease-in-out infinite', pointerEvents:'none' }}/>
-          <div style={{ position:'relative', zIndex:1, background:'linear-gradient(135deg, rgba(167,139,250,0.09), rgba(80,40,180,0.04) 55%, rgba(5,5,5,0.9) 100%)', border:'1px solid rgba(167,139,250,0.4)', borderRadius:22, padding:'22px 20px 20px', boxShadow:'0 0 36px rgba(167,139,250,0.12), inset 0 0 24px rgba(167,139,250,0.03)', overflow:'hidden' }}>
-            <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg, transparent, rgba(167,139,250,0.8), transparent)', opacity:0.7 }}/>
-            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
-              <div style={{ width:50, height:50, borderRadius:'50%', background:'radial-gradient(circle, rgba(167,139,250,0.2), rgba(5,5,5,0.85))', border:'1px solid rgba(167,139,250,0.42)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:22, boxShadow:'0 0 18px rgba(167,139,250,0.18)', animation:'sqBreathe 5s ease-in-out infinite' }}>◈</div>
-              <div>
-                <div style={{ fontSize:11.5, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:4 }}>32 Sacred Modules · Free to Akasha</div>
-                <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.6rem', fontWeight:700, color:'rgba(255,255,255,0.95)', lineHeight:1.05 }}>Jyotish Vidya</div>
-              </div>
-            </div>
-            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.92rem', color:'rgba(255,255,255,0.45)', lineHeight:1.7, marginBottom:14 }}>
-              From the Eye of the Veda to reading charts as Bhrigu would — a complete initiation into the sacred science of Vedic astrology across four sovereign tiers.
-            </p>
-            {/* Progress bar */}
-            <div style={{ fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.55)', marginBottom:6 }}>Your Progress</div>
-            {(() => {
-              const completedVidya = Object.values(vidyaProgress).filter(p => p.status === 'completed' || p.completion_percentage >= 100).length;
-              const pct = Math.round((completedVidya / VIDYA_MODULES.length) * 100);
-              return (
-                <>
-                  <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:99, height:5, overflow:'hidden', marginBottom:7 }}>
-                    <div style={{ height:'100%', background:'linear-gradient(90deg, rgba(167,139,250,0.6), rgba(200,180,255,0.9))', borderRadius:99, width:`${pct}%` }}/>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:14 }}>
-                    <span style={{ fontSize:13.5, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'rgba(200,180,255,0.75)' }}>{completedVidya} / {VIDYA_MODULES.length} modules</span>
-                    <span style={{ fontSize:13.5, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'rgba(200,180,255,0.75)' }}>{pct}%</span>
-                  </div>
-                </>
-              );
-            })()}
-            {/* Tier pills */}
-            <div style={{ display:'flex', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
-              {[
-                { label:'📖 Free', bg:'rgba(107,114,128,0.1)', border:'rgba(107,114,128,0.3)', color:'rgba(180,185,195,0.8)' },
-                { label:'🔥 Prāna', bg:'rgba(34,211,238,0.08)', border:'rgba(34,211,238,0.25)', color:'rgba(34,211,238,0.8)' },
-                { label:'⭐ Siddha', bg:'rgba(212,175,55,0.08)', border:'rgba(212,175,55,0.25)', color:'rgba(212,175,55,0.8)' },
-                { label:'∞ Ākāsha', bg:'rgba(255,255,255,0.06)', border:'rgba(255,255,255,0.18)', color:'rgba(255,255,255,0.75)' },
-              ].map(t => (
-                <div key={t.label} style={{ padding:'3px 10px', borderRadius:99, fontSize:11, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, background:t.bg, border:`1px solid ${t.border}`, color:t.color }}>{t.label}</div>
-              ))}
-            </div>
-            <button onClick={() => { switchTab('vidya'); setTimeout(() => { document.getElementById('jc-nav')?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50); }} style={{ width:'100%', padding:'13px 20px', borderRadius:99, border:'1px solid rgba(167,139,250,0.4)', background:'rgba(167,139,250,0.1)', color:'rgba(200,180,255,0.9)', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>
-              Open Jyotish Vidya →
-            </button>
-          </div>
-        </div>
-
         {/* ── NAV TABS (hidden but functional) ── */}
         <nav id="jc-nav" style={{ display:'flex', gap:5, padding:5, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:99, marginBottom:22, overflowX:'auto', scrollbarWidth:'none' }}>
-          {(['overview','chart','oracle','nadi','vidya','hora','bhumi'] as const).map((tab, i) => {
-            const labels = ['✦ Overview','☽ My Chart','🔱 Oracle','🌿 Nadi Leaf','◈ Vidya','⏱ Hora','🌍 Bhumi'];
+          {(['overview','chart','oracle','nadi','hora','bhumi'] as const).map((tab, i) => {
+            const labels = ['✦ Overview','☽ My Chart','🔱 Oracle','🌿 Nadi Leaf','⏱ Hora','🌍 Bhumi'];
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => switchTab(tab)} style={{
@@ -3836,86 +3758,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 Access Nadi Leaf →
               </button>
             </div>
-          </motion.div>
-        )}
-
-        {/* ══════════════ JYOTISH VIDYA ══════════════ */}
-        {(activeTab === 'vidya' || builtTabs.has('vidya')) && builtTabs.has('vidya') && (
-          <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 18px', marginBottom:14, borderRadius:20, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.01)' }}>
-              <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', flexShrink:0 }}>Your Path</div>
-              {(() => {
-                const completedVidya = Object.values(vidyaProgress).filter(p => p.status === 'completed' || p.completion_percentage >= 100).length;
-                const pct = Math.round((completedVidya / VIDYA_MODULES.length) * 100);
-                return (
-                  <>
-                    <div style={{ flex:1, height:3, borderRadius:99, background:'rgba(255,255,255,0.05)', overflow:'hidden' }}><div style={{ height:'100%', background:'#D4AF37', borderRadius:99, width:`${pct}%` }}/></div>
-                    <div style={{ fontSize:13, color:'rgba(255,255,255,0.25)' }}>{completedVidya} / {VIDYA_MODULES.length}</div>
-                  </>
-                );
-              })()}
-            </div>
-            <div style={{ display:'flex', gap:5, marginBottom:18 }}>
-              {[
-                { id:'free', icon:'📖', label:'Free', col:'#6B7280' },
-                { id:'prana', icon:'🔥', label:'Prāna', col:'#22D3EE' },
-                { id:'siddha', icon:'⭐', label:'Siddha', col:'#D4AF37' },
-                { id:'akasha', icon:'∞', label:'Ākāsha', col:'#fff' },
-              ].map(t => (
-                <button key={t.id} onClick={() => setActiveTierTab(t.id)} style={{ flex:1, padding:'11px 4px', borderRadius:14, border: activeTierTab === t.id ? `1px solid ${t.col}44` : '1px solid rgba(255,255,255,0.06)', background: activeTierTab === t.id ? `${t.col}18` : 'rgba(255,255,255,0.02)', color: activeTierTab === t.id ? t.col : 'rgba(255,255,255,0.4)', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer', textAlign:'center' as const, transition:'all 0.25s' }}>
-                  <span style={{ display:'block', fontSize:18, marginBottom:4 }}>{t.icon}</span>{t.label}
-                </button>
-              ))}
-            </div>
-            {VIDYA_MODULES.filter(m => m.tier === activeTierTab).map(m => {
-              const ok = isAdmin || canAccessJyotishModule({ isAdmin, userId: user?.id, tier: membershipTier, moduleId: m.id });
-              const isOpen = openModules.has(m.id);
-              const tierCol = { free:'#6B7280', prana:'#22D3EE', siddha:'#D4AF37', akasha:'#ffffff' }[m.tier] || '#D4AF37';
-              return (
-                <div key={m.id} style={{ background: isOpen ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border: isOpen ? '1px solid rgba(212,175,55,0.22)' : '1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55, transition:'all 0.2s', boxShadow: isOpen ? '0 0 18px rgba(212,175,55,0.08)' : 'none' }}>
-                  <div onClick={() => ok && toggleModule(m.id)} style={{ display:'flex', alignItems:'flex-start', gap:10, cursor: ok ? 'pointer' : 'default' }}>
-                    <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.28em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
-                    <div style={{ flex:1 }}>
-                      {m.isSecret && <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:11, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>⬡ Secret Module</div>}
-                      <div style={{ fontSize:15, fontWeight:900, letterSpacing:'-0.02em', lineHeight:1.3, marginBottom:2 }}>{m.title}</div>
-                      <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', lineHeight:1.35 }}>{m.subtitle}</div>
-                    </div>
-                    <span style={{ fontSize:14, color:'rgba(255,255,255,0.4)' }}>{ok ? (isOpen ? '▲' : '▼') : '🔒'}</span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:7, flexWrap:'wrap' as const }}>
-                    <span style={{ padding:'3px 9px', borderRadius:99, fontSize:12, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, background:`${tierCol}18`, border:`1px solid ${tierCol}33`, color:tierCol }}>
-                      { {free:'Free',prana:'Prāna-Flow',siddha:'Siddha-Quantum',akasha:'Ākāsha-Infinity'}[m.tier] }
-                    </span>
-                    <span style={{ fontSize:13.5, color:'rgba(255,255,255,0.25)' }}>{m.duration}</span>
-                  </div>
-                  {ok && isOpen && (
-                    <div onClick={e => e.stopPropagation()} style={{ paddingTop:15, borderTop:'1px solid rgba(255,255,255,0.04)', marginTop:13 }}>
-                      {m.description && (
-                        <p style={{ fontSize:14.5, color:'rgba(255,255,255,0.55)', lineHeight:1.55, marginBottom:12, fontStyle:'italic' }}>{m.description}</p>
-                      )}
-                      <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.32em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Curriculum</div>
-                      <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:6 }}>
-                        {m.topics.map(tp => (
-                          <li key={tp} style={{ display:'flex', gap:7, fontSize:14, color:'rgba(255,255,255,0.6)', lineHeight:1.45 }}>
-                            <span style={{ color:'rgba(212,175,55,0.35)', flexShrink:0 }}>◈</span>{tp}
-                          </li>
-                        ))}
-                      </ul>
-                      <button onClick={() => navigate(`/jyotish-vidya/module/${m.id}`)} style={{ width:'100%', marginTop:14, padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:13, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
-                    </div>
-                  )}
-                  {!ok && (
-                    <div onClick={e => e.stopPropagation()} style={{ display:'flex', alignItems:'center', gap:9, padding:'10px 13px', borderRadius:14, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)', marginTop:10 }}>
-                      <span>🔒</span>
-                      <p style={{ fontSize:13.5, color:'rgba(255,255,255,0.4)', flex:1 }}>
-                        Requires { {prana:'Prāna-Flow (€19/mo)',siddha:'Siddha-Quantum (€45/mo)',akasha:'Ākāsha-Infinity (€2,997 lifetime)'}[m.tier as 'prana'|'siddha'|'akasha'] }
-                      </p>
-                      <button onClick={() => navigate('/membership')} style={{ padding:'6px 13px', borderRadius:99, border:'1px solid rgba(212,175,55,0.22)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontSize:13, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase' as const, cursor:'pointer', flexShrink:0 }}>Upgrade</button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </motion.div>
         )}
 
