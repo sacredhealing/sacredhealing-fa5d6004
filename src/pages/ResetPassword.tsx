@@ -45,6 +45,21 @@ const ResetPassword: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    // Always subscribe first — Supabase fires PASSWORD_RECOVERY / SIGNED_IN
+    // once it processes hash tokens or a completed PKCE exchange.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+        markReady();
+      }
+    });
+
+    const confirmSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (mounted && data.session) markReady();
+    };
 
     const init = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -60,7 +75,7 @@ const ResetPassword: React.FC = () => {
           if (exchError) {
             markError('This reset link is invalid or has expired. Please request a new one.');
           } else {
-            markReady();
+            await confirmSession();
           }
         } catch {
           if (mounted) markError('Something went wrong. Please request a new reset link.');
@@ -79,7 +94,7 @@ const ResetPassword: React.FC = () => {
           if (verifyError) {
             markError('This reset link is invalid or has expired. Please request a new one.');
           } else {
-            markReady();
+            await confirmSession();
           }
         } catch {
           if (mounted) markError('Something went wrong. Please request a new reset link.');
@@ -87,35 +102,31 @@ const ResetPassword: React.FC = () => {
         return;
       }
 
-      // ── 3. Legacy hash flow: #type=recovery ──────────────
-      if (window.location.hash.includes('type=recovery')) {
-        if (mounted) markReady();
+      // ── 3. Implicit hash flow: #access_token=...&type=recovery ──
+      // detectSessionInUrl processes this asynchronously; wait for the
+      // auth event above, or poll getSession as a fallback.
+      if (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token')) {
+        await confirmSession();
         return;
       }
 
-      // ── 4. Listen for PASSWORD_RECOVERY auth event ───────
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY' && mounted) {
-          markReady();
-        }
-      });
-
-      // 8s timeout — use ref to avoid stale closure
-      const timeout = setTimeout(() => {
-        if (mounted && !isReadyRef.current) {
-          subscription.unsubscribe();
-          markError('This reset link is invalid or has expired. Please request a new one.');
-        }
-      }, 8000);
-
-      return () => {
-        subscription.unsubscribe();
-        clearTimeout(timeout);
-      };
+      // ── 4. No indicators — maybe session already exists ──
+      await confirmSession();
     };
 
+    // 8s timeout — use ref to avoid stale closure
+    timeout = setTimeout(() => {
+      if (mounted && !isReadyRef.current) {
+        markError('This reset link is invalid or has expired. Please request a new one.');
+      }
+    }, 8000);
+
     init();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      if (timeout) clearTimeout(timeout);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
