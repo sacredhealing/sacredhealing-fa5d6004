@@ -2277,13 +2277,25 @@ function QuantumApothecaryInner() {
 
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem('sqi_current_session_id');
-    } catch {
-      return null;
+  // ⟁ Session id is scoped per-user in localStorage so it cannot leak between
+  // accounts on the same device. We do NOT read any global key at init — the
+  // effect below hydrates it once the authenticated user is known.
+  const sessionStorageKey = user?.id ? `sqi_current_session_id:${user.id}` : null;
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  useEffect(() => {
+    // Clean up the legacy un-scoped key so no other account can inherit it.
+    try { localStorage.removeItem('sqi_current_session_id'); } catch { /* ignore */ }
+    if (!sessionStorageKey) {
+      setCurrentSessionId(null);
+      return;
     }
-  });
+    try {
+      const v = localStorage.getItem(sessionStorageKey);
+      setCurrentSessionId(v && v.length > 0 ? v : null);
+    } catch {
+      setCurrentSessionId(null);
+    }
+  }, [sessionStorageKey]);
 
   const handleSaveAIMessageToCodex = useCallback(
     (assistantMsg: Message, globalIndex: number) => {
@@ -2434,11 +2446,11 @@ function QuantumApothecaryInner() {
 
   const flushSqiLocalStorage = useCallback(() => {
     try {
-      if (currentSessionId) {
-        localStorage.setItem('sqi_current_session_id', currentSessionId);
+      if (currentSessionId && sessionStorageKey) {
+        localStorage.setItem(sessionStorageKey, currentSessionId);
       }
     } catch { /* ignore quota / private mode */ }
-  }, [currentSessionId]);
+  }, [currentSessionId, sessionStorageKey]);
 
   useEffect(() => {
     flushSqiLocalStorage();
@@ -2613,7 +2625,7 @@ function QuantumApothecaryInner() {
         setMessages(loaded);
         prevMsgCountRef.current = loaded.length;
         try {
-          localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+          if (sessionStorageKey) localStorage.setItem(sessionStorageKey, resumeSessionParam);
         } catch {
           /* ignore */
         }
@@ -2631,7 +2643,7 @@ function QuantumApothecaryInner() {
       setMessages(mapped);
       prevMsgCountRef.current = mapped.length;
       try {
-        localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+        if (sessionStorageKey) localStorage.setItem(sessionStorageKey, resumeSessionParam);
       } catch {
         /* ignore */
       }
@@ -2648,7 +2660,7 @@ function QuantumApothecaryInner() {
     if (isTyping) return;
     if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
     try {
-      localStorage.removeItem('sqi_current_session_id');
+      if (sessionStorageKey) localStorage.removeItem(sessionStorageKey);
     } catch { /* ignore */ }
     void clearSyncChatMessages();
     syncHydratedOnceRef.current = false;
@@ -2659,7 +2671,7 @@ function QuantumApothecaryInner() {
     setMessages([]);
     prevMsgCountRef.current = 0;
     setSessionsOpen(false);
-  }, [isTyping, clearSyncChatMessages]);
+  }, [isTyping, clearSyncChatMessages, sessionStorageKey]);
 
   const handleSendMessage = async (
     overrideText?: string,
