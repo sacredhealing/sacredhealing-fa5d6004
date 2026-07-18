@@ -2446,11 +2446,11 @@ function QuantumApothecaryInner() {
 
   const flushSqiLocalStorage = useCallback(() => {
     try {
-      if (currentSessionId) {
-        localStorage.setItem('sqi_current_session_id', currentSessionId);
+      if (currentSessionId && sessionStorageKey) {
+        localStorage.setItem(sessionStorageKey, currentSessionId);
       }
     } catch { /* ignore quota / private mode */ }
-  }, [currentSessionId]);
+  }, [currentSessionId, sessionStorageKey]);
 
   useEffect(() => {
     flushSqiLocalStorage();
