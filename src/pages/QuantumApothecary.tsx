@@ -2660,7 +2660,7 @@ function QuantumApothecaryInner() {
     if (isTyping) return;
     if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
     try {
-      localStorage.removeItem('sqi_current_session_id');
+      if (sessionStorageKey) localStorage.removeItem(sessionStorageKey);
     } catch { /* ignore */ }
     void clearSyncChatMessages();
     syncHydratedOnceRef.current = false;
