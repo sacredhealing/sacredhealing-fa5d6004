@@ -24,6 +24,22 @@ jobs:
             -d "{}" \
             --max-time 600)
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
           echo "HTTP: $HTTP_CODE"
           echo "Body: $BODY"
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::weekly-alignment-email returned HTTP $HTTP_CODE — email NOT sent."
+            exit 1
+          fi
+
+          if echo "$BODY" | grep -qi '"error"'; then
+            echo "::error::weekly-alignment-email returned 2xx but body contains an error field — email NOT sent."
+            echo "$BODY"
+            exit 1
+          fi
+
+          if echo "$BODY" | grep -qiE '"sent"[[:space:]]*:[[:space:]]*0|"recipients"[[:space:]]*:[[:space:]]*0'; then
+            echo "::error::weekly-alignment-email reported 0 recipients/sent — check subscriber query."
+            exit 1
+          fi
