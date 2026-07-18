@@ -1,6 +1,8 @@
 project_id = "ssygukfdbtehvtndandn"
 
 [functions]
+  [functions.lakshmi-friday]
+    verify_jwt = false
   [functions.qr-pairing]
     verify_jwt = false
   [functions.social-post]
