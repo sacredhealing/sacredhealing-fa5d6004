@@ -3767,6 +3767,45 @@ export type Database = {
         }
         Relationships: []
       }
+      email_batch_queue: {
+        Row: {
+          created_at: string
+          email: string
+          email_type: string
+          error: string | null
+          first_name: string | null
+          id: string
+          run_key: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          email_type: string
+          error?: string | null
+          first_name?: string | null
+          id?: string
+          run_key: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          email_type?: string
+          error?: string | null
+          first_name?: string | null
+          id?: string
+          run_key?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           email_type: string
@@ -13430,7 +13469,29 @@ export type Database = {
           remaining: number
         }[]
       }
+      claim_email_batch: {
+        Args: { p_email_type: string; p_limit?: number; p_run_key: string }
+        Returns: {
+          created_at: string
+          email: string
+          email_type: string
+          error: string | null
+          first_name: string | null
+          id: string
+          run_key: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "email_batch_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       clawbot_fee_for_tier: { Args: { tier_name: string }; Returns: number }
+      cleanup_old_email_batch_queue: { Args: never; Returns: undefined }
       cleanup_qr_pairing_tokens: { Args: never; Returns: undefined }
       cleanup_rate_limit_events: { Args: never; Returns: undefined }
       current_user_tier_level: { Args: never; Returns: number }
