@@ -905,7 +905,11 @@ serve(async (req) => {
           if (deep) {
             const natalMoonLon = (chart.planetLongitudes as Record<string, number>)?.moon ?? null;
             const transit = buildTransitAndSadeSatiBlock(chart.ascendantSign, natalMoonLon);
-            studentDeepAnalysis = `\n\n[STUDENT DEEP JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]\nLagna (Ascendant): ${chart.ascendantSign}\nComputed directly from birth date/time/place — treat exact-degree precision as good-but-approximate (birth-place geocoding and timezone are both estimated), but the sign placements, dignities, and yogas below are real calculations, not guesses. Same usage rule as your own chart data: check house lordship and the 6th house before naming a system under strain, check YOGAS before calling anything a strength or affliction, and for timing questions cross-reference the current transiting sign against that planet's own Ashtakavarga bindu count rather than a generic timeline.\n${deep}${transit ? `\n\n${transit}` : ''}`;
+            const d = chart.activeDasha;
+            const dashaLine = d
+              ? `\n\n━━ CALCULATED DASHA (Vimshottari — USE THESE EXACT DATES) ━━\nCurrent Mahadasha: ${d.mahadasha} (${d.mahadashaStart} → ${d.mahadashaEnd})\n${d.antardasha ? `Current Antardasha: ${d.antardasha} (${d.antardashaStart} → ${d.antardashaEnd})` : ''}\nRULE: Never approximate or invent dasha dates. These are computed, not guessed — use ONLY the dates above.`
+              : '';
+            studentDeepAnalysis = `\n\n[STUDENT DEEP JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]\nLagna (Ascendant): ${chart.ascendantSign}\nComputed directly from birth date/time/place — treat exact-degree precision as good-but-approximate (birth-place geocoding and timezone are both estimated), but the sign placements, dignities, dasha, and yogas below are real calculations, not guesses. Same usage rule as your own chart data: check house lordship and the 6th house before naming a system under strain, check YOGAS before calling anything a strength or affliction, and for timing questions cross-reference the current transiting sign against that planet's own Ashtakavarga bindu count rather than a generic timeline.\n${deep}${dashaLine}${transit ? `\n\n${transit}` : ''}`;
           }
         }
       } catch (e) { console.warn("[ayurveda-chat] Unlinked student chart fallback:", e); }

@@ -5654,12 +5654,17 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
               if (deep) {
                 const natalMoonLon = (chart.planetLongitudes as Record<string, number>)?.moon ?? null;
                 const transit = buildTransitAndSadeSatiBlock(chart.ascendantSign, natalMoonLon);
+                const d = chart.activeDasha;
+                const dashaLine = d
+                  ? `\n━━ CALCULATED DASHA (Vimshottari — USE THESE EXACT DATES) ━━\nCurrent Mahadasha: ${d.mahadasha} (${d.mahadashaStart} → ${d.mahadashaEnd})\n${d.antardasha ? `Current Antardasha: ${d.antardasha} (${d.antardashaStart} → ${d.antardashaEnd})` : ''}\nRULE: Never approximate or invent dasha dates. These are computed, not guessed — use ONLY the dates above.`
+                  : '';
                 resolvedStudentJyotish = [
                   "[STUDENT JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]",
                   `Lagna (Ascendant): ${chart.ascendantSign}`,
-                  "This chart is computed directly from birth date/time/place — the student has not linked an app account with a fully geocoded profile, so treat birth-place-dependent precision (exact Ascendant degree, house cusps near a sign boundary) as good-but-approximate rather than exact. The planetary sign placements, dasha-relevant dignities, and yogas below are still real calculations, not guesses.",
+                  "This chart is computed directly from birth date/time/place — the student has not linked an app account with a fully geocoded profile, so treat birth-place-dependent precision (exact Ascendant degree, house cusps near a sign boundary) as good-but-approximate rather than exact. The planetary sign placements, dasha, dasha-relevant dignities, and yogas below are still real calculations, not guesses.",
                   "",
                   deep,
+                  dashaLine,
                   transit ? `\n${transit}` : '',
                 ].join("\n");
               }

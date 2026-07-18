@@ -31,6 +31,7 @@
 // chart, and callers should not present it as such.
 
 import { computeAllPlanetLongitudesFallback, computeRetrogradeFlags, type PlanetLongitudes } from "./current-transits.ts";
+import { computeActiveDasha, type ActiveDasha } from "./vimshottari-dasha.ts";
 
 const ZODIAC_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
   'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
@@ -103,6 +104,7 @@ export interface FullChart {
   ascendantLongitude: number;
   planetLongitudes: PlanetLongitudes;
   retrogradeFlags: Record<string, boolean> | null;
+  activeDasha: ActiveDasha | null;
 }
 
 /**
@@ -125,7 +127,15 @@ export function computeFullChartFromBirthData(
     if (!planetLongitudes) return null;
     const { ascendantSign, ascendantLongitude } = computeAscendant(birthDate, time, tzOffsetHours, lat, lon);
     const retrogradeFlags = computeRetrogradeFlags(birthDate, time, tzOffsetHours);
-    return { ascendantSign, ascendantLongitude, planetLongitudes, retrogradeFlags };
+    // Real Vimshottari Mahadasha/Antardasha — previously missing entirely
+    // from this fallback path, meaning the model was left to invent
+    // dasha periods and dates from nothing even after every other piece
+    // of the chart became real. moon longitude comes straight out of the
+    // already-computed planetLongitudes, no extra computation needed.
+    const activeDasha = typeof planetLongitudes.moon === 'number'
+      ? computeActiveDasha(planetLongitudes.moon, birthDate)
+      : null;
+    return { ascendantSign, ascendantLongitude, planetLongitudes, retrogradeFlags, activeDasha };
   } catch (e) {
     console.error('computeFullChartFromBirthData error:', e);
     return null;
