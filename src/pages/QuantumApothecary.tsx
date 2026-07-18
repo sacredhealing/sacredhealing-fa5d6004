@@ -2277,13 +2277,25 @@ function QuantumApothecaryInner() {
 
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem('sqi_current_session_id');
-    } catch {
-      return null;
+  // ⟁ Session id is scoped per-user in localStorage so it cannot leak between
+  // accounts on the same device. We do NOT read any global key at init — the
+  // effect below hydrates it once the authenticated user is known.
+  const sessionStorageKey = user?.id ? `sqi_current_session_id:${user.id}` : null;
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  useEffect(() => {
+    // Clean up the legacy un-scoped key so no other account can inherit it.
+    try { localStorage.removeItem('sqi_current_session_id'); } catch { /* ignore */ }
+    if (!sessionStorageKey) {
+      setCurrentSessionId(null);
+      return;
     }
-  });
+    try {
+      const v = localStorage.getItem(sessionStorageKey);
+      setCurrentSessionId(v && v.length > 0 ? v : null);
+    } catch {
+      setCurrentSessionId(null);
+    }
+  }, [sessionStorageKey]);
 
   const handleSaveAIMessageToCodex = useCallback(
     (assistantMsg: Message, globalIndex: number) => {
