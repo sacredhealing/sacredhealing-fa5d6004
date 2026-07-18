@@ -1,45 +1,21 @@
-## Goal
+Apply the weekly-alignment queue extension and redeploy the function.
 
-Switch the Monday `weekly-alignment-email` GitHub workflow from anon-key auth to `CRON_SECRET` bearer auth, so it matches what the deployed function already validates and stops getting rejected by the gateway.
+## What we will do
 
-## Current state (verified this turn)
+1. **Verify the migration** `supabase/migrations/20260718210000_email_queue_extend_for_weekly.sql`.
+   - It adds a `payload` JSONB column to `public.email_batch_queue` and creates a new `public.email_run_meta` table for shared run metadata (week content, Gemini-generated copy, sender identity).
 
-- `supabase/functions/weekly-alignment-email/index.ts` lines 158–167 already contain the check:
-  ```ts
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret) {
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) return 401;
-  }
-  ```
-  So the function is ready — it just needs the caller to send `Authorization: Bearer <CRON_SECRET>`.
-- `CRON_SECRET` is confirmed present in the backend secrets (used today by the SHREEM stop-loss cron per `supabase/SHREEM_STOPLOSS_CRON.sql`). We reuse the existing value — no rotation.
-- Current `.github/workflows/monday-weekly-email.yml` sends `Authorization: Bearer $LOVABLE_SUPABASE_ANON_KEY` and `apikey: $LOVABLE_SUPABASE_ANON_KEY`.
+2. **Add the missing GRANT** for the new table.
+   - `public.email_run_meta` is created by the migration but has no Data API grant. The `weekly-alignment-email` edge function uses a service-role Supabase client, so we need:
+     ```sql
+     GRANT SELECT, INSERT, UPDATE, DELETE ON public.email_run_meta TO service_role;
+     ```
+   - Without this, PostgREST calls from the function will hit a permission error.
 
-## What you do (one manual step)
+3. **Apply the migration** via the Supabase migration tool.
 
-1. Open **View Backend → Edge Functions → Manage secrets**, reveal `CRON_SECRET`, copy the value.
-2. In GitHub → repo **Settings → Secrets and variables → Actions**, add a new secret named `CRON_SECRET` with that value. (You can paste it into chat and I'll wire it, or add it directly in GitHub — either works.)
+4. **Redeploy the `weekly-alignment-email` edge function** so the new queue/enqueue/drain code goes live.
 
-## What I change (one file, build mode)
+## Outcome
 
-Edit `.github/workflows/monday-weekly-email.yml`:
-
-- Add `CRON_SECRET: ${{ secrets.CRON_SECRET }}` to the step's `env`.
-- Replace the `Authorization` header with `Authorization: Bearer ${CRON_SECRET}`.
-- Keep the `apikey: ${SUPABASE_KEY}` header (the gateway still expects an apikey; only the bearer identity changes).
-- Leave `LOVABLE_SUPABASE_URL` / `LOVABLE_SUPABASE_ANON_KEY` in place for the `apikey` header and URL.
-
-Result: the request satisfies the gateway (valid `apikey`) AND satisfies the function's `CRON_SECRET` check (valid `Authorization: Bearer`). No function code change, no secret rotation, no impact on the SHREEM stop-loss cron.
-
-## Verification after the change
-
-- Trigger the workflow manually (`workflow_dispatch`).
-- I'll tail `weekly-alignment-email` edge logs and confirm the handler actually runs (boot + real log lines, not just `shutdown`) and returns 2xx with either `sent > 0` or a legitimate `skipped` payload.
-- If it still 401s, the failure is now definitively at the gateway `verify_jwt` layer (not the function), and we go back to the manual dashboard toggle for `weekly-alignment-email`.
-
-## Not doing
-
-- Not rotating `CRON_SECRET` (would break SHREEM stop-loss trading cron).
-- Not editing the edge function (check already exists).
-- Not touching `supabase/config.toml` again.
+`weekly-alignment-email` will use the same scalable `email_batch_queue` + `claim_email_batch` pattern as `lakshmi-friday`, avoiding timeouts as the user list grows.
