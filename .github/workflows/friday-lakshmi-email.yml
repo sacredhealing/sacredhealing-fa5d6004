@@ -20,6 +20,7 @@ jobs:
             -X POST \
             "${SUPABASE_URL}/functions/v1/lakshmi-friday" \
             -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "apikey: ${SUPABASE_KEY}" \
             -H "Content-Type: application/json" \
             -d "{}" \
             --max-time 600)
@@ -35,7 +36,6 @@ jobs:
 
           if echo "$BODY" | grep -qi '"error"'; then
             echo "::error::lakshmi-friday returned 2xx but body contains an error field — email NOT sent."
-            echo "$BODY"
             exit 1
           fi
 
