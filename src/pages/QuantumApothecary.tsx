@@ -2625,7 +2625,7 @@ function QuantumApothecaryInner() {
         setMessages(loaded);
         prevMsgCountRef.current = loaded.length;
         try {
-          localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+          if (sessionStorageKey) localStorage.setItem(sessionStorageKey, resumeSessionParam);
         } catch {
           /* ignore */
         }
