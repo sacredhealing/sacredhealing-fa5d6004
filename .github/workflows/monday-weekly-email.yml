@@ -35,11 +35,15 @@ jobs:
 
           if echo "$BODY" | grep -qi '"error"'; then
             echo "::error::weekly-alignment-email returned 2xx but body contains an error field — email NOT sent."
-            echo "$BODY"
             exit 1
           fi
 
+          if echo "$BODY" | grep -qi '"skipped"[[:space:]]*:[[:space:]]*true'; then
+            echo "No new content_changelog entries this week — intentional no-filler skip, not a failure."
+            exit 0
+          fi
+
           if echo "$BODY" | grep -qiE '"sent"[[:space:]]*:[[:space:]]*0|"recipients"[[:space:]]*:[[:space:]]*0'; then
-            echo "::error::weekly-alignment-email reported 0 recipients/sent — check subscriber query."
+            echo "::error::weekly-alignment-email reported 0 recipients/sent with no skip reason — likely broken."
             exit 1
           fi
