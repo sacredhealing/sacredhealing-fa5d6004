@@ -145,11 +145,12 @@ serve(async (req) => {
 
   let testEmail: string | null = null;
   let forceVoice: "Kritagya" | "Laila" | null = null;
+  let payload: Record<string, unknown> = {};
   try {
     if (req.method === "POST") {
-      const body = await req.clone().json().catch(() => ({}));
-      if (body?.testEmail) testEmail = String(body.testEmail);
-      if (body?.forceVoice === "Kritagya" || body?.forceVoice === "Laila") forceVoice = body.forceVoice;
+      payload = await req.clone().json().catch(() => ({}));
+      if (payload?.testEmail) testEmail = String(payload.testEmail);
+      if (payload?.forceVoice === "Kritagya" || payload?.forceVoice === "Laila") forceVoice = payload.forceVoice as "Kritagya" | "Laila";
     }
   } catch {}
   if (forceVoice) (globalThis as any).__FORCE_VOICE__ = forceVoice;
@@ -170,7 +171,6 @@ serve(async (req) => {
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
     const resend = new Resend(resendApiKey);
 
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "Kritagya Das | SQI <noreply@siddhaquantumnexus.com>";
     const appUrl = Deno.env.get("APP_URL") || "https://siddhaquantumnexus.com";
 
     const supabase = createClient(
@@ -179,206 +179,303 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    log("Starting Monday Weekly Update scan");
-
-    const now = new Date();
-    const oneWeekAgo = new Date(now);
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const weekStart = new Date(now);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-    const weekStartStr = weekStart.toISOString().slice(0, 10);
-
-    // ── New content this week from content_changelog ──
-    const { data: newContent } = await supabase
-      .from("content_changelog")
-      .select("content_type, content_title, content_description, tier_required")
-      .gte("created_at", oneWeekAgo.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    const weeklyNewContent: ContentItem[] = newContent || [];
-    log(`Found ${weeklyNewContent.length} new content items this week`);
-    // Always send — no new content_changelog entries just means the email
-    // leans on the teaching pool + activity summary instead of a content highlight.
-
-    // ── Fetch profiles ──
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, preferred_language");
-    if (profilesError) throw new Error(`Profiles fetch failed: ${profilesError.message}`);
-
-    const profilesWithEmail = await Promise.all(
-      (profiles || []).map(async (p) => {
-        const { data: authUser } = await supabase.auth.admin.getUserById(p.user_id);
-        const email = authUser?.user?.email || null;
-        return { ...p, email, language: resolveLang(p.preferred_language) };
-      })
-    );
-    const validProfiles = profilesWithEmail.filter((p) => p.email);
-    log(`Found ${validProfiles.length} users with emails`);
-
-    // ── Dedup: skip users already emailed this week ──
-    const { data: alreadySent } = await supabase
-      .from("user_weekly_email_log")
-      .select("user_id")
-      .eq("week_start", weekStartStr)
-      .eq("email_type", "weekly_alignment");
-    const alreadySentIds = new Set(alreadySent?.map((r) => r.user_id) || []);
-
-    // ── Activity data ──
-    const { data: mantraCompletions } = await supabase
-      .from("mantra_completions")
-      .select("user_id, mantra_id, completed_at")
-      .gte("completed_at", oneWeekAgo.toISOString());
-
-    const { data: mantras } = await supabase
-      .from("mantras")
-      .select("id, category, planet_type, duration_seconds");
-    const mantraMap = new Map(mantras?.map((m) => [m.id, m]) || []);
-
-    const { data: stargateMembers } = await supabase
-      .from("stargate_community_members")
-      .select("user_id");
-    const stargateMemberIds = new Set(stargateMembers?.map((m) => m.user_id) || []);
-
-    const { data: dailyActivities } = await supabase
-      .from("daily_active_users")
-      .select("user_id, activity_date")
-      .order("activity_date", { ascending: false });
-
-    const { data: nadiBaselines } = await supabase
-      .from("nadi_baselines")
-      .select("user_id, active_nadis, dominant_dosha, primary_blockage");
-    const nadiMap = new Map(nadiBaselines?.map((n) => [n.user_id, n]) || []);
-
-    // ── Per-user stats ──
-    const userMantraCounts = new Map<string, number>();
-    const userPracticeMin = new Map<string, number>();
-    const userTopCat = new Map<string, Map<string, number>>();
-    const userLastActive = new Map<string, Date>();
-
-    mantraCompletions?.forEach((c) => {
-      userMantraCounts.set(c.user_id, (userMantraCounts.get(c.user_id) || 0) + 1);
-      const m = mantraMap.get(c.mantra_id);
-      if (m) {
-        const min = (m.duration_seconds || 180) / 60;
-        userPracticeMin.set(c.user_id, (userPracticeMin.get(c.user_id) || 0) + min);
-        const cat = m.category || m.planet_type || "general";
-        if (!userTopCat.has(c.user_id)) userTopCat.set(c.user_id, new Map());
-        const cm = userTopCat.get(c.user_id)!;
-        cm.set(cat, (cm.get(cat) || 0) + 1);
-        const d = new Date(c.completed_at);
-        const last = userLastActive.get(c.user_id);
-        if (!last || d > last) userLastActive.set(c.user_id, d);
-      }
-    });
-
-    dailyActivities?.forEach((a) => {
-      const d = new Date(a.activity_date);
-      const last = userLastActive.get(a.user_id);
-      if (!last || d > last) userLastActive.set(a.user_id, d);
-    });
-
-    // ── Segment ──
-    const userStates: UserState[] = [];
-    for (const profile of validProfiles) {
-      if (alreadySentIds.has(profile.user_id)) continue;
-      const uid = profile.user_id;
-      const mantraCount = userMantraCounts.get(uid) || 0;
-      const practiceMinutes = Math.round(userPracticeMin.get(uid) || 0);
-      const lastActive = userLastActive.get(uid);
-      const daysInactive = lastActive
-        ? Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
-        : 999;
-      const catMap = userTopCat.get(uid);
-      const topCategory = catMap
-        ? Array.from(catMap.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || null
-        : null;
-      const nadiRow = nadiMap.get(uid);
-      const nadiBaseline = nadiRow
-        ? { activeNadis: nadiRow.active_nadis, dominantDosha: nadiRow.dominant_dosha, primaryBlockage: nadiRow.primary_blockage }
-        : null;
-
-      let segment: UserState["segment"];
-      if (mantraCount >= 3) segment = "consistent";
-      else if (daysInactive >= 14) segment = "dormant";
-      else if (daysInactive >= 5 && mantraCount > 0) segment = "returning";
-      else segment = "new_seeker";
-
-      userStates.push({
-        userId: uid, email: profile.email!, fullName: profile.full_name,
-        language: profile.language, segment, mantraCount, practiceMinutes,
-        daysInactive, topCategory, nadiBaseline, isStargateMember: stargateMemberIds.has(uid),
-      });
-    }
-
-    log(`Segmented ${userStates.length} users (skipped ${alreadySentIds.size} already emailed)`);
-
-    // ── Generate this week's personal opening (Kritagya/Laila voice via Gemini) ──
-    const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
-    const weekDate = new Date().toLocaleDateString("en-GB", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric",
-    });
-    const topContentItems = weeklyNewContent.slice(0, 4).map((c) => ({
-      title: c.content_title,
-      type: c.content_type,
-    }));
-    const generatedCopy = geminiKey
-      ? await generatePersonalOpening("mixed", geminiKey, weekDate, topContentItems)
-      : { subject: "", opening: "", body: "", sender: "Kritagya" as const };
-    log("Generated personal opening", { sender: generatedCopy.sender, hasSubject: !!generatedCopy.subject });
-
-    // Override sender identity in From header to match the chosen voice
-    const personalFromEmail = generatedCopy.sender === "Laila"
-      ? (Deno.env.get("FROM_EMAIL_LAILA") || "Karaveera Nivasini Dasi <noreply@siddhaquantumnexus.com>")
-      : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
-
-    // ── TEST MODE: override recipient list ──
+    // ── TEST MODE: bypasses the queue entirely, sends one email immediately ──
     if (testEmail) {
-      userStates.length = 0;
-      userStates.push({
+      const now = new Date();
+      const weekDate = now.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+      const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
+      const generatedCopy = geminiKey
+        ? await generatePersonalOpening("mixed", geminiKey, weekDate, [])
+        : { subject: "", opening: "", body: "", sender: "Kritagya" as const };
+      const personalFromEmail = generatedCopy.sender === "Laila"
+        ? (Deno.env.get("FROM_EMAIL_LAILA") || "Karaveera Nivasini Dasi <noreply@siddhaquantumnexus.com>")
+        : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
+      const testUser: UserState = {
         userId: "test-user", email: testEmail, fullName: "Test Seeker",
         language: "en", segment: "consistent", mantraCount: 7, practiceMinutes: 42,
         daysInactive: 0, topCategory: "shiva", nadiBaseline: null, isStargateMember: false,
-      });
-      log(`TEST MODE: sending only to ${testEmail} as ${generatedCopy.sender}`);
+      };
+      const { data: teachingRows } = await supabase.rpc("get_next_teaching", { p_user_id: testUser.userId, p_theme: null });
+      const teaching = teachingRows?.[0] ?? null;
+      const { subject, html, text } = buildEmail(testUser, appUrl, [], generatedCopy, teaching);
+      await resend.emails.send({ from: personalFromEmail, to: [testUser.email], subject, html, text });
+      return new Response(
+        JSON.stringify({ success: true, mode: "test", sent: 1 }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // ── Send ──
-    let sentEmails = 0;
-    let errors = 0;
+    const emailType = "weekly_alignment";
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+    const weekStartStr = weekStart.toISOString().slice(0, 10);
+    const runKey = (payload.run_key as string | undefined) || weekStartStr;
+    const action = (payload.action as string | undefined) || "enqueue";
 
-    for (const user of userStates) {
-      try {
-        const { data: teachingRows } = await supabase.rpc("get_next_teaching", {
-          p_user_id: user.userId,
-          p_theme: null,
-        });
-        const teaching = teachingRows?.[0] ?? null;
+    // ── ENQUEUE: segment all users, generate this week's shared personal ──
+    // opening once, and load everyone into the queue. Idempotent per run_key.
+    if (action === "enqueue") {
+      const { count: existingCount, error: countError } = await supabase
+        .from("email_batch_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("email_type", emailType).eq("run_key", runKey);
+      if (countError) throw new Error(`Queue check failed: ${countError.message}`);
 
-        const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy, teaching);
-        await resend.emails.send({ from: personalFromEmail, to: [user.email], subject, html, text });
-        if (teaching?.id && !testEmail) {
-          await supabase.rpc("log_teaching_sent", { p_user_id: user.userId, p_teaching_id: teaching.id, p_context: "monday" });
+      if (existingCount && existingCount > 0) {
+        const { count: pendingCount } = await supabase
+          .from("email_batch_queue")
+          .select("id", { count: "exact", head: true })
+          .eq("email_type", emailType).eq("run_key", runKey).eq("status", "pending");
+        return new Response(
+          JSON.stringify({ success: true, already_queued: true, total_queued: existingCount, remaining: pendingCount || 0 }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      log("Starting Monday Weekly Update enqueue");
+      const oneWeekAgo = new Date(now);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const { data: newContent } = await supabase
+        .from("content_changelog")
+        .select("content_type, content_title, content_description, tier_required")
+        .gte("created_at", oneWeekAgo.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(5);
+      const weeklyNewContent: ContentItem[] = newContent || [];
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, preferred_language");
+      if (profilesError) throw new Error(`Profiles fetch failed: ${profilesError.message}`);
+
+      const profilesWithEmail = await Promise.all(
+        (profiles || []).map(async (p) => {
+          const { data: authUser } = await supabase.auth.admin.getUserById(p.user_id);
+          const email = authUser?.user?.email || null;
+          return { ...p, email, language: resolveLang(p.preferred_language) };
+        })
+      );
+      const validProfiles = profilesWithEmail.filter((p) => p.email);
+
+      const { data: alreadySent } = await supabase
+        .from("user_weekly_email_log")
+        .select("user_id")
+        .eq("week_start", weekStartStr)
+        .eq("email_type", "weekly_alignment");
+      const alreadySentIds = new Set(alreadySent?.map((r) => r.user_id) || []);
+
+      const { data: mantraCompletions } = await supabase
+        .from("mantra_completions")
+        .select("user_id, mantra_id, completed_at")
+        .gte("completed_at", oneWeekAgo.toISOString());
+      const { data: mantras } = await supabase
+        .from("mantras")
+        .select("id, category, planet_type, duration_seconds");
+      const mantraMap = new Map(mantras?.map((m) => [m.id, m]) || []);
+      const { data: stargateMembers } = await supabase
+        .from("stargate_community_members")
+        .select("user_id");
+      const stargateMemberIds = new Set(stargateMembers?.map((m) => m.user_id) || []);
+      const { data: dailyActivities } = await supabase
+        .from("daily_active_users")
+        .select("user_id, activity_date")
+        .order("activity_date", { ascending: false });
+      const { data: nadiBaselines } = await supabase
+        .from("nadi_baselines")
+        .select("user_id, active_nadis, dominant_dosha, primary_blockage");
+      const nadiMap = new Map(nadiBaselines?.map((n) => [n.user_id, n]) || []);
+
+      const userMantraCounts = new Map<string, number>();
+      const userPracticeMin = new Map<string, number>();
+      const userTopCat = new Map<string, Map<string, number>>();
+      const userLastActive = new Map<string, Date>();
+
+      mantraCompletions?.forEach((c) => {
+        userMantraCounts.set(c.user_id, (userMantraCounts.get(c.user_id) || 0) + 1);
+        const m = mantraMap.get(c.mantra_id);
+        if (m) {
+          const min = (m.duration_seconds || 180) / 60;
+          userPracticeMin.set(c.user_id, (userPracticeMin.get(c.user_id) || 0) + min);
+          const cat = m.category || m.planet_type || "general";
+          if (!userTopCat.has(c.user_id)) userTopCat.set(c.user_id, new Map());
+          const cm = userTopCat.get(c.user_id)!;
+          cm.set(cat, (cm.get(cat) || 0) + 1);
+          const d = new Date(c.completed_at);
+          const last = userLastActive.get(c.user_id);
+          if (!last || d > last) userLastActive.set(c.user_id, d);
         }
-        if (!testEmail) {
+      });
+      dailyActivities?.forEach((a) => {
+        const d = new Date(a.activity_date);
+        const last = userLastActive.get(a.user_id);
+        if (!last || d > last) userLastActive.set(a.user_id, d);
+      });
+
+      const userStates: UserState[] = [];
+      for (const profile of validProfiles) {
+        if (alreadySentIds.has(profile.user_id)) continue;
+        const uid = profile.user_id;
+        const mantraCount = userMantraCounts.get(uid) || 0;
+        const practiceMinutes = Math.round(userPracticeMin.get(uid) || 0);
+        const lastActive = userLastActive.get(uid);
+        const daysInactive = lastActive
+          ? Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
+          : 999;
+        const catMap = userTopCat.get(uid);
+        const topCategory = catMap
+          ? Array.from(catMap.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+          : null;
+        const nadiRow = nadiMap.get(uid);
+        const nadiBaseline = nadiRow
+          ? { activeNadis: nadiRow.active_nadis, dominantDosha: nadiRow.dominant_dosha, primaryBlockage: nadiRow.primary_blockage }
+          : null;
+
+        let segment: UserState["segment"];
+        if (mantraCount >= 3) segment = "consistent";
+        else if (daysInactive >= 14) segment = "dormant";
+        else if (daysInactive >= 5 && mantraCount > 0) segment = "returning";
+        else segment = "new_seeker";
+
+        userStates.push({
+          userId: uid, email: profile.email!, fullName: profile.full_name,
+          language: profile.language, segment, mantraCount, practiceMinutes,
+          daysInactive, topCategory, nadiBaseline, isStargateMember: stargateMemberIds.has(uid),
+        });
+      }
+      log(`Segmented ${userStates.length} users (skipped ${alreadySentIds.size} already emailed)`);
+
+      if (userStates.length === 0) {
+        return new Response(
+          JSON.stringify({ success: true, enqueued: 0, remaining: 0 }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // ── Generate this week's shared personal opening ONCE, store it so every ──
+      // drain call reuses the same copy instead of calling Gemini per batch.
+      const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
+      const weekDate = now.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+      const topContentItems = weeklyNewContent.slice(0, 4).map((c) => ({ title: c.content_title, type: c.content_type }));
+      const generatedCopy = geminiKey
+        ? await generatePersonalOpening("mixed", geminiKey, weekDate, topContentItems)
+        : { subject: "", opening: "", body: "", sender: "Kritagya" as const };
+      const personalFromEmail = generatedCopy.sender === "Laila"
+        ? (Deno.env.get("FROM_EMAIL_LAILA") || "Karaveera Nivasini Dasi <noreply@siddhaquantumnexus.com>")
+        : (Deno.env.get("FROM_EMAIL_KRITAGYA") || "Kritagya Das <noreply@siddhaquantumnexus.com>");
+
+      const { error: metaError } = await supabase.from("email_run_meta").upsert({
+        email_type: emailType,
+        run_key: runKey,
+        meta: { weeklyNewContent, generatedCopy, personalFromEmail, weekStartStr },
+      }, { onConflict: "email_type,run_key" });
+      if (metaError) throw new Error(`Run meta save failed: ${metaError.message}`);
+
+      const INSERT_CHUNK = 500;
+      for (let i = 0; i < userStates.length; i += INSERT_CHUNK) {
+        const rows = userStates.slice(i, i + INSERT_CHUNK).map((u) => ({
+          email_type: emailType,
+          run_key: runKey,
+          user_id: u.userId,
+          email: u.email,
+          first_name: u.fullName,
+          status: "pending",
+          payload: {
+            language: u.language, segment: u.segment, mantraCount: u.mantraCount,
+            practiceMinutes: u.practiceMinutes, daysInactive: u.daysInactive,
+            topCategory: u.topCategory, nadiBaseline: u.nadiBaseline, isStargateMember: u.isStargateMember,
+          },
+        }));
+        const { error: insertError } = await supabase
+          .from("email_batch_queue")
+          .upsert(rows, { onConflict: "email_type,run_key,user_id", ignoreDuplicates: true });
+        if (insertError) throw new Error(`Enqueue failed: ${insertError.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, enqueued: userStates.length, remaining: userStates.length }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── DRAIN: claim and process one bounded chunk of the queue ──
+    if (action === "drain") {
+      const { data: metaRow, error: metaFetchError } = await supabase
+        .from("email_run_meta")
+        .select("meta")
+        .eq("email_type", emailType).eq("run_key", runKey)
+        .maybeSingle();
+      if (metaFetchError) throw new Error(`Run meta fetch failed: ${metaFetchError.message}`);
+      if (!metaRow) throw new Error(`No run meta found for ${emailType}/${runKey} — call action:"enqueue" first.`);
+
+      const { weeklyNewContent, generatedCopy, personalFromEmail, weekStartStr: metaWeekStart } = metaRow.meta as {
+        weeklyNewContent: ContentItem[]; generatedCopy: any; personalFromEmail: string; weekStartStr: string;
+      };
+
+      const claimLimit = Number(payload.limit as number | undefined) || 150;
+      const { data: claimed, error: claimError } = await supabase.rpc("claim_email_batch", {
+        p_email_type: emailType, p_run_key: runKey, p_limit: claimLimit,
+      });
+      if (claimError) throw new Error(`Claim failed: ${claimError.message}`);
+
+      const batchRows = (claimed || []) as Array<{
+        id: string; user_id: string; email: string; first_name: string | null; payload: any;
+      }>;
+
+      let sentCount = 0;
+      const errors: string[] = [];
+
+      async function processRow(row: typeof batchRows[number]) {
+        const p = row.payload || {};
+        const user: UserState = {
+          userId: row.user_id, email: row.email, fullName: row.first_name,
+          language: p.language || "en", segment: p.segment || "new_seeker",
+          mantraCount: p.mantraCount || 0, practiceMinutes: p.practiceMinutes || 0,
+          daysInactive: p.daysInactive ?? 999, topCategory: p.topCategory ?? null,
+          nadiBaseline: p.nadiBaseline ?? null, isStargateMember: !!p.isStargateMember,
+        };
+        try {
+          const { data: teachingRows } = await supabase.rpc("get_next_teaching", { p_user_id: user.userId, p_theme: null });
+          const teaching = teachingRows?.[0] ?? null;
+          const { subject, html, text } = buildEmail(user, appUrl, weeklyNewContent, generatedCopy, teaching);
+          await resend.emails.send({ from: personalFromEmail, to: [user.email], subject, html, text });
+          if (teaching?.id) {
+            await supabase.rpc("log_teaching_sent", { p_user_id: user.userId, p_teaching_id: teaching.id, p_context: "monday" });
+          }
           await supabase.from("user_weekly_email_log").insert({
-            user_id: user.userId, week_start: weekStartStr,
+            user_id: user.userId, week_start: metaWeekStart,
             segment: user.segment, email_type: "weekly_alignment",
           });
+          await supabase.from("email_batch_queue").update({ status: "sent", updated_at: new Date().toISOString() }).eq("id", row.id);
+          sentCount++;
+        } catch (e) {
+          const msg = (e as Error).message;
+          errors.push(`${user.email}: ${msg}`);
+          await supabase.from("email_batch_queue").update({ status: "failed", error: msg.slice(0, 500), updated_at: new Date().toISOString() }).eq("id", row.id);
         }
-        sentEmails++;
-        log(`Sent → ${user.email}`, { segment: user.segment, lang: user.language });
-      } catch (err) {
-        errors++;
-        console.error(`Failed for ${user.email}:`, err);
       }
+
+      const BATCH_SIZE = 8;
+      for (let i = 0; i < batchRows.length; i += BATCH_SIZE) {
+        const slice = batchRows.slice(i, i + BATCH_SIZE);
+        await Promise.all(slice.map((row) => processRow(row)));
+      }
+
+      const { count: remaining } = await supabase
+        .from("email_batch_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("email_type", emailType).eq("run_key", runKey).eq("status", "pending");
+
+      return new Response(
+        JSON.stringify({ success: true, claimed: batchRows.length, sent: sentCount, errors, remaining: remaining || 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    return new Response(
-      JSON.stringify({ success: true, scanned: userStates.length, sent: sentEmails, errors, newContentItems: weeklyNewContent.length }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: any) {
     console.error("weekly-alignment-email error:", error);
     return new Response(
