@@ -14,12 +14,13 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           echo "SQI Monday Transmission at $(date -u)"
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST \
             "${SUPABASE_URL}/functions/v1/weekly-alignment-email" \
-            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
             -H "apikey: ${SUPABASE_KEY}" \
             -H "Content-Type: application/json" \
             -d "{}" \
