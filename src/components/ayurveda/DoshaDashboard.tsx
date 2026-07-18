@@ -514,52 +514,6 @@ const AudioTeachings: React.FC = () => {
   );
 };
 
-// ── ACADEMY BANNER ────────────────────────────────────────────────────────────
-const AcademyBanner: React.FC<{ rank: TierRank }> = ({ rank }) => {
-  const texts: Record<TierRank, { sub:string; desc:string }> = {
-    0: { sub:'108 Modules', desc:'The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity.' },
-    1: { sub:'Phases 1 & 2 Unlocked', desc:'Modules 1–44 unlocked. Foundations and Panchakarma mastery path.' },
-    2: { sub:'Phases 1–4 Unlocked', desc:'Modules 1–87 unlocked. Clinical Siddha and planetary medicine.' },
-    3: { sub:'All 108 Modules Unlocked', desc:'The complete 108-module path — all 5 phases from Atma-Seed to Akasha Transmission.' },
-  };
-  const dots = [
-    { label: rank>=1 ? '✓ FREE 1–22' : 'FREE 1–22', on: true, c:'rgba(74,222,128,0.85)' },
-    { label: rank>=1 ? '✓ PRANA 23–44' : '🔒 PRANA 23–44', on: rank>=1, c: rank>=1 ? 'rgba(34,211,238,0.9)' : 'rgba(255,255,255,0.2)' },
-    { label: rank>=2 ? '✓ SIDDHA 45–66' : '🔒 SIDDHA 45–66', on: rank>=2, c: rank>=2 ? 'rgba(255,140,0,0.9)' : 'rgba(255,255,255,0.2)' },
-    { label: rank>=3 ? '✓ AKASHA 67–108' : '🔒 AKASHA 67–108', on: rank>=3, c: rank>=3 ? 'rgba(212,175,55,0.95)' : 'rgba(255,255,255,0.2)' },
-  ];
-  const t = texts[rank];
-  return (
-    <div style={{ position:'relative', marginBottom:12 }}>
-      <div style={{ position:'absolute', inset:-14, borderRadius:38, pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(60% 60% at 30% 40%,rgba(212,175,55,0.35),transparent 70%),radial-gradient(60% 60% at 75% 65%,rgba(34,211,238,0.28),transparent 70%)',
-        filter:'blur(22px)' }} />
-      <div onClick={() => { window.location.href='/agastyar-academy'; }} style={{ position:'relative', zIndex:1, cursor:'pointer',
-        background:'linear-gradient(135deg,rgba(212,175,55,0.10),rgba(0,242,254,0.05) 60%,rgba(5,5,5,0.6))',
-        border:'1px solid rgba(212,175,55,0.45)', borderRadius:24, padding:'22px 20px 20px',
-        boxShadow:'0 0 40px rgba(212,175,55,0.25),0 0 80px rgba(34,211,238,0.12),inset 0 0 30px rgba(212,175,55,0.06)' }}>
-        <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.7)', marginBottom:10 }}>⚜ Academy · {t.sub}</div>
-        <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.85rem', fontWeight:600, color:'rgba(255,255,255,0.96)', lineHeight:1.1, margin:0, textShadow:'0 0 18px rgba(212,175,55,0.35)' }}>Agastyar Academy</h2>
-        <p style={{ fontSize:13, lineHeight:1.65, color:'rgba(255,255,255,0.62)', margin:'8px 0 14px' }}>{t.desc}</p>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, flexWrap:'wrap' }}>
-          {dots.map((dot,i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <span style={{ width:6, height:6, borderRadius:'50%', background:dot.c, boxShadow:`0 0 8px ${dot.c}`, display:'inline-block' }}/>
-              <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:dot.c }}>{dot.label}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:999,
-          background:'linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.08))',
-          border:'1px solid rgba(212,175,55,0.5)', color:'rgba(212,175,55,0.98)',
-          fontSize:10, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' }}>
-          Enter Academy →
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ── DINACHARYA DATA ───────────────────────────────────────────────────────────
 const getTimeline = (rank: TierRank, dosha: string) => {
   if (rank >= 3) return [
@@ -748,9 +702,6 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
       ) : (
         <GateCard icon="🎧" iconColor="#D4AF37" tierLabel="∞ Akasha Infinity Required" tierColor="#D4AF37" title="Monthly Healing Teachings" sub="Personal audio teaching for your Prakriti" />
       )}
-
-      {/* ── ACADEMY ── */}
-      <AcademyBanner rank={rank} />
 
     </div>
   );
