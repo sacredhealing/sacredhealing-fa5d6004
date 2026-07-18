@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { buildDeepJyotishAnalysis } from "../_shared/jyotish-deep-analysis.ts";
+import { computeFullChartFromBirthData } from "../_shared/natal-chart-fallback.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -5616,6 +5617,45 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
               } catch (e) { console.warn("Student deep jyotish analysis:", e); }
             }
           }
+        } else if (studentRow?.birth_date) {
+          // No linked account — most students are managed profiles without
+          // their own app login, so this is the common case, not an edge
+          // case. Previously this meant NO computed chart at all: the
+          // model was left to freely guess nakshatra, dasha lord, and
+          // every other placement from birth date/time/place text alone
+          // (observed in production giving wrong, hedged answers —
+          // "approximated to be... Mrigashira, or the cusp with Ardra").
+          // Computing a real chart from the raw birth data, with no
+          // database row or linked account required, replaces that
+          // guessing with an actual calculation. See
+          // natal-chart-fallback.ts for the accuracy caveats (birth-place
+          // geocoding and timezone are both approximated) — meaningfully
+          // better than a freely-guessed chart, not a substitute for a
+          // properly linked, geocoded profile.
+          try {
+            const chart = computeFullChartFromBirthData(
+              studentRow.birth_date as string,
+              studentRow.birth_time as string | null,
+              studentRow.birth_place as string | null
+            );
+            if (chart) {
+              const deep = buildDeepJyotishAnalysis(
+                chart.ascendantSign,
+                chart.planetLongitudes as Record<string, number>,
+                chart.ascendantLongitude,
+                null
+              );
+              if (deep) {
+                resolvedStudentJyotish = [
+                  "[STUDENT JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]",
+                  `Lagna (Ascendant): ${chart.ascendantSign}`,
+                  "This chart is computed directly from birth date/time/place — the student has not linked an app account with a fully geocoded profile, so treat birth-place-dependent precision (exact Ascendant degree, house cusps near a sign boundary) as good-but-approximate rather than exact. The planetary sign placements, dasha-relevant dignities, and yogas below are still real calculations, not guesses.",
+                  "",
+                  deep,
+                ].join("\n");
+              }
+            }
+          } catch (e) { console.warn("Unlinked student chart fallback:", e); }
         }
       } catch (e) { console.warn("Student jyotish fetch:", e); }
     }

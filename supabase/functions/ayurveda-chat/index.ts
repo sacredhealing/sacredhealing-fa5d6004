@@ -6,6 +6,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildDeepJyotishAnalysis } from "../_shared/jyotish-deep-analysis.ts";
+import { computeFullChartFromBirthData } from "../_shared/natal-chart-fallback.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -874,9 +875,34 @@ serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime, userProfile, alternateNames);
 
+    // If the client couldn't supply a computed Mahadasha for this student
+    // (no linked/computed jyotish_profiles row — the common case for
+    // managed student profiles with no app login of their own), compute a
+    // real chart directly from the birth data already present in
+    // studentContext instead of leaving the model to freely guess every
+    // placement. Purely additive: only fires when mahadasha is missing,
+    // and if it fails for any reason, studentDeepAnalysis stays empty and
+    // the existing template below is completely unaffected.
+    let studentDeepAnalysis = "";
+    if (studentContext && typeof studentContext === 'object' && !studentContext.mahadasha && studentContext.birth_date) {
+      try {
+        const chart = computeFullChartFromBirthData(
+          studentContext.birth_date, studentContext.birth_time ?? null, studentContext.birth_place ?? null
+        );
+        if (chart) {
+          const deep = buildDeepJyotishAnalysis(
+            chart.ascendantSign, chart.planetLongitudes as Record<string, number>, chart.ascendantLongitude, null
+          );
+          if (deep) {
+            studentDeepAnalysis = `\n\n[STUDENT DEEP JYOTISH — COMPUTED FROM BIRTH DATA, NO LINKED APP PROFILE]\nLagna (Ascendant): ${chart.ascendantSign}\nComputed directly from birth date/time/place — treat exact-degree precision as good-but-approximate (birth-place geocoding and timezone are both estimated), but the sign placements, dignities, and yogas below are real calculations, not guesses.\n${deep}`;
+          }
+        }
+      } catch (e) { console.warn("[ayurveda-chat] Unlinked student chart fallback:", e); }
+    }
+
     // If admin is reading for a student, prepend a clear student context block
     const finalSystemPrompt = studentContext && typeof studentContext === 'object'
-      ? `${systemPrompt}\n\n━━━ STUDENT SEEKER — ADMIN CONSULTATION ━━━\nThe practitioner (admin) is consulting on behalf of a STUDENT. Read THIS student's chart — not the admin's.\nStudent Name: ${studentContext.name || 'Unknown'}\nBirth Date: ${studentContext.birth_date || 'not provided'}\nBirth Time: ${studentContext.birth_time || 'not provided'}\nBirth Place: ${studentContext.birth_place || 'not provided'}\n${studentContext.notes ? `Practitioner Notes: ${studentContext.notes}` : ''}\n${studentContext.lagna ? `Lagna (Ascendant): ${studentContext.lagna}` : ''}\n${studentContext.moon_nakshatra ? `Moon Nakshatra: ${studentContext.moon_nakshatra}` : ''}\n${studentContext.mahadasha ? `\n━━ CALCULATED EPHEMERIS (Swiss Ephemeris, Lahiri — USE THESE EXACT DATES) ━━\nCurrent Mahadasha: ${studentContext.mahadasha} (${studentContext.mahadasha_start} → ${studentContext.mahadasha_end})\n${studentContext.antardasha ? `Current Antardasha: ${studentContext.antardasha} (${studentContext.antardasha_start} → ${studentContext.antardasha_end})` : ''}\nRULE: Never approximate dasha dates. Use ONLY the dates above.\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}\nDerive Vata/Pitta/Kapha from the Lagna, Moon Nakshatra, and Dasha lord. Address this student directly using their name.`
+      ? `${systemPrompt}\n\n━━━ STUDENT SEEKER — ADMIN CONSULTATION ━━━\nThe practitioner (admin) is consulting on behalf of a STUDENT. Read THIS student's chart — not the admin's.\nStudent Name: ${studentContext.name || 'Unknown'}\nBirth Date: ${studentContext.birth_date || 'not provided'}\nBirth Time: ${studentContext.birth_time || 'not provided'}\nBirth Place: ${studentContext.birth_place || 'not provided'}\n${studentContext.notes ? `Practitioner Notes: ${studentContext.notes}` : ''}\n${studentContext.lagna ? `Lagna (Ascendant): ${studentContext.lagna}` : ''}\n${studentContext.moon_nakshatra ? `Moon Nakshatra: ${studentContext.moon_nakshatra}` : ''}\n${studentContext.mahadasha ? `\n━━ CALCULATED EPHEMERIS (Swiss Ephemeris, Lahiri — USE THESE EXACT DATES) ━━\nCurrent Mahadasha: ${studentContext.mahadasha} (${studentContext.mahadasha_start} → ${studentContext.mahadasha_end})\n${studentContext.antardasha ? `Current Antardasha: ${studentContext.antardasha} (${studentContext.antardasha_start} → ${studentContext.antardasha_end})` : ''}\nRULE: Never approximate dasha dates. Use ONLY the dates above.\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}${studentDeepAnalysis}\nDerive Vata/Pitta/Kapha from the Lagna, Moon Nakshatra, and Dasha lord. Address this student directly using their name.`
       : systemPrompt;
 
     // FULL HISTORY — Agastya remembers everything
