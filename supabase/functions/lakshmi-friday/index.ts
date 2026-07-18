@@ -337,7 +337,9 @@ serve(async (req) => {
     let sentCount = 0;
     const errors: string[] = [];
 
-    for (const user of recipients) {
+    // One user's full pipeline: activity lookup → Gemini message → teaching/featured
+    // content → Resend send → logging. Isolated so it can run concurrently in batches.
+    async function processUser(user: Recipient): Promise<void> {
       const firstName = singleName || user.first_name;
 
       try {
@@ -404,6 +406,18 @@ serve(async (req) => {
       } catch (e) {
         errors.push(`${user.email}: ${(e as Error).message}`);
       }
+    }
+
+    // Process in concurrent batches instead of one-at-a-time — at ~90+ users,
+    // sequential processing (Gemini call + Resend send + DB lookups per user)
+    // was exceeding the function's execution window and timing out at the
+    // gateway (504) before most users were ever emailed. Batch size of 8 is a
+    // conservative concurrency level that respects Gemini/Resend rate limits
+    // while cutting total wall-clock time roughly 8x.
+    const BATCH_SIZE = 8;
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map((user) => processUser(user)));
     }
 
     return new Response(
