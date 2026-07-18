@@ -13,7 +13,6 @@ jobs:
       - name: Trigger weekly-alignment-email
         env:
           SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.LOVABLE_SUPABASE_ANON_KEY }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           echo "SQI Monday Transmission at $(date -u)"
@@ -21,7 +20,6 @@ jobs:
             -X POST \
             "${SUPABASE_URL}/functions/v1/weekly-alignment-email" \
             -H "Authorization: Bearer ${CRON_SECRET}" \
-            -H "apikey: ${SUPABASE_KEY}" \
             -H "Content-Type: application/json" \
             -d "{}" \
             --max-time 600)
