@@ -3775,6 +3775,7 @@ export type Database = {
           error: string | null
           first_name: string | null
           id: string
+          payload: Json
           run_key: string
           status: string
           updated_at: string
@@ -3787,6 +3788,7 @@ export type Database = {
           error?: string | null
           first_name?: string | null
           id?: string
+          payload?: Json
           run_key: string
           status?: string
           updated_at?: string
@@ -3799,6 +3801,7 @@ export type Database = {
           error?: string | null
           first_name?: string | null
           id?: string
+          payload?: Json
           run_key?: string
           status?: string
           updated_at?: string
@@ -3836,6 +3839,27 @@ export type Database = {
           sent_at?: string
           status?: string
           subject?: string | null
+        }
+        Relationships: []
+      }
+      email_run_meta: {
+        Row: {
+          created_at: string
+          email_type: string
+          meta: Json
+          run_key: string
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          meta?: Json
+          run_key: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          meta?: Json
+          run_key?: string
         }
         Relationships: []
       }
@@ -13478,6 +13502,7 @@ export type Database = {
           error: string | null
           first_name: string | null
           id: string
+          payload: Json
           run_key: string
           status: string
           updated_at: string
