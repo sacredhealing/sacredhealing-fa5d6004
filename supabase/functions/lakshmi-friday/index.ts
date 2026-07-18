@@ -321,109 +321,132 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const recipients = await loadRecipients(supabase, {
-      single_email: payload.single_email as string | undefined,
-      single_user_id: payload.single_user_id as string | undefined,
-    });
-
     const singleName = (payload.single_name as string | undefined)?.trim();
 
-    if (recipients.length === 0) {
-      return new Response(JSON.stringify({ success: true, sent: 0 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // ── TEST MODE: single_email / single_user_id bypasses the queue entirely ──
+    // Manual test sends stay simple and immediate — no reason to queue one email.
+    if (payload.single_email || payload.single_user_id) {
+      const recipients = await loadRecipients(supabase, {
+        single_email: payload.single_email as string | undefined,
+        single_user_id: payload.single_user_id as string | undefined,
       });
-    }
-
-    let sentCount = 0;
-    const errors: string[] = [];
-
-    // One user's full pipeline: activity lookup → Gemini message → teaching/featured
-    // content → Resend send → logging. Isolated so it can run concurrently in batches.
-    async function processUser(user: Recipient): Promise<void> {
-      const firstName = singleName || user.first_name;
-
-      try {
-        const activity = await getUserActivity(supabase, user.user_id);
-        const { subject, headline, body, cta } = await getGeminiPersonalMessage(
-          firstName,
-          activity.activityType,
-          activity.sessionCount,
-          activity.membershipTier,
-        );
-
-        // Real, non-repeating teaching for this user (theme-matched to abundance/Friday)
-        const { data: teachingRows } = await supabase.rpc("get_next_teaching", {
-          p_user_id: user.user_id,
-          p_theme: "abundance",
-        });
-        const teaching = teachingRows?.[0] ?? null;
-
-        // One real, currently-active piece of content — never a made-up name
-        const { data: featuredRows } = await supabase.rpc("get_featured_content", {
-          p_kind: null,
-          p_category: null,
-        });
-        const featured = featuredRows?.[0] ?? null;
-
-        const tierIsFree = !activity.membershipTier || activity.membershipTier.toLowerCase().includes("atma") || activity.membershipTier.toLowerCase() === "free";
-
-        const html = buildLakshmiHTML(firstName, headline, body, cta, teaching, featured, tierIsFree);
-
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Kritagya Das & Karaveera Nivasini Dasi · SQI <noreply@siddhaquantumnexus.com>",
-            to: user.email,
-            subject,
-            html,
-          }),
-        });
-
-        if (res.ok) {
-          sentCount++;
-          if (teaching?.id) {
-            await supabase.rpc("log_teaching_sent", {
-              p_user_id: user.user_id,
-              p_teaching_id: teaching.id,
-              p_context: "friday",
-            });
-          }
-          await supabase.from("email_logs").insert({
-            email_type: "lakshmi_friday",
-            recipient_email: user.email,
-            recipient_id: user.user_id,
-            subject,
-            status: "sent",
-            metadata: { activity_type: activity.activityType, sessions: activity.sessionCount, teaching_id: teaching?.id ?? null },
-          });
-        } else {
-          errors.push(`${user.email}: ${await res.text()}`);
-        }
-      } catch (e) {
-        errors.push(`${user.email}: ${(e as Error).message}`);
+      let sentCount = 0;
+      const errors: string[] = [];
+      for (const user of recipients) {
+        await processUser(supabase, user, singleName, errors, () => sentCount++, null);
       }
+      return new Response(
+        JSON.stringify({ success: true, mode: "test", sent: sentCount, total: recipients.length, errors }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    // Process in concurrent batches instead of one-at-a-time — at ~90+ users,
-    // sequential processing (Gemini call + Resend send + DB lookups per user)
-    // was exceeding the function's execution window and timing out at the
-    // gateway (504) before most users were ever emailed. Batch size of 8 is a
-    // conservative concurrency level that respects Gemini/Resend rate limits
-    // while cutting total wall-clock time roughly 8x.
-    const BATCH_SIZE = 8;
-    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-      const batch = recipients.slice(i, i + BATCH_SIZE);
-      await Promise.all(batch.map((user) => processUser(user)));
+    const emailType = "lakshmi_friday";
+    const runKey = (payload.run_key as string | undefined) || new Date().toISOString().slice(0, 10);
+    const action = (payload.action as string | undefined) || "enqueue";
+
+    // ── ENQUEUE: build the full recipient list once per day and load it into ──
+    // the queue table. Idempotent — if this run_key is already queued (e.g. a
+    // retry), it does nothing rather than double-queueing everyone.
+    if (action === "enqueue") {
+      const { count: existingCount, error: countError } = await supabase
+        .from("email_batch_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("email_type", emailType)
+        .eq("run_key", runKey);
+      if (countError) throw new Error(`Queue check failed: ${countError.message}`);
+
+      if (existingCount && existingCount > 0) {
+        const { count: pendingCount } = await supabase
+          .from("email_batch_queue")
+          .select("id", { count: "exact", head: true })
+          .eq("email_type", emailType).eq("run_key", runKey).eq("status", "pending");
+        return new Response(
+          JSON.stringify({ success: true, already_queued: true, total_queued: existingCount, remaining: pendingCount || 0 }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const recipients = await loadRecipients(supabase, {});
+      if (recipients.length === 0) {
+        return new Response(
+          JSON.stringify({ success: true, enqueued: 0, remaining: 0 }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const INSERT_CHUNK = 500;
+      for (let i = 0; i < recipients.length; i += INSERT_CHUNK) {
+        const rows = recipients.slice(i, i + INSERT_CHUNK).map((r) => ({
+          email_type: emailType,
+          run_key: runKey,
+          user_id: r.user_id,
+          email: r.email,
+          first_name: r.first_name,
+          status: "pending",
+        }));
+        const { error: insertError } = await supabase
+          .from("email_batch_queue")
+          .upsert(rows, { onConflict: "email_type,run_key,user_id", ignoreDuplicates: true });
+        if (insertError) throw new Error(`Enqueue failed: ${insertError.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, enqueued: recipients.length, remaining: recipients.length }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    return new Response(
-      JSON.stringify({ success: true, sent: sentCount, total: recipients.length, errors }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    // ── DRAIN: claim and process one bounded chunk of the queue. Call this ──
+    // repeatedly (the GitHub Action loop does this) until `remaining` is 0.
+    // Each call stays well inside the execution/timeout window regardless of
+    // total list size — that's what makes this scale past any user count.
+    if (action === "drain") {
+      const claimLimit = Number(payload.limit as number | undefined) || 150;
+      const { data: claimed, error: claimError } = await supabase.rpc("claim_email_batch", {
+        p_email_type: emailType,
+        p_run_key: runKey,
+        p_limit: claimLimit,
+      });
+      if (claimError) throw new Error(`Claim failed: ${claimError.message}`);
+
+      const batchRows = (claimed || []) as Array<{
+        id: string; user_id: string; email: string; first_name: string | null;
+      }>;
+
+      let sentCount = 0;
+      const errors: string[] = [];
+
+      const BATCH_SIZE = 8;
+      for (let i = 0; i < batchRows.length; i += BATCH_SIZE) {
+        const slice = batchRows.slice(i, i + BATCH_SIZE);
+        await Promise.all(slice.map((row) =>
+          processUser(
+            supabase,
+            { user_id: row.user_id, email: row.email, first_name: row.first_name || "Sacred One" },
+            undefined,
+            errors,
+            () => sentCount++,
+            row.id,
+          )
+        ));
+      }
+
+      const { count: remaining } = await supabase
+        .from("email_batch_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("email_type", emailType).eq("run_key", runKey).eq("status", "pending");
+
+      return new Response(
+        JSON.stringify({ success: true, claimed: batchRows.length, sent: sentCount, errors, remaining: remaining || 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500,
@@ -431,3 +454,92 @@ serve(async (req) => {
     });
   }
 });
+
+// One user's full pipeline: activity lookup → Gemini message → teaching/featured
+// content → Resend send → logging. queueRowId is null in test mode (no queue
+// row to update); otherwise it's marked 'sent' or 'failed' on the queue table
+// so a drain call never re-claims a user it already emailed.
+async function processUser(
+  supabase: SupabaseClient,
+  user: Recipient,
+  singleName: string | undefined,
+  errors: string[],
+  onSent: () => void,
+  queueRowId: string | null,
+): Promise<void> {
+  const firstName = singleName || user.first_name;
+
+  try {
+    const activity = await getUserActivity(supabase, user.user_id);
+    const { subject, headline, body, cta } = await getGeminiPersonalMessage(
+      firstName,
+      activity.activityType,
+      activity.sessionCount,
+      activity.membershipTier,
+    );
+
+    const { data: teachingRows } = await supabase.rpc("get_next_teaching", {
+      p_user_id: user.user_id,
+      p_theme: "abundance",
+    });
+    const teaching = teachingRows?.[0] ?? null;
+
+    const { data: featuredRows } = await supabase.rpc("get_featured_content", {
+      p_kind: null,
+      p_category: null,
+    });
+    const featured = featuredRows?.[0] ?? null;
+
+    const tierIsFree = !activity.membershipTier || activity.membershipTier.toLowerCase().includes("atma") || activity.membershipTier.toLowerCase() === "free";
+
+    const html = buildLakshmiHTML(firstName, headline, body, cta, teaching, featured, tierIsFree);
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Kritagya Das & Karaveera Nivasini Dasi · SQI <noreply@siddhaquantumnexus.com>",
+        to: user.email,
+        subject,
+        html,
+      }),
+    });
+
+    if (res.ok) {
+      onSent();
+      if (teaching?.id) {
+        await supabase.rpc("log_teaching_sent", {
+          p_user_id: user.user_id,
+          p_teaching_id: teaching.id,
+          p_context: "friday",
+        });
+      }
+      await supabase.from("email_logs").insert({
+        email_type: "lakshmi_friday",
+        recipient_email: user.email,
+        recipient_id: user.user_id,
+        subject,
+        status: "sent",
+        metadata: { activity_type: activity.activityType, sessions: activity.sessionCount, teaching_id: teaching?.id ?? null },
+      });
+      if (queueRowId) {
+        await supabase.from("email_batch_queue").update({ status: "sent", updated_at: new Date().toISOString() }).eq("id", queueRowId);
+      }
+    } else {
+      const errText = await res.text();
+      errors.push(`${user.email}: ${errText}`);
+      if (queueRowId) {
+        await supabase.from("email_batch_queue").update({ status: "failed", error: errText.slice(0, 500), updated_at: new Date().toISOString() }).eq("id", queueRowId);
+      }
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    errors.push(`${user.email}: ${msg}`);
+    if (queueRowId) {
+      await supabase.from("email_batch_queue").update({ status: "failed", error: msg.slice(0, 500), updated_at: new Date().toISOString() }).eq("id", queueRowId);
+    }
+  }
+}
