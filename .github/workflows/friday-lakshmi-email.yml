@@ -8,37 +8,70 @@ on:
 jobs:
   send-friday-lakshmi:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
-      - name: Trigger lakshmi-friday
+      - name: Enqueue + drain lakshmi-friday send queue
         env:
           SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          echo "SQI Lakshmi Friday Transmission at $(date -u)"
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST \
-            "${SUPABASE_URL}/functions/v1/lakshmi-friday" \
-            -H "Authorization: Bearer ${CRON_SECRET}" \
-            -H "Content-Type: application/json" \
-            -d "{}" \
-            --max-time 600)
+          set -e
+          FN_URL="${SUPABASE_URL}/functions/v1/lakshmi-friday"
+
+          call() {
+            curl -s -w "\n%{http_code}" -X POST "$FN_URL" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "Content-Type: application/json" \
+              -d "$1" \
+              --max-time 120
+          }
+
+          echo "=== Enqueuing recipients ==="
+          RESPONSE=$(call '{"action":"enqueue"}')
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | sed '$d')
           echo "HTTP: $HTTP_CODE"
           echo "Body: $BODY"
-
           if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::lakshmi-friday returned HTTP $HTTP_CODE — email NOT sent."
+            echo "::error::Enqueue failed with HTTP $HTTP_CODE"
             exit 1
           fi
-
           if echo "$BODY" | grep -qi '"error"'; then
-            echo "::error::lakshmi-friday returned 2xx but body contains an error field — email NOT sent."
+            echo "::error::Enqueue returned an error field — nothing queued."
             exit 1
           fi
 
-          if echo "$BODY" | grep -qiE '"sent"[[:space:]]*:[[:space:]]*0|"recipients"[[:space:]]*:[[:space:]]*0'; then
-            echo "::error::lakshmi-friday reported 0 recipients/sent — check subscriber query."
-            exit 1
-          fi
+          echo "=== Draining queue ==="
+          MAX_ITERATIONS=100
+          TOTAL_SENT=0
+          i=0
+          while [ $i -lt $MAX_ITERATIONS ]; do
+            i=$((i+1))
+            RESPONSE=$(call '{"action":"drain","limit":150}')
+            HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "--- drain call $i: HTTP $HTTP_CODE ---"
+            echo "$BODY"
+
+            if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+              echo "::error::Drain call $i failed with HTTP $HTTP_CODE — stopping."
+              exit 1
+            fi
+            if echo "$BODY" | grep -qi '"error"'; then
+              echo "::error::Drain call $i returned an error field — stopping."
+              exit 1
+            fi
+
+            REMAINING=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('remaining', 0))" 2>/dev/null || echo "0")
+            SENT_THIS_CALL=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('sent', 0))" 2>/dev/null || echo "0")
+            TOTAL_SENT=$((TOTAL_SENT + SENT_THIS_CALL))
+
+            if [ "$REMAINING" -eq 0 ]; then
+              echo "=== Queue drained. Total sent this run: $TOTAL_SENT ==="
+              exit 0
+            fi
+            sleep 3
+          done
+
+          echo "::error::Queue still not drained after $MAX_ITERATIONS iterations — check email_batch_queue table manually."
+          exit 1
