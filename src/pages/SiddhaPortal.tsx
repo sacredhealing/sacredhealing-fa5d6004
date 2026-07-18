@@ -128,7 +128,7 @@ export default function SiddhaPortal() {
         )}
 
         {/* ══ CATEGORY 1: AYURVEDA & SIDDHA MEDICINE ══ */}
-        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Fasting" ac={teal(0.9)} count={4} delay={0.06}>
+        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Fasting" ac={teal(0.9)} count={5} delay={0.06}>
           <HeroCard SvgIcon={Icon.Herb} label="108 Modules · Agastyar Lineage · Complete Vidya" title="Agastyar Academy"
             desc="The most comprehensive Ayurveda education ever assembled — 108 modules across all four tiers, rooted entirely in Agastyar's direct transmission from the Tamil Siddha lineage."
             tiers={[{l:'Free · M1–27',c:white(0.5)},{l:'Prana · M28–54',c:green(0.85)},{l:'Siddha · M55–81',c:teal(0.9)},{l:'Akasha · M82–108',c:gold(0.95)}]}
@@ -147,6 +147,10 @@ export default function SiddhaPortal() {
             desc="The complete Siddha science of therapeutic fasting — from one-day Ekadashi fasts through extended Langhana protocols for disease reversal, Ojas renewal, and spiritual purification."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Academy" href="/siddha-fasting-academy" ac={teal(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Shield} label="12 Months · Personal Diksha · Certification" title="Siddha Healer's Sovereign Path"
+            desc="The complete 12-month practitioner certification — personal Diksha transmission, the 18 Siddhas' healing science, chakra sovereignty, pranic surgery, and full certification with Kritagya & Laila. Akasha-Infinity exclusive."
+            tiers={[{l:'Akasha-Infinity Only',c:gold(0.95)}]}
+            cta="Enter the Sovereign Path" href="/certification-path" ac={gold(0.9)} badge="AKASHA"/>
         </LibSection>
 
         {/* ══ CATEGORY 2: YOGA, KRIYA & BREATH SCIENCE ══ */}
