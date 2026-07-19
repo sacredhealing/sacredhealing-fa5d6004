@@ -508,8 +508,17 @@ async function recordRevenue(supabaseAdmin: any, params: {
 // ── User resolver by email ───────────────────────────────────────────────────
 // deno-lint-ignore no-explicit-any
 async function resolveUserByEmail(supabaseAdmin: any, email: string): Promise<string | null> {
-  const { data: userData } = await supabaseAdmin.auth.admin.listUsers();
-  return userData?.users?.find((u: { email?: string; id: string }) => u.email === email)?.id || null;
+  if (!email) return null;
+  const { data, error } = await supabaseAdmin
+    .from('profiles')
+    .select('user_id')
+    .eq('email', email)
+    .maybeSingle();
+  if (error) {
+    console.error('[resolveUserByEmail] profiles lookup failed', error);
+    return null;
+  }
+  return data?.user_id || null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
