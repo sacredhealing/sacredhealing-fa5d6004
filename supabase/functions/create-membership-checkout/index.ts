@@ -125,7 +125,7 @@ serve(async (req) => {
     // Growth: 7-day free trial on Prana-Flow monthly only — the entry-level paid
     // tier. Siddha-Quantum and any other subscription tier routed through this
     // same function stay trial-free (higher-commitment tiers).
-    if (isSubscription && tierSlug === "prana-monthly") {
+    if (isSubscription && tierSlug === "prana-flow") {
       sessionConfig.subscription_data = { trial_period_days: 7 };
     }
 
@@ -135,7 +135,7 @@ serve(async (req) => {
     // Log for abandonment recovery — best-effort, never blocks checkout.
     try {
       const tierDisplay: Record<string, { name: string; price: string }> = {
-        "prana-monthly": { name: "Prana-Flow", price: "19€/mo (7 days free)" },
+        "prana-flow": { name: "Prana-Flow", price: "19€/mo (7 days free)" },
         "siddha-quantum-monthly": { name: "Siddha-Quantum", price: "45€/mo" },
         "akasha-infinity": { name: "Akasha-Infinity", price: "2997€ once" },
       };
