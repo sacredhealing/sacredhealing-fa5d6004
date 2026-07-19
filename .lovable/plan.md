@@ -1,21 +1,26 @@
-Apply the weekly-alignment queue extension and redeploy the function.
+## Answer: the pasted reading is not in the database
 
-## What we will do
+I searched every apothecary/chat table for the unique fingerprints in the text you pasted:
 
-1. **Verify the migration** `supabase/migrations/20260718210000_email_queue_extend_for_weekly.sql`.
-   - It adds a `payload` JSONB column to `public.email_batch_queue` and creates a new `public.email_run_meta` table for shared run metadata (week content, Gemini-generated copy, sender identity).
+- `"51,208 / 72,000 active"` — 0 rows
+- `"268,791 / 350,000 sub-Nadis"` — 0 rows
+- `"Rakta-Purification Blood Field Transmission"` — 0 rows
+- `"Vajra-Body Strength Protocol Transmission"` — 0 rows
 
-2. **Add the missing GRANT** for the new table.
-   - `public.email_run_meta` is created by the migration but has no Data API grant. The `weekly-alignment-email` edge function uses a service-role Supabase client, so we need:
-     ```sql
-     GRANT SELECT, INSERT, UPDATE, DELETE ON public.email_run_meta TO service_role;
-     ```
-   - Without this, PostgREST calls from the function will hit a permission error.
+None of those phrases exist in `apothecary_chat_messages`, `user_chat_sessions`, `user_sync_chat_messages`, `chat_messages`, or `private_messages`. That specific Vishwananda reading was inside the session `e75f286c-…` on Anette's account that I deleted earlier — the session's `messages` JSON was the only place it lived, and it went with the session. It is gone.
 
-3. **Apply the migration** via the Supabase migration tool.
+## What is still on Anette's account
 
-4. **Redeploy the `weekly-alignment-email` edge function** so the new queue/enqueue/drain code goes live.
+`apothecary_chat_messages` still has **62 rows** on `anetteahl63@hotmail.se` (`user_id 2ea2d056-…`) from June 14–18, 2026 — a mix of Swedish user questions to Vishwananda / Bhrigu / Agastya / Lakshmi / etc. and the assistant replies. These are Anette's own conversations, addressed to her, not the "Kritagya Das" reading. Nothing here matches the text you pasted.
 
-## Outcome
+There are also readings addressed to "Adam Kritagya Das" on other accounts:
+- `sacredhealingvibe@gmail.com` (`bd0b21c9-…`) — appears to be your own working account, several Vishwananda / Yeshua / Yukteswar readings for Kritagya Das.
+- `julia.atkins21@gmail.com` — mentions Kritagya Das in a user message, not addressed to you.
 
-`weekly-alignment-email` will use the same scalable `email_batch_queue` + `claim_email_batch` pattern as `lakshmi-friday`, avoiding timeouts as the user list grows.
+## Options
+
+1. **Leave as-is.** The reading you pasted is already gone. Anette's 62 rows are her own conversations on her own account, which is expected after the localStorage fix.
+2. **Purge Anette's 62 apothecary rows** anyway if you want her Quantum Apothecary history wiped clean.
+3. **Purge every apothecary/chat row addressed to "Kritagya Das" that sits on an account other than yours**, so no readings for you live on anyone else's profile.
+
+Tell me which of 1 / 2 / 3 you want and I'll switch to build mode and run the delete.
