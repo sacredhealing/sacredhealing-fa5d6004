@@ -759,6 +759,43 @@ serve(async (req) => {
             logStep('Healing access granted', { userId, days, expiresAt });
           }
         }
+
+        // ── One-time membership purchase (Akasha-Infinity lifetime €2997) ──
+        // The subscription branch (customer.subscription.*) never fires for
+        // mode:"payment" checkouts, so lifetime tiers must be granted here
+        // or the buyer pays and never gets access.
+        if (session.mode === 'payment') {
+          try {
+            const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 10 });
+            const membershipItem = lineItems.data.find(li => {
+              const pid = (li.price as { id?: string } | null)?.id;
+              return pid && MEMBERSHIP_PRICE_TO_SLUG[pid];
+            });
+            const membershipPriceId = (membershipItem?.price as { id?: string } | null)?.id;
+            const tierSlug = membershipPriceId ? MEMBERSHIP_PRICE_TO_SLUG[membershipPriceId] : null;
+
+            if (tierSlug === 'akasha-infinity') {
+              const { data: tierRow } = await supabaseAdmin
+                .from('membership_tiers').select('id').eq('slug', tierSlug).maybeSingle();
+              if (tierRow?.id) {
+                const stripeCustomerId = typeof session.customer === 'string'
+                  ? session.customer
+                  : (session.customer as { id?: string } | null)?.id ?? null;
+                await supabaseAdmin.from('user_memberships').upsert({
+                  user_id: userId,
+                  tier_id: tierRow.id,
+                  status: 'active',
+                  stripe_customer_id: stripeCustomerId,
+                  expires_at: null, // lifetime
+                  updated_at: new Date().toISOString(),
+                }, { onConflict: 'user_id' });
+                logStep('Lifetime membership granted (one-time payment)', { userId, tierSlug, priceId: membershipPriceId });
+              }
+            }
+          } catch (memErr) {
+            logStep('One-time membership grant failed (non-blocking)', { error: String(memErr) });
+          }
+        }
       }
 
       // Send purchase email
