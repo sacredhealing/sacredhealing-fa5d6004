@@ -509,16 +509,22 @@ async function recordRevenue(supabaseAdmin: any, params: {
 // deno-lint-ignore no-explicit-any
 async function resolveUserByEmail(supabaseAdmin: any, email: string): Promise<string | null> {
   if (!email) return null;
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select('user_id')
-    .eq('email', email)
-    .maybeSingle();
-  if (error) {
-    console.error('[resolveUserByEmail] profiles lookup failed', error);
-    return null;
+  const target = email.toLowerCase();
+  // Paginate through auth.users — listUsers() defaults to only the first 50 users,
+  // which silently fails for any account not on page 1.
+  const perPage = 1000;
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      console.error('[resolveUserByEmail] listUsers failed', error);
+      return null;
+    }
+    const users = data?.users ?? [];
+    const match = users.find((u: { email?: string; id: string }) => (u.email || '').toLowerCase() === target);
+    if (match) return match.id;
+    if (users.length < perPage) return null;
   }
-  return data?.user_id || null;
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
