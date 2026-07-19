@@ -1,0 +1,1 @@
+GRANT SELECT ON public.membership_tiers TO anon, authenticated; GRANT ALL ON public.membership_tiers TO service_role;
