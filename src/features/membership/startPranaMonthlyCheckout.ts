@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { navigateToStripeCheckout, resolveStripeCheckoutUrl } from '@/lib/stripeCheckoutNavigation';
 
 /**
- * Stripe subscription checkout for Prana–Flow monthly (`prana-monthly`).
+ * Stripe subscription checkout for Prana–Flow monthly (`prana-flow`).
  * Same flow as /prana-flow — used from Meditations lock / upgrade CTAs.
  */
 export async function startPranaMonthlyCheckout(opts?: {
@@ -26,7 +26,7 @@ export async function startPranaMonthlyCheckout(opts?: {
   const { data: tierData, error: tierError } = await supabase
     .from('membership_tiers')
     .select('stripe_price_id, slug')
-    .eq('slug', 'prana-monthly')
+    .eq('slug', 'prana-flow')
     .single();
 
   if (tierError || !tierData?.stripe_price_id) {
@@ -36,7 +36,7 @@ export async function startPranaMonthlyCheckout(opts?: {
   const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
     body: {
       priceId: tierData.stripe_price_id,
-      tierSlug: 'prana-monthly',
+      tierSlug: 'prana-flow',
       affiliate_id: affiliateRef,
       successPath,
       metadata: {
