@@ -219,7 +219,7 @@ const AdminSystem = () => {
           </TabsContent>
 
           <TabsContent value="users">
-            <AdminUsersTab />
+            <AdminUsersTab onOpenSignupQR={() => setActiveTab('signup-qr')} />
           </TabsContent>
 
           <TabsContent value="signup-qr">

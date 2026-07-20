@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Shield, ShieldCheck } from 'lucide-react';
+import { User, Shield, ShieldCheck, QrCode } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ interface UserRole {
   role: string;
 }
 
-const AdminUsersTab = () => {
+const AdminUsersTab = ({ onOpenSignupQR }: { onOpenSignupQR?: () => void }) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,21 +88,43 @@ const AdminUsersTab = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Users
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <p className="text-muted-foreground">Loading...</p>
-        ) : profiles.length === 0 ? (
-          <p className="text-muted-foreground">No users yet</p>
-        ) : (
-          <div className="space-y-3">
-            {profiles.map((profile) => {
+    <div className="space-y-4">
+      {onOpenSignupQR && (
+        <button
+          type="button"
+          onClick={onOpenSignupQR}
+          className="w-full flex items-center justify-between gap-3 rounded-[20px] px-5 py-4 text-left bg-[#D4AF37]/[0.06] border border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.1] hover:border-[#D4AF37]/40 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <QrCode className="h-5 w-5 text-[#D4AF37]" />
+            <div>
+              <div className="text-[10px] font-extrabold tracking-[0.3em] uppercase text-[#D4AF37]">
+                Signup QR Code
+              </div>
+              <div className="text-white/50 text-xs mt-0.5">
+                Get the printable QR code to sign new users up in person
+              </div>
+            </div>
+          </div>
+          <span className="text-[#D4AF37] text-sm font-black">→</span>
+        </button>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Users
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-muted-foreground">Loading...</p>
+          ) : profiles.length === 0 ? (
+            <p className="text-muted-foreground">No users yet</p>
+          ) : (
+            <div className="space-y-3">
+              {profiles.map((profile) => {
               const roles = getUserRoles(profile.user_id);
               const isAdmin = roles.includes('admin');
 
@@ -152,8 +174,9 @@ const AdminUsersTab = () => {
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
