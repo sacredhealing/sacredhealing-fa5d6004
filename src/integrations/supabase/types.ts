@@ -669,7 +669,6 @@ export type Database = {
           id: string
           link_label: string | null
           paid_out: number
-          payout_bank_details: Json | null
           pending_balance: number
           stripe_connect_id: string | null
           total_earnings: number
@@ -683,7 +682,6 @@ export type Database = {
           id?: string
           link_label?: string | null
           paid_out?: number
-          payout_bank_details?: Json | null
           pending_balance?: number
           stripe_connect_id?: string | null
           total_earnings?: number
@@ -697,7 +695,6 @@ export type Database = {
           id?: string
           link_label?: string | null
           paid_out?: number
-          payout_bank_details?: Json | null
           pending_balance?: number
           stripe_connect_id?: string | null
           total_earnings?: number
