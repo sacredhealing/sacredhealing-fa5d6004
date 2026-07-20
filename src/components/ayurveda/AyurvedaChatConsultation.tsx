@@ -555,7 +555,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     (supabase as any)
       .from('profiles')
       .select('birth_date, birth_time, birth_place')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle()
       .then(async ({ data }: { data: any }) => {
         if (cancelled || !data?.birth_date) return;

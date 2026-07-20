@@ -24,7 +24,7 @@ async function cancelStripeSubsForUser(adminClient: any, userId: string, immedia
   if (m?.stripe_customer_id) custIds.add(m.stripe_customer_id);
 
   const { data: p } = await adminClient.from("profiles")
-    .select("stripe_customer_id").eq("id", userId).maybeSingle();
+    .select("stripe_customer_id").eq("user_id", userId).maybeSingle();
   if (p?.stripe_customer_id) custIds.add(p.stripe_customer_id);
 
   if (custIds.size === 0) {
@@ -216,7 +216,7 @@ serve(async (req) => {
         const { error: profileErr } = await adminClient
           .from("profiles")
           .update({ membership_tier: updates.membership_tier })
-          .eq("id", userId);
+          .eq("user_id", userId);
 
         if (profileErr) throw profileErr;
 
@@ -250,7 +250,7 @@ serve(async (req) => {
         await adminClient.from("shc_transactions").delete().eq("user_id", userId);
         await adminClient.from("user_balances").delete().eq("user_id", userId);
         await adminClient.from("user_roles").delete().eq("user_id", userId);
-        await adminClient.from("profiles").delete().eq("id", userId);
+        await adminClient.from("profiles").delete().eq("user_id", userId);
 
         const { error } = await adminClient.auth.admin.deleteUser(userId);
         if (error) throw error;
@@ -296,7 +296,7 @@ serve(async (req) => {
         if (error) throw error;
 
         const hyphenTier = slug;
-        await adminClient.from("profiles").update({ membership_tier: hyphenTier }).eq("id", userId);
+        await adminClient.from("profiles").update({ membership_tier: hyphenTier }).eq("user_id", userId);
 
         // Log manual grants distinctly from Stripe purchases so revenue reporting
         // and support history can tell the two apart later.
@@ -431,7 +431,7 @@ serve(async (req) => {
           await adminClient
             .from("profiles")
             .update({ membership_tier: "free" })
-            .eq("id", userId);
+            .eq("user_id", userId);
         }
 
         return new Response(JSON.stringify({
