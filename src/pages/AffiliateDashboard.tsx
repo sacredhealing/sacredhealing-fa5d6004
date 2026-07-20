@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/use-toast';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 
 interface AffiliateProfile {
   affiliate_code: string;
   link_label?: string | null;
+  payout_bank_details?: PayoutBankDetails | null;
   total_earnings: number;
   pending_balance: number;
   paid_out: number;
@@ -61,18 +63,6 @@ interface AbundanceOracle {
   affiliate_fit: AffiliateFit;
 }
 
-interface JyotishBirthProfile {
-  birth_date?: string;
-  birth_time?: string;
-  birth_place?: string;
-  moon_nakshatra?: string;
-  current_dasha?: string;
-  dosha_type?: string;
-  vata?: number;
-  pitta?: number;
-  kapha?: number;
-}
-
 type LangCode = 'en' | 'sv' | 'no' | 'es';
 type Platform = 'instagram' | 'tiktok' | 'youtube' | 'facebook';
 
@@ -104,6 +94,27 @@ const COUNTRY_OPTIONS = [
   { code: 'AU', label: '🇦🇺 Australia' },
   { code: 'CA', label: '🇨🇦 Canada' },
 ];
+
+interface PayoutBankDetails {
+  method_type: 'iban' | 'wise' | 'other';
+  account_holder_name: string;
+  country: string;
+  iban: string;
+  bic_swift: string;
+  wise_email: string;
+  account_number: string;
+  bank_name: string;
+}
+
+const EMPTY_BANK_FORM: PayoutBankDetails = {
+  method_type: 'iban', account_holder_name: '', country: 'SE',
+  iban: '', bic_swift: '', wise_email: '', account_number: '', bank_name: '',
+};
+
+// Commissions clear this many days after purchase before becoming withdrawable,
+// mirroring the refund window. This is a starting default — Kritagya/Laila should
+// confirm the exact number and adjust it here.
+const PAYOUT_HOLD_DAYS = 14;
 
 const VERDICT_COLOR: Record<AffiliateFit['verdict'], string> = {
   strongly_yes: '#4ade80',
@@ -181,6 +192,8 @@ const AccordionCard: React.FC<{
   </div>
 );
 
+const ADMIN_UUIDS = ['bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'a711f099-3d34-456f-8473-8a65eab056d5'];
+
 const AffiliateDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -206,81 +219,32 @@ const AffiliateDashboard: React.FC = () => {
   const [labelInput, setLabelInput] = useState('');
   const [labelSaving, setLabelSaving] = useState(false);
   const [labelEditing, setLabelEditing] = useState(false);
+  const [bankForm, setBankForm] = useState<PayoutBankDetails>(EMPTY_BANK_FORM);
+  const [bankEditing, setBankEditing] = useState(false);
+  const [bankSaving, setBankSaving] = useState(false);
 
   // Accordion state — "link" open by default since sharing is the primary action
   const [openSection, setOpenSection] = useState<string>('link');
   const toggle = (id: string) => setOpenSection(cur => (cur === id ? '' : id));
 
   // ── Monthly Abundance Reading (Jyotish) ──────────────────────────────────
-  const [birthProfile, setBirthProfile] = useState<JyotishBirthProfile | null>(null);
+  // Sourced from the SAME useJyotishProfile hook that powers the Jyotish
+  // Chamber itself, so this reflects whatever chart the user already entered
+  // there — no separate/duplicate birth-data entry.
+  const jyotish = useJyotishProfile();
   const [oracle, setOracle] = useState<AbundanceOracle | null>(null);
   const [oracleLoading, setOracleLoading] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    (async () => {
-      const [{ data: jy }, { data: pr }, { data: ay }] = await Promise.all([
-        (supabase as any).from('jyotish_profiles')
-          .select('birth_date, birth_time, birth_place, moon_nakshatra, dasha_data')
-          .eq('user_id', user.id).maybeSingle(),
-        supabase.from('profiles')
-          .select('birth_date, birth_time, birth_place')
-          .eq('user_id', user.id).maybeSingle(),
-        (supabase as any).from('ayurveda_profiles')
-          .select('dominant_dosha, prakriti, vata_percent, pitta_percent, kapha_percent')
-          .eq('user_id', user.id).maybeSingle(),
-      ]);
-      if (cancelled) return;
-
-      let currentDasha: string | undefined;
-      const dd: any = jy?.dasha_data;
-      if (dd) {
-        if (typeof dd.current === 'string') currentDasha = dd.current;
-        else if (typeof dd.currentDasha === 'string') currentDasha = dd.currentDasha;
-        else if (dd.current?.planet) currentDasha = dd.current.planet;
-        else if (Array.isArray(dd.periods)) {
-          const now = Date.now();
-          const active = dd.periods.find((p: any) => {
-            const s = p.start ? new Date(p.start).getTime() : 0;
-            const e = p.end ? new Date(p.end).getTime() : Infinity;
-            return s <= now && now < e;
-          });
-          if (active?.planet) currentDasha = active.planet;
-        }
-      }
-
-      setBirthProfile({
-        birth_date: jy?.birth_date || pr?.birth_date || undefined,
-        birth_time: jy?.birth_time || (pr?.birth_time ? String(pr.birth_time) : undefined),
-        birth_place: jy?.birth_place || pr?.birth_place || undefined,
-        moon_nakshatra: jy?.moon_nakshatra || undefined,
-        current_dasha: currentDasha,
-        dosha_type: (ay?.prakriti || ay?.dominant_dosha || '').toString() || undefined,
-        vata: ay?.vata_percent ?? undefined,
-        pitta: ay?.pitta_percent ?? undefined,
-        kapha: ay?.kapha_percent ?? undefined,
-      });
-    })();
-    return () => { cancelled = true; };
-  }, [user]);
-
   const fetchOracle = useCallback(async () => {
-    if (!birthProfile) return;
-    if (!birthProfile.birth_date && !birthProfile.dosha_type && !birthProfile.moon_nakshatra) return;
+    if (jyotish.isLoading) return;
+    if (!jyotish.nakshatra && !jyotish.primaryDosha && !jyotish.mahadasha) return;
     setOracleLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('abundance-oracle', {
         body: {
-          birth_date: birthProfile.birth_date,
-          birth_time: birthProfile.birth_time,
-          birth_place: birthProfile.birth_place,
-          moon_nakshatra: birthProfile.moon_nakshatra,
-          current_dasha: birthProfile.current_dasha,
-          dosha: birthProfile.dosha_type,
-          vata: birthProfile.vata,
-          pitta: birthProfile.pitta,
-          kapha: birthProfile.kapha,
+          moon_nakshatra: jyotish.nakshatra,
+          current_dasha: jyotish.mahadasha,
+          dosha: jyotish.primaryDosha,
         },
       });
       if (!error && data && !data.error) setOracle(data as AbundanceOracle);
@@ -289,7 +253,7 @@ const AffiliateDashboard: React.FC = () => {
     } finally {
       setOracleLoading(false);
     }
-  }, [birthProfile]);
+  }, [jyotish.isLoading, jyotish.nakshatra, jyotish.primaryDosha, jyotish.mahadasha]);
 
   useEffect(() => { fetchOracle(); }, [fetchOracle]);
 
@@ -303,21 +267,92 @@ const AffiliateDashboard: React.FC = () => {
     if (profile?.link_label) setLabelInput(profile.link_label);
   }, [profile?.link_label]);
 
+  // ── Payout bank details ──────────────────────────────────────────────────
+  useEffect(() => {
+    const saved = profile?.payout_bank_details;
+    if (saved && saved.account_holder_name) {
+      setBankForm({ ...EMPTY_BANK_FORM, ...saved });
+    }
+  }, [profile]);
+
+  const hasPayoutMethod = !!bankForm.account_holder_name && (
+    (bankForm.method_type === 'wise' && !!bankForm.wise_email) ||
+    (bankForm.method_type === 'iban' && !!bankForm.iban) ||
+    (bankForm.method_type === 'other' && !!bankForm.account_number)
+  );
+
+  const saveBankDetails = async () => {
+    if (!user) return;
+    if (!bankForm.account_holder_name.trim()) {
+      toast({ title: 'Account holder name required', variant: 'destructive' });
+      return;
+    }
+    if (bankForm.method_type === 'wise' && !bankForm.wise_email.trim()) {
+      toast({ title: 'Wise email or tag required', variant: 'destructive' });
+      return;
+    }
+    if (bankForm.method_type === 'iban' && !bankForm.iban.trim()) {
+      toast({ title: 'IBAN required', variant: 'destructive' });
+      return;
+    }
+    if (bankForm.method_type === 'other' && !bankForm.account_number.trim()) {
+      toast({ title: 'Account details required', variant: 'destructive' });
+      return;
+    }
+    setBankSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('affiliate_profiles')
+        .update({ payout_bank_details: bankForm as any })
+        .eq('user_id', user.id)
+        .select('payout_bank_details');
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        if (!profile?.affiliate_code) throw new Error('No affiliate profile found yet.');
+        const { error: upsertError } = await supabase
+          .from('affiliate_profiles')
+          .upsert({ user_id: user.id, affiliate_code: profile.affiliate_code, payout_bank_details: bankForm as any }, { onConflict: 'user_id' });
+        if (upsertError) throw upsertError;
+      }
+
+      setBankEditing(false);
+      toast({ title: 'Payout details saved' });
+    } catch (err) {
+      toast({ title: 'Could not save payout details', description: err instanceof Error ? err.message : 'Try again in a moment.', variant: 'destructive' });
+    } finally {
+      setBankSaving(false);
+    }
+  };
+
+
   const saveLabel = async () => {
     if (!user) return;
     const trimmed = labelInput.trim().slice(0, 40);
     setLabelSaving(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('affiliate_profiles')
         .update({ link_label: trimmed || null })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select('link_label');
       if (error) throw error;
+
+      // .update() with RLS can silently match 0 rows instead of erroring —
+      // fall back to an upsert keyed on user_id so the name always lands.
+      if (!data || data.length === 0) {
+        if (!profile?.affiliate_code) throw new Error('No affiliate profile found yet.');
+        const { error: upsertError } = await supabase
+          .from('affiliate_profiles')
+          .upsert({ user_id: user.id, affiliate_code: profile.affiliate_code, link_label: trimmed || null }, { onConflict: 'user_id' });
+        if (upsertError) throw upsertError;
+      }
+
       setProfile(p => (p ? { ...p, link_label: trimmed || null } : p));
       setLabelEditing(false);
       toast({ title: 'Link name updated' });
-    } catch {
-      toast({ title: 'Could not save name', description: 'Try again in a moment.', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Could not save name', description: err instanceof Error ? err.message : 'Try again in a moment.', variant: 'destructive' });
     } finally {
       setLabelSaving(false);
     }
@@ -365,12 +400,40 @@ const AffiliateDashboard: React.FC = () => {
   }, [loadData, loadConnectStatus]);
 
   const copyLink = async (link: string, key: string) => {
+    let copied = false;
+    // Primary: modern Clipboard API (requires secure context + permission)
     try {
-      await navigator.clipboard.writeText(link);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
+        copied = true;
+      }
+    } catch {
+      copied = false;
+    }
+    // Fallback: legacy hidden-textarea + execCommand — works in Android
+    // in-app/webview browsers that block the Clipboard API outright.
+    if (!copied) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = link;
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        ta.style.left = '-1000px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, link.length);
+        copied = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {
+        copied = false;
+      }
+    }
+    if (copied) {
       setCopiedLink(key);
       setTimeout(() => setCopiedLink(''), 2500);
-    } catch {
-      toast({ title: 'Could not copy', description: 'Copy the link manually.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Could not copy', description: 'Press and hold the link to copy it manually.', variant: 'destructive' });
     }
   };
 
@@ -386,7 +449,7 @@ const AffiliateDashboard: React.FC = () => {
       if (!session) throw new Error('Not authenticated');
       const { data, error } = await supabase.functions.invoke('create-stripe-connect-account', {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { country: selectedCountry },
+        body: { country: bankForm.country || selectedCountry },
       });
       if (error) throw new Error(error.message || 'Connect setup failed');
       if (data?.url) window.location.href = data.url;
@@ -405,12 +468,12 @@ const AffiliateDashboard: React.FC = () => {
       toast({ title: 'Minimum €20', description: 'Minimum payout amount is €20.', variant: 'destructive' });
       return;
     }
-    if (amount > (profile.pending_balance || 0)) {
-      toast({ title: 'Insufficient balance', description: `Max: ${formatMoney(profile.pending_balance, profile.currency || 'EUR', localeTag)}`, variant: 'destructive' });
+    if (amount > availableNow) {
+      toast({ title: 'Insufficient available balance', description: `Max: ${formatMoney(availableNow, profile.currency || 'EUR', localeTag)} (the rest is still in its ${PAYOUT_HOLD_DAYS}-day hold)`, variant: 'destructive' });
       return;
     }
-    if (!connectStatus?.payoutsEnabled) {
-      toast({ title: 'Set up bank account first', description: 'Connect your bank account via Stripe to receive payouts.', variant: 'destructive' });
+    if (!hasPayoutMethod) {
+      toast({ title: 'Add your payout details first', description: 'Add a bank account, Wise, or other transfer method to receive payouts.', variant: 'destructive' });
       setOpenSection('withdraw');
       return;
     }
@@ -422,6 +485,7 @@ const AffiliateDashboard: React.FC = () => {
         amount,
         currency: profile.currency || 'EUR',
         status: 'requested',
+        bank_details: bankForm as any,
       });
       if (error) throw new Error(error.message);
       toast({ title: 'Payout requested ✓', description: 'Your request will be processed within 3-5 business days.' });
@@ -453,12 +517,25 @@ const AffiliateDashboard: React.FC = () => {
     );
   }
 
+  const isAdmin = !!user && ADMIN_UUIDS.includes(user.id);
   const cur = profile?.currency || 'EUR';
   const earned = profile?.total_earnings || 0;
   const pending = profile?.pending_balance || 0;
   const paidOut = profile?.paid_out || 0;
   const downlineEarned = commissions.filter((c) => c.level === 2).reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
   const tradingEarned = commissions.filter(c => c.source?.startsWith('trading')).reduce((s, c) => s + Number(c.commission_amount), 0);
+
+  // Estimate how much of the pending balance is still inside the refund-hold
+  // window, using the fetched commission history. This is a display estimate
+  // only (fetched history is capped at 50 rows) — the true balance is always
+  // profile.pending_balance, and every payout is reviewed by an admin before
+  // it goes out, so that review is the real enforcement point for the hold.
+  const holdCutoff = Date.now() - PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000;
+  const recentHold = commissions
+    .filter(c => (c.status === 'approved' || c.status === 'pending') && new Date(c.created_at).getTime() > holdCutoff)
+    .reduce((s, c) => s + Number(c.commission_amount || 0), 0);
+  const processingHold = Math.min(recentHold, pending);
+  const availableNow = Math.max(0, pending - processingHold);
 
   const renderConnectBadge = () => {
     if (!connectStatus) return null;
@@ -483,7 +560,7 @@ const AffiliateDashboard: React.FC = () => {
 
   return (
     <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {user && ['bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'a711f099-3d34-456f-8473-8a65eab056d5'].includes(user.id) && (
+      {user && ADMIN_UUIDS.includes(user.id) && (
         <div style={{ padding: '16px 16px 0', maxWidth: 720, margin: '0 auto' }}>
           <button
             onClick={() => navigate('/admin/delta-arb')}
@@ -682,7 +759,7 @@ const AffiliateDashboard: React.FC = () => {
               <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 14 }}>
                 Complete your birth chart to unlock a personal wealth-timing reading, refreshed as your planetary period moves.
               </p>
-              <button type="button" onClick={() => navigate('/profile')} style={secondaryCta}>Complete Your Chart →</button>
+              <button type="button" onClick={() => navigate('/vedic-astrology')} style={secondaryCta}>Complete Your Chart →</button>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 14 }}>
@@ -771,63 +848,124 @@ const AffiliateDashboard: React.FC = () => {
         <AccordionCard
           id="withdraw" icon="💳" title="Withdraw" accent="#4ade80"
           open={openSection === 'withdraw'} onToggle={() => toggle('withdraw')}
-          teaser={teaserText(connectStatus?.payoutsEnabled ? 'Bank connected — ready to withdraw' : 'Connect your bank account to get paid')}
+          teaser={teaserText(hasPayoutMethod ? `${formatMoney(availableNow, cur, localeTag)} available now` : 'Add your payout details to get paid')}
         >
           <div style={{ display: 'grid', gap: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p style={{ ...microLabel, margin: 0 }}>Bank Account · Stripe Connect</p>
-              {renderConnectBadge()}
+
+            <div style={{ background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 16, padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Available Now</span>
+                <span style={{ color: '#4ade80', fontWeight: 800 }}>{formatMoney(availableNow, cur, localeTag)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>Processing (within {PAYOUT_HOLD_DAYS}-day window)</span>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>{formatMoney(processingHold, cur, localeTag)}</span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', lineHeight: 1.5, marginTop: 8, marginBottom: 0 }}>
+                New dividends clear {PAYOUT_HOLD_DAYS} days after the purchase, matching our refund window, before they're withdrawable. This figure is estimated from your recent history — your exact balance is confirmed when you submit a request.
+              </p>
             </div>
 
-            {connectStatus?.payoutsEnabled ? (
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
-                ✓ Your bank account is connected. Payouts transfer directly via Stripe.
-              </p>
-            ) : connectStatus?.hasAccount ? (
-              <div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 12 }}>
-                  Your Stripe account exists but setup is incomplete.
-                </p>
-                <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
-                  {connectLoading ? 'Opening…' : 'Complete Bank Setup →'}
-                </button>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <p style={{ ...microLabel, margin: 0 }}>Payout Details</p>
+                {hasPayoutMethod && !bankEditing && (
+                  <button type="button" onClick={() => setBankEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', cursor: 'pointer' }}>Edit</button>
+                )}
               </div>
-            ) : (
-              <div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 12 }}>
-                  Connect your bank via Stripe — takes ~5 minutes.
-                </p>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ ...microLabel, display: 'block', marginBottom: 8 }}>Your Country</label>
-                  <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={inputStyle}>
-                    {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code} style={{ background: '#050505' }}>{c.label}</option>)}
-                  </select>
-                </div>
-                <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
-                  {connectLoading ? 'Opening Stripe…' : 'Connect Bank Account →'}
-                </button>
-              </div>
-            )}
 
-            {connectStatus?.payoutsEnabled && (
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available to Withdraw</span>
-                  <span style={{ color: '#D4AF37', fontWeight: 800 }}>{formatMoney(pending, cur, localeTag)}</span>
+              {hasPayoutMethod && !bankEditing ? (
+                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: 12 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.85rem', margin: 0 }}>
+                    {bankForm.method_type === 'wise' ? '🟢 Wise' : bankForm.method_type === 'iban' ? '🏦 Bank Transfer (IBAN)' : '🏦 Bank Transfer'} · {bankForm.account_holder_name}
+                  </p>
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', margin: '4px 0 0' }}>
+                    {bankForm.method_type === 'wise' ? bankForm.wise_email : (bankForm.iban || bankForm.account_number)} · {COUNTRY_OPTIONS.find(c => c.code === bankForm.country)?.label || bankForm.country}
+                  </p>
                 </div>
+              ) : (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div>
+                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Payout Method</label>
+                    <select value={bankForm.method_type} onChange={(e) => setBankForm(f => ({ ...f, method_type: e.target.value as PayoutBankDetails['method_type'] }))} style={inputStyle}>
+                      <option value="iban" style={{ background: '#050505' }}>Bank Transfer (IBAN — EU/UK)</option>
+                      <option value="wise" style={{ background: '#050505' }}>Wise</option>
+                      <option value="other" style={{ background: '#050505' }}>Other Bank Transfer</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Account Holder Name</label>
+                    <input value={bankForm.account_holder_name} onChange={(e) => setBankForm(f => ({ ...f, account_holder_name: e.target.value }))} placeholder="Full name on the account" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Country</label>
+                    <select value={bankForm.country} onChange={(e) => setBankForm(f => ({ ...f, country: e.target.value }))} style={inputStyle}>
+                      {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code} style={{ background: '#050505' }}>{c.label}</option>)}
+                    </select>
+                  </div>
+
+                  {bankForm.method_type === 'wise' ? (
+                    <div>
+                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Wise Email or @wisetag</label>
+                      <input value={bankForm.wise_email} onChange={(e) => setBankForm(f => ({ ...f, wise_email: e.target.value }))} placeholder="you@example.com or @yourtag" style={inputStyle} />
+                    </div>
+                  ) : bankForm.method_type === 'iban' ? (
+                    <>
+                      <div>
+                        <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>IBAN</label>
+                        <input value={bankForm.iban} onChange={(e) => setBankForm(f => ({ ...f, iban: e.target.value.toUpperCase() }))} placeholder="BE00 0000 0000 0000" style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>BIC / SWIFT</label>
+                        <input value={bankForm.bic_swift} onChange={(e) => setBankForm(f => ({ ...f, bic_swift: e.target.value.toUpperCase() }))} placeholder="e.g. NDEASESS" style={inputStyle} />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Account Number / Routing Details</label>
+                      <input value={bankForm.account_number} onChange={(e) => setBankForm(f => ({ ...f, account_number: e.target.value }))} placeholder="Account number, sort code, routing number — whatever your bank needs" style={inputStyle} />
+                    </div>
+                  )}
+                  <div>
+                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Bank Name (optional)</label>
+                    <input value={bankForm.bank_name} onChange={(e) => setBankForm(f => ({ ...f, bank_name: e.target.value }))} placeholder="e.g. Nordea, Swedbank, Wise" style={inputStyle} />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" onClick={saveBankDetails} disabled={bankSaving} style={{ ...primaryCta, opacity: bankSaving ? 0.6 : 1 }}>
+                      {bankSaving ? 'Saving…' : 'Save Payout Details'}
+                    </button>
+                    {hasPayoutMethod && (
+                      <button type="button" onClick={() => { setBankEditing(false); }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '14px 20px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', cursor: 'pointer' }}>
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.72rem', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                    Works for any bank in any country — Wise, Nordea, or otherwise. Payouts are reviewed and sent manually to this account.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {hasPayoutMethod && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
                 <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Amount · Min €20</label>
                 <input
                   type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)}
-                  min={20} max={pending} placeholder={`Max ${formatMoney(pending, cur, localeTag)}`}
+                  min={20} max={availableNow} placeholder={`Max ${formatMoney(availableNow, cur, localeTag)}`}
                   style={{ ...inputStyle, marginBottom: 12 }}
                 />
                 <button
                   type="button" onClick={requestPayout}
-                  disabled={payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > pending}
-                  style={{ ...primaryCta, opacity: payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > pending ? 0.5 : 1 }}
+                  disabled={payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > availableNow}
+                  style={{ ...primaryCta, opacity: payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > availableNow ? 0.5 : 1 }}
                 >
                   {payoutLoading ? 'Submitting…' : 'Request Payout →'}
                 </button>
+                <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.72rem', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
+                  Reviewed by the team and sent to the account above — typically within 3-5 business days.
+                </p>
               </div>
             )}
 
@@ -844,6 +982,20 @@ const AffiliateDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Optional secondary path — kept because the backend already supports instant Stripe transfers when available, but never required */}
+            <details style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
+              <summary style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>Prefer instant payouts via Stripe instead? (optional)</summary>
+              <div style={{ marginTop: 10 }}>
+                {renderConnectBadge()}
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem', lineHeight: 1.6, margin: '8px 0 10px' }}>
+                  Connecting Stripe is optional and only speeds up payout — your bank details above work fine on their own.
+                </p>
+                <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={secondaryCta}>
+                  {connectLoading ? 'Opening…' : connectStatus?.hasAccount ? 'Manage Stripe Connection →' : 'Connect Stripe (optional) →'}
+                </button>
+              </div>
+            </details>
           </div>
         </AccordionCard>
 
@@ -851,8 +1003,17 @@ const AffiliateDashboard: React.FC = () => {
         <AccordionCard
           id="more" icon="⚡" title="More Ways to Earn" accent="#22D3EE"
           open={openSection === 'more'} onToggle={() => toggle('more')}
-          teaser={teaserText(`Trading commissions, bots & airdrops · $${tradingEarned.toFixed(2)} earned so far`)}
+          teaser={teaserText(isAdmin ? `Trading commissions, bots & airdrops · $${tradingEarned.toFixed(2)} earned so far` : 'Coming soon')}
         >
+          {!isAdmin ? (
+            <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+              <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>✦</div>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>Coming Soon</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', marginTop: 6, lineHeight: 1.6 }}>
+                New ways to earn are being prepared for the network. You'll see them here first.
+              </p>
+            </div>
+          ) : (
           <div style={{ display: 'grid', gap: 10 }}>
             <div style={{ background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 16, padding: 14 }}>
               <p style={{ ...microLabel, color: 'rgba(34,197,94,0.7)', marginBottom: 8 }}>⚡ CLAWBOT Trading Commissions</p>
@@ -891,6 +1052,7 @@ const AffiliateDashboard: React.FC = () => {
               </div>
             ))}
           </div>
+          )}
         </AccordionCard>
 
       </div>

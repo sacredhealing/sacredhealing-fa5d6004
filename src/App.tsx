@@ -400,7 +400,7 @@ function AppRoutes() {
                   <Route path="/healing" element={<Healing />} />
                   <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
                   <Route path="/breathing" element={<Breathing />} />
-                  <Route path="/library/abundance" element={<LibraryAbundance />} />
+                  <Route path="/library/abundance" element={<Navigate to="/affiliate/dashboard" replace />} />
                   <Route path="/income-streams" element={<IncomeStreams />} />
                   <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
                   <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
