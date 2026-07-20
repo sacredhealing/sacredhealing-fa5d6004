@@ -29,7 +29,8 @@ import {
   Volume2,
   Languages,
   Gift,
-  UserCheck
+  UserCheck,
+  QrCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -480,6 +481,28 @@ const AdminDashboard: React.FC = () => {
               <p className="ad-body text-sm mt-1">Manage all your app content — Vedic Light-Codes & Bhakti-Algorithms</p>
             </div>
           </div>
+
+          <Link to="/admin/system?tab=signup-qr">
+            <Card
+              className="border-0 shadow-none cursor-pointer p-5 sm:p-6 transition-transform hover:scale-[1.01]"
+              style={{
+                background: 'linear-gradient(135deg, rgba(212,175,55,0.14), rgba(212,175,55,0.03))',
+                border: '1px solid rgba(212,175,55,0.35)',
+                borderRadius: 28,
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <AdminSigilIcon icon={QrCode} variant="gold" size="md" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-black tracking-tight text-base sm:text-lg text-[#D4AF37]" style={{ textShadow: '0 0 12px rgba(212,175,55,0.25)' }}>
+                    Sign Someone Up Now
+                  </h3>
+                  <p className="ad-body text-sm mt-1">Show the QR code — scan and they're in, no typing needed</p>
+                </div>
+                <span className="text-[#D4AF37] text-xl font-black shrink-0">→</span>
+              </div>
+            </Card>
+          </Link>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
