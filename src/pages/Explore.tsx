@@ -313,6 +313,16 @@ export default function Explore() {
         </div>
       </div>
 
+      {/* ══ REFERRAL PORTAL — surfaced inside Abundance Field so it's actually findable ══ */}
+      <div style={{ padding: '14px 16px 0', animation: 'fadeUp 0.4s 0.16s ease both' }}>
+        <div onClick={() => navigate('/affiliate/dashboard')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 30%, rgba(0,30,36,0.9) 0%, rgba(5,10,10,0.98) 60%, #050505 100%)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 20, cursor: 'pointer', padding: '18px 20px' }}>
+          <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.7)', marginBottom: 8 }}>YOUR SOVEREIGN LINK</p>
+          <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 900, fontSize: 17, letterSpacing: '-0.03em', color: '#fff', marginBottom: 6 }}>{t('libraryAbundance.affiliateCta.title')}</p>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 14 }}>{t('libraryAbundance.affiliateCta.body')}</p>
+          <button onClick={(e) => { e.stopPropagation(); navigate('/affiliate/dashboard'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#22D3EE', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 24, padding: '10px 20px', cursor: 'pointer' }}>VIEW MY LINK →</button>
+        </div>
+      </div>
+
       {/* ══ SACRED TOOLS — VIRTUAL PILGRIMAGE ══ */}
       <SL label={t('converge.secSacredTools')} delay="0.18s"/>
       <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.2s ease both' }}>

@@ -261,8 +261,8 @@ const AffiliateLanding: React.FC = () => {
     if(!code) return;
     localStorage.setItem('affiliateId', code);
     sessionStorage.setItem('affiliateId', code);
-    supabase.from('affiliate_profiles').select('affiliate_code, profiles!inner(full_name)').eq('affiliate_code',code).single()
-      .then(({data}:any)=>{ if(data) setAffiliate({display_name:data.profiles?.full_name||'A Sovereign Soul',affiliate_code:data.affiliate_code}); });
+    supabase.from('affiliate_profiles').select('affiliate_code, link_label, profiles!inner(full_name)').eq('affiliate_code',code).single()
+      .then(({data}:any)=>{ if(data) setAffiliate({display_name:data.link_label||data.profiles?.full_name||'A Sovereign Soul',affiliate_code:data.affiliate_code}); });
   },[code]);
 
   useEffect(()=>{
@@ -273,7 +273,11 @@ const AffiliateLanding: React.FC = () => {
 
   const go = useCallback((slug?:string)=>{
     const p=new URLSearchParams();
-    if(code) p.set('affiliateId',code);
+    // "ref" is the key every downstream page (global session capture in App.tsx,
+    // and each tier's checkout handler) actually reads. Keep "affiliateId" too
+    // for the couple of legacy readers, but "ref" is what makes the code survive
+    // through to checkout.
+    if(code){ p.set('ref',code); p.set('affiliateId',code); }
     if(slug) p.set('tier',slug);
     if(slug==='free'){ navigate(`/auth?${p}`); return; }
     navigate(`/membership?${p}`);

@@ -667,6 +667,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          link_label: string | null
           paid_out: number
           pending_balance: number
           stripe_connect_id: string | null
@@ -679,6 +680,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          link_label?: string | null
           paid_out?: number
           pending_balance?: number
           stripe_connect_id?: string | null
@@ -691,6 +693,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          link_label?: string | null
           paid_out?: number
           pending_balance?: number
           stripe_connect_id?: string | null

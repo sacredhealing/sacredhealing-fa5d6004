@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface AffiliateProfile {
   affiliate_code: string;
+  link_label?: string | null;
   total_earnings: number;
   pending_balance: number;
   paid_out: number;
@@ -105,8 +106,35 @@ const AffiliateDashboard: React.FC = () => {
   const [connectLoading, setConnectLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('SE');
   const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'earnings' | 'payout'>('overview');
+  const [labelInput, setLabelInput] = useState('');
+  const [labelSaving, setLabelSaving] = useState(false);
+  const [labelEditing, setLabelEditing] = useState(false);
 
   const cur = profile?.currency || 'EUR';
+
+  useEffect(() => {
+    if (profile?.link_label) setLabelInput(profile.link_label);
+  }, [profile?.link_label]);
+
+  const saveLabel = async () => {
+    if (!user) return;
+    const trimmed = labelInput.trim().slice(0, 40);
+    setLabelSaving(true);
+    try {
+      const { error } = await supabase
+        .from('affiliate_profiles')
+        .update({ link_label: trimmed || null })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      setProfile(p => (p ? { ...p, link_label: trimmed || null } : p));
+      setLabelEditing(false);
+      toast({ title: 'Link name updated' });
+    } catch {
+      toast({ title: 'Could not save name', description: 'Try again in a moment.', variant: 'destructive' });
+    } finally {
+      setLabelSaving(false);
+    }
+  };
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -366,6 +394,35 @@ const AffiliateDashboard: React.FC = () => {
               </button>
             </div>
             {renderConnectBadge()}
+          </div>
+        )}
+
+        {profile && (
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+            {labelEditing ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  value={labelInput}
+                  onChange={(e) => setLabelInput(e.target.value)}
+                  placeholder="Give your link a name"
+                  maxLength={40}
+                  style={{
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 100,
+                    padding: '8px 16px', color: '#fff', fontSize: '0.85rem', outline: 'none', minWidth: 200,
+                  }}
+                />
+                <button type="button" disabled={labelSaving} onClick={saveLabel} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+                  {labelSaving ? 'Saving…' : 'Save'}
+                </button>
+                <button type="button" onClick={() => { setLabelEditing(false); setLabelInput(profile.link_label || ''); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setLabelEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                {profile.link_label ? `Shown as "${profile.link_label}" · edit` : 'Give your link a name →'}
+              </button>
+            )}
           </div>
         )}
       </div>

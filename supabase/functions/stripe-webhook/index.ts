@@ -836,7 +836,12 @@ serve(async (req) => {
 
       // ── FIX: UNIFIED affiliate commission via affiliate_commissions table ──
       // Resolve affiliate code from metadata (created by create-tier-checkout + all checkout functions)
-      const affiliateCode = session.metadata?.affiliateId || session.metadata?.affiliate_code || session.client_reference_id?.split('_affiliate_')[1] || null;
+      // NOTE (2026-07-20): create-membership-checkout — the function actually wired to
+      // Prana-Flow / Siddha-Quantum / Akasha-Infinity's buy buttons — sends the key as
+      // "affiliate_id" (snake_case), which this line was NOT checking. Every real paid
+      // signup was hitting "no affiliate code, skipping" and no commission was ever
+      // recorded, even though attribution was being saved correctly. Added below.
+      const affiliateCode = session.metadata?.affiliateId || session.metadata?.affiliate_code || session.metadata?.affiliate_id || session.client_reference_id?.split('_affiliate_')[1] || null;
       const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent as { id?: string })?.id || null;
 
       // Referred user ID for commission record
