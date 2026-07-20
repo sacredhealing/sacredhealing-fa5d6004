@@ -935,6 +935,7 @@ serve(async (req) => {
         // The subscription branch (customer.subscription.*) never fires for
         // mode:"payment" checkouts, so lifetime tiers must be granted here
         // or the buyer pays and never gets access.
+        let akashaWelcomeSent = false;
         if (session.mode === 'payment') {
           try {
             const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 10 });
