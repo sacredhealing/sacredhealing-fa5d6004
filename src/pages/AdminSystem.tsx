@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio, Map, Sparkles, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,9 +29,10 @@ import AdminSignupQRTab from '@/components/admin-system/AdminSignupQRTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
   const { isLoading: isAuthLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'dashboard');
 
   if (isAuthLoading || isAdminLoading) {
     return (
