@@ -1171,6 +1171,32 @@ serve(async (req) => {
               updated_at: new Date().toISOString(),
             }, { onConflict: "user_id" });
             logStep("Membership synced active", { userId, tierSlug });
+
+            // Welcome email — only on first-ever sync of this subscription
+            // (existingMembership was null), so subscription.updated events
+            // (renewals, plan changes) never re-trigger it.
+            if (event.type === "customer.subscription.created" && !existingMembership) {
+              try {
+                const customer = await stripe.customers.retrieve(customerId);
+                // deno-lint-ignore no-explicit-any
+                const custEmail = (customer && !(customer as any).deleted) ? (customer as Stripe.Customer).email : null;
+                // deno-lint-ignore no-explicit-any
+                const custName = (customer && !(customer as any).deleted) ? (customer as Stripe.Customer).name : null;
+                if (custEmail) {
+                  const toName = custName || custEmail.split("@")[0];
+                  if (tierSlug === "prana-flow") {
+                    const trialEndDate = sub.trial_end
+                      ? new Date(sub.trial_end * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : '7 days from today';
+                    await sendPranaFlowWelcomeEmail(custEmail, toName, trialEndDate);
+                  } else if (tierSlug === "siddha-quantum") {
+                    await sendSiddhaQuantumWelcomeEmail(custEmail, toName);
+                  }
+                }
+              } catch (e) {
+                logStep("Welcome email failed (non-blocking)", { error: String(e) });
+              }
+            }
           } else {
             await supabaseAdmin.from("user_memberships").update({
               status: "cancelled",
