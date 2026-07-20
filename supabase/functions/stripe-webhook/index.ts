@@ -976,7 +976,7 @@ serve(async (req) => {
       }
 
       // Send purchase email
-      if (customerEmail) {
+      if (customerEmail && !akashaWelcomeSent) {
         let buyerName = session.metadata?.full_name || session.customer_details?.name || customerEmail.split("@")[0];
         if (userId && !session.metadata?.full_name) {
           const { data: p } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
