@@ -556,7 +556,7 @@ const AffiliateDashboard: React.FC = () => {
   const earned = profile?.total_earnings || 0;
   const pending = profile?.pending_balance || 0;
   const paidOut = profile?.paid_out || 0;
-  const downlineEarned = commissions.filter((c) => c.level === 2).reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+  const downlineEarned = commissions.filter((c) => (c.level || 1) >= 2).reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
   const tradingEarned = commissions.filter(c => c.source?.startsWith('trading')).reduce((s, c) => s + Number(c.commission_amount), 0);
 
   // Estimate how much of the pending balance is still inside the refund-hold
@@ -805,6 +805,27 @@ const AffiliateDashboard: React.FC = () => {
             <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', marginLeft: 8 }}>on every membership, session, and purchase</span>
           </div>
 
+          <div style={{ background: 'rgba(139,92,246,0.03)', border: '1px solid rgba(139,92,246,0.12)', borderRadius: 16, padding: '12px 16px', marginBottom: 16 }}>
+            <p style={{ ...microLabel, color: 'rgba(139,92,246,0.7)', marginBottom: 8 }}>Full Commission Structure</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+              {[
+                { level: 1, rate: '30%', label: 'Direct' },
+                { level: 2, rate: '10%', label: 'Recruit' },
+                { level: 3, rate: '5%', label: '' },
+                { level: 4, rate: '3%', label: '' },
+                { level: 5, rate: '2%', label: '' },
+              ].map(l => (
+                <div key={l.level} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '6px 4px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>L{l.level}</div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#8b5cf6' }}>{l.rate}</div>
+                </div>
+              ))}
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', lineHeight: 1.5, marginTop: 8, marginBottom: 0 }}>
+              L1 is who you refer directly. L2-L5 are override commissions on sales made by people in your recruiting chain — you earn a percentage automatically, no action needed on your part.
+            </p>
+          </div>
+
           <p style={{ ...microLabel, marginBottom: 8 }}>Dividend History</p>
           {commissions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem 0', color: 'rgba(255,255,255,0.3)' }}>
@@ -823,7 +844,7 @@ const AffiliateDashboard: React.FC = () => {
                     <div>
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
                         {c.source === 'trading_l1' ? '⚡ Trading L1' : c.source === 'trading_l2' ? '🔗 Trading L2' : 'Initiation Dividend'}
-                        {c.level === 2 && <span style={{ marginLeft: 6, fontSize: 7, fontWeight: 800, color: '#8b5cf6' }}>DOWNLINE</span>}
+                        {(c.level || 1) >= 2 && <span style={{ marginLeft: 6, fontSize: 7, fontWeight: 800, color: '#8b5cf6' }}>L{c.level} DOWNLINE</span>}
                       </p>
                       <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', margin: 0 }}>
                         {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short' })}
