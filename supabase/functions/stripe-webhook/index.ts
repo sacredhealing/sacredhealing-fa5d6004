@@ -172,6 +172,177 @@ async function sendPurchaseEmail(params: {
   await sendEmail({ toEmail, toName, subject, html });
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Tier-specific welcome emails
+// ═══════════════════════════════════════════════════════════════
+
+function buildWelcomeEmail(opts: {
+  icon: string;
+  headline: string;
+  subline: string;
+  greeting: string;
+  intro: string;
+  sectionTitle: string;
+  bullets: string[];
+  trialLine?: string;
+  closingQuote: string;
+  ctaText: string;
+  ctaUrl: string;
+}): string {
+  const bulletsHtml = opts.bullets.map(b =>
+    `<li style="margin:0 0 10px;font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;">◈&nbsp;&nbsp;${b}</li>`
+  ).join('');
+  const trialHtml = opts.trialLine
+    ? `<tr><td style="padding:0 0 24px;">
+         <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:16px 22px;text-align:center;">
+           <p style="font-size:13px;color:#D4AF37;margin:0;letter-spacing:0.05em;">${opts.trialLine}</p>
+         </div>
+       </td></tr>`
+    : '';
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#050505;font-family:'Helvetica Neue',Arial,sans-serif;color:#fff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;">
+<tr><td align="center" style="padding:40px 16px 60px;">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+  <tr><td style="text-align:center;padding:48px 0 32px;">
+    <div style="color:rgba(212,175,55,0.5);font-size:9px;letter-spacing:0.7em;text-transform:uppercase;margin-bottom:12px;">SIDDHA QUANTUM NEXUS · SQI 2050</div>
+    <div style="font-size:42px;margin-bottom:10px;color:#D4AF37;">${opts.icon}</div>
+    <div style="color:#D4AF37;font-size:24px;font-weight:900;letter-spacing:-0.02em;text-shadow:0 0 20px rgba(212,175,55,0.4);">${opts.headline}</div>
+    <div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:10px;letter-spacing:0.25em;">${opts.subline}</div>
+  </td></tr>
+  <tr><td style="padding:0 0 24px;">
+    <div style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:20px;padding:28px 32px;">
+      <p style="font-size:16px;color:rgba(255,255,255,0.9);margin:0 0 14px;line-height:1.7;">${opts.greeting}</p>
+      <p style="font-size:14px;color:rgba(255,255,255,0.65);margin:0;line-height:1.8;">${opts.intro}</p>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 0 24px;">
+    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:28px 32px;">
+      <div style="font-size:9px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:18px;">${opts.sectionTitle}</div>
+      <ul style="margin:0;padding:0;list-style:none;">${bulletsHtml}</ul>
+    </div>
+  </td></tr>
+  ${trialHtml}
+  <tr><td style="padding:0 0 24px;">
+    <div style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:20px;padding:24px 30px;">
+      <p style="font-size:14px;color:rgba(255,255,255,0.75);margin:0 0 14px;line-height:1.8;font-style:italic;">${opts.closingQuote}</p>
+      <p style="font-size:13px;color:rgba(212,175,55,0.8);margin:0;line-height:1.6;">With love,<br>Adam, Kritagya Das &amp; Laila, Karaveera Nivasini Dasi</p>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 0 32px;text-align:center;">
+    <a href="${opts.ctaUrl}" style="display:inline-block;padding:16px 40px;background:#D4AF37;color:#050505;border-radius:100px;font-size:12px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;box-shadow:0 0 24px rgba(212,175,55,0.4);">${opts.ctaText}</a>
+  </td></tr>
+  <tr><td style="text-align:center;padding:24px 0 0;border-top:1px solid rgba(255,255,255,0.05);">
+    <p style="font-size:11px;color:rgba(255,255,255,0.2);margin:0;line-height:1.8;">
+      Sacred Healing · Siddha Quantum Intelligence<br>
+      <a href="https://siddhaquantumnexus.com" style="color:rgba(212,175,55,0.4);text-decoration:none;">siddhaquantumnexus.com</a>
+    </p>
+  </td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+async function sendAtmaSeedWelcomeEmail(toEmail: string, toName: string): Promise<void> {
+  const firstName = toName?.split(" ")[0] || "Seeker";
+  const html = buildWelcomeEmail({
+    icon: "✧",
+    headline: "The Gate Has Opened",
+    subline: "YOUR ATMA-SEED IS PLANTED",
+    greeting: `Jai Gurudev <strong style="color:#D4AF37;">${firstName}</strong>,`,
+    intro: "Your account is live and your Atma-Seed has been planted in the field. This is the free entry point into the Siddha Quantum Nexus — a starting point for the Vedic, Ayurvedic, and Siddha path.",
+    sectionTitle: "WHAT'S OPEN TO YOU NOW",
+    bullets: [
+      "Full Siddha Portal access — real teachings from the Academies",
+      "Basic Ayurveda scan &amp; readings",
+      "Basic Vedic Jyotish scan &amp; readings",
+      "Meditations, mantras &amp; healing music",
+      "Divine Transmission audios",
+    ],
+    trialLine: "When you're ready for direct chat with Agastya Muni &amp; the Bhrigu Oracle, the full Ayurvedic and Jyotish consultation, Vastu guidance, and the higher Sangha channels — Prana-Flow opens with a 7-day free trial.",
+    closingQuote: "\"We're genuinely glad you're here. This path has meant everything to us, and we built this space to share it — take your time, explore gently, and know we're walking alongside you.\"",
+    ctaText: "◈ Enter Sacred Space",
+    ctaUrl: "https://siddhaquantumnexus.com",
+  });
+  await sendEmail({ toEmail, toName, subject: "✦ The Gate Has Opened | Sacred Healing", html });
+}
+
+async function sendPranaFlowWelcomeEmail(toEmail: string, toName: string, trialEndDate: string): Promise<void> {
+  const firstName = toName?.split(" ")[0] || "Seeker";
+  const html = buildWelcomeEmail({
+    icon: "⟁",
+    headline: "Your Ascension Frequency Is Open",
+    subline: "WELCOME TO PRANA-FLOW",
+    greeting: `Jai Gurudev <strong style="color:#D4AF37;">${firstName}</strong>,`,
+    intro: "The full Prana-Flow transmission is now open to you. Here's everything that's yours to explore, starting right now:",
+    sectionTitle: "WHAT'S UNLOCKED",
+    bullets: [
+      "Siddha Portal — two full levels of education unlocked",
+      "Full Vedic Jyotish chart + unlimited Guru Chat",
+      "Full Ayurvedic Scan + Chat with Agastya Muni",
+      "Vastu Guide for your home",
+      "Full access to all Healing Music &amp; Divine Transmission Audios",
+      "Full Mantra &amp; Meditation Library, Yoga Nidra sessions, Soul Blueprint",
+      "Divine Sangha, Healing Blessings &amp; Sacred Mantras community channels",
+    ],
+    trialLine: `Your 7-day trial ends <strong>${trialEndDate}</strong>, then €19/month. Cancel anytime before then from your account.`,
+    closingQuote: "\"We're so glad you're going deeper with us. Take these 7 days to really live inside Prana-Flow — explore, ask, receive. There's no rush and nothing owed until you decide it's right for you.\"",
+    ctaText: "◈ Enter Sacred Space",
+    ctaUrl: "https://siddhaquantumnexus.com",
+  });
+  await sendEmail({ toEmail, toName, subject: "✦ Welcome to Prana-Flow | Sacred Healing", html });
+}
+
+async function sendSiddhaQuantumWelcomeEmail(toEmail: string, toName: string): Promise<void> {
+  const firstName = toName?.split(" ")[0] || "Seeker";
+  const html = buildWelcomeEmail({
+    icon: "⚝",
+    headline: "The Full Field Is Open",
+    subline: "WELCOME TO SIDDHA-QUANTUM",
+    greeting: `Jai Gurudev <strong style="color:#D4AF37;">${firstName}</strong>,`,
+    intro: "Siddha-Quantum is now fully active — the deepest tier of the Nexus, built for seekers ready for direct transmission from the full council of 18 Siddha masters. Here's everything that's open to you now:",
+    sectionTitle: "WHAT'S UNLOCKED",
+    bullets: [
+      "Everything in Prana-Flow, plus:",
+      "Siddha Portal — three full levels of education unlocked",
+      "Higher-level Divine Transmissions",
+      "Higher-level meditations, mantras &amp; healing audios",
+      "Full access to all SQI Technology &amp; Sacred Tools — Photonic Regeneration Engine, Sri Yantra Universal Shield &amp; more",
+      "Palm Oracle — scan your hand (or a loved one's) for a full palmistry reading",
+      "Higher Sangha channels — Siddha Masters &amp; Bhakti Algorithm Lab",
+    ],
+    trialLine: "Siddha-Quantum Membership — €45/month · Active",
+    closingQuote: "\"You've chosen to go all the way in, and we're honored to walk this deeper part of the path with you. The full council is open now — take what you need from it.\"",
+    ctaText: "◈ Enter Sacred Space",
+    ctaUrl: "https://siddhaquantumnexus.com",
+  });
+  await sendEmail({ toEmail, toName, subject: "✦ Welcome to Siddha-Quantum | Sacred Healing", html });
+}
+
+async function sendAkashaInfinityWelcomeEmail(toEmail: string, toName: string): Promise<void> {
+  const firstName = toName?.split(" ")[0] || "Seeker";
+  const html = buildWelcomeEmail({
+    icon: "✦",
+    headline: "Infinite Access, For Life",
+    subline: "WELCOME TO AKASHA-INFINITY",
+    greeting: `Jai Gurudev <strong style="color:#D4AF37;">${firstName}</strong>,`,
+    intro: "Akasha-Infinity is now active — the complete Nexus, held open for you for as long as it exists. Here's everything that's yours, for life:",
+    sectionTitle: "WHAT'S UNLOCKED — FOR LIFE",
+    bullets: [
+      "The full Siddha Portal — every level of education, permanently, with no renewal ever",
+      "The Sovereign Healer's Path — the complete healer education",
+      "Sacred Site Transmission — 40 holy sites, scalar field direct to your home (Giza, Kailash, Arunachala, Babaji's Cave &amp; more)",
+      "The full Quantum Apothecary — all 24 masters, Living Portrait &amp; Akashic Codex",
+      "The Stargate &amp; Sadhana channels — our most restricted, invite-only Sangha spaces",
+      "Every future Academy, oracle, tool, and transmission released to the platform — always included, forever",
+    ],
+    trialLine: "Akasha-Infinity — €2,997 one-time · Lifetime, no renewal",
+    closingQuote: "\"Your trust means so much to us. This is a lifelong bond now, not just a membership — we're deeply grateful to have you fully in this circle, for good.\"",
+    ctaText: "◈ Enter Sacred Space",
+    ctaUrl: "https://siddhaquantumnexus.com",
+  });
+  await sendEmail({ toEmail, toName, subject: "✦ Welcome to Akasha-Infinity | Sacred Healing", html });
+}
+
 // ── Cancellation email ───────────────────────────────────────────────────────
 async function sendCancellationEmail(params: {
   toEmail: string;
@@ -764,6 +935,7 @@ serve(async (req) => {
         // The subscription branch (customer.subscription.*) never fires for
         // mode:"payment" checkouts, so lifetime tiers must be granted here
         // or the buyer pays and never gets access.
+        let akashaWelcomeSent = false;
         if (session.mode === 'payment') {
           try {
             const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 10 });
@@ -790,6 +962,11 @@ serve(async (req) => {
                   updated_at: new Date().toISOString(),
                 }, { onConflict: 'user_id' });
                 logStep('Lifetime membership granted (one-time payment)', { userId, tierSlug, priceId: membershipPriceId });
+                if (customerEmail) {
+                  const buyerName = session.metadata?.full_name || session.customer_details?.name || customerEmail.split("@")[0];
+                  await sendAkashaInfinityWelcomeEmail(customerEmail, buyerName);
+                  akashaWelcomeSent = true;
+                }
               }
             }
           } catch (memErr) {
@@ -799,7 +976,7 @@ serve(async (req) => {
       }
 
       // Send purchase email
-      if (customerEmail) {
+      if (customerEmail && !akashaWelcomeSent) {
         let buyerName = session.metadata?.full_name || session.customer_details?.name || customerEmail.split("@")[0];
         if (userId && !session.metadata?.full_name) {
           const { data: p } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
@@ -994,6 +1171,32 @@ serve(async (req) => {
               updated_at: new Date().toISOString(),
             }, { onConflict: "user_id" });
             logStep("Membership synced active", { userId, tierSlug });
+
+            // Welcome email — only on first-ever sync of this subscription
+            // (existingMembership was null), so subscription.updated events
+            // (renewals, plan changes) never re-trigger it.
+            if (event.type === "customer.subscription.created" && !existingMembership) {
+              try {
+                const customer = await stripe.customers.retrieve(customerId);
+                // deno-lint-ignore no-explicit-any
+                const custEmail = (customer && !(customer as any).deleted) ? (customer as Stripe.Customer).email : null;
+                // deno-lint-ignore no-explicit-any
+                const custName = (customer && !(customer as any).deleted) ? (customer as Stripe.Customer).name : null;
+                if (custEmail) {
+                  const toName = custName || custEmail.split("@")[0];
+                  if (tierSlug === "prana-flow") {
+                    const trialEndDate = sub.trial_end
+                      ? new Date(sub.trial_end * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : '7 days from today';
+                    await sendPranaFlowWelcomeEmail(custEmail, toName, trialEndDate);
+                  } else if (tierSlug === "siddha-quantum") {
+                    await sendSiddhaQuantumWelcomeEmail(custEmail, toName);
+                  }
+                }
+              } catch (e) {
+                logStep("Welcome email failed (non-blocking)", { error: String(e) });
+              }
+            }
           } else {
             await supabaseAdmin.from("user_memberships").update({
               status: "cancelled",

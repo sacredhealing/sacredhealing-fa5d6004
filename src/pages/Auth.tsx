@@ -247,6 +247,9 @@ const Auth: React.FC = () => {
           // longer depends on this client call succeeding. See public.email_send_log
           // for delivery status of every signup.
 
+          // Atma-Seed tier welcome email (branded free-tier onboarding). Fire-and-forget.
+          supabase.functions.invoke('send-atma-seed-welcome', { body: { email, name } }).catch(() => {});
+
           goAfterAuth();
         }
       }
