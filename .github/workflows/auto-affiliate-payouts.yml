@@ -1,0 +1,35 @@
+name: SQI - Auto Affiliate Payouts (Stripe Connect)
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # Daily at 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  auto-pay-affiliates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Run auto_run payout pass
+        env:
+          SUPABASE_URL: ${{ secrets.LOVABLE_SUPABASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -e
+          FN_URL="${SUPABASE_URL}/functions/v1/process-payout-request"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$FN_URL" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d '{"action":"auto_run"}' \
+            --max-time 600)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "HTTP: $HTTP_CODE"
+          echo "Body: $BODY"
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::auto_run failed with HTTP $HTTP_CODE"
+            exit 1
+          fi

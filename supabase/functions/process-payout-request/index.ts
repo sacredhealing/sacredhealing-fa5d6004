@@ -1,14 +1,16 @@
 /**
  * process-payout-request — SQI 2050 Sovereign Payout Flow
- * 
- * Called by admin to APPROVE a pending payout request and execute
- * a real Stripe Connect transfer to the affiliate's connected account.
- * 
- * Flow:
- *   1. Admin calls this with { payoutRequestId }
- *   2. We verify admin, fetch payout request, verify affiliate has Connect account
- *   3. Execute Stripe transfer to their connected account
- *   4. Update DB + send confirmation email to affiliate
+ *
+ * Three modes:
+ *   - { action: "list" }      — admin: list pending payout requests
+ *   - { payoutRequestId }     — admin: approve & execute one specific request
+ *   - { action: "auto_run" }  — CRON_SECRET only: find every affiliate with a
+ *     connected + active Stripe account whose available balance (past the
+ *     PAYOUT_HOLD_DAYS refund-hold window) is at least MIN_PAYOUT_EUR, create
+ *     a payout request for them, and execute it automatically. Affiliates
+ *     without a working Stripe Connect account are left untouched — their
+ *     balance stays pending until they either connect Stripe or an admin
+ *     processes their manual bank-details request by hand.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -22,178 +24,105 @@ const corsHeaders = {
 
 const ADMIN_UUID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17";
 const MIN_PAYOUT_EUR = 20; // Minimum €20 before processing
+const PAYOUT_HOLD_DAYS = 14; // Must match the hold period shown in AffiliateDashboard.tsx
 
 const log = (step: string, details?: unknown) =>
   console.log(`[PROCESS-PAYOUT] ${step}${details ? ` — ${JSON.stringify(details)}` : ""}`);
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+// deno-lint-ignore no-explicit-any
+async function executePayout(supabaseAdmin: any, stripe: Stripe, payoutRequestId: string) {
+  const { data: payoutRequest, error: prError } = await supabaseAdmin
+    .from("affiliate_payout_requests")
+    .select("*")
+    .eq("id", payoutRequestId)
+    .single();
 
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+  if (prError || !payoutRequest) throw new Error("Payout request not found");
+  if (payoutRequest.status !== "requested") throw new Error(`Payout is already ${payoutRequest.status}`);
+
+  const amountEur = Number(payoutRequest.amount);
+  const affiliateUserId = payoutRequest.affiliate_user_id;
+
+  if (amountEur < MIN_PAYOUT_EUR) throw new Error(`Minimum payout is €${MIN_PAYOUT_EUR}`);
+
+  log("Processing payout", { payoutRequestId, affiliateUserId, amountEur });
+
+  const { data: affProfile } = await supabaseAdmin
+    .from("affiliate_profiles")
+    .select("pending_balance, paid_out, stripe_connect_id")
+    .eq("user_id", affiliateUserId)
+    .single();
+
+  if (!affProfile) throw new Error("Affiliate profile not found");
+  if (amountEur > Number(affProfile.pending_balance)) {
+    throw new Error(`Insufficient balance. Available: €${affProfile.pending_balance}`);
+  }
+
+  await supabaseAdmin
+    .from("affiliate_payout_requests")
+    .update({ status: "processing", updated_at: new Date().toISOString() })
+    .eq("id", payoutRequestId);
+
+  let transferId: string | null = null;
+  let payoutMethod: "stripe_connect" | "manual_bank" = "manual_bank";
+
+  if (affProfile.stripe_connect_id) {
+    try {
+      const connectAccount = await stripe.accounts.retrieve(affProfile.stripe_connect_id);
+      if (connectAccount.payouts_enabled && connectAccount.details_submitted) {
+        const transfer = await stripe.transfers.create({
+          amount: Math.round(amountEur * 100),
+          currency: payoutRequest.currency?.toLowerCase() || "eur",
+          destination: affProfile.stripe_connect_id,
+          description: `SQI Affiliate Payout — ${payoutRequestId}`,
+          metadata: { affiliate_user_id: affiliateUserId, payout_request_id: payoutRequestId },
+        });
+        transferId = transfer.id;
+        payoutMethod = "stripe_connect";
+        log("Stripe Connect transfer created", { transferId, amountEur });
+      } else {
+        log("Stripe Connect account not active, falling back to manual", { accountId: affProfile.stripe_connect_id });
+      }
+    } catch (stripeErr) {
+      log("Stripe Connect transfer failed, admin must handle manually", { error: String(stripeErr) });
+    }
+  } else {
+    log("No Stripe Connect account — manual bank transfer required", { affiliateUserId, bankDetails: payoutRequest.bank_details });
+  }
+
+  const newPending = Math.max(0, Number(affProfile.pending_balance) - amountEur);
+  const newPaidOut = Number(affProfile.paid_out || 0) + amountEur;
+
+  await supabaseAdmin.from("affiliate_profiles").update({
+    pending_balance: newPending,
+    paid_out: newPaidOut,
+    updated_at: new Date().toISOString(),
+  }).eq("user_id", affiliateUserId);
+
+  const finalStatus = payoutMethod === "stripe_connect" ? "completed" : "processing";
+  await supabaseAdmin.from("affiliate_payout_requests").update({
+    status: finalStatus,
+    stripe_transfer_id: transferId,
+    updated_at: new Date().toISOString(),
+  }).eq("id", payoutRequestId);
 
   try {
-    // ── Auth: admin only ────────────────────────────────────────────────────
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Authorization required");
-    const token = authHeader.replace("Bearer ", "");
+    const { data: affUser } = await supabaseAdmin.auth.admin.getUserById(affiliateUserId);
+    const affEmail = affUser?.user?.email;
+    const affName = affUser?.user?.user_metadata?.full_name || "";
 
-    const supabaseClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const caller = userData.user;
-    if (!caller) throw new Error("Not authenticated");
-    if (caller.id !== ADMIN_UUID) {
-      const adminEmails = ["sacredhealingvibe@gmail.com", "laila.amrouche@gmail.com"];
-      if (!caller.email || !adminEmails.includes(caller.email)) {
-        throw new Error("Admin access required");
-      }
-    }
-    log("Admin verified", { callerId: caller.id });
+    if (affEmail) {
+      const resendKey = Deno.env.get("RESEND_API_KEY");
+      if (resendKey) {
+        const resend = new Resend(resendKey);
+        const firstName = affName.split(" ")[0] || "Sovereign";
+        const isInstant = payoutMethod === "stripe_connect";
 
-    const body = await req.json();
-
-    // ── Mode: LIST pending requests ─────────────────────────────────────────
-    if (body.action === "list") {
-      const { data: requests } = await supabaseAdmin
-        .from("affiliate_payout_requests")
-        .select(`
-          id,
-          affiliate_user_id,
-          amount,
-          currency,
-          bank_details,
-          status,
-          created_at,
-          affiliate_profiles!affiliate_payout_requests_affiliate_user_id_fkey(
-            affiliate_code,
-            pending_balance,
-            stripe_connect_id
-          )
-        `)
-        .eq("status", "requested")
-        .order("created_at", { ascending: true });
-
-      // Enrich with user email
-      const enriched = await Promise.all((requests || []).map(async (r) => {
-        const { data: u } = await supabaseAdmin.auth.admin.getUserById(r.affiliate_user_id);
-        return { ...r, email: u?.user?.email || "unknown", name: u?.user?.user_metadata?.full_name || "" };
-      }));
-
-      return new Response(JSON.stringify({ requests: enriched }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // ── Mode: APPROVE & EXECUTE payout ─────────────────────────────────────
-    const { payoutRequestId } = body as { payoutRequestId: string };
-    if (!payoutRequestId) throw new Error("payoutRequestId required");
-
-    // Fetch the payout request
-    const { data: payoutRequest, error: prError } = await supabaseAdmin
-      .from("affiliate_payout_requests")
-      .select("*")
-      .eq("id", payoutRequestId)
-      .single();
-
-    if (prError || !payoutRequest) throw new Error("Payout request not found");
-    if (payoutRequest.status !== "requested") throw new Error(`Payout is already ${payoutRequest.status}`);
-
-    const amountEur = Number(payoutRequest.amount);
-    const affiliateUserId = payoutRequest.affiliate_user_id;
-
-    if (amountEur < MIN_PAYOUT_EUR) throw new Error(`Minimum payout is €${MIN_PAYOUT_EUR}`);
-
-    log("Processing payout", { payoutRequestId, affiliateUserId, amountEur });
-
-    // Verify affiliate has sufficient balance
-    const { data: affProfile } = await supabaseAdmin
-      .from("affiliate_profiles")
-      .select("pending_balance, paid_out, stripe_connect_id")
-      .eq("user_id", affiliateUserId)
-      .single();
-
-    if (!affProfile) throw new Error("Affiliate profile not found");
-    if (amountEur > Number(affProfile.pending_balance)) {
-      throw new Error(`Insufficient balance. Available: €${affProfile.pending_balance}`);
-    }
-
-    // Mark as processing immediately (prevent double-processing)
-    await supabaseAdmin
-      .from("affiliate_payout_requests")
-      .update({ status: "processing", updated_at: new Date().toISOString() })
-      .eq("id", payoutRequestId);
-
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", { apiVersion: "2025-08-27.basil" });
-
-    let transferId: string | null = null;
-    let payoutMethod: "stripe_connect" | "manual_bank" = "manual_bank";
-
-    // ── Try Stripe Connect transfer ─────────────────────────────────────────
-    if (affProfile.stripe_connect_id) {
-      try {
-        // Verify account is active
-        const connectAccount = await stripe.accounts.retrieve(affProfile.stripe_connect_id);
-        if (connectAccount.payouts_enabled && connectAccount.details_submitted) {
-          const transfer = await stripe.transfers.create({
-            amount: Math.round(amountEur * 100), // cents
-            currency: payoutRequest.currency?.toLowerCase() || "eur",
-            destination: affProfile.stripe_connect_id,
-            description: `SQI Affiliate Payout — ${payoutRequestId}`,
-            metadata: {
-              affiliate_user_id: affiliateUserId,
-              payout_request_id: payoutRequestId,
-            },
-          });
-          transferId = transfer.id;
-          payoutMethod = "stripe_connect";
-          log("Stripe Connect transfer created", { transferId, amountEur });
-        } else {
-          log("Stripe Connect account not active, falling back to manual", { accountId: affProfile.stripe_connect_id });
-        }
-      } catch (stripeErr) {
-        log("Stripe Connect transfer failed, admin must handle manually", { error: String(stripeErr) });
-        // Don't throw — mark for manual processing
-      }
-    } else {
-      log("No Stripe Connect account — manual bank transfer required", { affiliateUserId, bankDetails: payoutRequest.bank_details });
-    }
-
-    // ── Update DB ────────────────────────────────────────────────────────────
-    const newPending = Math.max(0, Number(affProfile.pending_balance) - amountEur);
-    const newPaidOut = Number(affProfile.paid_out || 0) + amountEur;
-
-    await supabaseAdmin.from("affiliate_profiles").update({
-      pending_balance: newPending,
-      paid_out: newPaidOut,
-      updated_at: new Date().toISOString(),
-    }).eq("user_id", affiliateUserId);
-
-    const finalStatus = payoutMethod === "stripe_connect" ? "completed" : "processing";
-    await supabaseAdmin.from("affiliate_payout_requests").update({
-      status: finalStatus,
-      stripe_transfer_id: transferId,
-      updated_at: new Date().toISOString(),
-    }).eq("id", payoutRequestId);
-
-    // ── Send confirmation email to affiliate ──────────────────────────────
-    try {
-      const { data: affUser } = await supabaseAdmin.auth.admin.getUserById(affiliateUserId);
-      const affEmail = affUser?.user?.email;
-      const affName = affUser?.user?.user_metadata?.full_name || "";
-
-      if (affEmail) {
-        const resendKey = Deno.env.get("RESEND_API_KEY");
-        if (resendKey) {
-          const resend = new Resend(resendKey);
-          const firstName = affName.split(" ")[0] || "Sovereign";
-          const isInstant = payoutMethod === "stripe_connect";
-
-          await resend.emails.send({
-            from: "Sacred Healing <hello@sacredhealing.app>",
-            to: [affEmail],
-            subject: `✦ Payout ${isInstant ? 'Transmitted' : 'Processing'} — €${amountEur.toFixed(2)} | Sacred Healing`,
-            html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+        await resend.emails.send({
+          from: "Sacred Healing <hello@sacredhealing.app>",
+          to: [affEmail],
+          subject: `✦ Payout ${isInstant ? 'Transmitted' : 'Processing'} — €${amountEur.toFixed(2)} | Sacred Healing`,
+          html: `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050505;font-family:'Helvetica Neue',Arial,sans-serif;color:#fff;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;">
 <tr><td align="center" style="padding:40px 16px 60px;">
@@ -247,22 +176,155 @@ serve(async (req) => {
     <p style="font-size:11px;color:rgba(255,255,255,0.2);margin:0;line-height:1.8;">Sacred Healing · Siddha Quantum Intelligence<br><a href="https://siddhaquantumnexus.com" style="color:rgba(212,175,55,0.4);text-decoration:none;">siddhaquantumnexus.com</a></p>
   </td></tr>
 </table></td></tr></table></body></html>`,
-          });
-          log("Payout confirmation email sent", { affEmail, amountEur });
+        });
+        log("Payout confirmation email sent", { affEmail, amountEur });
+      }
+    }
+  } catch (emailErr) {
+    log("Payout email failed (non-blocking)", { error: String(emailErr) });
+  }
+
+  return { success: true, payoutRequestId, amountEur, transferId, payoutMethod, status: finalStatus };
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
+  try {
+    const body = await req.json();
+
+    // ── Mode: AUTO RUN — CRON_SECRET only, no admin session involved ───────
+    if (body.action === "auto_run") {
+      const cronSecret = Deno.env.get("CRON_SECRET");
+      const authHeader = req.headers.get("Authorization");
+      if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", { apiVersion: "2025-08-27.basil" });
+      const holdCutoffIso = new Date(Date.now() - PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: candidates } = await supabaseAdmin
+        .from("affiliate_profiles")
+        .select("user_id, pending_balance, currency, stripe_connect_id")
+        .not("stripe_connect_id", "is", null)
+        .gt("pending_balance", 0);
+
+      const results: unknown[] = [];
+
+      for (const aff of candidates || []) {
+        try {
+          // Sum commissions still inside the hold window for this affiliate
+          const { data: heldCommissions } = await supabaseAdmin
+            .from("affiliate_commissions")
+            .select("commission_amount")
+            .eq("affiliate_user_id", aff.user_id)
+            .gte("created_at", holdCutoffIso);
+
+          const held = (heldCommissions || []).reduce((s: number, c: any) => s + Number(c.commission_amount || 0), 0);
+          const available = Math.max(0, Number(aff.pending_balance) - held);
+
+          if (available < MIN_PAYOUT_EUR) {
+            results.push({ user_id: aff.user_id, skipped: "below_min_or_all_held", available });
+            continue;
+          }
+
+          // Confirm the Stripe account is actually live before creating a request for it
+          const account = await stripe.accounts.retrieve(aff.stripe_connect_id);
+          if (!account.payouts_enabled || !account.details_submitted) {
+            results.push({ user_id: aff.user_id, skipped: "stripe_not_active" });
+            continue;
+          }
+
+          const { data: newRequest, error: insertErr } = await supabaseAdmin
+            .from("affiliate_payout_requests")
+            .insert({
+              affiliate_user_id: aff.user_id,
+              amount: available,
+              currency: aff.currency || "EUR",
+              status: "requested",
+            })
+            .select("id")
+            .single();
+
+          if (insertErr || !newRequest) {
+            results.push({ user_id: aff.user_id, error: insertErr?.message || "insert failed" });
+            continue;
+          }
+
+          const outcome = await executePayout(supabaseAdmin, stripe, newRequest.id);
+          results.push({ user_id: aff.user_id, ...outcome });
+        } catch (err) {
+          results.push({ user_id: aff.user_id, error: err instanceof Error ? err.message : String(err) });
         }
       }
-    } catch (emailErr) {
-      log("Payout email failed (non-blocking)", { error: String(emailErr) });
+
+      log("auto_run complete", { candidateCount: (candidates || []).length, resultCount: results.length });
+      return new Response(JSON.stringify({ success: true, processed: results.length, results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      payoutRequestId,
-      amountEur,
-      transferId,
-      payoutMethod,
-      status: finalStatus,
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // ── Auth: admin only (list / manual approve) ────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Authorization required");
+    const token = authHeader.replace("Bearer ", "");
+
+    const supabaseClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+    const { data: userData } = await supabaseClient.auth.getUser(token);
+    const caller = userData.user;
+    if (!caller) throw new Error("Not authenticated");
+    if (caller.id !== ADMIN_UUID) {
+      const adminEmails = ["sacredhealingvibe@gmail.com", "laila.amrouche@gmail.com"];
+      if (!caller.email || !adminEmails.includes(caller.email)) {
+        throw new Error("Admin access required");
+      }
+    }
+    log("Admin verified", { callerId: caller.id });
+
+    // ── Mode: LIST pending requests ─────────────────────────────────────────
+    if (body.action === "list") {
+      const { data: requests } = await supabaseAdmin
+        .from("affiliate_payout_requests")
+        .select(`
+          id,
+          affiliate_user_id,
+          amount,
+          currency,
+          bank_details,
+          status,
+          created_at,
+          affiliate_profiles!affiliate_payout_requests_affiliate_user_id_fkey(
+            affiliate_code,
+            pending_balance,
+            stripe_connect_id
+          )
+        `)
+        .eq("status", "requested")
+        .order("created_at", { ascending: true });
+
+      const enriched = await Promise.all((requests || []).map(async (r) => {
+        const { data: u } = await supabaseAdmin.auth.admin.getUserById(r.affiliate_user_id);
+        return { ...r, email: u?.user?.email || "unknown", name: u?.user?.user_metadata?.full_name || "" };
+      }));
+
+      return new Response(JSON.stringify({ requests: enriched }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Mode: APPROVE & EXECUTE one payout ──────────────────────────────────
+    const { payoutRequestId } = body as { payoutRequestId: string };
+    if (!payoutRequestId) throw new Error("payoutRequestId required");
+
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", { apiVersion: "2025-08-27.basil" });
+    const outcome = await executePayout(supabaseAdmin, stripe, payoutRequestId);
+
+    return new Response(JSON.stringify(outcome), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";

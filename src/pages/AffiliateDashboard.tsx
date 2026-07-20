@@ -848,7 +848,7 @@ const AffiliateDashboard: React.FC = () => {
         <AccordionCard
           id="withdraw" icon="💳" title="Withdraw" accent="#4ade80"
           open={openSection === 'withdraw'} onToggle={() => toggle('withdraw')}
-          teaser={teaserText(hasPayoutMethod ? `${formatMoney(availableNow, cur, localeTag)} available now` : 'Add your payout details to get paid')}
+          teaser={teaserText(connectStatus?.payoutsEnabled ? `${formatMoney(availableNow, cur, localeTag)} · auto-pays daily` : hasPayoutMethod ? `${formatMoney(availableNow, cur, localeTag)} available now` : 'Connect a payout method to get paid')}
         >
           <div style={{ display: 'grid', gap: 16 }}>
 
@@ -862,112 +862,148 @@ const AffiliateDashboard: React.FC = () => {
                 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>{formatMoney(processingHold, cur, localeTag)}</span>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', lineHeight: 1.5, marginTop: 8, marginBottom: 0 }}>
-                New dividends clear {PAYOUT_HOLD_DAYS} days after the purchase, matching our refund window, before they're withdrawable. This figure is estimated from your recent history — your exact balance is confirmed when you submit a request.
+                New dividends clear {PAYOUT_HOLD_DAYS} days after the purchase, matching our refund window, before they're withdrawable.
               </p>
             </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <p style={{ ...microLabel, margin: 0 }}>Payout Details</p>
-                {hasPayoutMethod && !bankEditing && (
-                  <button type="button" onClick={() => setBankEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', cursor: 'pointer' }}>Edit</button>
-                )}
+            {/* ── Primary path: Stripe Connect (automatic, no request needed) ── */}
+            <div style={{ background: connectStatus?.payoutsEnabled ? 'rgba(34,197,94,0.05)' : 'rgba(212,175,55,0.04)', border: `1px solid ${connectStatus?.payoutsEnabled ? 'rgba(34,197,94,0.25)' : 'rgba(212,175,55,0.2)'}`, borderRadius: 16, padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <p style={{ ...microLabel, margin: 0 }}>⚡ Automatic Payouts · Stripe</p>
+                {renderConnectBadge()}
               </div>
 
-              {hasPayoutMethod && !bankEditing ? (
-                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: 12 }}>
-                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.85rem', margin: 0 }}>
-                    {bankForm.method_type === 'wise' ? '🟢 Wise' : bankForm.method_type === 'iban' ? '🏦 Bank Transfer (IBAN)' : '🏦 Bank Transfer'} · {bankForm.account_holder_name}
+              {connectStatus?.payoutsEnabled ? (
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
+                  ✓ Connected. Your available balance pays out automatically — no request needed, nothing for you or us to click.
+                </p>
+              ) : connectStatus?.hasAccount ? (
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 12 }}>
+                    Your Stripe setup is incomplete — finish it to switch on automatic payouts.
                   </p>
-                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', margin: '4px 0 0' }}>
-                    {bankForm.method_type === 'wise' ? bankForm.wise_email : (bankForm.iban || bankForm.account_number)} · {COUNTRY_OPTIONS.find(c => c.code === bankForm.country)?.label || bankForm.country}
-                  </p>
+                  <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
+                    {connectLoading ? 'Opening…' : 'Complete Stripe Setup →'}
+                  </button>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 10 }}>
-                  <div>
-                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Payout Method</label>
-                    <select value={bankForm.method_type} onChange={(e) => setBankForm(f => ({ ...f, method_type: e.target.value as PayoutBankDetails['method_type'] }))} style={inputStyle}>
-                      <option value="iban" style={{ background: '#050505' }}>Bank Transfer (IBAN — EU/UK)</option>
-                      <option value="wise" style={{ background: '#050505' }}>Wise</option>
-                      <option value="other" style={{ background: '#050505' }}>Other Bank Transfer</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Account Holder Name</label>
-                    <input value={bankForm.account_holder_name} onChange={(e) => setBankForm(f => ({ ...f, account_holder_name: e.target.value }))} placeholder="Full name on the account" style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Country</label>
-                    <select value={bankForm.country} onChange={(e) => setBankForm(f => ({ ...f, country: e.target.value }))} style={inputStyle}>
-                      {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code} style={{ background: '#050505' }}>{c.label}</option>)}
-                    </select>
-                  </div>
-
-                  {bankForm.method_type === 'wise' ? (
-                    <div>
-                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Wise Email or @wisetag</label>
-                      <input value={bankForm.wise_email} onChange={(e) => setBankForm(f => ({ ...f, wise_email: e.target.value }))} placeholder="you@example.com or @yourtag" style={inputStyle} />
-                    </div>
-                  ) : bankForm.method_type === 'iban' ? (
-                    <>
-                      <div>
-                        <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>IBAN</label>
-                        <input value={bankForm.iban} onChange={(e) => setBankForm(f => ({ ...f, iban: e.target.value.toUpperCase() }))} placeholder="BE00 0000 0000 0000" style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>BIC / SWIFT</label>
-                        <input value={bankForm.bic_swift} onChange={(e) => setBankForm(f => ({ ...f, bic_swift: e.target.value.toUpperCase() }))} placeholder="e.g. NDEASESS" style={inputStyle} />
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Account Number / Routing Details</label>
-                      <input value={bankForm.account_number} onChange={(e) => setBankForm(f => ({ ...f, account_number: e.target.value }))} placeholder="Account number, sort code, routing number — whatever your bank needs" style={inputStyle} />
-                    </div>
-                  )}
-                  <div>
-                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Bank Name (optional)</label>
-                    <input value={bankForm.bank_name} onChange={(e) => setBankForm(f => ({ ...f, bank_name: e.target.value }))} placeholder="e.g. Nordea, Swedbank, Wise" style={inputStyle} />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="button" onClick={saveBankDetails} disabled={bankSaving} style={{ ...primaryCta, opacity: bankSaving ? 0.6 : 1 }}>
-                      {bankSaving ? 'Saving…' : 'Save Payout Details'}
-                    </button>
-                    {hasPayoutMethod && (
-                      <button type="button" onClick={() => { setBankEditing(false); }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '14px 20px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', cursor: 'pointer' }}>
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.72rem', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                    Works for any bank in any country — Wise, Nordea, or otherwise. Payouts are reviewed and sent manually to this account.
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 12 }}>
+                    Recommended: connect a bank account via Stripe (~5 min) and your dividends pay out automatically once they clear the {PAYOUT_HOLD_DAYS}-day hold. Available in most countries; not required.
                   </p>
+                  <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
+                    {connectLoading ? 'Opening Stripe…' : 'Connect Bank via Stripe →'}
+                  </button>
                 </div>
               )}
             </div>
 
-            {hasPayoutMethod && (
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
-                <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Amount · Min €20</label>
-                <input
-                  type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)}
-                  min={20} max={availableNow} placeholder={`Max ${formatMoney(availableNow, cur, localeTag)}`}
-                  style={{ ...inputStyle, marginBottom: 12 }}
-                />
-                <button
-                  type="button" onClick={requestPayout}
-                  disabled={payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > availableNow}
-                  style={{ ...primaryCta, opacity: payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > availableNow ? 0.5 : 1 }}
-                >
-                  {payoutLoading ? 'Submitting…' : 'Request Payout →'}
-                </button>
-                <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.72rem', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
-                  Reviewed by the team and sent to the account above — typically within 3-5 business days.
-                </p>
+            {/* ── Fallback path: manual bank details for anyone who can't/won't use Stripe ── */}
+            <details style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }} open={!connectStatus?.payoutsEnabled && hasPayoutMethod}>
+              <summary style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem', fontWeight: 700 }}>
+                Can't use Stripe? Add manual bank/Wise details instead
+              </summary>
+
+              <div style={{ marginTop: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <p style={{ ...microLabel, margin: 0 }}>Payout Details</p>
+                  {hasPayoutMethod && !bankEditing && (
+                    <button type="button" onClick={() => setBankEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', cursor: 'pointer' }}>Edit</button>
+                  )}
+                </div>
+
+                {hasPayoutMethod && !bankEditing ? (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: 12 }}>
+                    <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.85rem', margin: 0 }}>
+                      {bankForm.method_type === 'wise' ? '🟢 Wise' : bankForm.method_type === 'iban' ? '🏦 Bank Transfer (IBAN)' : '🏦 Bank Transfer'} · {bankForm.account_holder_name}
+                    </p>
+                    <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', margin: '4px 0 0' }}>
+                      {bankForm.method_type === 'wise' ? bankForm.wise_email : (bankForm.iban || bankForm.account_number)} · {COUNTRY_OPTIONS.find(c => c.code === bankForm.country)?.label || bankForm.country}
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    <div>
+                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Payout Method</label>
+                      <select value={bankForm.method_type} onChange={(e) => setBankForm(f => ({ ...f, method_type: e.target.value as PayoutBankDetails['method_type'] }))} style={inputStyle}>
+                        <option value="iban" style={{ background: '#050505' }}>Bank Transfer (IBAN — EU/UK)</option>
+                        <option value="wise" style={{ background: '#050505' }}>Wise</option>
+                        <option value="other" style={{ background: '#050505' }}>Other Bank Transfer</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Account Holder Name</label>
+                      <input value={bankForm.account_holder_name} onChange={(e) => setBankForm(f => ({ ...f, account_holder_name: e.target.value }))} placeholder="Full name on the account" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Country</label>
+                      <select value={bankForm.country} onChange={(e) => setBankForm(f => ({ ...f, country: e.target.value }))} style={inputStyle}>
+                        {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code} style={{ background: '#050505' }}>{c.label}</option>)}
+                      </select>
+                    </div>
+
+                    {bankForm.method_type === 'wise' ? (
+                      <div>
+                        <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Wise Email or @wisetag</label>
+                        <input value={bankForm.wise_email} onChange={(e) => setBankForm(f => ({ ...f, wise_email: e.target.value }))} placeholder="you@example.com or @yourtag" style={inputStyle} />
+                      </div>
+                    ) : bankForm.method_type === 'iban' ? (
+                      <>
+                        <div>
+                          <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>IBAN</label>
+                          <input value={bankForm.iban} onChange={(e) => setBankForm(f => ({ ...f, iban: e.target.value.toUpperCase() }))} placeholder="BE00 0000 0000 0000" style={inputStyle} />
+                        </div>
+                        <div>
+                          <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>BIC / SWIFT</label>
+                          <input value={bankForm.bic_swift} onChange={(e) => setBankForm(f => ({ ...f, bic_swift: e.target.value.toUpperCase() }))} placeholder="e.g. NDEASESS" style={inputStyle} />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Account Number / Routing Details</label>
+                        <input value={bankForm.account_number} onChange={(e) => setBankForm(f => ({ ...f, account_number: e.target.value }))} placeholder="Account number, sort code, routing number — whatever your bank needs" style={inputStyle} />
+                      </div>
+                    )}
+                    <div>
+                      <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Bank Name (optional)</label>
+                      <input value={bankForm.bank_name} onChange={(e) => setBankForm(f => ({ ...f, bank_name: e.target.value }))} placeholder="e.g. Nordea, Swedbank, Wise" style={inputStyle} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" onClick={saveBankDetails} disabled={bankSaving} style={{ ...primaryCta, opacity: bankSaving ? 0.6 : 1 }}>
+                        {bankSaving ? 'Saving…' : 'Save Payout Details'}
+                      </button>
+                      {hasPayoutMethod && (
+                        <button type="button" onClick={() => { setBankEditing(false); }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '14px 20px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', cursor: 'pointer' }}>
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.72rem', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                      Manual route — a request is queued and the team sends it by hand within 3-5 business days, not automatic like Stripe above.
+                    </p>
+                  </div>
+                )}
+
+                {hasPayoutMethod && !connectStatus?.payoutsEnabled && (
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16, marginTop: 16 }}>
+                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Amount · Min €20</label>
+                    <input
+                      type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)}
+                      min={20} max={availableNow} placeholder={`Max ${formatMoney(availableNow, cur, localeTag)}`}
+                      style={{ ...inputStyle, marginBottom: 12 }}
+                    />
+                    <button
+                      type="button" onClick={requestPayout}
+                      disabled={payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > availableNow}
+                      style={{ ...primaryCta, opacity: payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > availableNow ? 0.5 : 1 }}
+                    >
+                      {payoutLoading ? 'Submitting…' : 'Request Payout →'}
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </details>
 
             {payouts.length > 0 && (
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
@@ -982,20 +1018,6 @@ const AffiliateDashboard: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* Optional secondary path — kept because the backend already supports instant Stripe transfers when available, but never required */}
-            <details style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-              <summary style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>Prefer instant payouts via Stripe instead? (optional)</summary>
-              <div style={{ marginTop: 10 }}>
-                {renderConnectBadge()}
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem', lineHeight: 1.6, margin: '8px 0 10px' }}>
-                  Connecting Stripe is optional and only speeds up payout — your bank details above work fine on their own.
-                </p>
-                <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={secondaryCta}>
-                  {connectLoading ? 'Opening…' : connectStatus?.hasAccount ? 'Manage Stripe Connection →' : 'Connect Stripe (optional) →'}
-                </button>
-              </div>
-            </details>
           </div>
         </AccordionCard>
 
