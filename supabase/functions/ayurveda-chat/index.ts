@@ -733,9 +733,45 @@ serve(async (req) => {
 
     // Tier-aware daily chat cap — shared across ayurveda-chat, guide-chat,
     // vastu-chat, vedic-guru-chat (total AI cost per member, not per chat type).
+    // Resolve the effective tier from every authoritative access source. Manual
+    // admin grants and paid memberships must work even when profiles.membership_tier
+    // is stale (profiles.id is not the auth user id in this schema).
     if (userId) {
-      const { data: prof } = await supabase.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle();
-      const tierSlug = (prof?.membership_tier || "free").toLowerCase();
+      const [{ data: prof }, { data: membership }, { data: grants }, { data: isAdmin }] = await Promise.all([
+        supabase.from("profiles").select("membership_tier").eq("user_id", userId).maybeSingle(),
+        supabase
+          .from("user_memberships")
+          .select("status, expires_at, membership_tiers(slug)")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("admin_granted_access")
+          .select("tier, access_id, access_type")
+          .eq("user_id", userId)
+          .eq("is_active", true),
+        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      ]);
+      const rankTier = (raw: unknown): { slug: string; rank: number } => {
+        const value = String(raw ?? "").toLowerCase().replace(/_/g, "-");
+        if (value.includes("akasha") || value.includes("life")) return { slug: "akasha-infinity", rank: 3 };
+        if (value.includes("siddha")) return { slug: "siddha-quantum", rank: 2 };
+        if (value.includes("prana") || value.includes("premium")) return { slug: "prana-flow", rank: 1 };
+        return { slug: "free", rank: 0 };
+      };
+      const membershipSlug = (membership as any)?.membership_tiers?.slug;
+      const membershipCurrent = !membership?.expires_at || new Date(membership.expires_at).getTime() > Date.now();
+      const candidates = [
+        rankTier(prof?.membership_tier),
+        ...(membershipCurrent ? [rankTier(membershipSlug)] : []),
+        ...((grants ?? []) as Array<{ tier?: string; access_id?: string; access_type?: string }>)
+          .filter((grant) => grant.access_type === "membership")
+          .map((grant) => rankTier(grant.tier || grant.access_id)),
+        ...(isAdmin === true ? [{ slug: "akasha-infinity", rank: 3 }] : []),
+      ];
+      const tierSlug = candidates.sort((a, b) => b.rank - a.rank)[0]?.slug ?? "free";
       const { data: limitCheck } = await supabase.rpc("check_daily_chat_limit", { p_user_id: userId, p_tier_slug: tierSlug });
       const result = limitCheck?.[0];
       if (!result?.allowed) {
@@ -765,8 +801,8 @@ serve(async (req) => {
         const { data } = await supabase
           .from("profiles")
           .select("nadi_baseline, birth_date, birth_time, birth_place")
-          .eq("id", userId)
-          .single();
+          .eq("user_id", userId)
+          .maybeSingle();
         if (data?.nadi_baseline) nadiBaseline = data.nadi_baseline;
         if (data?.birth_date) birth.birth_date = data.birth_date;
         if (data?.birth_time) birth.birth_time = data.birth_time;

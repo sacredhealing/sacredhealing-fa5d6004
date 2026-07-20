@@ -242,6 +242,11 @@ export default function UserManagementPanel() {
         });
         if (error) throw error;
       }
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ membership_tier: newTier })
+        .eq("user_id", selectedUser.id);
+      if (profileError) throw profileError;
       setUsers(prev => prev.map(u => u.id===selectedUser.id ? {...u, tier:newTier} : u));
       toast({ title:"✦ Quantum Access Granted", description:`${selectedUser.full_name||"Seeker"} → ${TIER_LABELS[newTier]||newTier}` });
       setModalMode(null);
