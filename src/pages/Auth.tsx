@@ -17,6 +17,7 @@ const Auth: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
+  const forceSignup = searchParams.get('signup') === '1';
   const postLoginRedirect = searchParams.get('redirect');
   const goAfterAuth = () => navigate(postLoginRedirect || '/dashboard');
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -47,6 +48,13 @@ const Auth: React.FC = () => {
       setIsLogin(false);
     }
   }, [referralCode]);
+
+  // If landed here via a signup QR code / link, default to signup mode
+  useEffect(() => {
+    if (forceSignup) {
+      setIsLogin(false);
+    }
+  }, [forceSignup]);
 
   // Save email to localStorage when it changes
   useEffect(() => {

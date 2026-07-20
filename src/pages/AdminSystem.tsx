@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio, Map, Sparkles } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio, Map, Sparkles, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +25,7 @@ import AdminChallengesTab from '@/components/admin-system/AdminChallengesTab';
 import AdminLiveEventsTab from '@/components/admin-system/AdminLiveEventsTab';
 import AdminRoadmapTab from '@/components/admin-system/AdminRoadmapTab';
 import AdminCreativeSoulTab from '@/components/admin-system/AdminCreativeSoulTab';
+import AdminSignupQRTab from '@/components/admin-system/AdminSignupQRTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -92,6 +93,7 @@ const AdminSystem = () => {
     { id: 'revenue', label: 'Revenue', icon: TrendingUp },
     { id: 'access', label: 'Access', icon: Gift },
     { id: 'users', label: 'Users', icon: Users },
+    { id: 'signup-qr', label: 'Signup QR', icon: QrCode },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -218,6 +220,10 @@ const AdminSystem = () => {
 
           <TabsContent value="users">
             <AdminUsersTab />
+          </TabsContent>
+
+          <TabsContent value="signup-qr">
+            <AdminSignupQRTab />
           </TabsContent>
 
           <TabsContent value="settings">
