@@ -209,6 +209,11 @@ const AffiliateDashboard: React.FC = () => {
   const [profile, setProfile] = useState<AffiliateProfile | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
+  const [adminRevenue, setAdminRevenue] = useState<{
+    grossAttributed: number; totalCommissions: number; totalPaidOut: number; totalPending: number;
+    top: { code: string; earnings: number }[];
+  } | null>(null);
+  const [adminRevenueLoading, setAdminRevenueLoading] = useState(false);
   const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState('');
@@ -398,6 +403,35 @@ const AffiliateDashboard: React.FC = () => {
     loadData();
     loadConnectStatus();
   }, [loadData, loadConnectStatus]);
+
+  useEffect(() => {
+    if (!user || !ADMIN_UUIDS.includes(user.id)) return;
+    let cancelled = false;
+    setAdminRevenueLoading(true);
+    (async () => {
+      try {
+        const [{ data: allProfiles }, { data: allCommissions }] = await Promise.all([
+          supabase.from('affiliate_profiles').select('affiliate_code, total_earnings, pending_balance, paid_out'),
+          supabase.from('affiliate_commissions').select('gross_amount, commission_amount'),
+        ]);
+        if (cancelled) return;
+        const grossAttributed = (allCommissions || []).reduce((s, c) => s + Number(c.gross_amount || 0), 0);
+        const totalCommissions = (allCommissions || []).reduce((s, c) => s + Number(c.commission_amount || 0), 0);
+        const totalPaidOut = (allProfiles || []).reduce((s, p) => s + Number(p.paid_out || 0), 0);
+        const totalPending = (allProfiles || []).reduce((s, p) => s + Number(p.pending_balance || 0), 0);
+        const top = (allProfiles || [])
+          .map(p => ({ code: p.affiliate_code, earnings: Number(p.total_earnings || 0) }))
+          .sort((a, b) => b.earnings - a.earnings)
+          .slice(0, 5);
+        setAdminRevenue({ grossAttributed, totalCommissions, totalPaidOut, totalPending, top });
+      } catch {
+        /* admin card just won't populate — not user-facing */
+      } finally {
+        if (!cancelled) setAdminRevenueLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const copyLink = async (link: string, key: string) => {
     let copied = false;
@@ -612,6 +646,58 @@ const AffiliateDashboard: React.FC = () => {
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 1.25rem 4rem', display: 'grid', gap: '0.9rem' }}>
 
+        {/* ── Platform Revenue (admin only) ───────────────────────────────── */}
+        {isAdmin && (
+          <AccordionCard
+            id="revenue" icon="◎" title="Platform Revenue" accent="#F5E27B"
+            open={openSection === 'revenue'} onToggle={() => toggle('revenue')}
+            teaser={teaserText(adminRevenue ? `${formatMoney(adminRevenue.grossAttributed - adminRevenue.totalCommissions, 'EUR', localeTag)} net so far (affiliate-driven)` : 'Loading…')}
+          >
+            {adminRevenueLoading || !adminRevenue ? (
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>Loading…</p>
+            ) : (
+              <div style={{ display: 'grid', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 12, textAlign: 'center' }}>
+                    <p style={{ ...microLabel, marginBottom: 4, fontSize: 7 }}>Gross (Affiliate-Driven)</p>
+                    <p style={{ fontSize: '1.05rem', fontWeight: 900, color: '#F5E27B', margin: 0 }}>{formatMoney(adminRevenue.grossAttributed, 'EUR', localeTag)}</p>
+                  </div>
+                  <div style={{ background: 'rgba(74,222,128,0.05)', borderRadius: 16, padding: 12, textAlign: 'center' }}>
+                    <p style={{ ...microLabel, marginBottom: 4, fontSize: 7, color: 'rgba(74,222,128,0.7)' }}>Your Net (Est.)</p>
+                    <p style={{ fontSize: '1.05rem', fontWeight: 900, color: '#4ade80', margin: 0 }}>{formatMoney(adminRevenue.grossAttributed - adminRevenue.totalCommissions, 'EUR', localeTag)}</p>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 12, textAlign: 'center' }}>
+                    <p style={{ ...microLabel, marginBottom: 4, fontSize: 7 }}>Paid Out to Affiliates</p>
+                    <p style={{ fontSize: '1.05rem', fontWeight: 900, color: '#D4AF37', margin: 0 }}>{formatMoney(adminRevenue.totalPaidOut, 'EUR', localeTag)}</p>
+                  </div>
+                  <div style={{ background: 'rgba(34,211,238,0.05)', borderRadius: 16, padding: 12, textAlign: 'center' }}>
+                    <p style={{ ...microLabel, marginBottom: 4, fontSize: 7, color: 'rgba(34,211,238,0.7)' }}>Owed / Pending</p>
+                    <p style={{ fontSize: '1.05rem', fontWeight: 900, color: '#22D3EE', margin: 0 }}>{formatMoney(adminRevenue.totalPending, 'EUR', localeTag)}</p>
+                  </div>
+                </div>
+
+                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', lineHeight: 1.6, margin: 0 }}>
+                  "Your Net" is gross minus commissions only — it does not subtract Stripe's own processing fees (roughly 1.5–3% depending on card/region), and it only covers purchases that came through an affiliate link. Direct/organic purchases (no referral) aren't in this table at all — check your Stripe Dashboard balance for true total revenue.
+                </p>
+
+                {adminRevenue.top.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
+                    <p style={{ ...microLabel, marginBottom: 8 }}>Top Affiliates</p>
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      {adminRevenue.top.map((t, i) => (
+                        <div key={t.code} style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.015)', borderRadius: 12, padding: '8px 12px' }}>
+                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>#{i + 1} · {t.code}</span>
+                          <span style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.8rem' }}>{formatMoney(t.earnings, 'EUR', localeTag)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </AccordionCard>
+        )}
+
         {/* ── Your Sovereign Link ─────────────────────────────────────────── */}
         {profile && (
           <AccordionCard
@@ -726,22 +812,30 @@ const AffiliateDashboard: React.FC = () => {
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 6 }}>
-              {commissions.slice(0, 8).map((c) => (
-                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 14, padding: '10px 14px' }}>
-                  <div>
-                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
-                      {c.source === 'trading_l1' ? '⚡ Trading L1' : c.source === 'trading_l2' ? '🔗 Trading L2' : 'Initiation Dividend'}
-                      {c.level === 2 && <span style={{ marginLeft: 6, fontSize: 7, fontWeight: 800, color: '#8b5cf6' }}>DOWNLINE</span>}
-                    </p>
-                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', margin: 0 }}>
-                      {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short' })}
+              {commissions.slice(0, 15).map((c) => {
+                const ageMs = Date.now() - new Date(c.created_at).getTime();
+                const daysLeft = Math.ceil(PAYOUT_HOLD_DAYS - ageMs / (24 * 60 * 60 * 1000));
+                const rowStatus = c.status === 'paid' ? { label: '✓ Paid', color: '#4ade80' }
+                  : daysLeft > 0 ? { label: `Held · ${daysLeft}d left`, color: 'rgba(255,255,255,0.35)' }
+                  : { label: '● Available', color: '#22D3EE' };
+                return (
+                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 14, padding: '10px 14px' }}>
+                    <div>
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
+                        {c.source === 'trading_l1' ? '⚡ Trading L1' : c.source === 'trading_l2' ? '🔗 Trading L2' : 'Initiation Dividend'}
+                        {c.level === 2 && <span style={{ marginLeft: 6, fontSize: 7, fontWeight: 800, color: '#8b5cf6' }}>DOWNLINE</span>}
+                      </p>
+                      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', margin: 0 }}>
+                        {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short' })}
+                        {' · '}<span style={{ color: rowStatus.color }}>{rowStatus.label}</span>
+                      </p>
+                    </div>
+                    <p style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.85rem', margin: 0 }}>
+                      +{formatMoney(Number(c.commission_amount), c.currency || cur, localeTag)}
                     </p>
                   </div>
-                  <p style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.85rem', margin: 0 }}>
-                    +{formatMoney(Number(c.commission_amount), c.currency || cur, localeTag)}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </AccordionCard>
