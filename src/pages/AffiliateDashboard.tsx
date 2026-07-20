@@ -373,7 +373,7 @@ const AffiliateDashboard: React.FC = () => {
         supabase.from('affiliate_payout_requests').select('*').eq('affiliate_user_id', user.id).order('created_at', { ascending: false }),
       ]);
 
-      if (profRes.data) setProfile(profRes.data as AffiliateProfile);
+      if (profRes.data) setProfile(profRes.data as unknown as AffiliateProfile);
       if (commRes.data) setCommissions(commRes.data as Commission[]);
       if (payRes.data) setPayouts(payRes.data as PayoutRequest[]);
     } finally {
