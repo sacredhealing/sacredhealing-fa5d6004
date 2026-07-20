@@ -284,7 +284,7 @@ export default function Explore() {
 
       {/* ══ ABUNDANCE FIELD BANNER ══ */}
       <div style={{ margin: '13px 16px 0' }}>
-        <div onClick={() => navigate('/library/abundance')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 70% 40%, rgba(45,26,0,0.98) 0%, rgba(15,8,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite' }}>
+        <div onClick={() => navigate('/affiliate/dashboard')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 70% 40%, rgba(45,26,0,0.98) 0%, rgba(15,8,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite' }}>
           {/* Gold lotus + Sri Yantra geometry — top right */}
           <div style={{ position: 'absolute', top: -25, right: -25, width: 160, height: 160, pointerEvents: 'none' }}>
             <svg viewBox="0 0 160 160" width="160" height="160">
@@ -308,18 +308,8 @@ export default function Explore() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 15 }}>
               {['Lakshmi Codes','Dharmic Wealth','Creation Field'].map(l => <span key={l} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 20, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', color: 'rgba(212,175,55,0.85)' }}>{l}</span>)}
             </div>
-            <button onClick={(e) => { e.stopPropagation(); navigate('/library/abundance'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.42)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>ENTER →</button>
+            <button onClick={(e) => { e.stopPropagation(); navigate('/affiliate/dashboard'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.42)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>ENTER →</button>
           </div>
-        </div>
-      </div>
-
-      {/* ══ REFERRAL PORTAL — surfaced inside Abundance Field so it's actually findable ══ */}
-      <div style={{ padding: '14px 16px 0', animation: 'fadeUp 0.4s 0.16s ease both' }}>
-        <div onClick={() => navigate('/affiliate/dashboard')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 30%, rgba(0,30,36,0.9) 0%, rgba(5,10,10,0.98) 60%, #050505 100%)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 20, cursor: 'pointer', padding: '18px 20px' }}>
-          <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.7)', marginBottom: 8 }}>YOUR SOVEREIGN LINK</p>
-          <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 900, fontSize: 17, letterSpacing: '-0.03em', color: '#fff', marginBottom: 6 }}>{t('libraryAbundance.affiliateCta.title')}</p>
-          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 14 }}>{t('libraryAbundance.affiliateCta.body')}</p>
-          <button onClick={(e) => { e.stopPropagation(); navigate('/affiliate/dashboard'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#22D3EE', background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 24, padding: '10px 20px', cursor: 'pointer' }}>VIEW MY LINK →</button>
         </div>
       </div>
 

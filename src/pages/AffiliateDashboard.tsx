@@ -42,6 +42,37 @@ interface ConnectStatus {
   country?: string;
 }
 
+interface AffiliateFit {
+  verdict: 'strongly_yes' | 'yes' | 'neutral' | 'not_now' | 'no';
+  reason: string;
+  how: string[];
+}
+
+interface AbundanceOracle {
+  timing: string;
+  investment_guidance: string;
+  quick_invest: string;
+  long_term_invest: string;
+  do_not_invest: string;
+  avoid: string;
+  mantra: string;
+  favorable_sectors: string[];
+  dosha_practice: string;
+  affiliate_fit: AffiliateFit;
+}
+
+interface JyotishBirthProfile {
+  birth_date?: string;
+  birth_time?: string;
+  birth_place?: string;
+  moon_nakshatra?: string;
+  current_dasha?: string;
+  dosha_type?: string;
+  vata?: number;
+  pitta?: number;
+  kapha?: number;
+}
+
 type LangCode = 'en' | 'sv' | 'no' | 'es';
 type Platform = 'instagram' | 'tiktok' | 'youtube' | 'facebook';
 
@@ -74,6 +105,21 @@ const COUNTRY_OPTIONS = [
   { code: 'CA', label: '🇨🇦 Canada' },
 ];
 
+const VERDICT_COLOR: Record<AffiliateFit['verdict'], string> = {
+  strongly_yes: '#4ade80',
+  yes: '#4ade80',
+  neutral: '#D4AF37',
+  not_now: '#f59e0b',
+  no: 'rgba(255,255,255,0.4)',
+};
+const VERDICT_LABEL: Record<AffiliateFit['verdict'], string> = {
+  strongly_yes: 'Strongly Favorable',
+  yes: 'Favorable',
+  neutral: 'Neutral',
+  not_now: 'Not Now',
+  no: 'Sit This Out',
+};
+
 function formatMoney(amount: number, currency: string, locale: string): string {
   const cur = (currency || 'EUR').toUpperCase();
   try {
@@ -83,10 +129,62 @@ function formatMoney(amount: number, currency: string, locale: string): string {
   }
 }
 
+// ── Accordion primitive — one glowing card, collapsed by default, expands in place ──
+const AccordionCard: React.FC<{
+  id: string;
+  icon: string;
+  title: string;
+  teaser: React.ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  accent?: string;
+  children: React.ReactNode;
+}> = ({ icon, title, teaser, open, onToggle, accent = '#D4AF37', children }) => (
+  <div style={{
+    background: 'rgba(255,255,255,0.02)',
+    backdropFilter: 'blur(40px)',
+    WebkitBackdropFilter: 'blur(40px)',
+    border: `1px solid ${open ? `${accent}55` : 'rgba(255,255,255,0.06)'}`,
+    borderRadius: 32,
+    overflow: 'hidden',
+    boxShadow: open ? `0 0 50px ${accent}18` : 'none',
+    transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
+  }}>
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+        background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+        padding: '1.25rem 1.5rem', color: '#fff',
+      }}
+    >
+      <div style={{
+        width: 42, height: 42, borderRadius: 14, flexShrink: 0,
+        background: `${accent}18`, border: `1px solid ${accent}40`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+      }}>{icon}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 900, fontSize: '0.95rem', letterSpacing: '-0.01em', color: '#fff' }}>{title}</p>
+        {!open && <div style={{ marginTop: 3 }}>{teaser}</div>}
+      </div>
+      <span style={{
+        color: accent, fontSize: 14, flexShrink: 0, transition: 'transform 0.25s ease',
+        transform: open ? 'rotate(180deg)' : 'none',
+      }}>▾</span>
+    </button>
+    {open && (
+      <div style={{ padding: '0 1.5rem 1.5rem' }}>
+        {children}
+      </div>
+    )}
+  </div>
+);
+
 const AffiliateDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
   const { toast } = useToast();
 
   const baseUrl = useMemo(() => (typeof window !== 'undefined' ? window.location.origin : ''), []);
@@ -105,13 +203,102 @@ const AffiliateDashboard: React.FC = () => {
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('SE');
-  const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'earnings' | 'payout'>('overview');
   const [labelInput, setLabelInput] = useState('');
   const [labelSaving, setLabelSaving] = useState(false);
   const [labelEditing, setLabelEditing] = useState(false);
 
-  const cur = profile?.currency || 'EUR';
+  // Accordion state — "link" open by default since sharing is the primary action
+  const [openSection, setOpenSection] = useState<string>('link');
+  const toggle = (id: string) => setOpenSection(cur => (cur === id ? '' : id));
 
+  // ── Monthly Abundance Reading (Jyotish) ──────────────────────────────────
+  const [birthProfile, setBirthProfile] = useState<JyotishBirthProfile | null>(null);
+  const [oracle, setOracle] = useState<AbundanceOracle | null>(null);
+  const [oracleLoading, setOracleLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: jy }, { data: pr }, { data: ay }] = await Promise.all([
+        (supabase as any).from('jyotish_profiles')
+          .select('birth_date, birth_time, birth_place, moon_nakshatra, dasha_data')
+          .eq('user_id', user.id).maybeSingle(),
+        supabase.from('profiles')
+          .select('birth_date, birth_time, birth_place')
+          .eq('user_id', user.id).maybeSingle(),
+        (supabase as any).from('ayurveda_profiles')
+          .select('dominant_dosha, prakriti, vata_percent, pitta_percent, kapha_percent')
+          .eq('user_id', user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+
+      let currentDasha: string | undefined;
+      const dd: any = jy?.dasha_data;
+      if (dd) {
+        if (typeof dd.current === 'string') currentDasha = dd.current;
+        else if (typeof dd.currentDasha === 'string') currentDasha = dd.currentDasha;
+        else if (dd.current?.planet) currentDasha = dd.current.planet;
+        else if (Array.isArray(dd.periods)) {
+          const now = Date.now();
+          const active = dd.periods.find((p: any) => {
+            const s = p.start ? new Date(p.start).getTime() : 0;
+            const e = p.end ? new Date(p.end).getTime() : Infinity;
+            return s <= now && now < e;
+          });
+          if (active?.planet) currentDasha = active.planet;
+        }
+      }
+
+      setBirthProfile({
+        birth_date: jy?.birth_date || pr?.birth_date || undefined,
+        birth_time: jy?.birth_time || (pr?.birth_time ? String(pr.birth_time) : undefined),
+        birth_place: jy?.birth_place || pr?.birth_place || undefined,
+        moon_nakshatra: jy?.moon_nakshatra || undefined,
+        current_dasha: currentDasha,
+        dosha_type: (ay?.prakriti || ay?.dominant_dosha || '').toString() || undefined,
+        vata: ay?.vata_percent ?? undefined,
+        pitta: ay?.pitta_percent ?? undefined,
+        kapha: ay?.kapha_percent ?? undefined,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const fetchOracle = useCallback(async () => {
+    if (!birthProfile) return;
+    if (!birthProfile.birth_date && !birthProfile.dosha_type && !birthProfile.moon_nakshatra) return;
+    setOracleLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('abundance-oracle', {
+        body: {
+          birth_date: birthProfile.birth_date,
+          birth_time: birthProfile.birth_time,
+          birth_place: birthProfile.birth_place,
+          moon_nakshatra: birthProfile.moon_nakshatra,
+          current_dasha: birthProfile.current_dasha,
+          dosha: birthProfile.dosha_type,
+          vata: birthProfile.vata,
+          pitta: birthProfile.pitta,
+          kapha: birthProfile.kapha,
+        },
+      });
+      if (!error && data && !data.error) setOracle(data as AbundanceOracle);
+    } catch {
+      /* graceful fallback — card just shows the "complete your chart" prompt */
+    } finally {
+      setOracleLoading(false);
+    }
+  }, [birthProfile]);
+
+  useEffect(() => { fetchOracle(); }, [fetchOracle]);
+
+  const monthLabel = useMemo(
+    () => new Date().toLocaleDateString(localeTag, { month: 'long', year: 'numeric' }),
+    [localeTag]
+  );
+
+  // ── Link name ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (profile?.link_label) setLabelInput(profile.link_label);
   }, [profile?.link_label]);
@@ -154,7 +341,6 @@ const AffiliateDashboard: React.FC = () => {
     }
   }, [user]);
 
-  // Check Stripe Connect status
   const loadConnectStatus = useCallback(async () => {
     if (!user) return;
     try {
@@ -192,7 +378,6 @@ const AffiliateDashboard: React.FC = () => {
     `${baseUrl}/affiliate/r/${profile?.affiliate_code}?platform=${platform}&lang=${lang}`;
   const mainLink = profile ? `${baseUrl}/affiliate/r/${profile.affiliate_code}` : '';
 
-  // ── Connect Stripe account ─────────────────────────────────────────────────
   const handleConnectStripe = async () => {
     if (!user) return;
     setConnectLoading(true);
@@ -204,9 +389,7 @@ const AffiliateDashboard: React.FC = () => {
         body: { country: selectedCountry },
       });
       if (error) throw new Error(error.message || 'Connect setup failed');
-      if (data?.url) {
-        window.location.href = data.url; // Redirect to Stripe onboarding
-      }
+      if (data?.url) window.location.href = data.url;
     } catch (err) {
       toast({ title: 'Setup failed', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
     } finally {
@@ -214,7 +397,6 @@ const AffiliateDashboard: React.FC = () => {
     }
   };
 
-  // ── Request payout ─────────────────────────────────────────────────────────
   const requestPayout = async () => {
     if (!user || !profile || !payoutAmount || Number(payoutAmount) <= 0) return;
     const amount = Number(payoutAmount);
@@ -224,24 +406,17 @@ const AffiliateDashboard: React.FC = () => {
       return;
     }
     if (amount > (profile.pending_balance || 0)) {
-      toast({ title: 'Insufficient balance', description: `Max: ${formatMoney(profile.pending_balance, cur, localeTag)}`, variant: 'destructive' });
+      toast({ title: 'Insufficient balance', description: `Max: ${formatMoney(profile.pending_balance, profile.currency || 'EUR', localeTag)}`, variant: 'destructive' });
       return;
     }
-
-    // Check if they have Stripe Connect set up
     if (!connectStatus?.payoutsEnabled) {
-      toast({
-        title: 'Set up bank account first',
-        description: 'Connect your bank account via Stripe to receive payouts.',
-        variant: 'destructive',
-      });
-      setActiveTab('payout');
+      toast({ title: 'Set up bank account first', description: 'Connect your bank account via Stripe to receive payouts.', variant: 'destructive' });
+      setOpenSection('withdraw');
       return;
     }
 
     setPayoutLoading(true);
     try {
-      // Insert payout request — will be admin-approved and processed via process-payout-request
       const { error } = await supabase.from('affiliate_payout_requests').insert({
         affiliate_user_id: user.id,
         amount,
@@ -269,7 +444,7 @@ const AffiliateDashboard: React.FC = () => {
 
   if (!user) {
     return (
-      <div style={{ background: '#050505', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#050505', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem' }}>
         <div style={glassCard}>
           <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '1rem' }}>Sign in to access your Sovereign Abundance Network.</p>
           <button type="button" onClick={() => navigate('/auth')} style={primaryCta}>Sign In</button>
@@ -278,43 +453,23 @@ const AffiliateDashboard: React.FC = () => {
     );
   }
 
+  const cur = profile?.currency || 'EUR';
   const earned = profile?.total_earnings || 0;
   const pending = profile?.pending_balance || 0;
   const paidOut = profile?.paid_out || 0;
   const downlineEarned = commissions.filter((c) => c.level === 2).reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+  const tradingEarned = commissions.filter(c => c.source?.startsWith('trading')).reduce((s, c) => s + Number(c.commission_amount), 0);
 
-  const stats = [
-    { label: 'Quantum Dividends', value: formatMoney(earned, cur, localeTag), sub: 'Total earned', color: '#D4AF37' },
-    { label: 'Pending Balance', value: formatMoney(pending, cur, localeTag), sub: 'Available to withdraw', color: '#22D3EE' },
-    { label: 'Transmitted Out', value: formatMoney(paidOut, cur, localeTag), sub: 'Paid to your account', color: '#4ade80' },
-    { label: 'Downline Override', value: formatMoney(downlineEarned, cur, localeTag), sub: 'From people your affiliates recruited', color: '#8b5cf6' },
-  ];
-
-  const tabs = [
-    { id: 'overview' as const, label: '✦ Overview' },
-    { id: 'links' as const, label: '🔗 All Links' },
-    { id: 'earnings' as const, label: '📊 Dividends' },
-    { id: 'payout' as const, label: '💳 Withdraw' },
-  ];
-
-  // ── Connect status badge ───────────────────────────────────────────────────
   const renderConnectBadge = () => {
     if (!connectStatus) return null;
     const isActive = connectStatus.hasAccount && connectStatus.payoutsEnabled;
     const isPending = connectStatus.hasAccount && !connectStatus.payoutsEnabled;
     return (
       <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '4px 14px',
-        borderRadius: 100,
+        display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 100,
         background: isActive ? 'rgba(34,197,94,0.1)' : isPending ? 'rgba(212,175,55,0.1)' : 'rgba(239,68,68,0.1)',
         border: `1px solid ${isActive ? 'rgba(34,197,94,0.3)' : isPending ? 'rgba(212,175,55,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        fontSize: '9px',
-        fontWeight: 800,
-        letterSpacing: '0.2em',
-        textTransform: 'uppercase' as const,
+        fontSize: '9px', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
         color: isActive ? '#22c55e' : isPending ? '#D4AF37' : '#ef4444',
       }}>
         {isActive ? '✓ BANK CONNECTED' : isPending ? '⟳ SETUP PENDING' : '⚠ NO BANK ACCOUNT'}
@@ -322,71 +477,51 @@ const AffiliateDashboard: React.FC = () => {
     );
   };
 
+  const teaserText = (s: string): React.ReactNode => (
+    <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>{s}</p>
+  );
+
   return (
     <div style={{ background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* ADMIN-ONLY: Delta-Arb Bot dashboard entry (Kritagya + Laila) */}
       {user && ['bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'a711f099-3d34-456f-8473-8a65eab056d5'].includes(user.id) && (
         <div style={{ padding: '16px 16px 0', maxWidth: 720, margin: '0 auto' }}>
           <button
             onClick={() => navigate('/admin/delta-arb')}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(212,175,55,0.25)',
-              borderRadius: 22, padding: '14px 18px',
-              backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(212,175,55,0.25)',
+              borderRadius: 22, padding: '14px 18px', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
               cursor: 'pointer', textAlign: 'left', color: '#fff',
             }}
           >
-            <div style={{
-              width: 38, height: 38, borderRadius: 12,
-              background: 'rgba(212,175,55,0.1)',
-              border: '1px solid rgba(212,175,55,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-            }}>⚡</div>
+            <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>⚡</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 900, color: '#D4AF37' }}>Delta-Arb Bot</span>
-                <span style={{
-                  fontSize: 8, fontWeight: 800, letterSpacing: '0.15em',
-                  color: '#22D3EE', border: '1px solid rgba(34,211,238,0.4)',
-                  borderRadius: 99, padding: '1px 6px',
-                }}>ADMIN</span>
+                <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: '#22D3EE', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 99, padding: '1px 6px' }}>ADMIN</span>
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
-                Live balance & trade feed
-              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>Live balance & trade feed</div>
             </div>
             <span style={{ color: '#D4AF37', fontSize: 18, fontWeight: 700 }}>→</span>
           </button>
         </div>
       )}
+
       {/* Header */}
-      <div style={{
-        padding: '3rem 1.5rem 2rem',
-        background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,175,55,0.12) 0%, transparent 60%)',
-        textAlign: 'center',
-      }}>
+      <div style={{ padding: '3rem 1.5rem 2rem', background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,175,55,0.12) 0%, transparent 60%)', textAlign: 'center' }}>
         <p style={microLabel}>Sovereign Abundance Network · 2050</p>
         <h1 style={{
-          fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-          fontWeight: 900,
-          letterSpacing: '-0.04em',
+          fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, letterSpacing: '-0.04em',
           background: 'linear-gradient(135deg, #F5E27B, #D4AF37, #A07820)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          marginBottom: '0.5rem',
-          lineHeight: 1.1,
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          marginBottom: '0.5rem', lineHeight: 1.1,
         }}>
           Quantum Abundance Command
         </h1>
 
         {profile && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: '0.75rem' }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 100, padding: '8px 20px',
-            }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 100, padding: '8px 20px' }}>
               <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Your Code:</span>
               <span style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.9rem', letterSpacing: '0.05em' }}>{profile.affiliate_code}</span>
               <button type="button" onClick={() => copyLink(mainLink, 'main')} style={{ background: 'none', border: 'none', color: copiedLink === 'main' ? '#4ade80' : '#D4AF37', cursor: 'pointer', fontSize: '0.75rem' }}>
@@ -396,629 +531,368 @@ const AffiliateDashboard: React.FC = () => {
             {renderConnectBadge()}
           </div>
         )}
-
-        {profile && (
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-            {labelEditing ? (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  value={labelInput}
-                  onChange={(e) => setLabelInput(e.target.value)}
-                  placeholder="Give your link a name"
-                  maxLength={40}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 100,
-                    padding: '8px 16px', color: '#fff', fontSize: '0.85rem', outline: 'none', minWidth: 200,
-                  }}
-                />
-                <button type="button" disabled={labelSaving} onClick={saveLabel} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
-                  {labelSaving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" onClick={() => { setLabelEditing(false); setLabelInput(profile.link_label || ''); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setLabelEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                {profile.link_label ? `Shown as "${profile.link_label}" · edit` : 'Give your link a name →'}
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 1.5rem' }}>
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-          {stats.map((s, i) => (
-            <div key={i} style={{ ...glassCard, textAlign: 'center', padding: '1.5rem 1rem' }}>
-              <p style={{ ...microLabel, marginBottom: '0.4rem' }}>{s.label}</p>
-              <p style={{ fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', fontWeight: 900, color: s.color, margin: 0 }}>{s.value}</p>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginTop: '0.25rem' }}>{s.sub}</p>
-            </div>
-          ))}
-        </div>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 1.25rem 4rem', display: 'grid', gap: '0.9rem' }}>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: '2rem', flexWrap: 'wrap' }}>
-          {tabs.map((tab) => (
-            <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)} style={{
-              background: activeTab === tab.id ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${activeTab === tab.id ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.05)'}`,
-              borderRadius: 100, padding: '10px 24px', cursor: 'pointer',
-              color: activeTab === tab.id ? '#D4AF37' : 'rgba(255,255,255,0.5)',
-              fontWeight: 700, fontSize: '0.85rem', transition: 'all 0.2s ease',
-            }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Overview tab ────────────────────────────────────────────────── */}
-        {activeTab === 'overview' && (
-          <div style={{ display: 'grid', gap: '1.5rem' }}>
-            <div style={glassCard}>
-              <p style={microLabel}>How Your Quantum Dividends Work</p>
-              <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
-                {[
-                  'Share your unique link across any platform in any language.',
-                  'Seekers land on your personalised, translated landing page.',
-                  'When they purchase any tier, your affiliate code is permanently encoded.',
-                  '30% Quantum Dividend lands in your Pending Balance instantly via Stripe webhook.',
-                  'Connect your bank account via Stripe and request a payout — processed within 3-5 days.',
-                ].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                    <span style={{
-                      minWidth: 32, height: 32, borderRadius: '50%',
-                      background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.7rem', fontWeight: 800, color: '#D4AF37', flexShrink: 0,
-                    }}>
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0, paddingTop: 6 }}>{step}</p>
-                  </div>
-                ))}
-              </div>
+        {/* ── Your Sovereign Link ─────────────────────────────────────────── */}
+        {profile && (
+          <AccordionCard
+            id="link" icon="🔗" title="Your Sovereign Link" accent="#D4AF37"
+            open={openSection === 'link'} onToggle={() => toggle('link')}
+            teaser={teaserText(profile.link_label ? `Shown as "${profile.link_label}"` : 'One link, every platform, every language — tap to view')}
+          >
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <code style={{ flex: 1, fontSize: '0.78rem', color: '#D4AF37', wordBreak: 'break-all' as const }}>{mainLink}</code>
+              <button type="button" onClick={() => copyLink(mainLink, 'master')} style={copyBtn}>{copiedLink === 'master' ? '✓' : 'Copy'}</button>
             </div>
 
-            {profile && (
-              <div style={{ ...glassCard, border: '1px solid rgba(212,175,55,0.2)' }}>
-                <p style={microLabel}>Your Master Transmission Link</p>
-                <div style={{ display: 'flex', gap: 8, marginTop: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <code style={{ flex: 1, background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '10px 16px', fontSize: '0.8rem', color: '#D4AF37', border: '1px solid rgba(255,255,255,0.06)', wordBreak: 'break-all' as const }}>
-                    {mainLink}
-                  </code>
-                  <button type="button" onClick={() => copyLink(mainLink, 'master')} style={copyBtn}>
-                    {copiedLink === 'master' ? '✓' : 'Copy'}
-                  </button>
-                </div>
-
-                <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' as const }}>
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
-                    alt="Your unique signup QR code"
-                    style={{ width: 110, height: 110, borderRadius: 16, border: '1px solid rgba(212,175,55,0.2)', flexShrink: 0 }}
+            <div style={{ marginTop: 14 }}>
+              {labelEditing ? (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                  <input
+                    value={labelInput} onChange={(e) => setLabelInput(e.target.value)}
+                    placeholder="Give your link a name" maxLength={40}
+                    style={{ ...inputStyle, flex: 1, minWidth: 160 }}
                   />
-                  <div style={{ flex: 1, minWidth: 180 }}>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', lineHeight: 1.6, margin: 0 }}>
-                      Your own QR code. Print it, screenshot it, or share it at events — anyone who scans it is permanently encoded with your affiliate ID.
-                    </p>
-                    <a
-                      href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
-                      download="my-signup-qr-code.png"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'inline-block', marginTop: 10, color: '#D4AF37', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textDecoration: 'none', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 12, padding: '8px 14px' }}
-                    >
-                      ⬇ Download QR
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Commission rate callout */}
-            <div style={{ ...glassCard, background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.15)', textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#D4AF37', margin: '0 0 4px' }}>30%</div>
-              <p style={{ ...microLabel, color: 'rgba(212,175,55,0.7)' }}>Quantum Dividend on every purchase</p>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', marginTop: 8, lineHeight: 1.6 }}>
-                Memberships · One-time purchases · Sessions · Courses · All products
-              </p>
-            </div>
-
-
-            {/* Trading Commission card */}
-            <div style={{ ...glassCard, background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.15)', marginTop: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <p style={{ ...microLabel, color: 'rgba(34,197,94,0.7)' }}>⚡ CLAWBOT TRADING COMMISSIONS</p>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                {[
-                  { tier: 'Free', l1: '10%', l2: '3%' },
-                  { tier: 'Prana-Flow', l1: '8%', l2: '2%' },
-                  { tier: 'Siddha-Quantum', l1: '5%', l2: '1%' },
-                  { tier: 'Akasha-∞', l1: '3%', l2: '1%' },
-                ].map(r => (
-                  <div key={r.tier} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '8px 10px' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>{r.tier}</div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#22c55e' }}>L1: {r.l1}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>L2: {r.l2}</div>
-                  </div>
-                ))}
-              </div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', lineHeight: 1.6, margin: 0 }}>
-                Earn % of every trading win from people you refer (L1) and people they refer (L2) · Paid automatically on each resolved trade
-              </p>
-              <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(34,197,94,0.06)', borderRadius: 10, textAlign: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(34,197,94,0.8)' }}>
-                  Your trading earnings: ${commissions.filter(c => c.source?.startsWith('trading')).reduce((s, c) => s + Number(c.commission_amount), 0).toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            {/* Airdrop Farming — Income Stream card */}
-            <div
-              style={{
-                ...glassCard,
-                background: 'rgba(16,185,129,0.03)',
-                border: '1px solid rgba(16,185,129,0.2)',
-                marginTop: 12,
-                cursor: 'pointer',
-              }}
-              onClick={() => navigate('/income-streams/airdrop-farming')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 14,
-                  background: 'rgba(16,185,129,0.08)',
-                  border: '1px solid rgba(16,185,129,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, flexShrink: 0,
-                }}>🌱</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#10B981', letterSpacing: '-0.02em' }}>
-                      Airdrop Farming
-                    </span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                      color: '#10B981', border: '1px solid rgba(16,185,129,0.35)',
-                      borderRadius: 99, padding: '2px 8px',
-                    }}>ZERO CAPITAL</span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                      color: 'rgba(212,175,55,0.9)', border: '1px solid rgba(212,175,55,0.3)',
-                      borderRadius: 99, padding: '2px 8px',
-                    }}>NEW</span>
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
-                    Manual weekly routine · Meteora, Monad, Polymarket · no trading skill needed
-                  </p>
-                </div>
-                <span style={{ color: '#10B981', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
-              </div>
-              <p style={{
-                color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
-                lineHeight: 1.6, margin: '14px 0 0',
-                borderTop: '1px solid rgba(16,185,129,0.08)', paddingTop: 12,
-              }}>
-                Log a small weekly action across 3 apps that haven't launched a token yet. Payouts are a bonus, never budgeted income. Synced across your devices.
-              </p>
-            </div>
-
-            {/* Delta-Arb Bot — Income Stream card */}
-            <div
-              style={{
-                ...glassCard,
-                background: 'rgba(34,211,238,0.03)',
-                border: '1px solid rgba(34,211,238,0.18)',
-                marginTop: 12,
-                cursor: 'pointer',
-              }}
-              onClick={() => navigate('/income-streams/delta-arb-bot')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 14,
-                  background: 'rgba(34,211,238,0.08)',
-                  border: '1px solid rgba(34,211,238,0.25)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, flexShrink: 0,
-                }}>⚡</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#22D3EE', letterSpacing: '-0.02em' }}>
-                      Delta-Arb Bot
-                    </span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                      color: '#22D3EE', border: '1px solid rgba(34,211,238,0.35)',
-                      borderRadius: 99, padding: '2px 8px',
-                    }}>INCOME STREAM</span>
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
-                    Polymarket oracle-lag arbitrage · passive Siddha Quantum returns
-                  </p>
-                </div>
-                <span style={{ color: '#22D3EE', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
-              </div>
-              <p style={{
-                color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
-                lineHeight: 1.6, margin: '14px 0 0',
-                borderTop: '1px solid rgba(34,211,238,0.08)', paddingTop: 12,
-              }}>
-                Learn how the Delta-Arb Quantum Engine works, view live performance, and share it with your network to earn commissions.
-              </p>
-            </div>
-
-            {/* Shreem Brzee Bot — Income Stream card */}
-            <div
-              style={{
-                ...glassCard,
-                background: 'rgba(212,175,55,0.03)',
-                border: '1px solid rgba(212,175,55,0.18)',
-                marginTop: 12,
-                cursor: 'pointer',
-              }}
-              onClick={() => navigate('/income-streams/shreem-brzee-performance')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 14,
-                  background: 'rgba(212,175,55,0.08)',
-                  border: '1px solid rgba(212,175,55,0.25)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, flexShrink: 0,
-                }}>🔱</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.02em' }}>
-                      Shreem Brzee Bot
-                    </span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                      color: '#D4AF37', border: '1px solid rgba(212,175,55,0.35)',
-                      borderRadius: 99, padding: '2px 8px',
-                    }}>COPY TRADING</span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                      color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.3)',
-                      borderRadius: 99, padding: '2px 8px',
-                    }}>● LIVE</span>
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
-                    Solana meme coin copy trading · 21 elite whale wallets · paper session active
-                  </p>
-                </div>
-                <span style={{ color: '#D4AF37', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
-              </div>
-              <p style={{
-                color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
-                lineHeight: 1.6, margin: '14px 0 0',
-                borderTop: '1px solid rgba(212,175,55,0.08)', paddingTop: 12,
-              }}>
-                Mirror trades from top Solana meme coin whales in real time · Helius webhook · 24/7 server-side monitoring
-              </p>
-            </div>
-
-              {/* CLAWBOT — Polymarket Whale Mirror card */}
-              <div
-                style={{
-                  ...glassCard,
-                  background: 'rgba(212,175,55,0.03)',
-                  border: '1px solid rgba(212,175,55,0.22)',
-                  marginTop: 12,
-                  cursor: 'pointer',
-                }}
-                onClick={() => navigate('/income-streams/clawbot-hetzner')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    background: 'rgba(212,175,55,0.08)',
-                    border: '1px solid rgba(212,175,55,0.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, flexShrink: 0,
-                  }}>🦅</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.02em' }}>
-                        CLAWBOT
-                      </span>
-                      <span style={{
-                        fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                        color: '#D4AF37', border: '1px solid rgba(212,175,55,0.35)',
-                        borderRadius: 99, padding: '2px 8px',
-                      }}>WHALE MIRROR</span>
-                      <span style={{
-                        fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                        color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.3)',
-                        borderRadius: 99, padding: '2px 8px',
-                      }}>● LIVE</span>
-                    </div>
-                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
-                      Polymarket elite whale copy-trading · 9 sovereign signals · Hetzner 24/7
-                    </p>
-                  </div>
-                  <span style={{ color: '#D4AF37', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
-                </div>
-                <p style={{
-                  color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
-                  lineHeight: 1.6, margin: '14px 0 0',
-                  borderTop: '1px solid rgba(212,175,55,0.08)', paddingTop: 12,
-                }}>
-                  Mirror the top 9 Polymarket whales (BAA2BC, ED107A, A7A8C1 and 6 more) · Paper mode active · Live dashboard on sovereign Hetzner server
-                </p>
-              </div>
-
-              {/* SOVEREIGN SNIPER — Solana Memecoin Sniper card */}
-              <div
-                style={{
-                  ...glassCard,
-                  background: 'rgba(168,85,247,0.03)',
-                  border: '1px solid rgba(168,85,247,0.22)',
-                  marginTop: 12,
-                  cursor: 'pointer',
-                }}
-                onClick={() => navigate('/income-streams/sniper-bot')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    background: 'rgba(168,85,247,0.08)',
-                    border: '1px solid rgba(168,85,247,0.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, flexShrink: 0,
-                  }}>🎯</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
-                      <span style={{ fontSize: 14, fontWeight: 900, color: '#A855F7', letterSpacing: '-0.02em' }}>
-                        SOVEREIGN SNIPER
-                      </span>
-                      <span style={{
-                        fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                        color: '#A855F7', border: '1px solid rgba(168,85,247,0.35)',
-                        borderRadius: 99, padding: '2px 8px',
-                      }}>SOLANA</span>
-                      <span style={{
-                        fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
-                        color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.3)',
-                        borderRadius: 99, padding: '2px 8px',
-                      }}>● LIVE</span>
-                    </div>
-                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
-                      Pump.fun 7-launchpad sniper · 12-signal Gemini AI · Jito MEV · Hetzner 24/7
-                    </p>
-                  </div>
-                  <span style={{ color: '#A855F7', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
-                </div>
-                <p style={{
-                  color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
-                  lineHeight: 1.6, margin: '14px 0 0',
-                  borderTop: '1px solid rgba(168,85,247,0.08)', paddingTop: 12,
-                }}>
-                  7 launchpads · 97.8% rugs filtered · Gemini AI scorer · 0.05 SOL per snipe · Dev wallet monitor · Start earning sniper affiliate commissions
-                </p>
-              </div>
-          </div>
-        )}
-
-        {/* ── Links tab ──────────────────────────────────────────────────────── */}
-        {activeTab === 'links' && profile && (
-          <div style={{ display: 'grid', gap: '1.5rem' }}>
-            {PLATFORMS.map((platform) => (
-              <div key={platform.id} style={glassCard}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '1.25rem' }}>{platform.icon}</span>
-                  <p style={{ ...microLabel, margin: 0 }}>{platform.label} Transmission Links</p>
-                </div>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {LANGS.map((lang) => {
-                    const link = buildLink(platform.id, lang.id);
-                    const key = `${platform.id}-${lang.id}`;
-                    return (
-                      <div key={lang.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.015)', borderRadius: 16, padding: '10px 14px' }}>
-                        <span style={{ fontSize: '1rem' }}>{lang.flag}</span>
-                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', minWidth: 64 }}>{lang.label}</span>
-                        <code style={{ flex: 1, color: 'rgba(212,175,55,0.7)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{link}</code>
-                        <button type="button" onClick={() => copyLink(link, key)} style={copyBtn}>
-                          {copiedLink === key ? '✓' : 'Copy'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-
-            <div style={glassCard}>
-              <p style={microLabel}>QR Code — Master Link</p>
-              <div style={{ marginTop: '1rem', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' as const }}>
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
-                  alt="Affiliate QR Code"
-                  style={{ width: 120, height: 120, borderRadius: 16, border: '1px solid rgba(212,175,55,0.2)' }}
-                />
-                <div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.7, margin: 0 }}>
-                    Screenshot and share in stories, print for events, or embed on websites. Every scan permanently codes the visitor with your affiliate ID.
-                  </p>
-                  <a
-                    href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
-                    download="my-signup-qr-code.png"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'inline-block', marginTop: 10, color: '#D4AF37', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textDecoration: 'none', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 12, padding: '8px 14px' }}
-                  >
-                    ⬇ Download QR
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Earnings tab ──────────────────────────────────────────────────── */}
-        {activeTab === 'earnings' && (
-          <div style={glassCard}>
-            <p style={microLabel}>Quantum Dividend History</p>
-            {commissions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 0', color: 'rgba(255,255,255,0.3)' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>⚡</div>
-                <p style={{ fontSize: '0.9rem' }}>Your first transmission is on its way. Share your links to activate the flow.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: 8, marginTop: '1rem' }}>
-                {commissions.map((c) => (
-                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 16, padding: '12px 16px' }}>
-                    <div>
-                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', margin: 0 }}>
-                        {c.source === 'trading_l1' ? '⚡ Trading — Level 1 Referral' : c.source === 'trading_l2' ? '🔗 Trading — Level 2 Referral' : 'Initiation Quantum Dividend'}
-                        {c.level === 2 && <span style={{ marginLeft: 8, fontSize: '8px', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 100, padding: '2px 8px' }}>Downline Override</span>}
-                      </p>
-                      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginTop: 2 }}>
-                        {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short', year: 'numeric' })}
-                        {' · Gross: '}{formatMoney(Number(c.gross_amount), c.currency || cur, localeTag)}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ color: '#D4AF37', fontWeight: 800, fontSize: '1rem', margin: 0 }}>
-                        +{formatMoney(Number(c.commission_amount), c.currency || cur, localeTag)}
-                      </p>
-                      <span style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: c.status === 'approved' || c.status === 'paid' ? '#4ade80' : 'rgba(255,255,255,0.3)' }}>
-                        {c.status.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Payout tab ────────────────────────────────────────────────────── */}
-        {activeTab === 'payout' && (
-          <div style={{ display: 'grid', gap: '1.5rem' }}>
-
-            {/* Stripe Connect Setup */}
-            <div style={{ ...glassCard, border: connectStatus?.payoutsEnabled ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(212,175,55,0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                <p style={microLabel}>Bank Account Setup · Stripe Connect</p>
-                {renderConnectBadge()}
-              </div>
-
-              {connectStatus?.payoutsEnabled ? (
-                <div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6 }}>
-                    ✓ Your bank account is connected and active. Payouts will be transferred directly via Stripe.
-                  </p>
-                  <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={{ ...secondaryCta, marginTop: '1rem' }}>
-                    {connectLoading ? 'Opening…' : 'Manage Bank Account →'}
+                  <button type="button" disabled={labelSaving} onClick={saveLabel} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+                    {labelSaving ? 'Saving…' : 'Save'}
                   </button>
-                </div>
-              ) : connectStatus?.hasAccount ? (
-                <div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem' }}>
-                    Your Stripe account is created but setup is incomplete. Please finish the onboarding to enable payouts.
-                  </p>
-                  <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
-                    {connectLoading ? 'Opening Stripe…' : '◈ Complete Bank Setup →'}
+                  <button type="button" onClick={() => { setLabelEditing(false); setLabelInput(profile.link_label || ''); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                    Cancel
                   </button>
                 </div>
               ) : (
-                <div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                    Connect your bank account via Stripe to receive payouts directly. Takes ~5 minutes. Stripe handles all regulatory compliance.
-                  </p>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ ...microLabel, display: 'block', marginBottom: 8 }}>Your Country</label>
-                    <select
-                      value={selectedCountry}
-                      onChange={(e) => setSelectedCountry(e.target.value)}
-                      style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '12px 16px', color: '#fff', fontSize: '0.9rem', outline: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                    >
-                      {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code} style={{ background: '#050505' }}>{c.label}</option>)}
-                    </select>
-                  </div>
-                  <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
-                    {connectLoading ? 'Opening Stripe…' : '◈ Connect Bank Account via Stripe →'}
-                  </button>
-                  <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.75rem', textAlign: 'center', marginTop: '0.75rem', lineHeight: 1.5 }}>
-                    Powered by Stripe Express. Your banking details are stored securely with Stripe — never on our servers.
-                  </p>
-                </div>
+                <button type="button" onClick={() => setLabelEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>
+                  {profile.link_label ? `Shown as "${profile.link_label}" · edit` : 'Give your link a name →'}
+                </button>
               )}
             </div>
 
-            {/* Payout Request Form — only show when bank connected */}
-            {connectStatus?.payoutsEnabled && (
-              <div style={glassCard}>
-                <p style={microLabel}>Request Payout</p>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ ...microLabel, marginBottom: 10 }}>Links by Platform &amp; Language</p>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {PLATFORMS.map((platform) => (
+                  <details key={platform.id} style={{ background: 'rgba(255,255,255,0.015)', borderRadius: 16, padding: '10px 14px' }}>
+                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>{platform.icon}</span> {platform.label}
+                    </summary>
+                    <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+                      {LANGS.map((lang) => {
+                        const link = buildLink(platform.id, lang.id);
+                        const key = `${platform.id}-${lang.id}`;
+                        return (
+                          <div key={lang.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: '0.9rem' }}>{lang.flag}</span>
+                            <code style={{ flex: 1, color: 'rgba(212,175,55,0.7)', fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{link}</code>
+                            <button type="button" onClick={() => copyLink(link, key)} style={copyBtn}>{copiedLink === key ? '✓' : 'Copy'}</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
 
-                <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(212,175,55,0.05)', borderRadius: 20, border: '1px solid rgba(212,175,55,0.1)', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available to Withdraw</span>
-                    <span style={{ color: '#D4AF37', fontWeight: 800, fontSize: '1.1rem' }}>{formatMoney(pending, cur, localeTag)}</span>
-                  </div>
-                </div>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' as const }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
+                alt="Your unique signup QR code"
+                style={{ width: 100, height: 100, borderRadius: 16, border: '1px solid rgba(212,175,55,0.2)', flexShrink: 0 }}
+              />
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.8rem', lineHeight: 1.6, margin: 0 }}>
+                  Screenshot, print, or share — every scan permanently codes the visitor to you.
+                </p>
+                <a
+                  href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
+                  download="my-signup-qr-code.png" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-block', marginTop: 10, color: '#D4AF37', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textDecoration: 'none', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 12, padding: '8px 14px' }}
+                >
+                  ⬇ Download QR
+                </a>
+              </div>
+            </div>
+          </AccordionCard>
+        )}
 
-                <div style={{ display: 'grid', gap: '1rem' }}>
+        {/* ── Quantum Dividends ────────────────────────────────────────────── */}
+        <AccordionCard
+          id="dividends" icon="◈" title="Quantum Dividends" accent="#D4AF37"
+          open={openSection === 'dividends'} onToggle={() => toggle('dividends')}
+          teaser={teaserText(`${formatMoney(pending, cur, localeTag)} available to withdraw`)}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
+            {[
+              { label: 'Total Earned', value: earned, color: '#D4AF37' },
+              { label: 'Pending', value: pending, color: '#22D3EE' },
+              { label: 'Paid Out', value: paidOut, color: '#4ade80' },
+              { label: 'Downline', value: downlineEarned, color: '#8b5cf6' },
+            ].map((s) => (
+              <div key={s.label} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: '12px', textAlign: 'center' }}>
+                <p style={{ ...microLabel, marginBottom: 4, fontSize: 7 }}>{s.label}</p>
+                <p style={{ fontSize: '1.05rem', fontWeight: 900, color: s.color, margin: 0 }}>{formatMoney(s.value, cur, localeTag)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: '12px 16px', textAlign: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#D4AF37' }}>30%</span>
+            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', marginLeft: 8 }}>on every membership, session, and purchase</span>
+          </div>
+
+          <p style={{ ...microLabel, marginBottom: 8 }}>Dividend History</p>
+          {commissions.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem 0', color: 'rgba(255,255,255,0.3)' }}>
+              <p style={{ fontSize: '0.85rem' }}>Your first transmission is on its way. Share your link to activate the flow.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 6 }}>
+              {commissions.slice(0, 8).map((c) => (
+                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 14, padding: '10px 14px' }}>
                   <div>
-                    <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Amount (EUR) · Min €20</label>
-                    <input
-                      type="number"
-                      value={payoutAmount}
-                      onChange={(e) => setPayoutAmount(e.target.value)}
-                      min={20}
-                      max={pending}
-                      placeholder={`Max ${formatMoney(pending, cur, localeTag)}`}
-                      style={inputStyle}
-                    />
+                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
+                      {c.source === 'trading_l1' ? '⚡ Trading L1' : c.source === 'trading_l2' ? '🔗 Trading L2' : 'Initiation Dividend'}
+                      {c.level === 2 && <span style={{ marginLeft: 6, fontSize: 7, fontWeight: 800, color: '#8b5cf6' }}>DOWNLINE</span>}
+                    </p>
+                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', margin: 0 }}>
+                      {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short' })}
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={requestPayout}
-                    disabled={payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > pending}
-                    style={{ ...primaryCta, opacity: payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > pending ? 0.5 : 1, cursor: payoutLoading ? 'wait' : 'pointer' }}
-                  >
-                    {payoutLoading ? 'Submitting…' : 'Request Bank Transmission →'}
-                  </button>
-                  <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem', textAlign: 'center', lineHeight: 1.6 }}>
-                    Minimum €20. Processed within 3-5 business days via Stripe Connect.
+                  <p style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.85rem', margin: 0 }}>
+                    +{formatMoney(Number(c.commission_amount), c.currency || cur, localeTag)}
                   </p>
                 </div>
+              ))}
+            </div>
+          )}
+        </AccordionCard>
+
+        {/* ── Monthly Abundance Reading (Jyotish) ─────────────────────────── */}
+        <AccordionCard
+          id="reading" icon="✦" title={`${monthLabel} Abundance Reading`} accent="#A855F7"
+          open={openSection === 'reading'} onToggle={() => toggle('reading')}
+          teaser={teaserText(oracle ? oracle.timing : 'Your personal Jyotish + Ayurveda wealth timing for this month')}
+        >
+          {oracleLoading ? (
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>Reading your chart…</p>
+          ) : !oracle ? (
+            <div>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 14 }}>
+                Complete your birth chart to unlock a personal wealth-timing reading, refreshed as your planetary period moves.
+              </p>
+              <button type="button" onClick={() => navigate('/profile')} style={secondaryCta}>Complete Your Chart →</button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 14 }}>
+              <div>
+                <p style={{ ...microLabel, color: 'rgba(168,85,247,0.7)', marginBottom: 6 }}>Timing</p>
+                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>{oracle.timing}</p>
+              </div>
+              <div>
+                <p style={{ ...microLabel, color: 'rgba(168,85,247,0.7)', marginBottom: 6 }}>Investment Posture</p>
+                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>{oracle.investment_guidance}</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 14, padding: 12 }}>
+                  <p style={{ ...microLabel, color: 'rgba(74,222,128,0.8)', marginBottom: 4, fontSize: 7 }}>Quick Plays Suit You</p>
+                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.78rem', lineHeight: 1.5, margin: 0 }}>{oracle.quick_invest}</p>
+                </div>
+                <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 14, padding: 12 }}>
+                  <p style={{ ...microLabel, color: 'rgba(212,175,55,0.8)', marginBottom: 4, fontSize: 7 }}>Long-Term Vehicles</p>
+                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.78rem', lineHeight: 1.5, margin: 0 }}>{oracle.long_term_invest}</p>
+                </div>
+              </div>
+              <div style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 14, padding: 12 }}>
+                <p style={{ ...microLabel, color: 'rgba(239,68,68,0.75)', marginBottom: 4, fontSize: 7 }}>Sit This Out If…</p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', lineHeight: 1.5, margin: 0 }}>{oracle.do_not_invest}</p>
+              </div>
+              {oracle.favorable_sectors?.length > 0 && (
+                <div>
+                  <p style={{ ...microLabel, marginBottom: 6 }}>Favorable Sectors</p>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+                    {oracle.favorable_sectors.map((s) => (
+                      <span key={s} style={{ fontSize: '0.72rem', color: '#A855F7', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: 100, padding: '4px 12px' }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <p style={{ ...microLabel, marginBottom: 6 }}>Wealth Mantra</p>
+                <p style={{ color: '#D4AF37', fontStyle: 'italic', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>{oracle.mantra}</p>
+              </div>
+
+              {oracle.affiliate_fit && (
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${VERDICT_COLOR[oracle.affiliate_fit.verdict]}33`, borderRadius: 16, padding: 14, marginTop: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <p style={{ ...microLabel, margin: 0 }}>Affiliate Timing This Month</p>
+                    <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', color: VERDICT_COLOR[oracle.affiliate_fit.verdict], border: `1px solid ${VERDICT_COLOR[oracle.affiliate_fit.verdict]}55`, borderRadius: 99, padding: '3px 10px' }}>
+                      {VERDICT_LABEL[oracle.affiliate_fit.verdict]}
+                    </span>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', lineHeight: 1.6, margin: '0 0 8px' }}>{oracle.affiliate_fit.reason}</p>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>
+                    {oracle.affiliate_fit.how.map((step, i) => (
+                      <li key={i} style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', lineHeight: 1.5 }}>{step}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </AccordionCard>
+
+        {/* ── How It Works ─────────────────────────────────────────────────── */}
+        <AccordionCard
+          id="how" icon="?" title="How Your Dividends Work" accent="#D4AF37"
+          open={openSection === 'how'} onToggle={() => toggle('how')}
+          teaser={teaserText('5 steps, from your first share to money in your bank')}
+        >
+          <div style={{ display: 'grid', gap: 12 }}>
+            {[
+              'Share your unique link across any platform in any language.',
+              'Seekers land on your personalised, translated landing page.',
+              'When they purchase any tier, your affiliate code is permanently encoded.',
+              '30% Quantum Dividend lands in your Pending Balance instantly via Stripe webhook.',
+              'Connect your bank account via Stripe and request a payout — processed within 3-5 days.',
+            ].map((step, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <span style={{ minWidth: 26, height: 26, borderRadius: '50%', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#D4AF37', flexShrink: 0 }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0, paddingTop: 4 }}>{step}</p>
+              </div>
+            ))}
+          </div>
+        </AccordionCard>
+
+        {/* ── Withdraw ─────────────────────────────────────────────────────── */}
+        <AccordionCard
+          id="withdraw" icon="💳" title="Withdraw" accent="#4ade80"
+          open={openSection === 'withdraw'} onToggle={() => toggle('withdraw')}
+          teaser={teaserText(connectStatus?.payoutsEnabled ? 'Bank connected — ready to withdraw' : 'Connect your bank account to get paid')}
+        >
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ ...microLabel, margin: 0 }}>Bank Account · Stripe Connect</p>
+              {renderConnectBadge()}
+            </div>
+
+            {connectStatus?.payoutsEnabled ? (
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
+                ✓ Your bank account is connected. Payouts transfer directly via Stripe.
+              </p>
+            ) : connectStatus?.hasAccount ? (
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 12 }}>
+                  Your Stripe account exists but setup is incomplete.
+                </p>
+                <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
+                  {connectLoading ? 'Opening…' : 'Complete Bank Setup →'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 12 }}>
+                  Connect your bank via Stripe — takes ~5 minutes.
+                </p>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ ...microLabel, display: 'block', marginBottom: 8 }}>Your Country</label>
+                  <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={inputStyle}>
+                    {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code} style={{ background: '#050505' }}>{c.label}</option>)}
+                  </select>
+                </div>
+                <button type="button" onClick={handleConnectStripe} disabled={connectLoading} style={primaryCta}>
+                  {connectLoading ? 'Opening Stripe…' : 'Connect Bank Account →'}
+                </button>
               </div>
             )}
 
-            {/* Payout history */}
+            {connectStatus?.payoutsEnabled && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available to Withdraw</span>
+                  <span style={{ color: '#D4AF37', fontWeight: 800 }}>{formatMoney(pending, cur, localeTag)}</span>
+                </div>
+                <label style={{ ...microLabel, display: 'block', marginBottom: 6 }}>Amount · Min €20</label>
+                <input
+                  type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)}
+                  min={20} max={pending} placeholder={`Max ${formatMoney(pending, cur, localeTag)}`}
+                  style={{ ...inputStyle, marginBottom: 12 }}
+                />
+                <button
+                  type="button" onClick={requestPayout}
+                  disabled={payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > pending}
+                  style={{ ...primaryCta, opacity: payoutLoading || Number(payoutAmount) < 20 || Number(payoutAmount) > pending ? 0.5 : 1 }}
+                >
+                  {payoutLoading ? 'Submitting…' : 'Request Payout →'}
+                </button>
+              </div>
+            )}
+
             {payouts.length > 0 && (
-              <div style={glassCard}>
-                <p style={microLabel}>Transmission History</p>
-                <div style={{ display: 'grid', gap: 8, marginTop: '1rem' }}>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
+                <p style={{ ...microLabel, marginBottom: 8 }}>Payout History</p>
+                <div style={{ display: 'grid', gap: 6 }}>
                   {payouts.map((p) => (
-                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 16, padding: '12px 16px' }}>
-                      <div>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', margin: 0 }}>Bank Transmission</p>
-                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', margin: 0 }}>
-                          {new Date(p.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </p>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ color: '#D4AF37', fontWeight: 800, fontSize: '1rem', margin: 0 }}>{formatMoney(Number(p.amount), p.currency || cur, localeTag)}</p>
-                        <span style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: p.status === 'completed' ? '#4ade80' : 'rgba(212,175,55,0.7)' }}>
-                          {p.status.toUpperCase()}
-                        </span>
-                      </div>
+                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.015)', borderRadius: 14, padding: '10px 14px' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>{new Date(p.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short' })}</span>
+                      <span style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.85rem' }}>{formatMoney(Number(p.amount), p.currency || cur, localeTag)}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        )}
+        </AccordionCard>
 
-        <div style={{ height: '4rem' }} />
+        {/* ── More Ways to Earn (bots, tucked away — not competing for attention) ── */}
+        <AccordionCard
+          id="more" icon="⚡" title="More Ways to Earn" accent="#22D3EE"
+          open={openSection === 'more'} onToggle={() => toggle('more')}
+          teaser={teaserText(`Trading commissions, bots & airdrops · $${tradingEarned.toFixed(2)} earned so far`)}
+        >
+          <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 16, padding: 14 }}>
+              <p style={{ ...microLabel, color: 'rgba(34,197,94,0.7)', marginBottom: 8 }}>⚡ CLAWBOT Trading Commissions</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {[
+                  { tier: 'Free', l1: '10%', l2: '3%' },
+                  { tier: 'Prana-Flow', l1: '8%', l2: '2%' },
+                  { tier: 'Siddha-Quantum', l1: '5%', l2: '1%' },
+                  { tier: 'Akasha-∞', l1: '3%', l2: '1%' },
+                ].map(r => (
+                  <div key={r.tier} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '6px 8px' }}>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>{r.tier}</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#22c55e' }}>L1 {r.l1} · L2 {r.l2}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {[
+              { to: '/income-streams/airdrop-farming', icon: '🌱', color: '#10B981', title: 'Airdrop Farming', tag: 'ZERO CAPITAL', desc: 'Manual weekly routine · Meteora, Monad, Polymarket' },
+              { to: '/income-streams/delta-arb-bot', icon: '⚡', color: '#22D3EE', title: 'Delta-Arb Bot', tag: 'INCOME STREAM', desc: 'Polymarket oracle-lag arbitrage · passive returns' },
+              { to: '/income-streams/shreem-brzee-performance', icon: '🔱', color: '#D4AF37', title: 'Shreem Brzee Bot', tag: 'COPY TRADING · LIVE', desc: 'Solana meme coin copy trading · 21 whale wallets' },
+              { to: '/income-streams/clawbot-hetzner', icon: '🦅', color: '#D4AF37', title: 'CLAWBOT', tag: 'WHALE MIRROR · LIVE', desc: 'Polymarket elite whale copy-trading · 9 signals' },
+              { to: '/income-streams/sniper-bot', icon: '🎯', color: '#A855F7', title: 'Sovereign Sniper', tag: 'SOLANA · LIVE', desc: 'Pump.fun sniper · 12-signal AI · Jito MEV' },
+            ].map((b) => (
+              <div key={b.to} onClick={() => navigate(b.to)} style={{ background: `${b.color}0A`, border: `1px solid ${b.color}30`, borderRadius: 16, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 18 }}>{b.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: b.color }}>{b.title}</span>
+                    <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.1em', color: b.color, border: `1px solid ${b.color}55`, borderRadius: 99, padding: '2px 6px' }}>{b.tag}</span>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: '2px 0 0' }}>{b.desc}</p>
+                </div>
+                <span style={{ color: b.color, fontSize: 16 }}>→</span>
+              </div>
+            ))}
+          </div>
+        </AccordionCard>
+
       </div>
     </div>
   );
@@ -1094,4 +968,3 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default AffiliateDashboard;
-
