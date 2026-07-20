@@ -436,6 +436,28 @@ const AffiliateDashboard: React.FC = () => {
                     {copiedLink === 'master' ? '✓' : 'Copy'}
                   </button>
                 </div>
+
+                <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' as const }}>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
+                    alt="Your unique signup QR code"
+                    style={{ width: 110, height: 110, borderRadius: 16, border: '1px solid rgba(212,175,55,0.2)', flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 180 }}>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', lineHeight: 1.6, margin: 0 }}>
+                      Your own QR code. Print it, screenshot it, or share it at events — anyone who scans it is permanently encoded with your affiliate ID.
+                    </p>
+                    <a
+                      href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
+                      download="my-signup-qr-code.png"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-block', marginTop: 10, color: '#D4AF37', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textDecoration: 'none', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 12, padding: '8px 14px' }}
+                    >
+                      ⬇ Download QR
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -761,9 +783,20 @@ const AffiliateDashboard: React.FC = () => {
                   alt="Affiliate QR Code"
                   style={{ width: 120, height: 120, borderRadius: 16, border: '1px solid rgba(212,175,55,0.2)' }}
                 />
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.7 }}>
-                  Screenshot and share in stories, print for events, or embed on websites. Every scan permanently codes the visitor with your affiliate ID.
-                </p>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', lineHeight: 1.7, margin: 0 }}>
+                    Screenshot and share in stories, print for events, or embed on websites. Every scan permanently codes the visitor with your affiliate ID.
+                  </p>
+                  <a
+                    href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(mainLink)}&bgcolor=050505&color=D4AF37&qzone=1`}
+                    download="my-signup-qr-code.png"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'inline-block', marginTop: 10, color: '#D4AF37', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textDecoration: 'none', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 12, padding: '8px 14px' }}
+                  >
+                    ⬇ Download QR
+                  </a>
+                </div>
               </div>
             </div>
           </div>
