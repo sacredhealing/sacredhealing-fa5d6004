@@ -962,6 +962,11 @@ serve(async (req) => {
                   updated_at: new Date().toISOString(),
                 }, { onConflict: 'user_id' });
                 logStep('Lifetime membership granted (one-time payment)', { userId, tierSlug, priceId: membershipPriceId });
+                if (customerEmail) {
+                  const buyerName = session.metadata?.full_name || session.customer_details?.name || customerEmail.split("@")[0];
+                  await sendAkashaInfinityWelcomeEmail(customerEmail, buyerName);
+                  akashaWelcomeSent = true;
+                }
               }
             }
           } catch (memErr) {
