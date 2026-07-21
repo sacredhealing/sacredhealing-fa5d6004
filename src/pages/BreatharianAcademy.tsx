@@ -4,6 +4,7 @@ import { ArrowLeft, Wind } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
+import { useEducationGrants } from '@/hooks/useEducationGrants';
 import { useBreatharianProgress } from '@/hooks/useBreatharianProgress';
 import { hasFeatureAccess, getCourseTierRequiredRank, getSalesPageForRank } from '@/lib/tierAccess';
 import CourseSyllabus from '@/components/education/CourseSyllabus';
@@ -21,6 +22,7 @@ export default function BreatharianAcademy() {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { tier, loading: membershipLoading, settled } = useMembership();
+  const { grantedAcademies } = useEducationGrants();
   const membershipReady = !membershipLoading && settled;
   const { courses, progressByModuleId, stats, loading: loadingData, error: loadError } = useBreatharianProgress(membershipReady);
 
@@ -36,13 +38,13 @@ export default function BreatharianAcademy() {
         current: false,
         lessons: mods.map((m) => {
           const done = Boolean(progressByModuleId[m.id]?.completed);
-          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required));
+          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required), grantedAcademies.has('breatharian_academy'));
           const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
           return { id: m.id, number: m.module_number, title: m.title, state };
         }),
       };
     });
-  }, [courses, progressByModuleId, isAdmin, tier]);
+  }, [courses, progressByModuleId, isAdmin, tier, grantedAcademies]);
 
   if (!membershipReady || loadingData) {
     return (

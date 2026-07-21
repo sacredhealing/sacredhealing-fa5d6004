@@ -179,15 +179,41 @@ export function getSalesPageForRank(requiredRank: number): string {
   return '/prana-flow';
 }
 
-/** Check if user has access to a feature, considering admin and tier */
+/**
+ * Check if user has access to a feature, considering admin, tier, and an
+ * optional per-academy admin grant override (bypasses tier entirely for that
+ * one academy — see useEducationGrants / admin_granted_access access_type='program').
+ */
 export function hasFeatureAccess(
   isAdmin: boolean,
   tier: string | undefined | null,
-  requiredRank: number
+  requiredRank: number,
+  academyOverride?: boolean
 ): boolean {
-  if (isAdmin) return true;
+  if (isAdmin || academyOverride) return true;
   return getTierRank(tier) >= requiredRank;
 }
+
+/**
+ * Canonical Siddha Portal academy keys used for standalone education grants
+ * (admin_granted_access.access_type='program', access_id=<key>). Granting one
+ * of these unlocks every module of that academy for the user regardless of
+ * their membership tier — without touching membership_tier or unlocking any
+ * other Siddha-Quantum feature (Digital Nadi, Sri Yantra Shield, etc.).
+ *
+ * To wire a new academy into this system: add its key/label here, then in
+ * that academy's page pass `grantedAcademies.has('<key>')` as the 4th arg to
+ * every hasFeatureAccess(...) call (see SiddhaMedicineAcademy.tsx for the pattern).
+ */
+export const EDUCATION_PROGRAMS: { key: string; label: string }[] = [
+  { key: 'siddha_medicine_academy', label: 'Siddha Medicine Academy (32 modules)' },
+  { key: 'agastyar_ayurveda_academy', label: 'Agastyar Ayurveda Academy (108 modules)' },
+  { key: 'breatharian_academy', label: 'Breatharian Academy' },
+  { key: 'siddha_meditation_course', label: 'Siddha Meditation Course (18 modules)' },
+  { key: 'mantra_academy', label: 'Mantra Nada Academy (24 modules)' },
+  { key: 'kriya_yoga_academy', label: 'Kriya Yoga Academy' },
+  { key: 'brahmacharya_academy', label: 'Brahmacharya Academy' },
+];
 
 /**
  * Akasha-Infinity–level entitlements (Temple Home, virtual pilgrimage, etc.).

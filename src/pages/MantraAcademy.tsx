@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMembership } from "@/hooks/useMembership";
+import { useEducationGrants } from "@/hooks/useEducationGrants";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/hooks/useAuth";
 import { getTierRank } from "@/lib/tierAccess";
@@ -127,8 +128,10 @@ export default function MantraAcademy() {
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
   const { user } = useAuth();
-  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
-  const canAccess = (t: Tier) => isAdmin || TIER_ORDER.indexOf(t) <= rank;
+  const { grantedAcademies } = useEducationGrants();
+  const academyOverride = grantedAcademies.has('mantra_academy');
+  const rank = isAdmin || academyOverride ? 3 : (getTierRank(tier) ?? 0);
+  const canAccess = (t: Tier) => isAdmin || academyOverride || TIER_ORDER.indexOf(t) <= rank;
 
   const { courses, lessonProgress, toggleLessonComplete, moduleCompletionByModuleId } = useMantraAcademyProgress(true);
   const dbIdByModuleKey: Record<string, string> = {};

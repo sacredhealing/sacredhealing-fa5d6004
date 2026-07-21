@@ -31,6 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAyurvedaProgress, type AyurvedaCourseRow } from '@/hooks/useAyurvedaProgress';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
+import { useEducationGrants } from '@/hooks/useEducationGrants';
 import CourseSyllabus from '@/components/education/CourseSyllabus';
 import { teal } from '@/components/education/tokens';
 import {
@@ -208,6 +209,8 @@ const AgastyarAcademy: React.FC = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { tier, loading: membershipLoading, settled } = useMembership();
+  const { grantedAcademies } = useEducationGrants();
+  const academyOverride = grantedAcademies.has('agastyar_ayurveda_academy');
 
   const membershipReady = !membershipLoading && settled;
   const { courses, progressByModuleId, stats, loading: loadingData, error: loadError, refresh, getPhaseModules } =
@@ -238,18 +241,18 @@ const AgastyarAcademy: React.FC = () => {
         current: containsCurrent,
         lessons: mods.map((m) => {
           const done = Boolean(progressByModuleId[m.id]?.completed);
-          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required));
+          const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(m.tier_required), academyOverride);
           const state: 'done' | 'current' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
           return { id: m.id, number: m.module_number, title: m.title, state };
         }),
       };
     });
-  }, [getPhaseModules, progressByModuleId, isAdmin, tier, t]);
+  }, [getPhaseModules, progressByModuleId, isAdmin, tier, t, academyOverride]);
 
   const phaseAccess = useCallback(
     (phaseNum: number) =>
-      hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(PHASE_TIER_SLUG[phaseNum])),
-    [isAdmin, tier],
+      hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank(PHASE_TIER_SLUG[phaseNum]), academyOverride),
+    [isAdmin, tier, academyOverride],
   );
 
   const activeModules = useMemo(() => {
@@ -277,13 +280,13 @@ const AgastyarAcademy: React.FC = () => {
     let completed = 0;
     courses.forEach((c) => {
       const need = getCourseTierRequiredRank(c.tier_required);
-      if (hasFeatureAccess(isAdmin, tier, need)) {
+      if (hasFeatureAccess(isAdmin, tier, need, academyOverride)) {
         unlocked += 1;
         if (progressByModuleId[c.id]?.completed) completed += 1;
       }
     });
     return { unlocked, completed, total: courses.length };
-  }, [courses, progressByModuleId, isAdmin, tier]);
+  }, [courses, progressByModuleId, isAdmin, tier, academyOverride]);
 
   if (membershipLoading || !settled) {
     return (

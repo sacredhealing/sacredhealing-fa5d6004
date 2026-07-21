@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail, MessageSquare, XCircle, Clock } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail, MessageSquare, XCircle, Clock, GraduationCap } from "lucide-react";
+import { EDUCATION_PROGRAMS } from "@/lib/tierAccess";
 
 const ADMIN_UUID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17";
 
@@ -68,12 +69,13 @@ export default function UserManagementPanel() {
   const [filterTier, setFilterTier] = useState("all");
   const [showUnnamed, setShowUnnamed] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"create-user"|"send-message"|"cancel-sub"|null>(null);
+  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"edit-education"|"create-user"|"send-message"|"cancel-sub"|null>(null);
   const [messageSubject, setMessageSubject] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [cancelImmediately, setCancelImmediately] = useState(false);
   const [newTier, setNewTier] = useState("");
   const [pendingProducts, setPendingProducts] = useState<string[]>([]);
+  const [pendingEducation, setPendingEducation] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<string|null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [resetingId, setResetingId] = useState<string|null>(null);
@@ -105,13 +107,18 @@ export default function UserManagementPanel() {
         .from("admin_granted_access").select("user_id,tier,access_id,access_type,is_active,granted_at")
         .eq("is_active",true);
 
+      const EDUCATION_KEYS = new Set(EDUCATION_PROGRAMS.map(p => p.key));
       const membershipGrants: Record<string,string> = {};
       const productGrants: Record<string,string[]> = {};
+      const educationGrants: Record<string,string[]> = {};
       (grants||[]).forEach((g:any) => {
         if (g.access_type === "product") {
           if (!productGrants[g.user_id]) productGrants[g.user_id] = [];
           productGrants[g.user_id].push(g.access_id);
-        } else {
+        } else if (g.access_type === "program" && EDUCATION_KEYS.has(g.access_id)) {
+          if (!educationGrants[g.user_id]) educationGrants[g.user_id] = [];
+          educationGrants[g.user_id].push(g.access_id);
+        } else if (g.access_type === "membership") {
           const slug = canonicalize(g.tier || g.access_id);
           if (!membershipGrants[g.user_id]) membershipGrants[g.user_id] = slug;
         }
@@ -155,6 +162,7 @@ export default function UserManagementPanel() {
           stripe_sub: memberMap[authId]?.stripe_subscription_id||null,
           expires_at: memberMap[authId]?.expires_at||null,
           grantedProducts: productGrants[authId] || [],
+          grantedEducation: educationGrants[authId] || [],
         };
       }));
     } catch (e: any) {
@@ -271,7 +279,7 @@ export default function UserManagementPanel() {
         .eq("access_type", "product");
 
       if (pendingProducts.length > 0) {
-        const inserts = pendingProducts.map(pid => ({
+        const upserts = pendingProducts.map(pid => ({
           user_id: selectedUser.id,
           access_type: "product",
           access_id: pid,
@@ -280,7 +288,8 @@ export default function UserManagementPanel() {
           granted_by: ADMIN_UUID,
           granted_at: new Date().toISOString(),
         }));
-        const { error } = await supabase.from("admin_granted_access").insert(inserts);
+        const { error } = await supabase.from("admin_granted_access")
+          .upsert(upserts, { onConflict: "user_id,access_type,access_id" });
         if (error) throw error;
       }
 
@@ -313,6 +322,63 @@ export default function UserManagementPanel() {
     setPendingProducts(prev =>
       prev.includes(pid) ? prev.filter(x => x !== pid) : [...prev, pid]
     );
+  };
+
+  // ── Education / Siddha Portal academy access ──────────────────────────────
+  // Standalone from membership tier: grants full access to specific academies
+  // (admin_granted_access access_type='program') without touching the user's
+  // paid tier or unlocking anything else Siddha-Quantum normally includes.
+  const openEducationModal = (user: any) => {
+    setSelectedUser(user);
+    setPendingEducation([...(user.grantedEducation || [])]);
+    setModalMode("edit-education");
+  };
+
+  const toggleEducation = (key: string) => {
+    setPendingEducation(prev =>
+      prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]
+    );
+  };
+
+  const handleSaveEducation = async () => {
+    if (!selectedUser) return;
+    setActionLoading(true);
+    try {
+      // Deactivate only the education-program rows (never touch membership/product rows).
+      await supabase.from("admin_granted_access")
+        .update({ is_active: false })
+        .eq("user_id", selectedUser.id)
+        .eq("access_type", "program")
+        .in("access_id", EDUCATION_PROGRAMS.map(p => p.key));
+
+      if (pendingEducation.length > 0) {
+        const upserts = pendingEducation.map(key => ({
+          user_id: selectedUser.id,
+          access_type: "program",
+          access_id: key,
+          tier: null,
+          is_active: true,
+          granted_by: ADMIN_UUID,
+          granted_at: new Date().toISOString(),
+        }));
+        const { error } = await supabase.from("admin_granted_access")
+          .upsert(upserts, { onConflict: "user_id,access_type,access_id" });
+        if (error) throw error;
+      }
+
+      setUsers(prev => prev.map(u =>
+        u.id===selectedUser.id ? {...u, grantedEducation: pendingEducation} : u
+      ));
+      toast({
+        title: "⟁ Siddha Portal Access Transmitted",
+        description: pendingEducation.length > 0
+          ? `${selectedUser.full_name||"Seeker"} → ${pendingEducation.length} academ${pendingEducation.length>1?"ies":"y"} granted`
+          : "All academy access revoked",
+      });
+      setModalMode(null);
+    } catch (e:any) {
+      toast({ title:"Error", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
   };
 
   const handleResetPassword = async (userId: string, userName: string) => {
@@ -583,6 +649,7 @@ export default function UserManagementPanel() {
                   <IconBtn icon={<Eye size={12}/>} title="View profile & subscription" onClick={()=>openUser(user,"view")} />
                   <IconBtn icon={<Crown size={12}/>} title="Change membership tier" onClick={()=>openUser(user,"edit-tier")} color={gold} />
                   <IconBtn icon={<Package size={12}/>} title="Manage individual products" onClick={()=>openProductModal(user)} color="#a78bfa" />
+                  <IconBtn icon={<GraduationCap size={12}/>} title="Grant Siddha Portal academy access" onClick={()=>openEducationModal(user)} color="#34D399" />
                   <IconBtn icon={<MessageSquare size={12}/>} title="Send email message / upgrade nudge" onClick={()=>openSendMessage(user)} color="#22D3EE" />
                   {(user.stripe_sub || (user.tier !== "free")) && (
                     <IconBtn icon={<XCircle size={12}/>} title="Cancel subscription" onClick={()=>openCancelSub(user)} color="#f59e0b" />
@@ -787,9 +854,27 @@ export default function UserManagementPanel() {
               <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)" }}>No individual products granted</span>
             )}
           </div>
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(52,211,153,0.6)", marginBottom:10 }}>SIDDHA PORTAL ACCESS</div>
+            {selectedUser.grantedEducation?.length > 0 ? (
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                {selectedUser.grantedEducation.map((key:string) => {
+                  const program = EDUCATION_PROGRAMS.find(p=>p.key===key);
+                  return (
+                    <span key={key} style={{ fontSize:10, fontWeight:700, color:"#34D399", background:"rgba(52,211,153,0.1)", border:"1px solid rgba(52,211,153,0.25)", borderRadius:8, padding:"5px 10px" }}>
+                      🎓 {program?.label||key}
+                    </span>
+                  );
+                })}
+              </div>
+            ) : (
+              <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)" }}>No academies granted independently of tier</span>
+            )}
+          </div>
           <div style={{ display:"flex", gap:10, marginTop:18, flexWrap:"wrap" }}>
             <SQIBtn label="Edit Tier" onClick={()=>setModalMode("edit-tier")} color={gold} />
             <SQIBtn label="Edit Products" onClick={()=>{ setModalMode(null); openProductModal(selectedUser); }} color="#a78bfa" />
+            <SQIBtn label="🎓 Grant Academies" onClick={()=>{ setModalMode(null); openEducationModal(selectedUser); }} color="#34D399" />
             <SQIBtn label="✉ Send Message" onClick={()=>openSendMessage(selectedUser)} color="#22D3EE" />
             {(selectedUser.stripe_sub || selectedUser.tier !== "free") && (
               <SQIBtn label="✕ Cancel Subscription" onClick={()=>openCancelSub(selectedUser)} color="#f59e0b" />
@@ -873,6 +958,49 @@ export default function UserManagementPanel() {
           </div>
           <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
             <SQIBtn label={actionLoading?"Saving…":"◈ Save Product Access"} onClick={handleSaveProducts} loading={actionLoading} color="#a78bfa" />
+            <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
+          </div>
+        </SQIModal>
+      )}
+
+      {/* Edit Education / Siddha Portal Academy Access Modal */}
+      {modalMode==="edit-education" && selectedUser && (
+        <SQIModal onClose={()=>setModalMode(null)}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"#34D399", marginBottom:8 }}>SIDDHA PORTAL ACADEMY ACCESS</div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 4px" }}>{selectedUser.full_name||"No name set"}</h3>
+          <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:18 }}>
+            Grants full access to selected academies — independent of membership tier.
+            Doesn't touch Digital Nadi, Sri Yantra Shield, or any other Siddha-Quantum feature.
+          </p>
+          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
+            {EDUCATION_PROGRAMS.map(program => {
+              const isGranted = pendingEducation.includes(program.key);
+              return (
+                <button key={program.key} onClick={()=>toggleEducation(program.key)}
+                  style={{
+                    background: isGranted ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${isGranted ? "rgba(52,211,153,0.45)" : "rgba(255,255,255,0.08)"}`,
+                    borderRadius:14, padding:"12px 16px", textAlign:"left", cursor:"pointer",
+                    display:"flex", alignItems:"center", gap:12, transition:"all 0.15s",
+                  }}>
+                  <div style={{ width:18, height:18, borderRadius:"50%", flexShrink:0, background: isGranted ? "#34D399" : "rgba(255,255,255,0.1)", border: `2px solid ${isGranted ? "#34D399" : "rgba(255,255,255,0.2)"}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    {isGranted && <span style={{ color:"#050505", fontSize:10, fontWeight:900 }}>✓</span>}
+                  </div>
+                  <GraduationCap size={18} color={isGranted ? "#34D399" : "rgba(255,255,255,0.4)"} style={{ flexShrink:0 }} />
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color: isGranted ? "#34D399" : "rgba(255,255,255,0.7)" }}>{program.label}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ padding:"10px 14px", background:"rgba(52,211,153,0.06)", border:"1px solid rgba(52,211,153,0.15)", borderRadius:12, marginBottom:16 }}>
+            <span style={{ fontSize:10, color:"rgba(52,211,153,0.7)" }}>
+              {pendingEducation.length === 0 ? "No academies selected — all standalone academy access will be revoked" : `${pendingEducation.length} academ${pendingEducation.length>1?"ies":"y"} will be granted`}
+            </span>
+          </div>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <SQIBtn label={actionLoading?"Saving…":"🎓 Save Academy Access"} onClick={handleSaveEducation} loading={actionLoading} color="#34D399" />
             <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
           </div>
         </SQIModal>
