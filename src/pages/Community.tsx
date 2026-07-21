@@ -32,6 +32,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { getTierRank } from "@/lib/tierAccess";
 import CallRecorderBar from "@/components/community/CallRecorderBar";
+import BhagavadGitaSpace from "@/components/community/BhagavadGitaSpace";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
@@ -43,6 +44,14 @@ const CHANNELS = [
     icon: "🔱",
     description: "Open space for all members",
     access: "public",
+  },
+  {
+    id: "bhagavad-gita",
+    name: "Bhagavad Gita",
+    icon: "📜",
+    description: "Verse-by-verse wisdom — open to every tier",
+    access: "tiered",
+    minTierRank: 0, // every tier, including free — content within is gated per-verse
   },
   {
     id: "sacred-mantras",
@@ -2230,6 +2239,11 @@ const Community = () => {
                     </div>
                   );
                 })()
+              ) : activeChannel === "bhagavad-gita" ? (
+                <BhagavadGitaSpace
+                  isAdmin={isAdmin}
+                  onBack={() => { setActiveChannel(null); setMobileTab("members"); }}
+                />
               ) : (
               <div className="c-chat-view">
                 {/* Chat header */}
