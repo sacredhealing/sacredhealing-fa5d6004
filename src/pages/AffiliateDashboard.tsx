@@ -9,6 +9,7 @@ import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 interface AffiliateProfile {
   affiliate_code: string;
   link_label?: string | null;
+  vanity_slug?: string | null;
   payout_bank_details?: PayoutBankDetails | null;
   total_earnings: number;
   pending_balance: number;
@@ -130,6 +131,15 @@ const VERDICT_LABEL: Record<AffiliateFit['verdict'], string> = {
   not_now: 'Not Now',
   no: 'Sit This Out',
 };
+
+function slugify(input: string): string {
+  return input
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '') // strip accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 30);
+}
 
 function formatMoney(amount: number, currency: string, locale: string): string {
   const cur = (currency || 'EUR').toUpperCase();
@@ -334,14 +344,29 @@ const AffiliateDashboard: React.FC = () => {
   const saveLabel = async () => {
     if (!user) return;
     const trimmed = labelInput.trim().slice(0, 40);
+    const slug = trimmed ? slugify(trimmed) : null;
+
+    if (trimmed && !slug) {
+      toast({ title: 'Name needs at least one letter or number', variant: 'destructive' });
+      return;
+    }
+
     setLabelSaving(true);
     try {
+      const payload = { link_label: trimmed || null, vanity_slug: slug };
       const { data, error } = await supabase
         .from('affiliate_profiles')
-        .update({ link_label: trimmed || null })
+        .update(payload)
         .eq('user_id', user.id)
-        .select('link_label');
-      if (error) throw error;
+        .select('link_label, vanity_slug');
+
+      if (error) {
+        // Unique index violation on vanity_slug
+        if (error.code === '23505' || /vanity_slug/i.test(error.message)) {
+          throw new Error('That name is already taken by another affiliate — try a variation.');
+        }
+        throw error;
+      }
 
       // .update() with RLS can silently match 0 rows instead of erroring —
       // fall back to an upsert keyed on user_id so the name always lands.
@@ -349,13 +374,18 @@ const AffiliateDashboard: React.FC = () => {
         if (!profile?.affiliate_code) throw new Error('No affiliate profile found yet.');
         const { error: upsertError } = await supabase
           .from('affiliate_profiles')
-          .upsert({ user_id: user.id, affiliate_code: profile.affiliate_code, link_label: trimmed || null }, { onConflict: 'user_id' });
-        if (upsertError) throw upsertError;
+          .upsert({ user_id: user.id, affiliate_code: profile.affiliate_code, ...payload }, { onConflict: 'user_id' });
+        if (upsertError) {
+          if (upsertError.code === '23505' || /vanity_slug/i.test(upsertError.message)) {
+            throw new Error('That name is already taken by another affiliate — try a variation.');
+          }
+          throw upsertError;
+        }
       }
 
-      setProfile(p => (p ? { ...p, link_label: trimmed || null } : p));
+      setProfile(p => (p ? { ...p, link_label: trimmed || null, vanity_slug: slug } : p));
       setLabelEditing(false);
-      toast({ title: 'Link name updated' });
+      toast({ title: 'Link updated', description: slug ? `Your link now ends in /${slug}` : 'Custom name removed.' });
     } catch (err) {
       toast({ title: 'Could not save name', description: err instanceof Error ? err.message : 'Try again in a moment.', variant: 'destructive' });
     } finally {
@@ -471,9 +501,10 @@ const AffiliateDashboard: React.FC = () => {
     }
   };
 
+  const linkPath = profile?.vanity_slug || profile?.affiliate_code;
   const buildLink = (platform: Platform, lang: LangCode) =>
-    `${baseUrl}/affiliate/r/${profile?.affiliate_code}?platform=${platform}&lang=${lang}`;
-  const mainLink = profile ? `${baseUrl}/affiliate/r/${profile.affiliate_code}` : '';
+    `${baseUrl}/affiliate/r/${linkPath}?platform=${platform}&lang=${lang}`;
+  const mainLink = profile ? `${baseUrl}/affiliate/r/${linkPath}` : '';
 
   const handleConnectStripe = async () => {
     if (!user) return;
@@ -703,7 +734,7 @@ const AffiliateDashboard: React.FC = () => {
           <AccordionCard
             id="link" icon="🔗" title="Your Sovereign Link" accent="#D4AF37"
             open={openSection === 'link'} onToggle={() => toggle('link')}
-            teaser={teaserText(profile.link_label ? `Shown as "${profile.link_label}"` : 'One link, every platform, every language — tap to view')}
+            teaser={teaserText(profile.vanity_slug ? `Your link ends in /${profile.vanity_slug}` : 'One link, every platform, every language — tap to view')}
           >
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <code style={{ flex: 1, fontSize: '0.78rem', color: '#D4AF37', wordBreak: 'break-all' as const }}>{mainLink}</code>
@@ -712,22 +743,30 @@ const AffiliateDashboard: React.FC = () => {
 
             <div style={{ marginTop: 14 }}>
               {labelEditing ? (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, alignItems: 'center' }}>
-                  <input
-                    value={labelInput} onChange={(e) => setLabelInput(e.target.value)}
-                    placeholder="Give your link a name" maxLength={40}
-                    style={{ ...inputStyle, flex: 1, minWidth: 160 }}
-                  />
-                  <button type="button" disabled={labelSaving} onClick={saveLabel} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
-                    {labelSaving ? 'Saving…' : 'Save'}
-                  </button>
-                  <button type="button" onClick={() => { setLabelEditing(false); setLabelInput(profile.link_label || ''); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                    Cancel
-                  </button>
+                <div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                    <input
+                      value={labelInput} onChange={(e) => setLabelInput(e.target.value)}
+                      placeholder="e.g. Kritagyadas" maxLength={40}
+                      style={{ ...inputStyle, flex: 1, minWidth: 160 }}
+                    />
+                    <button type="button" disabled={labelSaving} onClick={saveLabel} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+                      {labelSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button type="button" onClick={() => { setLabelEditing(false); setLabelInput(profile.link_label || ''); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                      Cancel
+                    </button>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: 8, marginBottom: 0 }}>
+                    Your link will become:{' '}
+                    <code style={{ color: '#D4AF37' }}>
+                      {baseUrl}/affiliate/r/{labelInput.trim() ? (slugify(labelInput) || '…') : profile.affiliate_code}
+                    </code>
+                  </p>
                 </div>
               ) : (
                 <button type="button" onClick={() => setLabelEditing(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>
-                  {profile.link_label ? `Shown as "${profile.link_label}" · edit` : 'Give your link a name →'}
+                  {profile.vanity_slug ? `Link personalized as "${profile.link_label}" · edit` : 'Replace the code with your own name →'}
                 </button>
               )}
             </div>

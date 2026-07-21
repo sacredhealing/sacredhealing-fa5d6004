@@ -254,15 +254,32 @@ const AffiliateLanding: React.FC = () => {
   const hook = HOOKS[lang]?.[platform] || HOOKS.en.default;
 
   const [affiliate, setAffiliate] = useState<AffiliateInfo|null>(null);
+  const [resolvedCode, setResolvedCode] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hover, setHover] = useState<number|null>(null);
 
   useEffect(()=>{
     if(!code) return;
-    localStorage.setItem('affiliateId', code);
-    sessionStorage.setItem('affiliateId', code);
-    supabase.from('affiliate_profiles').select('affiliate_code, link_label, profiles!inner(full_name)').eq('affiliate_code',code).single()
-      .then(({data}:any)=>{ if(data) setAffiliate({display_name:data.link_label||data.profiles?.full_name||'A Sovereign Soul',affiliate_code:data.affiliate_code}); });
+    supabase.from('affiliate_profiles')
+      .select('affiliate_code, link_label, vanity_slug, profiles!inner(full_name)')
+      .or(`affiliate_code.eq.${code},vanity_slug.eq.${code.toLowerCase()}`)
+      .maybeSingle()
+      .then(({data}:any)=>{
+        if(data){
+          // Always resolve to the REAL affiliate_code before it touches
+          // attribution/checkout — that's the only key the rest of the
+          // system (affiliate_attribution, commissions, the webhook)
+          // understands. The vanity slug is purely a lookup convenience
+          // at this one entry point.
+          setResolvedCode(data.affiliate_code);
+          localStorage.setItem('affiliateId', data.affiliate_code);
+          sessionStorage.setItem('affiliateId', data.affiliate_code);
+          setAffiliate({display_name:data.link_label||data.profiles?.full_name||'A Sovereign Soul',affiliate_code:data.affiliate_code});
+        } else {
+          setNotFound(true);
+        }
+      });
   },[code]);
 
   useEffect(()=>{
@@ -274,17 +291,24 @@ const AffiliateLanding: React.FC = () => {
   const go = useCallback((slug?:string)=>{
     const p=new URLSearchParams();
     // "ref" is the key every downstream page (global session capture in App.tsx,
-    // and each tier's checkout handler) actually reads. Keep "affiliateId" too
-    // for the couple of legacy readers, but "ref" is what makes the code survive
-    // through to checkout.
-    if(code){ p.set('ref',code); p.set('affiliateId',code); }
+    // and each tier's checkout handler) actually reads. Use the RESOLVED real
+    // affiliate_code here, not the raw URL param — the param may be a vanity
+    // slug, and nothing downstream understands slugs, only the real code.
+    const forwardCode = resolvedCode || code;
+    if(forwardCode){ p.set('ref',forwardCode); p.set('affiliateId',forwardCode); }
     if(slug) p.set('tier',slug);
     if(slug==='free'){ navigate(`/auth?${p}`); return; }
     navigate(`/membership?${p}`);
-  },[code,navigate]);
+  },[code,resolvedCode,navigate]);
 
   return (
     <div style={{background:'#050505',minHeight:'100vh',color:'#fff',fontFamily:"'Plus Jakarta Sans', sans-serif",overflowX:'hidden'}}>
+
+      {notFound && (
+        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:200,background:'rgba(239,68,68,0.1)',borderBottom:'1px solid rgba(239,68,68,0.3)',padding:'10px 20px',textAlign:'center',fontSize:'0.78rem',color:'#fca5a5'}}>
+          This link isn't recognized — it may have changed. You can still explore below, just without a referral attached.
+        </div>
+      )}
 
       {/* ── STICKY NAV ── */}
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'0.9rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrolled?'rgba(5,5,5,0.97)':'transparent',backdropFilter:scrolled?'blur(24px)':'none',borderBottom:scrolled?'1px solid rgba(212,175,55,0.1)':'none',transition:'all 0.3s ease'}}>
