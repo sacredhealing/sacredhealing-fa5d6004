@@ -206,6 +206,8 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
         <div
           style={{
             margin: "14px 16px 0",
+            maxHeight: "calc(100vh - 220px)",
+            overflowY: "auto",
             padding: 18,
             borderRadius: 24,
             background: "rgba(255,255,255,0.02)",
