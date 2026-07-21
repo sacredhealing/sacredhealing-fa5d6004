@@ -231,7 +231,7 @@ export default function UserManagementPanel() {
         .eq("access_type","membership");
 
       if (newTier !== "free") {
-        const { error } = await supabase.from("admin_granted_access").insert({
+        const { error } = await supabase.from("admin_granted_access").upsert({
           user_id: selectedUser.id,
           access_type: "membership",
           tier: newTier,
@@ -239,7 +239,7 @@ export default function UserManagementPanel() {
           is_active: true,
           granted_by: ADMIN_UUID,
           granted_at: new Date().toISOString(),
-        });
+        }, { onConflict: "user_id,access_type,access_id" });
         if (error) throw error;
       }
       const { error: profileError } = await supabase
