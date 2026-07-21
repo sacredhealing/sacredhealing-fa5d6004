@@ -675,6 +675,7 @@ export type Database = {
           total_earnings: number
           updated_at: string
           user_id: string | null
+          vanity_slug: string | null
         }
         Insert: {
           affiliate_code: string
@@ -689,6 +690,7 @@ export type Database = {
           total_earnings?: number
           updated_at?: string
           user_id?: string | null
+          vanity_slug?: string | null
         }
         Update: {
           affiliate_code?: string
@@ -703,6 +705,7 @@ export type Database = {
           total_earnings?: number
           updated_at?: string
           user_id?: string | null
+          vanity_slug?: string | null
         }
         Relationships: []
       }
