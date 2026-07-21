@@ -13,6 +13,15 @@ const TIERS = [
   { value: "akasha-infinity", label: "Akasha-Infinity only" },
 ];
 
+const LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "sv", label: "Svenska" },
+  { value: "no", label: "Norsk" },
+  { value: "es", label: "Español" },
+];
+
+const TRANSMITTER_QUICK_PICKS = ["Shiva Siddhananda", "Karaveera Nivasini Dasi"];
+
 function tierLabel(t) {
   return TIERS.find((x) => x.value === t)?.label || t;
 }
@@ -22,28 +31,37 @@ function tierBadgeColor(t) {
   if (t === "siddha-quantum") return CYAN;
   return GOLD;
 }
+function languageLabel(l) {
+  return LANGUAGES.find((x) => x.value === l)?.label || l;
+}
 
 interface Props {
   isAdmin: boolean;
   onBack: () => void;
 }
 
+const emptyForm = {
+  chapter: "",
+  verse_number: "",
+  sanskrit: "",
+  transliteration: "",
+  translation: "",
+  transmitted_by: "",
+  language: "en",
+  tier_required: "free",
+};
+
 export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [fetchingSanskrit, setFetchingSanskrit] = useState(false);
+  const [sanskritFetchStatus, setSanskritFetchStatus] = useState(null); // "ok" | "notfound" | null
   const [collapsedChapters, setCollapsedChapters] = useState({});
+  const [readerLanguage, setReaderLanguage] = useState("en");
 
-  const [form, setForm] = useState({
-    chapter: "",
-    verse_number: "",
-    sanskrit: "",
-    transliteration: "",
-    translation: "",
-    commentary: "",
-    tier_required: "free",
-  });
+  const [form, setForm] = useState({ ...emptyForm });
 
   const loadVerses = useCallback(async () => {
     setLoading(true);
@@ -54,7 +72,6 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
       .order("verse_number", { ascending: true });
     if (error) {
       console.error("Failed to load Gita verses:", error);
-      // Table not migrated yet on this environment — fail quietly, not a broken screen.
       setVerses([]);
     } else {
       setVerses((data as any[]) || []);
@@ -66,20 +83,42 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
     loadVerses();
   }, [loadVerses]);
 
-  const resetForm = () =>
-    setForm({
-      chapter: "",
-      verse_number: "",
-      sanskrit: "",
-      transliteration: "",
-      translation: "",
-      commentary: "",
-      tier_required: "free",
-    });
+  const resetForm = () => setForm({ ...emptyForm });
+
+  // Auto-fetch the canonical Sanskrit + transliteration for a chapter/verse
+  // from the free, open-source Vedic Scriptures Gita API — no key needed.
+  // Admin can still hand-edit the fetched text before saving.
+  const fetchSanskrit = useCallback(async (chapter: string, verseNum: string) => {
+    const ch = parseInt(chapter, 10);
+    const sl = parseInt(verseNum, 10);
+    if (!ch || !sl || ch < 1 || ch > 18 || sl < 1) return;
+    setFetchingSanskrit(true);
+    setSanskritFetchStatus(null);
+    try {
+      const res = await fetch(`https://vedicscriptures.github.io/slok/${ch}/${sl}`);
+      if (!res.ok) throw new Error("not found");
+      const data = await res.json();
+      if (!data || !data.slok) throw new Error("not found");
+      setForm((f) => ({
+        ...f,
+        sanskrit: data.slok.replace(/\n/g, " ").trim(),
+        transliteration: (data.transliteration || "").replace(/\n/g, " ").trim(),
+      }));
+      setSanskritFetchStatus("ok");
+    } catch (e) {
+      setSanskritFetchStatus("notfound");
+    } finally {
+      setFetchingSanskrit(false);
+    }
+  }, []);
+
+  const handleChapterVerseBlur = () => {
+    fetchSanskrit(form.chapter, form.verse_number);
+  };
 
   const submitVerse = async () => {
     if (!form.chapter || !form.verse_number || !form.translation.trim()) {
-      toast.error("Chapter, verse number, and translation are required.");
+      toast.error("Chapter, verse number, and the teaching text are required.");
       return;
     }
     setSubmitting(true);
@@ -92,16 +131,19 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
           sanskrit: form.sanskrit.trim() || null,
           transliteration: form.transliteration.trim() || null,
           translation: form.translation.trim(),
-          commentary: form.commentary.trim() || null,
+          transmitted_by: form.transmitted_by.trim() || null,
+          language: form.language,
           tier_required: form.tier_required,
           is_published: true,
           created_by: authData?.user?.id || null,
         },
-        { onConflict: "chapter,verse_number" }
+        { onConflict: "chapter,verse_number,language" }
       );
       if (error) throw error;
-      toast.success(`Chapter ${form.chapter}, Verse ${form.verse_number} added — ${tierLabel(form.tier_required)}`);
-      resetForm();
+      toast.success(`Chapter ${form.chapter}, Verse ${form.verse_number} (${languageLabel(form.language)}) transmitted — ${tierLabel(form.tier_required)}`);
+      // Keep transmitted_by + language + tier for the next verse — admin is usually posting a batch.
+      setForm((f) => ({ ...emptyForm, transmitted_by: f.transmitted_by, language: f.language, tier_required: f.tier_required }));
+      setSanskritFetchStatus(null);
       loadVerses();
     } catch (e: any) {
       toast.error(e.message || "Could not save this verse.");
@@ -120,12 +162,14 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
     setVerses((prev) => prev.filter((v: any) => v.id !== id));
   };
 
+  const visibleVerses = verses.filter((v: any) => (v.language || "en") === readerLanguage);
   const byChapter: Record<number, any[]> = {};
-  verses.forEach((v: any) => {
+  visibleVerses.forEach((v: any) => {
     if (!byChapter[v.chapter]) byChapter[v.chapter] = [];
     byChapter[v.chapter].push(v);
   });
   const chapterNums = Object.keys(byChapter).map(Number).sort((a, b) => a - b);
+  const languagesPresent = new Set(verses.map((v: any) => v.language || "en"));
 
   return (
     <div className="c-chat-view">
@@ -172,7 +216,8 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
           <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>
             Transmit a verse
           </div>
-          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+
+          <div style={{ display: "flex", gap: 10, marginBottom: 6 }}>
             <input
               type="number"
               min={1}
@@ -180,6 +225,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
               placeholder="Chapter (1–18)"
               value={form.chapter}
               onChange={(e) => setForm((f) => ({ ...f, chapter: e.target.value }))}
+              onBlur={handleChapterVerseBlur}
               style={inputStyle}
             />
             <input
@@ -188,34 +234,96 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
               placeholder="Verse #"
               value={form.verse_number}
               onChange={(e) => setForm((f) => ({ ...f, verse_number: e.target.value }))}
+              onBlur={handleChapterVerseBlur}
               style={inputStyle}
             />
           </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10, minHeight: 16 }}>
+            {fetchingSanskrit
+              ? "Fetching Sanskrit…"
+              : sanskritFetchStatus === "ok"
+                ? "✓ Sanskrit auto-filled below — edit if needed"
+                : sanskritFetchStatus === "notfound"
+                  ? "Couldn't auto-find this verse — paste Sanskrit manually below"
+                  : "Enter chapter + verse, then tab out to auto-fill Sanskrit"}
+          </div>
+
           <textarea
-            placeholder="Sanskrit (optional)"
+            placeholder="Sanskrit (auto-filled — editable)"
             value={form.sanskrit}
             onChange={(e) => setForm((f) => ({ ...f, sanskrit: e.target.value }))}
             style={{ ...inputStyle, width: "100%", minHeight: 50, marginBottom: 10, resize: "vertical" }}
           />
           <input
             type="text"
-            placeholder="Transliteration (optional)"
+            placeholder="Transliteration (auto-filled — editable)"
             value={form.transliteration}
             onChange={(e) => setForm((f) => ({ ...f, transliteration: e.target.value }))}
-            style={{ ...inputStyle, width: "100%", marginBottom: 10 }}
+            style={{ ...inputStyle, width: "100%", marginBottom: 14 }}
           />
+
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+            Language of this transmission
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.value}
+                onClick={() => setForm((f) => ({ ...f, language: l.value }))}
+                style={{
+                  padding: "7px 14px",
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  border: `1px solid ${form.language === l.value ? CYAN : "rgba(255,255,255,0.08)"}`,
+                  background: form.language === l.value ? `${CYAN}22` : "rgba(255,255,255,0.02)",
+                  color: form.language === l.value ? CYAN : "rgba(255,255,255,0.6)",
+                }}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
           <textarea
-            placeholder="Translation (required)"
+            placeholder="Your transmission — the deepening, the teaching (required)"
             value={form.translation}
             onChange={(e) => setForm((f) => ({ ...f, translation: e.target.value }))}
-            style={{ ...inputStyle, width: "100%", minHeight: 60, marginBottom: 10, resize: "vertical" }}
+            style={{ ...inputStyle, width: "100%", minHeight: 140, marginBottom: 10, resize: "vertical" }}
           />
-          <textarea
-            placeholder="Commentary / deepening (optional)"
-            value={form.commentary}
-            onChange={(e) => setForm((f) => ({ ...f, commentary: e.target.value }))}
-            style={{ ...inputStyle, width: "100%", minHeight: 60, marginBottom: 12, resize: "vertical" }}
+
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+            Transmitted by
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+            {TRANSMITTER_QUICK_PICKS.map((name) => (
+              <button
+                key={name}
+                onClick={() => setForm((f) => ({ ...f, transmitted_by: name }))}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  border: `1px solid ${form.transmitted_by === name ? GOLD : "rgba(255,255,255,0.08)"}`,
+                  background: form.transmitted_by === name ? `${GOLD}22` : "rgba(255,255,255,0.02)",
+                  color: form.transmitted_by === name ? GOLD : "rgba(255,255,255,0.6)",
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+          <input
+            type="text"
+            placeholder="Or type a name (e.g. a guest teacher)"
+            value={form.transmitted_by}
+            onChange={(e) => setForm((f) => ({ ...f, transmitted_by: e.target.value }))}
+            style={{ ...inputStyle, width: "100%", marginBottom: 14 }}
           />
+
           <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
             Who receives this verse
           </div>
@@ -239,6 +347,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
               </button>
             ))}
           </div>
+
           <button
             onClick={submitVerse}
             disabled={submitting}
@@ -262,12 +371,35 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
         </div>
       )}
 
+      {/* Reader language filter */}
+      <div style={{ display: "flex", gap: 6, padding: "12px 16px 0", flexWrap: "wrap" }}>
+        {LANGUAGES.filter((l) => languagesPresent.has(l.value) || l.value === "en").map((l) => (
+          <button
+            key={l.value}
+            onClick={() => setReaderLanguage(l.value)}
+            style={{
+              padding: "5px 12px",
+              borderRadius: 10,
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              cursor: "pointer",
+              border: `1px solid ${readerLanguage === l.value ? GOLD : "rgba(255,255,255,0.08)"}`,
+              background: readerLanguage === l.value ? `${GOLD}18` : "transparent",
+              color: readerLanguage === l.value ? GOLD : "rgba(255,255,255,0.4)",
+            }}
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Loading the Gita…</div>
-        ) : verses.length === 0 ? (
+        ) : visibleVerses.length === 0 ? (
           <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-            {isAdmin ? "No verses yet — tap + Add Verse to transmit the first one." : "No verses available for your tier yet. Check back soon."}
+            {isAdmin ? "No verses yet in this language — tap + Add Verse to transmit the first one." : "No verses available for your tier in this language yet."}
           </div>
         ) : (
           chapterNums.map((ch) => {
@@ -342,18 +474,9 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                         <div style={{ fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{v.transliteration}</div>
                       )}
                       <div style={{ fontSize: 14, lineHeight: 1.6, color: "rgba(255,255,255,0.9)" }}>{v.translation}</div>
-                      {v.commentary && (
-                        <div
-                          style={{
-                            marginTop: 10,
-                            paddingTop: 10,
-                            borderTop: "1px solid rgba(255,255,255,0.05)",
-                            fontSize: 13,
-                            lineHeight: 1.6,
-                            color: "rgba(255,255,255,0.6)",
-                          }}
-                        >
-                          {v.commentary}
+                      {v.transmitted_by && (
+                        <div style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>
+                          — transmitted by {v.transmitted_by}
                         </div>
                       )}
                     </div>
