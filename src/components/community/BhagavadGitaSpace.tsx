@@ -25,16 +25,20 @@ const TRANSMITTER_QUICK_PICKS = ["Shiva Siddhananda", "Karaveera Nivasini Dasi"]
 // Same visual language as Quantum Apothecary: holy/Sanskrit/Vedic terms auto-highlighted in gold.
 const HOLY_TERMS_REGEX = (() => {
   const terms = [
-    'Chitta Vritti', 'Turiya', 'Kutastha Chaitanya', 'Manomaya Kosha', 'Pranamaya Kosha',
-    'Annamaya Kosha', 'Vijnanamaya Kosha', 'Anandamaya Kosha', 'Nadi(?:s)?', '72,000 Nadi(?:s)?',
-    'Sadhaka', 'Sadhana', 'Arjuna', 'Krishna', 'Bhagavan', 'Atma', 'Brahman', 'Purusha', 'Prakriti',
-    'Sattva', 'Rajas', 'Tamas', 'Dharma', 'Karma', 'Moksha', 'Samadhi', 'Bhakti', 'Jnana', 'Kriya',
-    'Prana', 'Kundalini', 'Sushumna', 'Ida', 'Pingala', 'Muladhara', 'Svadhishthana', 'Manipura',
-    'Anahata', 'Vishuddha', 'Ajna', 'Sahasrara', 'Om|Aum', 'Maya', 'Avidya', 'Vairagya', 'Ahimsa',
-    'Vishwananda', 'Mahavatar Babaji', 'Babaji', 'Paramahansa Yogananda', 'Yogananda',
-    'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Turiya state',
+    'Chitta Vritti', 'Turiya state', 'Turiya', 'Kutastha Chaitanya', 'Manomaya Kosha',
+    'Pranamaya Kosha', 'Annamaya Kosha', 'Vijnanamaya Kosha', 'Anandamaya Kosha',
+    '72,000 Nadis?', 'Nadis?', 'Sadhaka', 'Sadhana', 'Arjuna', 'Krishna', 'Bhagavan',
+    'Atma', 'Brahman', 'Purusha', 'Prakriti', 'Sattva', 'Rajas', 'Tamas', 'Dharma', 'Karma',
+    'Moksha', 'Samadhi', 'Bhakti', 'Jnana', 'Kriya Yoga', 'Kriya', 'Pranayama', 'Prana',
+    'Kundalini', 'Sushumna', 'Ida', 'Pingala', 'Muladhara', 'Svadhishthana', 'Manipura',
+    'Anahata', 'Vishuddha', 'Ajna', 'Sahasrara', 'Aum', 'Om', 'Maya', 'Avidya', 'Vairagya',
+    'Ahimsa', 'Mahavatar Babaji', 'Babaji', 'Vishwananda', 'Paramahansa Yogananda', 'Yogananda',
+    'Lahiri Mahasaya', 'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Agni',
   ];
-  return new RegExp(`(${terms.join('|')})`, 'g');
+  // Longer/compound terms are listed before their shorter roots (e.g. "Kriya Yoga"
+  // before "Kriya", "Pranayama" before "Prana") so they match as whole words first.
+  // \b...\b prevents "Prana" from lighting up half of "Pranayama".
+  return new RegExp(`\\b(${terms.join('|')})\\b`, 'g');
 })();
 
 function highlightHolyTerms(text: string): React.ReactNode {
@@ -88,6 +92,8 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
   const [sanskritFetchStatus, setSanskritFetchStatus] = useState(null); // "ok" | "notfound" | null
   const [collapsedChapters, setCollapsedChapters] = useState({});
   const [readerLanguage, setReaderLanguage] = useState("en");
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translatingKeys, setTranslatingKeys] = useState<Set<string>>(new Set());
 
   const [form, setForm] = useState({ ...emptyForm });
 
@@ -110,6 +116,42 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
   useEffect(() => {
     loadVerses();
   }, [loadVerses]);
+
+  const translateVerse = useCallback(async (verse: any, targetLang: string) => {
+    const key = `${verse.id}:${targetLang}`;
+    setTranslatingKeys((prev) => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+    try {
+      const { data, error } = await supabase.functions.invoke("gemini-bridge", {
+        body: {
+          messages: [
+            {
+              role: "user",
+              content: `Translate the following spiritual teaching text into ${languageLabel(targetLang)}. Preserve paragraph breaks exactly as they are. Return ONLY the translated text — no preamble, no quotes, no notes.\n\n${verse.translation}`,
+            },
+          ],
+          feature: "vedic_translation",
+        },
+      });
+      if (error) throw error;
+      const translated = (data as any)?.response?.trim();
+      if (translated) {
+        setTranslations((prev) => ({ ...prev, [key]: translated }));
+      }
+    } catch (e) {
+      console.warn("Auto-translation failed:", e);
+    } finally {
+      setTranslatingKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  }, []);
 
   const resetForm = () => setForm({ ...emptyForm });
 
@@ -205,7 +247,41 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
     setVerses((prev) => prev.filter((v: any) => v.id !== id));
   };
 
-  const visibleVerses = verses.filter((v: any) => (v.language || "en") === readerLanguage);
+  // Group by chapter+verse across all languages, preferring a native entry in the
+  // reader's selected language. If none exists, fall back to English (or any
+  // available language) and auto-translate the teaching text on the fly.
+  const byKey: Record<string, any[]> = {};
+  verses.forEach((v: any) => {
+    const k = `${v.chapter}:${v.verse_number}`;
+    if (!byKey[k]) byKey[k] = [];
+    byKey[k].push(v);
+  });
+  const displayList = Object.values(byKey).map((group: any[]) => {
+    const native = group.find((v) => (v.language || "en") === readerLanguage);
+    if (native) return { ...native, isFallbackTranslation: false };
+    const source = group.find((v) => (v.language || "en") === "en") || group[0];
+    const key = `${source.id}:${readerLanguage}`;
+    return {
+      ...source,
+      translation: translations[key] || source.translation,
+      isFallbackTranslation: true,
+      isTranslating: translatingKeys.has(key),
+      sourceLanguage: source.language || "en",
+      translationKey: key,
+    };
+  });
+
+  useEffect(() => {
+    if (readerLanguage === "en") return;
+    displayList.forEach((v: any) => {
+      if (v.isFallbackTranslation && !translations[v.translationKey] && !translatingKeys.has(v.translationKey)) {
+        translateVerse(v, readerLanguage);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readerLanguage, verses]);
+
+  const visibleVerses = displayList;
   const byChapter: Record<number, any[]> = {};
   visibleVerses.forEach((v: any) => {
     if (!byChapter[v.chapter]) byChapter[v.chapter] = [];
@@ -443,7 +519,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
           <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Loading the Gita…</div>
         ) : visibleVerses.length === 0 ? (
           <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-            {isAdmin ? "No verses yet in this language — tap + Add Verse to transmit the first one." : "No verses available for your tier in this language yet."}
+            {isAdmin ? "No verses yet — tap + Add Verse to transmit the first one." : "No verses available for your tier yet."}
           </div>
         ) : (
           chapterNums.map((ch) => {
@@ -500,7 +576,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                           >
                             {v.tier_required.replace("-", " ")}
                           </span>
-                          {isAdmin && (
+                          {isAdmin && !v.isFallbackTranslation && (
                             <button
                               onClick={() => editVerse(v)}
                               style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 13 }}
@@ -509,7 +585,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                               ✎
                             </button>
                           )}
-                          {isAdmin && (
+                          {isAdmin && !v.isFallbackTranslation && (
                             <button
                               onClick={() => deleteVerse(v.id)}
                               style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 13 }}
@@ -525,6 +601,11 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                       )}
                       {v.transliteration && (
                         <div style={{ fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{v.transliteration}</div>
+                      )}
+                      {v.isFallbackTranslation && (
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginBottom: 6 }}>
+                          {v.isTranslating ? "Translating…" : `Auto-translated from ${languageLabel(v.sourceLanguage)}`}
+                        </div>
                       )}
                       <div style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{highlightHolyTerms(v.translation)}</div>
                       {v.transmitted_by && (
