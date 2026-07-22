@@ -152,6 +152,21 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
     }
   };
 
+  const editVerse = (v: any) => {
+    setForm({
+      chapter: String(v.chapter),
+      verse_number: String(v.verse_number),
+      sanskrit: v.sanskrit || "",
+      transliteration: v.transliteration || "",
+      translation: v.translation || "",
+      transmitted_by: v.transmitted_by || "",
+      language: v.language || "en",
+      tier_required: v.tier_required || "free",
+    });
+    setSanskritFetchStatus(v.sanskrit ? "ok" : null);
+    setShowAddForm(true);
+  };
+
   const deleteVerse = async (id: string) => {
     if (!confirm("Remove this verse?")) return;
     const { error } = await supabase.from("bhagavad_gita_verses" as any).delete().eq("id", id);
@@ -460,6 +475,15 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                           </span>
                           {isAdmin && (
                             <button
+                              onClick={() => editVerse(v)}
+                              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 13 }}
+                              title="Edit verse"
+                            >
+                              ✎
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
                               onClick={() => deleteVerse(v.id)}
                               style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 13 }}
                               title="Remove verse"
@@ -475,7 +499,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                       {v.transliteration && (
                         <div style={{ fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{v.transliteration}</div>
                       )}
-                      <div style={{ fontSize: 14, lineHeight: 1.6, color: "rgba(255,255,255,0.9)" }}>{v.translation}</div>
+                      <div style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{v.translation}</div>
                       {v.transmitted_by && (
                         <div style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>
                           — transmitted by {v.transmitted_by}
