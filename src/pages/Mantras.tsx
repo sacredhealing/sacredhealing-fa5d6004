@@ -75,10 +75,17 @@ const SQI_CSS = `
     --black:   #050505;
     --glass:   rgba(255,255,255,0.02);
     --border:  rgba(255,255,255,0.05);
-    --muted:   rgba(255,255,255,0.42);
+    --muted:   rgba(255,255,255,0.6);
     --cyan:    #22D3EE;
     --r40:     40px;
     --page-pad: clamp(12px, 4.6vw, 22px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sqi-mantras *, .sqi-mantras *::before, .sqi-mantras *::after {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 
   .sqi-mantras {
@@ -166,22 +173,27 @@ const SQI_CSS = `
 
   /* ── Compact Hora strip ── */
   .m-hora-strip {
-    margin: 0 var(--page-pad) 16px;
+    margin: 0 var(--page-pad) 8px;
     display: flex; align-items: center;
     gap: 8px; flex-wrap: wrap;
-    background: rgba(255,255,255,.015);
-    border: 1px solid rgba(255,255,255,.05);
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,.08);
     border-radius: 100px;
-    padding: 8px 14px;
-    font-size: 11px;
+    padding: 10px 16px;
+    font-size: 12.5px;
   }
   .m-hora-strip-planet {
     font-size: 12px; font-weight: 900; color: var(--gold);
     letter-spacing: -.01em;
   }
   .m-hora-strip-time {
-    color: rgba(255,255,255,.55);
-    font-size: 11px;
+    color: rgba(255,255,255,.65);
+    font-size: 12px;
+  }
+  .m-glossary-hint {
+    margin: 6px var(--page-pad) 16px;
+    padding: 0 4px;
+    font-size: 12px; color: rgba(255,255,255,.48); line-height: 1.5; font-style: italic;
   }
   .m-hora-strip-timer {
     font-variant-numeric: tabular-nums;
@@ -289,7 +301,7 @@ const SQI_CSS = `
     color: rgba(255,255,255,0.9);
   }
   .m-cat-sub {
-    font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px;
+    font-size: 12.5px; color: rgba(255,255,255,0.48); margin-top: 2px;
   }
   .m-cat-chevron {
     width: 24px; height: 24px;
@@ -662,6 +674,25 @@ const SQI_CSS = `
     background: rgba(212,175,55,.08); border: 1px solid rgba(212,175,55,.25);
     padding: 5px 9px; border-radius: 100px; flex-shrink: 0; white-space: nowrap;
   }
+
+  /* ── First-visit onboarding strip ── */
+  .m-onboard {
+    margin: 0 var(--page-pad) 18px;
+    background: linear-gradient(135deg, rgba(34,211,238,.07), rgba(212,175,55,.04));
+    border: 1px solid rgba(34,211,238,.25);
+    border-radius: 24px; padding: 16px 18px;
+    position: relative;
+  }
+  .m-onboard-close {
+    position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.6);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer;
+  }
+  .m-onboard-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: rgba(34,211,238,.85); margin-bottom: 8px; padding-right: 30px; }
+  .m-onboard-body { font-size: 14px; color: rgba(255,255,255,.82); line-height: 1.6; padding-right: 20px; }
+
+  /* ── Player plain-language explainer ── */
+  .m-player-explainer { font-size: 12.5px; color: rgba(255,255,255,.55); line-height: 1.5; margin-bottom: 6px; }
 `;
 
 /* ─── planet helpers ─── */
@@ -797,6 +828,17 @@ const Mantras = () => {
   const [filterMode, setFilterMode] = useState<'all' | 'unlocked' | 'mine'>('all');
   const [scrubPct, setScrubPct] = useState(0);
   const [resumeAvailable, setResumeAvailable] = useState<{ id: string; count: number } | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('sqi_mantras_onboarded')) setShowOnboarding(true);
+    } catch { /* ignore */ }
+  }, []);
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    try { localStorage.setItem('sqi_mantras_onboarded', '1'); } catch { /* ignore */ }
+  };
 
   const playerRef = useRef<HTMLDivElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
@@ -1224,7 +1266,7 @@ const Mantras = () => {
           </div>
           <div className="m-micro" style={{ marginBottom: 8 }}>{t('mantras.heroMicro')}</div>
           <h1 className="m-hero-title m-shimmer">{t('mantras.title')}</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', lineHeight: 1.6, marginBottom: streak > 0 ? 12 : 0 }}>
+          <p style={{ fontSize: 14.5, color: 'rgba(255,255,255,.6)', lineHeight: 1.6, marginBottom: streak > 0 ? 12 : 0 }}>
             {t('mantras.subtitle')}
           </p>
           {streak > 0 && (
@@ -1237,8 +1279,24 @@ const Mantras = () => {
           )}
         </div>
 
+        {/* ── FIRST-VISIT ONBOARDING STRIP — plain language, dismissible, shown once ── */}
+        {showOnboarding && (
+          <div className="m-onboard">
+            <button type="button" className="m-onboard-close" onClick={dismissOnboarding} aria-label={t('mantras.onboardDismiss', { defaultValue: 'Dismiss' })}>✕</button>
+            <div className="m-onboard-eyebrow">{t('mantras.onboardEyebrow', { defaultValue: 'New here? Start in 30 seconds' })}</div>
+            <div className="m-onboard-body">
+              {t('mantras.onboardBody', { defaultValue: "A mantra is a short sacred phrase you repeat while it plays. This page suggests one based on today's date and your birth chart — or you can pick any one below. Press play, and it counts your repetitions for you." })}
+            </div>
+          </div>
+        )}
+
 
         {/* ── BHRIGU CARD ── */}
+        {showOnboarding && (
+          <div style={{ margin: '0 var(--page-pad) 8px', padding: '0 4px', fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5 }}>
+            {t('mantras.bhriguPlain', { defaultValue: "We looked at your birth chart and today's planetary hour — here's the mantra suited to you right now." })}
+          </div>
+        )}
         <div className="m-bhrigu">
           <BhriguCard
             handAnalysisComplete={handAnalysisComplete}
@@ -1286,17 +1344,24 @@ const Mantras = () => {
 
         {/* ── COMPACT HORA STRIP ── */}
         {horaWatch.calculation && horaRange && (
-          <div className="m-hora-strip">
-            <span style={{ fontSize: 13 }}>{PLANET_SYMBOLS[currentHoraPlanet ?? ''] ?? '🌙'}</span>
-            <span className="m-hora-strip-planet">{currentHoraPlanet ?? '--'} Hora</span>
-            <span className="m-hora-strip-time">· {horaRange}</span>
-            <span className="m-hora-strip-timer">{horaWatch.remainingTimeStr}</span>
-            {currentHoraPlanet && (
-              <button className="m-hora-remedy-btn" onClick={handleHoraRemedy}>
-                ▶ {currentHoraPlanet} Remedy
-              </button>
+          <>
+            <div className="m-hora-strip">
+              <span style={{ fontSize: 13 }}>{PLANET_SYMBOLS[currentHoraPlanet ?? ''] ?? '🌙'}</span>
+              <span className="m-hora-strip-planet">{currentHoraPlanet ?? '--'} Hora</span>
+              <span className="m-hora-strip-time">· {horaRange}</span>
+              <span className="m-hora-strip-timer">{horaWatch.remainingTimeStr}</span>
+              {currentHoraPlanet && (
+                <button className="m-hora-remedy-btn" onClick={handleHoraRemedy}>
+                  ▶ {currentHoraPlanet} Remedy
+                </button>
+              )}
+            </div>
+            {showOnboarding && (
+              <div className="m-glossary-hint">
+                {t('mantras.horaGlossary', { defaultValue: 'A "Hora" is a planetary hour — Vedic tradition holds each hour of the day is ruled by a different planet, and certain mantras suit each one.' })}
+              </div>
             )}
-          </div>
+          </>
         )}
 
         {/* ════ INLINE PLAYER — now the page's focal point ════ */}
@@ -1406,14 +1471,19 @@ const Mantras = () => {
             </div>
           )}
 
+          {/* plain-language explainer */}
+          <div className="m-player-explainer" style={{ margin: '0 var(--page-pad) 4px', textAlign: 'center' }}>
+            {t('mantras.playerExplainer', { defaultValue: 'Press the gold button below. It repeats this chant 108 times and counts each one for you.' })}
+          </div>
+
           {/* instructions */}
           <div className="m-instructions">
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 8 }}>
               {t('mantras.instructions.title')}
             </div>
             {[t('mantras.instructions.step1'), t('mantras.instructions.step2'), t('mantras.instructions.step3')].map((step, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: i < 2 ? 6 : 0 }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'rgba(212,175,55,.55)', flexShrink: 0, marginTop: 1 }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13.5, color: 'rgba(255,255,255,.62)', lineHeight: 1.55, marginBottom: i < 2 ? 7 : 0 }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: 'rgba(212,175,55,.7)', flexShrink: 0, marginTop: 1 }}>
                   {i + 1}
                 </div>
                 {step}
