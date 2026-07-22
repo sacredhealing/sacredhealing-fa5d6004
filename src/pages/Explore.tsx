@@ -18,6 +18,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   gold, cyan, Icon, HeroCard, ComingSoonCard, LibSection, PortalKeyframes,
 } from "@/components/portal/PortalUI";
+import WealthMeditationService from "@/components/meditation/WealthMeditationService";
+import CustomMeditationBooking from "@/components/meditation/CustomMeditationBooking";
+import CustomMeditationCreation from "@/components/meditation/CustomMeditationCreation";
 
 interface ExploreVideo {
   id: string; title: string; thumbnail: string; url: string; publishedAt: string; channelTitle: string;
@@ -48,6 +51,8 @@ export default function Explore() {
   const { isAdmin } = useAdminRole();
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
+  const [commissionsOpen, setCommissionsOpen] = useState(false);
+  const [activeCommission, setActiveCommission] = useState<string | null>(null);
   const userHouse = 12;
 
   const [exploreVideos, setExploreVideos] = useState<ExploreVideo[]>([]);
@@ -973,6 +978,90 @@ export default function Explore() {
           </div>
         </div>
       </div>
+
+      {/* ══ SACRED COMMISSIONS — single consolidated entry point ══ */}
+      <div style={{ margin: '22px 16px 0' }}>
+        <div
+          onClick={() => setCommissionsOpen(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '18px 18px', borderRadius: 24,
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(212,175,55,0.18)',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{
+            width: 48, height: 48, borderRadius: 16, flexShrink: 0,
+            background: 'linear-gradient(135deg,rgba(212,175,55,.22),rgba(212,175,55,.06))',
+            border: '1.5px solid rgba(212,175,55,.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, boxShadow: '0 0 18px rgba(212,175,55,.3)',
+          }}>ॐ</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(212,175,55,.55)', marginBottom: 4 }}>
+              {t('meditations.sacredCommissionsMicro').toUpperCase()}
+            </div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>
+              {t('meditations.personalTransmissions')}
+            </div>
+            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', lineHeight: 1.4 }}>
+              {t('meditations.sacredCommissionsDesc')}
+            </div>
+          </div>
+          <div style={{ color: 'rgba(212,175,55,.5)', fontSize: 18, flexShrink: 0 }}>›</div>
+        </div>
+      </div>
+
+      {/* Sacred Commissions picker sheet */}
+      <Dialog open={commissionsOpen} onOpenChange={setCommissionsOpen}>
+        <DialogContent className="max-w-md bg-[#0a0a0a] border-[#D4AF37]/25 p-5">
+          <div style={{ fontWeight: 800, fontSize: 17, color: 'rgba(255,255,255,.9)', marginBottom: 14 }}>
+            {t('meditations.personalTransmissions')}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[
+              { key: 'wealth', price: '€47', title: t('meditations.wealthTitle'), sub: t('meditations.wealthSub') },
+              { key: 'booking', price: '€20–€97', title: t('meditations.bookingTitle'), sub: t('meditations.bookingSub') },
+              { key: 'creation', price: '€97–€197', title: t('meditations.creationTitle'), sub: t('meditations.creationSub') },
+            ].map((item) => (
+              <div
+                key={item.key}
+                onClick={() => { setCommissionsOpen(false); setActiveCommission(item.key); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px',
+                  borderRadius: 18, background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(212,175,55,0.15)', cursor: 'pointer',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>{item.price}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>{item.title}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>{item.sub}</div>
+                </div>
+                <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preserved commission modal sheets */}
+      <WealthMeditationService
+        open={activeCommission === 'wealth'}
+        onOpenChange={(o: boolean) => !o && setActiveCommission(null)}
+        hideTrigger
+      />
+      <CustomMeditationBooking
+        open={activeCommission === 'booking'}
+        onOpenChange={(o: boolean) => !o && setActiveCommission(null)}
+        hideTrigger
+      />
+      <CustomMeditationCreation
+        open={activeCommission === 'creation'}
+        onOpenChange={(o: boolean) => !o && setActiveCommission(null)}
+        hideTrigger
+      />
 
       {/* ══ WISDOM QUOTE ══ */}
       <div style={{ margin: '22px 16px 0', padding: '20px 16px', borderTop: '1px solid rgba(212,175,55,0.07)' }}>
