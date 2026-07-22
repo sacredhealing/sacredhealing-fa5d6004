@@ -676,26 +676,31 @@ const Section: React.FC<{
   const [open, setOpen] = useState(defaultOpen);
   if (!tracks.length) return null;
   return (
-    <div className="glass-card" style={{ marginBottom: 10, overflow: 'visible' }}>
+    <div style={{
+      marginBottom: 10, overflow: 'visible', position: 'relative', borderRadius: 20,
+      background: 'radial-gradient(ellipse at 25% 15%, rgba(212,175,55,.1) 0%, rgba(12,8,0,.6) 65%, rgba(5,5,5,.4) 100%)',
+      border: '1px solid rgba(212,175,55,.3)',
+    }}>
+      <div style={{ position: 'absolute', inset: 0, borderRadius: 20, border: '1px solid rgba(212,175,55,.14)', animation: 'sqiPulse 5s ease-in-out infinite', pointerEvents: 'none' }} />
       <div
         onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
+        style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', cursor: 'pointer' }}
       >
-        <div style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={18} style={{ color: '#D4AF37' }} />
+        <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: 'linear-gradient(135deg, rgba(212,175,55,.32), rgba(212,175,55,.06))', border: '1px solid rgba(212,175,55,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(212,175,55,.28)' }}>
+          <Icon size={17} style={{ color: '#D4AF37' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.9)' }}>{title}</div>
-          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.92)' }}>{title}</div>
+          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.42)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {micro} · {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'}
           </div>
         </div>
-        <div style={{ color: 'rgba(212,175,55,.5)', fontSize: 16, flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .2s' }}>
+        <div style={{ color: 'rgba(212,175,55,.6)', fontSize: 16, flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .2s' }}>
           ›
         </div>
       </div>
       {open && (
-        <div style={{ paddingBottom: 10 }}>
+        <div style={{ position: 'relative', zIndex: 1, paddingBottom: 8 }}>
           <div className="akasha-div" />
           {tracks.map((t, i) => (
             <React.Fragment key={t.id}>
