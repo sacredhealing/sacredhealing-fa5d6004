@@ -94,6 +94,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
   const [readerLanguage, setReaderLanguage] = useState("en");
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [translatingKeys, setTranslatingKeys] = useState<Set<string>>(new Set());
+  const [translationErrors, setTranslationErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({ ...emptyForm });
 
@@ -141,9 +142,15 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
       const translated = (data as any)?.response?.trim();
       if (translated) {
         setTranslations((prev) => ({ ...prev, [key]: translated }));
+      } else {
+        console.warn("Translation returned empty response:", data);
+        setTranslationErrors((prev) => ({ ...prev, [key]: "empty response from translator" }));
+        toast.error("Translation came back empty — check the gemini-bridge function logs in Supabase.");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn("Auto-translation failed:", e);
+      setTranslationErrors((prev) => ({ ...prev, [key]: e?.message || "unknown error" }));
+      toast.error(`Couldn't auto-translate: ${e?.message || "unknown error"}`);
     } finally {
       setTranslatingKeys((prev) => {
         const next = new Set(prev);
@@ -266,6 +273,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
       translation: translations[key] || source.translation,
       isFallbackTranslation: true,
       isTranslating: translatingKeys.has(key),
+      translationError: translationErrors[key],
       sourceLanguage: source.language || "en",
       translationKey: key,
     };
@@ -603,8 +611,12 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                         <div style={{ fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{v.transliteration}</div>
                       )}
                       {v.isFallbackTranslation && (
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginBottom: 6 }}>
-                          {v.isTranslating ? "Translating…" : `Auto-translated from ${languageLabel(v.sourceLanguage)}`}
+                        <div style={{ fontSize: 10, color: v.translationError ? "#e07070" : "rgba(255,255,255,0.35)", fontStyle: "italic", marginBottom: 6 }}>
+                          {v.isTranslating
+                            ? "Translating…"
+                            : v.translationError
+                              ? `Translation failed (${v.translationError}) — showing ${languageLabel(v.sourceLanguage)} original`
+                              : `Auto-translated from ${languageLabel(v.sourceLanguage)}`}
                         </div>
                       )}
                       <div style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{highlightHolyTerms(v.translation)}</div>
