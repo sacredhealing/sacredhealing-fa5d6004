@@ -1062,8 +1062,11 @@ export default function Explore() {
                     <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)' }}>{item.sub}</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: 14, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {item.diff}
+                </div>
+                <div style={{ fontSize: 10, color: 'rgba(212,175,55,.45)', fontWeight: 600, letterSpacing: '.03em', marginBottom: 10 }}>
+                  By Kritagya & Laila · Bhakti Marga lineage
                 </div>
                 <button
                   onClick={() => { setCommissionsOpen(false); setActiveCommission(item.key); }}
