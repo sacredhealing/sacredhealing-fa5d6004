@@ -26,7 +26,6 @@ import { useMembership } from '@/hooks/useMembership';
 import { safePlay } from '@/utils/safeAudioPlay';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { getTierRank } from '@/lib/tierAccess';
-import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
 import {
   Play,
@@ -565,6 +564,104 @@ const SQI_CSS = `
     border: 1px solid rgba(255,255,255,.04);
     border-radius: 20px; padding: 14px 16px;
   }
+
+  /* ── Player, now the hero focal point ── */
+  .m-player-top {
+    margin-top: 0;
+    box-shadow: 0 0 60px rgba(212,175,55,.08), inset 0 1px 0 rgba(255,255,255,.04);
+    border-color: rgba(212,175,55,.22);
+  }
+  .m-player-eyebrow {
+    font-size: 8.5px; font-weight: 800; letter-spacing: .35em; text-transform: uppercase;
+    color: rgba(212,175,55,.5); margin-bottom: 8px;
+  }
+  .m-resume-chip {
+    margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(212,175,55,.09); border: 1px solid rgba(212,175,55,.28);
+    color: #D4AF37; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    padding: 7px 14px; border-radius: 100px; cursor: pointer; font-family: inherit;
+  }
+  .m-scrub-track {
+    margin: 0 var(--page-pad) 16px; height: 3px; border-radius: 3px;
+    background: rgba(255,255,255,.06); overflow: hidden;
+  }
+  .m-scrub-fill {
+    height: 100%; background: linear-gradient(90deg, #D4AF37, #F5E17A);
+    box-shadow: 0 0 8px rgba(212,175,55,.5); transition: width .3s linear;
+  }
+
+  /* ── Tier-aware upgrade banner ── */
+  .m-upgrade-banner {
+    margin: 0 var(--page-pad) 18px;
+    background: linear-gradient(135deg, rgba(212,175,55,.09), rgba(212,175,55,.02));
+    border: 1px solid rgba(212,175,55,.25);
+    border-radius: 28px; padding: 15px 17px;
+    display: flex; align-items: center; gap: 13px; cursor: pointer;
+  }
+  .m-upgrade-icon {
+    width: 38px; height: 38px; border-radius: 13px; flex-shrink: 0;
+    background: rgba(212,175,55,.1); border: 1px solid rgba(212,175,55,.3);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .m-upgrade-title { font-size: 12px; font-weight: 800; color: rgba(255,255,255,.92); margin-bottom: 2px; }
+  .m-upgrade-sub { font-size: 10.5px; color: rgba(255,255,255,.42); line-height: 1.4; }
+  .m-upgrade-cta {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #050505;
+    background: linear-gradient(135deg,#F5E17A,#D4AF37); padding: 9px 14px; border-radius: 100px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* ── Filter chips ── */
+  .m-filter-row { margin: 0 var(--page-pad) 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .m-filter-chip {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+    background: var(--glass); border: 1px solid var(--border); color: rgba(255,255,255,.5);
+    padding: 7px 14px; border-radius: 100px; cursor: pointer; font-family: inherit;
+    transition: all .2s;
+  }
+  .m-filter-chip.active {
+    background: rgba(212,175,55,.12); border-color: rgba(212,175,55,.4); color: #D4AF37;
+  }
+
+  /* ── Category glow + count ── */
+  .m-cat-glow { border-color: rgba(212,175,55,.35); box-shadow: 0 0 40px rgba(212,175,55,.07), inset 0 1px 0 rgba(255,255,255,.03); }
+  .m-cat-count {
+    font-size: 9.5px; font-weight: 800; color: rgba(212,175,55,.6);
+    background: rgba(212,175,55,.08); border: 1px solid rgba(212,175,55,.2);
+    padding: 4px 10px; border-radius: 100px; flex-shrink: 0; margin-left: 6px;
+  }
+
+  /* ── Playlist rows (replaces button grid) ── */
+  .m-playlist { display: flex; flex-direction: column; gap: 4px; padding: 4px 8px 8px; }
+  .m-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 10px; border-radius: 18px; border: 1px solid transparent;
+    background: none; cursor: pointer; text-align: left; font-family: inherit;
+    transition: background .2s, border-color .2s; width: 100%;
+  }
+  .m-row:hover { background: rgba(255,255,255,.02); }
+  .m-row-active { background: linear-gradient(135deg, rgba(212,175,55,.1), rgba(212,175,55,.02)); border-color: rgba(212,175,55,.32); }
+  .m-row-aura:not(.m-row-active) { border-color: rgba(212,175,55,.22); animation: goldPulse 2.6s ease-in-out infinite; }
+  .m-row-locked { opacity: .6; }
+  .m-row-play {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(212,175,55,.25); color: #D4AF37;
+  }
+  .m-row-active .m-row-play { background: linear-gradient(135deg,#F5E17A,#D4AF37); color: #050505; box-shadow: 0 0 16px rgba(212,175,55,.5); border-color: transparent; }
+  .m-row-locked .m-row-play { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.08); color: rgba(255,255,255,.3); }
+  .m-row-body { flex: 1; min-width: 0; }
+  .m-row-title {
+    font-size: 12.5px; font-weight: 700; letter-spacing: -.01em; color: rgba(255,255,255,.88);
+    margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .m-row-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .m-row-dur { font-size: 9.5px; color: rgba(255,255,255,.3); flex-shrink: 0; }
+  .m-row-lock-badge {
+    font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #D4AF37;
+    background: rgba(212,175,55,.08); border: 1px solid rgba(212,175,55,.25);
+    padding: 5px 9px; border-radius: 100px; flex-shrink: 0; white-space: nowrap;
+  }
 `;
 
 /* ─── planet helpers ─── */
@@ -685,7 +782,6 @@ const Mantras = () => {
   const { user } = useAuth();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const { refreshBalance } = useSHCBalance();
 
   const [mantras, setMantras] = useState<MantraItem[]>([]);
   const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null);
@@ -695,6 +791,12 @@ const Mantras = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<CatKey>>(new Set());
+  const [collapsedCatsInit, setCollapsedCatsInit] = useState(false);
+  const [streak, setStreak] = useState<number>(0);
+  const [streakDirty, setStreakDirty] = useState(false);
+  const [filterMode, setFilterMode] = useState<'all' | 'unlocked' | 'mine'>('all');
+  const [scrubPct, setScrubPct] = useState(0);
+  const [resumeAvailable, setResumeAvailable] = useState<{ id: string; count: number } | null>(null);
 
   const playerRef = useRef<HTMLDivElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
@@ -720,6 +822,59 @@ const Mantras = () => {
       window.history.replaceState({}, '', '/mantras');
     }
   }, []);
+
+  // Practice streak — consecutive days with at least one completion
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('mantra_completions')
+        .select('completed_at')
+        .eq('user_id', user.id)
+        .gte('completed_at', since)
+        .order('completed_at', { ascending: false });
+      if (cancelled || !data) return;
+      const days = new Set(data.map((r: any) => new Date(r.completed_at).toDateString()));
+      let count = 0;
+      const cursor = new Date();
+      // allow today to be "not yet practiced" without breaking the streak
+      if (!days.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
+      while (days.has(cursor.toDateString())) {
+        count += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      setStreak(count);
+    })();
+    return () => { cancelled = true; };
+  }, [user, streakDirty]);
+
+  // Resume-in-progress — restore last unfinished count from this device
+  useEffect(() => {
+    if (!selectedMantraId) return;
+    try {
+      const raw = localStorage.getItem(`sqi_mantra_progress_${selectedMantraId}`);
+      if (raw) {
+        const saved = JSON.parse(raw) as { count: number; ts: number };
+        if (saved.count > 0 && saved.count < reps && Date.now() - saved.ts < 6 * 60 * 60 * 1000) {
+          setResumeAvailable({ id: selectedMantraId, count: saved.count });
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    setResumeAvailable(null);
+  }, [selectedMantraId]);
+
+  // Persist in-progress count for resume
+  useEffect(() => {
+    if (!selectedMantraId) return;
+    if (count > 0 && count < reps) {
+      localStorage.setItem(`sqi_mantra_progress_${selectedMantraId}`, JSON.stringify({ count, ts: Date.now() }));
+    } else if (count === 0 || count >= reps) {
+      localStorage.removeItem(`sqi_mantra_progress_${selectedMantraId}`);
+    }
+  }, [count, selectedMantraId]);
 
   const reps = MANTRA_REPETITIONS;
   const currentMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
@@ -822,7 +977,7 @@ const Mantras = () => {
     return () => { preload.src = ''; };
   }, [dashaPlanet, mantras]);
 
-  const awardMantraReward = async (mantra: MantraItem) => {
+  const recordMantraCompletion = async (mantra: MantraItem) => {
     if (!user) return;
     try {
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -831,14 +986,9 @@ const Mantras = () => {
         .eq('user_id', user.id).eq('mantra_id', mantra.id)
         .gte('completed_at', twentyFourHoursAgo).limit(1);
       if (recent?.length) return;
-      await supabase.from('mantra_completions').insert({ user_id: user.id, mantra_id: mantra.id, shc_earned: mantra.shc_reward });
-      const { data: bal } = await supabase.from('user_balances').select('balance, total_earned').eq('user_id', user.id).maybeSingle();
-      if (bal) {
-        await supabase.from('user_balances').update({ balance: bal.balance + mantra.shc_reward, total_earned: bal.total_earned + mantra.shc_reward }).eq('user_id', user.id);
-      }
-      await supabase.from('shc_transactions').insert({ user_id: user.id, type: 'earned', amount: mantra.shc_reward, description: `Mantra: ${mantra.title}`, status: 'completed' });
-      toast.success(t('mantras.shcEarnedToast', { amount: mantra.shc_reward }));
-      refreshBalance();
+      await supabase.from('mantra_completions').insert({ user_id: user.id, mantra_id: mantra.id });
+      toast.success(t('mantras.completionToast', { defaultValue: '108 recitations complete 🕉' }));
+      setStreakDirty(true);
       if ('vibrate' in navigator) navigator.vibrate([10, 50, 10]);
     } catch (e) { console.error(e); }
   };
@@ -864,12 +1014,14 @@ const Mantras = () => {
           if (!Number.isFinite(el.duration) || el.duration <= 0) return;
           const n = Math.min(reps - 1, Math.floor((el.currentTime / el.duration) * reps));
           if (n !== lastSyncedCount) { lastSyncedCount = n; setCount(n); }
+          setScrubPct(Math.min(100, (el.currentTime / el.duration) * 100));
         };
         const onFullEnd = () => {
           clearMantraPlaybackListeners();
           lastSyncedCount = reps; setCount(reps); setIsPlaying(false); setCompleted(true);
+          setScrubPct(100);
           currentMantraIdRef.current = null; audioEngine.stop();
-          if (user) void awardMantraReward(mantra);
+          if (user) void recordMantraCompletion(mantra);
         };
         el.addEventListener('timeupdate', onTime);
         el.addEventListener('ended', onFullEnd, { once: true });
@@ -882,7 +1034,7 @@ const Mantras = () => {
             if (next >= reps) {
               setIsPlaying(false); setCompleted(true); currentMantraIdRef.current = null;
               clearMantraPlaybackListeners(); audioEngine.stop();
-              if (user) void awardMantraReward(mantra);
+              if (user) void recordMantraCompletion(mantra);
               return reps;
             }
             const cur = audioEngine.getCurrent();
@@ -918,7 +1070,7 @@ const Mantras = () => {
 
   const handleReset = () => {
     clearMantraPlaybackListeners(); audioEngine.stop();
-    currentMantraIdRef.current = null; setCount(0); setIsPlaying(false); setCompleted(false);
+    currentMantraIdRef.current = null; setCount(0); setIsPlaying(false); setCompleted(false); setScrubPct(0);
   };
 
   const handleRestartFrom1 = () => {
@@ -983,6 +1135,59 @@ const Mantras = () => {
     return groups;
   }, [mantras]);
 
+  /* ── Today's most relevant category (Dasha, else Hora) floats to the top ── */
+  const priorityCat: CatKey | null = useMemo(() => {
+    const relevantPlanet = dashaPlanet ?? currentHoraPlanet;
+    if (!relevantPlanet) return null;
+    const match = mantras.find((m) => m.planet_type && normalizePlanetName(m.planet_type) === relevantPlanet);
+    return match ? getMantraCategory(match) : null;
+  }, [mantras, dashaPlanet, currentHoraPlanet]);
+
+  const orderedCats: CatKey[] = useMemo(() => {
+    if (!priorityCat) return CAT_ORDER;
+    return [priorityCat, ...CAT_ORDER.filter((c) => c !== priorityCat)];
+  }, [priorityCat]);
+
+  /* ── Auto-collapse every category except today's relevant one, once ── */
+  useEffect(() => {
+    if (collapsedCatsInit || mantras.length === 0) return;
+    const allCats = CAT_ORDER.filter((ck) => categorisedMantras[ck].length > 0);
+    const openCat = priorityCat ?? allCats[0] ?? null;
+    setCollapsedCats(new Set(allCats.filter((c) => c !== openCat)));
+    setCollapsedCatsInit(true);
+  }, [mantras, categorisedMantras, priorityCat, collapsedCatsInit]);
+
+  /* ── Filter chips: All / Unlocked / My Planet ── */
+  const filteredGroup = useCallback((ck: CatKey): MantraItem[] => {
+    const group = categorisedMantras[ck];
+    if (filterMode === 'all') return group;
+    if (filterMode === 'unlocked') {
+      return group.filter((m) => {
+        const requiredTier = (m.required_tier ?? (m.is_premium ? 1 : 0)) as number;
+        return isAdmin || requiredTier <= userRank;
+      });
+    }
+    // 'mine' — matches today's Dasha or Hora planet
+    const relevantPlanet = dashaPlanet ?? currentHoraPlanet;
+    return group.filter((m) => m.planet_type && normalizePlanetName(m.planet_type) === relevantPlanet);
+  }, [categorisedMantras, filterMode, isAdmin, userRank, dashaPlanet, currentHoraPlanet]);
+
+  /* ── Tier-aware upgrade banner — hidden once nothing is left to unlock ── */
+  const TIER_NAMES = ['Atma-Seed', 'Prana-Flow', 'Siddha-Quantum', 'Akasha-Infinity'];
+  const upgradeInfo = useMemo(() => {
+    if (isAdmin) return null;
+    let minLockedTier = Infinity;
+    mantras.forEach((m) => {
+      const rt = (m.required_tier ?? (m.is_premium ? 1 : 0)) as number;
+      if (rt > userRank && rt < minLockedTier) minLockedTier = rt;
+    });
+    if (!Number.isFinite(minLockedTier)) return null; // nothing locked above current tier
+    return {
+      targetTier: minLockedTier,
+      targetName: TIER_NAMES[minLockedTier] ?? 'higher tier',
+    };
+  }, [mantras, userRank, isAdmin]);
+
   if (loading) {
     return (
       <div className="sqi-mantras" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -1019,9 +1224,17 @@ const Mantras = () => {
           </div>
           <div className="m-micro" style={{ marginBottom: 8 }}>{t('mantras.heroMicro')}</div>
           <h1 className="m-hero-title m-shimmer">{t('mantras.title')}</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', lineHeight: 1.6, marginBottom: 0 }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', lineHeight: 1.6, marginBottom: streak > 0 ? 12 : 0 }}>
             {t('mantras.subtitle')}
           </p>
+          {streak > 0 && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(212,175,55,.08)', border: '1px solid rgba(212,175,55,.22)', borderRadius: 100, padding: '5px 12px' }}>
+              <span style={{ fontSize: 12 }}>🔥</span>
+              <span style={{ fontSize: 10.5, fontWeight: 800, color: '#D4AF37', letterSpacing: '.02em' }}>
+                {streak}-{t('mantras.dayStreak', { defaultValue: 'day streak' })}
+              </span>
+            </div>
+          )}
         </div>
 
 
@@ -1086,26 +1299,169 @@ const Mantras = () => {
           </div>
         )}
 
-        {/* ── PLAY GUIDANCE BAR ── */}
-        <div className="m-play-guidance" onClick={() => playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
-          <Play size={14} style={{ color: '#D4AF37', flexShrink: 0 }} />
-          <span className="m-play-guidance-text">
-            {selectedMantraId
-              ? `${currentMantra?.title ?? ''} — press start to begin`
-              : 'Select a mantra below — then press start'}
-          </span>
+        {/* ════ INLINE PLAYER — now the page's focal point ════ */}
+        <div ref={playerRef} className="m-player-wrap m-player-top">
+          {/* banner */}
+          <div className="m-player-banner">
+            <div className="m-player-eyebrow">{t('mantras.nowReciting', { defaultValue: 'Now Reciting' })}</div>
+            <div className="m-mantra-name m-shimmer">
+              {currentMantra?.title ?? t('mantras.selectPrompt')}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {mantraPlanet && (
+                <span className="m-tag" style={{ background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.22)', color: '#D4AF37' }}>
+                  {planetSymbol} {t('mantras.planetMantraTag', { planet: mantraPlanet })}
+                </span>
+              )}
+              <span className="m-tag" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', color: 'rgba(255,255,255,.4)' }}>
+                ✦ {t('mantras.sacredReverb')}
+              </span>
+            </div>
+            {resumeAvailable && resumeAvailable.id === selectedMantraId && count === 0 && !isPlaying && (
+              <button
+                type="button"
+                className="m-resume-chip"
+                onClick={() => { setCount(resumeAvailable.count); handleStart(); }}
+              >
+                ↺ {t('mantras.resumeFrom', { count: resumeAvailable.count, defaultValue: `Resume from ${resumeAvailable.count}/108` })}
+              </button>
+            )}
+          </div>
+
+          {/* compact ring + controls row */}
+          {!completed ? (
+            <>
+              <div className="m-controls-row">
+                {/* ring counter */}
+                <div className="m-ring-wrap">
+                  {isPlaying && (
+                    <>
+                      <div className="m-scalar-ring" />
+                      <div className="m-scalar-ring" />
+                      <div className="m-scalar-ring" />
+                    </>
+                  )}
+                  <svg className="m-counter-ring" width="100" height="100" viewBox="0 0 36 36">
+                    <defs>
+                      <linearGradient id="goldGradMantra" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.9" />
+                        <stop offset="50%" stopColor="#F5D77A" stopOpacity="1" />
+                        <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.7" />
+                      </linearGradient>
+                    </defs>
+                    <circle className="m-counter-track" cx="18" cy="18" r="15.5" />
+                    <circle
+                      className="m-counter-fill"
+                      cx="18" cy="18" r="15.5"
+                      strokeDasharray={`${CIRC} ${CIRC}`}
+                      strokeDashoffset={progressOffset}
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-.04em', color: '#D4AF37', lineHeight: 1 }}>{count}</div>
+                    <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.4)', marginTop: 2 }}>
+                      {t('mantras.slash108')}
+                    </div>
+                  </div>
+                </div>
+
+                {/* buttons */}
+                <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className={`m-btn-start${isPlaying ? ' m-paused' : ''}`}
+                    onClick={() => {
+                      if (isPlaying) handlePause();
+                      else handleStart();
+                      if ('vibrate' in navigator) navigator.vibrate(15);
+                    }}
+                  >
+                    {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                    {isPlaying ? t('mantras.pauseUpper') : t('mantras.startUpper')}
+                  </button>
+                  <button type="button" className="m-btn-reset" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }} title={t('mantras.resetAria')}>
+                    <RotateCcw size={16} />
+                  </button>
+                </div>
+              </div>
+              {scrubPct > 0 && (
+                <div className="m-scrub-track">
+                  <div className="m-scrub-fill" style={{ width: `${scrubPct}%` }} />
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ margin: 16, background: 'linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.04))', border: '1px solid rgba(212,175,55,.3)', borderRadius: 20, padding: 20, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🕉</div>
+              <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-.02em', color: '#D4AF37', marginBottom: 4 }}>{t('mantras.completed108Title')}</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginBottom: 16 }}>{t('mantras.completed108Sub')}</div>
+              <button
+                type="button"
+                className="m-btn-start"
+                style={{ margin: '0 auto', width: 'auto', padding: '10px 28px', display: 'inline-flex' }}
+                onClick={() => { setCount(0); setCompleted(false); setScrubPct(0); handleStart(); if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]); }}
+              >
+                {t('mantras.practiceAgain')}
+              </button>
+            </div>
+          )}
+
+          {/* instructions */}
+          <div className="m-instructions">
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 8 }}>
+              {t('mantras.instructions.title')}
+            </div>
+            {[t('mantras.instructions.step1'), t('mantras.instructions.step2'), t('mantras.instructions.step3')].map((step, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: i < 2 ? 6 : 0 }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'rgba(212,175,55,.55)', flexShrink: 0, marginTop: 1 }}>
+                  {i + 1}
+                </div>
+                {step}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── TIER-AWARE UPGRADE BANNER — hidden entirely once nothing is left to unlock (e.g. Akasha-Infinity) ── */}
+        {upgradeInfo && (
+          <div className="m-upgrade-banner" onClick={handleUpgradeCheckout}>
+            <div className="m-upgrade-icon">🔓</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="m-upgrade-title">{t('mantras.upgradeTitle', { defaultValue: 'Unlock the full mantra library' })}</div>
+              <div className="m-upgrade-sub">{t('mantras.upgradeSub', { tier: upgradeInfo.targetName, defaultValue: `${upgradeInfo.targetName} unlocks every remaining mantra` })}</div>
+            </div>
+            <div className="m-upgrade-cta">{t('mantras.upgradeCta', { defaultValue: 'Upgrade' })}</div>
+          </div>
+        )}
+
+        {/* ── FILTER CHIPS ── */}
+        <div className="m-filter-row">
+          {(['all', 'unlocked', 'mine'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`m-filter-chip${filterMode === f ? ' active' : ''}`}
+              onClick={() => setFilterMode(f)}
+            >
+              {f === 'all' ? t('mantras.filterAll', { defaultValue: 'All' })
+                : f === 'unlocked' ? t('mantras.filterUnlocked', { defaultValue: 'Unlocked' })
+                : t('mantras.filterMine', { defaultValue: 'My Planet' })}
+            </button>
+          ))}
         </div>
 
         {/* ════ MANTRA GRID BY CATEGORY ════ */}
-        {CAT_ORDER.map((ck) => {
-          const group = categorisedMantras[ck];
-          if (group.length === 0) return null;
+        {orderedCats.map((ck) => {
+          const fullGroup = categorisedMantras[ck];
+          if (fullGroup.length === 0) return null;
+          const group = filteredGroup(ck);
           const meta = CAT_META[ck];
           const CatSectionIcon = CAT_ICONS[ck];
           const isCollapsed = collapsedCats.has(ck);
+          const isPriority = ck === priorityCat;
 
           return (
-            <div key={ck} className="m-cat-card">
+            <div key={ck} className={`m-cat-card${isPriority ? ' m-cat-glow' : ''}`}>
               <div
                 className="m-cat-header"
                 onClick={() => setCollapsedCats((prev) => {
@@ -1128,6 +1484,7 @@ const Mantras = () => {
                     <div className="m-cat-sub">{t(`mantras.categorySections.${ck}.subtitle`)}</div>
                   </div>
                 </div>
+                <div className="m-cat-count">{fullGroup.length}</div>
                 <div className={`m-cat-chevron${!isCollapsed ? ' open' : ''}`} aria-hidden>
                   {!isCollapsed ? '▲' : '▼'}
                 </div>
@@ -1137,7 +1494,12 @@ const Mantras = () => {
                 <>
                   <div className="m-cat-divider" style={{ marginLeft: 20, marginRight: 20 }} />
                   <div className="m-cat-grid-wrap">
-                <div className="m-mantra-grid">
+                {group.length === 0 && (
+                  <div style={{ padding: '4px 8px 16px', fontSize: 11.5, color: 'rgba(255,255,255,.3)' }}>
+                    {t('mantras.noMatchesFilter', { defaultValue: 'No mantras match this filter in this category.' })}
+                  </div>
+                )}
+                <div className="m-playlist">
                   {group.map((m) => {
                     const mp = m.planet_type ? normalizePlanetName(m.planet_type) : null;
                     const isSel = selectedMantraId === m.id;
@@ -1157,65 +1519,47 @@ const Mantras = () => {
                         key={m.id}
                         type="button"
                         className={[
-                          'm-card',
-                          isSel ? 'm-card-selected' : '',
-                          isAura && !isSel ? 'm-card-aura' : '',
-                          cardLocked ? 'm-card-locked' : '',
+                          'm-row',
+                          isSel ? 'm-row-active' : '',
+                          isAura && !isSel ? 'm-row-aura' : '',
+                          cardLocked ? 'm-row-locked' : '',
                         ].filter(Boolean).join(' ')}
-                        style={{ borderColor: isSel ? 'rgba(212,175,55,.45)' : meta.borderColor }}
                         onClick={() => handleMantraSelect(m, cardLocked)}
                       >
-                        {/* premium indicator dot */}
-                        {requiredTier > 0 && !cardLocked && (
-                          <div className="m-card-premium-dot" title={tierLabel} />
-                        )}
-
-                        {/* lock overlay — full card teaser with upgrade CTA */}
-                        {cardLocked && (
-                          <div className="m-card-lock-overlay">
-                            <div className="m-card-lock-icon">
-                              <Lock size={12} />
-                            </div>
-                            <div className="m-card-lock-label">
-                              {tierLabel}<br />Tap to Unlock
-                            </div>
-                          </div>
-                        )}
-
-                        {/* icon: planet glyph when set, else crisp category vector */}
-                        <div
-                          className="m-card-planet-icon"
-                          style={{ background: `${meta.borderColor}55`, border: `1px solid ${meta.borderColor}` }}
-                        >
-                          {pSym ? (
-                            <span className="m-card-planet-glyph" style={{ color: meta.pillColor }}>{pSym}</span>
+                        {/* play state / planet-or-category icon */}
+                        <div className="m-row-play" style={{ background: isSel ? undefined : `${meta.borderColor}22`, borderColor: meta.borderColor }}>
+                          {cardLocked ? (
+                            <Lock size={13} />
+                          ) : isSel ? (
+                            isPlaying ? <Pause size={13} /> : <Play size={13} />
+                          ) : pSym ? (
+                            <span style={{ color: meta.pillColor, fontSize: 14, fontWeight: 650 }}>{pSym}</span>
                           ) : (
-                            <CardCatIcon size={19} strokeWidth={1.65} color={meta.pillColor} aria-hidden />
+                            <CardCatIcon size={15} strokeWidth={1.8} color={meta.pillColor} aria-hidden />
                           )}
                         </div>
 
-                        {/* title */}
-                        <div className="m-card-title">{m.title}</div>
-
-                        {/* meta pills */}
-                        <div className="m-card-meta">
-                          {mp && (
-                            <span className="m-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
-                              {pSym} {mp}
+                        {/* title + meta */}
+                        <div className="m-row-body">
+                          <div className="m-row-title">{m.title}</div>
+                          <div className="m-row-meta">
+                            {mp && (
+                              <span className="m-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
+                                {pSym} {mp}
+                              </span>
+                            )}
+                            <span className="m-pill" style={{ background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.15)', color: 'rgba(212,175,55,.55)' }}>
+                              {pct}% ✦
                             </span>
-                          )}
-                          {!mp && (
-                            <span className="m-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
-                              {meta.label.split(' ')[0]}
-                            </span>
-                          )}
-                          <span className="m-pill" style={{ background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.15)', color: 'rgba(212,175,55,.55)' }}>
-                            {pct}% ✦
-                          </span>
-                          {m.duration_minutes > 0 && (
-                            <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.3)' }}>{formatDurationMinutes(m.duration_minutes)}</span>
-                          )}
+                          </div>
                         </div>
+
+                        {/* duration or lock badge */}
+                        {cardLocked ? (
+                          <div className="m-row-lock-badge">{tierLabel}</div>
+                        ) : m.duration_minutes > 0 ? (
+                          <div className="m-row-dur">{formatDurationMinutes(m.duration_minutes)}</div>
+                        ) : null}
                       </button>
                     );
                   })}
@@ -1226,115 +1570,6 @@ const Mantras = () => {
             </div>
           );
         })}
-
-        {/* ── PREMA-PULSE DIVIDER ── */}
-        <div className="m-prema-divider" />
-
-        {/* ════ INLINE PLAYER ════ */}
-        <div ref={playerRef} className="m-player-wrap">
-          {/* banner */}
-          <div className="m-player-banner">
-            <div className="m-mantra-name m-shimmer">
-              {currentMantra?.title ?? t('mantras.selectPrompt')}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {mantraPlanet && (
-                <span className="m-tag" style={{ background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.22)', color: '#D4AF37' }}>
-                  {planetSymbol} {t('mantras.planetMantraTag', { planet: mantraPlanet })}
-                </span>
-              )}
-              <span className="m-tag" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', color: 'rgba(255,255,255,.4)' }}>
-                ✦ {t('mantras.sacredReverb')}
-              </span>
-            </div>
-          </div>
-
-          {/* compact ring + controls row */}
-          {!completed ? (
-            <div className="m-controls-row">
-              {/* ring counter */}
-              <div className="m-ring-wrap">
-                {isPlaying && (
-                  <>
-                    <div className="m-scalar-ring" />
-                    <div className="m-scalar-ring" />
-                    <div className="m-scalar-ring" />
-                  </>
-                )}
-                <svg className="m-counter-ring" width="100" height="100" viewBox="0 0 36 36">
-                  <defs>
-                    <linearGradient id="goldGradMantra" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.9" />
-                      <stop offset="50%" stopColor="#F5D77A" stopOpacity="1" />
-                      <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.7" />
-                    </linearGradient>
-                  </defs>
-                  <circle className="m-counter-track" cx="18" cy="18" r="15.5" />
-                  <circle
-                    className="m-counter-fill"
-                    cx="18" cy="18" r="15.5"
-                    strokeDasharray={`${CIRC} ${CIRC}`}
-                    strokeDashoffset={progressOffset}
-                  />
-                </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-.04em', color: '#D4AF37', lineHeight: 1 }}>{count}</div>
-                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.4)', marginTop: 2 }}>
-                    {t('mantras.slash108')}
-                  </div>
-                </div>
-              </div>
-
-              {/* buttons */}
-              <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button
-                  type="button"
-                  className={`m-btn-start${isPlaying ? ' m-paused' : ''}`}
-                  onClick={() => {
-                    if (isPlaying) handlePause();
-                    else handleStart();
-                    if ('vibrate' in navigator) navigator.vibrate(15);
-                  }}
-                >
-                  {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                  {isPlaying ? t('mantras.pauseUpper') : t('mantras.startUpper')}
-                </button>
-                <button type="button" className="m-btn-reset" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }} title={t('mantras.resetAria')}>
-                  <RotateCcw size={16} />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ margin: 16, background: 'linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.04))', border: '1px solid rgba(212,175,55,.3)', borderRadius: 20, padding: 20, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🕉</div>
-              <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-.02em', color: '#D4AF37', marginBottom: 4 }}>{t('mantras.completed108Title')}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginBottom: 16 }}>{t('mantras.completed108Sub')}</div>
-              <button
-                type="button"
-                className="m-btn-start"
-                style={{ margin: '0 auto', width: 'auto', padding: '10px 28px', display: 'inline-flex' }}
-                onClick={() => { setCount(0); setCompleted(false); handleStart(); if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]); }}
-              >
-                {t('mantras.practiceAgain')}
-              </button>
-            </div>
-          )}
-
-          {/* instructions */}
-          <div className="m-instructions">
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 8 }}>
-              {t('mantras.instructions.title')}
-            </div>
-            {[t('mantras.instructions.step1'), t('mantras.instructions.step2'), t('mantras.instructions.step3')].map((step, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: i < 2 ? 6 : 0 }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'rgba(212,175,55,.55)', flexShrink: 0, marginTop: 1 }}>
-                  {i + 1}
-                </div>
-                {step}
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* ── Jyotish Recommendations ── */}
         {jyotishRecommendation && (
