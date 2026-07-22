@@ -20,7 +20,6 @@ const PRIMARY_MODEL = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.0-flash";
 
 const FEATURE_TOKEN_LIMITS: Record<string, number> = {
-const FEATURE_TOKEN_LIMITS: Record<string, number> = {
   // Short utility calls
   temple_home:           400,   // anchoring transmission ~1 paragraph
   food_photo_analysis:   300,   // yes/no + brief dosha note
