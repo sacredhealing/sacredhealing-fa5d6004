@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+// Deploy trigger: fixed multi-part response truncation (2026-07-22).
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -173,7 +175,11 @@ serve(async (req) => {
     }
 
     const data = await geminiResponse.json();
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    // Gemini can split a response across multiple `parts` (e.g. a reasoning/thought
+    // part followed by the actual answer, or a long answer split across parts).
+    // Reading only parts[0] silently truncated longer outputs — concatenate all of them.
+    const responseParts = data.candidates?.[0]?.content?.parts ?? [];
+    const responseText = responseParts.map((p: any) => p.text ?? "").join("");
 
     if (!responseText) {
       console.error(`gemini-bridge: empty response from ${usedModel}:`, JSON.stringify(data));

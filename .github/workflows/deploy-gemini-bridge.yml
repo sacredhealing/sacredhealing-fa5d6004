@@ -1,0 +1,29 @@
+name: Deploy gemini-bridge Edge Function
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase/functions/gemini-bridge/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_linux_amd64.tar.gz \
+            | tar xz -C /usr/local/bin supabase
+          supabase --version
+
+      - name: Deploy edge function to the live project (ssygukfdbtehvtndandn)
+        env:
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+        run: |
+          supabase functions deploy gemini-bridge \
+            --project-ref ssygukfdbtehvtndandn \
+            --no-verify-jwt
+          echo "✅ Deployed gemini-bridge to ssygukfdbtehvtndandn"
