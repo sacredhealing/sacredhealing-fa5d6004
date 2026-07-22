@@ -33,6 +33,25 @@ const HEALING_PRICES = {
     amount: 147,
     days: 30,
   },
+  // Healing Boosts — quick-tap micro tiers, no pre-created Stripe Price object.
+  // No price_id here on purpose: the checkout session builder below uses Stripe's
+  // dynamic price_data for any plan missing a price_id, so these don't touch how
+  // the four plans above are charged.
+  "boost_1_day": {
+    name: "1-Day Healing Boost",
+    amount: 11.11,
+    days: 1,
+  },
+  "boost_2_day": {
+    name: "2-Day Healing Boost",
+    amount: 22.22,
+    days: 2,
+  },
+  "boost_3_day": {
+    name: "3-Day Healing Boost",
+    amount: 33.33,
+    days: 3,
+  },
 };
 
 serve(async (req) => {
@@ -102,16 +121,24 @@ serve(async (req) => {
         status: 200,
       });
     } else {
-      // One-time payment
+      // One-time payment. Plans with a pre-created Stripe price_id use it exactly as before.
+      // Boost plans (no price_id) build the price inline via price_data — same checkout flow,
+      // just no Stripe Dashboard price object needed for these smaller tiers.
+      const lineItem = "price_id" in planConfig && planConfig.price_id
+        ? { price: planConfig.price_id, quantity: 1 }
+        : {
+            price_data: {
+              currency: "usd",
+              product_data: { name: planConfig.name },
+              unit_amount: Math.round(planConfig.amount * 100),
+            },
+            quantity: 1,
+          };
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
-        line_items: [
-          {
-            price: planConfig.price_id,
-            quantity: 1,
-          },
-        ],
+        line_items: [lineItem],
         mode: "payment",
         success_url: `${origin}/healing?success=true&type=${planType}`,
         cancel_url: `${origin}/healing?canceled=true`,

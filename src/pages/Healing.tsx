@@ -156,6 +156,16 @@ const HEALING_PLANS: HealingPlan[] = [
   { id: '30_day', name: '30 days', price: 197, days: 30 },
 ];
 
+/** Quick-buy micro tiers, priced on the 11.11 pattern (an "angel number" — on-brand for this
+ * audience, and cleanly linear: each extra day is another $11.11, so the math is legible at a
+ * glance). Server-side in create-healing-checkout uses Stripe's dynamic price_data for these
+ * three, since there's no pre-created Stripe Price object for them (unlike the plans above). */
+const BOOST_PLANS: HealingPlan[] = [
+  { id: 'boost_1_day', name: '1-Day Healing Boost', price: 11.11, days: 1 },
+  { id: 'boost_2_day', name: '2-Day Healing Boost', price: 22.22, days: 2 },
+  { id: 'boost_3_day', name: '3-Day Healing Boost', price: 33.33, days: 3 },
+];
+
 /** Ongoing subscription — same Stripe/crypto flows as fixed-duration plans */
 const SUBSCRIPTION_PLAN: HealingPlan = {
   id: 'subscription',
@@ -1153,6 +1163,42 @@ const Healing: React.FC = () => {
           ))}
         </Accordion>
       </section>
+
+      {/* Healing Boosts — quick-tap micro purchases, separate from the considered 7/14/30-day plans below */}
+      {!hasHealingAccess && (
+      <div style={{ padding: '0 22px 20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 12 }}>
+          <div className="h-micro" style={{ marginBottom: 4 }}>Instant · No Commitment</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,.85)' }}>Healing Boost</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {BOOST_PLANS.map((plan) => (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => {
+                setSelectedPlan(plan);
+                void handleStripePayment(plan.id);
+              }}
+              disabled={isProcessing}
+              style={{
+                flex: 1,
+                background: 'linear-gradient(135deg, rgba(212,175,55,.1), rgba(212,175,55,.03))',
+                border: '1px solid rgba(212,175,55,.3)',
+                borderRadius: 18,
+                padding: '14px 6px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.04em', color: 'rgba(255,255,255,.65)', marginBottom: 4 }}>{plan.days} {plan.days === 1 ? 'Day' : 'Days'}</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: '#D4AF37' }}>${plan.price.toFixed(2)}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      )}
 
       {/* Booking — Stripe/checkout preserved */}
       <section id="booking-section" style={{ padding: '0 22px 32px', scrollMarginTop: 32 }}>
