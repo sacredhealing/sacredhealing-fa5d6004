@@ -28,9 +28,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Play, Pause, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
 import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { Button } from '@/components/ui/button';
-import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
-import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
-import WealthMeditationService from '@/components/meditation/WealthMeditationService';
 import { CuratedMeditationCard } from '@/components/meditation/CuratedMeditationCard';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -885,7 +882,6 @@ const Meditations: React.FC = () => {
   const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('meditation');
   const [meditations, setMeditations] = useState<MeditationFull[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCommission, setActiveCommission] = useState<string | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<MeditationFull[]>([]);
   const pranaUpgradeLockRef = useRef(false);
@@ -1239,97 +1235,7 @@ const Meditations: React.FC = () => {
           ))}
         </div>
 
-        {/* ✅ FIX 9: Sacred Commissions — glass card treatment */}
-        <div style={{ padding: '8px 20px 20px' }}>
-          <div className="sqi-micro" style={{ marginBottom: 6 }}>{t('meditations.sacredCommissionsMicro').toUpperCase()}</div>
-          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,.9)', marginBottom: 4 }}>
-            {t('meditations.personalTransmissions')}
-          </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.35)', lineHeight: 1.5, marginBottom: 16 }}>
-            {t('meditations.sacredCommissionsDesc')}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-            {/* Wealth */}
-            <div
-              className="commission-card"
-              onClick={() => setActiveCommission('wealth')}
-            >
-              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,rgba(212,175,55,.22),rgba(212,175,55,.06))', border: '1.5px solid rgba(212,175,55,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 18px rgba(212,175,55,.3)', flexShrink: 0 }}>
-                ॐ
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>€47</div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>
-                  {t('meditations.wealthTitle')}
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {t('meditations.wealthSub')}
-                </div>
-              </div>
-              <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
-            </div>
-
-            {/* Custom booking */}
-            <div
-              className="commission-card"
-              onClick={() => setActiveCommission('booking')}
-            >
-              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,rgba(212,175,55,.22),rgba(212,175,55,.06))', border: '1.5px solid rgba(212,175,55,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 18px rgba(212,175,55,.3)', flexShrink: 0 }}>
-                ॐ
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>€20–€97</div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>
-                  {t('meditations.bookingTitle')}
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {t('meditations.bookingSub')}
-                </div>
-              </div>
-              <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
-            </div>
-
-            {/* Creation */}
-            <div
-              className="commission-card"
-              onClick={() => setActiveCommission('creation')}
-            >
-              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,rgba(212,175,55,.22),rgba(212,175,55,.06))', border: '1.5px solid rgba(212,175,55,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 18px rgba(212,175,55,.3)', flexShrink: 0 }}>
-                ॐ
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>€97–€197</div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>
-                  {t('meditations.creationTitle')}
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {t('meditations.creationSub')}
-                </div>
-              </div>
-              <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Preserved modal sheets */}
-        <WealthMeditationService
-          open={activeCommission === 'wealth'}
-          onOpenChange={o => !o && setActiveCommission(null)}
-          hideTrigger
-        />
-        <CustomMeditationBooking
-          open={activeCommission === 'booking'}
-          onOpenChange={o => !o && setActiveCommission(null)}
-          hideTrigger
-        />
-        <CustomMeditationCreation
-          open={activeCommission === 'creation'}
-          onOpenChange={o => !o && setActiveCommission(null)}
-          hideTrigger
-        />
+        {/* Sacred Commissions moved to /explore (Akasha) — see card before Vishwananda block */}
 
         {BackToTopFab && <BackToTopFab />}
         <div style={{ height: 100 }} />
