@@ -18,7 +18,7 @@ import React, {
 } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  Play, Pause, Lock, ArrowLeft, Loader2, Sparkles, Crown, ListPlus, ListMusic,
+  Play, Pause, Lock, ArrowLeft, Loader2, Sparkles, Crown, ListPlus, ListMusic, Music2, Wind, Waves,
 } from 'lucide-react';
 import { AddToPlaylistSheet } from '@/components/music/AddToPlaylistSheet';
 import { supabase } from '@/integrations/supabase/client';
@@ -671,19 +671,28 @@ const Section: React.FC<{
   activeId?: string; isPlaying: boolean; progress: number; secondsLeft: number;
   userTierRank: number; purchasedIds: string[]; purchasedAlbumTrackIds: string[];
   onPlay: (t: MusicTrack) => void; onLock: (t: MusicTrack) => void;
-  defaultOpen?: boolean;
-}> = ({ title, micro, tracks, activeId, isPlaying, progress, secondsLeft, userTierRank, purchasedIds, purchasedAlbumTrackIds, onPlay, onLock, defaultOpen = true }) => {
+  defaultOpen?: boolean; icon: React.ElementType;
+}> = ({ title, micro, tracks, activeId, isPlaying, progress, secondsLeft, userTierRank, purchasedIds, purchasedAlbumTrackIds, onPlay, onLock, defaultOpen = true, icon: Icon }) => {
   const [open, setOpen] = useState(defaultOpen);
   if (!tracks.length) return null;
   return (
-    <div className="glass-card" style={{ marginBottom: 11, overflow: 'visible' }}>
-      <div className="sec-toggle" onClick={() => setOpen(o => !o)}>
-        <div>
-          <span className="micro" style={{ marginBottom: 3 }}>{micro}</span>
-          <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>{title}</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.32)', marginTop: 2 }}>{tracks.length} transmissions</div>
+    <div className="glass-card" style={{ marginBottom: 10, overflow: 'visible' }}>
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
+      >
+        <div style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={18} style={{ color: '#D4AF37' }} />
         </div>
-        <div className={`chevron${open ? ' open' : ''}`}>{open ? '▲' : '▼'}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.9)' }}>{title}</div>
+          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {micro} · {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'}
+          </div>
+        </div>
+        <div style={{ color: 'rgba(212,175,55,.5)', fontSize: 16, flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .2s' }}>
+          ›
+        </div>
       </div>
       {open && (
         <div style={{ paddingBottom: 10 }}>
@@ -950,9 +959,9 @@ const Music: React.FC = () => {
 
         {filter === 'all' ? (
           <>
-            <Section title="Sacred Songs" micro="Vedic Light-Codes · Soul Transmissions" tracks={songs} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
-            <Section title="Meditation Music" micro="Scalar Wave · Deep Healing Codes" tracks={meditations} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
-            <Section title="Sacred Beats" micro="Bhakti-Algorithms · Rhythm Transmissions" tracks={beats} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
+            <Section title="Sacred Songs" micro="Vedic Light-Codes · Soul Transmissions" icon={Music2} tracks={songs} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
+            <Section title="Meditation Music" micro="Scalar Wave · Deep Healing Codes" icon={Wind} tracks={meditations} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
+            <Section title="Sacred Beats" micro="Bhakti-Algorithms · Rhythm Transmissions" icon={Waves} tracks={beats} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
           </>
         ) : (
           <div className="glass-card" style={{ overflow: 'visible', padding: '8px 0' }}>
