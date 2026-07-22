@@ -936,9 +936,9 @@ const Music: React.FC = () => {
 
         {filter === 'all' ? (
           <>
-            <Section title="Sacred Songs" micro="Vedic Light-Codes · Soul Transmissions" tracks={songs} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
-            <Section title="Meditation Music" micro="Scalar Wave · Deep Healing Codes" tracks={meditations} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
-            <Section title="Sacred Beats" micro="Bhakti-Algorithms · Rhythm Transmissions" tracks={beats} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
+            <Section title="Sacred Songs" micro="Vedic Light-Codes · Soul Transmissions" tracks={songs} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
+            <Section title="Meditation Music" micro="Scalar Wave · Deep Healing Codes" tracks={meditations} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
+            <Section title="Sacred Beats" micro="Bhakti-Algorithms · Rhythm Transmissions" tracks={beats} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={false} />
           </>
         ) : (
           <div className="glass-card" style={{ overflow: 'visible', padding: '8px 0' }}>
@@ -956,16 +956,24 @@ const Music: React.FC = () => {
 
         <div className="akasha-div" style={{ margin: '28px 0 8px' }} />
 
-        {/* SINGLE UNLOCK BANNER — replaces the four tier comparison cards */}
+        {/* SINGLE UNLOCK BANNER — Siddha Portal glow treatment */}
         {userTierRank < 3 && (
-          <div style={{ padding: '24px 20px', borderRadius: 28, background: 'rgba(212,175,55,.05)', border: '1px solid rgba(212,175,55,.22)', textAlign: 'center' }}>
-            <div style={{ fontWeight: 800, fontSize: 17, color: 'rgba(255,255,255,.92)', marginBottom: 6 }}>
-              Hear everything, whenever you like
+          <div style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', padding: '28px 22px', borderRadius: 28, background: 'radial-gradient(ellipse at 50% 35%, rgba(45,26,0,0.98) 0%, rgba(15,8,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.55)', boxShadow: '0 0 90px rgba(212,175,55,0.14)' }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: 28, border: '1px solid rgba(212,175,55,0.18)', animation: 'sqiPulse 4s ease-in-out infinite', pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,.95)', marginBottom: 7 }}>
+                Hear everything, whenever you like
+              </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', lineHeight: 1.6, marginBottom: 22, maxWidth: 280, marginLeft: 'auto', marginRight: 'auto' }}>
+                Prana-Flow unlocks every song, meditation and beat in full — no more 30-second previews.
+              </p>
+              <button
+                onClick={handleUpgrade}
+                style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 9, fontWeight: 800, letterSpacing: '.32em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.44)', borderRadius: 32, padding: '14px 32px', cursor: 'pointer', boxShadow: '0 0 28px rgba(212,175,55,0.1)', animation: 'sqiPulse 3.5s ease-in-out infinite' }}
+              >
+                ⬡ &nbsp;Unlock Full Access · €19/mo
+              </button>
             </div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', lineHeight: 1.6, marginBottom: 18 }}>
-              Prana-Flow unlocks every song, meditation and beat in full — no more 30-second previews.
-            </p>
-            <button className="cta-gold" onClick={handleUpgrade}>Unlock Full Access · €19/mo</button>
           </div>
         )}
 
