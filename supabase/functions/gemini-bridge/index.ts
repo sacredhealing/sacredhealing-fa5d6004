@@ -20,14 +20,20 @@ const PRIMARY_MODEL = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.0-flash";
 
 const FEATURE_TOKEN_LIMITS: Record<string, number> = {
-  temple_home:           400,
-  food_photo_analysis:   300,
-  soul_scan:             600,
-  vedic_translation:     500,
-  soul_vault:           2200,
-  transformation_doc:   1500,
-  academy_curriculum:   3000,
-  vision_analysis:       800,
+const FEATURE_TOKEN_LIMITS: Record<string, number> = {
+  // Short utility calls
+  temple_home:           400,   // anchoring transmission ~1 paragraph
+  food_photo_analysis:   300,   // yes/no + brief dosha note
+  soul_scan:             600,   // quick scan summary
+  vedic_translation:     500,   // translation output, not prose
+  gita_translation:     4000,   // full multi-paragraph teaching passages, not short verses
+  // Medium outputs
+  soul_vault:           2200,   // soul vault reading: 3 rich paragraphs + kosha map
+  transformation_doc:   1500,   // transformation narrative
+  // Longer admin/content tasks
+  academy_curriculum:   3000,   // module/lesson generation — genuinely long
+  // Vision / multimodal
+  vision_analysis:       800,   // image-based analysis
 };
 
 const DEFAULT_TOKEN_LIMIT = 2048;
