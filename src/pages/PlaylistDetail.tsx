@@ -1,10 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, Shuffle, X, ListMusic } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Shuffle, X, ListMusic, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 import { toast } from 'sonner';
+
+interface PlaylistRow {
+  track: Track;
+  orderIndex: number;
+}
 
 const PlaylistDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,7 +18,7 @@ const PlaylistDetail: React.FC = () => {
   const { playTrack, currentTrack, isPlaying, hasAccess } = useMusicPlayer();
 
   const [name, setName] = useState('');
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [rows, setRows] = useState<PlaylistRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -34,16 +39,35 @@ const PlaylistDetail: React.FC = () => {
         .select('*')
         .in('id', pt.map((p) => p.track_id));
       const byId = new Map((tracksData || []).map((t) => [t.id, t]));
-      const ordered = pt.map((p) => byId.get(p.track_id)).filter(Boolean) as Track[];
-      setTracks(ordered);
+      const ordered = pt
+        .map((p) => {
+          const t = byId.get(p.track_id);
+          return t ? { track: t as Track, orderIndex: p.order_index } : null;
+        })
+        .filter(Boolean) as PlaylistRow[];
+      setRows(ordered);
     } else {
-      setTracks([]);
+      setRows([]);
     }
     setLoading(false);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
 
+  // Refetch whenever this screen regains focus — fixes cards/tracklist
+  // going stale after adding or removing tracks elsewhere in the app.
+  useEffect(() => {
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
+
+  const tracks = rows.map((r) => r.track);
   const covers = tracks.map((t) => t.cover_image_url).filter(Boolean).slice(0, 4) as string[];
 
   const playAll = (shuffle = false) => {
@@ -55,8 +79,30 @@ const PlaylistDetail: React.FC = () => {
   const removeTrack = async (trackId: string) => {
     if (!id) return;
     await supabase.from('playlist_tracks').delete().eq('playlist_id', id).eq('track_id', trackId);
-    setTracks((t) => t.filter((tr) => tr.id !== trackId));
+    setRows((r) => r.filter((row) => row.track.id !== trackId));
     toast.success('Removed from playlist');
+  };
+
+  const moveTrack = async (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (!id || targetIndex < 0 || targetIndex >= rows.length) return;
+
+    const a = rows[index];
+    const b = rows[targetIndex];
+    const aOrder = a.orderIndex;
+    const bOrder = b.orderIndex;
+
+    // Swap positions locally so the row moves immediately, without waiting on the network
+    const next = [...rows];
+    next[index] = { track: b.track, orderIndex: aOrder };
+    next[targetIndex] = { track: a.track, orderIndex: bOrder };
+    setRows(next);
+
+    // Persist the swapped order_index values so the new order survives a reload
+    await Promise.all([
+      supabase.from('playlist_tracks').update({ order_index: aOrder }).eq('playlist_id', id).eq('track_id', b.track.id),
+      supabase.from('playlist_tracks').update({ order_index: bOrder }).eq('playlist_id', id).eq('track_id', a.track.id),
+    ]);
   };
 
   if (loading) {
@@ -135,17 +181,34 @@ const PlaylistDetail: React.FC = () => {
             No songs here yet. Go to Music and tap "Add to Playlist" on any track.
           </div>
         )}
-        {tracks.map((track) => {
+        {rows.map((row, index) => {
+          const track = row.track;
           const active = currentTrack?.id === track.id;
           const locked = !hasAccess(track);
           return (
             <div
               key={track.id}
               style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px',
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px',
                 borderRadius: 16, background: active ? 'rgba(212,175,55,.06)' : 'transparent',
               }}
             >
+              <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                <button
+                  onClick={() => moveTrack(index, -1)}
+                  disabled={index === 0}
+                  style={{ width: 22, height: 18, border: 'none', background: 'transparent', color: index === 0 ? 'rgba(255,255,255,.12)' : 'rgba(212,175,55,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: index === 0 ? 'default' : 'pointer' }}
+                >
+                  <ChevronUp size={15} />
+                </button>
+                <button
+                  onClick={() => moveTrack(index, 1)}
+                  disabled={index === rows.length - 1}
+                  style={{ width: 22, height: 18, border: 'none', background: 'transparent', color: index === rows.length - 1 ? 'rgba(255,255,255,.12)' : 'rgba(212,175,55,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: index === rows.length - 1 ? 'default' : 'pointer' }}
+                >
+                  <ChevronDown size={15} />
+                </button>
+              </div>
               <div
                 onClick={() => playTrack(track, tracks)}
                 style={{ width: 46, height: 46, borderRadius: 10, overflow: 'hidden', flexShrink: 0, cursor: 'pointer', position: 'relative', background: 'rgba(212,175,55,.08)' }}

@@ -41,6 +41,16 @@ export const AddToPlaylistSheet: React.FC<{
     })();
   }, [open, user, trackId]);
 
+  const nextOrderIndex = async (playlistId: string) => {
+    const { data } = await supabase
+      .from('playlist_tracks')
+      .select('order_index')
+      .eq('playlist_id', playlistId)
+      .order('order_index', { ascending: false })
+      .limit(1);
+    return data && data.length > 0 ? data[0].order_index + 1 : 0;
+  };
+
   const toggle = async (playlistId: string) => {
     if (!trackId) return;
     const isMember = memberOf.has(playlistId);
@@ -49,7 +59,8 @@ export const AddToPlaylistSheet: React.FC<{
       setMemberOf((s) => { const n = new Set(s); n.delete(playlistId); return n; });
       toast.success('Removed from playlist');
     } else {
-      await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: trackId });
+      const order_index = await nextOrderIndex(playlistId);
+      await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: trackId, order_index });
       setMemberOf((s) => new Set(s).add(playlistId));
       toast.success('Added to playlist');
     }
@@ -68,7 +79,7 @@ export const AddToPlaylistSheet: React.FC<{
       setCreating(false);
       return;
     }
-    await supabase.from('playlist_tracks').insert({ playlist_id: pl.id, track_id: trackId });
+    await supabase.from('playlist_tracks').insert({ playlist_id: pl.id, track_id: trackId, order_index: 0 });
     setPlaylists((p) => [pl, ...p]);
     setMemberOf((s) => new Set(s).add(pl.id));
     setNewName('');
