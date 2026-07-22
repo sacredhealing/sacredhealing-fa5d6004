@@ -1319,6 +1319,60 @@ export type Database = {
         }
         Relationships: []
       }
+      bhagavad_gita_verses: {
+        Row: {
+          chapter: number
+          commentary: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_published: boolean
+          language: string
+          sanskrit: string | null
+          sort_order: number
+          tier_required: string
+          translation: string
+          transliteration: string | null
+          transmitted_by: string | null
+          updated_at: string
+          verse_number: number
+        }
+        Insert: {
+          chapter: number
+          commentary?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          language?: string
+          sanskrit?: string | null
+          sort_order?: number
+          tier_required?: string
+          translation: string
+          transliteration?: string | null
+          transmitted_by?: string | null
+          updated_at?: string
+          verse_number: number
+        }
+        Update: {
+          chapter?: number
+          commentary?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          language?: string
+          sanskrit?: string | null
+          sort_order?: number
+          tier_required?: string
+          translation?: string
+          transliteration?: string | null
+          transmitted_by?: string | null
+          updated_at?: string
+          verse_number?: number
+        }
+        Relationships: []
+      }
       bhrigu_readings: {
         Row: {
           birth_data: Json | null
