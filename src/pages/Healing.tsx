@@ -851,7 +851,7 @@ const Healing: React.FC = () => {
           <div className="h-pricing">
             <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.3rem', color: 'white', textAlign: 'center', marginBottom: 8 }}>Unlock the Full Healing Library</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 20, maxWidth: 300, margin: '0 auto 20px', textAlign: 'center' }}>Divine Transmission Audios · Sacred Frequencies · Full Meditation Access — go ongoing with Prana-Flow, or pick a one-time pass below.</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 20, maxWidth: 300, margin: '0 auto 20px', textAlign: 'center' }}>Divine Transmission Audios · Sacred Frequencies · Full Meditation Access — go monthly, or pick a one-time pass below.</div>
 
             <button
               type="button"
@@ -860,11 +860,12 @@ const Healing: React.FC = () => {
                 void handleStripePayment('subscription');
               }}
               disabled={isProcessing}
-              style={{ width: '100%', padding: 16, borderRadius: 20, background: 'linear-gradient(135deg, rgba(212,175,55,.14), rgba(212,175,55,.04))', border: '1.5px solid #D4AF37', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', marginBottom: 16 }}
+              style={{ width: '100%', padding: 16, borderRadius: 20, background: 'linear-gradient(135deg, rgba(212,175,55,.14), rgba(212,175,55,.04))', border: '1.5px solid #D4AF37', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', marginBottom: 8 }}
             >
-              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 4 }}>Prana-Flow · Ongoing</div>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 4 }}>Healing Monthly</div>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, color: '#D4AF37' }}>€147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}</div>
             </button>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 16 }}>3-month minimum commitment</div>
 
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 10 }}>Day-Pass · One-Time</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
