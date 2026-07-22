@@ -3128,7 +3128,24 @@
     "shareGraphic": {
       "download": "Descargar imagen",
       "title": "Comparte tu mantra"
-    }
+    },
+    "onboardEyebrow": "¿Primera vez? Empieza en 30 segundos",
+    "onboardBody": "Un mantra es una breve frase sagrada que repites mientras suena. Esta página sugiere uno según la fecha de hoy y tu carta natal, o puedes elegir cualquiera de los que aparecen abajo. Pulsa reproducir y él cuenta las repeticiones por ti.",
+    "onboardDismiss": "Cerrar",
+    "horaGlossary": "Una \"Hora\" es una hora planetaria: la tradición védica sostiene que cada hora del día está regida por un planeta distinto, y ciertos mantras se adaptan a cada una.",
+    "bhriguPlain": "Analizamos tu carta natal y la hora planetaria de hoy: este es el mantra indicado para ti en este momento.",
+    "playerExplainer": "Pulsa el botón dorado de abajo. Repetirá este canto 108 veces y contará cada repetición por ti.",
+    "nowReciting": "Recitando ahora",
+    "dayStreak": "días seguidos",
+    "resumeFrom": "Reanudar desde {{count}}/108",
+    "upgradeTitle": "Desbloquea la biblioteca completa de mantras",
+    "upgradeSub": "{{tier}} desbloquea todos los mantras restantes",
+    "upgradeCta": "Mejorar plan",
+    "filterAll": "Todos",
+    "filterUnlocked": "Desbloqueados",
+    "filterMine": "Mi planeta",
+    "noMatchesFilter": "Ningún mantra coincide con este filtro en esta categoría.",
+    "completionToast": "108 recitaciones completadas 🕉"
   },
   "spiritualEducation": {
     "title": "Educación Espiritual",
