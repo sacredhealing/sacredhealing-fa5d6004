@@ -135,7 +135,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
               content: `Translate the following spiritual teaching text into ${languageLabel(targetLang)}. Preserve paragraph breaks exactly as they are. Return ONLY the translated text — no preamble, no quotes, no notes.\n\n${verse.translation}`,
             },
           ],
-          feature: "vedic_translation",
+          feature: "gita_translation",
         },
       });
       if (error) throw error;
