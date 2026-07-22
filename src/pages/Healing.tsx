@@ -9,11 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
-import { SriYantra } from '@/components/dashboard/SriYantra';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
-import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { IntentionThreshold } from '@/components/meditation/IntentionThreshold';
 import { useUserDailyState } from '@/hooks/useUserDailyState';
@@ -107,21 +105,9 @@ const H_CSS = `
   .h-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,.1), transparent); margin: 0 22px 32px; }
 `;
 
-const JyotishHealingCard = () => {
-  const jyotish = useJyotishProfile();
-  if (jyotish.isLoading || !jyotish.mahadasha) return null;
-  return (
-    <div className="h-vedic" style={{ margin: '0 22px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ color: '#10B981', fontSize: 15 }}>⚕</span>
-        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(16,185,129,.7)' }}>Vedic Healing Insight</span>
-      </div>
-      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.65 }}>
-        During your <strong style={{ color: '#D4AF37' }}>{jyotish.mahadasha}/{jyotish.antardasha}</strong> period, <strong style={{ color: '#D4AF37' }}>{jyotish.doshaImbalance}</strong> may occur. {jyotish.healingFocus} can help restore balance during your {jyotish.bhriguCycle} cycle.
-      </div>
-    </div>
-  );
-};
+// Note: the Vedic Healing Insight that used to live in its own JyotishHealingCard
+// component is now fused directly into the hero paragraph below (see doshaPlainLanguage
+// and the jyotish hook call in the main component) - one paragraph, not a separate card.
 
 // ============================================================
 // TYPES
@@ -183,6 +169,23 @@ const HEALING_CRYPTO_TREASURY =
 function formatEnergyExchange(priceUsd: number): string {
   const sek = Math.round(priceUsd * 11);
   return `Exchange: $${priceUsd} / ${sek}kr`;
+}
+
+/** Plain-language symptom translation for each dosha, so someone who has never heard of
+ * Vedic astrology can still recognize themselves in the reading. `primaryDosha` from
+ * useJyotishProfile() is one of these three, or 'Tridoshic' as a fallback when moon sign
+ * is unavailable. */
+function doshaPlainLanguage(primaryDosha: string): string {
+  switch (primaryDosha) {
+    case 'Vata':
+      return 'anxiety, restlessness, racing thoughts, trouble settling down';
+    case 'Pitta':
+      return 'irritability, frustration, burnout, feeling overheated or overly critical';
+    case 'Kapha':
+      return 'heaviness, low motivation, sluggishness, feeling stuck';
+    default:
+      return 'shifting energy that can feel different day to day';
+  }
 }
 
 // ============================================================
@@ -467,6 +470,7 @@ const Healing: React.FC = () => {
     }
   }, [selectedPath]);
   const { language, setLanguage } = useHealingMeditationLanguage();
+  const jyotish = useJyotishProfile();
   const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
   const userDailyState = useUserDailyState();
   const dayPhase: DayPhase = getDayPhase();
@@ -488,6 +492,9 @@ const Healing: React.FC = () => {
   const [showThreshold, setShowThreshold] = useState(false);
   const [pendingAudio, setPendingAudio] = useState<HealingAudio | null>(null);
   const [testimonialsExpanded, setTestimonialsExpanded] = useState(false);
+  const [freeTracksExpanded, setFreeTracksExpanded] = useState(false);
+  const [premiumTracksExpanded, setPremiumTracksExpanded] = useState(false);
+  const [learnMoreOpen, setLearnMoreOpen] = useState<string | null>(null);
   const [upgradeSheetOpen, setUpgradeSheetOpen] = useState(false);
 
   const sessions = useMemo(() => getHealingSessions(audioTracks as HealingSessionItem[], language), [audioTracks, language]);
@@ -730,13 +737,60 @@ const Healing: React.FC = () => {
           {T.heroTitle}
         </h1>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,.42)', lineHeight: 1.75, maxWidth: 320, marginBottom: 32 }}>
-          {T.heroSubtitle}
+          {(!jyotish.isLoading && jyotish.mahadasha) ? (
+            <>For 15 years I've worked through direct energetic healing — transmitted through my own daily spiritual practice. Right now, Vedic astrology shows you're in a {jyotish.mahadasha}/{jyotish.antardasha} period — a time that often brings {jyotish.primaryDosha} imbalance: {doshaPlainLanguage(jyotish.primaryDosha)}. These frequencies are made to help restore that balance, ease whatever else you're facing, or simply support your next spiritual upgrade.</>
+          ) : (
+            T.heroSubtitle
+          )}
         </p>
         <button type="button" className="h-cta-btn" style={{ width: 'auto', padding: '16px 36px' }} onClick={scrollToBooking}>
           <Sparkles size={15} className="h-nadi" />
           {T.heroCta}
         </button>
       </section>
+
+      {/* Healing Boost — the primary conversion element, right after the hero, before anything else */}
+      {!hasHealingAccess && (
+      <div style={{ padding: '0 22px 28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <div className="h-micro" style={{ marginBottom: 4 }}>Instant · No Commitment</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,.9)' }}>Get Your Healing Boost</div>
+          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', marginTop: 6, maxWidth: 260, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.55 }}>Full library access, right now — pick your days and go.</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {BOOST_PLANS.map((plan, i) => (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => {
+                setSelectedPlan(plan);
+                void handleStripePayment(plan.id);
+              }}
+              disabled={isProcessing}
+              style={{
+                flex: 1,
+                position: 'relative',
+                background: i === 1 ? 'linear-gradient(160deg, rgba(212,175,55,.18), rgba(212,175,55,.04))' : 'linear-gradient(135deg, rgba(212,175,55,.1), rgba(212,175,55,.03))',
+                border: i === 1 ? '1.5px solid #D4AF37' : '1px solid rgba(212,175,55,.3)',
+                borderRadius: 18,
+                padding: i === 1 ? '16px 6px' : '14px 6px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transform: i === 1 ? 'scale(1.05)' : undefined,
+                boxShadow: i === 1 ? '0 0 24px rgba(212,175,55,.2)' : undefined,
+              }}
+            >
+              {i === 1 && (
+                <span style={{ position: 'absolute', top: -9, left: '50%', transform: 'translateX(-50%)', fontSize: 7, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', background: '#D4AF37', color: '#050505', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>Most Chosen</span>
+              )}
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.04em', color: 'rgba(255,255,255,.65)', marginBottom: 4 }}>{plan.days} {plan.days === 1 ? 'Day' : 'Days'}</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: '#D4AF37' }}>${plan.price.toFixed(2)}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      )}
 
       {/* Sonic Treatments — moved right after the hero so the actual audio library is seen */}
       {/* before any upsell copy. Language toggle merged in here since it directly filters */}
@@ -764,452 +818,56 @@ const Healing: React.FC = () => {
           <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
 
           <TabsContent value="free" className="space-y-3 mt-4">
-            {freeSessions.length > 0 ? freeSessions.map((audio) => (
+            {freeSessions.length > 0 ? freeSessions.slice(0, freeTracksExpanded ? undefined : 3).map((audio) => (
               <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
             )) : (
               <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
             )}
+            {freeSessions.length > 3 && (
+              <button type="button" onClick={() => setFreeTracksExpanded(!freeTracksExpanded)} style={{ display: 'block', width: '100%', textAlign: 'center', padding: '8px 0', fontSize: 11, fontWeight: 700, color: 'rgba(212,175,55,.6)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                {freeTracksExpanded ? '← Show fewer' : `See all ${freeSessions.length} tracks →`}
+              </button>
+            )}
           </TabsContent>
           <TabsContent value="premium" className="space-y-3 mt-4">
-            {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
+            {premiumSessions.length > 0 ? premiumSessions.slice(0, premiumTracksExpanded ? undefined : 3).map((audio) => (
               <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
             )) : (
               <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+            {premiumSessions.length > 3 && (
+              <button type="button" onClick={() => setPremiumTracksExpanded(!premiumTracksExpanded)} style={{ display: 'block', width: '100%', textAlign: 'center', padding: '8px 0', fontSize: 11, fontWeight: 700, color: 'rgba(212,175,55,.6)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                {premiumTracksExpanded ? '← Show fewer' : `See all ${premiumSessions.length} tracks →`}
+              </button>
             )}
           </TabsContent>
         </Tabs>
       </section>
 
-      <div style={{ padding: '0 22px 24px' }}>
-        <div
-          onClick={() => navigate('/prana-flow')}
-          style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.98) 60%)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 24, padding: '24px 22px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-        >
-          <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '60%', height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.3), transparent)' }} />
-          <div style={{ fontWeight: 800, fontSize: 7, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)', marginBottom: 8 }}>◈ Prana–Flow · 19€/mo</div>
-          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem', color: 'white', marginBottom: 6 }}>Unlock the Full Healing Library</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 14 }}>Divine Transmission Audios · Sacred Frequencies · Full Meditation Access</div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: '#050505', borderRadius: 100, padding: '10px 22px', fontWeight: 800, fontSize: 8, letterSpacing: '0.35em', textTransform: 'uppercase' }}>◈ Activate Prana–Flow</div>
-        </div>
-      </div>
-
-      <JyotishHealingCard />
-
-      <div className="h-divider" />
-
-      {/* Evolution of Grace */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Avataric Blueprint · Origin Story</div>
-          <div className="h-section-title h-shimmer">{T.statementTitle}</div>
-        </div>
-        <div className="h-glass" style={{ padding: '28px 26px' }}>
-          {T.statementBody.split('\n\n').map((para, i) => (
-            <p key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', lineHeight: 1.8, fontStyle: 'italic', marginBottom: i === 0 ? 14 : 0 }}>{para}</p>
-          ))}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Prema-Pulse Mechanics</div>
-          <div className="h-section-title h-shimmer">{T.howTitle}</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[
-            { icon: '◈', title: T.howCard1Title, body: T.howCard1Body },
-            { icon: '⟁', title: T.howCard2Title, body: T.howCard2Body },
-            { icon: '☽◯☾', title: T.howCard3Title, body: T.howCard3Body },
-          ].map((card) => (
-            <div key={card.title} className="h-glass" style={{ padding: '26px 24px' }}>
-              <div className="h-how-icon">{card.icon}</div>
-              <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-.01em', marginBottom: 8 }}>{card.title}</div>
-              <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.65 }}>{card.body}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Why different */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Bhakti-Algorithm Comparison</div>
-          <div className="h-section-title h-shimmer">{T.compTitle}</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[[T.comp1L, T.comp1R], [T.comp2L, T.comp2R], [T.comp3L, T.comp3R], [T.comp4L, T.comp4R]].map(([left, right], i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, overflow: 'hidden' }}>
-              <div className="h-diff-old">{left}</div>
-              <div className="h-diff-new"><span style={{ color: '#D4AF37' }}>→</span> {right}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Direct Healing CTA */}
-      <div style={{ margin: '0 22px 32px', background: 'linear-gradient(135deg,rgba(139,92,246,.07),rgba(212,175,55,.05))', border: '1px solid rgba(212,175,55,.2)', borderRadius: 40, padding: '30px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 50% 0%,rgba(212,175,55,.07),transparent 65%)', pointerEvents: 'none' }} />
-        <div className="h-section-title h-shimmer" style={{ marginBottom: 10 }}>{T.directTitle}</div>
-        <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.65, marginBottom: 24 }}>{T.directSub}</div>
-        <Link to="/private-sessions">
-          <button type="button" className="h-cta-btn" style={{ width: 'auto', padding: '16px 36px', display: 'inline-flex' }}>
-            <Sparkles size={15} className="h-nadi" />
-            {T.directCta}
-          </button>
-        </Link>
-      </div>
-
-      {/* Your Healing Journey — collapsed by default, tap to expand */}
-      <div style={{ padding: '0 22px 32px' }}>
-        <Accordion type="single" collapsible defaultValue="">
-          <AccordionItem value="journey" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 40, overflow: 'hidden' }}>
-            <AccordionTrigger style={{ padding: '20px 24px', fontWeight: 800, fontSize: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Sparkles size={15} style={{ color: '#D4AF37' }} />
-                {t('healing.journeyTitle', 'Your Healing Journey')}
-              </div>
-            </AccordionTrigger>
-            <AccordionContent style={{ padding: '0 24px 20px' }}>
-              <HealingProgressCard variant="full" />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-
-      <div className="h-divider" />
-
-      {/* Miracle Logs / Testimonials */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>{T.testimMicro}</div>
-          <div className="h-section-title h-shimmer">{T.testimTitle}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 6 }}>{T.testimSub}</div>
-        </div>
-
-        <ReviewSection contentType="healing" contentId="general" />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-          {testimonials.filter((x): x is typeof x & { text: string } => 'text' in x && !!x.text).slice(0, testimonialsExpanded ? 99 : 2).map((t_, i) => (
-            <div key={i} className="h-testimonial">
-              <div style={{ fontSize: 22, color: 'rgba(212,175,55,.3)', lineHeight: 1, marginBottom: 8 }}>"</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', lineHeight: 1.7, fontStyle: 'italic', marginBottom: 10 }}>{t_.text}</div>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)' }}>— {t_.name}</div>
-            </div>
-          ))}
-          {testimonials.filter((x) => 'text' in x).length > 2 && (
-            <Button variant="ghost" className="w-full text-[#D4AF37]/60 hover:text-[#D4AF37]" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
-              {testimonialsExpanded ? T.seeLess : T.seeMore}
-            </Button>
-          )}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
-          {testimonialVideos.map((url, j) => (
-            <div key={j} style={{ aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(212,175,55,.2)' }}>
-              <iframe title={`Testimonial ${j + 1}`} src={url} style={{ width: '100%', height: '100%' }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="h-divider" />
-
-      {/* ══ SACRED JOURNEYS — dynamic day-by-day guided tracks (separate from the 12-month practitioner certification, which now lives only in the Siddha Portal) ══ */}
-      <section style={{ padding: '0 22px 40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Siddha Quantum · Living Transmission</div>
-          <div className="h-section-title h-shimmer">Sacred Journeys</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 8, lineHeight: 1.7 }}>
-            Guided day-by-day practices — track your progress, earn rewards, walk each sacred journey step by step
-          </div>
-        </div>
-
-        {pathsLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[1,2,3].map(i => (
-              <div key={i} style={{ height: 88, borderRadius: 22, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }} />
-            ))}
-          </div>
-        ) : sovereignPaths.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
-            No paths available yet — the Akasha is preparing your curriculum.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {sovereignPaths.map((path) => {
-              const pathKey = normalizeSpiritualPathSlugKey(path.slug);
-              const pathTitle = t(`spiritualPath.paths.${pathKey}.title`, path.title);
-              const pathDesc = t(`spiritualPath.paths.${pathKey}.description`, path.description || '');
-              const prog = getProgressForPath(path.id);
-              const progressPercent = prog ? Math.round((prog.current_day / path.duration_days) * 100) : 0;
-              const isOpen = expandedPath === path.id;
-
-              return (
-                <div key={path.id} style={{
-                  background: 'rgba(255,255,255,0.018)',
-                  border: `1px solid ${(isOpen || (prog?.is_active && !prog.completed_at)) ? 'rgba(212,175,55,0.38)' : 'rgba(255,255,255,0.06)'}`,
-                  borderRadius: 22,
-                  overflow: 'hidden',
-                  transition: 'border-color .3s, box-shadow .3s',
-                  boxShadow: (isOpen || (prog?.is_active && !prog.completed_at)) ? '0 0 40px rgba(212,175,55,0.08)' : 'none',
-                }}>
-
-                  {/* ── Card Header ── */}
-                  <div
-                    onClick={() => {
-                      if (isOpen) { setExpandedPath(null); } else { setExpandedPath(path.id); setSelectedPath(path); }
-                    }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', cursor: 'pointer' }}
-                  >
-                    {/* Thumbnail */}
-                    <div style={{ width: 64, height: 64, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {path.cover_image_url ? (
-                        <img src={path.cover_image_url} alt={pathTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: 26 }}>🌿</span>
-                      )}
-                    </div>
-
-                    {/* Meta */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "'Cinzel',serif", fontSize: 15, fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1.3, marginBottom: 7, color: (prog?.is_active && !prog.completed_at) ? '#D4AF37' : 'rgba(255,255,255,0.88)' }}>
-                        {pathTitle}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>⏱ {path.duration_days} days</span>
-                        <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontWeight: 700 }}>★ +{path.shc_reward_total} pts</span>
-                        {prog?.is_active && !prog.completed_at && (
-                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.35)', borderRadius: 100, padding: '3px 10px' }}>Active</span>
-                        )}
-                        {prog?.completed_at && (
-                          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 100, padding: '3px 10px' }}>✓ Complete</span>
-                        )}
-                      </div>
-                      {prog && (
-                        <div style={{ marginTop: 9 }}>
-                          <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: 5 }}>
-                            <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99, transition: 'width .4s ease' }} />
-                          </div>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Day {prog.current_day} of {path.duration_days}</div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Chevron */}
-                    <div style={{ color: 'rgba(212,175,55,0.42)', fontSize: 11, transition: 'transform .3s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>▼</div>
-                  </div>
-
-                  {/* ── Expanded Body ── */}
-                  {isOpen && (
-                    <div style={{ borderTop: '1px solid rgba(212,175,55,0.07)', padding: '0 18px 18px' }}>
-                      {pathDesc && (
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.75, padding: '14px 0', fontStyle: 'italic' }}>
-                          {pathDesc}
-                        </div>
-                      )}
-
-                      {/* Begin / Progress CTA */}
-                      {!prog ? (
-                        <button
-                          type="button"
-                          onClick={() => startPath.mutate(path.id)}
-                          disabled={startPath.isPending}
-                          style={{ width: '100%', padding: '12px', borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#D4AF37,#B8960C)', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14, opacity: startPath.isPending ? 0.6 : 1 }}
-                        >
-                          {startPath.isPending ? 'Initiating...' : '▶ Begin This Path'}
-                        </button>
-                      ) : !prog.completed_at && (
-                        <div style={{ padding: '10px 14px', borderRadius: 14, background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.12)', marginBottom: 14 }}>
-                          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', marginBottom: 5 }}>Your Progress</div>
-                          <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: 4 }}>
-                            <div style={{ height: '100%', width: `${progressPercent}%`, background: 'linear-gradient(90deg,#D4AF37,#F5E17A)', borderRadius: 99 }} />
-                          </div>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Day {prog.current_day} / {path.duration_days} · {prog.total_shc_earned} pts earned</div>
-                        </div>
-                      )}
-
-                      {/* Module list */}
-                      {pathDaysLoading ? (
-                        <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>Loading modules...</div>
-                      ) : pathDays.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                          {pathDays.map((day) => {
-                            const currentDay = prog?.current_day || 0;
-                            const isCompleted = day.day_number < currentDay;
-                            const isCurrentDay = day.day_number === currentDay;
-                            const isLocked = day.day_number > currentDay && !prog?.completed_at;
-                            const dayTitle = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.title`, day.title) : day.title;
-                            const dayDesc = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.description`, day.description || '') : (day.description || '');
-                            const affirmation = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.affirmation`, day.affirmation || '') : (day.affirmation || '');
-                            const mantraText = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.mantraText`, day.mantra_text || '') : (day.mantra_text || '');
-                            const breathDesc = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.breathingDescription`, day.breathing_description || '') : (day.breathing_description || '');
-                            const journalPrompt = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.journalPrompt`, day.journal_prompt || '') : (day.journal_prompt || '');
-
-                            return (
-                              <Accordion key={day.id} type="single" collapsible defaultValue={isCurrentDay ? `day-${day.day_number}` : undefined}>
-                                <AccordionItem value={`day-${day.day_number}`} style={{
-                                  background: isCompleted ? 'rgba(16,185,129,0.06)' : isCurrentDay ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.012)',
-                                  border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.18)' : isCurrentDay ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.04)'}`,
-                                  borderRadius: 14, overflow: 'hidden',
-                                }}>
-                                  <AccordionTrigger style={{ padding: '10px 13px' }} className="hover:no-underline">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                      {/* Day number circle */}
-                                      <div style={{
-                                        width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: isCompleted ? 13 : 9, fontWeight: 800,
-                                        background: isCompleted ? 'rgba(16,185,129,0.12)' : isCurrentDay ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.04)',
-                                        border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.38)' : isCurrentDay ? 'rgba(212,175,55,0.42)' : 'rgba(255,255,255,0.08)'}`,
-                                        color: isCompleted ? '#10B981' : isCurrentDay ? '#D4AF37' : 'rgba(255,255,255,0.22)',
-                                      }}>
-                                        {isCompleted ? '✓' : isLocked ? <Lock size={9} /> : day.day_number}
-                                      </div>
-                                      <div style={{ textAlign: 'left' }}>
-                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 600, letterSpacing: '0.02em', color: isLocked ? 'rgba(255,255,255,0.28)' : isCompleted ? 'rgba(16,185,129,0.85)' : 'rgba(255,255,255,0.85)', lineHeight: 1.35 }}>
-                                          Day {day.day_number}: {dayTitle}
-                                        </div>
-                                        <div style={{ fontSize: 9, color: 'rgba(212,175,55,0.5)', marginTop: 2, opacity: isLocked ? 0.4 : 1 }}>+{day.shc_reward} pts</div>
-                                      </div>
-                                    </div>
-                                  </AccordionTrigger>
-                                  {!isLocked && (
-                                    <AccordionContent>
-                                      <div style={{ padding: '0 13px 13px 47px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        {dayDesc && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>{dayDesc}</p>}
-                                        {affirmation && (
-                                          <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)' }}>
-                                            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>Affirmation</div>
-                                            <p style={{ fontSize: 12, fontStyle: 'italic', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>"{affirmation}"</p>
-                                          </div>
-                                        )}
-                                        {mantraText && (
-                                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                                            <Music size={13} style={{ color: '#D4AF37', marginTop: 2, flexShrink: 0 }} />
-                                            <div>
-                                              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 3 }}>Mantra</div>
-                                              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{mantraText}</p>
-                                            </div>
-                                          </div>
-                                        )}
-                                        {breathDesc && (
-                                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                                            <Wind size={13} style={{ color: 'rgba(34,211,238,0.7)', marginTop: 2, flexShrink: 0 }} />
-                                            <div>
-                                              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 3 }}>Breathing</div>
-                                              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{breathDesc}</p>
-                                            </div>
-                                          </div>
-                                        )}
-                                        {journalPrompt && (
-                                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                                            <BookOpen size={13} style={{ color: 'rgba(255,255,255,0.4)', marginTop: 2, flexShrink: 0 }} />
-                                            <div>
-                                              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 3 }}>Journal Prompt</div>
-                                              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{journalPrompt}</p>
-                                            </div>
-                                          </div>
-                                        )}
-                                        {isCurrentDay && prog && !prog.completed_at && (
-                                          <button
-                                            type="button"
-                                            onClick={() => completeDay.mutate({ progressId: prog.id, dayReward: day.shc_reward })}
-                                            disabled={completeDay.isPending}
-                                            style={{ width: '100%', padding: '11px', borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', background: 'linear-gradient(135deg,#10B981,#059669)', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 4, opacity: completeDay.isPending ? 0.6 : 1 }}
-                                          >
-                                            {completeDay.isPending ? 'Completing...' : `✓ Complete Day ${day.day_number}`}
-                                          </button>
-                                        )}
-                                      </div>
-                                    </AccordionContent>
-                                  )}
-                                </AccordionItem>
-                              </Accordion>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div style={{ textAlign: 'center', padding: '20px 0', color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
-                          Module content arriving soon from the Akasha...
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <div className="h-divider" />
-
-      {/* FAQ */}
-      <section style={{ padding: '0 22px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Akasha-Intelligence Answers</div>
-          <div className="h-section-title h-shimmer">{T.faqTitle}</div>
-        </div>
-        <Accordion type="single" collapsible style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[
-            { q: T.faq1Q, a: T.faq1A }, { q: T.faq2Q, a: T.faq2A }, { q: T.faq3Q, a: T.faq3A },
-            { q: T.faq4Q, a: T.faq4A }, { q: T.faq5Q, a: T.faq5A }, { q: T.faq6Q, a: T.faq6A },
-          ].map((item, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, overflow: 'hidden' }}>
-              <AccordionTrigger style={{ padding: '16px 20px', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,.82)', textAlign: 'left' }}>{item.q}</AccordionTrigger>
-              <AccordionContent style={{ padding: '0 20px 16px', fontSize: 12.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.75, borderTop: '1px solid rgba(255,255,255,.04)' }}>{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      {/* Healing Boosts — quick-tap micro purchases, separate from the considered 7/14/30-day plans below */}
-      {!hasHealingAccess && (
-      <div style={{ padding: '0 22px 20px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 12 }}>
-          <div className="h-micro" style={{ marginBottom: 4 }}>Instant · No Commitment</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,.85)' }}>Healing Boost</div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {BOOST_PLANS.map((plan) => (
-            <button
-              key={plan.id}
-              type="button"
-              onClick={() => {
-                setSelectedPlan(plan);
-                void handleStripePayment(plan.id);
-              }}
-              disabled={isProcessing}
-              style={{
-                flex: 1,
-                background: 'linear-gradient(135deg, rgba(212,175,55,.1), rgba(212,175,55,.03))',
-                border: '1px solid rgba(212,175,55,.3)',
-                borderRadius: 18,
-                padding: '14px 6px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.04em', color: 'rgba(255,255,255,.65)', marginBottom: 4 }}>{plan.days} {plan.days === 1 ? 'Day' : 'Days'}</div>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: '#D4AF37' }}>${plan.price.toFixed(2)}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-      )}
-
-      {/* Booking — Stripe/checkout preserved */}
+      {/* Unlock the Library — merged: Prana-Flow subscription + the real 7/14/30-day breakdown + crypto */}
+      {/* (used to be two disconnected cards/sections; same Stripe/crypto handlers as before, just one place) */}
       <section id="booking-section" style={{ padding: '0 22px 32px', scrollMarginTop: 32 }}>
         {!hasHealingAccess ? (
           <div className="h-pricing">
             <div style={{ position: 'relative', zIndex: 1 }}>
-            <div className="h-micro" style={{ marginBottom: 10 }}>Sacred Initiation · Stripe Checkout</div>
-            <div className="h-section-title h-shimmer" style={{ marginBottom: 8 }}>{T.bookingTitle}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 24, maxWidth: 300, margin: '0 auto 24px' }}>{T.bookingSub}</div>
+            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.3rem', color: 'white', textAlign: 'center', marginBottom: 8 }}>Unlock the Full Healing Library</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 20, maxWidth: 300, margin: '0 auto 20px', textAlign: 'center' }}>Divine Transmission Audios · Sacred Frequencies · Full Meditation Access — go ongoing with Prana-Flow, or pick a one-time pass below.</div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPlan(SUBSCRIPTION_PLAN);
+                void handleStripePayment('subscription');
+              }}
+              disabled={isProcessing}
+              style={{ width: '100%', padding: 16, borderRadius: 20, background: 'linear-gradient(135deg, rgba(212,175,55,.14), rgba(212,175,55,.04))', border: '1.5px solid #D4AF37', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', marginBottom: 16 }}
+            >
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 4 }}>Prana-Flow · Ongoing</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, color: '#D4AF37' }}>€147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}</div>
+            </button>
+
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 10 }}>Day-Pass · One-Time</div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
               {HEALING_PLANS.map((plan) => (
                 <button
                   key={plan.id}
@@ -1225,18 +883,6 @@ const Healing: React.FC = () => {
                 </button>
               ))}
             </div>
-
-            <button
-              type="button"
-              style={{ width: '100%', padding: 13, borderRadius: 100, fontSize: 12, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
-              onClick={() => {
-                setSelectedPlan(SUBSCRIPTION_PLAN);
-                void handleStripePayment('subscription');
-              }}
-              disabled={isProcessing}
-            >
-              {T.bookingOngoing} — €147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}
-            </button>
 
             <button
               type="button"
@@ -1282,24 +928,120 @@ const Healing: React.FC = () => {
         )}
       </section>
 
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '0 22px 40px' }}>
-        <SriYantra style={{ width: 80, height: 80 }} />
-      </div>
+      <div className="h-divider" />
 
-      <div style={{ padding: '0 22px 32px' }}>
-        <div
-          onClick={() => navigate('/prana-flow')}
-          style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.98) 60%)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 24, padding: '24px 22px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-        >
-          <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '60%', height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.3), transparent)' }} />
-          <div style={{ fontWeight: 800, fontSize: 7, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)', marginBottom: 8 }}>◈ Prana–Flow · 19€/mo</div>
-          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem', color: 'white', marginBottom: 6 }}>Begin Your Healing Journey</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 14 }}>Full healing audio library · Solfeggio tones · Vedic sound sequences</div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: '#050505', borderRadius: 100, padding: '10px 22px', fontWeight: 800, fontSize: 8, letterSpacing: '0.35em', textTransform: 'uppercase' }}>◈ Activate Prana–Flow</div>
+      {/* Learn More — everything kept, nothing deleted, tucked behind small icon taps for people who want depth */}
+      <div style={{ padding: '20px 22px 6px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div className="h-micro">For Those Who Want to Know More</div>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 4 }}>
+          {[
+            { key: 'why', icon: '✦', label: 'Why It Works' },
+            { key: 'story', icon: '◈', label: 'Our Story' },
+            { key: 'testimonials', icon: '❝', label: 'Testimonials' },
+            { key: 'faq', icon: '?', label: 'Full Q&A' },
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setLearnMoreOpen(learnMoreOpen === item.key ? null : item.key)}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: learnMoreOpen === item.key ? 'rgba(212,175,55,.12)' : 'rgba(255,255,255,.02)', border: `1px solid ${learnMoreOpen === item.key ? 'rgba(212,175,55,.5)' : 'rgba(255,255,255,.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, color: 'rgba(212,175,55,.6)' }}>{item.icon}</div>
+              <div style={{ fontSize: 8, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.04em', textAlign: 'center', maxWidth: 56 }}>{item.label}</div>
+            </button>
+          ))}
+        </div>
+
+        {learnMoreOpen === 'why' && (
+          <div style={{ marginTop: 16, background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, padding: '18px 18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {[
+              { icon: '◈', title: T.howCard1Title, body: T.howCard1Body },
+              { icon: '⟁', title: T.howCard2Title, body: T.howCard2Body },
+              { icon: '☽◯☾', title: T.howCard3Title, body: T.howCard3Body },
+            ].map((card) => (
+              <div key={card.title}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,.75)', marginBottom: 4 }}>{card.icon} {card.title}</div>
+                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.65 }}>{card.body}</div>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: 12 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,.75)', marginBottom: 8 }}>{T.compTitle}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[[T.comp1L, T.comp1R], [T.comp2L, T.comp2R], [T.comp3L, T.comp3R], [T.comp4L, T.comp4R]].map(([left, right], i) => (
+                  <div key={i} style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 16, overflow: 'hidden' }}>
+                    <div className="h-diff-old">{left}</div>
+                    <div className="h-diff-new"><span style={{ color: '#D4AF37' }}>→</span> {right}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {learnMoreOpen === 'story' && (
+          <div style={{ marginTop: 16, background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, padding: '18px' }}>
+            {T.statementBody.split('\n\n').map((para, i) => (
+              <p key={i} style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.75, fontStyle: 'italic', marginBottom: i === 0 ? 12 : 0 }}>{para}</p>
+            ))}
+          </div>
+        )}
+
+        {learnMoreOpen === 'testimonials' && (
+          <div style={{ marginTop: 16 }}>
+            <ReviewSection contentType="healing" contentId="general" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+              {testimonials.filter((x): x is typeof x & { text: string } => 'text' in x && !!x.text).slice(0, testimonialsExpanded ? 99 : 2).map((t_, i) => (
+                <div key={i} className="h-testimonial">
+                  <div style={{ fontSize: 22, color: 'rgba(212,175,55,.3)', lineHeight: 1, marginBottom: 8 }}>"</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', lineHeight: 1.7, fontStyle: 'italic', marginBottom: 10 }}>{t_.text}</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)' }}>— {t_.name}</div>
+                </div>
+              ))}
+              {testimonials.filter((x) => 'text' in x).length > 2 && (
+                <Button variant="ghost" className="w-full text-[#D4AF37]/60 hover:text-[#D4AF37]" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
+                  {testimonialsExpanded ? T.seeLess : T.seeMore}
+                </Button>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
+              {testimonialVideos.map((url, j) => (
+                <div key={j} style={{ aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(212,175,55,.2)' }}>
+                  <iframe title={`Testimonial ${j + 1}`} src={url} style={{ width: '100%', height: '100%' }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {learnMoreOpen === 'faq' && (
+          <div style={{ marginTop: 16 }}>
+            <Accordion type="single" collapsible style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { q: T.faq1Q, a: T.faq1A }, { q: T.faq2Q, a: T.faq2A }, { q: T.faq3Q, a: T.faq3A },
+                { q: T.faq4Q, a: T.faq4A }, { q: T.faq5Q, a: T.faq5A }, { q: T.faq6Q, a: T.faq6A },
+              ].map((item, i) => (
+                <AccordionItem key={i} value={`faq-${i}`} style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, overflow: 'hidden' }}>
+                  <AccordionTrigger style={{ padding: '16px 20px', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,.82)', textAlign: 'left' }}>{item.q}</AccordionTrigger>
+                  <AccordionContent style={{ padding: '0 20px 16px', fontSize: 12.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.75, borderTop: '1px solid rgba(255,255,255,.04)' }}>{item.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        )}
       </div>
 
-      <div style={{ height: 100 }} />
+      <div className="h-divider" />
+
+      {/* 1:1 sessions — small footer link, not a competing section. A different product from the library above. */}
+      <div style={{ padding: '20px 22px 40px', textAlign: 'center' }}>
+        <Link to="/private-sessions" style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 2 }}>
+          Looking for a personal 1:1 session with Kritagya & Laila? →
+        </Link>
+      </div>
+
+      <div style={{ height: 60 }} />
 
       {/* ========== PAYMENT MODAL ========== */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
