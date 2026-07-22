@@ -89,35 +89,6 @@ export default function Explore() {
         </p>
       </div>
 
-      {/* ══ MUSIC MASTERING — moved here from Music page ══ */}
-      <div style={{ margin: '20px 16px 0', padding: '22px 20px', borderRadius: 28, background: 'radial-gradient(ellipse at 50% 0%, rgba(45,26,0,0.7) 0%, rgba(15,8,0,0.9) 70%, #050505 100%)', border: '1px solid rgba(212,175,55,0.3)' }}>
-        <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)' }}>Sacred Sound Alchemy</span>
-        <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em', color: '#fff', marginTop: 6, marginBottom: 10 }}>Music Mastering Service</div>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', lineHeight: 1.65, marginBottom: 18 }}>
-          Have your music mastered through the SQI-2050 Scalar Wave Architecture — professional mastering infused with Vedic Light-Codes and sacred geometry frequency alignment.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
-          {[['⚡', 'Scalar Alignment', '528Hz + harmonics'], ['🕉️', 'Vedic Light-Code Imprint', 'Sacred intention encoded'], ['🎵', 'Full Mastering Suite', 'Dynamics, EQ, limiter'], ['📀', 'All Formats', 'WAV · MP3 · FLAC']].map(([icon, title, desc], i) => (
-            <div key={i} style={{ background: 'rgba(212,175,55,.05)', border: '1px solid rgba(212,175,55,.14)', borderRadius: 14, padding: '12px 14px' }}>
-              <div style={{ fontSize: 18, marginBottom: 5 }}>{icon}</div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.8)', marginBottom: 2 }}>{title}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>{desc}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-          {['From €147', '1-week turnaround', 'Unlimited revisions'].map((item, i) => (
-            <span key={i} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.1em', color: 'rgba(212,175,55,.7)' }}>{i > 0 ? '· ' : ''}{item}</span>
-          ))}
-        </div>
-        <button
-          onClick={() => window.open('mailto:info@siddhaquantumnexus.com?subject=Music Mastering Service', '_blank')}
-          style={{ width: '100%', padding: 15, borderRadius: 20, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', background: '#D4AF37', color: '#000' }}
-        >
-          Book Music Mastering · From €147
-        </button>
-      </div>
-
       {/* ══ SIDDHA PORTAL ══ */}
       <div style={{ padding: '28px 20px 10px' }}>
         <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.32)' }}>
@@ -1036,6 +1007,40 @@ export default function Explore() {
             </div>
             <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', lineHeight: 1.4 }}>
               {t('meditations.sacredCommissionsDesc')}
+            </div>
+          </div>
+          <div style={{ color: 'rgba(212,175,55,.5)', fontSize: 18, flexShrink: 0 }}>›</div>
+        </div>
+      </div>
+
+      {/* ══ MUSIC MASTERING — small card, same row style as Personal Transmissions ══ */}
+      <div style={{ margin: '10px 16px 0' }}>
+        <div
+          onClick={() => window.open('mailto:info@siddhaquantumnexus.com?subject=Music Mastering Service', '_blank')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '18px 18px', borderRadius: 24,
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(212,175,55,0.18)',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{
+            width: 48, height: 48, borderRadius: 16, flexShrink: 0,
+            background: 'linear-gradient(135deg,rgba(212,175,55,.22),rgba(212,175,55,.06))',
+            border: '1.5px solid rgba(212,175,55,.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, boxShadow: '0 0 18px rgba(212,175,55,.3)',
+          }}>🎵</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(212,175,55,.55)', marginBottom: 4 }}>
+              SACRED SOUND ALCHEMY
+            </div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>
+              Music Mastering Service
+            </div>
+            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', lineHeight: 1.4 }}>
+              Scalar-aligned mastering · From €147 · 1-week turnaround
             </div>
           </div>
           <div style={{ color: 'rgba(212,175,55,.5)', fontSize: 18, flexShrink: 0 }}>›</div>
