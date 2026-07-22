@@ -1013,7 +1013,7 @@ const Music: React.FC = () => {
           <Crown size={20} style={{ color: '#D4AF37', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>Want your own music mastered?</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Find Music Mastering in Explore</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Find Music Mastering in Akasha</div>
           </div>
         </div>
 
