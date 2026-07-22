@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Deploy trigger: fixed multi-part response truncation (2026-07-22).
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -21,25 +19,18 @@ interface GeminiBridgeRequest {
 const PRIMARY_MODEL = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.0-flash";
 
-// ── COST CONTROL: feature-specific token caps ──────────────────────────────
-// Was a flat 8192 for EVERYTHING. Now each feature gets exactly what it needs.
-// Callers that don't send a feature key fall back to a safe 2048 default.
 const FEATURE_TOKEN_LIMITS: Record<string, number> = {
-  // Short utility calls
-  temple_home:           400,   // anchoring transmission ~1 paragraph
-  food_photo_analysis:   300,   // yes/no + brief dosha note
-  soul_scan:             600,   // quick scan summary
-  vedic_translation:     500,   // translation output, not prose
-  // Medium outputs
-  soul_vault:           2200,   // soul vault reading: 3 rich paragraphs + kosha map
-  transformation_doc:   1500,   // transformation narrative
-  // Longer admin/content tasks
-  academy_curriculum:   3000,   // module/lesson generation — genuinely long
-  // Vision / multimodal
-  vision_analysis:       800,   // image-based analysis
+  temple_home:           400,
+  food_photo_analysis:   300,
+  soul_scan:             600,
+  vedic_translation:     500,
+  soul_vault:           2200,
+  transformation_doc:   1500,
+  academy_curriculum:   3000,
+  vision_analysis:       800,
 };
 
-const DEFAULT_TOKEN_LIMIT = 2048; // safe fallback (was 8192)
+const DEFAULT_TOKEN_LIMIT = 2048;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -47,7 +38,6 @@ serve(async (req) => {
   }
 
   try {
-    // ── Auth gate: require an authenticated user (prevents quota abuse) ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -86,7 +76,6 @@ serve(async (req) => {
       });
     }
 
-    // Resolve token limit for this feature
     const maxOutputTokens = feature && FEATURE_TOKEN_LIMITS[feature]
       ? FEATURE_TOKEN_LIMITS[feature]
       : DEFAULT_TOKEN_LIMIT;
@@ -120,7 +109,7 @@ serve(async (req) => {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens, // ← feature-aware, not flat 8192
+        maxOutputTokens,
       },
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -175,9 +164,6 @@ serve(async (req) => {
     }
 
     const data = await geminiResponse.json();
-    // Gemini can split a response across multiple `parts` (e.g. a reasoning/thought
-    // part followed by the actual answer, or a long answer split across parts).
-    // Reading only parts[0] silently truncated longer outputs — concatenate all of them.
     const responseParts = data.candidates?.[0]?.content?.parts ?? [];
     const responseText = responseParts.map((p: any) => p.text ?? "").join("");
 
@@ -188,7 +174,6 @@ serve(async (req) => {
       });
     }
 
-    // Return both 'response' (legacy) and 'text' (new) so all consumers work
     return new Response(
       JSON.stringify({ response: responseText, text: responseText, model: usedModel, feature: feature || "general" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
