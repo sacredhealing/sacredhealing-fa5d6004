@@ -3097,7 +3097,24 @@
     "bhrigu": {
       "title": "Bhrigu Nadi Oracle",
       "subtitle": "Ancient Vedic destiny reading"
-    }
+    },
+    "onboardEyebrow": "New here? Start in 30 seconds",
+    "onboardBody": "A mantra is a short sacred phrase you repeat while it plays. This page suggests one based on today's date and your birth chart — or you can pick any one below. Press play, and it counts your repetitions for you.",
+    "onboardDismiss": "Dismiss",
+    "horaGlossary": "A \"Hora\" is a planetary hour — Vedic tradition holds each hour of the day is ruled by a different planet, and certain mantras suit each one.",
+    "bhriguPlain": "We looked at your birth chart and today's planetary hour — here's the mantra suited to you right now.",
+    "playerExplainer": "Press the gold button below. It repeats this chant 108 times and counts each one for you.",
+    "nowReciting": "Now Reciting",
+    "dayStreak": "day streak",
+    "resumeFrom": "Resume from {{count}}/108",
+    "upgradeTitle": "Unlock the full mantra library",
+    "upgradeSub": "{{tier}} unlocks every remaining mantra",
+    "upgradeCta": "Upgrade",
+    "filterAll": "All",
+    "filterUnlocked": "Unlocked",
+    "filterMine": "My Planet",
+    "noMatchesFilter": "No mantras match this filter in this category.",
+    "completionToast": "108 recitations complete 🕉"
   },
   "spiritualEducation": {
     "title": "Spiritual Education",
