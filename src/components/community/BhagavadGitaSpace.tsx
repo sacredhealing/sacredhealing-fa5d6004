@@ -22,6 +22,34 @@ const LANGUAGES = [
 
 const TRANSMITTER_QUICK_PICKS = ["Shiva Siddhananda", "Karaveera Nivasini Dasi"];
 
+// Same visual language as Quantum Apothecary: holy/Sanskrit/Vedic terms auto-highlighted in gold.
+const HOLY_TERMS_REGEX = (() => {
+  const terms = [
+    'Chitta Vritti', 'Turiya', 'Kutastha Chaitanya', 'Manomaya Kosha', 'Pranamaya Kosha',
+    'Annamaya Kosha', 'Vijnanamaya Kosha', 'Anandamaya Kosha', 'Nadi(?:s)?', '72,000 Nadi(?:s)?',
+    'Sadhaka', 'Sadhana', 'Arjuna', 'Krishna', 'Bhagavan', 'Atma', 'Brahman', 'Purusha', 'Prakriti',
+    'Sattva', 'Rajas', 'Tamas', 'Dharma', 'Karma', 'Moksha', 'Samadhi', 'Bhakti', 'Jnana', 'Kriya',
+    'Prana', 'Kundalini', 'Sushumna', 'Ida', 'Pingala', 'Muladhara', 'Svadhishthana', 'Manipura',
+    'Anahata', 'Vishuddha', 'Ajna', 'Sahasrara', 'Om|Aum', 'Maya', 'Avidya', 'Vairagya', 'Ahimsa',
+    'Vishwananda', 'Mahavatar Babaji', 'Babaji', 'Paramahansa Yogananda', 'Yogananda',
+    'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Turiya state',
+  ];
+  return new RegExp(`(${terms.join('|')})`, 'g');
+})();
+
+function highlightHolyTerms(text: string): React.ReactNode {
+  if (!text) return text;
+  const parts = text.split(HOLY_TERMS_REGEX);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <span key={i} style={{ color: GOLD, fontWeight: 600 }}>{part}</span>
+    ) : (
+      part
+    )
+  );
+}
+
 function tierLabel(t) {
   return TIERS.find((x) => x.value === t)?.label || t;
 }
@@ -499,9 +527,20 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                       {v.transliteration && (
                         <div style={{ fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{v.transliteration}</div>
                       )}
-                      <div style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{v.translation}</div>
+                      <div style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{highlightHolyTerms(v.translation)}</div>
                       {v.transmitted_by && (
-                        <div style={{ marginTop: 10, fontSize: 11, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>
+                        <div
+                          style={{
+                            marginTop: 12,
+                            paddingTop: 10,
+                            borderTop: `1px solid ${GOLD}22`,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            letterSpacing: "0.03em",
+                            fontStyle: "italic",
+                            color: GOLD,
+                          }}
+                        >
                           — transmitted by {v.transmitted_by}
                         </div>
                       )}
