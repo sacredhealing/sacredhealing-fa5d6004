@@ -3140,7 +3140,24 @@
     "bhrigu": {
       "title": "Bhrigu Nadi Orakel",
       "subtitle": "Forntida vedisk ödesläsning"
-    }
+    },
+    "onboardEyebrow": "Ny här? Kom igång på 30 sekunder",
+    "onboardBody": "Ett mantra är en kort helig fras som du upprepar medan den spelas. Den här sidan föreslår ett baserat på dagens datum och ditt födelsehoroskop — eller så väljer du valfritt nedan. Tryck på spela, så räknar den dina upprepningar åt dig.",
+    "onboardDismiss": "Stäng",
+    "horaGlossary": "En \"Hora\" är en planettimme — vedisk tradition menar att varje timme på dygnet styrs av en planet, och vissa mantran passar särskilt bra till respektive timme.",
+    "bhriguPlain": "Vi har tittat på ditt födelsehoroskop och dagens planettimme — här är mantrat som passar dig just nu.",
+    "playerExplainer": "Tryck på den gyllene knappen nedan. Den upprepar chantet 108 gånger och räknar varje upprepning åt dig.",
+    "nowReciting": "Reciterar nu",
+    "dayStreak": "dagars svit",
+    "resumeFrom": "Återuppta från {{count}}/108",
+    "upgradeTitle": "Lås upp hela mantrabiblioteket",
+    "upgradeSub": "{{tier}} låser upp alla återstående mantran",
+    "upgradeCta": "Uppgradera",
+    "filterAll": "Alla",
+    "filterUnlocked": "Upplåsta",
+    "filterMine": "Min planet",
+    "noMatchesFilter": "Inga mantran matchar det här filtret i den här kategorin.",
+    "completionToast": "108 reciteringar slutförda 🕉"
   },
   "spiritualEducation": {
     "title": "Andlig utbildning",
