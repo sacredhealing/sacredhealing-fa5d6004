@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, Shuffle, X, ListMusic, ChevronUp, ChevronDown } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Play, Pause, Shuffle, X, ListMusic, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
@@ -13,7 +13,6 @@ interface PlaylistRow {
 
 const PlaylistDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { playTrack, currentTrack, isPlaying, hasAccess } = useMusicPlayer();
 
@@ -123,10 +122,6 @@ const PlaylistDetail: React.FC = () => {
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <button onClick={() => navigate('/playlists')} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginBottom: 18 }}>
-            <ArrowLeft size={22} />
-          </button>
-
           <div style={{
             width: 168, height: 168, borderRadius: 18, overflow: 'hidden', margin: '0 auto 20px',
             boxShadow: '0 12px 40px rgba(0,0,0,.6)',

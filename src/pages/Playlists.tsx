@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, ListMusic } from 'lucide-react';
+import { Plus, ListMusic } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -85,10 +85,7 @@ const Playlists: React.FC = () => {
 
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 100, color: '#fff', fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '20px 20px 8px' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-          <ArrowLeft size={22} />
-        </button>
+      <div style={{ padding: '20px 20px 8px' }}>
         <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.02em' }}>Your Playlists</div>
       </div>
 
