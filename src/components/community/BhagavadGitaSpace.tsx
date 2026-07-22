@@ -88,6 +88,10 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showImportPicker, setShowImportPicker] = useState(false);
+  const [bookEntries, setBookEntries] = useState<any[]>([]);
+  const [loadingBookEntries, setLoadingBookEntries] = useState(false);
+  const [importSearch, setImportSearch] = useState("");
   const [fetchingSanskrit, setFetchingSanskrit] = useState(false);
   const [sanskritFetchStatus, setSanskritFetchStatus] = useState(null); // "ok" | "notfound" | null
   const [collapsedChapters, setCollapsedChapters] = useState({});
@@ -159,6 +163,37 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
       });
     }
   }, []);
+
+  const loadBookEntries = useCallback(async () => {
+    setLoadingBookEntries(true);
+    try {
+      const { data, error } = await supabase
+        .from("book_entries" as any)
+        .select("id,title,content,tags,book_type,created_at")
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      setBookEntries((data as any[]) || []);
+    } catch (e) {
+      console.warn("Could not load book entries:", e);
+      setBookEntries([]);
+    } finally {
+      setLoadingBookEntries(false);
+    }
+  }, []);
+
+  const openImportPicker = () => {
+    setShowImportPicker(true);
+    if (bookEntries.length === 0) loadBookEntries();
+  };
+
+  const importEntry = (entry: any) => {
+    setForm((f) => ({ ...f, translation: entry.content || "" }));
+    setShowImportPicker(false);
+    setShowAddForm(true);
+    toast.success(`Imported "${entry.title}" — add chapter, verse, and tier, then Transmit`);
+  };
 
   const resetForm = () => setForm({ ...emptyForm });
 
@@ -344,6 +379,25 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
           <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>
             Transmit a verse
           </div>
+
+          <button
+            onClick={openImportPicker}
+            style={{
+              width: "100%",
+              marginBottom: 14,
+              padding: "9px 12px",
+              borderRadius: 12,
+              background: "rgba(34,211,238,0.08)",
+              border: `1px solid ${CYAN}44`,
+              color: CYAN,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: "pointer",
+              textAlign: "center",
+            }}
+          >
+            📖 Import from My Book
+          </button>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 6 }}>
             <input
@@ -643,6 +697,89 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
           })
         )}
       </div>
+
+      {showImportPicker && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(5,5,5,0.92)",
+            backdropFilter: "blur(20px)",
+            zIndex: 50,
+            display: "flex",
+            flexDirection: "column",
+            padding: "20px 16px",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: GOLD }}>Import from My Book</div>
+            <button
+              onClick={() => setShowImportPicker(false)}
+              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer" }}
+            >
+              ✕
+            </button>
+          </div>
+          <input
+            type="text"
+            placeholder="Search your Life Book & Akashic Codex entries…"
+            value={importSearch}
+            onChange={(e) => setImportSearch(e.target.value)}
+            style={{ ...inputStyle, width: "100%", marginBottom: 14 }}
+          />
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {loadingBookEntries ? (
+              <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Loading your book…</div>
+            ) : (
+              (() => {
+                const filtered = bookEntries.filter((e: any) => {
+                  if (!importSearch.trim()) return true;
+                  const q = importSearch.toLowerCase();
+                  return (
+                    e.title?.toLowerCase().includes(q) ||
+                    e.content?.toLowerCase().includes(q) ||
+                    e.tags?.some((t: string) => t.toLowerCase().includes(q))
+                  );
+                });
+                if (filtered.length === 0) {
+                  return (
+                    <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+                      No entries found{importSearch ? " for that search" : ""}.
+                    </div>
+                  );
+                }
+                return filtered.map((entry: any) => (
+                  <button
+                    key={entry.id}
+                    onClick={() => importEntry(entry)}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: 14,
+                      marginBottom: 10,
+                      borderRadius: 18,
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{entry.title}</div>
+                      <div style={{ fontSize: 9, fontWeight: 800, color: entry.book_type === "akashic_codex" ? GOLD : CYAN, textTransform: "uppercase" }}>
+                        {entry.book_type === "akashic_codex" ? "Akashic Codex" : "Life Book"}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                      {(entry.content || "").slice(0, 140)}{entry.content?.length > 140 ? "…" : ""}
+                    </div>
+                  </button>
+                ));
+              })()
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
