@@ -738,7 +738,7 @@ const Healing: React.FC = () => {
         </h1>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,.42)', lineHeight: 1.75, maxWidth: 320, marginBottom: 32 }}>
           {(!jyotish.isLoading && jyotish.mahadasha) ? (
-            <>For 15 years I've worked through direct energetic healing — transmitted through my own daily spiritual practice. Right now, Vedic astrology shows you're in a {jyotish.mahadasha}/{jyotish.antardasha} period — a time that often brings {jyotish.primaryDosha} imbalance: {doshaPlainLanguage(jyotish.primaryDosha)}. These frequencies are made to help restore that balance, ease whatever else you're facing, or simply support your next spiritual upgrade.</>
+            <>For 15 years I've worked through direct energetic healing — transmitted through my own daily spiritual practice. Right now, Vedic astrology shows you're in a {jyotish.mahadasha}/{jyotish.antardasha} period — a time that often brings {jyotish.primaryDosha} imbalance: {doshaPlainLanguage(jyotish.primaryDosha)}. This healing energy is made to help restore that balance, ease whatever else you're facing, or simply support your next spiritual upgrade.</>
           ) : (
             T.heroSubtitle
           )}
