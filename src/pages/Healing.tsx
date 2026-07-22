@@ -865,7 +865,7 @@ const Healing: React.FC = () => {
               <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 4 }}>Healing Monthly</div>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, color: '#D4AF37' }}>€147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}</div>
             </button>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 16 }}>3-month minimum commitment</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 16 }}>Cancel anytime</div>
 
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 10 }}>Day-Pass · One-Time</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
