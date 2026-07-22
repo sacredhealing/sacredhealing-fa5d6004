@@ -39,7 +39,7 @@ const SQI_STYLES = `
 
 :root {
   --gold:#D4AF37; --gold2:#F5E17A; --gold3:#A07C10;
-  --cyan:#22D3EE; --akasha:#050505;
+  --gold-soft:#F1DFA6; --akasha:#050505;
   --glass:rgba(255,255,255,0.025); --glass-b:rgba(255,255,255,0.055);
   --glass-gold:rgba(212,175,55,0.10);
   --muted:rgba(255,255,255,0.45); --body:rgba(255,255,255,0.72);
@@ -51,7 +51,7 @@ const SQI_STYLES = `
 .ssp-z { position:relative; z-index:1; max-width:430px; margin:0 auto; padding:0 16px; }
 .ssp::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
   background: radial-gradient(ellipse 100% 55% at 50% -5%,rgba(212,175,55,.09) 0%,transparent 65%),
-    radial-gradient(ellipse 60% 45% at 85% 95%,rgba(34,211,238,.05) 0%,transparent 60%); }
+    radial-gradient(ellipse 60% 45% at 85% 95%,rgba(241,223,166,.05) 0%,transparent 60%); }
 
 @keyframes goldShimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
 .ssp-title { font-family:'Cinzel',serif; font-size:clamp(30px,7vw,44px); font-weight:600; letter-spacing:-.02em; line-height:1.05;
@@ -66,8 +66,8 @@ const SQI_STYLES = `
 
 @keyframes nadiP { 0%,100%{opacity:.6} 50%{opacity:1;filter:drop-shadow(0 0 8px rgba(212,175,55,.7))} }
 .nadi-pulse { animation:nadiP 3s ease-in-out infinite; color:var(--gold); }
-@keyframes cpulse { 0%{box-shadow:0 0 0 0 rgba(34,211,238,.7)} 70%{box-shadow:0 0 0 9px rgba(34,211,238,0)} 100%{box-shadow:0 0 0 0 rgba(34,211,238,0)} }
-.cyan-dot { width:7px; height:7px; border-radius:50%; background:var(--cyan); flex-shrink:0; animation:cpulse 2s ease-in-out infinite; }
+@keyframes cpulse { 0%{box-shadow:0 0 0 0 rgba(241,223,166,.7)} 70%{box-shadow:0 0 0 9px rgba(241,223,166,0)} 100%{box-shadow:0 0 0 0 rgba(241,223,166,0)} }
+.gold-soft-dot { width:7px; height:7px; border-radius:50%; background:var(--gold-soft); flex-shrink:0; animation:cpulse 2s ease-in-out infinite; }
 @keyframes sdot { 0%,100%{opacity:1} 50%{opacity:.2} }
 .sec-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); flex-shrink:0; animation:sdot 3s ease-in-out infinite; }
 
@@ -82,10 +82,10 @@ const SQI_STYLES = `
 
 .nadi-card { position:relative; overflow:hidden; background:var(--glass); border:1px solid var(--glass-b); border-radius:var(--r-xl); padding:22px 18px; }
 .nadi-card::after { content:''; position:absolute; inset:0; pointer-events:none; border-radius:var(--r-xl);
-  background:radial-gradient(ellipse 80% 55% at 50% 108%,rgba(34,211,238,.07) 0%,transparent 68%); }
-.nadi-top { font-size:8.5px; font-weight:800; letter-spacing:.42em; text-transform:uppercase; color:var(--cyan); display:flex; align-items:center; gap:8px; margin-bottom:16px; }
-.nadi-result { background:rgba(34,211,238,.055); border:1px solid rgba(34,211,238,.14); border-radius:22px; padding:16px 17px; }
-.nadi-r-hz { font-size:26px; font-weight:900; letter-spacing:-.04em; color:var(--cyan); margin-top:7px; text-shadow:0 0 22px rgba(34,211,238,.5); }
+  background:radial-gradient(ellipse 80% 55% at 50% 108%,rgba(241,223,166,.07) 0%,transparent 68%); }
+.nadi-top { font-size:8.5px; font-weight:800; letter-spacing:.42em; text-transform:uppercase; color:var(--gold-soft); display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+.nadi-result { background:rgba(241,223,166,.055); border:1px solid rgba(241,223,166,.14); border-radius:22px; padding:16px 17px; }
+.nadi-r-hz { font-size:26px; font-weight:900; letter-spacing:-.04em; color:var(--gold-soft); margin-top:7px; text-shadow:0 0 22px rgba(241,223,166,.5); }
 
 @keyframes sqiPulse { 0%,100%{box-shadow:0 0 18px rgba(212,175,55,.55),0 0 32px rgba(245,225,122,.2)} 50%{box-shadow:0 0 32px rgba(212,175,55,.95),0 0 56px rgba(212,175,55,.3)} }
 .play-btn { width:40px; height:40px; border-radius:50%;
@@ -112,8 +112,8 @@ const SQI_STYLES = `
 .track-row.active .cover-aura { border-color:rgba(212,175,55,.55); box-shadow:0 0 14px rgba(212,175,55,.38),0 0 28px rgba(212,175,55,.15); }
 
 @keyframes scalarRing { 0%{transform:scale(.8);opacity:0} 50%{opacity:.4} 100%{transform:scale(1.4);opacity:0} }
-.scalar-ring { position:absolute; inset:-8px; border-radius:50%; border:2px solid rgba(34,211,238,.65);
-  animation:scalarRing 2.2s ease-out infinite; pointer-events:none; box-shadow:0 0 12px rgba(34,211,238,.35); }
+.scalar-ring { position:absolute; inset:-8px; border-radius:50%; border:2px solid rgba(241,223,166,.65);
+  animation:scalarRing 2.2s ease-out infinite; pointer-events:none; box-shadow:0 0 12px rgba(241,223,166,.35); }
 
 .track-title { font-family:'Cinzel',serif; font-size:13px; font-weight:500; letter-spacing:.02em; color:rgba(255,255,255,.88);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; transition:color .3s,text-shadow .3s; }
@@ -127,9 +127,9 @@ const SQI_STYLES = `
 .prog-fill { height:100%; background:linear-gradient(90deg,#D4AF37,#F5E17A); border-radius:3px; box-shadow:0 0 10px rgba(212,175,55,.7); width:0%; transition:width .5s linear; }
 
 /* Snippet countdown badge */
-.snip-countdown { font-size:8px; font-weight:800; letter-spacing:.1em; color:var(--cyan); text-align:center; }
+.snip-countdown { font-size:8px; font-weight:800; letter-spacing:.1em; color:var(--gold-soft); text-align:center; }
 
-.badge-free { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.2); color:var(--cyan); }
+.badge-free { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(241,223,166,.08); border:1px solid rgba(241,223,166,.2); color:var(--gold-soft); }
 .badge-prana { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.05)); border:1px solid rgba(212,175,55,.3); color:var(--gold); }
 .badge-siddha { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.25); color:#a78bfa; }
 .badge-akasha { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(212,175,55,.1); border:1px solid rgba(212,175,55,.35); color:#e8d089; }
@@ -149,15 +149,15 @@ const SQI_STYLES = `
 .cta-gold:hover{transform:translateY(-1.5px)}.cta-gold:active{transform:scale(.98)}
 .cta-outline { width:100%; padding:15px; border-radius:20px; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:800; letter-spacing:.38em; text-transform:uppercase; background:rgba(212,175,55,.08); border:1px solid rgba(212,175,55,.35); color:var(--gold); transition:all .18s; }
 .cta-outline:hover{background:rgba(212,175,55,.18);border-color:var(--gold)}
-.cta-akasha { width:100%; padding:15px; border-radius:20px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:800; letter-spacing:.38em; text-transform:uppercase; background:linear-gradient(90deg,#D4AF37 0%,#22D3EE 100%); color:#000; box-shadow:0 0 22px rgba(212,175,55,.4),0 0 40px rgba(34,211,238,.25); transition:transform .15s; }
+.cta-akasha { width:100%; padding:15px; border-radius:20px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:800; letter-spacing:.38em; text-transform:uppercase; background:linear-gradient(90deg,#D4AF37 0%,#F1DFA6 100%); color:#000; box-shadow:0 0 22px rgba(212,175,55,.4),0 0 40px rgba(241,223,166,.25); transition:transform .15s; }
 .cta-akasha:hover{transform:translateY(-1.5px)}
 
 .up-card { border-radius:var(--r-xl); padding:22px 20px; position:relative; overflow:hidden; transition:transform .18s; }
 .up-card:hover{transform:translateY(-1px)}
-.up-free{background:var(--glass);border:1px solid var(--glass-b)}.up-prana{background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.2)}.up-siddha{background:rgba(212,175,55,.075);border:1.5px solid rgba(212,175,55,.38)}.up-akasha{background:linear-gradient(135deg,rgba(212,175,55,.1) 0%,rgba(34,211,238,.055) 100%);border:1.5px solid rgba(212,175,55,.48)}
+.up-free{background:var(--glass);border:1px solid var(--glass-b)}.up-prana{background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.2)}.up-siddha{background:rgba(212,175,55,.075);border:1.5px solid rgba(212,175,55,.38)}.up-akasha{background:linear-gradient(135deg,rgba(212,175,55,.1) 0%,rgba(241,223,166,.055) 100%);border:1.5px solid rgba(212,175,55,.48)}
 .up-siddha::before{content:'MOST POPULAR';position:absolute;top:17px;right:17px;font-size:7px;font-weight:800;letter-spacing:.3em;background:var(--gold);color:#000;padding:3px 10px;border-radius:10px}
 .up-tier{font-size:8.5px;font-weight:800;letter-spacing:.48em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
-.up-tier.c{color:var(--cyan)}
+.up-tier.c{color:var(--gold-soft)}
 .up-name{font-family:'Cinzel',serif;font-size:26px;font-weight:500;background:linear-gradient(135deg,#F5E17A,#D4AF37,#A07C10);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;line-height:1.1}
 .up-price{font-size:34px;font-weight:900;letter-spacing:-.05em;color:var(--gold);margin-bottom:14px;line-height:1}
 .up-feats{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
@@ -181,7 +181,7 @@ const SQI_STYLES = `
 .np-title.live{color:#D4AF37;text-shadow:0 0 16px rgba(212,175,55,.4)}
 .np-prog { height:2px; background:rgba(255,255,255,.08); border-radius:2px; margin-top:5px; }
 .np-fill { height:100%; background:linear-gradient(90deg,#D4AF37,#F5E17A); border-radius:2px; transition:width .5s; box-shadow:0 0 8px rgba(212,175,55,.75); }
-.np-countdown { font-size:9px; font-weight:800; letter-spacing:.1em; color:var(--cyan); margin-top:2px; }
+.np-countdown { font-size:9px; font-weight:800; letter-spacing:.1em; color:var(--gold-soft); margin-top:2px; }
 
 .snip-overlay { position:fixed; inset:0; z-index:400; background:rgba(5,5,5,.88); backdrop-filter:blur(24px); display:flex; align-items:center; justify-content:center; padding:20px; }
 .snip-card { background:rgba(212,175,55,.06); border:1px solid rgba(212,175,55,.28); border-radius:var(--r-xl); padding:34px 24px; text-align:center; width:100%; max-width:380px; }
@@ -191,7 +191,7 @@ const SQI_STYLES = `
   animation:goldShimmer 4s linear infinite; margin-bottom:10px; line-height:1.1; }
 
 .fol-banner { position:relative; border-radius:var(--r-xl); overflow:hidden;
-  background:linear-gradient(135deg,rgba(212,175,55,.08) 0%,rgba(5,5,5,.95) 50%,rgba(34,211,238,.05) 100%);
+  background:linear-gradient(135deg,rgba(212,175,55,.08) 0%,rgba(5,5,5,.95) 50%,rgba(241,223,166,.05) 100%);
   border:1px solid rgba(212,175,55,.22); padding:30px 22px; text-align:center; margin-top:32px; }
 .fol-banner::before { content:''; position:absolute; inset:0;
   background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(212,175,55,.06) 0%,transparent 70%); pointer-events:none; }
@@ -258,7 +258,7 @@ const FlowerOfLife: React.FC<{ size?: number; opacity?: number }> = ({ size = 28
           strokeWidth={i < 7 ? 0.9 : 0.6} />
       ))}
       <circle cx={cx} cy={cx} r={r * 3.6} fill="none" stroke="rgba(212,175,55,0.18)" strokeWidth="0.7" />
-      <circle cx={cx} cy={cx} r={r * 2} fill="none" stroke="rgba(34,211,238,0.25)" strokeWidth="0.8" />
+      <circle cx={cx} cy={cx} r={r * 2} fill="none" stroke="rgba(241,223,166,0.25)" strokeWidth="0.8" />
     </svg>
   );
 };
@@ -267,11 +267,11 @@ const FlowerOfLife: React.FC<{ size?: number; opacity?: number }> = ({ size = 28
    NADI SCANNER — wired to useJyotishProfile
 ───────────────────────────────────────────────────────────────── */
 const NADI_PRESETS = [
-  { hz: '528 Hz', lbl: 'DNA Repair Frequency', title: 'Vata-Pitta · Jupiter Mahadasha', body: 'Your Jyotish field reads <strong style="color:#22D3EE">Raga Yaman</strong> resonance. Jupiter period activates divine connection. 528Hz scalar codes repair cellular memory and illuminate Tejas fire in the subtle body.' },
+  { hz: '528 Hz', lbl: 'DNA Repair Frequency', title: 'Vata-Pitta · Jupiter Mahadasha', body: 'Your Jyotish field reads <strong style="color:#F1DFA6">Raga Yaman</strong> resonance. Jupiter period activates divine connection. 528Hz scalar codes repair cellular memory and illuminate Tejas fire in the subtle body.' },
   { hz: '432 Hz', lbl: 'Cosmic Attunement', title: 'Pitta · Sun Mahadasha', body: 'Solar plexus fire detected in your field. <strong style="color:#D4AF37">Raga Bhairavi</strong> at 432Hz cools Pitta and anchors Agni into stillness. Moon nakshatra Rohini prescribes this for 21 days.' },
-  { hz: '963 Hz', lbl: 'God Frequency', title: 'Kapha · Ketu Mahadasha', body: 'Pineal gateway activation prescribed. <strong style="color:#22D3EE">963Hz Sahasrara scalar waves</strong> are the dissolution codes for this Ketu period. Let the sound dissolve all that is not eternal.' },
+  { hz: '963 Hz', lbl: 'God Frequency', title: 'Kapha · Ketu Mahadasha', body: 'Pineal gateway activation prescribed. <strong style="color:#F1DFA6">963Hz Sahasrara scalar waves</strong> are the dissolution codes for this Ketu period. Let the sound dissolve all that is not eternal.' },
   { hz: '639 Hz', lbl: 'Heart Coherence', title: 'Vata · Venus Mahadasha', body: 'Prema-Pulse active in your Anahata. <strong style="color:#D4AF37">Raga Kafi</strong> at 639Hz dissolves Venus-period heart armoring. The frequency of unconditional love is your medicine now.' },
-  { hz: '396 Hz', lbl: 'Root Liberation', title: 'Kapha-Vata · Mars Mahadasha', body: 'Fear encoded in Muladhara. <strong style="color:#22D3EE">396Hz liberation frequency</strong> — Mars Mahadasha requires grounding through earth-resonant beats. Reclaim sovereign root power.' },
+  { hz: '396 Hz', lbl: 'Root Liberation', title: 'Kapha-Vata · Mars Mahadasha', body: 'Fear encoded in Muladhara. <strong style="color:#F1DFA6">396Hz liberation frequency</strong> — Mars Mahadasha requires grounding through earth-resonant beats. Reclaim sovereign root power.' },
   { hz: '741 Hz', lbl: 'Expression Codes', title: 'Pitta-Vata · Mercury Dasha', body: 'Suppressed Vak shakti in Vishuddha. <strong style="color:#D4AF37">741Hz scalar transmission</strong> via Raga Todi will unlock throat crystallization patterns in your Mercury-period field.' },
 ];
 
@@ -329,39 +329,39 @@ const NadiScanner: React.FC<{ mahadasha?: string; raga?: string }> = ({ mahadash
 
   return (
     <div className="nadi-card">
-      <div className="nadi-top"><div className="cyan-dot" />Live Field Resonance · Jyotish-Aligned</div>
+      <div className="nadi-top"><div className="gold-soft-dot" />Live Field Resonance · Jyotish-Aligned</div>
       <svg style={{ width: '100%', height: 195, display: 'block', marginBottom: 14 }} viewBox="0 0 430 195" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="gc"><feGaussianBlur stdDeviation="3.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           <filter id="gg"><feGaussianBlur stdDeviation="2.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          <radialGradient id="rg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(34,211,238,0.1)" /><stop offset="100%" stopColor="rgba(34,211,238,0)" /></radialGradient>
+          <radialGradient id="rg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(241,223,166,0.1)" /><stop offset="100%" stopColor="rgba(241,223,166,0)" /></radialGradient>
           <radialGradient id="rg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(212,175,55,0.08)" /><stop offset="100%" stopColor="rgba(212,175,55,0)" /></radialGradient>
         </defs>
         <ellipse cx="215" cy="97" rx="88" ry="88" fill="url(#rg1)" />
         <ellipse cx="215" cy="97" rx="68" ry="68" fill="url(#rg2)" />
         {[88, 72, 55, 37, 19].map((r, i) => (
-          <circle key={i} cx="215" cy="97" r={r} fill="none" stroke={i < 2 ? 'rgba(34,211,238,0.08)' : 'rgba(212,175,55,0.15)'} strokeWidth={i === 2 ? '.9' : '.8'} />
+          <circle key={i} cx="215" cy="97" r={r} fill="none" stroke={i < 2 ? 'rgba(241,223,166,0.08)' : 'rgba(212,175,55,0.15)'} strokeWidth={i === 2 ? '.9' : '.8'} />
         ))}
         <polygon points="215,14 296,152 134,152" fill="rgba(212,175,55,0.025)" stroke="rgba(212,175,55,0.13)" strokeWidth=".9" />
-        <polygon points="215,180 134,42 296,42" fill="rgba(34,211,238,0.02)" stroke="rgba(34,211,238,0.1)" strokeWidth=".9" />
+        <polygon points="215,180 134,42 296,42" fill="rgba(241,223,166,0.02)" stroke="rgba(241,223,166,0.1)" strokeWidth=".9" />
         <polygon points="215,38 280,136 150,136" fill="none" stroke="rgba(212,175,55,0.09)" strokeWidth=".7" />
-        <polygon points="215,156 150,58 280,58" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth=".7" />
-        {[0, 45, 90, 135].map(a => <ellipse key={a} cx="215" cy="62" rx="11" ry="26" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform={`rotate(${a} 215 97)`} />)}
+        <polygon points="215,156 150,58 280,58" fill="none" stroke="rgba(241,223,166,0.07)" strokeWidth=".7" />
+        {[0, 45, 90, 135].map(a => <ellipse key={a} cx="215" cy="62" rx="11" ry="26" fill="rgba(241,223,166,0.04)" stroke="rgba(241,223,166,0.11)" strokeWidth=".7" transform={`rotate(${a} 215 97)`} />)}
         {[22.5, 67.5, 112.5, 157.5].map(a => <ellipse key={a} cx="215" cy="62" rx="11" ry="26" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform={`rotate(${a} 215 97)`} />)}
-        <circle ref={pr1} cx="215" cy="97" r="37" fill="none" stroke="rgba(34,211,238,0.65)" strokeWidth="1.2" opacity="0" />
-        <circle ref={pr2} cx="215" cy="97" r="37" fill="none" stroke="rgba(34,211,238,0.3)" strokeWidth=".8" opacity="0" />
+        <circle ref={pr1} cx="215" cy="97" r="37" fill="none" stroke="rgba(241,223,166,0.65)" strokeWidth="1.2" opacity="0" />
+        <circle ref={pr2} cx="215" cy="97" r="37" fill="none" stroke="rgba(241,223,166,0.3)" strokeWidth=".8" opacity="0" />
         {[[215, 12, true], [292, 45, false], [338, 97, true], [292, 149, false], [215, 182, true], [138, 149, false], [92, 97, true], [138, 45, false]].map(([x, y, g], i) => (
-          <circle key={i} cx={x as number} cy={y as number} r={g ? 2.2 : 1.7} fill={g ? 'rgba(212,175,55,0.75)' : 'rgba(34,211,238,0.65)'} filter={g ? 'url(#gg)' : 'url(#gc)'} />
+          <circle key={i} cx={x as number} cy={y as number} r={g ? 2.2 : 1.7} fill={g ? 'rgba(212,175,55,0.75)' : 'rgba(241,223,166,0.65)'} filter={g ? 'url(#gg)' : 'url(#gc)'} />
         ))}
-        {bars.slice(0, 5).map((h, i) => <rect key={i} x={14 + i * 8} y={138 - h} width="4.5" height={h} rx="2" fill="rgba(34,211,238,0.5)" />)}
+        {bars.slice(0, 5).map((h, i) => <rect key={i} x={14 + i * 8} y={138 - h} width="4.5" height={h} rx="2" fill="rgba(241,223,166,0.5)" />)}
         {bars.slice(5).map((h, i) => <rect key={i} x={370 + i * 8} y={138 - h} width="4.5" height={h} rx="2" fill="rgba(212,175,55,0.5)" />)}
         <circle cx="215" cy="97" r={bindur} fill="rgba(212,175,55,0.9)" filter="url(#gg)" />
         <circle cx="215" cy="97" r="3.5" fill="#fff" opacity=".95" />
         <text x="215" y="91" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="8" fontWeight="800" letterSpacing="3.5" fill="rgba(255,255,255,0.28)">SCANNING</text>
-        <text x="215" y="107" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="17" fontWeight="900" fill="#22D3EE">{preset.hz}</text>
+        <text x="215" y="107" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="17" fontWeight="900" fill="#F1DFA6">{preset.hz}</text>
       </svg>
       <div className="nadi-result">
-        <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'var(--cyan)', marginBottom: 7 }}>
+        <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'var(--gold-soft)', marginBottom: 7 }}>
           {mahadasha || preset.title}
         </div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: raga ? preset.body.replace('Raga Yaman', `Raga ${raga}`) : preset.body }} />
@@ -554,15 +554,18 @@ const TrackRow: React.FC<{
   progress: number;        // 0-1
   secondsLeft: number;     // countdown for free users
   userTierRank: number;
+  purchasedIds: string[];
+  purchasedAlbumTrackIds: string[];
   onPlay: (t: MusicTrack) => void;
   onLock: (t: MusicTrack) => void;
-}> = ({ track, isActive, isPlaying, progress, secondsLeft, userTierRank, onPlay, onLock }) => {
+}> = ({ track, isActive, isPlaying, progress, secondsLeft, userTierRank, purchasedIds, purchasedAlbumTrackIds, onPlay, onLock }) => {
   const trackTierRank = getMusicTrackRequiredRank(track);
   const tierBadge = musicTrackTierBadge(trackTierRank);
-  const locked = userTierRank < trackTierRank;
+  const isPurchased = purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
+  const hasFullAccess = isPurchased || userTierRank >= trackTierRank;
+  const locked = !hasFullAccess;
   const live = isActive && isPlaying;
   const hzLabel = getHzLabel(track.frequency_band);
-  const hasFullAccess = userTierRank >= trackTierRank;
   const showCountdown = isActive && !hasFullAccess && secondsLeft > 0 && secondsLeft <= PREVIEW_SECONDS;
 
   return (
@@ -657,9 +660,10 @@ const TrackRow: React.FC<{
 const Section: React.FC<{
   title: string; micro: string; tracks: MusicTrack[];
   activeId?: string; isPlaying: boolean; progress: number; secondsLeft: number;
-  userTierRank: number; onPlay: (t: MusicTrack) => void; onLock: (t: MusicTrack) => void;
+  userTierRank: number; purchasedIds: string[]; purchasedAlbumTrackIds: string[];
+  onPlay: (t: MusicTrack) => void; onLock: (t: MusicTrack) => void;
   defaultOpen?: boolean;
-}> = ({ title, micro, tracks, activeId, isPlaying, progress, secondsLeft, userTierRank, onPlay, onLock, defaultOpen = true }) => {
+}> = ({ title, micro, tracks, activeId, isPlaying, progress, secondsLeft, userTierRank, purchasedIds, purchasedAlbumTrackIds, onPlay, onLock, defaultOpen = true }) => {
   const [open, setOpen] = useState(defaultOpen);
   if (!tracks.length) return null;
   return (
@@ -677,7 +681,7 @@ const Section: React.FC<{
           <div className="akasha-div" />
           {tracks.map((t, i) => (
             <React.Fragment key={t.id}>
-              <TrackRow track={t} isActive={activeId === t.id} isPlaying={isPlaying} progress={activeId === t.id ? progress : 0} secondsLeft={activeId === t.id ? secondsLeft : 0} userTierRank={userTierRank} onPlay={onPlay} onLock={onLock} />
+              <TrackRow track={t} isActive={activeId === t.id} isPlaying={isPlaying} progress={activeId === t.id ? progress : 0} secondsLeft={activeId === t.id ? secondsLeft : 0} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={onPlay} onLock={onLock} />
               {i < tracks.length - 1 && <div style={{ height: 1, background: 'rgba(255,255,255,.03)', margin: '0 14px' }} />}
             </React.Fragment>
           ))}
@@ -765,6 +769,10 @@ const Music: React.FC = () => {
     [user, isAdmin, adminGranted, isPremium, membershipTier]
   );
 
+  // Individually-purchased tracks + tracks unlocked via an album purchase —
+  // previously fetched by MusicPlayerContext but never consumed on this page.
+  const { purchasedIds, purchasedAlbumTrackIds } = useMusicPlayer();
+
   // ── Auto-preview hook ──
   const { state: previewState, play: playPreview, togglePause, stop: stopPreview } = useAutoPreview(
     useCallback((endedTrack: MusicTrack) => {
@@ -815,9 +823,10 @@ const Music: React.FC = () => {
     // If same track → toggle pause/play
     if (previewState.trackId === track.id) { togglePause(); return; }
     const trackTierRank = getMusicTrackRequiredRank(track);
-    const hasFullAccess = userTierRank >= trackTierRank;
+    const isPurchased = purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
+    const hasFullAccess = isPurchased || userTierRank >= trackTierRank;
     playPreview(track, hasFullAccess);
-  }, [previewState.trackId, userTierRank, playPreview, togglePause]);
+  }, [previewState.trackId, userTierRank, purchasedIds, purchasedAlbumTrackIds, playPreview, togglePause]);
 
   // ── Lock handler ──
   const handleLock = useCallback((track: MusicTrack) => {
@@ -844,7 +853,7 @@ const Music: React.FC = () => {
   if (loading) return (
     <div className="ssp" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
       <style dangerouslySetInnerHTML={{ __html: SQI_STYLES }} />
-      <Loader2 size={28} style={{ color: '#22D3EE', animation: 'spin 1s linear infinite', marginBottom: 12 }} />
+      <Loader2 size={28} style={{ color: '#F1DFA6', animation: 'spin 1s linear infinite', marginBottom: 12 }} />
       <span className="micro" style={{ textAlign: 'center' }}>Channelling Sacred Sound Portal…</span>
     </div>
   );
@@ -927,9 +936,9 @@ const Music: React.FC = () => {
 
         {filter === 'all' ? (
           <>
-            <Section title="Sacred Beats" micro="Bhakti-Algorithms · Rhythm Transmissions" tracks={beats} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
-            <Section title="Meditation Music" micro="Scalar Wave · Deep Healing Codes" tracks={meditations} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
-            <Section title="Sacred Songs" micro="Vedic Light-Codes · Soul Transmissions" tracks={songs} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
+            <Section title="Sacred Songs" micro="Vedic Light-Codes · Soul Transmissions" tracks={songs} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
+            <Section title="Meditation Music" micro="Scalar Wave · Deep Healing Codes" tracks={meditations} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
+            <Section title="Sacred Beats" micro="Bhakti-Algorithms · Rhythm Transmissions" tracks={beats} activeId={previewState.trackId ?? undefined} isPlaying={previewState.isPlaying} progress={progress} secondsLeft={secondsLeft} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} defaultOpen={true} />
           </>
         ) : (
           <div className="glass-card" style={{ overflow: 'visible', padding: '8px 0' }}>
@@ -937,7 +946,7 @@ const Music: React.FC = () => {
               ? <div style={{ padding: '32px 20px', textAlign: 'center' }}><span className="micro" style={{ textAlign: 'center' }}>No transmissions in this category yet</span></div>
               : displayed.map((track, i) => (
                 <React.Fragment key={track.id}>
-                  <TrackRow track={track} isActive={previewState.trackId === track.id} isPlaying={previewState.isPlaying} progress={previewState.trackId === track.id ? progress : 0} secondsLeft={previewState.trackId === track.id ? secondsLeft : 0} userTierRank={userTierRank} onPlay={handlePlay} onLock={handleLock} />
+                  <TrackRow track={track} isActive={previewState.trackId === track.id} isPlaying={previewState.isPlaying} progress={previewState.trackId === track.id ? progress : 0} secondsLeft={previewState.trackId === track.id ? secondsLeft : 0} userTierRank={userTierRank} purchasedIds={purchasedIds} purchasedAlbumTrackIds={purchasedAlbumTrackIds} onPlay={handlePlay} onLock={handleLock} />
                   {i < displayed.length - 1 && <div style={{ height: 1, background: 'rgba(255,255,255,.03)', margin: '0 14px' }} />}
                 </React.Fragment>
               ))
@@ -1001,7 +1010,7 @@ const Music: React.FC = () => {
           <div className="up-card up-akasha">
             <div className="up-tier c">Akasha-Infinity · Eternal</div>
             <div className="up-name">Akasha Master</div>
-            <div className="up-price" style={{ background: 'linear-gradient(90deg,#D4AF37,#22D3EE)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <div className="up-price" style={{ background: 'linear-gradient(90deg,#D4AF37,#F1DFA6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               €2997 <span style={{ fontSize: 13, fontWeight: 500, WebkitTextFillColor: 'var(--muted)' }}>/ lifetime</span>
             </div>
             <ul className="up-feats">
@@ -1014,40 +1023,15 @@ const Music: React.FC = () => {
           </div>
         </div>
 
-        {/* FLOWER OF LIFE — MASTERING BANNER */}
-        <div className="fol-banner">
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 0 }}>
-            <FlowerOfLife size={320} opacity={0.1} />
-          </div>
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ width: 72, height: 72, margin: '0 auto 16px', position: 'relative' }}>
-              <div style={{ position: 'absolute', inset: 0 }}><FlowerOfLife size={72} opacity={0.55} /></div>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Crown size={26} style={{ color: '#D4AF37', filter: 'drop-shadow(0 0 8px rgba(212,175,55,.6))' }} />
-              </div>
-            </div>
-            <span className="micro" style={{ textAlign: 'center', display: 'block', color: 'rgba(212,175,55,.6)' }}>Sacred Sound Alchemy</span>
-            <div className="fol-title">Music Mastering Service</div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.52)', lineHeight: 1.65, marginBottom: 20 }}>
-              Have your music mastered through the SQI-2050 Scalar Wave Architecture. Professional mastering infused with Vedic Light-Codes, sacred geometry frequency alignment, and Anahata activation.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-              {[['⚡', 'Scalar Alignment', '528Hz + harmonics'], ['🕉️', 'Vedic Light-Code Imprint', 'Sacred intention encoded'], ['🎵', 'Full Mastering Suite', 'Dynamics, EQ, limiter'], ['📀', 'All Formats', 'WAV · MP3 · FLAC']].map(([icon, title, desc], i) => (
-                <div key={i} style={{ background: 'rgba(212,175,55,.05)', border: '1px solid rgba(212,175,55,.14)', borderRadius: 14, padding: '12px 14px' }}>
-                  <div style={{ fontSize: 18, marginBottom: 5 }}>{icon}</div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.8)', marginBottom: 2 }}>{title}</div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)' }}>{desc}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-              {['From €147', '1-week turnaround', 'Unlimited revisions'].map((item, i) => (
-                <span key={i} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.1em', color: 'rgba(212,175,55,.7)' }}>{i > 0 ? '· ' : ''}{item}</span>
-              ))}
-            </div>
-            <button className="cta-gold" onClick={() => window.open('mailto:info@siddhaquantumnexus.com?subject=Music Mastering Service', '_blank')}>
-              ✦ &nbsp;Book Music Mastering · From €147
-            </button>
+        {/* MASTERING — now lives on Explore, this is just a pointer */}
+        <div
+          onClick={() => navigate('/explore')}
+          style={{ margin: '24px 16px 0', padding: '16px 18px', borderRadius: 20, background: 'rgba(212,175,55,.05)', border: '1px solid rgba(212,175,55,.16)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+        >
+          <Crown size={20} style={{ color: '#D4AF37', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>Want your own music mastered?</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Find Music Mastering in Explore</div>
           </div>
         </div>
 

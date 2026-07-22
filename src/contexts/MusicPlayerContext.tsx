@@ -170,6 +170,7 @@ interface MusicPlayerContextType {
   isLoop: boolean;
   queue: Track[];
   purchasedIds: string[];
+  purchasedAlbumTrackIds: string[];
   likedIds: string[];
   isSubscribed: boolean;
   
@@ -1215,6 +1216,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       isLoop,
       queue,
       purchasedIds,
+      purchasedAlbumTrackIds,
       likedIds,
       isSubscribed,
       playTrack,
