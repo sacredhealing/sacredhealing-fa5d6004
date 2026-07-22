@@ -1045,12 +1045,23 @@ export default function Explore() {
                   border: '1px solid rgba(212,175,55,0.15)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(212,175,55,.8)' }}>{item.price}</span>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 600 }}>{item.turnaround}</span>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 4 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                    background: 'linear-gradient(135deg,rgba(212,175,55,.18),rgba(212,175,55,.05))',
+                    border: '1px solid rgba(212,175,55,.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 17,
+                  }}>ॐ</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(212,175,55,.8)' }}>{item.price}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 600 }}>{item.turnaround}</span>
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>{item.title}</div>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)' }}>{item.sub}</div>
+                  </div>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 15, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>{item.title}</div>
-                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', marginBottom: 10 }}>{item.sub}</div>
                 <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: 14, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {item.diff}
                 </div>
