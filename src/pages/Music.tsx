@@ -906,16 +906,6 @@ const Music: React.FC = () => {
           ))}
         </div>
 
-        {/* NADI SCANNER */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '20px 0 12px' }}>
-          <div className="sec-dot" />
-          <div>
-            <span className="micro" style={{ marginBottom: 2 }}>Jyotish-Aligned · Live Field Reading</span>
-            <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Nadi Scanner · Your Frequency Prescription</div>
-          </div>
-        </div>
-        <NadiScanner mahadasha={jyotish?.mahadasha} raga={jyotish?.meditationType} />
-
         {/* ACCESS BANNER — only for guests / free users */}
         {userTierRank === 0 && (
           <div style={{ margin: '16px 0', padding: '14px 18px', background: 'linear-gradient(135deg,rgba(212,175,55,.06),rgba(212,175,55,.02))', border: '1px solid rgba(212,175,55,.18)', borderRadius: 22, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1012,6 +1002,16 @@ const Music: React.FC = () => {
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Find Music Mastering in Explore</div>
           </div>
         </div>
+
+        {/* NADI SCANNER — moved to bottom of page */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '28px 0 12px' }}>
+          <div className="sec-dot" />
+          <div>
+            <span className="micro" style={{ marginBottom: 2 }}>Jyotish-Aligned · Live Field Reading</span>
+            <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Nadi Scanner · Your Frequency Prescription</div>
+          </div>
+        </div>
+        <NadiScanner mahadasha={jyotish?.mahadasha} raga={jyotish?.meditationType} />
 
         <div style={{ height: 40 }} />
       </div>
