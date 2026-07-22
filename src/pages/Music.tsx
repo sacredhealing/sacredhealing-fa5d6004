@@ -956,72 +956,18 @@ const Music: React.FC = () => {
 
         <div className="akasha-div" style={{ margin: '28px 0 8px' }} />
 
-        {/* UPGRADE SECTION */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 18px' }}>
-          <div className="sec-dot" />
-          <div>
-            <span className="micro" style={{ marginBottom: 2 }}>Akasha-Infinity Access Architecture</span>
-            <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Unlock Your Frequency</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-          <div className="up-card up-free">
-            <div className="up-tier">Free · Seeker</div>
-            <div className="up-name">Taste the Field</div>
-            <div className="up-price">€0 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>/ forever</span></div>
-            <ul className="up-feats">
-              <li>Automatic 30-second preview of every track</li>
-              <li>No uploads needed — browser clips automatically</li>
-              <li>Nadi Scanner — 1 Jyotish field scan per day</li>
-              <li className="dim">Full streaming (Prana-Flow+)</li>
-              <li className="dim">Downloads (Siddha-Quantum+)</li>
-            </ul>
-            <button className="cta-outline">Explore Free Access</button>
-          </div>
-
-          <div className="up-card up-prana">
-            <div className="up-tier">Prana-Flow</div>
-            <div className="up-name">Practitioner</div>
-            <div className="up-price">€19 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>/ month</span></div>
-            <ul className="up-feats">
-              <li>Full streaming — all {tracks.length} tracks unlimited</li>
-              <li>Nadi Scanner — unlimited daily scans</li>
-              <li>Jyotish frequency prescription (full depth)</li>
-              <li className="dim">Downloads (Siddha-Quantum+)</li>
-            </ul>
-            <button className="cta-gold" onClick={handleUpgrade}>Start Free — 7 Days, Then €19/mo</button>
-          </div>
-
-          <div className="up-card up-siddha">
-            <div className="up-tier">Siddha-Quantum</div>
-            <div className="up-name">Siddha</div>
-            <div className="up-price">€45 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}>/ month</span></div>
-            <ul className="up-feats">
-              <li>Everything in Prana-Flow</li>
-              <li>Full high-quality downloads — all formats</li>
-              <li>Custom mantra creation with Kritagya Das</li>
-              <li>Custom healing beat production request</li>
-              <li>Early access to all new releases</li>
-            </ul>
-            <button className="cta-gold" onClick={handleUpgrade}>Activate Siddha-Quantum · €45/mo</button>
-          </div>
-
-          <div className="up-card up-akasha">
-            <div className="up-tier c">Akasha-Infinity · Eternal</div>
-            <div className="up-name">Akasha Master</div>
-            <div className="up-price" style={{ background: 'linear-gradient(90deg,#D4AF37,#F1DFA6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              €2997 <span style={{ fontSize: 13, fontWeight: 500, WebkitTextFillColor: 'var(--muted)' }}>/ lifetime</span>
+        {/* SINGLE UNLOCK BANNER — replaces the four tier comparison cards */}
+        {userTierRank < 3 && (
+          <div style={{ padding: '24px 20px', borderRadius: 28, background: 'rgba(212,175,55,.05)', border: '1px solid rgba(212,175,55,.22)', textAlign: 'center' }}>
+            <div style={{ fontWeight: 800, fontSize: 17, color: 'rgba(255,255,255,.92)', marginBottom: 6 }}>
+              Hear everything, whenever you like
             </div>
-            <ul className="up-feats">
-              <li>Everything — unlocked eternally</li>
-              <li>Lifetime download vault — all future releases</li>
-              <li>Custom mantra + healing beat co-creation</li>
-              <li>Zero cost on all future releases — forever</li>
-            </ul>
-            <button className="cta-akasha" onClick={handleUpgrade}>Activate Akasha-Infinity · €2997</button>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', lineHeight: 1.6, marginBottom: 18 }}>
+              Prana-Flow unlocks every song, meditation and beat in full — no more 30-second previews.
+            </p>
+            <button className="cta-gold" onClick={handleUpgrade}>Unlock Full Access · €19/mo</button>
           </div>
-        </div>
+        )}
 
         {/* MASTERING — now lives on Explore, this is just a pointer */}
         <div
