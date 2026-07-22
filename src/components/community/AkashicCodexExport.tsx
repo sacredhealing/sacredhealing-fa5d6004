@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { listChapters, listChapterTransmitters } from "@/lib/codex/api";
 
 const GOLD = "#D4AF37";
 const CYAN = "#22D3EE";
@@ -19,32 +20,46 @@ export default function AkashicCodexExport({ onClose }: Props) {
   const run = async () => {
     setPhase("loading");
     try {
-      const { data: entries, error } = await supabase
-        .from("book_entries" as any)
-        .select("id,title,content,tags,book_type,created_at")
-        .eq("book_type", "akashic_codex")
-        .eq("is_archived", false)
-        .order("created_at", { ascending: true })
-        .limit(500);
-      if (error) throw error;
-      if (!entries || entries.length === 0) {
+      // Real source: the Akashic Codex (codex_type "akasha") — chapters woven
+      // from your transmissions, not the older book_entries table.
+      const chapters = await listChapters("akasha");
+      if (!chapters || chapters.length === 0) {
         setPhase("ready");
         setResults([]);
         return;
       }
 
-      setPhase("classifying");
-      setProgress({ done: 0, total: entries.length });
+      // Assemble readable content per chapter from the woven prose fields,
+      // and grab who it was channelled through.
+      const withContent = await Promise.all(
+        chapters.map(async (ch: any) => {
+          const content = [ch.opening_hook, ch.prose_woven, ch.closing_reflection]
+            .filter(Boolean)
+            .join("\n\n");
+          let transmitters: string[] = [];
+          try {
+            transmitters = await listChapterTransmitters(ch.id);
+          } catch {
+            transmitters = [];
+          }
+          return { id: ch.id, title: ch.title, content, transmitters, order_index: ch.order_index };
+        })
+      );
 
-      const BATCH_SIZE = 8;
+      const usable = withContent.filter((c) => c.content && c.content.trim().length > 0);
+
+      setPhase("classifying");
+      setProgress({ done: 0, total: usable.length });
+
+      const BATCH_SIZE = 6;
       const classified: any[] = [];
 
-      for (let i = 0; i < entries.length; i += BATCH_SIZE) {
-        const batch = entries.slice(i, i + BATCH_SIZE);
-        const batchPayload = batch.map((e: any) => ({
+      for (let i = 0; i < usable.length; i += BATCH_SIZE) {
+        const batch = usable.slice(i, i + BATCH_SIZE);
+        const batchPayload = batch.map((e) => ({
           id: e.id,
           title: e.title,
-          content: (e.content || "").slice(0, 1200),
+          content: e.content.slice(0, 1500),
         }));
 
         try {
@@ -53,12 +68,12 @@ export default function AkashicCodexExport({ onClose }: Props) {
               messages: [
                 {
                   role: "user",
-                  content: `You are identifying which entries below are teachings on specific Bhagavad Gita verses. For EACH entry, determine: is it a commentary/teaching tied to a specific Bhagavad Gita chapter and verse? If yes, give your best-guess chapter (1-18) and verse number. If it's general spiritual knowledge not tied to a specific Gita verse, mark is_gita false.
+                  content: `You are identifying which chapters below are teachings on specific Bhagavad Gita verses. For EACH chapter, determine: is it a commentary/teaching tied to a specific Bhagavad Gita chapter and verse? If yes, give your best-guess chapter (1-18) and verse number. If it's general spiritual knowledge not tied to a specific Gita verse (even if Gita-adjacent), mark is_gita false.
 
 Respond ONLY with a JSON array, no markdown fences, no preamble, in this exact shape:
-[{"id":"...", "is_gita": true, "chapter": 4, "verse": 26, "confidence": "high", "reason": "mentions BG 4.26 sense withdrawal"}, ...]
+[{"id":"...", "is_gita": true, "chapter": 4, "verse": 26, "confidence": "high", "reason": "short reason"}, ...]
 
-Entries:
+Chapters:
 ${JSON.stringify(batchPayload)}`,
                 },
               ],
@@ -70,13 +85,13 @@ ${JSON.stringify(batchPayload)}`,
           const parsed = JSON.parse(raw);
           const byId: Record<string, any> = {};
           parsed.forEach((p: any) => { byId[p.id] = p; });
-          batch.forEach((e: any) => {
+          batch.forEach((e) => {
             const c = byId[e.id] || {};
             classified.push({
               id: e.id,
               title: e.title,
               content: e.content,
-              tags: e.tags,
+              transmitters: e.transmitters,
               is_gita: !!c.is_gita,
               chapter: c.chapter || null,
               verse: c.verse || null,
@@ -86,14 +101,14 @@ ${JSON.stringify(batchPayload)}`,
           });
         } catch (batchErr) {
           console.warn("Batch classification failed, keeping entries unclassified:", batchErr);
-          batch.forEach((e: any) => {
+          batch.forEach((e) => {
             classified.push({
-              id: e.id, title: e.title, content: e.content, tags: e.tags,
+              id: e.id, title: e.title, content: e.content, transmitters: e.transmitters,
               is_gita: false, chapter: null, verse: null, confidence: "low", reason: "classification failed",
             });
           });
         }
-        setProgress({ done: Math.min(i + BATCH_SIZE, entries.length), total: entries.length });
+        setProgress({ done: Math.min(i + BATCH_SIZE, usable.length), total: usable.length });
       }
 
       setResults(classified);
@@ -131,7 +146,7 @@ ${JSON.stringify(batchPayload)}`,
 
         <h1 style={{ color: GOLD, fontSize: 22, fontWeight: 900, marginBottom: 4 }}>Akashic Codex — Bhagavad Gita Extract</h1>
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 28 }}>
-          {gitaEntries.length} entries matched to a Gita chapter/verse · {otherEntries.length} not tied to a specific verse · {results.length} total. Chapter/verse are Gemini's best guess — please review before transmitting.
+          {gitaEntries.length} chapters matched to a Gita chapter/verse · {otherEntries.length} not tied to a specific verse · {results.length} total. Chapter/verse are Gemini's best guess — please review before transmitting.
         </p>
 
         {gitaEntries.length > 0 && (
@@ -146,6 +161,11 @@ ${JSON.stringify(batchPayload)}`,
                   <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, textTransform: "uppercase" }}>{e.confidence} confidence</span>
                 </div>
                 <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{e.title}</div>
+                {e.transmitters?.length > 0 && (
+                  <div style={{ color: GOLD, fontSize: 10, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
+                    Channelled through: {e.transmitters.join(", ")}
+                  </div>
+                )}
                 <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{e.content}</div>
                 {e.reason && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontStyle: "italic", marginTop: 6 }}>Why: {e.reason}</div>}
               </div>
@@ -161,6 +181,11 @@ ${JSON.stringify(batchPayload)}`,
             {otherEntries.map((e) => (
               <div key={e.id} style={{ marginBottom: 22, pageBreakInside: "avoid" }}>
                 <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{e.title}</div>
+                {e.transmitters?.length > 0 && (
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
+                    Channelled through: {e.transmitters.join(", ")}
+                  </div>
+                )}
                 <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{e.content}</div>
               </div>
             ))}
@@ -183,7 +208,7 @@ ${JSON.stringify(batchPayload)}`,
       <div style={{ fontSize: 40, marginBottom: 16 }}>📖</div>
       <h2 style={{ color: GOLD, fontSize: 18, fontWeight: 900, marginBottom: 10 }}>Export Akashic Codex → Gita PDF</h2>
       <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 24, maxWidth: 320 }}>
-        Pulls every entry from your Akashic Codex, asks Gemini which Bhagavad Gita chapter and verse each one belongs to, and lays it out so you can review and copy into the Gita space.
+        Pulls every chapter from your actual Akashic Codex, asks Gemini which Bhagavad Gita chapter and verse each one belongs to, and lays it out so you can review and copy into the Gita space.
       </p>
 
       {phase === "idle" && (
@@ -194,14 +219,14 @@ ${JSON.stringify(batchPayload)}`,
           Start
         </button>
       )}
-      {phase === "loading" && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>Loading your Codex…</div>}
+      {phase === "loading" && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>Loading your Codex chapters…</div>}
       {phase === "classifying" && (
         <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
           Identifying verses… {progress.done} / {progress.total}
         </div>
       )}
       {phase === "ready" && results.length === 0 && (
-        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>No Akashic Codex entries found.</div>
+        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>No Akashic Codex chapters with content found.</div>
       )}
       {phase === "error" && (
         <div style={{ color: "#e07070", fontSize: 13 }}>
