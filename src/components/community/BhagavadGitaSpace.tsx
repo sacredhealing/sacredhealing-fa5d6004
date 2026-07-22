@@ -212,7 +212,6 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
     byChapter[v.chapter].push(v);
   });
   const chapterNums = Object.keys(byChapter).map(Number).sort((a, b) => a - b);
-  const languagesPresent = new Set(verses.map((v: any) => v.language || "en"));
 
   return (
     <div className="c-chat-view">
@@ -418,7 +417,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
 
       {/* Reader language filter */}
       <div style={{ display: "flex", gap: 6, padding: "12px 16px 0", flexWrap: "wrap" }}>
-        {LANGUAGES.filter((l) => languagesPresent.has(l.value) || l.value === "en").map((l) => (
+        {LANGUAGES.map((l) => (
           <button
             key={l.value}
             onClick={() => setReaderLanguage(l.value)}
@@ -439,7 +438,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
         ))}
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 48px" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Loading the Gita…</div>
         ) : visibleVerses.length === 0 ? (
