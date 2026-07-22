@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AkashicCodexExport from "./AkashicCodexExport";
 
 const GOLD = "#D4AF37";
 const CYAN = "#22D3EE";
@@ -89,6 +90,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showImportPicker, setShowImportPicker] = useState(false);
+  const [showCodexExport, setShowCodexExport] = useState(false);
   const [bookEntries, setBookEntries] = useState<any[]>([]);
   const [loadingBookEntries, setLoadingBookEntries] = useState(false);
   const [importSearch, setImportSearch] = useState("");
@@ -384,7 +386,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
             onClick={openImportPicker}
             style={{
               width: "100%",
-              marginBottom: 14,
+              marginBottom: 10,
               padding: "9px 12px",
               borderRadius: 12,
               background: "rgba(34,211,238,0.08)",
@@ -397,6 +399,25 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
             }}
           >
             📖 Import from My Book
+          </button>
+
+          <button
+            onClick={() => setShowCodexExport(true)}
+            style={{
+              width: "100%",
+              marginBottom: 14,
+              padding: "9px 12px",
+              borderRadius: 12,
+              background: "rgba(212,175,55,0.06)",
+              border: `1px solid ${GOLD}33`,
+              color: GOLD,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: "pointer",
+              textAlign: "center",
+            }}
+          >
+            📄 Export Akashic Codex → Gita PDF
           </button>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 6 }}>
@@ -780,6 +801,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
           </div>
         </div>
       )}
+      {showCodexExport && <AkashicCodexExport onClose={() => setShowCodexExport(false)} />}
     </div>
   );
 }
