@@ -11,6 +11,17 @@ interface Props {
   onClose: () => void;
 }
 
+// The woven prose sometimes carries internal structure markers (like <t>...</t>
+// teaching-block tags) that were never meant to be shown to a reader. Strip them.
+function cleanContent(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/<\/?t>/gi, "")
+    .replace(/<\/?[a-z_]+>/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export default function AkashicCodexExport({ onClose }: Props) {
   const [phase, setPhase] = useState<"idle" | "loading" | "classifying" | "ready" | "error">("idle");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -33,9 +44,9 @@ export default function AkashicCodexExport({ onClose }: Props) {
       // and grab who it was channelled through.
       const withContent = await Promise.all(
         chapters.map(async (ch: any) => {
-          const content = [ch.opening_hook, ch.prose_woven, ch.closing_reflection]
-            .filter(Boolean)
-            .join("\n\n");
+          const content = cleanContent(
+            [ch.opening_hook, ch.prose_woven, ch.closing_reflection].filter(Boolean).join("\n\n")
+          );
           let transmitters: string[] = [];
           try {
             transmitters = await listChapterTransmitters(ch.id);
@@ -124,7 +135,6 @@ ${JSON.stringify(batchPayload)}`,
   const gitaEntries = results
     .filter((r) => r.is_gita && r.chapter)
     .sort((a, b) => (a.chapter - b.chapter) || ((a.verse || 0) - (b.verse || 0)));
-  const otherEntries = results.filter((r) => !(r.is_gita && r.chapter));
 
   if (phase === "ready" && results.length > 0) {
     return (
@@ -146,50 +156,30 @@ ${JSON.stringify(batchPayload)}`,
 
         <h1 style={{ color: GOLD, fontSize: 22, fontWeight: 900, marginBottom: 4 }}>Akashic Codex — Bhagavad Gita Extract</h1>
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 28 }}>
-          {gitaEntries.length} chapters matched to a Gita chapter/verse · {otherEntries.length} not tied to a specific verse · {results.length} total. Chapter/verse are Gemini's best guess — please review before transmitting.
+          {gitaEntries.length} chapters matched to a Gita chapter/verse, out of {results.length} scanned. Chapter/verse are Gemini's best guess — please review before transmitting.
         </p>
 
-        {gitaEntries.length > 0 && (
-          <>
-            <h2 style={{ color: CYAN, fontSize: 15, fontWeight: 800, marginBottom: 14, borderBottom: `1px solid ${CYAN}33`, paddingBottom: 6 }}>
-              Identified Gita Verses
-            </h2>
-            {gitaEntries.map((e) => (
-              <div key={e.id} style={{ marginBottom: 22, pageBreakInside: "avoid" }}>
-                <div style={{ display: "flex", gap: 10, alignItems: "baseline", marginBottom: 4 }}>
-                  <span style={{ color: GOLD, fontWeight: 900, fontSize: 14 }}>BG {e.chapter}.{e.verse || "?"}</span>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, textTransform: "uppercase" }}>{e.confidence} confidence</span>
+        {gitaEntries.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+            None of your Codex chapters were confidently matched to a specific Gita verse.
+          </div>
+        ) : (
+          gitaEntries.map((e) => (
+            <div key={e.id} style={{ marginBottom: 26, pageBreakInside: "avoid" }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "baseline", marginBottom: 4 }}>
+                <span style={{ color: GOLD, fontWeight: 900, fontSize: 14 }}>BG {e.chapter}.{e.verse || "?"}</span>
+                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, textTransform: "uppercase" }}>{e.confidence} confidence</span>
+              </div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{e.title}</div>
+              {e.transmitters?.length > 0 && (
+                <div style={{ color: GOLD, fontSize: 10, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
+                  Channelled through: {e.transmitters.join(", ")}
                 </div>
-                <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{e.title}</div>
-                {e.transmitters?.length > 0 && (
-                  <div style={{ color: GOLD, fontSize: 10, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
-                    Channelled through: {e.transmitters.join(", ")}
-                  </div>
-                )}
-                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{e.content}</div>
-                {e.reason && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontStyle: "italic", marginTop: 6 }}>Why: {e.reason}</div>}
-              </div>
-            ))}
-          </>
-        )}
-
-        {otherEntries.length > 0 && (
-          <>
-            <h2 style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, fontWeight: 800, margin: "24px 0 14px", borderBottom: "1px solid rgba(255,255,255,0.15)", paddingBottom: 6 }}>
-              Other Sacred Knowledge (not tied to a specific Gita verse)
-            </h2>
-            {otherEntries.map((e) => (
-              <div key={e.id} style={{ marginBottom: 22, pageBreakInside: "avoid" }}>
-                <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{e.title}</div>
-                {e.transmitters?.length > 0 && (
-                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
-                    Channelled through: {e.transmitters.join(", ")}
-                  </div>
-                )}
-                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{e.content}</div>
-              </div>
-            ))}
-          </>
+              )}
+              <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{e.content}</div>
+              {e.reason && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontStyle: "italic", marginTop: 6 }}>Why: {e.reason}</div>}
+            </div>
+          ))
         )}
 
         <style>{`
@@ -201,6 +191,7 @@ ${JSON.stringify(batchPayload)}`,
       </div>
     );
   }
+
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(5,5,5,0.95)", zIndex: 60, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
