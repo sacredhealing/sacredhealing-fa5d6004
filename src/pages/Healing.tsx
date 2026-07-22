@@ -844,14 +844,29 @@ const Healing: React.FC = () => {
         </Tabs>
       </section>
 
-      {/* Unlock the Library — merged: Prana-Flow subscription + the real 7/14/30-day breakdown + crypto */}
-      {/* (used to be two disconnected cards/sections; same Stripe/crypto handlers as before, just one place) */}
+      {/* Unlock the Library — Prana-Flow (€19/mo, real membership, unlocks everything) is the featured */}
+      {/* option since it's genuinely the best deal. Healing Monthly (€147/mo, healing-only) and the */}
+      {/* one-time Day-Pass sit below as smaller secondary options for people who want just the audio. */}
       <section id="booking-section" style={{ padding: '0 22px 32px', scrollMarginTop: 32 }}>
         {!hasHealingAccess ? (
           <div className="h-pricing">
             <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.3rem', color: 'white', textAlign: 'center', marginBottom: 8 }}>Unlock the Full Healing Library</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 20, maxWidth: 300, margin: '0 auto 20px', textAlign: 'center' }}>Divine Transmission Audios · Sacred Frequencies · Full Meditation Access — go monthly, or pick a one-time pass below.</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 18, maxWidth: 300, margin: '0 auto 18px', textAlign: 'center' }}>Divine Transmission Audios · Sacred Frequencies · Full Meditation Access — included in Prana-Flow.</div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/prana-flow')}
+              style={{ width: '100%', padding: 18, borderRadius: 22, background: 'linear-gradient(135deg, rgba(212,175,55,.2), rgba(212,175,55,.06))', border: '1.5px solid #D4AF37', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', marginBottom: 6, boxShadow: '0 0 24px rgba(212,175,55,.12)' }}
+            >
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(212,175,55,.7)', marginBottom: 5 }}>◈ Prana-Flow · Full Access</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: '#D4AF37' }}>€19/mo</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>The healing library, plus everything else in Prana-Flow</div>
+            </button>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 22 }}>The best value — one membership, everything unlocked</div>
+
+            <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '0 0 16px' }} />
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', textAlign: 'center', marginBottom: 14 }}>Prefer just the healing content, nothing else?</div>
 
             <button
               type="button"
@@ -860,14 +875,14 @@ const Healing: React.FC = () => {
                 void handleStripePayment('subscription');
               }}
               disabled={isProcessing}
-              style={{ width: '100%', padding: 16, borderRadius: 20, background: 'linear-gradient(135deg, rgba(212,175,55,.14), rgba(212,175,55,.04))', border: '1.5px solid #D4AF37', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', marginBottom: 8 }}
+              style={{ width: '100%', padding: 12, borderRadius: 16, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 16, paddingRight: 16 }}
             >
-              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 4 }}>Healing Monthly</div>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, color: '#D4AF37' }}>€147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}</div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.55)' }}>Healing Monthly</span>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: 'rgba(212,175,55,.75)' }}>€147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}</span>
             </button>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 16 }}>Cancel anytime</div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,.25)', textAlign: 'center', marginBottom: 14 }}>Cancel anytime</div>
 
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 10 }}>Day-Pass · One-Time</div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', textAlign: 'center', marginBottom: 10 }}>Or a Day-Pass · One-Time</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
               {HEALING_PLANS.map((plan) => (
                 <button
