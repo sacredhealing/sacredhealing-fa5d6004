@@ -1015,31 +1015,57 @@ export default function Explore() {
 
       {/* Sacred Commissions picker sheet */}
       <Dialog open={commissionsOpen} onOpenChange={setCommissionsOpen}>
-        <DialogContent className="max-w-md bg-[#0a0a0a] border-[#D4AF37]/25 p-5">
+        <DialogContent className="max-w-md bg-[#0a0a0a] border-[#D4AF37]/25 p-5 max-h-[85vh] overflow-y-auto">
           <div style={{ fontWeight: 800, fontSize: 17, color: 'rgba(255,255,255,.9)', marginBottom: 14 }}>
             {t('meditations.personalTransmissions')}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { key: 'wealth', price: '€47', title: t('meditations.wealthTitle'), sub: t('meditations.wealthSub') },
-              { key: 'booking', price: '€20–€97', title: t('meditations.bookingTitle'), sub: t('meditations.bookingSub') },
-              { key: 'creation', price: '€97–€197', title: t('meditations.creationTitle'), sub: t('meditations.creationSub') },
+              {
+                key: 'wealth', price: '€47', turnaround: '48hr delivery',
+                title: t('meditations.wealthTitle'), sub: t('meditations.wealthSub'),
+                diff: 'Fixed template, your name channeled in. Delivered as-is, no back-and-forth.',
+              },
+              {
+                key: 'booking', price: '€70–€97', turnaround: '3–5 day delivery',
+                title: t('meditations.bookingTitle'), sub: t('meditations.bookingSub'),
+                diff: 'Custom-channeled around your intention, with one revision round included.',
+              },
+              {
+                key: 'creation', price: '€97–€197', turnaround: '7–10 day delivery',
+                title: t('meditations.creationTitle'), sub: t('meditations.creationSub'),
+                diff: 'Full original composition, yours to use — for creators and healers.',
+              },
             ].map((item) => (
               <div
                 key={item.key}
-                onClick={() => { setCommissionsOpen(false); setActiveCommission(item.key); }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px 14px',
-                  borderRadius: 18, background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(212,175,55,0.15)', cursor: 'pointer',
+                  padding: '16px 16px', borderRadius: 20,
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(212,175,55,0.15)',
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>{item.price}</div>
-                  <div style={{ fontWeight: 700, fontSize: 13.5, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>{item.title}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>{item.sub}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'rgba(212,175,55,.8)' }}>{item.price}</span>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 600 }}>{item.turnaround}</span>
                 </div>
-                <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>{item.title}</div>
+                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', marginBottom: 10 }}>{item.sub}</div>
+                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: 14, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  {item.diff}
+                </div>
+                <button
+                  onClick={() => { setCommissionsOpen(false); setActiveCommission(item.key); }}
+                  style={{
+                    width: '100%', padding: '11px 0', borderRadius: 100,
+                    background: 'linear-gradient(135deg,#D4AF37,#f0d878)',
+                    color: '#050505', fontWeight: 800, fontSize: 11.5,
+                    letterSpacing: '.05em', textTransform: 'uppercase',
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >
+                  Request This
+                </button>
               </div>
             ))}
           </div>
