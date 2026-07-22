@@ -2884,7 +2884,24 @@
     "shareGraphic": {
       "download": "Last ned bilde",
       "title": "Del ditt mantra"
-    }
+    },
+    "onboardEyebrow": "Ny her? Kom i gang på 30 sekunder",
+    "onboardBody": "Et mantra er en kort hellig frase du gjentar mens den spilles. Denne siden foreslår ett basert på dagens dato og fødselskartet ditt — eller du kan velge et hvilket som helst nedenfor. Trykk spill, så teller den repetisjonene for deg.",
+    "onboardDismiss": "Lukk",
+    "horaGlossary": "En \"Hora\" er en planettime — vedisk tradisjon holder at hver time på døgnet styres av en planet, og enkelte mantraer passer til hver av dem.",
+    "bhriguPlain": "Vi har sett på fødselskartet ditt og dagens planettime — her er mantraet som passer deg akkurat nå.",
+    "playerExplainer": "Trykk på den gylne knappen under. Den gjentar denne sangen 108 ganger og teller hver repetisjon for deg.",
+    "nowReciting": "Reciterer nå",
+    "dayStreak": "dagers rekke",
+    "resumeFrom": "Fortsett fra {{count}}/108",
+    "upgradeTitle": "Lås opp hele mantrabiblioteket",
+    "upgradeSub": "{{tier}} låser opp alle gjenværende mantraer",
+    "upgradeCta": "Oppgrader",
+    "filterAll": "Alle",
+    "filterUnlocked": "Låst opp",
+    "filterMine": "Min planet",
+    "noMatchesFilter": "Ingen mantraer matcher dette filteret i denne kategorien.",
+    "completionToast": "108 reciteringer fullført 🕉"
   },
   "spiritualEducation": {
     "title": "Spirituell utdanning",
