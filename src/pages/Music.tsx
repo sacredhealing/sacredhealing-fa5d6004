@@ -18,8 +18,9 @@ import React, {
 } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  Play, Pause, Lock, ArrowLeft, Loader2, Sparkles, Crown,
+  Play, Pause, Lock, ArrowLeft, Loader2, Sparkles, Crown, ListPlus, ListMusic,
 } from 'lucide-react';
+import { AddToPlaylistSheet } from '@/components/music/AddToPlaylistSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { safePlay } from '@/utils/safeAudioPlay';
@@ -567,6 +568,7 @@ const TrackRow: React.FC<{
   const live = isActive && isPlaying;
   const hzLabel = getHzLabel(track.frequency_band);
   const showCountdown = isActive && !hasFullAccess && secondsLeft > 0 && secondsLeft <= PREVIEW_SECONDS;
+  const [addOpen, setAddOpen] = useState(false);
 
   return (
     <div
@@ -574,6 +576,7 @@ const TrackRow: React.FC<{
       style={!live ? { border: isActive ? '1px solid rgba(212,175,55,.3)' : '1px solid transparent', background: isActive ? 'rgba(212,175,55,.04)' : undefined } : undefined}
       onClick={() => locked ? onLock(track) : onPlay(track)}
     >
+      <AddToPlaylistSheet trackId={track.id} open={addOpen} onOpenChange={setAddOpen} />
       {/* Cover — real image from Supabase cover_image_url */}
       <div className="cover-wrap">
         <div className="cover-inner">
@@ -616,6 +619,12 @@ const TrackRow: React.FC<{
 
       {/* Controls */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <button
+          onClick={e => { e.stopPropagation(); setAddOpen(true); }}
+          style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'transparent', color: 'rgba(255,255,255,.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+        >
+          <ListPlus size={15} />
+        </button>
         {locked ? (
           <>
             <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -919,6 +928,21 @@ const Music: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* YOUR PLAYLISTS — entry point */}
+        <div
+          onClick={() => navigate('/playlists')}
+          style={{ margin: '0 0 16px', padding: '14px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(212,175,55,.16)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+        >
+          <div style={{ width: 40, height: 40, borderRadius: 13, flexShrink: 0, background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ListMusic size={18} style={{ color: '#D4AF37' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)' }}>Your Playlists</div>
+            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', marginTop: 1 }}>Create and play your own mixes</div>
+          </div>
+          <div style={{ color: 'rgba(212,175,55,.5)', fontSize: 16, flexShrink: 0 }}>›</div>
+        </div>
 
         {/* TRACK LIBRARY */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0 14px' }}>
