@@ -158,9 +158,10 @@ function BottomNavInner() {
       >
         {NAV_ITEMS.map((item) => {
           const isActive = activeTo === item.to;
+          const showBadge = item.to === '/explore' && unreadCount > 0;
           return (
+            <div key={item.to} className="relative min-w-0 w-full">
             <Link
-              key={item.to}
               to={item.to}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-300 min-w-0 w-full overflow-hidden',
@@ -184,20 +185,6 @@ function BottomNavInner() {
                     style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }}
                   />
                 )}
-                {item.to === '/explore' && unreadCount > 0 && (
-                  <div
-                    className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-[4px] rounded-full flex items-center justify-center text-[10px] font-black"
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 70%)',
-                      color: '#1a1300',
-                      border: '1.5px solid rgba(0,0,0,.4)',
-                      boxShadow:
-                        '0 0 0 3px #050505, 0 0 10px 2px rgba(212,175,55,.85), 0 0 22px 6px rgba(212,175,55,.45)',
-                    }}
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </div>
-                )}
               </div>
               <span
                 className="text-center block w-full min-w-0 px-0.5"
@@ -217,6 +204,21 @@ function BottomNavInner() {
                 {item.label}
               </span>
             </Link>
+            {showBadge && (
+              <div
+                className="absolute top-0.5 right-[18%] min-w-[16px] h-[16px] px-[4px] rounded-full flex items-center justify-center text-[9.5px] font-black pointer-events-none z-10"
+                style={{
+                  background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 70%)',
+                  color: '#1a1300',
+                  border: '1.5px solid rgba(0,0,0,.4)',
+                  boxShadow:
+                    '0 0 0 3px #050505, 0 0 10px 2px rgba(212,175,55,.85), 0 0 22px 6px rgba(212,175,55,.45)',
+                }}
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </div>
+            )}
+            </div>
           );
         })}
       </div>

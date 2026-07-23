@@ -48,16 +48,24 @@ export const UnreadMessagesProvider: React.FC<{ children: React.ReactNode }> = (
       setGroupUnread(0);
       return;
     }
-    const [{ count }, { data: groupCount }] = await Promise.all([
-      supabase
+    try {
+      const { count } = await supabase
         .from('private_messages')
         .select('id', { count: 'exact', head: true })
         .eq('receiver_id', user.id)
-        .eq('is_read', false),
-      supabase.rpc('get_unread_group_count', { _user_id: user.id }),
-    ]);
-    setPrivateUnread(count || 0);
-    setGroupUnread(typeof groupCount === 'number' ? groupCount : 0);
+        .eq('is_read', false);
+      setPrivateUnread(count || 0);
+    } catch (e) {
+      console.error('[UnreadMessages] private count failed:', e);
+    }
+    try {
+      const { data: groupCount, error } = await supabase.rpc('get_unread_group_count', { _user_id: user.id });
+      if (error) throw error;
+      setGroupUnread(typeof groupCount === 'number' ? groupCount : 0);
+    } catch (e) {
+      // Expected until supabase/RUN_THIS_group_chat_read_tracking.sql has been run — fail silent, not fatal.
+      setGroupUnread(0);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -78,7 +86,11 @@ export const UnreadMessagesProvider: React.FC<{ children: React.ReactNode }> = (
       .from('chat_members')
       .select('room_id')
       .eq('user_id', user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[UnreadMessages] room membership fetch failed:', error);
+          return;
+        }
         myRoomIdsRef.current = new Set((data || []).map((r: any) => r.room_id));
       });
   }, [user]);
