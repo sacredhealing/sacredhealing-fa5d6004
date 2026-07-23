@@ -36,6 +36,7 @@ const ADMIN_SECTIONS = [
   { icon: "🎧", label: "Meditations",          desc: "Upload and manage meditation audio files",        path: "/admin/meditations"       },
   { icon: "✨", label: "Healing Audio",        desc: "Manage healing space audio content",             path: "/admin/healing-audio"     },
   { icon: "🎵", label: "Music Store",          desc: "Upload and manage music tracks for sale",         path: "/admin/music-store"       },
+  { icon: "🔓", label: "Content Vault",        desc: "Paid meditations, audio, video — post as chat drops", path: "/admin/content-vault" },
   { icon: "👑", label: "Mantras",             desc: "Manage sacred mantras & reward points",        path: "/admin/mantras"           },
   { icon: "🛍️", label: "Shop Products",       desc: "Manage Laila's clothing and art for sale",        path: "/admin/shop"              },
   { icon: "🔮", label: "Private Sessions",     desc: "Session types, packages, and Calendly links",    path: "/admin/private-sessions"  },

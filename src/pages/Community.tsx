@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { getTierRank } from "@/lib/tierAccess";
 import CallRecorderBar from "@/components/community/CallRecorderBar";
 import BhagavadGitaSpace from "@/components/community/BhagavadGitaSpace";
+import ContentDropCard from "@/components/community/ContentDropCard";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
@@ -580,6 +581,30 @@ const CSS = `
 .c-reaction-count { font-size:10px; font-weight:800; color:rgba(212,175,55,.6); }
 
 /* ── INPUT BAR — NEVER CUT OFF ── */
+/* ── CONTENT DROP CARD ── */
+.c-drop-wrap { align-self: flex-start; max-width: 82%; width: 82%; margin: 4px 0; }
+.c-drop-eyebrow { font-size: 8px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: rgba(212,175,55,.55); margin-bottom: 6px; padding-left: 4px; display: flex; align-items: center; gap: 6px; }
+.c-drop-dot { width: 5px; height: 5px; border-radius: 50%; background: #D4AF37; }
+.c-drop-card { border-radius: 22px; overflow: hidden; border: 1px solid rgba(212,175,55,.28); background: linear-gradient(180deg, rgba(212,175,55,.06), rgba(255,255,255,.02)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.c-drop-media { height: 140px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 30% 20%, rgba(212,175,55,.18), transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(34,211,238,.1), transparent 55%), #0a0a0a; display: flex; align-items: center; justify-content: center; }
+.c-drop-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; }
+.c-drop-media::after { content: ''; position: absolute; inset: 0; backdrop-filter: blur(14px); background: rgba(5,5,5,.35); }
+.c-drop-media.unlocked::after { content: none; }
+.c-drop-play { position: relative; z-index: 2; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 16px; backdrop-filter: blur(6px); cursor: pointer; color: #fff; }
+.c-drop-lock { position: absolute; z-index: 3; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 8px; background: rgba(5,5,5,.7); border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.c-drop-duration { position: absolute; z-index: 3; bottom: 10px; left: 10px; font-size: 9px; font-weight: 800; letter-spacing: .1em; padding: 4px 9px; border-radius: 20px; background: rgba(5,5,5,.7); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.75); }
+.c-drop-player, .c-drop-audio-player { position: relative; z-index: 4; width: 100%; }
+.c-drop-audio-player { position: absolute; bottom: 8px; left: 8px; right: 8px; width: calc(100% - 16px); height: 34px; }
+.c-drop-body { padding: 13px 15px 15px; }
+.c-drop-title { font-weight: 900; font-size: 14px; letter-spacing: -.02em; color: #fff; }
+.c-drop-desc { font-size: 11.5px; color: rgba(255,255,255,.55); margin-top: 4px; line-height: 1.5; }
+.c-drop-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.c-drop-price { font-size: 16px; font-weight: 900; color: #D4AF37; }
+.c-drop-price span { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.35); margin-left: 4px; }
+.c-unlock-btn { background: radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%); color: #1a1300; border: none; padding: 8px 16px; border-radius: 13px; font-weight: 900; font-size: 11.5px; cursor: pointer; box-shadow: 0 6px 16px rgba(212,175,55,.25); }
+.c-unlock-btn.owned { background: rgba(34,211,238,.12); color: #22D3EE; border: 1px solid rgba(34,211,238,.35); box-shadow: none; }
+.c-unlock-btn:disabled { opacity: .5; cursor: default; }
+
 .c-input-bar {
   flex-shrink: 0;
   padding: 10px 14px calc(64px + max(14px, env(safe-area-inset-bottom)));
@@ -960,7 +985,9 @@ const Community = () => {
   console.log("[Community] isAdmin:", isAdmin);
 
   // UI state
-  const [mobileTab, setMobileTab] = useState<"chat" | "feed" | "members">("chat");
+  const [mobileTab, setMobileTab] = useState<"chat" | "feed" | "members" | "library">("chat");
+  const [libraryItems, setLibraryItems] = useState<any[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -985,7 +1012,55 @@ const Community = () => {
   const [feedFile, setFeedFile] = useState<File | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
+  const [contentMap, setContentMap] = useState<Record<string, any>>({});
+  const [myPurchasedIds, setMyPurchasedIds] = useState<Set<string>>(new Set());
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any)
+      .from('content_vault_purchases')
+      .select('content_id')
+      .eq('user_id', user.id)
+      .then(({ data }: any) => {
+        setMyPurchasedIds(new Set((data || []).map((r: any) => r.content_id)));
+      });
+  }, [user]);
+
+  const fetchLibrary = useCallback(async () => {
+    if (!user) return;
+    setLibraryLoading(true);
+    const { data, error } = await (supabase as any).rpc('get_my_library', { _user_id: user.id });
+    if (error) {
+      console.error('fetchLibrary error:', error);
+      setLibraryItems([]);
+    } else {
+      setLibraryItems(data || []);
+    }
+    setLibraryLoading(false);
+  }, [user]);
+
+  const ensureContentLoaded = useCallback(async (ids: string[]) => {
+    setContentMap((prev) => {
+      const missing = ids.filter((id) => id && !prev[id]);
+      if (missing.length > 0) {
+        (supabase as any)
+          .from('content_vault')
+          .select('*')
+          .in('id', missing)
+          .then(({ data }: any) => {
+            if (data && data.length > 0) {
+              setContentMap((cur) => {
+                const next = { ...cur };
+                data.forEach((row: any) => { next[row.id] = row; });
+                return next;
+              });
+            }
+          });
+      }
+      return prev;
+    });
+  }, []);
   const [commentsByPostId, setCommentsByPostId] = useState<Record<string, FeedComment[]>>({});
   const [commentDraft, setCommentDraft] = useState("");
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
@@ -1134,12 +1209,14 @@ const Community = () => {
           user_name: row.user_name || (row.user_id === user?.id ? "You" : (nameMap[row.user_id] || "Member")),
         }));
         setMessages(enriched);
+        const dropIds = enriched.filter((m: any) => m.message_type === 'content_drop' && m.content_id).map((m: any) => m.content_id);
+        if (dropIds.length > 0) ensureContentLoaded(dropIds);
       } finally {
         if (fetchInProgressRef.current === channelId) fetchInProgressRef.current = null;
         setLoading(false);
       }
     },
-    [roomIds, user]
+    [roomIds, user, ensureContentLoaded]
   );
 
   // Fetch feed posts (admin posts); include likes/comments counts and current user's like state
@@ -2191,6 +2268,7 @@ const Community = () => {
           <button className={`c-top-tab ${mobileTab === "chat" ? "active" : ""}`} onClick={() => setMobileTab("chat")}>Chat</button>
           <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>
           <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => setMobileTab("members")}>Members</button>
+          <button className={`c-top-tab ${mobileTab === "library" ? "active" : ""}`} onClick={() => { setMobileTab("library"); fetchLibrary(); }}>Library</button>
         </div>
 
         {/* Body */}
@@ -2401,6 +2479,21 @@ const Community = () => {
                       const isMine = msg.user_id === user?.id;
                       const prev = messages[i - 1];
                       const consecutive = prev && prev.user_id === msg.user_id;
+
+                      if ((msg as any).message_type === 'content_drop' && (msg as any).content_id) {
+                        const content = contentMap[(msg as any).content_id];
+                        if (!content) return null;
+                        const myTierRank = getTierRank(members.find((m) => m.id === user?.id)?.subscription_tier);
+                        return (
+                          <ContentDropCard
+                            key={msg.id}
+                            content={content}
+                            owned={myPurchasedIds.has(content.id)}
+                            myTierRank={isAdmin ? 3 : myTierRank}
+                          />
+                        );
+                      }
+
                       return (
                         <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
                           <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive || isMine ? "hidden" : ""}`}>
@@ -2965,6 +3058,33 @@ const Community = () => {
                   );
                 });
               })()}
+            </div>
+          ) : mobileTab === "library" ? (
+            <div className="c-channels-view">
+              <div className="c-section-label">My Library</div>
+              {libraryLoading ? (
+                <div className="c-empty">
+                  <div className="c-empty-icon">⏳</div>
+                  <div className="c-empty-sub">LOADING LIBRARY</div>
+                </div>
+              ) : libraryItems.length === 0 ? (
+                <div className="c-empty">
+                  <div className="c-empty-icon">📚</div>
+                  <div className="c-empty-title">Nothing here yet</div>
+                  <div className="c-empty-sub">PURCHASES SHOW UP HERE PERMANENTLY</div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {libraryItems.map((item: any) => (
+                    <ContentDropCard
+                      key={item.id}
+                      content={item}
+                      owned={true}
+                      myTierRank={isAdmin ? 3 : getTierRank(members.find((m) => m.id === user?.id)?.subscription_tier)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ) : null}
         </div>

@@ -805,6 +805,7 @@ serve(async (req) => {
           const trackId = session.metadata?.track_id;
           const audioId = session.metadata?.audio_id;
           const transmissionId = session.metadata?.transmission_id;
+          const contentId = session.metadata?.content_id;
           const amountPaid = (session.amount_total ?? 0) / 100;
 
           if (trackId) {
@@ -821,6 +822,11 @@ serve(async (req) => {
             await supabaseAdmin.from("divine_transmission_purchases").upsert(
               { user_id: userId, transmission_id: transmissionId, stripe_session_id: session.id, amount_usd: amountPaid },
               { onConflict: "user_id,transmission_id" }
+            );
+          } else if (contentId && session.metadata?.type === "content_drop") {
+            await supabaseAdmin.from("content_vault_purchases").upsert(
+              { user_id: userId, content_id: contentId, stripe_session_id: session.id, amount_cents: session.amount_total ?? 0 },
+              { onConflict: "user_id,content_id" }
             );
           }
         } catch (contentPurchaseErr) {

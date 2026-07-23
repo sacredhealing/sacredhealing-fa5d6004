@@ -63,6 +63,7 @@ const Admin = React.lazy(() => import("./pages/Admin"));
 const AdminMeditations = React.lazy(() => import("./pages/AdminMeditations"));
 const AdminMeditationEdit = React.lazy(() => import("./pages/AdminMeditationEdit"));
 const AdminMusic = React.lazy(() => import("./pages/AdminMusic"));
+const AdminContentVault = React.lazy(() => import("./pages/AdminContentVault"));
 const AdminHealing = React.lazy(() => import("./pages/AdminHealing"));
 const AdminHealingEdit = React.lazy(() => import("./pages/AdminHealingEdit"));
 const AdminContent = React.lazy(() => import("./pages/AdminContent"));
@@ -583,6 +584,7 @@ function AppRoutes() {
                   <Route path="/admin/meditations" element={<AdminMeditations />} />
                   <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
                   <Route path="/admin/music" element={<AdminMusic />} />
+                  <Route path="/admin/content-vault" element={<AdminContentVault />} />
                   <Route path="/admin/healing" element={<AdminHealing />} />
                   <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
                   <Route path="/admin/content" element={<AdminContent />} />
