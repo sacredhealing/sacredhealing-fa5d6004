@@ -305,15 +305,17 @@ const CSS = `
 .c-back-btn:hover { background:rgba(212,175,55,.08); border-color:rgba(212,175,55,.2); color:#D4AF37; }
 
 .c-chat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: rgba(212,175,55,.08);
-  border: 1px solid rgba(212,175,55,.18);
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #17140a, #0a0a0a);
+  border: 1px solid rgba(212,175,55,.22);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
+  font-size: 15px;
+  font-weight: 900;
+  color: rgba(212,175,55,.75);
   flex-shrink: 0;
 }
 
@@ -445,19 +447,19 @@ const CSS = `
 
 .c-date-divider {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 12px 0 6px;
-}
-.c-date-divider::before,.c-date-divider::after {
-  content:'';flex:1;height:1px;background:rgba(255,255,255,.05);
+  justify-content: center;
+  margin: 16px 0 14px;
 }
 .c-date-text {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: .4em;
+  letter-spacing: .2em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.4);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  padding: 6px 14px;
+  border-radius: 20px;
   white-space: nowrap;
 }
 
@@ -465,7 +467,7 @@ const CSS = `
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  max-width: 80%;
+  max-width: 78%;
   align-self: flex-start;
   animation: msgIn .2s ease-out;
 }
@@ -474,24 +476,24 @@ const CSS = `
 @keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
 .c-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 11px;
-  background: rgba(212,175,55,.1);
-  border: 1px solid rgba(212,175,55,.2);
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #17140a, #0a0a0a);
+  border: 1px solid rgba(255,255,255,.08);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
   font-weight: 900;
-  color: #D4AF37;
+  color: rgba(212,175,55,.65);
   flex-shrink: 0;
   align-self: flex-end;
 }
-.c-avatar.mine { background:rgba(212,175,55,.15); }
+.c-avatar.mine { background:linear-gradient(145deg, rgba(212,175,55,.3), rgba(212,175,55,.12)); color:#fff; }
 .c-avatar.hidden { opacity: 0; pointer-events: none; }
 
-.c-msg-body { display: flex; flex-direction: column; gap: 2px; }
+.c-msg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
 .c-msg-meta {
   display: flex;
@@ -500,25 +502,26 @@ const CSS = `
   margin-bottom: 3px;
   padding-left: 2px;
 }
-.c-msg-author { font-weight:900; font-size:12px; letter-spacing:-.02em; color:#D4AF37; }
+.c-msg-author { font-weight:900; font-size:11.5px; letter-spacing:-.01em; color:#D4AF37; }
 .c-msg-role { font-size:8px; font-weight:800; letter-spacing:.3em; text-transform:uppercase; color:rgba(212,175,55,.35); }
 
 .c-bubble {
-  background: #0a0a0a;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 18px 18px 18px 4px;
-  padding: 10px 14px;
-  color: rgba(212,175,55,.9);
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 19px 19px 19px 5px;
+  padding: 10px 14px 8px;
+  color: rgba(255,255,255,.88);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.55;
   word-break: break-word;
   position: relative;
 }
 .c-bubble.mine {
-  background: rgba(212,175,55,.12);
-  border-color: rgba(212,175,55,.22);
-  border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 14px rgba(212,175,55,.08);
+  background: linear-gradient(135deg, rgba(212,175,55,.24), rgba(212,175,55,.11));
+  border: 1px solid rgba(212,175,55,.32);
+  border-radius: 19px 19px 5px 19px;
+  color: #fff;
+  box-shadow: 0 3px 16px rgba(212,175,55,.1);
 }
 
 .c-delete-btn {
@@ -537,26 +540,21 @@ const CSS = `
 .c-bubble:hover .c-delete-btn { opacity: 1; }
 
 .c-msg-time {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: rgba(212,175,55,.28);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,.32);
   margin-top: 3px;
   padding-left: 2px;
 }
-.c-msg-time.mine { text-align: right; padding-right: 2px; padding-left: 0; }
+.c-msg-time.mine { text-align: right; padding-right: 2px; padding-left: 0; display:flex; justify-content:flex-end; align-items:center; gap:4px; color: rgba(255,255,255,.4); }
 
 .c-msg-sent {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: rgba(212,175,55,.75);
-  margin-top: 2px;
-  padding-left: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #D4AF37;
+  display: inline;
 }
-.c-msg-sent.mine { text-align: right; padding-right: 2px; padding-left: 0; }
+.c-msg-sent.mine { text-align: right; }
 
 .c-reactions { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
 .c-reaction {
@@ -588,43 +586,45 @@ const CSS = `
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 22px;
-  padding: 4px 6px 4px 16px;
-  transition: border-color .2s;
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 26px;
+  padding: 5px 6px 5px 18px;
+  transition: border-color .2s, box-shadow .2s;
 }
 .c-input-row:focus-within {
-  border-color: rgba(212,175,55,.25);
-  box-shadow: 0 0 20px rgba(212,175,55,.06);
+  border-color: rgba(212,175,55,.32);
+  box-shadow: 0 0 0 3px rgba(212,175,55,.06);
 }
 .c-input-row input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-  color: rgba(255,255,255,.9);
+  color: rgba(255,255,255,.92);
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
+  font-size: 14.5px;
 }
-.c-input-row input::placeholder { color: rgba(255,255,255,.2); }
+.c-input-row input::placeholder { color: rgba(255,255,255,.25); }
 .c-send-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(212,175,55,.25), rgba(212,175,55,.45));
+  background: radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%);
   border: none;
-  color: #D4AF37;
+  color: #1a1300;
   font-size: 16px;
+  font-weight: 900;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all .2s;
+  box-shadow: 0 4px 16px rgba(212,175,55,.3);
+  transition: transform .12s ease, opacity .2s;
 }
-.c-send-btn:hover { background: linear-gradient(135deg, rgba(212,175,55,.35), rgba(212,175,55,.55)); }
-.c-send-btn:disabled { opacity: .3; cursor: default; }
+.c-send-btn:active { transform: scale(.92); }
+.c-send-btn:disabled { opacity: .25; cursor: default; box-shadow: none; }
 
 /* ── FEED VIEW ── */
 .c-feed-view {
@@ -892,15 +892,10 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
         ) : (
           messages.map((msg: any) => {
             const isMine = msg.sender_id === user?.id;
+            const isPending = String(msg.id || "").startsWith("temp-") || msg.status === "pending";
             return (
               <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
-                <div className={`c-avatar ${isMine ? "mine" : ""}`}>
-                  {getInitials(isMine ? "You" : msg.sender_profile?.full_name)}
-                </div>
                 <div className="c-msg-body">
-                  <div className="c-msg-meta">
-                    <span className="c-msg-author">{isMine ? "You" : (msg.sender_profile?.full_name || "Member")}</span>
-                  </div>
                   <div className={`c-bubble ${isMine ? "mine" : ""}`}>
                     {typeof msg.content === "string" && msg.content.startsWith("VIDEO_CALL:") ? (
                       <button
@@ -923,10 +918,8 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                   </div>
                   <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
                     {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                    {isMine && <span className="c-msg-sent mine">{isPending ? "○" : "✓✓"}</span>}
                   </div>
-                  {isMine && !(String(msg.id || "").startsWith("temp-") || msg.status === "pending") && (
-                    <div className={`c-msg-sent ${isMine ? "mine" : ""}`}>✓ Sent</div>
-                  )}
                 </div>
               </div>
             );
