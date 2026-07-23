@@ -580,7 +580,7 @@ const CSS = `
 /* ── INPUT BAR — NEVER CUT OFF ── */
 .c-input-bar {
   flex-shrink: 0;
-  padding: 10px 14px max(14px, env(safe-area-inset-bottom));
+  padding: 10px 14px calc(64px + max(14px, env(safe-area-inset-bottom)));
   background: rgba(5,5,5,.85);
   border-top: 1px solid rgba(255,255,255,.05);
 }
