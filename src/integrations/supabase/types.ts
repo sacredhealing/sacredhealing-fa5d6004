@@ -2272,29 +2272,42 @@ export type Database = {
       chat_messages: {
         Row: {
           content: string
+          content_id: string | null
           created_at: string
           id: string
           is_pinned: boolean | null
+          message_type: string | null
           room_id: string
           user_id: string
         }
         Insert: {
           content: string
+          content_id?: string | null
           created_at?: string
           id?: string
           is_pinned?: boolean | null
+          message_type?: string | null
           room_id: string
           user_id: string
         }
         Update: {
           content?: string
+          content_id?: string | null
           created_at?: string
           id?: string
           is_pinned?: boolean | null
+          message_type?: string | null
           room_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_messages_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_vault"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_messages_room_id_fkey"
             columns: ["room_id"]
