@@ -206,59 +206,63 @@ const CSS = `
 .c-channel-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 12px;
-  border: 1px solid rgba(255,255,255,.04);
-  border-radius: 18px;
-  margin-bottom: 6px;
+  gap: 13px;
+  padding: 13px 13px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 20px;
+  margin-bottom: 7px;
   cursor: pointer;
-  transition: all .2s;
-  background: rgba(255,255,255,.02);
+  transition: background .2s, border-color .2s, transform .12s;
+  background: rgba(255,255,255,.03);
   width: 100%;
   text-align: left;
   position: relative;
 }
 .c-channel-row:hover, .c-channel-row:active {
-  background: rgba(212,175,55,.06);
-  border-color: rgba(212,175,55,.15);
+  background: rgba(212,175,55,.07);
+  border-color: rgba(212,175,55,.22);
 }
-.c-channel-row.locked { opacity: .45; }
+.c-channel-row:active { transform: scale(.99); }
+.c-channel-row.locked { opacity: .4; }
 
 .c-ch-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 15px;
-  background: rgba(212,175,55,.07);
-  border: 1px solid rgba(212,175,55,.14);
+  background: linear-gradient(145deg, #17140a, #0a0a0a);
+  border: 1px solid rgba(212,175,55,.25);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
 }
-.c-ch-icon.sacred { background:rgba(34,211,238,.06); border-color:rgba(34,211,238,.18); }
-.c-ch-icon.private { background:rgba(212,175,55,.04); border-color:rgba(212,175,55,.1); }
+.c-ch-icon.sacred { background:linear-gradient(145deg, rgba(34,211,238,.14), #0a0a0a); border-color:rgba(34,211,238,.3); }
+.c-ch-icon.private { background:linear-gradient(145deg, rgba(212,175,55,.1), #0a0a0a); border-color:rgba(212,175,55,.16); }
 
 .c-ch-info { flex: 1; min-width: 0; }
 .c-ch-name {
   font-weight: 800;
-  font-size: 14px;
+  font-size: 14.5px;
   letter-spacing: -.02em;
-  color: rgba(255,255,255,.92);
+  color: rgba(255,255,255,.95);
 }
 .c-ch-desc {
-  font-size: 11px;
-  color: rgba(255,255,255,.35);
+  font-size: 11.5px;
+  color: rgba(255,255,255,.4);
   margin-top: 2px;
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .c-ch-arrow {
-  color: rgba(212,175,55,.35);
-  font-size: 16px;
+  color: rgba(212,175,55,.4);
+  font-size: 17px;
   flex-shrink: 0;
 }
 .c-lock-badge {
-  font-size: 12px;
+  font-size: 13px;
   flex-shrink: 0;
 }
 
