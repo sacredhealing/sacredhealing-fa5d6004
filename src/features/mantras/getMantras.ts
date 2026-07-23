@@ -16,6 +16,7 @@ export interface MantraItem {
   is_premium?: boolean;
   /** 0=Free, 1=Prana-Flow, 2=Siddha-Quantum, 3=Akasha-Infinity */
   required_tier?: number;
+  price_usd?: number;
   repetitionsFixed: 108;
 }
 

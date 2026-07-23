@@ -806,6 +806,7 @@ serve(async (req) => {
           const audioId = session.metadata?.audio_id;
           const transmissionId = session.metadata?.transmission_id;
           const contentId = session.metadata?.content_id;
+          const mantraId = session.metadata?.mantra_id;
           const amountPaid = (session.amount_total ?? 0) / 100;
 
           if (trackId) {
@@ -839,6 +840,11 @@ serve(async (req) => {
                 purchased_at: new Date().toISOString(),
               },
               { onConflict: "user_id,content_id" }
+            );
+          } else if (mantraId && session.metadata?.type === "mantra") {
+            await supabaseAdmin.from("mantra_purchases").upsert(
+              { user_id: userId, mantra_id: mantraId, stripe_session_id: session.id, amount_usd: amountPaid },
+              { onConflict: "user_id,mantra_id" }
             );
           }
         } catch (contentPurchaseErr) {

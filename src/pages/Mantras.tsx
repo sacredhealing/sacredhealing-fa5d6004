@@ -816,6 +816,7 @@ const Mantras = () => {
 
   const [mantras, setMantras] = useState<MantraItem[]>([]);
   const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null);
+  const [purchasedMantraIds, setPurchasedMantraIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userTimezone] = useState<string>('Europe/Stockholm');
   const [count, setCount] = useState(0);
@@ -994,6 +995,31 @@ const Mantras = () => {
   }, [tier, isAdmin, jyotishRecommendation?.recommendedMantraId, dashaPlanet]);
 
   useEffect(() => {
+    if (!user) return;
+    (supabase as any)
+      .from('mantra_purchases')
+      .select('mantra_id')
+      .eq('user_id', user.id)
+      .then(({ data }: any) => {
+        setPurchasedMantraIds(new Set((data || []).map((r: any) => r.mantra_id)));
+      });
+  }, [user]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mantra_unlocked') && user) {
+      (supabase as any)
+        .from('mantra_purchases')
+        .select('mantra_id')
+        .eq('user_id', user.id)
+        .then(({ data }: any) => {
+          setPurchasedMantraIds(new Set((data || []).map((r: any) => r.mantra_id)));
+        });
+      window.history.replaceState({}, '', '/mantras');
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (jyotishRecommendation?.recommendedMantraId && mantras.length > 0 && !selectedMantraId) {
       const rec = mantras.find((m) => m.id === jyotishRecommendation.recommendedMantraId);
       if (rec) setSelectedMantraId(rec.id);
@@ -1132,11 +1158,34 @@ const Mantras = () => {
     }
   }, [user, navigate]);
 
+  const handleBuyMantra = useCallback(async (m: MantraItem) => {
+    if (!user) { navigate('/auth'); return; }
+    try {
+      const { data, error } = await supabase.functions.invoke('create-mantra-checkout', {
+        body: { mantraId: m.id },
+      });
+      if (error) throw error;
+      if (data?.alreadyPurchased) {
+        setPurchasedMantraIds((prev) => new Set(prev).add(m.id));
+        return;
+      }
+      if (data?.url) window.location.href = data.url;
+      else throw new Error(data?.error || 'No checkout URL returned');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Checkout failed.');
+    }
+  }, [user, navigate]);
+
   const handleMantraSelect = useCallback((m: MantraItem, locked: boolean) => {
     if (locked) {
       if (!user) { navigate('/auth'); return; }
-      // Show upgrade checkout (Stripe — PRESERVED)
-      void handleUpgradeCheckout();
+      // Individual purchase, if this mantra has its own price — otherwise
+      // fall back to the tier upgrade flow (Stripe — PRESERVED).
+      if (m.price_usd && m.price_usd > 0) {
+        void handleBuyMantra(m);
+      } else {
+        void handleUpgradeCheckout();
+      }
       return;
     }
     setSelectedMantraId(m.id);
@@ -1206,13 +1255,13 @@ const Mantras = () => {
     if (filterMode === 'unlocked') {
       return group.filter((m) => {
         const requiredTier = (m.required_tier ?? (m.is_premium ? 1 : 0)) as number;
-        return isAdmin || requiredTier <= userRank;
+        return isAdmin || requiredTier <= userRank || purchasedMantraIds.has(m.id);
       });
     }
     // 'mine' — matches today's Dasha or Hora planet
     const relevantPlanet = dashaPlanet ?? currentHoraPlanet;
     return group.filter((m) => m.planet_type && normalizePlanetName(m.planet_type) === relevantPlanet);
-  }, [categorisedMantras, filterMode, isAdmin, userRank, dashaPlanet, currentHoraPlanet]);
+  }, [categorisedMantras, filterMode, isAdmin, userRank, dashaPlanet, currentHoraPlanet, purchasedMantraIds]);
 
   /* ── Tier-aware upgrade banner — hidden once nothing is left to unlock ── */
   const TIER_NAMES = ['Atma-Seed', 'Prana-Flow', 'Siddha-Quantum', 'Akasha-Infinity'];
@@ -1578,8 +1627,9 @@ const Mantras = () => {
                     const CardCatIcon = CAT_ICONS[ck];
                     const pct = getSuccessPercent(mp);
                     const requiredTier = (m.required_tier ?? (m.is_premium ? 1 : 0)) as number;
-                    const cardLocked = (requiredTier > userRank) && !isAdmin;
-                    const tierLabel = requiredTier >= 3 ? 'Akasha-Infinity'
+                    const cardLocked = (requiredTier > userRank) && !isAdmin && !purchasedMantraIds.has(m.id);
+                    const tierLabel = m.price_usd && m.price_usd > 0 ? `$${m.price_usd.toFixed(2)}`
+                      : requiredTier >= 3 ? 'Akasha-Infinity'
                       : requiredTier === 2 ? 'Siddha-Quantum'
                       : requiredTier === 1 ? 'Prana-Flow+'
                       : '';

@@ -331,6 +331,7 @@ export default function AdminContentVault() {
           required_tier: rank,
           category: 'general',
           planet_type: null,
+          price_usd: parseFloat(priceEuros || '0') || 0,
         }) as any);
         if (insertError) throw insertError;
         deepLink = '/mantras';
@@ -446,7 +447,7 @@ export default function AdminContentVault() {
               CATEGORY_CONFIG[category].destination === 'meditations' ? 'the Meditations page' :
               CATEGORY_CONFIG[category].destination === 'healing_audio' ? 'Sonic Treatments on the Healing page' :
               CATEGORY_CONFIG[category].destination === 'divine_transmissions' ? 'Explore Akasha (Divine Transmissions)' :
-              CATEGORY_CONFIG[category].destination === 'mantras' ? 'the Mantras page — note: mantras have no individual price, only tier-gating, so the price field below is ignored for this category' :
+              CATEGORY_CONFIG[category].destination === 'mantras' ? 'the Mantras page' :
               'the new Videos page (Content Vault purchase flow)'
             }
           </div>
