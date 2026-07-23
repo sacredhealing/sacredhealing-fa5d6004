@@ -73,16 +73,23 @@ const TIER_OPTIONS = [
 // 'healing' goes to the existing Healing Blessings page. Only 'video' has no
 // existing home, so it's the one category that stays on Content Vault's own
 // content_vault table + purchase flow + drop card.
-type Destination = 'music_tracks' | 'meditations' | 'healing_audio' | 'content_vault';
+type Destination = 'music_tracks' | 'meditations' | 'healing_audio' | 'divine_transmissions' | 'content_vault';
 
 const CATEGORY_CONFIG: Record<string, { label: string; destination: Destination; contentType?: string }> = {
   song: { label: 'Song', destination: 'music_tracks' },
   beat: { label: 'Beat', destination: 'music_tracks' },
   meditation: { label: 'Meditation', destination: 'meditations' },
   healing: { label: 'Healing Audio', destination: 'healing_audio' },
+  'divine-transmission': { label: 'Divine Transmission', destination: 'divine_transmissions' },
   video: { label: 'Video', destination: 'content_vault', contentType: 'video' },
 };
 const CATEGORIES = Object.keys(CATEGORY_CONFIG);
+
+// divine_transmissions.required_tier is a plain number (0-3), not the text
+// slug used everywhere else in this form — same scale as getTierRank though.
+const TIER_SLUG_TO_RANK: Record<string, number> = {
+  '': 3, free: 0, 'prana-flow': 1, 'siddha-quantum': 2, 'akasha-infinity': 3,
+};
 
 export default function AdminContentVault() {
   const { user } = useAuth();
@@ -206,8 +213,14 @@ export default function AdminContentVault() {
       // Music goes to the same public 'songs' bucket AdminMusic.tsx already uses,
       // so it's playable the exact same way the Music Store already plays tracks.
       // Everything else uses the private content-vault bucket (signed-URL only).
-      const bucket = config.destination === 'music_tracks' ? 'songs' : 'content-vault';
-      const mediaPath = config.destination === 'music_tracks' ? uniqueName : `${user.id}/${uniqueName}`;
+      const bucket =
+        config.destination === 'music_tracks' ? 'songs' :
+        config.destination === 'divine_transmissions' ? 'audio' :
+        'content-vault';
+      const mediaPath =
+        config.destination === 'music_tracks' || config.destination === 'divine_transmissions'
+          ? uniqueName
+          : `${user.id}/${uniqueName}`;
 
       await uploadWithProgress(bucket, mediaPath, mediaFile, accessToken, setUploadProgress);
 
@@ -278,6 +291,29 @@ export default function AdminContentVault() {
         } as any);
         if (insertError) throw insertError;
         deepLink = '/healing';
+      } else if (config.destination === 'divine_transmissions') {
+        const publicUrl = supabase.storage.from('audio').getPublicUrl(mediaPath).data.publicUrl;
+        const rank = TIER_SLUG_TO_RANK[tierRequired] ?? 3;
+        const { error: insertError } = await (supabase.from('divine_transmissions' as any).insert({
+          title: title.trim(),
+          description: description.trim() || null,
+          category: 'general',
+          audio_url_en: publicUrl,
+          audio_url_sv: null,
+          content_type: 'audio',
+          video_url_en: null,
+          video_url_sv: null,
+          price_usd: parseFloat(priceEuros || '0') || null,
+          cover_image_url: thumbnailUrl,
+          duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : 0,
+          is_free: !tierRequired || tierRequired === 'free',
+          required_tier: rank,
+          series_name: null,
+          series_order: null,
+          published: true,
+        }) as any);
+        if (insertError) throw insertError;
+        deepLink = '/explore-akasha';
       } else {
         // video — no existing home, stays on Content Vault's own table + purchase flow
         const { data: inserted, error: insertError } = await (supabase as any)
@@ -321,7 +357,7 @@ export default function AdminContentVault() {
           const { error: msgError } = await (supabase as any).from('chat_messages').insert({
             room_id: roomId,
             user_id: user.id,
-            content: `🎁 New ${config.label.toLowerCase()} added — "${title.trim()}". Find it on ${deepLink === '/music' ? 'the Music page' : deepLink === '/meditations' ? 'the Meditations page' : 'the Healing page'}.`,
+            content: `🎁 New ${config.label.toLowerCase()} added — "${title.trim()}". Find it on ${deepLink === '/music' ? 'the Music page' : deepLink === '/meditations' ? 'the Meditations page' : deepLink === '/healing' ? 'the Healing page' : 'Explore Akasha'}.`,
             message_type: 'text',
           });
           if (msgError) throw msgError;
@@ -389,6 +425,7 @@ export default function AdminContentVault() {
               CATEGORY_CONFIG[category].destination === 'music_tracks' ? 'the Music page (its own purchase flow)' :
               CATEGORY_CONFIG[category].destination === 'meditations' ? 'the Meditations page' :
               CATEGORY_CONFIG[category].destination === 'healing_audio' ? 'the Healing Blessings page' :
+              CATEGORY_CONFIG[category].destination === 'divine_transmissions' ? 'Explore Akasha (Divine Transmissions)' :
               'the new Videos page (Content Vault purchase flow)'
             }
           </div>
