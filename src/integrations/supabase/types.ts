@@ -2304,6 +2304,32 @@ export type Database = {
           },
         ]
       }
+      chat_room_reads: {
+        Row: {
+          last_read_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_room_reads_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string
@@ -13867,6 +13893,7 @@ export type Database = {
           title: string
         }[]
       }
+      get_unread_group_count: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -13891,6 +13918,7 @@ export type Database = {
         Args: { p_context: string; p_teaching_id: string; p_user_id: string }
         Returns: undefined
       }
+      mark_room_read: { Args: { _room_id: string }; Returns: undefined }
       move_to_dlq: {
         Args: {
           dlq_name: string
