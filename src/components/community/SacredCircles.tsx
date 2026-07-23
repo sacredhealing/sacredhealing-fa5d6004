@@ -64,11 +64,10 @@ const SacredCircles = () => {
 
     // Mark this room's messages read so its unread badge clears app-wide.
     if (user) {
-      supabase
-        .rpc('mark_room_read', { _room_id: circle.id })
+      Promise.resolve(supabase.rpc('mark_room_read', { _room_id: circle.id }))
         .then(() => window.dispatchEvent(new CustomEvent('sqi:room-read')))
         .catch(() => {
-          // Expected until the group-read-tracking migration has been run — non-fatal.
+          // non-fatal
         });
     }
   };
