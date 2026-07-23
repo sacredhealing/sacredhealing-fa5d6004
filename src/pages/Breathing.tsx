@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useSiteContent } from '@/hooks/useSiteContent';
-import { SacredBreathingGuide } from '@/components/breathing/SacredBreathingGuide';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -259,44 +258,63 @@ const SQI_STYLES = `
     display: block;
   }
 
-  /* ── KRIYA PORTAL ── */
-  .kriya-portal {
+  /* ── 3-STEP BEGINNER GUIDE ── */
+  .howto-strip {
     margin: 0 20px 20px;
-    padding: 28px 24px;
-    background: linear-gradient(135deg, rgba(120,50,200,0.12) 0%, rgba(212,175,55,0.04) 100%);
-    border: 1px solid rgba(120,50,200,0.25);
-    border-radius: 32px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
+    padding: 16px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 20px;
   }
 
-  .kriya-portal::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(120,50,200,0.5), rgba(212,175,55,0.3), transparent);
+  .howto-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
 
-  .kriya-portal-title {
-    font-family: 'Cinzel', serif;
-    font-size: 18px;
-    font-weight: 700;
+  .howto-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.12);
+    border: 1px solid rgba(212,175,55,0.4);
     color: #D4AF37;
-    text-shadow: 0 0 20px rgba(212,175,55,0.4);
-    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
   }
 
-  .kriya-portal-sub {
-    color: rgba(255,255,255,0.4);
+  .howto-text {
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: rgba(255,255,255,0.55);
+  }
+
+  .howto-text strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+  }
+
+  .howto-arrow {
+    color: rgba(212,175,55,0.3);
     font-size: 12px;
-    letter-spacing: 0.08em;
-    margin-bottom: 28px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 380px) {
+    .howto-strip { flex-wrap: wrap; }
+    .howto-arrow { display: none; }
+    .howto-step { flex: 1 1 100%; }
   }
 
   /* ── PRANAYAMA CAVE GRID ── */
@@ -1066,28 +1084,34 @@ const Breathing: React.FC = () => {
           <div className="intro-banner glass-card">
             <p>
               {content['breathing_description'] ||
-                <>Enter the <strong>Cave of Pranayama</strong> — where breath becomes Bhakti-Algorithm. Each inhale draws cosmic Prana. Each exhale releases karmic density. <strong>Anahata opens. Healing flows.</strong></>
+                <>Conscious breathing to calm the nervous system and clear the mind. <strong>Pick a pattern below, press begin, and follow the orb.</strong></>
               }
             </p>
           </div>
 
-          <div className="cave-divider"><span>🕉</span></div>
-
-          {/* ── SIDDHA KRIYA PORTAL ── */}
-          <div className="kriya-portal">
-            <div className="kriya-portal-title">
-              <Sparkles size={18} color="#D4AF37" />
-              Siddha Kriya Portal
+          {/* ── 3-STEP BEGINNER GUIDE ── */}
+          <div className="howto-strip">
+            <div className="howto-step">
+              <div className="howto-num">1</div>
+              <div className="howto-text"><strong>Choose</strong> a pattern below</div>
             </div>
-            <div className="kriya-portal-sub">
-              Sync breath with the orb · Awaken the Kundalini · Release the Karma
+            <div className="howto-arrow">→</div>
+            <div className="howto-step">
+              <div className="howto-num">2</div>
+              <div className="howto-text"><strong>Press</strong> Begin the Kriya</div>
             </div>
-            <SacredBreathingGuide inhaleSeconds={4} exhaleSeconds={4} />
+            <div className="howto-arrow">→</div>
+            <div className="howto-step">
+              <div className="howto-num">3</div>
+              <div className="howto-text"><strong>Follow</strong> the orb — in and out</div>
+            </div>
           </div>
+
+          <div className="cave-divider"><span>🕉</span></div>
 
           {/* ── PATTERN SELECTION GRID ── */}
           <div style={{ margin: '0 20px 8px', padding: '0' }}>
-            <span className="section-label">⬡ Choose Your Kriya</span>
+            <span className="section-label">⬡ Step 1 · Choose Your Pattern</span>
           </div>
           <div className="cave-grid">
             {patterns.map((pattern) => (
@@ -1110,7 +1134,7 @@ const Breathing: React.FC = () => {
 
           {/* ── CLASSIC TIMER ── */}
           <div className="timer-section glass-card">
-            <div className="timer-section-title">Prana Flow Timer</div>
+            <div className="timer-section-title">Step 2 · Follow the Orb</div>
             <div className="timer-circle-wrap">
               <div className={`timer-orb ${orbColorClass} ${orbScaleClass}`}>
                 <div className="orb-inner-text">
@@ -1185,8 +1209,8 @@ const Breathing: React.FC = () => {
 
           {/* ── PRANAYAMA CAVE GUIDE ── */}
           <div className="cave-guide glass-card">
-            <div className="cave-guide-title">🕉 The Cave Teachings</div>
-            <div className="cave-guide-sub">Ancient Pranayama · Decoded for the Western Mind</div>
+            <div className="cave-guide-title">🕉 Want to Go Deeper?</div>
+            <div className="cave-guide-sub">The teachings behind each breath — read anytime</div>
             {CAVE_GUIDE.map((item, i) => (
               <div key={i} className="pranayama-guide-item">
                 <div className="guide-number">{i + 1}</div>
@@ -1216,33 +1240,6 @@ const Breathing: React.FC = () => {
                 <div className="benefit-dot" />
                 <span>{benefit}</span>
               </div>
-            ))}
-          </div>
-
-          {/* ── ALL PATTERNS LIST (fallback full list) ── */}
-          <div className="pattern-list-wrap glass-card">
-            <div className="pattern-list-title">
-              <Sparkles size={15} color="#D4AF37" />
-              {t('breathing.choosePattern', 'All Sacred Patterns')}
-            </div>
-            <div className="pattern-list-sub">Vedic Breath Sequences</div>
-            {patterns.map((pattern) => (
-              <button
-                key={pattern.id}
-                onClick={() => { if (!isActive) setSelectedPattern(pattern); }}
-                disabled={isActive}
-                className={`pattern-item ${selectedPattern.id === pattern.id ? 'selected' : ''} ${isActive ? 'is-disabled' : ''}`}
-              >
-                <div className="pattern-item-row">
-                  <span className="pattern-item-name">
-                    {getPatternEmoji(pattern.id, pattern.name)} {pattern.name}
-                  </span>
-                  <span className="pattern-item-ratio">
-                    {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.hold_out > 0 ? `-${pattern.hold_out}` : ''}
-                  </span>
-                </div>
-                <div className="pattern-item-desc">{pattern.description}</div>
-              </button>
             ))}
           </div>
 
