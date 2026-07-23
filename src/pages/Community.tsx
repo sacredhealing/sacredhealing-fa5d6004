@@ -1013,29 +1013,31 @@ const Community = () => {
   const [feedLoading, setFeedLoading] = useState(false);
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
   const [contentMap, setContentMap] = useState<Record<string, any>>({});
-  const [myPurchasedIds, setMyPurchasedIds] = useState<Set<string>>(new Set());
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    (supabase as any)
-      .from('content_vault_purchases')
-      .select('content_id')
-      .eq('user_id', user.id)
-      .then(({ data }: any) => {
-        setMyPurchasedIds(new Set((data || []).map((r: any) => r.content_id)));
-      });
-  }, [user]);
 
   const fetchLibrary = useCallback(async () => {
     if (!user) return;
     setLibraryLoading(true);
-    const { data, error } = await (supabase as any).rpc('get_my_library', { _user_id: user.id });
+    const { data, error } = await (supabase as any).rpc('get_my_library');
     if (error) {
       console.error('fetchLibrary error:', error);
       setLibraryItems([]);
     } else {
-      setLibraryItems(data || []);
+      // get_my_library() returns content_id (not id) and no price/tier columns —
+      // everything it returns is already owned, so those fields don't drive anything.
+      setLibraryItems(
+        (data || []).map((row: any) => ({
+          id: row.content_id,
+          title: row.title,
+          description: row.description,
+          content_type: row.content_type,
+          thumbnail_url: row.thumbnail_url,
+          duration_seconds: row.duration_seconds,
+          price_cents: 0,
+          currency: row.currency || 'eur',
+          tier_required: 'free',
+        }))
+      );
     }
     setLibraryLoading(false);
   }, [user]);
@@ -2483,14 +2485,8 @@ const Community = () => {
                       if ((msg as any).message_type === 'content_drop' && (msg as any).content_id) {
                         const content = contentMap[(msg as any).content_id];
                         if (!content) return null;
-                        const myTierRank = getTierRank(members.find((m) => m.id === user?.id)?.subscription_tier);
                         return (
-                          <ContentDropCard
-                            key={msg.id}
-                            content={content}
-                            owned={myPurchasedIds.has(content.id)}
-                            myTierRank={isAdmin ? 3 : myTierRank}
-                          />
+                          <ContentDropCard key={msg.id} content={content} />
                         );
                       }
 
@@ -3076,12 +3072,7 @@ const Community = () => {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {libraryItems.map((item: any) => (
-                    <ContentDropCard
-                      key={item.id}
-                      content={item}
-                      owned={true}
-                      myTierRank={isAdmin ? 3 : getTierRank(members.find((m) => m.id === user?.id)?.subscription_tier)}
-                    />
+                    <ContentDropCard key={item.id} content={item} />
                   ))}
                 </div>
               )}

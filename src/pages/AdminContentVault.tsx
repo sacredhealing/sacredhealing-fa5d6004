@@ -8,10 +8,10 @@ interface VaultItem {
   id: string;
   title: string;
   description: string | null;
-  media_type: string;
+  content_type: string;
   price_cents: number;
   currency: string;
-  included_min_tier_rank: number | null;
+  tier_required: string;
   is_published: boolean;
   created_at: string;
   thumbnail_url: string | null;
@@ -25,13 +25,24 @@ interface RoomOption {
 
 const TIER_OPTIONS = [
   { value: '', label: 'Never free — purchase only' },
-  { value: '0', label: 'Free tier and up' },
-  { value: '1', label: 'Prana-Flow and up' },
-  { value: '2', label: 'Siddha-Quantum and up' },
-  { value: '3', label: 'Akasha-Infinity only' },
+  { value: 'free', label: 'Free tier and up' },
+  { value: 'prana-flow', label: 'Prana-Flow and up' },
+  { value: 'siddha-quantum', label: 'Siddha-Quantum and up' },
+  { value: 'akasha-infinity', label: 'Akasha-Infinity only' },
 ];
 
-const MEDIA_TYPES = ['audio', 'video', 'meditation', 'song', 'beat'];
+// content_type is a DB CHECK constraint: file | audio | video | image | pdf | archive.
+// 'meditation'/'song'/'beat' aren't real content_type values here — they're stored
+// as metadata.category so the CHECK stays intact while the admin UI + drop card can
+// still show a nicer label.
+const CATEGORY_TO_CONTENT_TYPE: Record<string, string> = {
+  meditation: 'audio',
+  song: 'audio',
+  beat: 'audio',
+  audio: 'audio',
+  video: 'video',
+};
+const CATEGORIES = ['meditation', 'song', 'beat', 'audio', 'video'];
 
 export default function AdminContentVault() {
   const { user } = useAuth();
@@ -45,9 +56,9 @@ export default function AdminContentVault() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [mediaType, setMediaType] = useState('meditation');
+  const [category, setCategory] = useState('meditation');
   const [priceEuros, setPriceEuros] = useState('11');
-  const [tierRank, setTierRank] = useState('');
+  const [tierRequired, setTierRequired] = useState('');
   const [durationSeconds, setDurationSeconds] = useState('');
   const [roomId, setRoomId] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -74,9 +85,9 @@ export default function AdminContentVault() {
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setMediaType('meditation');
+    setCategory('meditation');
     setPriceEuros('11');
-    setTierRank('');
+    setTierRequired('');
     setDurationSeconds('');
     setRoomId('');
     setMediaFile(null);
@@ -125,16 +136,16 @@ export default function AdminContentVault() {
         .insert({
           title: title.trim(),
           description: description.trim() || null,
-          media_type: mediaType,
-          media_path: mediaPath,
+          content_type: CATEGORY_TO_CONTENT_TYPE[category] || 'file',
+          storage_path: mediaPath,
           thumbnail_url: thumbnailUrl,
           duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : null,
           price_cents: Math.round(parseFloat(priceEuros || '0') * 100),
           currency: 'eur',
-          included_min_tier_rank: tierRank === '' ? null : parseInt(tierRank, 10),
-          room_id: publishToChat ? roomId : null,
+          tier_required: tierRequired || 'free',
           is_published: true,
-          created_by: user.id,
+          owner_id: user.id,
+          metadata: { category },
         })
         .select()
         .single();
@@ -203,8 +214,8 @@ export default function AdminContentVault() {
             style={{ ...inputStyle, resize: 'vertical' as const }}
           />
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
-            <select value={mediaType} onChange={(e) => setMediaType(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-              {MEDIA_TYPES.map((t) => (
+            <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
+              {CATEGORIES.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
@@ -225,7 +236,7 @@ export default function AdminContentVault() {
               onChange={(e) => setPriceEuros(e.target.value)}
               style={{ ...inputStyle, flex: 1 }}
             />
-            <select value={tierRank} onChange={(e) => setTierRank(e.target.value)} style={{ ...inputStyle, flex: 2 }}>
+            <select value={tierRequired} onChange={(e) => setTierRequired(e.target.value)} style={{ ...inputStyle, flex: 2 }}>
               {TIER_OPTIONS.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
@@ -276,8 +287,8 @@ export default function AdminContentVault() {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 13 }}>{it.title}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
-                  {it.media_type} · €{(it.price_cents / 100).toFixed(2)}
-                  {it.included_min_tier_rank !== null ? ` · free from tier ${it.included_min_tier_rank}` : ' · purchase only'}
+                  {it.content_type} · €{(it.price_cents / 100).toFixed(2)}
+                  {it.tier_required !== 'free' ? ` · included from ${it.tier_required}` : it.price_cents > 0 ? ' · purchase only' : ' · free'}
                 </div>
               </div>
               <div style={{ fontSize: 10, color: it.is_published ? '#22D3EE' : 'rgba(255,255,255,.3)', fontWeight: 800, flexShrink: 0 }}>
