@@ -287,6 +287,18 @@ export default function Explore() {
         </div>
       </div>
 
+      {/* ══ VIDEOS BANNER ══ */}
+      <div style={{ margin: '13px 16px 0' }}>
+        <div onClick={() => navigate('/videos')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 70% 40%, rgba(45,32,0,0.98) 0%, rgba(15,10,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, cursor: 'pointer' }}>
+          <div style={{ position: 'relative', zIndex: 1, padding: '22px 20px 20px' }}>
+            <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 9 }}>SACRED CINEMA</p>
+            <div style={{ fontFamily: "'Cinzel',serif", fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, fontSize: 'clamp(22px, 6vw, 26px)', marginBottom: 11, maxWidth: '65%', background: 'linear-gradient(135deg, #D4AF37 0%, #F4D35E 40%, #D4AF37 60%, #A07A20 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VIDEOS</div>
+            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.68, marginBottom: 15, maxWidth: '72%' }}>Sacred video teachings and offerings</p>
+            <button onClick={(e) => { e.stopPropagation(); navigate('/videos'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(244,211,94,0.9)', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.4)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>ENTER →</button>
+          </div>
+        </div>
+      </div>
+
       {/* ══ ABUNDANCE FIELD BANNER ══ */}
       <div style={{ margin: '13px 16px 0' }}>
         <div onClick={() => navigate('/affiliate/dashboard')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 70% 40%, rgba(45,26,0,0.98) 0%, rgba(15,8,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite' }}>
