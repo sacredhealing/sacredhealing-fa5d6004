@@ -1,3 +1,4 @@
+// Content Vault: create a Stripe Checkout session for a single content item (dynamic price).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
@@ -7,114 +8,119 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
-  console.log(`[CREATE-CONTENT-CHECKOUT] ${step}${detailsStr}`);
-};
+const log = (step: string, details?: Record<string, unknown>) =>
+  console.log(`[create-content-checkout] ${step}${details ? ` ${JSON.stringify(details)}` : ""}`);
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    logStep("Function started");
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Authorization required");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const svc = createClient(supabaseUrl, serviceKey);
 
-    const { contentId } = await req.json();
+    const { data: userData } = await userClient.auth.getUser(authHeader.replace("Bearer ", ""));
+    const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated");
+
+    const body = (await req.json().catch(() => ({}))) as { contentId?: string };
+    const contentId = body.contentId;
     if (!contentId) throw new Error("contentId is required");
 
-    const { data: content, error: contentError } = await supabaseClient
+    // Load item
+    const { data: item, error: itemErr } = await svc
       .from("content_vault")
-      .select("*")
+      .select("id, title, description, price_cents, currency, is_published, thumbnail_url")
       .eq("id", contentId)
-      .eq("is_published", true)
-      .single();
+      .maybeSingle();
 
-    if (contentError || !content) throw new Error("Content not found");
-    logStep("Content found", { title: content.title, price_cents: content.price_cents });
+    if (itemErr) throw itemErr;
+    if (!item || !item.is_published) throw new Error("Content not available");
+    if (!item.price_cents || item.price_cents <= 0) throw new Error("Item is free — no checkout needed");
 
-    if (!content.price_cents || content.price_cents <= 0) {
-      throw new Error("This item is not available for individual purchase");
-    }
-
-    // Already owns it — don't let them pay twice.
-    const { data: existing } = await supabaseClient
+    // Already purchased?
+    const { data: existing } = await svc
       .from("content_vault_purchases")
-      .select("id")
+      .select("id, status")
       .eq("user_id", user.id)
       .eq("content_id", contentId)
       .maybeSingle();
-    if (existing) throw new Error("You already own this");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+    if (existing?.status === "paid") {
+      return new Response(JSON.stringify({ alreadyPurchased: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", { apiVersion: "2025-08-27.basil" });
+    const origin = req.headers.get("origin") ?? "https://siddhaquantumnexus.com";
+
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customerId = customers.data[0]?.id;
+
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer: customerId ?? undefined,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price_data: {
-            currency: content.currency || "eur",
-            product_data: {
-              name: content.title,
-              description: content.description || undefined,
-              images: content.thumbnail_url ? [content.thumbnail_url] : [],
-            },
-            unit_amount: content.price_cents,
-          },
           quantity: 1,
+          price_data: {
+            currency: item.currency || "eur",
+            unit_amount: item.price_cents,
+            product_data: {
+              name: item.title,
+              description: item.description ?? undefined,
+              images: item.thumbnail_url ? [item.thumbnail_url] : undefined,
+            },
+          },
         },
       ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/community?content_unlocked=${contentId}`,
-      cancel_url: `${req.headers.get("origin")}/community?content_cancelled=${contentId}`,
       metadata: {
+        content_id: item.id,
+        content_title: item.title,
         user_id: user.id,
-        content_id: contentId,
-        type: "content_drop",
+        product_kind: "content_vault",
       },
+      success_url: `${origin}/library?session_id={CHECKOUT_SESSION_ID}&content_id=${item.id}`,
+      cancel_url: `${origin}/library?cancelled=true&content_id=${item.id}`,
     });
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    // Upsert pending purchase row so we can reconcile from webhook or success page
+    await svc.from("content_vault_purchases").upsert(
+      {
+        user_id: user.id,
+        content_id: item.id,
+        stripe_session_id: session.id,
+        amount_cents: item.price_cents,
+        currency: item.currency || "eur",
+        status: "pending",
+      },
+      { onConflict: "user_id,content_id" },
+    );
 
-    // Deliberately NOT inserting into content_vault_purchases here.
-    // The stripe-webhook confirms payment_status === 'paid' and writes the
-    // purchase row — same fix already applied to music/healing-audio
-    // purchases after the earlier bug where checkout-create wrote the row
-    // optimistically and unpaid/abandoned sessions could grant access.
+    log("session created", { userId: user.id, contentId: item.id, sessionId: session.id });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
       status: 200,
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[create-content-checkout] error", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
