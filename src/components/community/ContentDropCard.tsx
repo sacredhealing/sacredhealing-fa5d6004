@@ -101,7 +101,32 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const isImage = content.content_type === 'image';
 
   return (
-    <div className="c-drop-wrap">
+    <>
+      <style>{`
+        .c-drop-wrap { align-self: flex-start; max-width: 82%; width: 82%; margin: 4px 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .c-drop-eyebrow { font-size: 8px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: rgba(212,175,55,.55); margin-bottom: 6px; padding-left: 4px; display: flex; align-items: center; gap: 6px; }
+        .c-drop-dot { width: 5px; height: 5px; border-radius: 50%; background: #D4AF37; }
+        .c-drop-card { border-radius: 22px; overflow: hidden; border: 1px solid rgba(212,175,55,.28); background: linear-gradient(180deg, rgba(212,175,55,.06), rgba(255,255,255,.02)); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+        .c-drop-media { height: 160px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 30% 20%, rgba(212,175,55,.18), transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(34,211,238,.1), transparent 55%), #0a0a0a; display: flex; align-items: center; justify-content: center; }
+        .c-drop-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; }
+        .c-drop-media::after { content: ''; position: absolute; inset: 0; backdrop-filter: blur(14px); background: rgba(5,5,5,.35); }
+        .c-drop-media.unlocked::after { content: none; }
+        .c-drop-play { position: relative; z-index: 2; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 16px; backdrop-filter: blur(6px); cursor: pointer; color: #fff; }
+        .c-drop-lock { position: absolute; z-index: 3; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 8px; background: rgba(5,5,5,.7); border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+        .c-drop-duration { position: absolute; z-index: 3; bottom: 10px; left: 10px; font-size: 9px; font-weight: 800; letter-spacing: .1em; padding: 4px 9px; border-radius: 20px; background: rgba(5,5,5,.7); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.75); }
+        .c-drop-player, .c-drop-audio-player { position: relative; z-index: 4; width: 100%; }
+        .c-drop-audio-player { position: absolute; bottom: 8px; left: 8px; right: 8px; width: calc(100% - 16px); height: 34px; }
+        .c-drop-body { padding: 13px 15px 15px; color: #fff; }
+        .c-drop-title { font-weight: 900; font-size: 14px; letter-spacing: -.02em; color: #fff; }
+        .c-drop-desc { font-size: 11.5px; color: rgba(255,255,255,.55); margin-top: 4px; line-height: 1.5; }
+        .c-drop-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+        .c-drop-price { font-size: 16px; font-weight: 900; color: #D4AF37; }
+        .c-drop-price span { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.35); margin-left: 4px; }
+        .c-unlock-btn { background: radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%); color: #1a1300; border: none; padding: 8px 16px; border-radius: 13px; font-weight: 900; font-size: 11.5px; cursor: pointer; box-shadow: 0 6px 16px rgba(212,175,55,.25); }
+        .c-unlock-btn.owned { background: rgba(34,211,238,.12); color: #22D3EE; border: 1px solid rgba(34,211,238,.35); box-shadow: none; }
+        .c-unlock-btn:disabled { opacity: .5; cursor: default; }
+      `}</style>
+      <div className="c-drop-wrap">
       <div className="c-drop-eyebrow"><span className="c-drop-dot" />New Offering</div>
       <div className="c-drop-card">
         <div className={`c-drop-media ${unlocked ? 'unlocked' : ''}`}>
@@ -142,6 +167,7 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

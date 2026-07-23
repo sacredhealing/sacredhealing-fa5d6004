@@ -4,6 +4,42 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
+const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+
+// XHR (not fetch) is what gives us real upload progress — the supabase-js SDK's
+// .upload() is fetch-based under the hood and exposes no progress at all, which
+// is why a large file just sat on "Uploading…" with zero feedback before.
+function uploadWithProgress(
+  bucket: string,
+  path: string,
+  file: File,
+  accessToken: string,
+  onProgress: (pct: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status}): ${xhr.responseText || 'unknown error'}`));
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload — check your connection and try again'));
+    xhr.send(file);
+  });
+}
+
+// Safety valve: a plain single-request upload (progress bar or not) is still
+// not resumable — a dropped connection at 95% means starting over. Large
+// video files should be compressed first; this is a soft warning, not a hard
+// block, since some admins may have a fast enough connection to push through.
+const LARGE_FILE_WARNING_BYTES = 300 * 1024 * 1024; // 300MB
+
 interface VaultItem {
   id: string;
   title: string;
@@ -31,18 +67,22 @@ const TIER_OPTIONS = [
   { value: 'akasha-infinity', label: 'Akasha-Infinity only' },
 ];
 
-// content_type is a DB CHECK constraint: file | audio | video | image | pdf | archive.
-// 'meditation'/'song'/'beat' aren't real content_type values here — they're stored
-// as metadata.category so the CHECK stays intact while the admin UI + drop card can
-// still show a nicer label.
-const CATEGORY_TO_CONTENT_TYPE: Record<string, string> = {
-  meditation: 'audio',
-  song: 'audio',
-  beat: 'audio',
-  audio: 'audio',
-  video: 'video',
+// Where each category actually lives. 'song' and 'beat' go to the existing
+// Music Store (music_tracks, its own purchase flow via purchase-music /
+// music_purchases). 'meditation' goes to the existing Meditations page.
+// 'healing' goes to the existing Healing Blessings page. Only 'video' has no
+// existing home, so it's the one category that stays on Content Vault's own
+// content_vault table + purchase flow + drop card.
+type Destination = 'music_tracks' | 'meditations' | 'healing_audio' | 'content_vault';
+
+const CATEGORY_CONFIG: Record<string, { label: string; destination: Destination; contentType?: string }> = {
+  song: { label: 'Song', destination: 'music_tracks' },
+  beat: { label: 'Beat', destination: 'music_tracks' },
+  meditation: { label: 'Meditation', destination: 'meditations' },
+  healing: { label: 'Healing Audio', destination: 'healing_audio' },
+  video: { label: 'Video', destination: 'content_vault', contentType: 'video' },
 };
-const CATEGORIES = ['meditation', 'song', 'beat', 'audio', 'video'];
+const CATEGORIES = Object.keys(CATEGORY_CONFIG);
 
 export default function AdminContentVault() {
   const { user } = useAuth();
@@ -53,6 +93,7 @@ export default function AdminContentVault() {
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -143,16 +184,32 @@ export default function AdminContentVault() {
       toast({ title: 'Pick a room to post the drop in', variant: 'destructive' });
       return;
     }
+    if (mediaFile.size > LARGE_FILE_WARNING_BYTES) {
+      const proceed = window.confirm(
+        `That file is ${(mediaFile.size / (1024 * 1024)).toFixed(0)}MB. This upload isn't resumable — if your connection drops partway, you'll need to start over. Compress it smaller if you can. Continue anyway?`
+      );
+      if (!proceed) return;
+    }
+
+    const config = CATEGORY_CONFIG[category];
 
     setIsSaving(true);
+    setUploadProgress(0);
     try {
-      const ext = mediaFile.name.split('.').pop();
-      const mediaPath = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Not signed in');
 
-      const { error: uploadError } = await supabase.storage
-        .from('content-vault')
-        .upload(mediaPath, mediaFile, { upsert: false });
-      if (uploadError) throw uploadError;
+      const ext = mediaFile.name.split('.').pop();
+      const uniqueName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+      // Music goes to the same public 'songs' bucket AdminMusic.tsx already uses,
+      // so it's playable the exact same way the Music Store already plays tracks.
+      // Everything else uses the private content-vault bucket (signed-URL only).
+      const bucket = config.destination === 'music_tracks' ? 'songs' : 'content-vault';
+      const mediaPath = config.destination === 'music_tracks' ? uniqueName : `${user.id}/${uniqueName}`;
+
+      await uploadWithProgress(bucket, mediaPath, mediaFile, accessToken, setUploadProgress);
 
       let thumbnailUrl: string | null = null;
       if (thumbnailFile) {
@@ -166,48 +223,112 @@ export default function AdminContentVault() {
         thumbnailUrl = pub.publicUrl;
       }
 
-      const { data: inserted, error: insertError } = await (supabase as any)
-        .from('content_vault')
-        .insert({
+      let deepLink = '';
+      let contentIdForChat: string | null = null;
+      let isLockedDrop = false;
+
+      if (config.destination === 'music_tracks') {
+        const fullUrl = supabase.storage.from('songs').getPublicUrl(mediaPath).data.publicUrl;
+        const { error: insertError } = await supabase.from('music_tracks').insert({
+          title: title.trim(),
+          artist: 'Sacred Healing',
+          description: description.trim() || null,
+          genre: category === 'beat' ? 'beat' : 'devotional',
+          duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : 0,
+          preview_url: fullUrl,
+          full_audio_url: fullUrl,
+          cover_image_url: thumbnailUrl,
+          price_usd: parseFloat(priceEuros || '0'),
+          bpm: null,
+          shc_reward: 5,
+          analysis_status: 'pending',
+          auto_analysis_data: { access_tier: tierRequired || 'free' },
+        } as any);
+        if (insertError) throw insertError;
+        deepLink = '/music';
+      } else if (config.destination === 'meditations') {
+        const publicUrl = supabase.storage.from('content-vault').getPublicUrl(mediaPath).data.publicUrl;
+        const { error: insertError } = await supabase.from('meditations').insert({
           title: title.trim(),
           description: description.trim() || null,
-          content_type: CATEGORY_TO_CONTENT_TYPE[category] || 'file',
-          storage_path: mediaPath,
-          thumbnail_url: thumbnailUrl,
-          duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : null,
-          price_cents: Math.round(parseFloat(priceEuros || '0') * 100),
-          currency: 'eur',
-          tier_required: tierRequired || 'free',
-          is_published: true,
-          owner_id: user.id,
-          metadata: { category },
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
+          audio_url: publicUrl,
+          duration_minutes: durationSeconds ? Math.round(parseInt(durationSeconds, 10) / 60) : 10,
+          category: 'general',
+          is_premium: tierRequired !== '' && tierRequired !== 'free',
+          shc_reward: 5,
+          language: 'en',
+        } as any);
+        if (insertError) throw insertError;
+        deepLink = '/meditations';
+      } else if (config.destination === 'healing_audio') {
+        const publicUrl = supabase.storage.from('content-vault').getPublicUrl(mediaPath).data.publicUrl;
+        const { error: insertError } = await supabase.from('healing_audio').insert({
+          title: title.trim(),
+          description: description.trim() || null,
+          audio_url: publicUrl,
+          preview_url: null,
+          duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : 0,
+          is_free: !tierRequired || tierRequired === 'free',
+          required_tier: tierRequired || 'free',
+          price_usd: parseFloat(priceEuros || '0'),
+          price_shc: 0,
+          category: 'general',
+          script_text: null,
+          language: 'en',
+        } as any);
+        if (insertError) throw insertError;
+        deepLink = '/healing';
+      } else {
+        // video — no existing home, stays on Content Vault's own table + purchase flow
+        const { data: inserted, error: insertError } = await (supabase as any)
+          .from('content_vault')
+          .insert({
+            title: title.trim(),
+            description: description.trim() || null,
+            content_type: 'video',
+            storage_path: mediaPath,
+            thumbnail_url: thumbnailUrl,
+            duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : null,
+            price_cents: Math.round(parseFloat(priceEuros || '0') * 100),
+            currency: 'eur',
+            tier_required: tierRequired || 'free',
+            is_published: true,
+            owner_id: user.id,
+            metadata: { category },
+          })
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        contentIdForChat = inserted.id;
+        isLockedDrop = true;
+        deepLink = '/videos';
+      }
 
       if (publishToChat) {
-        const { data: msg, error: msgError } = await (supabase as any)
-          .from('chat_messages')
-          .insert({
+        if (isLockedDrop && contentIdForChat) {
+          const { error: msgError } = await (supabase as any).from('chat_messages').insert({
             room_id: roomId,
             user_id: user.id,
             content: title.trim(),
             message_type: 'content_drop',
-            content_id: inserted.id,
-          })
-          .select()
-          .single();
-        if (msgError) throw msgError;
-
-        await (supabase as any)
-          .from('content_vault')
-          .update({ drop_message_id: msg.id })
-          .eq('id', inserted.id);
+            content_id: contentIdForChat,
+          });
+          if (msgError) throw msgError;
+        } else {
+          // Already purchasable/playable on its own native page (Music/Meditations/
+          // Healing) with that page's own existing flow — chat gets a plain
+          // announcement pointing there, not a second parallel unlock mechanism.
+          const { error: msgError } = await (supabase as any).from('chat_messages').insert({
+            room_id: roomId,
+            user_id: user.id,
+            content: `🎁 New ${config.label.toLowerCase()} added — "${title.trim()}". Find it on ${deepLink === '/music' ? 'the Music page' : deepLink === '/meditations' ? 'the Meditations page' : 'the Healing page'}.`,
+            message_type: 'text',
+          });
+          if (msgError) throw msgError;
+        }
       }
 
-      toast({ title: publishToChat ? 'Uploaded and posted to chat' : 'Uploaded to the vault' });
+      toast({ title: publishToChat ? `Uploaded — live on ${deepLink}, posted to chat` : `Uploaded — live on ${deepLink}` });
       resetForm();
       fetchAll();
     } catch (err: any) {
@@ -215,6 +336,7 @@ export default function AdminContentVault() {
       toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
     } finally {
       setIsSaving(false);
+      setUploadProgress(0);
     }
   };
 
@@ -251,7 +373,7 @@ export default function AdminContentVault() {
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
             <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
               {CATEGORIES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>{CATEGORY_CONFIG[t].label}</option>
               ))}
             </select>
             <input
@@ -261,6 +383,14 @@ export default function AdminContentVault() {
               onChange={(e) => setDurationSeconds(e.target.value)}
               style={{ ...inputStyle, flex: 1 }}
             />
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(34,211,238,.8)', marginTop: -4 }}>
+            → Will appear on {
+              CATEGORY_CONFIG[category].destination === 'music_tracks' ? 'the Music page (its own purchase flow)' :
+              CATEGORY_CONFIG[category].destination === 'meditations' ? 'the Meditations page' :
+              CATEGORY_CONFIG[category].destination === 'healing_audio' ? 'the Healing Blessings page' :
+              'the new Videos page (Content Vault purchase flow)'
+            }
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
             <input
@@ -297,12 +427,30 @@ export default function AdminContentVault() {
             </select>
           </div>
 
+          {isSaving && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{ height: 6, borderRadius: 4, background: 'rgba(255,255,255,.08)', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${uploadProgress}%`,
+                    background: 'linear-gradient(90deg, #D4AF37, #F4D35E)',
+                    transition: 'width .2s ease',
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(212,175,55,.7)', marginTop: 4, fontWeight: 700 }}>
+                {uploadProgress > 0 ? `${uploadProgress}% uploaded` : 'Preparing upload…'}
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button disabled={isSaving} onClick={() => handleUploadAndPublish(false)} style={secondaryBtnStyle}>
-              {isSaving ? 'Uploading…' : 'Save to vault only'}
+              {isSaving ? `${uploadProgress}%` : 'Save to vault only'}
             </button>
             <button disabled={isSaving} onClick={() => handleUploadAndPublish(true)} style={primaryBtnStyle}>
-              {isSaving ? 'Uploading…' : 'Upload & post to chat'}
+              {isSaving ? `${uploadProgress}%` : 'Upload & post to chat'}
             </button>
           </div>
         </div>
