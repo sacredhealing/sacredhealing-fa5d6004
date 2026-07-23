@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSacredCircles, useCircleMessages, useCircleMembers, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
+import { supabase } from '@/integrations/supabase/client';
 import { TelegramChatInput } from './TelegramChatInput';
 import { VoicePlayer } from './VoicePlayer';
 import { useCommunityPolls, type CommunityPoll } from '@/hooks/useCommunityPolls';
@@ -60,6 +61,13 @@ const SacredCircles = () => {
     }
 
     setSelectedCircle(circle);
+
+    // Mark this room's messages read so its unread badge clears app-wide.
+    if (user) {
+      supabase.rpc('mark_room_read', { _room_id: circle.id }).then(() => {
+        window.dispatchEvent(new CustomEvent('sqi:room-read'));
+      });
+    }
   };
 
   // If user opens an Andlig invite link, auto-join and open the chat.

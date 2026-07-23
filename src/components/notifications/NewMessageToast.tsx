@@ -20,6 +20,7 @@ export const NewMessageToast: React.FC = () => {
 
   if (!latest) return null;
 
+  const isGroup = latest.kind === 'group';
   const initials = latest.senderName
     .split(' ')
     .map((p) => p[0])
@@ -35,7 +36,7 @@ export const NewMessageToast: React.FC = () => {
       <div
         onClick={() => {
           setVisible(false);
-          navigate(`/community?dm=${latest.senderId}`);
+          navigate(isGroup ? `/community?circle=${latest.roomId}` : `/community?dm=${latest.senderId}`);
         }}
         className="flex items-center gap-3 rounded-[20px] px-4 py-3 cursor-pointer pointer-events-auto"
         style={{
@@ -56,13 +57,17 @@ export const NewMessageToast: React.FC = () => {
         <div
           className="w-9 h-9 rounded-[10px] shrink-0 flex items-center justify-center font-extrabold text-xs"
           style={{
-            background: 'linear-gradient(145deg,#1a1a1a,#0a0a0a)',
+            background: isGroup
+              ? 'linear-gradient(145deg, rgba(212,175,55,.35), rgba(212,175,55,.12))'
+              : 'linear-gradient(145deg,#1a1a1a,#0a0a0a)',
             border: '1px solid rgba(255,255,255,.1)',
-            color: 'rgba(212,175,55,.7)',
+            color: isGroup ? '#fff' : 'rgba(212,175,55,.7)',
           }}
         >
           {latest.senderAvatar ? (
             <img src={latest.senderAvatar} alt="" className="w-full h-full rounded-[10px] object-cover" />
+          ) : isGroup ? (
+            (latest.roomName || 'G').slice(0, 2).toUpperCase()
           ) : (
             initials
           )}
@@ -72,7 +77,7 @@ export const NewMessageToast: React.FC = () => {
             className="font-extrabold uppercase"
             style={{ fontSize: '7px', letterSpacing: '.35em', color: 'rgba(212,175,55,.55)', marginBottom: 2 }}
           >
-            New Message
+            {isGroup ? `${latest.roomName || 'Group'} · Group` : 'New Message'}
           </div>
           <div className="font-extrabold text-[12.5px] truncate">{latest.senderName}</div>
           <div className="text-[11.5px] truncate" style={{ color: 'rgba(255,255,255,.6)' }}>
