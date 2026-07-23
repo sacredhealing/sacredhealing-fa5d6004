@@ -64,17 +64,52 @@ export default function AdminContentVault() {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
+  // The ONLY channels that actually exist in the visible Nexus UI — mirrors
+  // Community.tsx's CHANNELS list exactly. chat_rooms has other rows (test
+  // duplicates, dead aliases like "Community Lounge", old circle names) that
+  // are never shown to members anywhere; this keeps the picker to just these 8.
+  const VISIBLE_CHANNELS = [
+    { id: 'divine-sangha', name: 'Divine Sangha' },
+    { id: 'bhagavad-gita', name: 'Bhagavad Gita' },
+    { id: 'sacred-mantras', name: 'Sacred Mantras' },
+    { id: 'healing-circle', name: 'Healing Blessings' },
+    { id: 'siddha-masters', name: 'Siddha Masters' },
+    { id: 'bhakti-algorithm-lab', name: 'Bhakti Algorithm Lab' },
+    { id: 'stargate', name: 'Stargate' },
+    { id: 'sadhana', name: 'Sadhana' },
+  ];
+
   const fetchAll = async () => {
     setIsLoading(true);
-    const [{ data: vaultData }, { data: roomData }] = await Promise.all([
+    const [{ data: vaultData }, { data: allRooms }] = await Promise.all([
       (supabase as any)
         .from('content_vault')
         .select('*')
         .order('created_at', { ascending: false }),
-      supabase.from('chat_rooms').select('id, name').eq('is_active', true),
+      supabase.from('chat_rooms').select('id, name, type').eq('is_active', true),
     ]);
     setItems((vaultData as VaultItem[]) || []);
-    setRooms((roomData as RoomOption[]) || []);
+
+    // Same name-matching rules as Community.tsx's room resolution, so this
+    // picker can never show a room the real chat UI wouldn't also resolve.
+    const resolved: RoomOption[] = [];
+    (allRooms || []).forEach((room: any) => {
+      const matched = VISIBLE_CHANNELS.find((ch) => ch.name === room.name);
+      if (matched && !resolved.find((r) => r.id === matched.id)) {
+        resolved.push({ id: room.id, name: matched.name });
+      } else if (room.type === 'sadhana' && !resolved.find((r) => r.id === 'sadhana')) {
+        resolved.push({ id: room.id, name: 'Sadhana' });
+      } else if (room.type === 'stargate' && !resolved.find((r) => r.id === 'stargate')) {
+        resolved.push({ id: room.id, name: 'Stargate' });
+      } else if (room.name?.includes('Divine Sangha') && !resolved.find((r) => r.name === 'Divine Sangha')) {
+        resolved.push({ id: room.id, name: 'Divine Sangha' });
+      } else if (room.name?.includes('Sacred Mantra') && !resolved.find((r) => r.name === 'Sacred Mantras')) {
+        resolved.push({ id: room.id, name: 'Sacred Mantras' });
+      } else if (room.name?.includes('Healing') && !resolved.find((r) => r.name === 'Healing Blessings')) {
+        resolved.push({ id: room.id, name: 'Healing Blessings' });
+      }
+    });
+    setRooms(resolved);
     setIsLoading(false);
   };
 
