@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock, Youtube, Music, Square, Moon, Zap, Waves, Crown, Scale, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock, Youtube, Music, Square, Moon, Zap, Waves, Crown, Scale, CheckCircle2, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { canAccessPranayamaLevel, pranayamaTechniqueRequiresScreening, isClearedForPranayamaTechnique, getTierRank } from '@/lib/tierAccess';
+import { PranayamaHealthScreen } from '@/components/breathing/PranayamaHealthScreen';
 
 // ─────────────────────────────────────────────
 // SQI 2050 INLINE STYLES — Pranayama Cave DNA
@@ -409,6 +414,186 @@ const SQI_STYLES = `
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(1.4); }
+  }
+
+  /* ── LOCK BADGE (tier-gated technique) ── */
+  .cave-technique-card.locked {
+    opacity: 0.55;
+  }
+
+  .lock-badge {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(212,175,55,0.4);
+    color: #D4AF37;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── LEVEL PILL ── */
+  .level-pill {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+
+  .level-beginner {
+    background: rgba(52,211,153,0.1);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: rgba(52,211,153,0.9);
+  }
+
+  .level-intermediate {
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.3);
+    color: rgba(34,211,238,0.9);
+  }
+
+  .level-advanced {
+    background: rgba(212,175,55,0.12);
+    border: 1px solid rgba(212,175,55,0.4);
+    color: #D4AF37;
+  }
+
+  /* ── SIDDHA GUIDANCE PANEL ── */
+  .guidance-panel {
+    margin: 0 20px 20px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .guidance-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 18px 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .guidance-toggle-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .guidance-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .guidance-sanskrit {
+    font-weight: 400;
+    color: rgba(212,175,55,0.65);
+    font-style: italic;
+  }
+
+  .guidance-sub {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+
+  .guidance-body {
+    padding: 0 20px 20px;
+  }
+
+  .guidance-lock-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(212,175,55,0.06);
+    border: 1px solid rgba(212,175,55,0.25);
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .guidance-upgrade-link {
+    background: none;
+    border: none;
+    color: #D4AF37;
+    font-weight: 800;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 11.5px;
+  }
+
+  .guidance-section {
+    margin-bottom: 16px;
+  }
+
+  .guidance-section:last-child { margin-bottom: 0; }
+
+  .guidance-section-title {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(212,175,55,0.55);
+    margin-bottom: 8px;
+  }
+
+  .guidance-steps {
+    margin: 0;
+    padding-left: 18px;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .guidance-steps li { margin-bottom: 4px; }
+
+  .guidance-list {
+    margin: 0;
+    padding-left: 18px;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    line-height: 1.7;
+    list-style: disc;
+  }
+
+  .guidance-caution .guidance-list {
+    color: rgba(240,176,60,0.85);
+  }
+
+  .guidance-danger .guidance-section-title {
+    color: rgba(240,120,90,0.85);
+  }
+
+  .guidance-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .guidance-tag {
+    font-size: 10.5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: rgba(240,120,90,0.08);
+    border: 1px solid rgba(240,120,90,0.3);
+    color: rgba(255,180,160,0.9);
   }
 
   /* ── CLASSIC TIMER ── */
@@ -896,6 +1081,7 @@ type BreathPhase = 'inhale' | 'hold' | 'exhale' | 'holdOut' | 'idle';
 interface BreathingPattern {
   id: string;
   name: string;
+  sanskrit_name?: string | null;
   description: string | null;
   inhale: number;
   hold: number;
@@ -904,18 +1090,31 @@ interface BreathingPattern {
   cycles: number;
   youtube_url?: string | null;
   audio_url?: string | null;
+  level?: 'beginner' | 'intermediate' | 'advanced';
+  tier_required?: string;
+  technique_type?: 'gentle' | 'retention' | 'forceful';
+  requires_health_screen?: boolean;
+  steps?: string[];
+  benefits?: string[];
+  cautions?: string[];
+  contraindications?: string[];
 }
 
 const defaultPatterns: BreathingPattern[] = [
   {
     id: 'box',
     name: 'Box Breathing',
+    sanskrit_name: 'Sama Vritti',
     description: 'Equal counts for calm and focus. Used by Navy SEALs.',
     inhale: 4,
     hold: 4,
     exhale: 4,
     hold_out: 4,
     cycles: 4,
+    level: 'beginner',
+    tier_required: 'free',
+    technique_type: 'gentle',
+    requires_health_screen: false,
   },
 ];
 
@@ -928,6 +1127,15 @@ const TECHNIQUE_ICONS: Record<string, string> = {
   energizing: '⚡',
   calming: '🌊',
   crown: '🔱',
+};
+
+const tierLabel = (tierRequired: string | undefined): string => {
+  switch (tierRequired) {
+    case 'akasha-infinity': return 'Akasha-Infinity';
+    case 'siddha-quantum': return 'Siddha-Quantum';
+    case 'prana-flow': return 'Prana-Flow';
+    default: return 'Atma-Seed';
+  }
 };
 
 const getPatternIcon = (id: string, name: string) => {
@@ -954,6 +1162,9 @@ const Breathing: React.FC = () => {
   ]);
 
   // ── STATE (unchanged logic) ──
+  const { user } = useAuth();
+  const { tier } = useMembership();
+  const { isAdmin } = useAdminRole();
   const [patterns, setPatterns] = useState<BreathingPattern[]>(defaultPatterns);
   const [selectedPattern, setSelectedPattern] = useState<BreathingPattern>(defaultPatterns[0]);
   const [isActive, setIsActive] = useState(false);
@@ -963,21 +1174,47 @@ const Breathing: React.FC = () => {
   const [totalSeconds, setTotalSeconds] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // ── SIDDHA LEVEL / TIER / HEALTH-SCREENING GATING ──
+  const [screening, setScreening] = useState<{ cleared_for_retention: boolean; cleared_for_forceful: boolean } | null>(null);
+  const [healthScreenOpen, setHealthScreenOpen] = useState(false);
+  const [showGuidance, setShowGuidance] = useState(true);
+
+  useEffect(() => {
+    const fetchScreening = async () => {
+      if (!user) { setScreening(null); return; }
+      const { data } = await (supabase as any)
+        .from('user_pranayama_health_screening')
+        .select('cleared_for_retention, cleared_for_forceful')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setScreening(data || null);
+    };
+    fetchScreening();
+  }, [user]);
+
+  const isPatternLocked = (p: BreathingPattern) => !canAccessPranayamaLevel({ isAdmin, tier, level: p.level });
+  const needsHealthScreen = (p: BreathingPattern) =>
+    pranayamaTechniqueRequiresScreening(p.technique_type) &&
+    !isClearedForPranayamaTechnique({ technique_type: p.technique_type, screening });
+
   // Fetch patterns from database (unchanged)
   useEffect(() => {
     const fetchPatterns = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('breathing_patterns')
         .select('*')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
       if (!error && data && data.length > 0) {
         setPatterns(data);
-        setSelectedPattern(data[0]);
+        // default to the first pattern the user can actually access
+        const firstAccessible = data.find((p: BreathingPattern) => !isPatternLocked(p)) || data[0];
+        setSelectedPattern(firstAccessible);
       }
     };
     fetchPatterns();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tier, isAdmin]);
 
   // ── PHASE LOGIC (unchanged) ──
   const phaseLabels: Record<BreathPhase, string> = {
@@ -1015,6 +1252,18 @@ const Breathing: React.FC = () => {
     setPhase('inhale');
     setTimeLeft(selectedPattern.inhale);
     setTotalSeconds(0);
+  };
+
+  const handleBeginPress = () => {
+    if (isPatternLocked(selectedPattern)) {
+      navigate('/membership');
+      return;
+    }
+    if (needsHealthScreen(selectedPattern)) {
+      setHealthScreenOpen(true);
+      return;
+    }
+    startExercise();
   };
 
   const stopExercise = () => {
@@ -1134,12 +1383,18 @@ const Breathing: React.FC = () => {
                 key={pattern.id}
                 onClick={() => { if (!isActive) setSelectedPattern(pattern); }}
                 disabled={isActive}
-                className={`cave-technique-card ${selectedPattern.id === pattern.id ? 'active' : ''} ${isActive ? 'disabled' : ''}`}
+                className={`cave-technique-card ${selectedPattern.id === pattern.id ? 'active' : ''} ${isActive ? 'disabled' : ''} ${isPatternLocked(pattern) ? 'locked' : ''}`}
               >
                 {selectedPattern.id === pattern.id && <div className="active-glow-dot" />}
+                {isPatternLocked(pattern) && (
+                  <div className="lock-badge"><Lock size={10} strokeWidth={2.5} /></div>
+                )}
                 <div className="technique-icon-ring">
                   <PatternIcon size={20} strokeWidth={1.75} />
                 </div>
+                <span className={`level-pill level-${pattern.level || 'beginner'}`}>
+                  {(pattern.level || 'beginner').charAt(0).toUpperCase() + (pattern.level || 'beginner').slice(1)}
+                </span>
                 <div className="technique-name">{pattern.name}</div>
                 <div className="technique-desc">{pattern.description}</div>
                 <div className="technique-ratio">
@@ -1148,6 +1403,74 @@ const Breathing: React.FC = () => {
               </button>
               );
             })}
+          </div>
+
+          {/* ── SIDDHA GUIDANCE FOR THE SELECTED TECHNIQUE ── */}
+          <div className="guidance-panel glass-card">
+            <button className="guidance-toggle" onClick={() => setShowGuidance((v) => !v)}>
+              <div className="guidance-toggle-left">
+                <Sparkles size={15} color="#D4AF37" />
+                <div>
+                  <div className="guidance-title">
+                    {selectedPattern.name}
+                    {selectedPattern.sanskrit_name ? <span className="guidance-sanskrit"> · {selectedPattern.sanskrit_name}</span> : null}
+                  </div>
+                  <div className="guidance-sub">
+                    {isPatternLocked(selectedPattern)
+                      ? `Requires ${tierLabel(selectedPattern.tier_required)}`
+                      : `Proper Siddha guidance for this practice`}
+                  </div>
+                </div>
+              </div>
+              {showGuidance ? <ChevronUp size={16} color="rgba(255,255,255,.4)" /> : <ChevronDown size={16} color="rgba(255,255,255,.4)" />}
+            </button>
+
+            {showGuidance && (
+              <div className="guidance-body">
+                {isPatternLocked(selectedPattern) && (
+                  <div className="guidance-lock-notice">
+                    <Lock size={13} color="#D4AF37" />
+                    <span>This technique is part of {tierLabel(selectedPattern.tier_required)}. <button className="guidance-upgrade-link" onClick={() => navigate('/membership')}>Upgrade to unlock →</button></span>
+                  </div>
+                )}
+
+                {!!selectedPattern.steps?.length && (
+                  <div className="guidance-section">
+                    <div className="guidance-section-title">How to Practice</div>
+                    <ol className="guidance-steps">
+                      {selectedPattern.steps.map((s, i) => <li key={i}>{s}</li>)}
+                    </ol>
+                  </div>
+                )}
+
+                {!!selectedPattern.benefits?.length && (
+                  <div className="guidance-section">
+                    <div className="guidance-section-title">Benefits</div>
+                    <ul className="guidance-list">
+                      {selectedPattern.benefits.map((b, i) => <li key={i}>{b}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {!!selectedPattern.cautions?.length && (
+                  <div className="guidance-section guidance-caution">
+                    <div className="guidance-section-title">Cautions</div>
+                    <ul className="guidance-list">
+                      {selectedPattern.cautions.map((c, i) => <li key={i}>{c}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {!!selectedPattern.contraindications?.length && (
+                  <div className="guidance-section guidance-danger">
+                    <div className="guidance-section-title">Do Not Practice If You Have</div>
+                    <div className="guidance-tags">
+                      {selectedPattern.contraindications.map((c, i) => <span key={i} className="guidance-tag">{c}</span>)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── CLASSIC TIMER ── */}
@@ -1178,7 +1501,7 @@ const Breathing: React.FC = () => {
           {/* ── CONTROLS ── */}
           <div className="controls-row">
             {!isActive ? (
-              <button onClick={startExercise} className="btn-begin">
+              <button onClick={handleBeginPress} className="btn-begin">
                 <Play size={16} />
                 Begin the Kriya
               </button>
@@ -1263,6 +1586,16 @@ const Breathing: React.FC = () => {
 
         </div>
       </div>
+
+      <PranayamaHealthScreen
+        open={healthScreenOpen}
+        onOpenChange={setHealthScreenOpen}
+        techniqueType={selectedPattern.technique_type || 'gentle'}
+        onCleared={() => {
+          setScreening({ cleared_for_retention: true, cleared_for_forceful: true });
+          startExercise();
+        }}
+      />
     </>
   );
 };

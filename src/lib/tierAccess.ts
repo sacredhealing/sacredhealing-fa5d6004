@@ -232,3 +232,51 @@ export function isAkashaInfinityTier(tier: string | undefined | null): boolean {
   );
 }
 
+/**
+ * Pranayama technique gating. Levels map 1:1 to membership tier rank so that
+ * paying more unlocks deeper technique access:
+ *   beginner (rank 0, free / Atma-Seed)
+ *   intermediate (rank 1, Prana-Flow)
+ *   advanced (rank 2+, Siddha-Quantum and above)
+ * Admins always pass.
+ */
+export type PranayamaLevel = 'beginner' | 'intermediate' | 'advanced';
+export type PranayamaTechniqueType = 'gentle' | 'retention' | 'forceful';
+
+export function getPranayamaLevelRank(level: string | undefined | null): number {
+  const l = (level || 'beginner').toLowerCase();
+  if (l === 'advanced') return 2;
+  if (l === 'intermediate') return 1;
+  return 0;
+}
+
+export function canAccessPranayamaLevel(params: {
+  isAdmin: boolean;
+  tier: string | undefined | null;
+  level: string | undefined | null;
+}): boolean {
+  if (params.isAdmin) return true;
+  return getTierRank(params.tier) >= getPranayamaLevelRank(params.level);
+}
+
+/**
+ * A technique with technique_type of 'retention' or 'forceful' requires the
+ * user to have completed the pranayama health screening AND to have no
+ * flagged contraindication for that technique type, regardless of tier.
+ * 'gentle' techniques are never gated by health screening.
+ */
+export function pranayamaTechniqueRequiresScreening(technique_type: string | undefined | null): boolean {
+  return technique_type === 'retention' || technique_type === 'forceful';
+}
+
+export function isClearedForPranayamaTechnique(params: {
+  technique_type: string | undefined | null;
+  screening: { cleared_for_retention: boolean; cleared_for_forceful: boolean } | null | undefined;
+}): boolean {
+  if (!pranayamaTechniqueRequiresScreening(params.technique_type)) return true;
+  if (!params.screening) return false;
+  if (params.technique_type === 'retention') return params.screening.cleared_for_retention;
+  if (params.technique_type === 'forceful') return params.screening.cleared_for_forceful;
+  return true;
+}
+
