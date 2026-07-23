@@ -87,27 +87,22 @@ serve(async (req) => {
         },
       ],
       metadata: {
+        type: "content_drop",
         content_id: item.id,
         content_title: item.title,
         user_id: user.id,
         product_kind: "content_vault",
+        currency: item.currency || "eur",
       },
       success_url: `${origin}/library?session_id={CHECKOUT_SESSION_ID}&content_id=${item.id}`,
       cancel_url: `${origin}/library?cancelled=true&content_id=${item.id}`,
     });
 
-    // Upsert pending purchase row so we can reconcile from webhook or success page
-    await svc.from("content_vault_purchases").upsert(
-      {
-        user_id: user.id,
-        content_id: item.id,
-        stripe_session_id: session.id,
-        amount_cents: item.price_cents,
-        currency: item.currency || "eur",
-        status: "pending",
-      },
-      { onConflict: "user_id,content_id" },
-    );
+    // Intentionally do NOT write a purchase row here. The stripe-webhook
+    // records the row with status='paid' only after payment is confirmed
+    // (matches the fix already applied to music/healing-audio/transmission
+    // purchases). Writing pending rows on session-create risks granting
+    // access if reconciliation ever runs against pending rows.
 
     log("session created", { userId: user.id, contentId: item.id, sessionId: session.id });
 

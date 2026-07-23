@@ -824,8 +824,20 @@ serve(async (req) => {
               { onConflict: "user_id,transmission_id" }
             );
           } else if (contentId && session.metadata?.type === "content_drop") {
+            const paymentIntent = typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : (session.payment_intent as { id?: string } | null)?.id ?? null;
             await supabaseAdmin.from("content_vault_purchases").upsert(
-              { user_id: userId, content_id: contentId, stripe_session_id: session.id, amount_cents: session.amount_total ?? 0 },
+              {
+                user_id: userId,
+                content_id: contentId,
+                stripe_session_id: session.id,
+                stripe_payment_intent: paymentIntent,
+                amount_cents: session.amount_total ?? 0,
+                currency: (session.metadata?.currency || session.currency || "eur").toLowerCase(),
+                status: "paid",
+                purchased_at: new Date().toISOString(),
+              },
               { onConflict: "user_id,content_id" }
             );
           }
