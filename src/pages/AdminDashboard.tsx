@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   Crown,
   Trophy,
+  Unlock,
   Mail,
   SendHorizontal,
   FolderKanban,
@@ -295,6 +296,13 @@ const adminSections = [
     icon: Music,
     href: '/admin/music',
     color: 'text-emerald-500',
+  },
+  {
+    title: 'Content Vault',
+    description: 'Paid meditations, audio, video — post as chat drops',
+    icon: Unlock,
+    href: '/admin/content-vault',
+    color: 'text-amber-500',
   },
   {
     title: 'Divine Transmissions',
