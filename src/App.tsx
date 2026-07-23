@@ -17,6 +17,7 @@ import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ConversionProvider } from "@/components/conversion/ConversionSystem";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
+import { UnreadMessagesProvider } from "@/contexts/UnreadMessagesContext";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
@@ -631,6 +632,7 @@ function App() {
                   <MusicPlayerProvider>
                     <GitaTransitionOverlay />
                     <AmbientAudioProvider>
+                    <UnreadMessagesProvider>
                       <Toaster />
                       <Sonner />
                       <DebugBanner />
@@ -645,6 +647,7 @@ function App() {
                       >
                         <AppRoutes />
                       </Suspense>
+                    </UnreadMessagesProvider>
                     </AmbientAudioProvider>
                   </MusicPlayerProvider>
                 </ConversionProvider>

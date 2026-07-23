@@ -7,6 +7,7 @@ import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
 import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
 import StarPentagramIcon from '@/components/icons/StarPentagramIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
+import { useUnreadMessages } from '@/contexts/UnreadMessagesContext';
 
 /** SQI tab names — fixed English; not driven by i18n so profile language never changes this bar. */
 const NAV_ITEMS = [
@@ -141,6 +142,7 @@ function getActiveNavTo(pathname: string): string | null {
 function BottomNavInner() {
   const { pathname } = useLocation();
   const activeTo = getActiveNavTo(pathname);
+  const { unreadCount } = useUnreadMessages();
 
   return (
     <nav
@@ -181,6 +183,20 @@ function BottomNavInner() {
                     className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#D4AF37]"
                     style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }}
                   />
+                )}
+                {item.to === '/explore' && unreadCount > 0 && (
+                  <div
+                    className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-[4px] rounded-full flex items-center justify-center text-[10px] font-black"
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 70%)',
+                      color: '#1a1300',
+                      border: '1.5px solid rgba(0,0,0,.4)',
+                      boxShadow:
+                        '0 0 0 3px #050505, 0 0 10px 2px rgba(212,175,55,.85), 0 0 22px 6px rgba(212,175,55,.45)',
+                    }}
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </div>
                 )}
               </div>
               <span

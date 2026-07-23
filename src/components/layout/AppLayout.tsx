@@ -7,6 +7,7 @@ import { BackButton, BACK_BUTTON_HIDE_PATHS } from './BackButton';
 import { AnnouncementPopup } from '@/components/AnnouncementPopup';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { NowPlayingBar } from '@/components/music/NowPlayingBar';
+import { NewMessageToast } from '@/components/notifications/NewMessageToast';
 
 const pageVariants = {
   initial: {
@@ -141,6 +142,7 @@ export const AppLayout: React.FC = () => {
       </AnimatePresence>
       {!isVastuRoute ? <AnnouncementPopup /> : null}
       <NowPlayingBar />
+      <NewMessageToast />
       {!isVastuRoute && <BottomNav />}
       <PWAInstallPrompt />
     </div>
