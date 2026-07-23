@@ -1218,7 +1218,7 @@ const Mantras = () => {
   const TIER_NAMES = ['Atma-Seed', 'Prana-Flow', 'Siddha-Quantum', 'Akasha-Infinity'];
   const upgradeInfo = useMemo(() => {
     if (isAdmin) return null;
-    let minLockedTier = Infinity;
+    let minLockedTier = Number.POSITIVE_INFINITY;
     mantras.forEach((m) => {
       const rt = (m.required_tier ?? (m.is_premium ? 1 : 0)) as number;
       if (rt > userRank && rt < minLockedTier) minLockedTier = rt;
