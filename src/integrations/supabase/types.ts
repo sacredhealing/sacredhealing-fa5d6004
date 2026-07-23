@@ -2989,6 +2989,116 @@ export type Database = {
         }
         Relationships: []
       }
+      content_vault: {
+        Row: {
+          content_type: string
+          created_at: string
+          currency: string
+          description: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          is_published: boolean
+          metadata: Json
+          mime_type: string | null
+          owner_id: string
+          price_cents: number
+          storage_path: string
+          thumbnail_url: string | null
+          tier_required: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_type?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          is_published?: boolean
+          metadata?: Json
+          mime_type?: string | null
+          owner_id: string
+          price_cents?: number
+          storage_path: string
+          thumbnail_url?: string | null
+          tier_required?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          is_published?: boolean
+          metadata?: Json
+          mime_type?: string | null
+          owner_id?: string
+          price_cents?: number
+          storage_path?: string
+          thumbnail_url?: string | null
+          tier_required?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_vault_purchases: {
+        Row: {
+          amount_cents: number
+          content_id: string
+          created_at: string
+          currency: string
+          id: string
+          purchased_at: string | null
+          status: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          content_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          purchased_at?: string | null
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          content_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          purchased_at?: string | null
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_vault_purchases_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_vault"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_enrollments: {
         Row: {
           amount_paid: number | null
@@ -13712,6 +13822,17 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       generate_sqi_affiliate_code: { Args: never; Returns: string }
+      get_content_access: {
+        Args: { p_content_id: string }
+        Returns: {
+          currency: string
+          has_access: boolean
+          price_cents: number
+          reason: string
+          storage_path: string
+          title: string
+        }[]
+      }
       get_featured_content: {
         Args: { p_category?: string; p_kind?: string }
         Returns: {
@@ -13719,6 +13840,21 @@ export type Database = {
           kind: string
           title: string
           url_path: string
+        }[]
+      }
+      get_my_library: {
+        Args: never
+        Returns: {
+          amount_cents: number
+          content_id: string
+          content_type: string
+          currency: string
+          description: string
+          duration_seconds: number
+          mime_type: string
+          purchased_at: string
+          thumbnail_url: string
+          title: string
         }[]
       }
       get_next_teaching: {

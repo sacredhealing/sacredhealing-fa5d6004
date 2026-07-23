@@ -1,16 +1,12 @@
 -- Content Vault: paid content drops with per-item pricing, purchase tracking, and gated Storage access.
--- Bucket `content-vault` is created separately (private).
 
--- ==========================================================
--- 1. content_vault (catalog)
--- ==========================================================
 CREATE TABLE IF NOT EXISTS public.content_vault (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title text NOT NULL,
   description text,
   content_type text NOT NULL DEFAULT 'file' CHECK (content_type IN ('file','audio','video','image','pdf','archive')),
-  storage_path text NOT NULL,           -- path inside `content-vault` bucket
+  storage_path text NOT NULL,
   mime_type text,
   file_size_bytes bigint,
   duration_seconds integer,
@@ -50,9 +46,6 @@ CREATE TRIGGER trg_content_vault_updated_at
   BEFORE UPDATE ON public.content_vault
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- ==========================================================
--- 2. content_vault_purchases (ledger)
--- ==========================================================
 CREATE TABLE IF NOT EXISTS public.content_vault_purchases (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -78,8 +71,6 @@ CREATE POLICY "cvp_select_own"
   ON public.content_vault_purchases FOR SELECT
   USING (user_id = auth.uid() OR public.has_role(auth.uid(), 'admin'::app_role));
 
--- No client-side INSERT/UPDATE: only edge functions (service_role) may write.
-
 CREATE INDEX IF NOT EXISTS idx_cvp_user ON public.content_vault_purchases(user_id);
 CREATE INDEX IF NOT EXISTS idx_cvp_content ON public.content_vault_purchases(content_id);
 
@@ -88,10 +79,6 @@ CREATE TRIGGER trg_cvp_updated_at
   BEFORE UPDATE ON public.content_vault_purchases
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- ==========================================================
--- 3. Access helper: get_content_access(content_id)
---    Returns whether the caller may unlock a given item.
--- ==========================================================
 CREATE OR REPLACE FUNCTION public.get_content_access(p_content_id uuid)
 RETURNS TABLE (
   has_access boolean,
@@ -113,34 +100,30 @@ DECLARE
 BEGIN
   SELECT * INTO v_item FROM public.content_vault WHERE id = p_content_id;
   IF NOT FOUND OR v_item.is_published = false THEN
-    RETURN QUERY SELECT false, 'not_found', 0, 'eur'::text, NULL::text, NULL::text;
+    RETURN QUERY SELECT false, 'not_found'::text, 0, 'eur'::text, NULL::text, NULL::text;
     RETURN;
   END IF;
 
-  -- Owner / admin bypass
   IF v_uid IS NOT NULL AND (v_item.owner_id = v_uid OR public.has_role(v_uid, 'admin'::app_role)) THEN
-    RETURN QUERY SELECT true, 'owner_or_admin', v_item.price_cents, v_item.currency, v_item.title, v_item.storage_path;
+    RETURN QUERY SELECT true, 'owner_or_admin'::text, v_item.price_cents, v_item.currency, v_item.title, v_item.storage_path;
     RETURN;
   END IF;
 
-  -- Tier gating
   v_required_level := public.tier_name_to_level(v_item.tier_required);
   v_tier_level := COALESCE(public.current_user_tier_level(), 0);
 
   IF v_required_level > v_tier_level THEN
-    RETURN QUERY SELECT false, 'tier_required', v_item.price_cents, v_item.currency, v_item.title, NULL::text;
+    RETURN QUERY SELECT false, 'tier_required'::text, v_item.price_cents, v_item.currency, v_item.title, NULL::text;
     RETURN;
   END IF;
 
-  -- Free item after tier check
   IF v_item.price_cents = 0 THEN
-    RETURN QUERY SELECT true, 'free', 0, v_item.currency, v_item.title, v_item.storage_path;
+    RETURN QUERY SELECT true, 'free'::text, 0, v_item.currency, v_item.title, v_item.storage_path;
     RETURN;
   END IF;
 
-  -- Paid check
   IF v_uid IS NULL THEN
-    RETURN QUERY SELECT false, 'auth_required', v_item.price_cents, v_item.currency, v_item.title, NULL::text;
+    RETURN QUERY SELECT false, 'auth_required'::text, v_item.price_cents, v_item.currency, v_item.title, NULL::text;
     RETURN;
   END IF;
 
@@ -150,18 +133,15 @@ BEGIN
   ) INTO v_paid;
 
   IF v_paid THEN
-    RETURN QUERY SELECT true, 'purchased', v_item.price_cents, v_item.currency, v_item.title, v_item.storage_path;
+    RETURN QUERY SELECT true, 'purchased'::text, v_item.price_cents, v_item.currency, v_item.title, v_item.storage_path;
   ELSE
-    RETURN QUERY SELECT false, 'payment_required', v_item.price_cents, v_item.currency, v_item.title, NULL::text;
+    RETURN QUERY SELECT false, 'payment_required'::text, v_item.price_cents, v_item.currency, v_item.title, NULL::text;
   END IF;
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_content_access(uuid) TO anon, authenticated;
 
--- ==========================================================
--- 4. Library helper: get_my_library()
--- ==========================================================
 CREATE OR REPLACE FUNCTION public.get_my_library()
 RETURNS TABLE (
   content_id uuid,
@@ -190,10 +170,6 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_my_library() TO authenticated;
 
--- ==========================================================
--- 5. Storage RLS on content-vault bucket
---    Reads go only through edge function (service_role). Admins may upload directly.
--- ==========================================================
 DROP POLICY IF EXISTS "content_vault_admin_upload" ON storage.objects;
 CREATE POLICY "content_vault_admin_upload"
   ON storage.objects FOR INSERT TO authenticated
