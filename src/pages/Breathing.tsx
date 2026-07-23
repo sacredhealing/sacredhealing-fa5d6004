@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock, Youtube, Music } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock, Youtube, Music, Square, Moon, Zap, Waves, Crown, Scale, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -352,10 +352,24 @@ const SQI_STYLES = `
     cursor: not-allowed;
   }
 
-  .technique-emoji {
-    font-size: 28px;
+  .technique-icon-ring {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.04));
+    border: 1px solid rgba(212,175,55,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4AF37;
+    box-shadow: 0 0 16px rgba(212,175,55,0.12), inset 0 1px 0 rgba(212,175,55,0.18);
     margin-bottom: 10px;
-    display: block;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .cave-technique-card.active .technique-icon-ring {
+    border-color: rgba(212,175,55,0.55);
+    box-shadow: 0 0 24px rgba(212,175,55,0.3), inset 0 1px 0 rgba(212,175,55,0.25);
   }
 
   .technique-name {
@@ -916,15 +930,15 @@ const TECHNIQUE_ICONS: Record<string, string> = {
   crown: '🔱',
 };
 
-const getPatternEmoji = (id: string, name: string) => {
-  if (id === 'box') return '◻️';
-  if (name.toLowerCase().includes('4-7-8') || name.toLowerCase().includes('relaxation')) return '🌙';
-  if (name.toLowerCase().includes('energiz') || name.toLowerCase().includes('kapalbhati')) return '⚡';
-  if (name.toLowerCase().includes('calm')) return '🌊';
-  if (name.toLowerCase().includes('crown') || name.toLowerCase().includes('pump')) return '🔱';
-  if (name.toLowerCase().includes('nadi') || name.toLowerCase().includes('nostril')) return '☯️';
-  if (name.toLowerCase().includes('ocean') || name.toLowerCase().includes('ujjayi')) return '🌊';
-  return '🕉️';
+const getPatternIcon = (id: string, name: string) => {
+  const n = name.toLowerCase();
+  if (id === 'box') return Square;
+  if (n.includes('4-7-8') || n.includes('relaxation')) return Moon;
+  if (n.includes('energiz') || n.includes('kapalbhati')) return Zap;
+  if (n.includes('crown') || n.includes('pump')) return Crown;
+  if (n.includes('nadi') || n.includes('nostril')) return Scale;
+  if (n.includes('calm') || n.includes('ocean') || n.includes('ujjayi')) return Waves;
+  return Sparkles;
 };
 
 // ─────────────────────────────────────────────
@@ -1076,8 +1090,7 @@ const Breathing: React.FC = () => {
 
           {/* ── ACCESS BADGES ── */}
           <div className="access-badges">
-            <span className="badge badge-free">✓ Free Access</span>
-            <span className="badge badge-prana">✦ Prana Flow Included</span>
+            <span className="badge badge-free"><CheckCircle2 size={13} strokeWidth={2.25} />Free — No Subscription Needed</span>
           </div>
 
           {/* ── INTRO BANNER ── */}
@@ -1114,7 +1127,9 @@ const Breathing: React.FC = () => {
             <span className="section-label">⬡ Step 1 · Choose Your Pattern</span>
           </div>
           <div className="cave-grid">
-            {patterns.map((pattern) => (
+            {patterns.map((pattern) => {
+              const PatternIcon = getPatternIcon(pattern.id, pattern.name);
+              return (
               <button
                 key={pattern.id}
                 onClick={() => { if (!isActive) setSelectedPattern(pattern); }}
@@ -1122,14 +1137,17 @@ const Breathing: React.FC = () => {
                 className={`cave-technique-card ${selectedPattern.id === pattern.id ? 'active' : ''} ${isActive ? 'disabled' : ''}`}
               >
                 {selectedPattern.id === pattern.id && <div className="active-glow-dot" />}
-                <span className="technique-emoji">{getPatternEmoji(pattern.id, pattern.name)}</span>
+                <div className="technique-icon-ring">
+                  <PatternIcon size={20} strokeWidth={1.75} />
+                </div>
                 <div className="technique-name">{pattern.name}</div>
                 <div className="technique-desc">{pattern.description}</div>
                 <div className="technique-ratio">
                   {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.hold_out > 0 ? `-${pattern.hold_out}` : ''}
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
 
           {/* ── CLASSIC TIMER ── */}
