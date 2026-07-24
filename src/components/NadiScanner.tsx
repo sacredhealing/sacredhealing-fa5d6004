@@ -474,6 +474,19 @@ export default function NadiScanner({
   const voiceStopRef = useRef<(() => void) | null>(null);
   const rafVoiceRef = useRef<number | null>(null);
 
+  // The <video> element only exists in the DOM once phase === 'scanning' (it's conditionally
+  // rendered). The camera stream is obtained earlier, during 'calibrating', when videoRef is
+  // still null — so the original attach attempt silently no-ops. This effect re-attaches the
+  // already-live stream the moment the video element actually mounts, fixing a black/frozen
+  // preview (and, more importantly, blank frames going into the rPPG canvas capture).
+  useEffect(() => {
+    if (phase === 'scanning' && videoRef.current && streamRef.current && videoRef.current.srcObject !== streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [phase]);
+
+
   const bioAccum = useRef({
     frames: [] as ImageData[],
     blinkCounts: 0,
@@ -801,6 +814,10 @@ export default function NadiScanner({
           });
         }
         streamRef.current = stream;
+        // NOTE: the <video> element only exists in the DOM once phase === 'scanning',
+        // which hasn't happened yet at this point (we're still 'calibrating'). Attaching
+        // here is a best-effort no-op most of the time — the real attach happens in the
+        // useEffect below, keyed on phase, once the element has actually mounted.
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => void videoRef.current?.play();
@@ -1261,8 +1278,8 @@ export default function NadiScanner({
       )}
 
       {phase === 'scanning' && (
-        <div className="sqi-glass" style={{ overflow: 'hidden', animation: 'fadeUp .4s ease' }}>
-          <div style={{ position: 'relative', aspectRatio: '4/3' }}>
+        <div style={{ background: 'rgba(10,10,12,.7)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 40, overflow: 'hidden', animation: 'fadeUp .4s ease' }}>
+          <div style={{ position: 'relative', aspectRatio: '4/3', background: '#000' }}>
             <video
               ref={videoRef}
               playsInline
@@ -2031,3 +2048,4 @@ export default function NadiScanner({
     </div>
   );
 }
+
