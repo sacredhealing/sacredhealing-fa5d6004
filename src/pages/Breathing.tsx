@@ -214,15 +214,25 @@ const SQI_STYLES = `
     flex-shrink: 0;
   }
 
-  .hero-titles h1 {
+  @keyframes heroGoldShimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+
+  .hero-shimmer-title {
     font-family: 'Cinzel', serif;
     font-weight: 900;
     font-size: 26px;
-    color: #D4AF37;
-    text-shadow: 0 0 25px rgba(212,175,55,0.35);
     line-height: 1.1;
     margin: 0 0 4px;
     letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 45%, #D4AF37 65%, #A07C10 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: heroGoldShimmer 5s linear infinite;
+    display: inline-block;
   }
 
   .hero-titles p {
@@ -1076,7 +1086,7 @@ const SQI_STYLES = `
   /* Responsive */
   @media (max-width: 400px) {
     .cave-grid { grid-template-columns: 1fr; }
-    .hero-titles h1 { font-size: 22px; }
+    .hero-shimmer-title { font-size: 22px; }
   }
 `;
 
@@ -1380,7 +1390,7 @@ const Breathing: React.FC = () => {
                   <Wind size={28} color="#D4AF37" />
                 </div>
                 <div className="hero-titles">
-                  <h1>{content['breathing_title'] || 'Pranayama Cave'}</h1>
+                  <h1 className="hero-shimmer-title">{content['breathing_title'] || 'Pranayama Cave'}</h1>
                   <p>{content['breathing_subtitle'] || 'Sacred Breath · Vedic Light-Codes'}</p>
                 </div>
               </div>
@@ -1391,15 +1401,6 @@ const Breathing: React.FC = () => {
           {/* ── ACCESS BADGES ── */}
           <div className="access-badges">
             <span className="badge badge-free"><CheckCircle2 size={13} strokeWidth={2.25} />Free — No Subscription Needed</span>
-          </div>
-
-          {/* ── INTRO BANNER ── */}
-          <div className="intro-banner glass-card">
-            <p>
-              {content['breathing_description'] ||
-                <>Conscious breathing to calm the nervous system and clear the mind. <strong>Pick a pattern below, press begin, and follow the orb.</strong></>
-              }
-            </p>
           </div>
 
           {/* ── 3-STEP BEGINNER GUIDE ── */}
