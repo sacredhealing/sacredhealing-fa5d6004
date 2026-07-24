@@ -513,6 +513,7 @@ interface PatchProtocol {
   name: string;
   peptide: string;
   icon: string;
+  geo: 'sriyantra' | 'flower' | 'merkaba' | 'sunwheel' | 'hexagram' | 'metatron' | 'lotus' | 'crescent';
   color: string;
   frequency: string;
   mantra: string;
@@ -525,6 +526,7 @@ interface PatchProtocol {
 const SIDDHA_PATCHES: PatchProtocol[] = [
   {
     id: 'agastya',
+    geo: 'sriyantra',
     name: 'Agastya Muni',
     peptide: 'Kayakalpa Renewal',
     icon: '🌿',
@@ -538,6 +540,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'thirumoolar',
+    geo: 'flower',
     name: 'Thirumoolar',
     peptide: 'Pranayama Neural Code',
     icon: '🧠',
@@ -551,6 +554,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'bogar',
+    geo: 'merkaba',
     name: 'Bogar',
     peptide: 'Alchemical Fire Code',
     icon: '🔥',
@@ -564,6 +568,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'konganar',
+    geo: 'sunwheel',
     name: 'Konganar',
     peptide: 'Solar Prana Activation',
     icon: '☀️',
@@ -577,6 +582,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'sattaimuni',
+    geo: 'hexagram',
     name: 'Sattaimuni',
     peptide: 'Purification Vortex',
     icon: '🛡️',
@@ -590,6 +596,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'kalangi',
+    geo: 'metatron',
     name: 'Kalangi Nathar',
     peptide: 'Immortal Body Code',
     icon: '⚛️',
@@ -603,6 +610,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'idaikadar',
+    geo: 'lotus',
     name: 'Idaikadar',
     peptide: 'Shakti Hormonal Harmony',
     icon: '🌊',
@@ -616,6 +624,7 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
   {
     id: 'kudambai',
+    geo: 'crescent',
     name: 'Kudambai Siddhar',
     peptide: 'Yoga Nidra Deep Code',
     icon: '🌙',
@@ -629,6 +638,84 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
 ];
 
+
+/* ─── SACRED GEOMETRY — generated glyphs, one per Siddha ────────────────── */
+function polyPts(n: number, r: number, cx: number, cy: number, rot = 0): [number, number][] {
+  const pts: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const a = rot + i * (2 * Math.PI / n) - Math.PI / 2;
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  return pts;
+}
+const ptsStr = (pts: [number, number][]) => pts.map(p => p.join(',')).join(' ');
+
+function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; color: string; size?: number }) {
+  const c = color;
+  let inner: React.ReactNode = null;
+
+  if (geo === 'sriyantra') {
+    inner = <>
+      {[26, 20, 14].map((r, i) => (
+        <g key={r}>
+          <polygon points={ptsStr(polyPts(3, r, 32, 32, 0))} fill="none" stroke={c} strokeWidth={1.4 - i * 0.2} />
+          <polygon points={ptsStr(polyPts(3, r, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={1.4 - i * 0.2} />
+        </g>
+      ))}
+      <circle cx={32} cy={32} r={2} fill={c} />
+    </>;
+  } else if (geo === 'flower') {
+    inner = <>
+      <circle cx={32} cy={32} r={10} fill="none" stroke={c} strokeWidth={1.2} />
+      {polyPts(6, 10, 32, 32, 0).map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={10} fill="none" stroke={c} strokeWidth={1.2} />)}
+    </>;
+  } else if (geo === 'merkaba') {
+    inner = <>
+      <polygon points={ptsStr(polyPts(3, 24, 32, 32, 0))} fill="none" stroke={c} strokeWidth={1.6} />
+      <polygon points={ptsStr(polyPts(3, 24, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={1.6} opacity={0.7} />
+      <circle cx={32} cy={32} r={30} fill="none" stroke={c} strokeWidth={0.6} opacity={0.4} />
+    </>;
+  } else if (geo === 'sunwheel') {
+    inner = <>
+      <circle cx={32} cy={32} r={9} fill="none" stroke={c} strokeWidth={1.6} />
+      {Array.from({ length: 8 }).map((_, i) => {
+        const a = i * (Math.PI / 4);
+        return <line key={i} x1={32 + 11 * Math.cos(a)} y1={32 + 11 * Math.sin(a)} x2={32 + 27 * Math.cos(a)} y2={32 + 27 * Math.sin(a)} stroke={c} strokeWidth={1.4} />;
+      })}
+      <circle cx={32} cy={32} r={27} fill="none" stroke={c} strokeWidth={0.5} opacity={0.35} />
+    </>;
+  } else if (geo === 'hexagram') {
+    inner = <>
+      <polygon points={ptsStr(polyPts(3, 22, 32, 32, 0))} fill="none" stroke={c} strokeWidth={1.5} />
+      <polygon points={ptsStr(polyPts(3, 22, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={1.5} />
+      <circle cx={32} cy={32} r={28} fill="none" stroke={c} strokeWidth={0.5} opacity={0.3} />
+    </>;
+  } else if (geo === 'metatron') {
+    const pts = [...polyPts(6, 20, 32, 32, 0), [32, 32] as [number, number]];
+    const lines: React.ReactNode[] = [];
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) lines.push(<line key={`${i}-${j}`} x1={pts[i][0]} y1={pts[i][1]} x2={pts[j][0]} y2={pts[j][1]} stroke={c} strokeWidth={0.4} opacity={0.5} />);
+    inner = <>{lines}{pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={3.2} fill="none" stroke={c} strokeWidth={1} />)}</>;
+  } else if (geo === 'lotus') {
+    inner = <>
+      {Array.from({ length: 8 }).map((_, i) => {
+        const a = i * (Math.PI / 4); const x = 32 + 14 * Math.cos(a), y = 32 + 14 * Math.sin(a);
+        return <ellipse key={i} cx={x} cy={y} rx={7} ry={14} transform={`rotate(${a * 180 / Math.PI + 90} ${x} ${y})`} fill="none" stroke={c} strokeWidth={1} />;
+      })}
+      <circle cx={32} cy={32} r={4} fill={c} opacity={0.6} />
+    </>;
+  } else if (geo === 'crescent') {
+    inner = <>
+      <path d="M40,14 A20,20 0 1 0 40,54 A15,20 0 1 1 40,14 Z" fill={c} opacity={0.5} />
+      {[[16, 16, 1.4], [48, 20, 1], [50, 44, 1.6], [18, 46, 1.1]].map(([x, y, r], i) => <circle key={i} cx={x} cy={y} r={r} fill={c} />)}
+    </>;
+  }
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" style={{ filter: `drop-shadow(0 0 6px ${c})`, animation: 'spr-spin-slow 40s linear infinite' }}>
+      {inner}
+    </svg>
+  );
+}
 
 function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: string | null; onSelect: (id: string) => void }) {
   const [open, setOpen]         = useState(false);
@@ -677,19 +764,24 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                   const isExpanded = expanded === patch.id;
                   return (
                     <div key={patch.id}
-                      style={{ borderRadius: 20, border: `1px solid ${isActive ? patch.color + '55' : 'rgba(255,255,255,.06)'}`,
+                      style={{ position: 'relative', borderRadius: 20, border: `1px solid ${isActive ? patch.color + '55' : 'rgba(255,255,255,.06)'}`,
                         background: isActive ? `rgba(${patch.color === GOLD ? '212,175,55' : '34,211,238'},.05)` : 'rgba(255,255,255,.02)',
                         overflow: 'hidden', transition: 'all .3s ease',
                         boxShadow: isActive ? `0 0 24px ${patch.color}22` : 'none' }}>
 
                       {/* Patch header */}
+                      {/* Sacred geometry watermark, large and faint, behind the card */}
+                      <div style={{ position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', width: 160, height: 160, opacity: 0.05, pointerEvents: 'none', zIndex: 0 }}>
+                        <SacredGeometry geo={patch.geo} color={patch.color} size={160} />
+                      </div>
+
                       <button type="button"
                         onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
-                        style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left' }}>
+                        style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', position: 'relative', zIndex: 1 }}>
                         <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0,
                           background: `${patch.color}18`, border: `1px solid ${patch.color}33`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                          {patch.icon}
+                          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <SacredGeometry geo={patch.geo} color={patch.color} size={30} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1308,5 +1400,6 @@ export default function SiddhaPhotonicRegeneration() {
     </div>
   );
 }
+
 
 
