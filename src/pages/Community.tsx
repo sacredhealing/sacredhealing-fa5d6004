@@ -992,6 +992,13 @@ const Community = () => {
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const attachInputRef = useRef<HTMLInputElement | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStuck, setLoadingStuck] = useState(false);
@@ -2003,6 +2010,119 @@ const Community = () => {
     }
   };
 
+  // Uploads to the existing public 'chat-storage' bucket (already set up for
+  // this — any authenticated user can upload to their own folder, and any
+  // authenticated user can view). Returns the metadata chat_messages expects.
+  const uploadChatMedia = async (blob: File | Blob, kind: "image" | "video" | "voice", fileName?: string) => {
+    if (!user) throw new Error("Not signed in");
+    const ext = kind === "voice" ? "webm" : (fileName?.split(".").pop() || (kind === "video" ? "mp4" : "jpg"));
+    const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("chat-storage").upload(path, blob, {
+      upsert: false,
+      contentType: (blob as File).type || (kind === "voice" ? "audio/webm" : undefined),
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("chat-storage").getPublicUrl(path);
+    return {
+      file_url: data.publicUrl,
+      file_name: fileName || `${kind}-${Date.now()}.${ext}`,
+      file_size: (blob as File).size || (blob as Blob).size || 0,
+      mime_type: (blob as File).type || (kind === "voice" ? "audio/webm" : ""),
+    };
+  };
+
+  // Sends a media message directly into the currently active GROUP channel.
+  // DMs don't have message_type/file_url columns on private_messages yet —
+  // that needs one more migration, so this only ever targets chat_messages.
+  const sendGroupMedia = async (
+    file: File | Blob,
+    kind: "image" | "video" | "voice",
+    fileName?: string,
+    durationSeconds?: number
+  ) => {
+    if (!user || !activeChannel) return;
+    if (isDmChannel(activeChannel)) {
+      toast.error("Photo/video/voice messages aren't available in private chats yet — group channels only for now.");
+      return;
+    }
+    const roomId = roomIds[activeChannel];
+    if (!roomId) {
+      toast.error("Channel is not ready yet — try again in a moment.");
+      return;
+    }
+    setIsUploadingMedia(true);
+    try {
+      const meta = await uploadChatMedia(file, kind, fileName);
+      const label = kind === "voice" ? "🎤 Voice message" : kind === "image" ? "📷 Photo" : "🎬 Video";
+      const { error } = await (supabase as any).from("chat_messages").insert({
+        room_id: roomId,
+        user_id: user.id,
+        content: label,
+        message_type: kind,
+        file_url: meta.file_url,
+        file_name: meta.file_name,
+        file_size: meta.file_size,
+        mime_type: meta.mime_type,
+        duration: durationSeconds || null,
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      console.error("[Community] media send failed:", err);
+      toast.error(err.message || "Could not send media message.");
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  };
+
+  const handleAttachFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const kind = file.type.startsWith("video/") ? "video" : "image";
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("File is too large (50MB limit).");
+      return;
+    }
+    sendGroupMedia(file, kind, file.name);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      recordedChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        const seconds = recordSeconds;
+        if (blob.size > 0 && seconds >= 1) {
+          sendGroupMedia(blob, "voice", `voice-note-${Date.now()}.webm`, seconds);
+        }
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+    } catch (err) {
+      console.error("[Community] mic access failed:", err);
+      toast.error("Couldn't access the microphone — check permissions.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    setIsRecording(false);
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+  };
+
   const sendMessage = async () => {
     if (!messageText.trim() || !user || !activeChannel) return;
 
@@ -2533,6 +2653,38 @@ const Community = () => {
                         );
                       }
 
+                      if (['image', 'video', 'voice'].includes((msg as any).message_type) && (msg as any).file_url) {
+                        const mtype = (msg as any).message_type;
+                        const fileUrl = (msg as any).file_url;
+                        const dur = (msg as any).duration;
+                        return (
+                          <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
+                            <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive || isMine ? "hidden" : ""}`}>
+                              {getInitials(msg.user_name || (isMine ? "ME" : undefined))}
+                            </div>
+                            <div className="c-msg-body">
+                              {!consecutive && !isMine && (
+                                <div className="c-msg-meta"><span className="c-msg-author">{msg.user_name || "Member"}</span></div>
+                              )}
+                              <div style={{ maxWidth: 260, borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,.1)' }}>
+                                {mtype === 'image' && <img src={fileUrl} alt="" style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'cover' }} />}
+                                {mtype === 'video' && <video src={fileUrl} controls style={{ display: 'block', width: '100%', maxHeight: 320 }} />}
+                                {mtype === 'voice' && (
+                                  <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,.05)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{ fontSize: 15 }}>🎤</span>
+                                    <audio src={fileUrl} controls style={{ height: 32, flex: 1 }} />
+                                    {dur ? <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>{Math.floor(dur / 60)}:{(dur % 60).toString().padStart(2, '0')}</span> : null}
+                                  </div>
+                                )}
+                              </div>
+                              <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
+                                {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
                           <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive || isMine ? "hidden" : ""}`}>
@@ -2566,15 +2718,54 @@ const Community = () => {
                 <div className="c-input-bar">
                   <div className="c-input-row">
                     <input
-                      placeholder={`Message ${currentChannel.name}...`}
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      onKeyDown={handleKeyDown}
+                      type="file"
+                      ref={attachInputRef}
+                      accept="image/*,video/*"
+                      style={{ display: "none" }}
+                      onChange={handleAttachFile}
                     />
-                    <button className="c-send-btn" onClick={sendMessage} disabled={!messageText.trim()}>
-                      ➤
-                    </button>
+                    {isRecording ? (
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, color: "#ff6b61", fontSize: 13, fontWeight: 700 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff3b30", animation: "c-rec-pulse 1s infinite" }} />
+                        Recording… {Math.floor(recordSeconds / 60)}:{(recordSeconds % 60).toString().padStart(2, "0")}
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => attachInputRef.current?.click()}
+                          disabled={isUploadingMedia}
+                          style={{ background: "none", border: "none", fontSize: 19, cursor: "pointer", padding: "0 4px", opacity: isUploadingMedia ? 0.4 : 0.75, flexShrink: 0 }}
+                          title="Send a photo or video"
+                        >
+                          📎
+                        </button>
+                        <input
+                          placeholder={isUploadingMedia ? "Sending…" : `Message ${currentChannel.name}...`}
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          disabled={isUploadingMedia}
+                        />
+                      </>
+                    )}
+                    {!messageText.trim() && !isUploadingMedia ? (
+                      <button
+                        type="button"
+                        className="c-send-btn"
+                        onClick={isRecording ? stopRecording : startRecording}
+                        style={isRecording ? { background: "radial-gradient(circle at 30% 30%, #ff8a80, #ff3b30 75%)" } : undefined}
+                        title={isRecording ? "Stop and send" : "Record a voice message"}
+                      >
+                        {isRecording ? "⏹" : "🎤"}
+                      </button>
+                    ) : (
+                      <button className="c-send-btn" onClick={sendMessage} disabled={!messageText.trim() || isUploadingMedia}>
+                        ➤
+                      </button>
+                    )}
                   </div>
+                  <style>{`@keyframes c-rec-pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }`}</style>
                 </div>
               </div>
             )
