@@ -48,6 +48,7 @@ interface PhotonicSession {
   biometricProfile: BiometricProfile;
   userId: string;
   activePatchId?: string | null;
+  activePatchIds?: string[];
   patchActivatedAt?: number | null;
 }
 
@@ -794,10 +795,10 @@ function SacredGeometry({ geo, color, size = 48, active = false }: { geo: PatchP
   );
 }
 
-function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expiresAt }: { activePatchId: string | null; onSelect: (id: string | null) => void; biometricProfile?: BiometricProfile | null; expiresAt?: number | null }) {
+function PatchProtocolSelector({ activePatchIds, onToggle, biometricProfile, expiresAt }: { activePatchIds: string[]; onToggle: (id: string) => void; biometricProfile?: BiometricProfile | null; expiresAt?: number | null }) {
   const [open, setOpen]         = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const activePatch = SIDDHA_PATCHES.find(p => p.id === activePatchId);
+  const activePatches = SIDDHA_PATCHES.filter(p => activePatchIds.includes(p.id));
   const recommended = recommendedPatchIds(biometricProfile);
 
   return (
@@ -815,7 +816,7 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
             <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>Siddha × SQI 2050</p>
             <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 800, color: '#fff' }}>
               Siddha Scalar Amplification Protocol
-              {activePatch && <span style={{ marginLeft: 10, fontSize: 11, color: GOLD, fontWeight: 600 }}>· {activePatch.name} Invoked</span>}
+              {activePatches.length > 0 && <span style={{ marginLeft: 10, fontSize: 11, color: GOLD, fontWeight: 600 }}>· {activePatches.length} Active</span>}
             </p>
           </div>
         </div>
@@ -832,8 +833,17 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                 Siddha Scalar Patches work via <span style={{ color: GOLD }}>photobiomodulation</span> — transmitting living consciousness codes from the 18 Tamil Siddha masters directly into the biophotonic field.
                 Each Siddha carries a sovereign healing domain. SQI amplifies the transmission through the{' '}
                 <span style={{ color: CYAN }}>Nadi entanglement field</span>, adding Vedic mantra resonance and frequency pairing.
-                Select your Siddha to receive your personalised Scalar Amplification Protocol.
+                All 8 can run at once — select and activate as many as you want.
               </p>
+
+              {/* Start-with-one guidance — explicit, not enforced. Multiple Siddhas is fine;
+                  this just sets expectations for someone new to the practice. */}
+              <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderRadius: 14, background: 'rgba(212,175,55,.05)', border: `1px solid ${GOLD_BORDER}`, marginBottom: 20 }}>
+                <span style={{ fontSize: 13, flexShrink: 0 }}>◈</span>
+                <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,.5)', lineHeight: 1.7, fontWeight: 300 }}>
+                  <strong style={{ color: GOLD, fontWeight: 700 }}>Good to know:</strong> you can activate all 8 at once, but it's generally better to start with just one, get accustomed to how it feels, and add more over time as you're ready. After each scan, you choose which one(s) to activate — nothing is chosen for you.
+                </p>
+              </div>
 
               {biometricProfile && recommended.length > 0 && (
                 <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.35)', lineHeight: 1.6, marginBottom: 20, fontStyle: 'italic' }}>
@@ -845,7 +855,7 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
               {/* Patch grid — recommended matches (from the real scan) surface first */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
                 {[...SIDDHA_PATCHES].sort((a, b) => Number(recommended.includes(b.id)) - Number(recommended.includes(a.id))).map(patch => {
-                  const isActive   = activePatchId === patch.id;
+                  const isActive   = activePatchIds.includes(patch.id);
                   const isExpanded = expanded === patch.id;
                   const isRecommended = recommended.includes(patch.id);
                   return (
@@ -927,13 +937,8 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
 
                               {/* Activate/Deactivate toggle — no external link, no physical product */}
                               <button type="button" onClick={() => {
-                                  if (isActive) {
-                                    onSelect(null);
-                                    toast(`${patch.name} transmission deactivated.`);
-                                  } else {
-                                    onSelect(patch.id);
-                                    toast(`${patch.name} transmission activated — stacked into your current Nadi session.`);
-                                  }
+                                  onToggle(patch.id);
+                                  toast(isActive ? `${patch.name} transmission deactivated.` : `${patch.name} transmission activated — stacked into your current Nadi session.`);
                                 }}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999, cursor: 'pointer', marginTop: 4,
                                   border: isActive ? `1px solid ${patch.color}` : `1px solid ${patch.color}44`,
@@ -953,34 +958,28 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                 })}
               </div>
 
-              {/* Active stack summary */}
-              {activePatch && (
-                <motion.div initial={{ opacity: 0, scale: .92 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .2, type: 'spring', stiffness: 200, damping: 16 }}
+              {/* Active stack summary — now lists every active Siddha, not just one */}
+              {activePatches.length > 0 && (
+                <motion.div initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .2 }}
                   style={{ marginTop: 20, padding: '18px 22px', borderRadius: 20,
-                    background: `${activePatch.color}0a`, border: `1px solid ${activePatch.color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
-                    <SacredGeometry geo={activePatch.geo} color={activePatch.color} size={44} active />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                        <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: activePatch.color }}>
-                          Active Transmission Stack
-                        </p>
-                        {expiresAt && <TransmissionCountdown expiresAt={expiresAt} />}
-                      </div>
-                    </div>
+                    background: 'rgba(212,175,55,.05)', border: `1px solid ${GOLD_BORDER}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+                    <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: GOLD }}>
+                      Active Transmission Stack · {activePatches.length}
+                    </p>
+                    {expiresAt && <TransmissionCountdown expiresAt={expiresAt} />}
                   </div>
-                  <p style={{ margin: '0 0 12px', fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 300, fontStyle: 'italic' }}>
-                    Tied to your current 72-hour transmission window — activating a new Nadi Scan or Re-Calibrating clears this.
+                  <p style={{ margin: '0 0 16px', fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 300, fontStyle: 'italic' }}>
+                    All tied to your current 72-hour transmission window — a new Nadi Scan or Re-Calibrating clears the whole stack.
                   </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {[
-                      { label: 'Siddha', value: `${activePatch.name} (${activePatch.peptide})` },
-                      { label: 'Frequency', value: activePatch.frequency },
-                      { label: 'Mantra', value: activePatch.mantra },
-                    ].map(item => (
-                      <div key={item.label} style={{ padding: '6px 14px', borderRadius: 999, background: `${activePatch.color}12`, border: `1px solid ${activePatch.color}25` }}>
-                        <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '.2em' }}>{item.label}: </span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{item.value}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {activePatches.map(ap => (
+                      <div key={ap.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 16, background: `${ap.color}0a`, border: `1px solid ${ap.color}25` }}>
+                        <SacredGeometry geo={ap.geo} color={ap.color} size={34} active />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: ap.color }}>{ap.name}</p>
+                          <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,.4)' }}>{ap.frequency} · {ap.mantra}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1131,7 +1130,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
   const [showReturn, setShowReturn]     = useState(false);
   const [showProtocol, setShowProtocol] = useState(false);
   const [isSyncing, setIsSyncing]       = useState(false);
-  const [activePatchId, setActivePatchId] = useState<string | null>(null);
+  const [activePatchIds, setActivePatchIds] = useState<string[]>([]);
   const [activeScalars, setActiveScalars] = useState<string[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const nodeSize = 220;
@@ -1153,6 +1152,10 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
   const isRealScanSession = (s: PhotonicSession | null): boolean =>
     !!s?.biometricProfile?.activatedNadi && ['Ida', 'Pingala', 'Sushumna', 'Blocked'].includes(s.biometricProfile.activatedNadi);
 
+  // Older sessions stored a single activePatchId string. Migrate that into the array model.
+  const readActivePatchIds = (s: PhotonicSession): string[] =>
+    s.activePatchIds ?? (s.activePatchId ? [s.activePatchId] : []);
+
   useEffect(() => {
     const local = loadFromLocalStorage(userId);
     if (local) {
@@ -1162,7 +1165,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         toast('Your previous reading used placeholder data before the live scanner was connected — run a new Nadi Scan for a real reading.');
         return;
       }
-      setSession(local); setShowReturn(true); if (local.activePatchId) setActivePatchId(local.activePatchId); return;
+      setSession(local); setShowReturn(true); setActivePatchIds(readActivePatchIds(local)); return;
     }
     setIsSyncing(true);
     loadFromSupabase(userId).then(remote => {
@@ -1171,21 +1174,24 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         toast('Your previous reading used placeholder data before the live scanner was connected — run a new Nadi Scan for a real reading.');
         return;
       }
-      if (remote) { setSession(remote); saveToLocalStorage(remote); setShowReturn(true); if (remote.activePatchId) setActivePatchId(remote.activePatchId); }
+      if (remote) { setSession(remote); saveToLocalStorage(remote); setShowReturn(true); setActivePatchIds(readActivePatchIds(remote)); }
     }).finally(() => setIsSyncing(false));
   }, [userId]);
 
   // Persists the selected Siddha into the same session object the entanglement/light-code
   // already lives in — so the choice is tied to this user's field, not just local component state.
   // Passing null deactivates whatever is currently active.
-  const handleSelectPatch = useCallback((id: string | null) => {
-    setActivePatchId(id);
-    setSession(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, activePatchId: id, patchActivatedAt: id ? Date.now() : null };
-      saveToLocalStorage(updated);
-      syncToSupabase(userId, updated).catch(() => {});
-      return updated;
+  const handleTogglePatch = useCallback((id: string) => {
+    setActivePatchIds(prevIds => {
+      const nextIds = prevIds.includes(id) ? prevIds.filter(x => x !== id) : [...prevIds, id];
+      setSession(prev => {
+        if (!prev) return prev;
+        const updated: PhotonicSession = { ...prev, activePatchIds: nextIds, activePatchId: undefined, patchActivatedAt: nextIds.length ? Date.now() : null };
+        saveToLocalStorage(updated);
+        syncToSupabase(userId, updated).catch(() => {});
+        return updated;
+      });
+      return nextIds;
     });
   }, [userId]);
 
@@ -1258,7 +1264,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     clearFromLocalStorage(userId);
     clearFromSupabase(userId).catch(() => {});
     setSession(null); setShowReturn(false); setShowProtocol(false);
-    setActivePatchId(null);
+    setActivePatchIds([]);
     startScan();
   };
 
@@ -1437,7 +1443,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
            countdown) only appears once a real scan session exists. Selecting a patch without
            an active session still works locally, it just won't persist until you scan. ── */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}>
-        <PatchProtocolSelector activePatchId={activePatchId} onSelect={handleSelectPatch} biometricProfile={session?.biometricProfile} expiresAt={session?.expiresAt} />
+        <PatchProtocolSelector activePatchIds={activePatchIds} onToggle={handleTogglePatch} biometricProfile={session?.biometricProfile} expiresAt={session?.expiresAt} />
       </motion.div>
 
       {/* ── SCALAR TRANSMISSION STACK — always browsable for the same reason ── */}
