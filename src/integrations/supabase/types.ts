@@ -1844,6 +1844,9 @@ export type Database = {
       breathing_patterns: {
         Row: {
           audio_url: string | null
+          benefits: string[]
+          cautions: string[]
+          contraindications: string[]
           created_at: string
           cycles: number
           description: string | null
@@ -1853,13 +1856,22 @@ export type Database = {
           id: string
           inhale: number
           is_active: boolean
+          level: string
           name: string
           order_index: number
+          requires_health_screen: boolean
+          sanskrit_name: string | null
+          steps: string[]
+          technique_type: string
+          tier_required: string
           updated_at: string
           youtube_url: string | null
         }
         Insert: {
           audio_url?: string | null
+          benefits?: string[]
+          cautions?: string[]
+          contraindications?: string[]
           created_at?: string
           cycles?: number
           description?: string | null
@@ -1869,13 +1881,22 @@ export type Database = {
           id?: string
           inhale?: number
           is_active?: boolean
+          level?: string
           name: string
           order_index?: number
+          requires_health_screen?: boolean
+          sanskrit_name?: string | null
+          steps?: string[]
+          technique_type?: string
+          tier_required?: string
           updated_at?: string
           youtube_url?: string | null
         }
         Update: {
           audio_url?: string | null
+          benefits?: string[]
+          cautions?: string[]
+          contraindications?: string[]
           created_at?: string
           cycles?: number
           description?: string | null
@@ -1885,8 +1906,14 @@ export type Database = {
           id?: string
           inhale?: number
           is_active?: boolean
+          level?: string
           name?: string
           order_index?: number
+          requires_health_screen?: boolean
+          sanskrit_name?: string | null
+          steps?: string[]
+          technique_type?: string
+          tier_required?: string
           updated_at?: string
           youtube_url?: string | null
         }
@@ -12066,6 +12093,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_pranayama_health_screening: {
+        Row: {
+          cleared_for_forceful: boolean
+          cleared_for_retention: boolean
+          has_blood_pressure_condition: boolean
+          has_epilepsy_or_seizures: boolean
+          has_glaucoma_or_eye_condition: boolean
+          has_heart_condition: boolean
+          has_panic_or_anxiety_disorder: boolean
+          has_recent_surgery: boolean
+          is_pregnant: boolean
+          other_condition_note: string | null
+          screened_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cleared_for_forceful?: boolean
+          cleared_for_retention?: boolean
+          has_blood_pressure_condition?: boolean
+          has_epilepsy_or_seizures?: boolean
+          has_glaucoma_or_eye_condition?: boolean
+          has_heart_condition?: boolean
+          has_panic_or_anxiety_disorder?: boolean
+          has_recent_surgery?: boolean
+          is_pregnant?: boolean
+          other_condition_note?: string | null
+          screened_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cleared_for_forceful?: boolean
+          cleared_for_retention?: boolean
+          has_blood_pressure_condition?: boolean
+          has_epilepsy_or_seizures?: boolean
+          has_glaucoma_or_eye_condition?: boolean
+          has_heart_condition?: boolean
+          has_panic_or_anxiety_disorder?: boolean
+          has_recent_surgery?: boolean
+          is_pregnant?: boolean
+          other_condition_note?: string | null
+          screened_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_pranayama_progress: {
         Row: {
