@@ -3373,7 +3373,24 @@ const Community = () => {
             </div>
           ) : mobileTab === "members" ? (
             <div className="c-members-view">
-              {recentDms.length > 0 && (
+              <div style={{ position: "sticky", top: 0, zIndex: 5, background: "#050505", paddingBottom: 10, marginBottom: 4 }}>
+                <input
+                  placeholder="Search members…"
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,.08)",
+                    background: "rgba(255,255,255,.04)",
+                    color: "rgba(255,255,255,.9)",
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              {!memberSearch.trim() && recentDms.length > 0 && (
                 <>
                   <div className="c-section-label">Recent Chats</div>
                   {recentDms.map((c) => (
@@ -3410,6 +3427,8 @@ const Community = () => {
                   ))}
                 </>
               )}
+              {!memberSearch.trim() && (
+              <>
               <div className="c-section-label" style={{ marginTop: recentDms.length > 0 ? 16 : 0 }}>Guides & Admins</div>
               {members.filter((m) => m.isAdmin && m.id !== user?.id).length > 0 ? (
                 members.filter((m) => m.isAdmin && m.id !== user?.id).map((m) => {
@@ -3440,24 +3459,11 @@ const Community = () => {
               ) : (
                 <div style={{ padding: "8px 12px", fontSize: 11, color: "rgba(255,255,255,.4)" }}>No guides online</div>
               )}
+                </>
+              )}
               <div className="c-section-label" style={{ marginTop: 16 }}>All Members</div>
-              <div style={{ marginBottom: 10 }}>
-                <input
-                  placeholder="Search members…"
-                  value={memberSearch}
-                  onChange={(e) => setMemberSearch(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(255,255,255,.08)",
-                    background: "rgba(5,5,5,.8)",
-                    color: "rgba(255,255,255,.9)",
-                    fontSize: 12,
-                    outline: "none",
-                  }}
-                />
-              </div>
+              {memberSearch.trim() && (
+              <>
               {(() => {
                 const query = memberSearch.trim().toLowerCase();
                 const filtered = members.filter((m) => {
@@ -3568,6 +3574,8 @@ const Community = () => {
                   );
                 });
               })()}
+              </>
+              )}
             </div>
           ) : mobileTab === "library" ? (
             <div className="c-channels-view">
