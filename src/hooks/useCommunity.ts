@@ -475,22 +475,53 @@ export const usePrivateChat = (partnerId: string) => {
 
     setMessages(prev => [...prev, optimisticMessage]);
 
-    // Bug fix: this previously only ever inserted { sender_id, receiver_id,
-    // content } — message_type and fileData were built into the optimistic
-    // message above but never actually saved, so a media message would
-    // look right in the current session and then silently revert to plain
-    // text (or disappear) on reload. Now sends everything that was built.
-    const { data, error } = await (supabase as any)
-      .from('private_messages')
-      .insert({
-        sender_id: user.id,
-        receiver_id: partnerId,
-        content,
-        message_type: type,
-        ...(fileData || {}),
-      })
-      .select()
-      .single();
+    // Fix for a regression: unconditionally including message_type/fileData
+    // in every insert broke ALL DM sending, not just media, because
+    // private_messages doesn't have those columns until
+    // supabase/RUN_THIS_dm_media_messages.sql is run. Plain text messages
+    // must never depend on that pending migration — only attempt the
+    // extended insert when this is actually a media message, and if even
+    // that fails (migration still pending), fall back to a plain text
+    // insert so the message still sends rather than being lost entirely.
+    const isMediaMessage = type !== 'text' || !!fileData;
+
+    let data: any = null;
+    let error: any = null;
+
+    if (isMediaMessage) {
+      const attempt = await (supabase as any)
+        .from('private_messages')
+        .insert({
+          sender_id: user.id,
+          receiver_id: partnerId,
+          content,
+          message_type: type,
+          ...(fileData || {}),
+        })
+        .select()
+        .single();
+      data = attempt.data;
+      error = attempt.error;
+
+      if (error) {
+        console.error('[usePrivateChat] media insert failed, falling back to text-only:', error);
+        const fallback = await supabase
+          .from('private_messages')
+          .insert({ sender_id: user.id, receiver_id: partnerId, content })
+          .select()
+          .single();
+        data = fallback.data;
+        error = fallback.error;
+      }
+    } else {
+      const attempt = await supabase
+        .from('private_messages')
+        .insert({ sender_id: user.id, receiver_id: partnerId, content })
+        .select()
+        .single();
+      data = attempt.data;
+      error = attempt.error;
+    }
 
     if (error) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
