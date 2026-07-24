@@ -7,7 +7,7 @@ import {
   Sparkles, Radio, Shield, Zap, Activity, Fingerprint,
   ChevronLeft, Waves, Eye, Brain, Heart, Atom,
   BookOpen, ChevronDown, ChevronUp, Infinity as InfinityIcon,
-  Clock, ExternalLink, Layers, FlaskConical,
+  Clock, ExternalLink, Layers, FlaskConical, Check,
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { useMembership } from '@/hooks/useMembership';
@@ -757,6 +757,12 @@ function SacredGeometry({ geo, color, size = 48, active = false }: { geo: PatchP
 
   return (
     <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Static, motion-independent "this is active" signal: a solid bright ring + filled wash.
+          Everything else here (spin speed, orbiting dots) only reads in a live view or video —
+          this ring is visible in a single still frame too. */}
+      {active && (
+        <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `2.5px solid ${c}`, boxShadow: `0 0 14px 2px ${c}88, inset 0 0 10px ${c}44`, background: `radial-gradient(circle, ${c}30 0%, ${c}08 60%, transparent 100%)` }} />
+      )}
       <svg width={size} height={size} viewBox="0 0 64 64"
         style={{
           position: 'absolute', inset: 0,
@@ -765,7 +771,7 @@ function SacredGeometry({ geo, color, size = 48, active = false }: { geo: PatchP
         }}>
         <defs>
           <radialGradient id={gradId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={c} stopOpacity={active ? 0.35 : 0.14} />
+            <stop offset="0%" stopColor={c} stopOpacity={active ? 0.5 : 0.14} />
             <stop offset="100%" stopColor={c} stopOpacity={0} />
           </radialGradient>
         </defs>
@@ -776,11 +782,11 @@ function SacredGeometry({ geo, color, size = 48, active = false }: { geo: PatchP
           idle glyph, and a much stronger "this is active" signal than a border color alone. */}
       {active && (
         <>
-          <div style={{ position: 'absolute', inset: -size * 0.12, animation: 'spr-geo-orbit 3.2s linear infinite' }}>
-            <div style={{ position: 'absolute', top: 0, left: '50%', width: Math.max(3, size * 0.06), height: Math.max(3, size * 0.06), borderRadius: '50%', background: c, boxShadow: `0 0 6px ${c}`, transform: 'translateX(-50%)' }} />
+          <div style={{ position: 'absolute', inset: -size * 0.18, animation: 'spr-geo-orbit 3.2s linear infinite' }}>
+            <div style={{ position: 'absolute', top: 0, left: '50%', width: Math.max(4, size * 0.08), height: Math.max(4, size * 0.08), borderRadius: '50%', background: c, boxShadow: `0 0 8px ${c}`, transform: 'translateX(-50%)' }} />
           </div>
-          <div style={{ position: 'absolute', inset: -size * 0.12, animation: 'spr-geo-orbit-rev 4.6s linear infinite' }}>
-            <div style={{ position: 'absolute', bottom: 0, left: '50%', width: Math.max(2.5, size * 0.045), height: Math.max(2.5, size * 0.045), borderRadius: '50%', background: c, opacity: 0.8, boxShadow: `0 0 5px ${c}`, transform: 'translateX(-50%)' }} />
+          <div style={{ position: 'absolute', inset: -size * 0.18, animation: 'spr-geo-orbit-rev 4.6s linear infinite' }}>
+            <div style={{ position: 'absolute', bottom: 0, left: '50%', width: Math.max(3, size * 0.06), height: Math.max(3, size * 0.06), borderRadius: '50%', background: c, opacity: 0.85, boxShadow: `0 0 6px ${c}`, transform: 'translateX(-50%)' }} />
           </div>
         </>
       )}
@@ -788,7 +794,7 @@ function SacredGeometry({ geo, color, size = 48, active = false }: { geo: PatchP
   );
 }
 
-function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expiresAt }: { activePatchId: string | null; onSelect: (id: string) => void; biometricProfile?: BiometricProfile | null; expiresAt?: number | null }) {
+function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expiresAt }: { activePatchId: string | null; onSelect: (id: string | null) => void; biometricProfile?: BiometricProfile | null; expiresAt?: number | null }) {
   const [open, setOpen]         = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const activePatch = SIDDHA_PATCHES.find(p => p.id === activePatchId);
@@ -915,17 +921,23 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                                 </div>
                               ))}
 
-                              {/* Activate transmission — no external link, no physical product */}
+                              {/* Activate/Deactivate toggle — no external link, no physical product */}
                               <button type="button" onClick={() => {
-                                  onSelect(patch.id);
-                                  toast(`${patch.name} transmission activated — stacked into your current Nadi session.`);
+                                  if (isActive) {
+                                    onSelect(null);
+                                    toast(`${patch.name} transmission deactivated.`);
+                                  } else {
+                                    onSelect(patch.id);
+                                    toast(`${patch.name} transmission activated — stacked into your current Nadi session.`);
+                                  }
                                 }}
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999,
-                                  border: `1px solid ${patch.color}44`, background: `${patch.color}10`, cursor: 'pointer',
-                                  marginTop: 4 }}>
-                                <Sparkles size={12} color={patch.color} />
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999, cursor: 'pointer', marginTop: 4,
+                                  border: isActive ? `1px solid ${patch.color}` : `1px solid ${patch.color}44`,
+                                  background: isActive ? `linear-gradient(135deg, ${patch.color}35, ${patch.color}15)` : `${patch.color}10`,
+                                  boxShadow: isActive ? `0 0 16px ${patch.color}35` : 'none' }}>
+                                {isActive ? <Check size={12} color={patch.color} /> : <Sparkles size={12} color={patch.color} />}
                                 <span style={{ fontSize: 9, fontWeight: 800, color: patch.color, textTransform: 'uppercase', letterSpacing: '.3em' }}>
-                                  Activate {patch.name} Transmission
+                                  {isActive ? `Active — Tap to Deactivate` : `Activate ${patch.name} Transmission`}
                                 </span>
                               </button>
                             </div>
@@ -1149,11 +1161,12 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
 
   // Persists the selected Siddha into the same session object the entanglement/light-code
   // already lives in — so the choice is tied to this user's field, not just local component state.
-  const handleSelectPatch = useCallback((id: string) => {
+  // Passing null deactivates whatever is currently active.
+  const handleSelectPatch = useCallback((id: string | null) => {
     setActivePatchId(id);
     setSession(prev => {
       if (!prev) return prev;
-      const updated = { ...prev, activePatchId: id, patchActivatedAt: Date.now() };
+      const updated = { ...prev, activePatchId: id, patchActivatedAt: id ? Date.now() : null };
       saveToLocalStorage(updated);
       syncToSupabase(userId, updated).catch(() => {});
       return updated;
