@@ -2501,7 +2501,13 @@ const Community = () => {
 
                       if ((msg as any).message_type === 'content_drop' && (msg as any).content_id) {
                         const content = contentMap[(msg as any).content_id];
-                        if (!content) return null;
+                        if (!content) {
+                          return (
+                            <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 16, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.3)', color: 'rgba(255,180,180,.9)', fontSize: 11.5 }}>
+                              ⚠️ Drop card failed to load (content_id: {(msg as any).content_id?.slice(0, 8)}…). The message exists but its linked content couldn't be found or read.
+                            </div>
+                          );
+                        }
                         return (
                           <ContentDropCard key={msg.id} content={content} />
                         );
