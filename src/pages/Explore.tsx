@@ -178,15 +178,22 @@ export default function Explore() {
       {/* ══ DIVINE SANGHA NEXUS MINI-BANNER ══ */}
       <div style={{ margin: '13px 16px 0' }}>
         <div onClick={() => navigate('/community')} style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, rgba(20,8,40,0.96) 0%, rgba(10,4,22,0.98) 100%)', border: '1px solid rgba(160,80,240,0.45)', borderRadius: 20, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <svg width="48" height="48" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
-            <polygon points="24,2 45,13 45,35 24,46 3,35 3,13" fill="rgba(160,80,240,0.08)" stroke="rgba(160,80,240,0.5)" strokeWidth="1.1"/>
-            <polygon points="24,8 41,18 41,30 24,40 7,30 7,18" fill="none" stroke="rgba(160,80,240,0.28)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 24 24;360 24 24" dur="18s" repeatCount="indefinite"/></polygon>
-            <line x1="24" y1="3" x2="24" y2="45" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
-            <line x1="3" y1="16" x2="45" y2="32" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
-            <line x1="45" y1="16" x2="3" y2="32" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
-            <circle cx="24" cy="24" r="6" fill="none" stroke="rgba(190,140,255,0.5)" strokeWidth="0.9"><animate attributeName="r" values="6;21;6" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/></circle>
-            <circle cx="24" cy="24" r="3.5" fill="rgba(190,140,255,0.9)"><animate attributeName="r" values="3;5;3" dur="2.2s" repeatCount="indefinite"/></circle>
-          </svg>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <polygon points="24,2 45,13 45,35 24,46 3,35 3,13" fill="rgba(160,80,240,0.08)" stroke="rgba(160,80,240,0.5)" strokeWidth="1.1"/>
+              <polygon points="24,8 41,18 41,30 24,40 7,30 7,18" fill="none" stroke="rgba(160,80,240,0.28)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 24 24;360 24 24" dur="18s" repeatCount="indefinite"/></polygon>
+              <line x1="24" y1="3" x2="24" y2="45" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
+              <line x1="3" y1="16" x2="45" y2="32" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
+              <line x1="45" y1="16" x2="3" y2="32" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
+              <circle cx="24" cy="24" r="6" fill="none" stroke="rgba(190,140,255,0.5)" strokeWidth="0.9"><animate attributeName="r" values="6;21;6" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/></circle>
+              <circle cx="24" cy="24" r="3.5" fill="rgba(190,140,255,0.9)"><animate attributeName="r" values="3;5;3" dur="2.2s" repeatCount="indefinite"/></circle>
+            </svg>
+            {divineSanghaRoomId && (groupUnreadByRoom[divineSanghaRoomId] || 0) > 0 && (
+              <div style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)', color: '#1a1300', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(10,4,22,1), 0 0 10px rgba(212,175,55,.8)' }}>
+                {groupUnreadByRoom[divineSanghaRoomId] > 9 ? '9+' : groupUnreadByRoom[divineSanghaRoomId]}
+              </div>
+            )}
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(190,140,255,0.92)', marginBottom: 3 }}>DIVINE SANGHA NEXUS</div>
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(190,140,255,0.48)', lineHeight: 1.5 }}>Sacred community · Group channels · Live transmissions</div>
