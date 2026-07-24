@@ -207,7 +207,11 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
           <div className="c-drop-footer">
             <div className="c-drop-price">
               {unlocked ? (
-                <span style={{ color: '#22D3EE' }}>Owned</span>
+                content.price_cents > 0 ? (
+                  <span style={{ color: '#22D3EE' }}>Owned</span>
+                ) : (
+                  <span style={{ color: '#D4AF37' }}>Atma-Seed</span>
+                )
               ) : priceLabel ? (
                 <>{priceLabel}<span>one-time</span></>
               ) : (
