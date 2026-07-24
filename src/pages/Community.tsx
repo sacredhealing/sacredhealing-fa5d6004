@@ -1013,6 +1013,7 @@ const Community = () => {
   const [feedLoading, setFeedLoading] = useState(false);
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
   const [contentMap, setContentMap] = useState<Record<string, any>>({});
+  const [contentLoadErrors, setContentLoadErrors] = useState<Record<string, string>>({});
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
 
   const fetchLibrary = useCallback(async () => {
@@ -1050,11 +1051,28 @@ const Community = () => {
           .from('content_vault')
           .select('*')
           .in('id', missing)
-          .then(({ data }: any) => {
+          .then(({ data, error }: any) => {
+            if (error) {
+              console.error('[Community] content_vault lookup failed:', error);
+              setContentLoadErrors((prevErr) => {
+                const next = { ...prevErr };
+                missing.forEach((id) => { next[id] = error.message || 'Unknown error'; });
+                return next;
+              });
+              return;
+            }
             if (data && data.length > 0) {
               setContentMap((cur) => {
                 const next = { ...cur };
                 data.forEach((row: any) => { next[row.id] = row; });
+                return next;
+              });
+            } else {
+              // Query succeeded but returned zero rows — RLS silently hid it,
+              // or the id genuinely doesn't exist in content_vault.
+              setContentLoadErrors((prevErr) => {
+                const next = { ...prevErr };
+                missing.forEach((id) => { next[id] = 'No row returned (RLS-hidden or deleted)'; });
                 return next;
               });
             }
@@ -2504,7 +2522,7 @@ const Community = () => {
                         if (!content) {
                           return (
                             <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 16, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.3)', color: 'rgba(255,180,180,.9)', fontSize: 11.5 }}>
-                              ⚠️ Drop card failed to load (content_id: {(msg as any).content_id?.slice(0, 8)}…). The message exists but its linked content couldn't be found or read.
+                              ⚠️ Drop card failed to load (content_id: {(msg as any).content_id?.slice(0, 8)}…). {contentLoadErrors[(msg as any).content_id] || "Still loading, or couldn't be found."}
                             </div>
                           );
                         }
