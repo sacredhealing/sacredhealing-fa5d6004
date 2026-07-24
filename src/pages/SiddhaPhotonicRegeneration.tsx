@@ -850,27 +850,31 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                   const isRecommended = recommended.includes(patch.id);
                   return (
                     <div key={patch.id}
-                      style={{ position: 'relative', borderRadius: 20, border: `1px solid ${isActive ? patch.color + '55' : isRecommended ? patch.color + '35' : 'rgba(255,255,255,.06)'}`,
+                      style={{ position: 'relative', borderRadius: 20,
+                        border: isActive ? `1px solid ${patch.color}55` : isRecommended ? `1px solid ${CYAN}30` : '1px solid rgba(255,255,255,.06)',
                         background: isActive ? `rgba(${patch.color === GOLD ? '212,175,55' : '34,211,238'},.05)` : 'rgba(255,255,255,.02)',
                         overflow: 'hidden', transition: 'all .3s ease',
                         boxShadow: isActive ? `0 0 24px ${patch.color}22` : 'none' }}>
 
                       {/* Patch header */}
                       {/* Sacred geometry watermark, large and faint, behind the card — comes alive when active */}
-                      <div style={{ position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', width: 160, height: 160, opacity: isActive ? 0.1 : 0.05, pointerEvents: 'none', zIndex: 0 }}>
+                      <div style={{ position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', width: 160, height: 160, opacity: isActive ? 0.1 : 0.035, pointerEvents: 'none', zIndex: 0 }}>
                         <SacredGeometry geo={patch.geo} color={patch.color} size={160} active={isActive} />
                       </div>
 
+                      {/* Recommended: always cyan, deliberately NOT the patch's own color — this is
+                          a scan-relevance note, visually unrelated to the gold/patch-colored
+                          "living" activation state below, so the two can never be mistaken. */}
                       {isRecommended && !isActive && (
-                        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, fontSize: 7, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: patch.color, background: `${patch.color}15`, border: `1px solid ${patch.color}35`, padding: '3px 8px', borderRadius: 999 }}>
-                          Aligned to scan
+                        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, fontSize: 7, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: CYAN, background: `${CYAN}15`, border: `1px solid ${CYAN}35`, padding: '3px 8px', borderRadius: 999 }}>
+                          ◈ Aligned to scan
                         </div>
                       )}
 
                       {isActive && (
                         <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, display: 'flex', alignItems: 'center', gap: 5, fontSize: 7, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: patch.color, background: `${patch.color}18`, border: `1px solid ${patch.color}45`, padding: '3px 8px', borderRadius: 999 }}>
                           <span style={{ width: 5, height: 5, borderRadius: '50%', background: patch.color, animation: 'spr-blink 1.2s ease infinite' }} />
-                          Living transmission
+                          ● Living transmission
                         </div>
                       )}
 
@@ -1129,7 +1133,19 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
   const [isSyncing, setIsSyncing]       = useState(false);
   const [activePatchId, setActivePatchId] = useState<string | null>(null);
   const [activeScalars, setActiveScalars] = useState<string[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const nodeSize = 220;
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(`sqi_photonic_onboarding_seen_${userId}`)) setShowOnboarding(true);
+    } catch { setShowOnboarding(true); }
+  }, [userId]);
+
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    try { localStorage.setItem(`sqi_photonic_onboarding_seen_${userId}`, '1'); } catch {}
+  };
 
   // Sessions created before the real scanner was wired in have no activatedNadi field
   // (they were Math.random() output). Treat those as invalid rather than displaying
@@ -1246,6 +1262,47 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 16px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+      <AnimatePresence>
+        {showOnboarding && (
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+            style={{ ...glass({ borderRadius: 28, padding: '24px 24px 20px' }), border: `1px solid ${GOLD_BORDER}`, position: 'relative' }}>
+            <button type="button" onClick={dismissOnboarding}
+              style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.3)', fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+            <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: GOLD }}>New Here? Start With This</p>
+            <p style={{ margin: '0 0 18px', fontSize: 13, color: 'rgba(255,255,255,.55)', fontWeight: 300, lineHeight: 1.6 }}>
+              This page runs a real camera + voice + motion scan — it needs permissions and about 30 seconds. Here's the order that actually works:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { n: '1', title: 'Initiate Nadi Scan', body: 'Tap the gold button below. Allow camera + mic. Hold your face steady in the oval and breathe normally for ~30s.' },
+                { n: '2', title: 'Browse the Siddhas & Holy Places', body: 'Scroll down — all 8 Siddha patches and the Holy Places/Masters/Herbs list are always visible, scan or not.' },
+                { n: '3', title: 'Activate one', body: 'After a real scan, 1–2 Siddhas get an "Aligned to scan" tag based on your actual reading. Tap Activate on any Siddha to make it the living one — you can only have one active at a time.' },
+                { n: '4', title: 'Know when it ends', body: 'An active Siddha stays active for your 72-hour session countdown, shown in the Active Transmission Stack card. Re-Calibrate or a new scan clears it.' },
+              ].map(step => (
+                <div key={step.n} style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(212,175,55,.12)', border: `1px solid ${GOLD_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 800, color: GOLD }}>{step.n}</div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#fff' }}>{step.title}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,.4)', lineHeight: 1.6, fontWeight: 300 }}>{step.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={dismissOnboarding}
+              style={{ marginTop: 18, padding: '9px 20px', borderRadius: 999, border: `1px solid ${GOLD_BORDER}`, background: 'rgba(212,175,55,.08)', cursor: 'pointer', fontSize: 9, fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: '.3em' }}>
+              Got It — Let's Scan
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!showOnboarding && (
+        <button type="button" onClick={() => setShowOnboarding(true)}
+          style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid rgba(255,255,255,.08)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', color: 'rgba(255,255,255,.35)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.25em' }}>
+          ? How This Works
+        </button>
+      )}
 
       {isSyncing && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, background: 'rgba(212,175,55,.06)', border: `1px solid ${GOLD_BORDER}`, alignSelf: 'flex-start' }}>
