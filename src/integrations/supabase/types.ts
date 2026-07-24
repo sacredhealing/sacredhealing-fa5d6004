@@ -5366,6 +5366,41 @@ export type Database = {
           },
         ]
       }
+      mantra_purchases: {
+        Row: {
+          amount_usd: number
+          id: string
+          mantra_id: string
+          purchased_at: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_usd?: number
+          id?: string
+          mantra_id: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          id?: string
+          mantra_id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mantra_purchases_mantra_id_fkey"
+            columns: ["mantra_id"]
+            isOneToOne: false
+            referencedRelation: "mantras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mantras: {
         Row: {
           audio_url: string
@@ -5379,6 +5414,7 @@ export type Database = {
           is_premium: boolean
           planet_type: string | null
           play_count: number
+          price_usd: number | null
           required_tier: number
           shc_reward: number
           title: string
@@ -5396,6 +5432,7 @@ export type Database = {
           is_premium?: boolean
           planet_type?: string | null
           play_count?: number
+          price_usd?: number | null
           required_tier?: number
           shc_reward?: number
           title: string
@@ -5413,6 +5450,7 @@ export type Database = {
           is_premium?: boolean
           planet_type?: string | null
           play_count?: number
+          price_usd?: number | null
           required_tier?: number
           shc_reward?: number
           title?: string
