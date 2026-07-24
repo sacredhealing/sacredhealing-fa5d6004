@@ -1697,6 +1697,20 @@ const Community = () => {
 
       if (cancelled) return;
 
+      // Ensure this user has a chat_members row for this room. Since a June
+      // migration, chat_messages SELECT is restricted to
+      // is_room_member(room_id) — without this, RLS silently hides every
+      // message in the room, including ones this same user just posted.
+      // "Users can join rooms" policy already permits self-insert.
+      if (user) {
+        (supabase as any)
+          .from('chat_members')
+          .upsert({ room_id: roomId, user_id: user.id, role: 'member' }, { onConflict: 'room_id,user_id' })
+          .then(({ error }: any) => {
+            if (error) console.error('[Community] chat_members auto-join failed:', error);
+          });
+      }
+
       // Fetch messages + live sessions in parallel
       setLoading(true);
       const fetchSessions = fetchActiveSessionsRef.current;
