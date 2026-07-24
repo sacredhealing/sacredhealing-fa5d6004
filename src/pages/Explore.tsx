@@ -15,6 +15,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { getDayPhase } from "@/utils/postSessionContext";
 import SacredRevealGate from "@/components/SacredRevealGate";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadMessages } from "@/contexts/UnreadMessagesContext";
 import {
   gold, cyan, Icon, HeroCard, ComingSoonCard, LibSection, PortalKeyframes,
 } from "@/components/portal/PortalUI";
@@ -49,6 +50,8 @@ export default function Explore() {
   const { tier } = useMembership();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
+  const { groupUnreadByRoom } = useUnreadMessages();
+  const [divineSanghaRoomId, setDivineSanghaRoomId] = useState<string | null>(null);
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
   const [commissionsOpen, setCommissionsOpen] = useState(false);
@@ -60,6 +63,17 @@ export default function Explore() {
     supabase.functions.invoke('fetch-youtube-videos').then(({ data }) => {
       if (data?.videos) setExploreVideos(data.videos.slice(0, 4));
     });
+  }, []);
+
+  useEffect(() => {
+    supabase
+      .from('chat_rooms')
+      .select('id, name')
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        const match = (data || []).find((r: any) => r.name?.includes('Divine Sangha') || r.name === 'Community Lounge');
+        if (match) setDivineSanghaRoomId((match as any).id);
+      });
   }, []);
 
   /* ── micro components ── */
@@ -936,13 +950,21 @@ export default function Explore() {
                 { day: 'Tisdag',  name: 'Healing Chamber',       gold: false },
                 { day: 'Veckovis',name: 'Bhagavad Gita & Q&A',  gold: true  },
                 { day: 'Alltid',  name: 'Divine Sangha Nexus',   gold: false },
-              ] as {day:string;name:string;gold:boolean}[]).map(({ day, name, gold }) => (
-                <div key={name} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(160,100,255,0.12)', borderRadius: 16, padding: '12px 12px 10px' }}>
+              ] as {day:string;name:string;gold:boolean}[]).map(({ day, name, gold }) => {
+                const roomUnread = name === 'Divine Sangha Nexus' && divineSanghaRoomId ? (groupUnreadByRoom[divineSanghaRoomId] || 0) : 0;
+                return (
+                <div key={name} onClick={() => { if (name === 'Divine Sangha Nexus') navigate('/community'); }} style={{ position: 'relative', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(160,100,255,0.12)', borderRadius: 16, padding: '12px 12px 10px', cursor: name === 'Divine Sangha Nexus' ? 'pointer' : 'default' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold ? 'rgba(212,175,55,0.55)' : 'rgba(180,130,255,0.55)', boxShadow: gold ? '0 0 6px rgba(212,175,55,0.5)' : '0 0 6px rgba(160,100,255,0.5)', marginBottom: 8 }} />
+                  {roomUnread > 0 && (
+                    <div style={{ position: 'absolute', top: 8, right: 8, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)', color: '#1a1300', fontSize: 9, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(212,175,55,.7)' }}>
+                      {roomUnread > 9 ? '9+' : roomUnread}
+                    </div>
+                  )}
                   <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 5.5, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', marginBottom: 4 }}>{day}</div>
                   <div style={{ fontFamily: "'Cinzel',serif", fontSize: 10, fontWeight: 600, color: 'rgba(220,200,255,0.85)', lineHeight: 1.3, letterSpacing: '0.02em' }}>{name}</div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Footer */}
