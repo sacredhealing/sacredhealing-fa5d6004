@@ -191,7 +191,7 @@ const CSS = `
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px 14px 20px;
+  padding: 8px 14px calc(64px + max(14px, env(safe-area-inset-bottom)));
 }
 .c-channels-view::-webkit-scrollbar{width:2px}
 .c-channels-view::-webkit-scrollbar-thumb{background:rgba(212,175,55,.2)}
@@ -690,7 +690,7 @@ const CSS = `
 .c-members-view {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
+  padding: 14px 14px calc(64px + max(14px, env(safe-area-inset-bottom)));
 }
 .c-member-row {
   display: flex;
@@ -2254,6 +2254,10 @@ const Community = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (mobileTab === "members") fetchRecentDms();
+  }, [mobileTab, fetchRecentDms]);
+
   // Sends a media message directly into the currently active GROUP channel.
   // DMs don't have message_type/file_url columns on private_messages yet —
   // that needs one more migration, so this only ever targets chat_messages.
@@ -2646,7 +2650,7 @@ const Community = () => {
         <div className="c-top-tabs">
           <button className={`c-top-tab ${mobileTab === "chat" ? "active" : ""}`} onClick={() => setMobileTab("chat")}>Chat</button>
           <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>
-          <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => { setMobileTab("members"); fetchRecentDms(); }}>Members</button>
+          <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => setMobileTab("members")}>Members</button>
           <button className={`c-top-tab ${mobileTab === "library" ? "active" : ""}`} onClick={() => { setMobileTab("library"); fetchLibrary(); }}>Library</button>
         </div>
 
