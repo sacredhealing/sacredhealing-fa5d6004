@@ -685,14 +685,22 @@ function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; 
   let inner: React.ReactNode = null;
 
   if (geo === 'sriyantra') {
+    // Real Sri Yantra: asymmetric interlocking triangles inside a circle + square (bhupura).
+    // Deliberately NOT a symmetric 2-triangle star (that's Hexagram) — different triangle
+    // counts, different sizes, offset centers, plus the outer square is the visual signature
+    // that makes this read as "Sri Yantra" rather than a generic star at a glance.
     inner = <>
-      {[24, 15].map((r, i) => (
-        <g key={r}>
-          <polygon points={ptsStr(polyPts(3, r, 32, 32, 0))} fill="none" stroke={c} strokeWidth={2.2 * k - i * 0.4} />
-          <polygon points={ptsStr(polyPts(3, r, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={2.2 * k - i * 0.4} />
-        </g>
+      <rect x={10} y={10} width={44} height={44} fill="none" stroke={c} strokeWidth={1.1 * k} opacity={0.5} />
+      <circle cx={32} cy={32} r={23} fill="none" stroke={c} strokeWidth={1 * k} opacity={0.55} />
+      {/* 3 upward (Shiva) triangles, shrinking + rising slightly */}
+      {[{ r: 20, dy: 1 }, { r: 15, dy: 2.5 }, { r: 10, dy: 3.5 }].map((t, i) => (
+        <polygon key={`up${i}`} points={ptsStr(polyPts(3, t.r, 32, 32 + t.dy, 0))} fill="none" stroke={c} strokeWidth={2 * k - i * 0.3} />
       ))}
-      <circle cx={32} cy={32} r={2.4} fill={c} />
+      {/* 2 downward (Shakti) triangles, different size rhythm than the upward set */}
+      {[{ r: 18, dy: -1.5 }, { r: 12, dy: -3 }].map((t, i) => (
+        <polygon key={`dn${i}`} points={ptsStr(polyPts(3, t.r, 32, 32 + t.dy, Math.PI))} fill="none" stroke={c} strokeWidth={1.8 * k - i * 0.3} opacity={0.85} />
+      ))}
+      <circle cx={32} cy={33} r={2.6} fill={c} />
     </>;
   } else if (geo === 'flower') {
     inner = <>
@@ -701,9 +709,9 @@ function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; 
     </>;
   } else if (geo === 'merkaba') {
     inner = <>
-      <polygon points={ptsStr(polyPts(3, 24, 32, 32, 0))} fill="none" stroke={c} strokeWidth={2.4 * k} />
-      <polygon points={ptsStr(polyPts(3, 24, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={2.4 * k} opacity={0.75} />
-      <circle cx={32} cy={32} r={30} fill="none" stroke={c} strokeWidth={0.9 * k} opacity={0.4} />
+      <polygon points={ptsStr(polyPts(3, 25, 32, 30, 0))} fill="none" stroke={c} strokeWidth={2.4 * k} />
+      <polygon points={ptsStr(polyPts(3, 19, 32, 34, Math.PI))} fill="none" stroke={c} strokeWidth={2.4 * k} opacity={0.7} />
+      <circle cx={32} cy={32} r={30} fill="none" stroke={c} strokeWidth={0.9 * k} opacity={0.35} />
     </>;
   } else if (geo === 'sunwheel') {
     inner = <>
@@ -823,10 +831,10 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                       <button type="button"
                         onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
                         style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', position: 'relative', zIndex: 1 }}>
-                        <div style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0,
+                        <div style={{ width: 60, height: 60, borderRadius: 18, flexShrink: 0,
                           background: `${patch.color}18`, border: `1px solid ${patch.color}33`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <SacredGeometry geo={patch.geo} color={patch.color} size={38} />
+                          <SacredGeometry geo={patch.geo} color={patch.color} size={46} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -867,7 +875,10 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                               ))}
 
                               {/* Activate transmission — no external link, no physical product */}
-                              <button type="button" onClick={() => onSelect(patch.id)}
+                              <button type="button" onClick={() => {
+                                  onSelect(patch.id);
+                                  toast(`${patch.name} transmission activated — stacked into your current Nadi session.`);
+                                }}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999,
                                   border: `1px solid ${patch.color}44`, background: `${patch.color}10`, cursor: 'pointer',
                                   marginTop: 4 }}>
@@ -1062,11 +1073,30 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
   const [activeScalars, setActiveScalars] = useState<string[]>([]);
   const nodeSize = 220;
 
+  // Sessions created before the real scanner was wired in have no activatedNadi field
+  // (they were Math.random() output). Treat those as invalid rather than displaying
+  // fake data as if it were a real reading.
+  const isRealScanSession = (s: PhotonicSession | null): boolean =>
+    !!s?.biometricProfile?.activatedNadi && ['Ida', 'Pingala', 'Sushumna', 'Blocked'].includes(s.biometricProfile.activatedNadi);
+
   useEffect(() => {
     const local = loadFromLocalStorage(userId);
-    if (local) { setSession(local); setShowReturn(true); if (local.activePatchId) setActivePatchId(local.activePatchId); return; }
+    if (local) {
+      if (!isRealScanSession(local)) {
+        clearFromLocalStorage(userId);
+        clearFromSupabase(userId).catch(() => {});
+        toast('Your previous reading used placeholder data before the live scanner was connected — run a new Nadi Scan for a real reading.');
+        return;
+      }
+      setSession(local); setShowReturn(true); if (local.activePatchId) setActivePatchId(local.activePatchId); return;
+    }
     setIsSyncing(true);
     loadFromSupabase(userId).then(remote => {
+      if (remote && !isRealScanSession(remote)) {
+        clearFromSupabase(userId).catch(() => {});
+        toast('Your previous reading used placeholder data before the live scanner was connected — run a new Nadi Scan for a real reading.');
+        return;
+      }
       if (remote) { setSession(remote); saveToLocalStorage(remote); setShowReturn(true); if (remote.activePatchId) setActivePatchId(remote.activePatchId); }
     }).finally(() => setIsSyncing(false));
   }, [userId]);
