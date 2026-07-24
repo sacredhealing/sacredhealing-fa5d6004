@@ -221,7 +221,8 @@ export default function AdminContentVault() {
         content_id: item.id,
       });
       if (msgError) throw msgError;
-      toast({ title: `Posted "${item.title}" to chat` });
+      console.log('[Content Vault] Posted to room_id:', room);
+      toast({ title: `Posted "${item.title}" to chat`, description: `Room ID: ${room}` });
       setPostingChatFor(null);
       setChatPostRoom('');
     } catch (err: any) {
