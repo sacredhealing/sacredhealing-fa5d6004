@@ -290,6 +290,24 @@ export default function Explore() {
       {/* ══ VIDEOS BANNER ══ */}
       <div style={{ margin: '13px 16px 0' }}>
         <div onClick={() => navigate('/videos')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 70% 40%, rgba(45,32,0,0.98) 0%, rgba(15,10,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, cursor: 'pointer' }}>
+          {/* Living sacred geometry — top right, same construction as the other Explore banners */}
+          <div style={{ position: 'absolute', top: -25, right: -25, width: 160, height: 160, pointerEvents: 'none' }}>
+            <svg viewBox="0 0 160 160" width="160" height="160">
+              <defs><radialGradient id="bgVid" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(255,215,70,0.3)"/><stop offset="55%" stopColor="rgba(212,175,55,0.06)"/><stop offset="100%" stopColor="rgba(0,0,0,0)"/></radialGradient></defs>
+              <ellipse cx="80" cy="80" rx="75" ry="75" fill="url(#bgVid)"/>
+              <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(212,175,55,0.22)" strokeWidth="0.8"><animateTransform attributeName="transform" type="rotate" values="0 80 80;360 80 80" dur="45s" repeatCount="indefinite"/></circle>
+              <circle cx="80" cy="52" r="26" fill="none" stroke="rgba(34,211,238,0.22)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 80 80;-360 80 80" dur="38s" repeatCount="indefinite"/></circle>
+              <circle cx="80" cy="108" r="26" fill="none" stroke="rgba(34,211,238,0.22)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 80 80;-360 80 80" dur="38s" repeatCount="indefinite"/></circle>
+              <circle cx="56" cy="66" r="26" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 80 80;-360 80 80" dur="38s" repeatCount="indefinite"/></circle>
+              <circle cx="104" cy="66" r="26" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 80 80;-360 80 80" dur="38s" repeatCount="indefinite"/></circle>
+              <circle cx="56" cy="94" r="26" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 80 80;-360 80 80" dur="38s" repeatCount="indefinite"/></circle>
+              <circle cx="104" cy="94" r="26" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 80 80;-360 80 80" dur="38s" repeatCount="indefinite"/></circle>
+              <polygon points="80,20 138,112 22,112" fill="none" stroke="rgba(212,175,55,0.45)" strokeWidth="1"><animateTransform attributeName="transform" type="rotate" values="0 80 80;360 80 80" dur="50s" repeatCount="indefinite"/></polygon>
+              {[0,1,2].map(i => (<circle key={i} cx="80" cy="80" r="10" fill="none" stroke="rgba(212,175,55,0.55)" strokeWidth="1"><animate attributeName="r" values="8;66" dur="4.5s" begin={`${i*1.5}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.65;0" dur="4.5s" begin={`${i*1.5}s`} repeatCount="indefinite"/></circle>))}
+              <circle cx="80" cy="80" r="14" fill="rgba(212,175,55,0.07)" stroke="rgba(244,211,94,0.6)" strokeWidth="1.1"><animate attributeName="r" values="12;17;12" dur="3.2s" repeatCount="indefinite"/></circle>
+              <circle cx="80" cy="80" r="4.5" fill="rgba(255,248,160,0.95)"><animate attributeName="r" values="3.5;6;3.5" dur="2s" repeatCount="indefinite"/></circle>
+            </svg>
+          </div>
           <div style={{ position: 'relative', zIndex: 1, padding: '22px 20px 20px' }}>
             <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 9 }}>SACRED CINEMA</p>
             <div style={{ fontFamily: "'Cinzel',serif", fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, fontSize: 'clamp(22px, 6vw, 26px)', marginBottom: 11, maxWidth: '65%', background: 'linear-gradient(135deg, #D4AF37 0%, #F4D35E 40%, #D4AF37 60%, #A07A20 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VIDEOS</div>
