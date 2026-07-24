@@ -1306,23 +1306,17 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         {showProtocol && <PostActivationProtocol onComplete={() => setShowProtocol(false)} />}
       </AnimatePresence>
 
-      {/* ── NEW: PATCH PROTOCOL SELECTOR ── */}
-      <AnimatePresence>
-        {isEntangled && !isExpired && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}>
-            <PatchProtocolSelector activePatchId={activePatchId} onSelect={handleSelectPatch} biometricProfile={session?.biometricProfile} expiresAt={session?.expiresAt} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── PATCH PROTOCOL SELECTOR — always browsable; personalization (recommended badges,
+           countdown) only appears once a real scan session exists. Selecting a patch without
+           an active session still works locally, it just won't persist until you scan. ── */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}>
+        <PatchProtocolSelector activePatchId={activePatchId} onSelect={handleSelectPatch} biometricProfile={session?.biometricProfile} expiresAt={session?.expiresAt} />
+      </motion.div>
 
-      {/* ── NEW: SCALAR TRANSMISSION STACK ── */}
-      <AnimatePresence>
-        {isEntangled && !isExpired && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}>
-            <ScalarTransmissionPanel activeScalars={activeScalars} onToggle={toggleScalar} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── SCALAR TRANSMISSION STACK — always browsable for the same reason ── */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}>
+        <ScalarTransmissionPanel activeScalars={activeScalars} onToggle={toggleScalar} />
+      </motion.div>
 
       {/* STAT CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 20 }}>
