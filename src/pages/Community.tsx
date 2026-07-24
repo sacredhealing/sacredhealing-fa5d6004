@@ -857,6 +857,28 @@ type FeedComment = {
 };
 
 // DM chat using useCommunity's usePrivateChat (same as original app)
+// Hardcoding 'audio/webm' broke recording on devices/WebViews that don't
+// support that exact codec — MediaRecorder throws immediately on
+// construction, which got caught and misreported as a permissions problem.
+// This tries a list of real candidates and uses whichever the device
+// actually supports, falling back to letting the browser pick if none of
+// our guesses match (still better than a hard string that might not exist).
+function pickSupportedAudioMimeType(): string {
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/aac",
+    "audio/ogg;codecs=opus",
+  ];
+  if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported) {
+    for (const type of candidates) {
+      if (MediaRecorder.isTypeSupported(type)) return type;
+    }
+  }
+  return "";
+}
+
 function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEndVideoCall, onDmSent }: { partnerId: string; onBack: () => void; isAdmin?: boolean; onVideoCall?: () => void; dmVideoUrl?: string | null; onEndVideoCall?: () => void; onDmSent?: (content: string, partnerId: string) => void }) {
   const { user } = useAuth();
   const { messages, partnerProfile, isLoading, sendMessage } = usePrivateChat(partnerId);
@@ -879,7 +901,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
 
   const uploadDmMedia = async (blob: File | Blob, kind: "image" | "video" | "voice", fileName?: string) => {
     if (!user) throw new Error("Not signed in");
-    const ext = kind === "voice" ? "webm" : (fileName?.split(".").pop() || (kind === "video" ? "mp4" : "jpg"));
+    const ext = fileName?.split(".").pop() || (kind === "voice" ? "webm" : kind === "video" ? "mp4" : "jpg");
     const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("chat-storage").upload(path, blob, {
       upsert: false,
@@ -931,15 +953,20 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      const mimeType = pickSupportedAudioMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const actualType = recorder.mimeType || mimeType || "audio/webm";
+      const ext = actualType.includes("mp4") ? "m4a" : actualType.includes("ogg") ? "ogg" : actualType.includes("aac") ? "aac" : "webm";
       recordedChunksRef.current = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(recordedChunksRef.current, { type: actualType });
         const seconds = recordSeconds;
         if (blob.size > 0 && seconds >= 1) {
-          sendDmMedia(blob, "voice", `voice-note-${Date.now()}.webm`, seconds);
+          sendDmMedia(blob, "voice", `voice-note-${Date.now()}.${ext}`, seconds);
+        } else if (blob.size === 0) {
+          toast.error("Recording came out empty — try again.");
         }
       };
       mediaRecorderRef.current = recorder;
@@ -948,8 +975,11 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
       setRecordSeconds(0);
       recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
     } catch (err) {
-      console.error("[DMChatView] mic access failed:", err);
-      toast.error("Couldn't access the microphone — check permissions.");
+      console.error("[DMChatView] mic access/recording failed:", err);
+      const msg = err instanceof DOMException && err.name === "NotAllowedError"
+        ? "Microphone permission denied — check your browser/app settings."
+        : "Couldn't start recording on this device.";
+      toast.error(msg);
     }
   };
 
@@ -2179,7 +2209,7 @@ const Community = () => {
   // authenticated user can view). Returns the metadata chat_messages expects.
   const uploadChatMedia = async (blob: File | Blob, kind: "image" | "video" | "voice", fileName?: string) => {
     if (!user) throw new Error("Not signed in");
-    const ext = kind === "voice" ? "webm" : (fileName?.split(".").pop() || (kind === "video" ? "mp4" : "jpg"));
+    const ext = fileName?.split(".").pop() || (kind === "voice" ? "webm" : kind === "video" ? "mp4" : "jpg");
     const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("chat-storage").upload(path, blob, {
       upsert: false,
@@ -2316,17 +2346,22 @@ const Community = () => {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      const mimeType = pickSupportedAudioMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const actualType = recorder.mimeType || mimeType || "audio/webm";
+      const ext = actualType.includes("mp4") ? "m4a" : actualType.includes("ogg") ? "ogg" : actualType.includes("aac") ? "aac" : "webm";
       recordedChunksRef.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) recordedChunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(recordedChunksRef.current, { type: actualType });
         const seconds = recordSeconds;
         if (blob.size > 0 && seconds >= 1) {
-          sendGroupMedia(blob, "voice", `voice-note-${Date.now()}.webm`, seconds);
+          sendGroupMedia(blob, "voice", `voice-note-${Date.now()}.${ext}`, seconds);
+        } else if (blob.size === 0) {
+          toast.error("Recording came out empty — try again.");
         }
       };
       mediaRecorderRef.current = recorder;
@@ -2335,8 +2370,11 @@ const Community = () => {
       setRecordSeconds(0);
       recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
     } catch (err) {
-      console.error("[Community] mic access failed:", err);
-      toast.error("Couldn't access the microphone — check permissions.");
+      console.error("[Community] mic access/recording failed:", err);
+      const msg = err instanceof DOMException && err.name === "NotAllowedError"
+        ? "Microphone permission denied — check your browser/app settings."
+        : "Couldn't start recording on this device.";
+      toast.error(msg);
     }
   };
 
