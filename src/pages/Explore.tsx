@@ -50,7 +50,7 @@ export default function Explore() {
   const { tier } = useMembership();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { groupUnreadByRoom } = useUnreadMessages();
+  const { unreadCount } = useUnreadMessages();
   const [divineSanghaRoomId, setDivineSanghaRoomId] = useState<string | null>(null);
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
@@ -196,9 +196,9 @@ export default function Explore() {
               <circle cx="24" cy="24" r="6" fill="none" stroke="rgba(190,140,255,0.5)" strokeWidth="0.9"><animate attributeName="r" values="6;21;6" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/></circle>
               <circle cx="24" cy="24" r="3.5" fill="rgba(190,140,255,0.9)"><animate attributeName="r" values="3;5;3" dur="2.2s" repeatCount="indefinite"/></circle>
             </svg>
-            {divineSanghaRoomId && (groupUnreadByRoom[divineSanghaRoomId] || 0) > 0 && (
+            {unreadCount > 0 && (
               <div style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)', color: '#1a1300', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(10,4,22,1), 0 0 10px rgba(212,175,55,.8)' }}>
-                {groupUnreadByRoom[divineSanghaRoomId] > 9 ? '9+' : groupUnreadByRoom[divineSanghaRoomId]}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </div>
             )}
           </div>
@@ -966,7 +966,7 @@ export default function Explore() {
                 { day: 'Veckovis',name: 'Bhagavad Gita & Q&A',  gold: true  },
                 { day: 'Alltid',  name: 'Divine Sangha Nexus',   gold: false },
               ] as {day:string;name:string;gold:boolean}[]).map(({ day, name, gold }) => {
-                const roomUnread = name === 'Divine Sangha Nexus' && divineSanghaRoomId ? (groupUnreadByRoom[divineSanghaRoomId] || 0) : 0;
+                const roomUnread = name === 'Divine Sangha Nexus' ? unreadCount : 0;
                 return (
                 <div key={name} onClick={() => { if (name === 'Divine Sangha Nexus') navigate('/community'); }} style={{ position: 'relative', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(160,100,255,0.12)', borderRadius: 16, padding: '12px 12px 10px', cursor: name === 'Divine Sangha Nexus' ? 'pointer' : 'default' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold ? 'rgba(212,175,55,0.55)' : 'rgba(180,130,255,0.55)', boxShadow: gold ? '0 0 6px rgba(212,175,55,0.5)' : '0 0 6px rgba(160,100,255,0.5)', marginBottom: 8 }} />
