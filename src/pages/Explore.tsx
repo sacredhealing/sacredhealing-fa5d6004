@@ -71,8 +71,16 @@ export default function Explore() {
       .select('id, name')
       .order('created_at', { ascending: true })
       .then(({ data }) => {
-        const match = (data || []).find((r: any) => r.name?.includes('Divine Sangha') || r.name === 'Community Lounge');
-        if (match) setDivineSanghaRoomId((match as any).id);
+        const rooms = (data || []) as { id: string; name: string }[];
+        // Same precedence as Community.tsx's loadRooms: an exact 'Divine
+        // Sangha' match wins over any looser fallback. Without this, a
+        // differently-named legacy room (e.g. 'Community Lounge') created
+        // earlier could get picked instead — same room the badge is
+        // supposed to track, but the wrong UUID, so it would never light up.
+        const exact = rooms.find((r) => r.name === 'Divine Sangha');
+        const fallback = rooms.find((r) => r.name === 'Community Lounge' || r.name?.includes('Divine Sangha'));
+        const match = exact || fallback;
+        if (match) setDivineSanghaRoomId(match.id);
       });
   }, []);
 
