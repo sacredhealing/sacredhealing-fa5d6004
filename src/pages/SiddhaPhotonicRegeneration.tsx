@@ -44,6 +44,8 @@ interface PhotonicSession {
   expiresAt: number;
   biometricProfile: BiometricProfile;
   userId: string;
+  activePatchId?: string | null;
+  patchActivatedAt?: number | null;
 }
 
 function lsKey(userId: string) { return `sqi_photonic_v2_${userId}`; }
@@ -652,61 +654,66 @@ const ptsStr = (pts: [number, number][]) => pts.map(p => p.join(',')).join(' ');
 
 function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; color: string; size?: number }) {
   const c = color;
+  // Stroke widths below are tuned for a 64×64 viewBox rendered at ~64px.
+  // At smaller render sizes the SVG scales down and thin strokes vanish below 1px,
+  // so we boost stroke width inversely to size (clamped) to keep every glyph legible
+  // whether it's a 40px card icon or a 160px background watermark.
+  const k = Math.min(2.4, Math.max(0.5, 64 / size));
   let inner: React.ReactNode = null;
 
   if (geo === 'sriyantra') {
     inner = <>
-      {[26, 20, 14].map((r, i) => (
+      {[24, 15].map((r, i) => (
         <g key={r}>
-          <polygon points={ptsStr(polyPts(3, r, 32, 32, 0))} fill="none" stroke={c} strokeWidth={1.4 - i * 0.2} />
-          <polygon points={ptsStr(polyPts(3, r, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={1.4 - i * 0.2} />
+          <polygon points={ptsStr(polyPts(3, r, 32, 32, 0))} fill="none" stroke={c} strokeWidth={2.2 * k - i * 0.4} />
+          <polygon points={ptsStr(polyPts(3, r, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={2.2 * k - i * 0.4} />
         </g>
       ))}
-      <circle cx={32} cy={32} r={2} fill={c} />
+      <circle cx={32} cy={32} r={2.4} fill={c} />
     </>;
   } else if (geo === 'flower') {
     inner = <>
-      <circle cx={32} cy={32} r={10} fill="none" stroke={c} strokeWidth={1.2} />
-      {polyPts(6, 10, 32, 32, 0).map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={10} fill="none" stroke={c} strokeWidth={1.2} />)}
+      <circle cx={32} cy={32} r={10} fill="none" stroke={c} strokeWidth={2 * k} />
+      {polyPts(6, 10, 32, 32, 0).map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={10} fill="none" stroke={c} strokeWidth={2 * k} />)}
     </>;
   } else if (geo === 'merkaba') {
     inner = <>
-      <polygon points={ptsStr(polyPts(3, 24, 32, 32, 0))} fill="none" stroke={c} strokeWidth={1.6} />
-      <polygon points={ptsStr(polyPts(3, 24, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={1.6} opacity={0.7} />
-      <circle cx={32} cy={32} r={30} fill="none" stroke={c} strokeWidth={0.6} opacity={0.4} />
+      <polygon points={ptsStr(polyPts(3, 24, 32, 32, 0))} fill="none" stroke={c} strokeWidth={2.4 * k} />
+      <polygon points={ptsStr(polyPts(3, 24, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={2.4 * k} opacity={0.75} />
+      <circle cx={32} cy={32} r={30} fill="none" stroke={c} strokeWidth={0.9 * k} opacity={0.4} />
     </>;
   } else if (geo === 'sunwheel') {
     inner = <>
-      <circle cx={32} cy={32} r={9} fill="none" stroke={c} strokeWidth={1.6} />
+      <circle cx={32} cy={32} r={9} fill="none" stroke={c} strokeWidth={2.4 * k} />
       {Array.from({ length: 8 }).map((_, i) => {
         const a = i * (Math.PI / 4);
-        return <line key={i} x1={32 + 11 * Math.cos(a)} y1={32 + 11 * Math.sin(a)} x2={32 + 27 * Math.cos(a)} y2={32 + 27 * Math.sin(a)} stroke={c} strokeWidth={1.4} />;
+        return <line key={i} x1={32 + 11 * Math.cos(a)} y1={32 + 11 * Math.sin(a)} x2={32 + 27 * Math.cos(a)} y2={32 + 27 * Math.sin(a)} stroke={c} strokeWidth={2.2 * k} />;
       })}
-      <circle cx={32} cy={32} r={27} fill="none" stroke={c} strokeWidth={0.5} opacity={0.35} />
+      <circle cx={32} cy={32} r={27} fill="none" stroke={c} strokeWidth={0.8 * k} opacity={0.35} />
     </>;
   } else if (geo === 'hexagram') {
     inner = <>
-      <polygon points={ptsStr(polyPts(3, 22, 32, 32, 0))} fill="none" stroke={c} strokeWidth={1.5} />
-      <polygon points={ptsStr(polyPts(3, 22, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={1.5} />
-      <circle cx={32} cy={32} r={28} fill="none" stroke={c} strokeWidth={0.5} opacity={0.3} />
+      <polygon points={ptsStr(polyPts(3, 22, 32, 32, 0))} fill="none" stroke={c} strokeWidth={2.3 * k} />
+      <polygon points={ptsStr(polyPts(3, 22, 32, 32, Math.PI))} fill="none" stroke={c} strokeWidth={2.3 * k} />
+      <circle cx={32} cy={32} r={28} fill="none" stroke={c} strokeWidth={0.8 * k} opacity={0.3} />
     </>;
   } else if (geo === 'metatron') {
     const pts = [...polyPts(6, 20, 32, 32, 0), [32, 32] as [number, number]];
     const lines: React.ReactNode[] = [];
-    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) lines.push(<line key={`${i}-${j}`} x1={pts[i][0]} y1={pts[i][1]} x2={pts[j][0]} y2={pts[j][1]} stroke={c} strokeWidth={0.4} opacity={0.5} />);
-    inner = <>{lines}{pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={3.2} fill="none" stroke={c} strokeWidth={1} />)}</>;
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) lines.push(<line key={`${i}-${j}`} x1={pts[i][0]} y1={pts[i][1]} x2={pts[j][0]} y2={pts[j][1]} stroke={c} strokeWidth={0.9 * k} opacity={0.55} />);
+    inner = <>{lines}{pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={3.6} fill="none" stroke={c} strokeWidth={1.8 * k} />)}</>;
   } else if (geo === 'lotus') {
     inner = <>
       {Array.from({ length: 8 }).map((_, i) => {
         const a = i * (Math.PI / 4); const x = 32 + 14 * Math.cos(a), y = 32 + 14 * Math.sin(a);
-        return <ellipse key={i} cx={x} cy={y} rx={7} ry={14} transform={`rotate(${a * 180 / Math.PI + 90} ${x} ${y})`} fill="none" stroke={c} strokeWidth={1} />;
+        return <ellipse key={i} cx={x} cy={y} rx={7} ry={14} transform={`rotate(${a * 180 / Math.PI + 90} ${x} ${y})`} fill="none" stroke={c} strokeWidth={1.8 * k} />;
       })}
       <circle cx={32} cy={32} r={4} fill={c} opacity={0.6} />
     </>;
   } else if (geo === 'crescent') {
     inner = <>
-      <path d="M40,14 A20,20 0 1 0 40,54 A15,20 0 1 1 40,14 Z" fill={c} opacity={0.5} />
-      {[[16, 16, 1.4], [48, 20, 1], [50, 44, 1.6], [18, 46, 1.1]].map(([x, y, r], i) => <circle key={i} cx={x} cy={y} r={r} fill={c} />)}
+      <path d="M40,14 A20,20 0 1 0 40,54 A15,20 0 1 1 40,14 Z" fill={c} opacity={0.55} />
+      {[[16, 16, 2.2], [48, 20, 1.7], [50, 44, 2.5], [18, 46, 1.9]].map(([x, y, r], i) => <circle key={i} cx={x} cy={y} r={r} fill={c} />)}
     </>;
   }
 
@@ -778,10 +785,10 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                       <button type="button"
                         onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
                         style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', position: 'relative', zIndex: 1 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                        <div style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0,
                           background: `${patch.color}18`, border: `1px solid ${patch.color}33`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <SacredGeometry geo={patch.geo} color={patch.color} size={30} />
+                          <SacredGeometry geo={patch.geo} color={patch.color} size={38} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1013,11 +1020,24 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
 
   useEffect(() => {
     const local = loadFromLocalStorage(userId);
-    if (local) { setSession(local); setShowReturn(true); return; }
+    if (local) { setSession(local); setShowReturn(true); if (local.activePatchId) setActivePatchId(local.activePatchId); return; }
     setIsSyncing(true);
     loadFromSupabase(userId).then(remote => {
-      if (remote) { setSession(remote); saveToLocalStorage(remote); setShowReturn(true); }
+      if (remote) { setSession(remote); saveToLocalStorage(remote); setShowReturn(true); if (remote.activePatchId) setActivePatchId(remote.activePatchId); }
     }).finally(() => setIsSyncing(false));
+  }, [userId]);
+
+  // Persists the selected Siddha into the same session object the entanglement/light-code
+  // already lives in — so the choice is tied to this user's field, not just local component state.
+  const handleSelectPatch = useCallback((id: string) => {
+    setActivePatchId(id);
+    setSession(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, activePatchId: id, patchActivatedAt: Date.now() };
+      saveToLocalStorage(updated);
+      syncToSupabase(userId, updated).catch(() => {});
+      return updated;
+    });
   }, [userId]);
 
   const startScan = () => {
@@ -1073,6 +1093,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     clearFromLocalStorage(userId);
     clearFromSupabase(userId).catch(() => {});
     setSession(null); setShowReturn(false); setShowProtocol(false);
+    setActivePatchId(null);
     startScan();
   };
 
@@ -1206,7 +1227,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
       <AnimatePresence>
         {isEntangled && !isExpired && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}>
-            <PatchProtocolSelector activePatchId={activePatchId} onSelect={setActivePatchId} />
+            <PatchProtocolSelector activePatchId={activePatchId} onSelect={handleSelectPatch} />
           </motion.div>
         )}
       </AnimatePresence>
