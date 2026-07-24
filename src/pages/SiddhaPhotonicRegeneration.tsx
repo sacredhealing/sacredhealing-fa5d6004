@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import NadiScanner, { type NadiReading } from '@/components/NadiScanner';
 
 /* ─── TOKENS ─────────────────────────────────────────────────────────────── */
 const GOLD        = '#D4AF37';
@@ -31,7 +32,7 @@ const TTL_MS = 72 * 60 * 60 * 1000;
 interface BiometricProfile {
   dominantFrequency: string;
   nadiBand: string;
-  cellularAge: string;
+  vagalTone: string;
   coherenceScore: number;
   archiveSignature: string;
 }
@@ -283,7 +284,7 @@ function BiometricReadout({ session }: { session: PhotonicSession }) {
     { label: 'Archive Signature',  value: p.archiveSignature,  color: GOLD },
     { label: 'Dominant Frequency', value: p.dominantFrequency, color: CYAN },
     { label: 'Nadi Band',          value: p.nadiBand },
-    { label: 'Cellular Age',       value: p.cellularAge },
+    { label: 'Vagal Tone (HRV)',   value: p.vagalTone },
     { label: 'Coherence Score',    value: `${p.coherenceScore}%` },
     { label: 'Scan Count',         value: `#${scanCount}` },
     { label: 'Entangled',          value: timeLabel },
@@ -1045,27 +1046,30 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     setSession(null); setShowReturn(false); setShowProtocol(false);
   };
 
-  useEffect(() => {
-    if (!isScanning) return;
-    let p = 0;
-    const id = window.setInterval(() => {
-      p += 1;
-      if (p >= 100) {
-        clearInterval(id); setScanProgress(100); setIsScanning(false);
-        const now = Date.now();
-        const newSession: PhotonicSession = {
-          isEntangled: true, lightCode: '',
-          scanCount: (session?.scanCount ?? 0) + 1,
-          entangledAt: now, expiresAt: now + TTL_MS,
-          biometricProfile: generateBiometric(), userId,
-        };
-        setSession(newSession);
-        saveToLocalStorage(newSession);
-        syncToSupabase(userId, newSession).catch(() => {});
-      } else setScanProgress(p);
-    }, 45);
-    return () => clearInterval(id);
-  }, [isScanning]);
+  // Real scan complete — builds the session from genuinely measured camera/voice/motion data,
+  // not a random generator. hr/hrv/vagal tone/coherence all trace back to NadiScanner's
+  // rPPG + FaceMesh + voice + motion signal fusion.
+  const handleRealScanComplete = useCallback((reading: NadiReading) => {
+    setIsScanning(false);
+    const now = Date.now();
+    const hr = reading.rawVitals.heart_rate;
+    const profile: BiometricProfile = {
+      dominantFrequency: `${(hr / 60).toFixed(2)} Hz (Cardiac)`,
+      nadiBand: `${reading.activatedNadi} — ${reading.autonomicBalance}`,
+      vagalTone: `${reading.vagalTone} (RMSSD ${Math.round(reading.rawVitals.hrv_rmssd ?? 0)}ms)`,
+      coherenceScore: Math.round(reading.pranaCoherence),
+      archiveSignature: `RPPG-${Math.round(reading.rawVitals.confidence * 100)}-${now.toString(36).toUpperCase().slice(-6)}`,
+    };
+    const newSession: PhotonicSession = {
+      isEntangled: true, lightCode: '',
+      scanCount: (session?.scanCount ?? 0) + 1,
+      entangledAt: now, expiresAt: now + TTL_MS,
+      biometricProfile: profile, userId,
+    };
+    setSession(newSession);
+    saveToLocalStorage(newSession);
+    syncToSupabase(userId, newSession).catch(() => {});
+  }, [session, userId]);
 
   const generateLightCode = useCallback(async (currentSession: PhotonicSession) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
@@ -1201,7 +1205,11 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
                   <span style={{ fontSize: 10, fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: '.3em' }}>Initiate Nadi Scan</span>
                 </motion.button>
               )}
-              {isScanning && <ScanProgressBar progress={scanProgress} />}
+              {isScanning && (
+                <div style={{ width: '100%', maxWidth: 360, marginTop: 8 }}>
+                  <NadiScanner onScanComplete={handleRealScanComplete} />
+                </div>
+              )}
               {isEntangled && (
                 <motion.button initial={{ opacity: 0, scale: .9 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.04 }} whileTap={{ scale: .97 }} type="button" onClick={handleReset}
                   style={{ padding: '10px 22px', borderRadius: 999, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.03)', cursor: 'pointer', fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '.3em' }}>
