@@ -851,7 +851,7 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                   return (
                     <div key={patch.id}
                       style={{ position: 'relative', borderRadius: 20,
-                        border: isActive ? `1px solid ${patch.color}55` : isRecommended ? `1px solid ${CYAN}30` : '1px solid rgba(255,255,255,.06)',
+                        border: isActive ? `1px solid ${patch.color}55` : '1px solid rgba(255,255,255,.06)',
                         background: isActive ? `rgba(${patch.color === GOLD ? '212,175,55' : '34,211,238'},.05)` : 'rgba(255,255,255,.02)',
                         overflow: 'hidden', transition: 'all .3s ease',
                         boxShadow: isActive ? `0 0 24px ${patch.color}22` : 'none' }}>
@@ -1201,11 +1201,19 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     setIsScanning(false);
     const now = Date.now();
     const hr = reading.rawVitals.heart_rate;
+    const hrIsValid = hr > 40 && hr < 130;
+
+    // pranaCoherence from NadiScanner is a raw score in the ~8,000–68,000 range
+    // (Math.round(8000 + composite * 60000) on the main path, 12000–68000 on the
+    // voice-only path) — NOT a 0–100 percentage. Displaying it directly with a "%"
+    // suffix, as this used to do, produced nonsense like "25421%". Normalize properly.
+    const coherencePercent = Math.round(Math.max(0, Math.min(100, ((reading.pranaCoherence - 8000) / 60000) * 100)));
+
     const profile: BiometricProfile = {
-      dominantFrequency: `${(hr / 60).toFixed(2)} Hz (Cardiac)`,
+      dominantFrequency: hrIsValid ? `${(hr / 60).toFixed(2)} Hz (Cardiac)` : 'No stable pulse signal detected',
       nadiBand: `${reading.activatedNadi} — ${reading.autonomicBalance}`,
-      vagalTone: `${reading.vagalTone} (RMSSD ${Math.round(reading.rawVitals.hrv_rmssd ?? 0)}ms)`,
-      coherenceScore: Math.round(reading.pranaCoherence),
+      vagalTone: hrIsValid ? `${reading.vagalTone} (RMSSD ${Math.round(reading.rawVitals.hrv_rmssd ?? 0)}ms)` : `${reading.vagalTone} (low confidence — no HRV data)`,
+      coherenceScore: coherencePercent,
       archiveSignature: `RPPG-${Math.round(reading.rawVitals.confidence * 100)}-${now.toString(36).toUpperCase().slice(-6)}`,
       activatedNadi: reading.activatedNadi,
       vagalToneLevel: reading.vagalTone,
@@ -1219,6 +1227,9 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     setSession(newSession);
     saveToLocalStorage(newSession);
     syncToSupabase(userId, newSession).catch(() => {});
+    if (!hrIsValid) {
+      toast('Scan completed, but no clear pulse was detected — hold your face steady in good light and try again for a full reading.');
+    }
   }, [session, userId]);
 
   const generateLightCode = useCallback(async (currentSession: PhotonicSession) => {
