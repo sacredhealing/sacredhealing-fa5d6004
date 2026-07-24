@@ -40,6 +40,19 @@ function uploadWithProgress(
 // block, since some admins may have a fast enough connection to push through.
 const LARGE_FILE_WARNING_BYTES = 300 * 1024 * 1024; // 300MB
 
+function extractYoutubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([\w-]{11})/,
+    /(?:youtu\.be\/)([\w-]{11})/,
+    /(?:youtube\.com\/embed\/)([\w-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
 interface VaultItem {
   id: string;
   title: string;
@@ -112,6 +125,8 @@ export default function AdminContentVault() {
   const [durationSeconds, setDurationSeconds] = useState('');
   const [roomId, setRoomId] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [useYoutubeEmbed, setUseYoutubeEmbed] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   // The ONLY channels that actually exist in the visible Nexus UI — mirrors
@@ -177,6 +192,8 @@ export default function AdminContentVault() {
     setRoomId('');
     setMediaFile(null);
     setThumbnailFile(null);
+    setYoutubeUrl('');
+    setUseYoutubeEmbed(false);
   };
 
   const handleUploadAndPublish = async (publishToChat: boolean) => {
@@ -185,7 +202,12 @@ export default function AdminContentVault() {
       toast({ title: 'Title required', variant: 'destructive' });
       return;
     }
-    if (!mediaFile) {
+    const youtubeId = useYoutubeEmbed ? extractYoutubeId(youtubeUrl) : null;
+    if (useYoutubeEmbed && !youtubeId) {
+      toast({ title: "Couldn't read a video ID from that URL", variant: 'destructive' });
+      return;
+    }
+    if (!useYoutubeEmbed && !mediaFile) {
       toast({ title: 'Select the media file first', variant: 'destructive' });
       return;
     }
@@ -193,7 +215,7 @@ export default function AdminContentVault() {
       toast({ title: 'Pick a room to post the drop in', variant: 'destructive' });
       return;
     }
-    if (mediaFile.size > LARGE_FILE_WARNING_BYTES) {
+    if (!useYoutubeEmbed && mediaFile && mediaFile.size > LARGE_FILE_WARNING_BYTES) {
       const proceed = window.confirm(
         `That file is ${(mediaFile.size / (1024 * 1024)).toFixed(0)}MB. This upload isn't resumable — if your connection drops partway, you'll need to start over. Compress it smaller if you can. Continue anyway?`
       );
@@ -209,24 +231,33 @@ export default function AdminContentVault() {
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Not signed in');
 
-      const ext = mediaFile.name.split('.').pop();
-      const uniqueName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-      // Music goes to the same public 'songs' bucket AdminMusic.tsx already uses,
-      // so it's playable the exact same way the Music Store already plays tracks.
-      // Everything else uses the private content-vault bucket (signed-URL only).
-      const bucket =
-        config.destination === 'music_tracks' ? 'songs' :
-        config.destination === 'divine_transmissions' || config.destination === 'mantras' ? 'audio' :
-        'content-vault';
-      const mediaPath =
-        config.destination === 'music_tracks' || config.destination === 'divine_transmissions' || config.destination === 'mantras'
-          ? uniqueName
-          : `${user.id}/${uniqueName}`;
-
-      await uploadWithProgress(bucket, mediaPath, mediaFile, accessToken, setUploadProgress);
-
+      let mediaPath = '';
+      let bucket = '';
       let thumbnailUrl: string | null = null;
+
+      if (!useYoutubeEmbed && mediaFile) {
+        const ext = mediaFile.name.split('.').pop();
+        const uniqueName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+        // Music goes to the same public 'songs' bucket AdminMusic.tsx already uses,
+        // so it's playable the exact same way the Music Store already plays tracks.
+        // Everything else uses the private content-vault bucket (signed-URL only).
+        bucket =
+          config.destination === 'music_tracks' ? 'songs' :
+          config.destination === 'divine_transmissions' || config.destination === 'mantras' ? 'audio' :
+          'content-vault';
+        mediaPath =
+          config.destination === 'music_tracks' || config.destination === 'divine_transmissions' || config.destination === 'mantras'
+            ? uniqueName
+            : `${user.id}/${uniqueName}`;
+
+        await uploadWithProgress(bucket, mediaPath, mediaFile, accessToken, setUploadProgress);
+      }
+      // YouTube embed mode: no file to upload, nothing to store — only the
+      // video ID gets saved (in the insert branch below), used to build the
+      // official YouTube embed URL. The video itself always stays hosted on
+      // YouTube; nothing is downloaded or re-hosted.
+
       if (thumbnailFile) {
         const thumbExt = thumbnailFile.name.split('.').pop();
         const thumbPath = `${user.id}/thumb-${crypto.randomUUID()}.${thumbExt}`;
@@ -343,7 +374,7 @@ export default function AdminContentVault() {
             title: title.trim(),
             description: description.trim() || null,
             content_type: 'video',
-            storage_path: mediaPath,
+            storage_path: useYoutubeEmbed ? '' : mediaPath,
             thumbnail_url: thumbnailUrl,
             duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : null,
             price_cents: Math.round(parseFloat(priceEuros || '0') * 100),
@@ -351,7 +382,7 @@ export default function AdminContentVault() {
             tier_required: tierRequired || 'free',
             is_published: true,
             owner_id: user.id,
-            metadata: { category },
+            metadata: useYoutubeEmbed ? { category, source: 'youtube', youtube_id: youtubeId } : { category },
           })
           .select()
           .single();
@@ -467,10 +498,44 @@ export default function AdminContentVault() {
             </select>
           </div>
 
-          <div>
-            <label style={labelStyle}>Media file (audio/video — private, never public)</label>
-            <input type="file" accept="audio/*,video/*" onChange={(e) => setMediaFile(e.target.files?.[0] || null)} style={fileInputStyle} />
-          </div>
+          {category === 'video' && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setUseYoutubeEmbed(false)}
+                style={{ ...toggleBtnStyle, ...(useYoutubeEmbed ? {} : toggleBtnActiveStyle) }}
+              >
+                Upload file
+              </button>
+              <button
+                type="button"
+                onClick={() => setUseYoutubeEmbed(true)}
+                style={{ ...toggleBtnStyle, ...(useYoutubeEmbed ? toggleBtnActiveStyle : {}) }}
+              >
+                Embed YouTube video
+              </button>
+            </div>
+          )}
+
+          {useYoutubeEmbed ? (
+            <div>
+              <label style={labelStyle}>YouTube URL</label>
+              <input
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                style={inputStyle}
+              />
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', marginTop: 4 }}>
+                Video stays hosted on YouTube — embedded via YouTube's own player, nothing is downloaded or copied.
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label style={labelStyle}>Media file (audio/video — private, never public)</label>
+              <input type="file" accept="audio/*,video/*" onChange={(e) => setMediaFile(e.target.files?.[0] || null)} style={fileInputStyle} />
+            </div>
+          )}
           <div>
             <label style={labelStyle}>Thumbnail (optional — shown on the locked card)</label>
             <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} style={fileInputStyle} />
@@ -581,6 +646,24 @@ const primaryBtnStyle: React.CSSProperties = {
   fontWeight: 900,
   fontSize: 13,
   cursor: 'pointer',
+};
+
+const toggleBtnStyle: React.CSSProperties = {
+  flex: 1,
+  background: 'rgba(255,255,255,.04)',
+  color: 'rgba(255,255,255,.5)',
+  border: '1px solid rgba(255,255,255,.1)',
+  borderRadius: 10,
+  padding: '9px',
+  fontWeight: 700,
+  fontSize: 11.5,
+  cursor: 'pointer',
+};
+
+const toggleBtnActiveStyle: React.CSSProperties = {
+  background: 'rgba(212,175,55,.15)',
+  color: '#D4AF37',
+  border: '1px solid rgba(212,175,55,.4)',
 };
 
 const secondaryBtnStyle: React.CSSProperties = {

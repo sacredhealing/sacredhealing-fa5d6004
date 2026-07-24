@@ -28,6 +28,33 @@ function formatDuration(sec: number | null) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function LivingSacredGeometry() {
+  return (
+    <div className="c-geo-wrap">
+      <svg viewBox="0 0 200 200" width="120" height="120">
+        <g className="c-geo-ring r1" stroke="#D4AF37" strokeWidth="0.6" fill="none" opacity="0.7">
+          <circle cx="100" cy="100" r="70" />
+          <circle cx="100" cy="46" r="35" />
+          <circle cx="100" cy="154" r="35" />
+          <circle cx="53" cy="73" r="35" />
+          <circle cx="147" cy="73" r="35" />
+          <circle cx="53" cy="127" r="35" />
+          <circle cx="147" cy="127" r="35" />
+        </g>
+        <g className="c-geo-ring r2" stroke="#22D3EE" strokeWidth="0.5" fill="none" opacity="0.5">
+          <polygon points="100,25 168,145 32,145" />
+          <polygon points="100,175 32,55 168,55" />
+        </g>
+        <g className="c-geo-ring r3" stroke="#D4AF37" strokeWidth="0.4" fill="none" opacity="0.4">
+          <circle cx="100" cy="100" r="90" />
+          <circle cx="100" cy="100" r="55" />
+        </g>
+        <circle className="c-geo-core" cx="100" cy="100" r="6" fill="#F4D35E" />
+      </svg>
+    </div>
+  );
+}
+
 export default function ContentDropCard({ content }: { content: VaultItem }) {
   const { toast } = useToast();
   const [access, setAccess] = useState<{ has_access: boolean; reason: string } | null>(null);
@@ -52,6 +79,7 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const priceLabel = content.price_cents > 0 ? `${(content.price_cents / 100).toFixed(2)} ${content.currency.toUpperCase()}` : null;
 
   const handlePlay = async () => {
+    if ((content as any).metadata?.source === 'youtube') { setIsPlaying(true); return; }
     if (playUrl) { setIsPlaying(true); return; }
     try {
       const { data, error } = await supabase.functions.invoke('get-content-signed-url', {
@@ -99,6 +127,8 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
 
   const isVideo = content.content_type === 'video';
   const isImage = content.content_type === 'image';
+  const isYoutube = (content as any).metadata?.source === 'youtube';
+  const youtubeId = (content as any).metadata?.youtube_id as string | undefined;
 
   return (
     <>
@@ -125,18 +155,41 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
         .c-unlock-btn { background: radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%); color: #1a1300; border: none; padding: 8px 16px; border-radius: 13px; font-weight: 900; font-size: 11.5px; cursor: pointer; box-shadow: 0 6px 16px rgba(212,175,55,.25); }
         .c-unlock-btn.owned { background: rgba(34,211,238,.12); color: #22D3EE; border: 1px solid rgba(34,211,238,.35); box-shadow: none; }
         .c-unlock-btn:disabled { opacity: .5; cursor: default; }
+        .c-drop-youtube { position: relative; z-index: 4; width: 100%; height: 100%; border: none; }
+
+        /* ── Living sacred geometry — original animated SVG, no external assets ── */
+        .c-geo-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; opacity: .55; }
+        .c-geo-ring { transform-origin: center; animation: c-geo-spin linear infinite; }
+        .c-geo-ring.r1 { animation-duration: 40s; }
+        .c-geo-ring.r2 { animation-duration: 55s; animation-direction: reverse; }
+        .c-geo-ring.r3 { animation-duration: 70s; }
+        .c-geo-core { animation: c-geo-pulse 4s ease-in-out infinite; transform-origin: center; }
+        @keyframes c-geo-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes c-geo-pulse { 0%, 100% { opacity: .5; transform: scale(1); } 50% { opacity: .95; transform: scale(1.06); } }
       `}</style>
       <div className="c-drop-wrap">
       <div className="c-drop-eyebrow"><span className="c-drop-dot" />New Offering</div>
       <div className="c-drop-card">
         <div className={`c-drop-media ${unlocked ? 'unlocked' : ''}`}>
-          {content.thumbnail_url && <img src={content.thumbnail_url} alt="" className="c-drop-thumb-img" />}
+          {content.thumbnail_url ? (
+            <img src={content.thumbnail_url} alt="" className="c-drop-thumb-img" />
+          ) : isVideo ? (
+            <LivingSacredGeometry />
+          ) : null}
           {!unlocked && <div className="c-drop-lock">🔒</div>}
           <div className="c-drop-duration">
             {content.duration_seconds ? `${formatDuration(content.duration_seconds)} · ` : ''}
             {content.content_type.toUpperCase()}
           </div>
-          {isPlaying && playUrl ? (
+          {isPlaying && isYoutube && youtubeId ? (
+            <iframe
+              className="c-drop-youtube"
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+              title={content.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : isPlaying && playUrl ? (
             isVideo ? (
               <video src={playUrl} controls autoPlay className="c-drop-player" />
             ) : isImage ? (
