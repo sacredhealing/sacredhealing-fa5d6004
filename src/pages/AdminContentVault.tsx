@@ -154,7 +154,7 @@ export default function AdminContentVault() {
         .from('content_vault')
         .select('*')
         .order('created_at', { ascending: false }),
-      supabase.from('chat_rooms').select('id, name, type').eq('is_active', true),
+      supabase.from('chat_rooms').select('id, name, type').eq('is_active', true).order('created_at', { ascending: true }),
     ]);
     setItems((vaultData as VaultItem[]) || []);
 

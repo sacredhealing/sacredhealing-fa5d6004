@@ -1409,7 +1409,7 @@ const Community = () => {
     };
 
     const loadRooms = async () => {
-      const { data, error } = await supabase.from("chat_rooms").select("id, name");
+      const { data, error } = await supabase.from("chat_rooms").select("id, name").order("created_at", { ascending: true });
       if (error) {
         console.error("Error loading chat rooms:", error);
         return;
@@ -1435,7 +1435,7 @@ const Community = () => {
             .select("id")
             .single();
           if (!createErr && created?.id) return { channelId: ch.id, roomId: (created as any).id };
-          const { data: found } = await supabase.from("chat_rooms").select("id").eq("name", ch.name).limit(1);
+          const { data: found } = await supabase.from("chat_rooms").select("id").eq("name", ch.name).order("created_at", { ascending: true }).limit(1);
           if (found && found.length > 0) return { channelId: ch.id, roomId: (found[0] as any).id };
           return { channelId: ch.id, roomId: null };
         });
