@@ -2638,9 +2638,6 @@ const Community = () => {
                   <div className="c-chat-title">
                     <div className="c-chat-name">{currentChannel.name}</div>
                     <div className="c-chat-sub">{currentChannel.description}</div>
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,.25)', fontFamily: 'monospace', marginTop: 2 }}>
-                      Room ID: {roomIds[activeChannel!] || 'not resolved'}
-                    </div>
                   </div>
                   {/* DM: 1o1 video — both participants can start a Daily room */}
                   {isDmChannel(activeChannel) && !dmVideoUrl && (
