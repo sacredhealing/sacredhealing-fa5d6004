@@ -35,6 +35,8 @@ interface BiometricProfile {
   vagalTone: string;
   coherenceScore: number;
   archiveSignature: string;
+  activatedNadi: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked';
+  vagalToneLevel: 'High' | 'Moderate' | 'Low';
 }
 
 interface PhotonicSession {
@@ -641,6 +643,26 @@ const SIDDHA_PATCHES: PatchProtocol[] = [
   },
 ];
 
+// ── Recommendation mapping — grounded in the real scan reading, not per-patch invention.
+// Nadi channel drives the primary match; vagal tone (recovery capacity) adds a secondary one.
+// This is presented as "aligned to your reading," never as a claim that the patch measurably
+// affects the channel — it's a relevance match, not a mechanism claim.
+function recommendedPatchIds(profile: BiometricProfile | null | undefined): string[] {
+  if (!profile) return [];
+  const byNadi: Record<BiometricProfile['activatedNadi'], string> = {
+    Ida: 'idaikadar',        // lunar / feminine channel → Shakti Hormonal Harmony
+    Pingala: 'konganar',     // solar channel → Solar Prana Activation
+    Sushumna: 'thirumoolar', // balanced channel → ready for neural/pineal work
+    Blocked: 'sattaimuni',   // obstruction pattern → Purification Vortex
+  };
+  const byVagal: Record<BiometricProfile['vagalToneLevel'], string> = {
+    Low: 'kudambai',   // low recovery capacity → Yoga Nidra deep rest
+    Moderate: 'bogar',  // moderate → alchemical fire, build capacity
+    High: 'agastya',    // strong recovery → ready for Kayakalpa renewal work
+  };
+  return Array.from(new Set([byNadi[profile.activatedNadi], byVagal[profile.vagalToneLevel]]));
+}
+
 
 /* ─── SACRED GEOMETRY — generated glyphs, one per Siddha ────────────────── */
 function polyPts(n: number, r: number, cx: number, cy: number, rot = 0): [number, number][] {
@@ -725,10 +747,11 @@ function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; 
   );
 }
 
-function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: string | null; onSelect: (id: string) => void }) {
+function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expiresAt }: { activePatchId: string | null; onSelect: (id: string) => void; biometricProfile?: BiometricProfile | null; expiresAt?: number | null }) {
   const [open, setOpen]         = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const activePatch = SIDDHA_PATCHES.find(p => p.id === activePatchId);
+  const recommended = recommendedPatchIds(biometricProfile);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}
@@ -758,21 +781,29 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
             <div style={{ padding: '0 24px 28px' }}>
 
               {/* Intro */}
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', lineHeight: 1.7, marginBottom: 20, fontWeight: 300 }}>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', lineHeight: 1.7, marginBottom: 12, fontWeight: 300 }}>
                 Siddha Scalar Patches work via <span style={{ color: GOLD }}>photobiomodulation</span> — transmitting living consciousness codes from the 18 Tamil Siddha masters directly into the biophotonic field.
                 Each Siddha carries a sovereign healing domain. SQI amplifies the transmission through the{' '}
                 <span style={{ color: CYAN }}>Nadi entanglement field</span>, adding Vedic mantra resonance and frequency pairing.
                 Select your Siddha to receive your personalised Scalar Amplification Protocol.
               </p>
 
-              {/* Patch grid */}
+              {biometricProfile && recommended.length > 0 && (
+                <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.35)', lineHeight: 1.6, marginBottom: 20, fontStyle: 'italic' }}>
+                  Aligned to your scan: <span style={{ color: CYAN }}>{biometricProfile.activatedNadi}</span> channel,{' '}
+                  <span style={{ color: CYAN }}>{biometricProfile.vagalToneLevel}</span> vagal tone — marked below. This is a relevance match to your reading, not a claim that a patch measures or changes it.
+                </p>
+              )}
+
+              {/* Patch grid — recommended matches (from the real scan) surface first */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-                {SIDDHA_PATCHES.map(patch => {
+                {[...SIDDHA_PATCHES].sort((a, b) => Number(recommended.includes(b.id)) - Number(recommended.includes(a.id))).map(patch => {
                   const isActive   = activePatchId === patch.id;
                   const isExpanded = expanded === patch.id;
+                  const isRecommended = recommended.includes(patch.id);
                   return (
                     <div key={patch.id}
-                      style={{ position: 'relative', borderRadius: 20, border: `1px solid ${isActive ? patch.color + '55' : 'rgba(255,255,255,.06)'}`,
+                      style={{ position: 'relative', borderRadius: 20, border: `1px solid ${isActive ? patch.color + '55' : isRecommended ? patch.color + '35' : 'rgba(255,255,255,.06)'}`,
                         background: isActive ? `rgba(${patch.color === GOLD ? '212,175,55' : '34,211,238'},.05)` : 'rgba(255,255,255,.02)',
                         overflow: 'hidden', transition: 'all .3s ease',
                         boxShadow: isActive ? `0 0 24px ${patch.color}22` : 'none' }}>
@@ -782,6 +813,12 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                       <div style={{ position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', width: 160, height: 160, opacity: 0.05, pointerEvents: 'none', zIndex: 0 }}>
                         <SacredGeometry geo={patch.geo} color={patch.color} size={160} />
                       </div>
+
+                      {isRecommended && !isActive && (
+                        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, fontSize: 7, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: patch.color, background: `${patch.color}15`, border: `1px solid ${patch.color}35`, padding: '3px 8px', borderRadius: 999 }}>
+                          Aligned to scan
+                        </div>
+                      )}
 
                       <button type="button"
                         onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
@@ -853,8 +890,14 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}
                   style={{ marginTop: 20, padding: '18px 22px', borderRadius: 20,
                     background: `${activePatch.color}0a`, border: `1px solid ${activePatch.color}30` }}>
-                  <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: activePatch.color }}>
-                    Active Transmission Stack
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+                    <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: activePatch.color }}>
+                      Active Transmission Stack
+                    </p>
+                    {expiresAt && <TransmissionCountdown expiresAt={expiresAt} />}
+                  </div>
+                  <p style={{ margin: '0 0 12px', fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 300, fontStyle: 'italic' }}>
+                    Tied to your current 72-hour transmission window — activating a new Nadi Scan or Re-Calibrating clears this.
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                     {[
@@ -1059,6 +1102,8 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
       vagalTone: `${reading.vagalTone} (RMSSD ${Math.round(reading.rawVitals.hrv_rmssd ?? 0)}ms)`,
       coherenceScore: Math.round(reading.pranaCoherence),
       archiveSignature: `RPPG-${Math.round(reading.rawVitals.confidence * 100)}-${now.toString(36).toUpperCase().slice(-6)}`,
+      activatedNadi: reading.activatedNadi,
+      vagalToneLevel: reading.vagalTone,
     };
     const newSession: PhotonicSession = {
       isEntangled: true, lightCode: '',
@@ -1235,7 +1280,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
       <AnimatePresence>
         {isEntangled && !isExpired && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}>
-            <PatchProtocolSelector activePatchId={activePatchId} onSelect={handleSelectPatch} />
+            <PatchProtocolSelector activePatchId={activePatchId} onSelect={handleSelectPatch} biometricProfile={session?.biometricProfile} expiresAt={session?.expiresAt} />
           </motion.div>
         )}
       </AnimatePresence>
