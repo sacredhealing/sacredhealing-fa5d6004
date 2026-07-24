@@ -783,23 +783,61 @@ const SQI_STYLES = `
   /* ── CAVE GUIDE (5 techniques) ── */
   .cave-guide {
     margin: 0 20px 20px;
-    padding: 28px 24px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .cave-guide-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 22px 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .cave-guide-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .cave-guide-icon-ring {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.04));
+    border: 1px solid rgba(212,175,55,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4AF37;
+    box-shadow: 0 0 16px rgba(212,175,55,0.15), inset 0 1px 0 rgba(212,175,55,0.18);
   }
 
   .cave-guide-title {
     font-family: 'Cinzel', serif;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
     color: #D4AF37;
     text-shadow: 0 0 20px rgba(212,175,55,0.3);
-    margin-bottom: 6px;
   }
 
   .cave-guide-sub {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255,255,255,0.35);
-    letter-spacing: 0.06em;
-    margin-bottom: 24px;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  .cave-guide-body {
+    padding: 0 24px 28px;
   }
 
   .pranayama-guide-item {
@@ -1129,6 +1167,15 @@ const TECHNIQUE_ICONS: Record<string, string> = {
   crown: '🔱',
 };
 
+const OmIcon: React.FC<{ size?: number; strokeWidth?: number }> = ({ size = 20, strokeWidth = 1.6 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.2 15.2c0-2.6 2.1-4.3 4.4-4.3 2.7 0 4 2.1 4 4 0 2.1-1.6 3.9-3.8 3.9-1.9 0-3-1.2-3-2.5 0-1.2.9-2 1.9-2 .9 0 1.5.6 1.5 1.4" />
+    <path d="M12.6 11.4c0-2.2 1.8-3.9 4.2-3.9 2.2 0 3.8 1.6 3.8 3.6 0 2.4-2 4.4-4.5 4.4-1.1 0-2-.4-2.7-.9" />
+    <path d="M13.4 5.8c1.7-1.1 3.8-.6 4.6.9" />
+    <circle cx="19.4" cy="4.6" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 const tierLabel = (tierRequired: string | undefined): string => {
   switch (tierRequired) {
     case 'akasha-infinity': return 'Akasha-Infinity';
@@ -1178,6 +1225,7 @@ const Breathing: React.FC = () => {
   const [screening, setScreening] = useState<{ cleared_for_retention: boolean; cleared_for_forceful: boolean } | null>(null);
   const [healthScreenOpen, setHealthScreenOpen] = useState(false);
   const [showGuidance, setShowGuidance] = useState(true);
+  const [caveGuideOpen, setCaveGuideOpen] = useState(false);
 
   useEffect(() => {
     const fetchScreening = async () => {
@@ -1553,18 +1601,32 @@ const Breathing: React.FC = () => {
 
           {/* ── PRANAYAMA CAVE GUIDE ── */}
           <div className="cave-guide glass-card">
-            <div className="cave-guide-title">🕉 Want to Go Deeper?</div>
-            <div className="cave-guide-sub">The teachings behind each breath — read anytime</div>
-            {CAVE_GUIDE.map((item, i) => (
-              <div key={i} className="pranayama-guide-item">
-                <div className="guide-number">{i + 1}</div>
-                <div className="guide-text">
-                  <span className="guide-sanskrit">{item.sanskrit}</span>
-                  <h4>{item.title}</h4>
-                  <p>{item.desc}</p>
+            <button className="cave-guide-header" onClick={() => setCaveGuideOpen((v) => !v)}>
+              <div className="cave-guide-header-left">
+                <div className="cave-guide-icon-ring">
+                  <OmIcon size={18} strokeWidth={1.7} />
+                </div>
+                <div>
+                  <div className="cave-guide-title">Want to Go Deeper?</div>
+                  <div className="cave-guide-sub">The teachings behind each breath — read anytime</div>
                 </div>
               </div>
-            ))}
+              {caveGuideOpen ? <ChevronUp size={16} color="rgba(255,255,255,.4)" /> : <ChevronDown size={16} color="rgba(255,255,255,.4)" />}
+            </button>
+            {caveGuideOpen && (
+              <div className="cave-guide-body">
+                {CAVE_GUIDE.map((item, i) => (
+                  <div key={i} className="pranayama-guide-item">
+                    <div className="guide-number">{i + 1}</div>
+                    <div className="guide-text">
+                      <span className="guide-sanskrit">{item.sanskrit}</span>
+                      <h4>{item.title}</h4>
+                      <p>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── BENEFITS ── */}
