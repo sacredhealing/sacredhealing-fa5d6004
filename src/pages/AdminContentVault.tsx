@@ -154,27 +154,37 @@ export default function AdminContentVault() {
         .from('content_vault')
         .select('*')
         .order('created_at', { ascending: false }),
-      supabase.from('chat_rooms').select('id, name, type').eq('is_active', true).order('created_at', { ascending: true }),
+      // No is_active filter here — Community.tsx's own room resolution has
+      // none either, so filtering here could make this picker disagree with
+      // what the actual chat screen resolves to.
+      supabase.from('chat_rooms').select('id, name, type').order('created_at', { ascending: true }),
     ]);
     setItems((vaultData as VaultItem[]) || []);
 
     // Same name-matching rules as Community.tsx's room resolution, so this
     // picker can never show a room the real chat UI wouldn't also resolve.
     const resolved: RoomOption[] = [];
+    const takenChannelIds = new Set<string>();
     (allRooms || []).forEach((room: any) => {
       const matched = VISIBLE_CHANNELS.find((ch) => ch.name === room.name);
-      if (matched && !resolved.find((r) => r.id === matched.id)) {
+      if (matched && !takenChannelIds.has(matched.id)) {
         resolved.push({ id: room.id, name: matched.name });
-      } else if (room.type === 'sadhana' && !resolved.find((r) => r.id === 'sadhana')) {
+        takenChannelIds.add(matched.id);
+      } else if (room.type === 'sadhana' && !takenChannelIds.has('sadhana')) {
         resolved.push({ id: room.id, name: 'Sadhana' });
-      } else if (room.type === 'stargate' && !resolved.find((r) => r.id === 'stargate')) {
+        takenChannelIds.add('sadhana');
+      } else if (room.type === 'stargate' && !takenChannelIds.has('stargate')) {
         resolved.push({ id: room.id, name: 'Stargate' });
-      } else if (room.name?.includes('Divine Sangha') && !resolved.find((r) => r.name === 'Divine Sangha')) {
+        takenChannelIds.add('stargate');
+      } else if (room.name?.includes('Divine Sangha') && !takenChannelIds.has('divine-sangha')) {
         resolved.push({ id: room.id, name: 'Divine Sangha' });
-      } else if (room.name?.includes('Sacred Mantra') && !resolved.find((r) => r.name === 'Sacred Mantras')) {
+        takenChannelIds.add('divine-sangha');
+      } else if (room.name?.includes('Sacred Mantra') && !takenChannelIds.has('sacred-mantras')) {
         resolved.push({ id: room.id, name: 'Sacred Mantras' });
-      } else if (room.name?.includes('Healing') && !resolved.find((r) => r.name === 'Healing Blessings')) {
-        resolved.push({ id: room.id, name: 'Healing Blessings' });
+        takenChannelIds.add('sacred-mantras');
+      } else if (room.name?.includes('Healing') && !takenChannelIds.has('healing-circle')) {
+        resolved.push({ id: room.id, name: 'Sonic Treatments' });
+        takenChannelIds.add('healing-circle');
       }
     });
     setRooms(resolved);
