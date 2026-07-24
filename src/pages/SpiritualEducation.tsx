@@ -290,7 +290,7 @@ const SpiritualEducation: React.FC = () => {
               <Youtube className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <p className="font-medium text-foreground">Videos Watched</p>
+              <p className="font-medium text-foreground">Spiritual Guidance</p>
               <p className="text-sm text-muted-foreground">{watchedVideos.size} completed</p>
             </div>
           </div>
