@@ -1170,6 +1170,16 @@ const Community = () => {
   const [goLiveChannelName, setGoLiveChannelName] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
+  const [recentDms, setRecentDms] = useState<Array<{
+    partnerId: string;
+    partnerName: string;
+    partnerAvatar: string | null;
+    lastMessage: string;
+    lastMessageAt: string;
+    isMine: boolean;
+    unread: number;
+  }>>([]);
+  const [recentDmsLoading, setRecentDmsLoading] = useState(false);
   const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
   const [feedText, setFeedText] = useState("");
   const [feedFile, setFeedFile] = useState<File | null>(null);
@@ -2185,6 +2195,65 @@ const Community = () => {
     };
   };
 
+  // Telegram-style "recent chats" list: one row per person you've actually
+  // exchanged DMs with, most recent first, with a preview + unread count —
+  // distinct from the member directory below it, which is for finding
+  // someone new to message, not seeing who you already talk to.
+  const fetchRecentDms = useCallback(async () => {
+    if (!user) return;
+    setRecentDmsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('private_messages')
+        .select('id, sender_id, receiver_id, content, created_at, is_read')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error) throw error;
+
+      const byPartner = new Map<string, { last: any; unread: number }>();
+      (data || []).forEach((row: any) => {
+        const partnerId = row.sender_id === user.id ? row.receiver_id : row.sender_id;
+        const entry = byPartner.get(partnerId) || { last: row, unread: 0 };
+        if (row.receiver_id === user.id && !row.is_read) entry.unread += 1;
+        byPartner.set(partnerId, entry);
+      });
+
+      const partnerIds = Array.from(byPartner.keys());
+      if (partnerIds.length === 0) {
+        setRecentDms([]);
+        return;
+      }
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', partnerIds);
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
+
+      const list = partnerIds.map((pid) => {
+        const { last, unread } = byPartner.get(pid)!;
+        return {
+          partnerId: pid,
+          partnerName: profileMap[pid]?.full_name || 'Member',
+          partnerAvatar: profileMap[pid]?.avatar_url || null,
+          lastMessage: last.content || '',
+          lastMessageAt: last.created_at,
+          isMine: last.sender_id === user.id,
+          unread,
+        };
+      }).sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+
+      setRecentDms(list);
+    } catch (e) {
+      console.error('[Community] fetchRecentDms failed:', e);
+      setRecentDms([]);
+    } finally {
+      setRecentDmsLoading(false);
+    }
+  }, [user]);
+
   // Sends a media message directly into the currently active GROUP channel.
   // DMs don't have message_type/file_url columns on private_messages yet —
   // that needs one more migration, so this only ever targets chat_messages.
@@ -2577,7 +2646,7 @@ const Community = () => {
         <div className="c-top-tabs">
           <button className={`c-top-tab ${mobileTab === "chat" ? "active" : ""}`} onClick={() => setMobileTab("chat")}>Chat</button>
           <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>
-          <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => setMobileTab("members")}>Members</button>
+          <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => { setMobileTab("members"); fetchRecentDms(); }}>Members</button>
           <button className={`c-top-tab ${mobileTab === "library" ? "active" : ""}`} onClick={() => { setMobileTab("library"); fetchLibrary(); }}>Library</button>
         </div>
 
@@ -3300,7 +3369,44 @@ const Community = () => {
             </div>
           ) : mobileTab === "members" ? (
             <div className="c-members-view">
-              <div className="c-section-label">Guides & Admins</div>
+              {recentDms.length > 0 && (
+                <>
+                  <div className="c-section-label">Recent Chats</div>
+                  {recentDms.map((c) => (
+                    <div
+                      key={c.partnerId}
+                      className="c-member-row"
+                      onClick={() => {
+                        if (!user) return;
+                        const ids = [user.id, c.partnerId].sort();
+                        setActiveChannel(`dm-${ids[0]}-${ids[1]}`);
+                        setMobileTab("chat");
+                      }}
+                    >
+                      <div className="c-member-avatar">
+                        {c.partnerAvatar ? <img src={c.partnerAvatar} alt="" /> : getInitials(c.partnerName)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="c-member-name">{c.partnerName}</div>
+                        <div className="c-member-status" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {c.isMine ? "You: " : ""}{c.lastMessage}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,.35)" }}>
+                          {formatDistanceToNow(new Date(c.lastMessageAt), { addSuffix: false })}
+                        </span>
+                        {c.unread > 0 && (
+                          <div style={{ minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)", color: "#1a1300", fontSize: 10, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            {c.unread > 9 ? "9+" : c.unread}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              <div className="c-section-label" style={{ marginTop: recentDms.length > 0 ? 16 : 0 }}>Guides & Admins</div>
               {members.filter((m) => m.isAdmin && m.id !== user?.id).length > 0 ? (
                 members.filter((m) => m.isAdmin && m.id !== user?.id).map((m) => {
                   const isOnline = onlineUserIds.has(m.id);
