@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Creative Soul Meditation Studio — SQI 2050</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+:root{--gold:#D4AF37;--black:#050505;--glass:rgba(255,255,255,.02);--glass-b:rgba(255,255,255,.05);--text:rgba(255,255,255,.78);--dim:rgba(255,255,255,.40);--cyan:#22D3EE;--rose:rgba(212,100,100,.6)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--text);font-family:"Cormorant Garamond",serif;font-size:18px;line-height:1.75;overflow-x:hidden}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.star{position:absolute;width:var(--s,1px);height:var(--s,1px);background:#fff;border-radius:50%;opacity:0;animation:twk var(--d,4s) var(--delay,0s) ease-in-out infinite}
+@keyframes twk{0%,100%{opacity:0}50%{opacity:var(--op,.5)}}
+.glow{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(140px)}
+.g1{width:700px;height:700px;top:-300px;right:-250px;background:rgba(212,175,55,.06);animation:dft1 28s ease-in-out infinite}
+.g2{width:450px;height:450px;bottom:-180px;left:-150px;background:rgba(34,211,238,.04);animation:dft2 22s ease-in-out infinite}
+.g3{width:400px;height:400px;top:40%;left:30%;background:rgba(212,175,55,.04);animation:dft3 20s ease-in-out infinite}
+@keyframes dft1{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,50px)}}
+@keyframes dft2{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-30px)}}
+@keyframes dft3{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px}
+header{position:relative;z-index:1;text-align:center;padding:110px 24px 80px}
+.eyebrow{display:inline-block;font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);opacity:.7;border:1px solid rgba(212,175,55,.25);padding:6px 18px;border-radius:100px;margin-bottom:36px;animation:fadeUp .8s .1s both}
+h1{font-family:"Cinzel",serif;font-weight:900;font-size:clamp(2.4rem,7vw,5rem);color:#fff;letter-spacing:-.02em;line-height:1.1;animation:fadeUp .9s .2s both;margin-bottom:16px}
+h1 span{color:var(--gold);text-shadow:0 0 50px rgba(212,175,55,.3)}
+.tagline{font-family:"Cormorant Garamond",serif;font-size:clamp(1.1rem,2.5vw,1.5rem);font-style:italic;color:var(--dim);animation:fadeUp 1s .3s both;margin-bottom:48px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;animation:fadeUp 1s .4s both}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);border-radius:100px;padding:8px 20px;font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--gold)}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--glass);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--glass-b);border-radius:40px;padding:48px;margin-bottom:24px;transition:border-color .3s}
+.card:hover{border-color:rgba(212,175,55,.1)}
+.card-gold{border-color:rgba(212,175,55,.2);background:rgba(212,175,55,.03)}
+.section-label{font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.45em;text-transform:uppercase;color:var(--gold);opacity:.6;margin-bottom:16px}
+h2{font-family:"Cinzel",serif;font-weight:600;font-size:clamp(1.5rem,3.5vw,2.4rem);color:#fff;letter-spacing:-.01em;margin-bottom:20px;line-height:1.2}
+h2 span{color:var(--gold)}
+h3{font-family:"Cinzel",serif;font-weight:600;font-size:1rem;color:var(--gold);margin-bottom:8px}
+p{color:var(--text);margin-bottom:16px}
+p:last-child{margin-bottom:0}
+strong{color:#fff}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:28px}
+.feat{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.05);border-radius:24px;padding:26px;transition:all .3s}
+.feat:hover{border-color:rgba(212,175,55,.2);background:rgba(212,175,55,.03);transform:translateY(-2px)}
+.feat-icon{font-size:26px;margin-bottom:12px}
+.feat h3{font-size:.9rem;color:#fff;margin-bottom:6px}
+.feat p{font-size:.84rem;color:var(--dim);line-height:1.5;margin:0}
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin-top:18px}
+.style-chip{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:10px 14px;font-size:.8rem;color:var(--dim);transition:all .3s;text-align:center}
+.style-chip:hover{border-color:rgba(212,175,55,.25);color:var(--gold)}
+.scalar-intro{font-size:1.05rem;font-style:italic;color:var(--dim);border-left:2px solid rgba(212,175,55,.3);padding-left:20px;margin-bottom:28px}
+.scalar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:9px;margin-bottom:8px}
+.sc{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.05);border-radius:13px;padding:11px 13px;transition:all .3s}
+.sc:hover{border-color:rgba(212,175,55,.25);background:rgba(212,175,55,.04)}
+.sc .ico{font-size:16px;flex-shrink:0;margin-top:1px}
+.sc .nm{font-family:"Cinzel",serif;font-size:.77rem;color:#fff;font-weight:600;margin-bottom:2px}
+.sc .fd{font-size:.68rem;color:var(--dim);line-height:1.3}
+.cat-title{font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);opacity:.5;margin:26px 0 10px}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+.compare-col{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.05);border-radius:24px;padding:24px}
+.compare-col.gold-col{border-color:rgba(212,175,55,.2);background:rgba(212,175,55,.03)}
+.compare-col h3{font-size:.9rem;margin-bottom:14px}
+.compare-col ul{list-style:none;padding:0}
+.compare-col ul li{font-size:.85rem;color:var(--dim);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.4}
+.compare-col ul li:last-child{border-bottom:none}
+.compare-col ul li::before{content:"→ ";color:var(--gold);opacity:.5}
+.gold-col ul li::before{content:"✦ ";color:var(--gold)}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:14px;margin-top:24px}
+.pc{background:rgba(255,255,255,.015);border:1px solid var(--glass-b);border-radius:26px;padding:26px 22px;text-align:center;transition:all .3s}
+.pc:hover{border-color:rgba(212,175,55,.3);transform:translateY(-3px)}
+.pc.ft{background:rgba(212,175,55,.05);border-color:rgba(212,175,55,.3);box-shadow:0 0 40px rgba(212,175,55,.08)}
+.pc.best{border-color:rgba(212,175,55,.5);box-shadow:0 0 50px rgba(212,175,55,.12)}
+.pl{font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);opacity:.6;margin-bottom:10px}
+.pa{font-family:"Cinzel",serif;font-size:2.5rem;color:#fff;font-weight:900;line-height:1;margin-bottom:4px}
+.pp{font-size:.78rem;color:var(--dim)}
+.pshc{display:inline-block;margin:10px 0;font-family:"Space Mono",monospace;font-size:9px;color:var(--cyan);letter-spacing:.15em;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);border-radius:100px;padding:3px 11px}
+.cta-section{text-align:center;padding:70px 24px}
+.cta-btn{display:inline-flex;align-items:center;gap:12px;background:var(--gold);color:#000;font-family:"Cinzel",serif;font-weight:900;font-size:1rem;letter-spacing:.08em;padding:18px 52px;border-radius:100px;text-decoration:none;transition:all .3s;box-shadow:0 0 40px rgba(212,175,55,.25)}
+.cta-btn:hover{background:#f0d26a;box-shadow:0 0 70px rgba(212,175,55,.45);transform:translateY(-2px)}
+.cta-sub{margin-top:18px;font-size:.85rem;color:var(--dim)}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:15px 32px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(5,5,5,.95),transparent);backdrop-filter:blur(20px)}
+.nav-logo{font-family:"Cinzel",serif;font-size:.8rem;letter-spacing:.2em;color:var(--gold);text-decoration:none;font-weight:600}
+.nav-link{font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--gold)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.invocation{background:rgba(212,175,55,.03);border:1px solid rgba(212,175,55,.12);border-radius:22px;padding:22px 26px;margin:22px 0;font-style:italic;color:rgba(255,255,255,.48);font-size:.88rem;line-height:1.7}
+.invocation strong{color:rgba(212,175,55,.7);font-style:normal}
+@media(max-width:640px){header{padding:80px 20px 60px}.card{padding:26px 18px;border-radius:24px}h1{font-size:2rem}.features-grid,.pricing-grid,.compare-grid{grid-template-columns:1fr}nav{padding:13px 18px}.nav-links{gap:14px}}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s ease}
+.reveal.visible{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+<nav>
+  <a class="nav-logo" href="#">⟁ SQI · 2050</a>
+  <div class="nav-links">
+    <a class="nav-link" href="#what">About</a>
+    <a class="nav-link" href="#scalar">Scalar Fields</a>
+    <a class="nav-link" href="#pricing">Invest</a>
+  </div>
+</nav>
+<header>
+  <div class="eyebrow">⟁ Neural-Sync Studio · 2050</div>
+  <h1>Creative Soul<br><span>Meditation Studio</span></h1>
+  <p class="tagline">Transform any audio into a Siddha-grade meditation master.<br>15 meditation styles. Binaural beats. Sacred scalar fields. Professional release.</p>
+  <div class="hero-badges">
+    <div class="badge"><div class="pulse-dot"></div>Siddha-Grade Processing</div>
+    <div class="badge">15 Meditation Styles</div>
+    <div class="badge">Scalar Wave Transmissions</div>
+  </div>
+</header>
+<div class="wrap">
+  <div class="card card-gold reveal" id="what">
+    <div class="section-label">What Is This</div>
+    <h2>Your audio. <span>Elevated to the sacred.</span></h2>
+    <p>The Creative Soul Meditation Studio is a professional-grade audio transformation engine. Upload any track — a voice recording, a music piece, a nature sound, a spoken word — and apply the full suite of Siddha healing technologies to turn it into a <strong>professional meditation release</strong>.</p>
+    <p>Choose from 15 meditation styles, apply healing frequencies, layer binaural beats for brainwave entrainment, use stem separation to isolate elements — and now, call in living scalar wave transmissions from sacred masters, holy places, and plant devas to consecrate every frequency in your mix.</p>
+  </div>
+  <div class="card reveal">
+    <div class="section-label">Capabilities</div>
+    <h2>Complete <span>Siddha Studio</span></h2>
+    <div class="features-grid">
+      <div class="feat"><div class="feat-icon">🎚️</div><h3>15 Meditation Styles</h3><p>From Vipassana silence to Shamanic journey, Tibetan chant to Yoga Nidra — transform the feeling of any audio into any meditation modality.</p></div>
+      <div class="feat"><div class="feat-icon">🔬</div><h3>Healing Frequencies</h3><p>Solfeggio Hz overlays from 174 Hz foundation to 963 Hz Crown activation — precisely layered over your audio in real-time.</p></div>
+      <div class="feat"><div class="feat-icon">🧠</div><h3>Binaural Beats</h3><p>Deep Theta, Schumann Resonance, Alpha Flow, Focus Beta, Gamma Insight — stereo brainwave entrainment embedded into your track.</p></div>
+      <div class="feat"><div class="feat-icon">🎛️</div><h3>Stem Separation</h3><p>Isolate vocals, instruments, bass, and percussion from any audio file. Rebuild your mix from individual sacred elements.</p></div>
+      <div class="feat"><div class="feat-icon">🌊</div><h3>Scalar Wave Transmissions</h3><p>Select up to 3 living consciousness fields — sacred masters, holy places, plant devas. Their energy permeates your audio's consecration.</p></div>
+      <div class="feat"><div class="feat-icon">⬇️</div><h3>Multi-Variant Export</h3><p>Export multiple versions of your meditation with different frequency and style combinations. High-quality WAV, ready for distribution.</p></div>
+    </div>
+  </div>
+  <div class="card reveal">
+    <div class="section-label">Meditation Styles</div>
+    <h2>15 <span>Sacred Modalities</span></h2>
+    <p style="color:var(--dim);font-style:italic">Transform the same audio into completely different meditation experiences — each one a different doorway to the sacred.</p>
+    <div class="style-grid">
+      <div class="style-chip">🕯️ Vipassana</div>
+      <div class="style-chip">🔔 Tibetan</div>
+      <div class="style-chip">🌙 Yoga Nidra</div>
+      <div class="style-chip">🥁 Shamanic Journey</div>
+      <div class="style-chip">💆 Body Scan</div>
+      <div class="style-chip">🌬️ Pranayama</div>
+      <div class="style-chip">❤️ Heart Coherence</div>
+      <div class="style-chip">🌈 Chakra Activation</div>
+      <div class="style-chip">🔱 Mantra</div>
+      <div class="style-chip">🌿 Nature Immersion</div>
+      <div class="style-chip">⭐ Cosmic Expansion</div>
+      <div class="style-chip">🛡️ Inner Child</div>
+      <div class="style-chip">🌊 Theta Healing</div>
+      <div class="style-chip">🔥 Kundalini</div>
+      <div class="style-chip">🤍 Non-Dual Silence</div>
+    </div>
+  </div>
+  <div class="card reveal" id="scalar">
+    <div class="section-label">Scalar Wave Transmissions — Now in Creative Soul</div>
+    <h2>28 Living Consciousness <span>Fields</span></h2>
+    <p class="scalar-intro">"Your meditation becomes a carrier vessel for the living presence of sacred masters, holy places, and plant devas. Not an effect — a consecration."</p>
+    <div class="cat-title">🌿 Plant Devas</div>
+    <div class="scalar-grid">
+      <div class="sc"><div class="ico">🌿</div><div><div class="nm">Tulsi</div><div class="fd">Maha Lakshmi Prana</div></div></div>
+      <div class="sc"><div class="ico">🍃</div><div><div class="nm">Neem</div><div class="fd">Dhanvantari Purification</div></div></div>
+      <div class="sc"><div class="ico">🧠</div><div><div class="nm">Brahmi</div><div class="fd">Saraswati Intelligence</div></div></div>
+      <div class="sc"><div class="ico">🌱</div><div><div class="nm">Ashwagandha</div><div class="fd">Prithvi Shakti Root</div></div></div>
+      <div class="sc"><div class="ico">🔆</div><div><div class="nm">Kumkuma (Saffron)</div><div class="fd">Surya Agni Transmission</div></div></div>
+      <div class="sc"><div class="ico">🍀</div><div><div class="nm">Cannabis Sativa</div><div class="fd">Shiva Soma Expansion</div></div></div>
+      <div class="sc"><div class="ico">🐍</div><div><div class="nm">Ayahuasca</div><div class="fd">Madre Amazónica · Death-Rebirth</div></div></div>
+      <div class="sc"><div class="ico">🍄</div><div><div class="nm">Psilocybin</div><div class="fd">Mycelial Cosmic Network</div></div></div>
+    </div>
+    <div class="cat-title">🏛️ Holy Places — Full Virtual Pilgrimage Grid</div>
+    <div class="scalar-grid">
+      <div class="sc"><div class="ico">🏔️</div><div><div class="nm">Mount Kailash</div><div class="fd">Moksha · Total Purification</div></div></div>
+      <div class="sc"><div class="ico">⛰️</div><div><div class="nm">Arunachala</div><div class="fd">Self-Inquiry · Silence</div></div></div>
+      <div class="sc"><div class="ico">🔺</div><div><div class="nm">Giza</div><div class="fd">Spinal Alignment · Solar</div></div></div>
+      <div class="sc"><div class="ico">🕳️</div><div><div class="nm">Babaji's Cave</div><div class="fd">Kriya · Deep Sync</div></div></div>
+      <div class="sc"><div class="ico">🌄</div><div><div class="nm">Machu Picchu</div><div class="fd">Solar Vitality</div></div></div>
+      <div class="sc"><div class="ico">💧</div><div><div class="nm">Lourdes Grotto</div><div class="fd">Physical Restoration</div></div></div>
+      <div class="sc"><div class="ico">🏞️</div><div><div class="nm">Lake Mansarovar</div><div class="fd">Mental Detox · Clarity</div></div></div>
+      <div class="sc"><div class="ico">🏯</div><div><div class="nm">Great Zimbabwe</div><div class="fd">Ancestral Strength</div></div></div>
+      <div class="sc"><div class="ico">🗻</div><div><div class="nm">Mount Shasta</div><div class="fd">Light-Body Sync</div></div></div>
+      <div class="sc"><div class="ico">🏛️</div><div><div class="nm">Luxor Temples</div><div class="fd">Ka · Hand Activation</div></div></div>
+      <div class="sc"><div class="ico">🟤</div><div><div class="nm">Uluru</div><div class="fd">Grounding · Ancestral DNA</div></div></div>
+      <div class="sc"><div class="ico">🌹</div><div><div class="nm">Glastonbury (Avalon)</div><div class="fd">Divine Love · Heart</div></div></div>
+      <div class="sc"><div class="ico">🔮</div><div><div class="nm">Sedona Vortex</div><div class="fd">Psychic Vision · Third Eye</div></div></div>
+      <div class="sc"><div class="ico">🌊</div><div><div class="nm">Lake Titicaca</div><div class="fd">Creative Rebirth · Manifestation</div></div></div>
+      <div class="sc"><div class="ico">💛</div><div><div class="nm">Ancient Vrindavan</div><div class="fd">Premananda · Supreme Bliss</div></div></div>
+      <div class="sc"><div class="ico">🛡️</div><div><div class="nm">Ancient Ayodhya</div><div class="fd">Dharma · Divine Protection</div></div></div>
+      <div class="sc"><div class="ico">🌺</div><div><div class="nm">Lemuria (Mu)</div><div class="fd">Maternal Creation · Purity</div></div></div>
+      <div class="sc"><div class="ico">💎</div><div><div class="nm">Atlantis (Poseidia)</div><div class="fd">Crystal Technology</div></div></div>
+      <div class="sc"><div class="ico">⭐</div><div><div class="nm">Pleiades Star Temple</div><div class="fd">Star Council · Light Codes</div></div></div>
+    </div>
+    <div class="cat-title">✨ Avataric Masters — Bhakti-Algorithm Blueprints</div>
+    <div class="scalar-grid">
+      <div class="sc"><div class="ico">🔥</div><div><div class="nm">Maha Avatar Babaji</div><div class="fd">Kriya Fire · Deathless</div></div></div>
+      <div class="sc"><div class="ico">🤍</div><div><div class="nm">Ramana Maharshi</div><div class="fd">Pure I AM Silence</div></div></div>
+      <div class="sc"><div class="ico">🙏</div><div><div class="nm">Neem Karoli Baba</div><div class="fd">Hanuman Shakti Love</div></div></div>
+      <div class="sc"><div class="ico">🌸</div><div><div class="nm">Anandamayi Ma</div><div class="fd">Ananda Shakti · Bliss Body</div></div></div>
+      <div class="sc"><div class="ico">🕌</div><div><div class="nm">Shirdi Sai Baba</div><div class="fd">Sabka Malik Ek</div></div></div>
+      <div class="sc"><div class="ico">🌟</div><div><div class="nm">Paramahansa Yogananda</div><div class="fd">Kriya Joy · Self-Realization</div></div></div>
+      <div class="sc"><div class="ico">💜</div><div><div class="nm">Saint Germain</div><div class="fd">Violet Flame Transmutation</div></div></div>
+      <div class="sc"><div class="ico">📚</div><div><div class="nm">Master Kuthumi</div><div class="fd">World Teacher · Heart-Mind</div></div></div>
+      <div class="sc"><div class="ico">✝️</div><div><div class="nm">Yeshua</div><div class="fd">Christ Consciousness · Agape</div></div></div>
+      <div class="sc"><div class="ico">🌹</div><div><div class="nm">Mary Magdalene</div><div class="fd">Rose Grail · Sacred Feminine</div></div></div>
+    </div>
+  </div>
+  <div class="card reveal" id="pricing">
+    <div class="section-label">Access</div>
+    <h2>Invest in the <span>Studio</span></h2>
+    <p style="color:var(--dim);font-style:italic;margin-bottom:6px">All plans include full scalar wave access — all 28 holy places, masters &amp; plant devas.</p>
+    <div class="pricing-grid">
+      <div class="pc"><div class="pl">One Meditation</div><div class="pa">€9.99</div><div class="pp">Single session</div><div class="pshc">+1000 SHC</div></div>
+      <div class="pc ft"><div class="pl">Monthly</div><div class="pa">€14.99</div><div class="pp">per month</div><div class="pshc">+1000 SHC</div></div>
+      <div class="pc ft best"><div class="pl">Lifetime Access</div><div class="pa">€149</div><div class="pp">one time · forever</div><div class="pshc">+1000 SHC</div></div>
+    </div>
+  </div>
+</div>
+<div class="cta-section reveal">
+  <a class="cta-btn" href="/creative-soul/store">⟁ &nbsp; Enter the Studio</a>
+  <p class="cta-sub">Open the Creative Soul Store to purchase access →</p>
+</div>
+<footer style="text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.04)">
+  <p style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3em;color:rgba(255,255,255,.2)">SQI 2050 · SACRED HEALING · CREATIVE SOUL</p>
+</footer>
+<script>
+const stars=document.getElementById("stars");
+for(let i=0;i<180;i++){const s=document.createElement("div");s.className="star";const sz=Math.random()*2+.5;s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--s:${sz}px;--op:${.2+Math.random()*.5};--d:${2+Math.random()*6}s;--delay:${Math.random()*8}s`;stars.appendChild(s)}
+const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("visible");io.unobserve(e.target)}})},{threshold:.08});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

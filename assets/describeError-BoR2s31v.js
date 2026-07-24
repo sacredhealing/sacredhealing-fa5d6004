@@ -1,0 +1,1 @@
+function i(t){if(t instanceof Error)return t.message;if(t&&typeof t=="object"){const n=t,e=[n.message,n.code,n.details,n.hint].filter(r=>typeof r=="string"&&r.length>0);if(e.length)return e.join(" — ");try{return JSON.stringify(t)}catch{return"unknown error"}}return String(t)}export{i as d};

@@ -1,0 +1,1 @@
+function e(...t){try{typeof window<"u"&&typeof window.fbq=="function"&&window.fbq(...t)}catch{}}function c(t="standard"){e("track","CompleteRegistration",{content_name:t})}function o(t,n,a="EUR"){e("track","InitiateCheckout",{content_name:t,value:n,currency:a})}function i(t,n,a="EUR"){e("track","Purchase",{content_name:t,value:n,currency:a})}export{i as a,o as b,c as t};

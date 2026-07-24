@@ -1,0 +1,1 @@
+import{s as e}from"./index-RRXEvQfm.js";async function o(){const{data:t,error:r}=await e.rpc("public_aggregate_dashboard_stats");if(r||t==null||typeof t!="object")return null;const a=t;return{total_profiles:Number(a.total_profiles)||0,active_this_month:Number(a.active_this_month)||0,total_shc_distributed:Number(a.total_shc_distributed)||0}}export{o as f};
