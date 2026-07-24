@@ -821,16 +821,16 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                                 </div>
                               ))}
 
-                              {/* Get patch CTA */}
-                              <a href={affiliateUrl(patch.affiliateHint)} target="_blank" rel="noopener noreferrer"
+                              {/* Activate transmission — no external link, no physical product */}
+                              <button type="button" onClick={() => onSelect(patch.id)}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999,
-                                  border: `1px solid ${patch.color}44`, background: `${patch.color}10`,
-                                  textDecoration: 'none', marginTop: 4 }}>
-                                <ExternalLink size={12} color={patch.color} />
+                                  border: `1px solid ${patch.color}44`, background: `${patch.color}10`, cursor: 'pointer',
+                                  marginTop: 4 }}>
+                                <Sparkles size={12} color={patch.color} />
                                 <span style={{ fontSize: 9, fontWeight: 800, color: patch.color, textTransform: 'uppercase', letterSpacing: '.3em' }}>
-                                  Invoke {patch.name} · Siddha Transmission
+                                  Activate {patch.name} Transmission
                                 </span>
-                              </a>
+                              </button>
                             </div>
                           </motion.div>
                         )}
