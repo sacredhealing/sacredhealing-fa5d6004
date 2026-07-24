@@ -861,6 +861,13 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
   const { user } = useAuth();
   const { messages, partnerProfile, isLoading, sendMessage } = usePrivateChat(partnerId);
   const [messageText, setMessageText] = useState("");
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const attachInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSend = async () => {
     const text = messageText.trim();
@@ -868,6 +875,89 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
     setMessageText("");
     await sendMessage(text, "text");
     if (isAdmin && onDmSent) onDmSent(text, partnerId);
+  };
+
+  const uploadDmMedia = async (blob: File | Blob, kind: "image" | "video" | "voice", fileName?: string) => {
+    if (!user) throw new Error("Not signed in");
+    const ext = kind === "voice" ? "webm" : (fileName?.split(".").pop() || (kind === "video" ? "mp4" : "jpg"));
+    const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("chat-storage").upload(path, blob, {
+      upsert: false,
+      contentType: (blob as File).type || (kind === "voice" ? "audio/webm" : undefined),
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("chat-storage").getPublicUrl(path);
+    return {
+      file_url: data.publicUrl,
+      file_name: fileName || `${kind}-${Date.now()}.${ext}`,
+      file_size: (blob as File).size || (blob as Blob).size || 0,
+      mime_type: (blob as File).type || (kind === "voice" ? "audio/webm" : ""),
+    };
+  };
+
+  const sendDmMedia = async (file: File | Blob, kind: "image" | "video" | "voice", fileName?: string, durationSeconds?: number) => {
+    setIsUploadingMedia(true);
+    try {
+      const meta = await uploadDmMedia(file, kind, fileName);
+      const label = kind === "voice" ? "🎤 Voice message" : kind === "image" ? "📷 Photo" : "🎬 Video";
+      const ok = await sendMessage(label, kind, { ...meta, duration: durationSeconds });
+      if (!ok) throw new Error("Message not saved");
+    } catch (err: any) {
+      console.error("[DMChatView] media send failed:", err);
+      // Most likely cause right now: supabase/RUN_THIS_dm_media_messages.sql
+      // hasn't been run yet, so private_messages doesn't have these columns.
+      toast.error(
+        err?.message?.includes("column") || err?.code === "PGRST204"
+          ? "Media messages in DMs need one more update to be enabled — ask your developer to run the pending migration."
+          : err.message || "Could not send media message."
+      );
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  };
+
+  const handleAttachFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const kind = file.type.startsWith("video/") ? "video" : "image";
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("File is too large (50MB limit).");
+      return;
+    }
+    sendDmMedia(file, kind, file.name);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      recordedChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        const seconds = recordSeconds;
+        if (blob.size > 0 && seconds >= 1) {
+          sendDmMedia(blob, "voice", `voice-note-${Date.now()}.webm`, seconds);
+        }
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+    } catch (err) {
+      console.error("[DMChatView] mic access failed:", err);
+      toast.error("Couldn't access the microphone — check permissions.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+    setIsRecording(false);
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
   };
 
   const getInitials = (name?: string | null) => {
@@ -923,6 +1013,31 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
           messages.map((msg: any) => {
             const isMine = msg.sender_id === user?.id;
             const isPending = String(msg.id || "").startsWith("temp-") || msg.status === "pending";
+
+            if (["image", "video", "voice"].includes(msg.message_type) && msg.file_url) {
+              return (
+                <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
+                  <div className="c-msg-body">
+                    <div style={{ maxWidth: 260, borderRadius: 18, overflow: "hidden", border: "1px solid rgba(255,255,255,.1)" }}>
+                      {msg.message_type === "image" && <img src={msg.file_url} alt="" style={{ display: "block", width: "100%", maxHeight: 320, objectFit: "cover" }} />}
+                      {msg.message_type === "video" && <video src={msg.file_url} controls style={{ display: "block", width: "100%", maxHeight: 320 }} />}
+                      {msg.message_type === "voice" && (
+                        <div style={{ padding: "10px 12px", background: "rgba(255,255,255,.05)", display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 15 }}>🎤</span>
+                          <audio src={msg.file_url} controls style={{ height: 32, flex: 1 }} />
+                          {msg.duration ? <span style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>{Math.floor(msg.duration / 60)}:{(msg.duration % 60).toString().padStart(2, "0")}</span> : null}
+                        </div>
+                      )}
+                    </div>
+                    <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
+                      {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                      {isMine && <span className="c-msg-sent mine">{isPending ? "○" : "✓✓"}</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
                 <div className="c-msg-body">
@@ -959,18 +1074,57 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
       <div className="c-input-bar">
         <div className="c-input-row">
           <input
-            placeholder={`Message ${partnerProfile?.full_name || "them"}...`}
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
+            type="file"
+            ref={attachInputRef}
+            accept="image/*,video/*"
+            style={{ display: "none" }}
+            onChange={handleAttachFile}
           />
-          <button className="c-send-btn" onClick={handleSend} disabled={!messageText.trim()}>➤</button>
+          {isRecording ? (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, color: "#ff6b61", fontSize: 13, fontWeight: 700 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff3b30", animation: "c-rec-pulse 1s infinite" }} />
+              Recording… {Math.floor(recordSeconds / 60)}:{(recordSeconds % 60).toString().padStart(2, "0")}
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => attachInputRef.current?.click()}
+                disabled={isUploadingMedia}
+                style={{ background: "none", border: "none", fontSize: 19, cursor: "pointer", padding: "0 4px", opacity: isUploadingMedia ? 0.4 : 0.75, flexShrink: 0 }}
+                title="Send a photo or video"
+              >
+                📎
+              </button>
+              <input
+                placeholder={isUploadingMedia ? "Sending…" : `Message ${partnerProfile?.full_name || "them"}...`}
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                disabled={isUploadingMedia}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+            </>
+          )}
+          {!messageText.trim() && !isUploadingMedia ? (
+            <button
+              type="button"
+              className="c-send-btn"
+              onClick={isRecording ? stopRecording : startRecording}
+              style={isRecording ? { background: "radial-gradient(circle at 30% 30%, #ff8a80, #ff3b30 75%)" } : undefined}
+              title={isRecording ? "Stop and send" : "Record a voice message"}
+            >
+              {isRecording ? "⏹" : "🎤"}
+            </button>
+          ) : (
+            <button className="c-send-btn" onClick={handleSend} disabled={!messageText.trim() || isUploadingMedia}>➤</button>
+          )}
         </div>
+        <style>{`@keyframes c-rec-pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }`}</style>
       </div>
     </div>
   );

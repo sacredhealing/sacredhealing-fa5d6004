@@ -475,9 +475,20 @@ export const usePrivateChat = (partnerId: string) => {
 
     setMessages(prev => [...prev, optimisticMessage]);
 
-    const { data, error } = await supabase
+    // Bug fix: this previously only ever inserted { sender_id, receiver_id,
+    // content } — message_type and fileData were built into the optimistic
+    // message above but never actually saved, so a media message would
+    // look right in the current session and then silently revert to plain
+    // text (or disappear) on reload. Now sends everything that was built.
+    const { data, error } = await (supabase as any)
       .from('private_messages')
-      .insert({ sender_id: user.id, receiver_id: partnerId, content })
+      .insert({
+        sender_id: user.id,
+        receiver_id: partnerId,
+        content,
+        message_type: type,
+        ...(fileData || {}),
+      })
       .select()
       .single();
 
