@@ -115,6 +115,9 @@ export default function AdminContentVault() {
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [postingChatFor, setPostingChatFor] = useState<string | null>(null);
+  const [chatPostRoom, setChatPostRoom] = useState('');
+  const [isPostingToChat, setIsPostingToChat] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const [title, setTitle] = useState('');
@@ -194,6 +197,28 @@ export default function AdminContentVault() {
     setThumbnailFile(null);
     setYoutubeUrl('');
     setUseYoutubeEmbed(false);
+  };
+
+  const postExistingToChat = async (item: VaultItem, room: string) => {
+    if (!user || !room) return;
+    setIsPostingToChat(true);
+    try {
+      const { error: msgError } = await (supabase as any).from('chat_messages').insert({
+        room_id: room,
+        user_id: user.id,
+        content: item.title,
+        message_type: 'content_drop',
+        content_id: item.id,
+      });
+      if (msgError) throw msgError;
+      toast({ title: `Posted "${item.title}" to chat` });
+      setPostingChatFor(null);
+      setChatPostRoom('');
+    } catch (err: any) {
+      toast({ title: 'Could not post to chat', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsPostingToChat(false);
+    }
   };
 
   const handleUploadAndPublish = async (publishToChat: boolean) => {
@@ -590,17 +615,44 @@ export default function AdminContentVault() {
       ) : (
         <div style={{ display: 'grid', gap: 10 }}>
           {items.map((it) => (
-            <div key={it.id} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 14, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 13 }}>{it.title}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
-                  {it.content_type} · €{(it.price_cents / 100).toFixed(2)}
-                  {it.tier_required !== 'free' ? ` · included from ${it.tier_required}` : it.price_cents > 0 ? ' · purchase only' : ' · free'}
+            <div key={it.id} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 14, padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: 13 }}>{it.title}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
+                    {it.content_type} · €{(it.price_cents / 100).toFixed(2)}
+                    {it.tier_required !== 'free' ? ` · included from ${it.tier_required}` : it.price_cents > 0 ? ' · purchase only' : ' · free'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <div style={{ fontSize: 10, color: it.is_published ? '#22D3EE' : 'rgba(255,255,255,.3)', fontWeight: 800 }}>
+                    {it.is_published ? 'PUBLISHED' : 'DRAFT'}
+                  </div>
+                  <button
+                    onClick={() => { setPostingChatFor(postingChatFor === it.id ? null : it.id); setChatPostRoom(''); }}
+                    style={{ background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', color: '#D4AF37', borderRadius: 8, padding: '5px 10px', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    📤 Post to Chat
+                  </button>
                 </div>
               </div>
-              <div style={{ fontSize: 10, color: it.is_published ? '#22D3EE' : 'rgba(255,255,255,.3)', fontWeight: 800, flexShrink: 0 }}>
-                {it.is_published ? 'PUBLISHED' : 'DRAFT'}
-              </div>
+              {postingChatFor === it.id && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.06)' }}>
+                  <select value={chatPostRoom} onChange={(e) => setChatPostRoom(e.target.value)} style={{ ...inputStyle, flex: 1, padding: '7px 10px', fontSize: 12 }}>
+                    <option value="">— choose a room —</option>
+                    {rooms.map((r) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    disabled={!chatPostRoom || isPostingToChat}
+                    onClick={() => postExistingToChat(it, chatPostRoom)}
+                    style={{ ...primaryBtnStyle, flex: 'none', padding: '7px 16px', fontSize: 12 }}
+                  >
+                    {isPostingToChat ? '…' : 'Send'}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
