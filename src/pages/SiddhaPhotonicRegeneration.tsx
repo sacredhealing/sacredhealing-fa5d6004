@@ -145,6 +145,12 @@ const GLOBAL_CSS = `
   @keyframes spr-blink { 0%,100%{opacity:1} 50%{opacity:0} }
   @keyframes spr-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
   @keyframes spr-entangle-halo { 0%,100%{box-shadow:0 0 20px rgba(34,211,238,.2),0 0 40px rgba(212,175,55,.1)} 50%{box-shadow:0 0 40px rgba(34,211,238,.5),0 0 80px rgba(212,175,55,.25)} }
+  @keyframes spr-geo-spin-live { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes spr-geo-breathe { 0%,100%{transform:scale(1);filter-opacity:1} 50%{transform:scale(1.09)} }
+  @keyframes spr-geo-glow-pulse { 0%,100%{opacity:.55} 50%{opacity:1} }
+  @keyframes spr-geo-orbit { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes spr-geo-orbit-rev { from{transform:rotate(360deg)} to{transform:rotate(0deg)} }
+  @keyframes spr-geo-activate-burst { 0%{transform:scale(.6);opacity:0} 45%{transform:scale(1.25);opacity:1} 100%{transform:scale(1);opacity:0} }
   .spr-flex-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 48px; width: 100%; }
   .spr-copy { text-align: center; flex: 1; min-width: 280px; }
   @media (min-width: 768px) { .spr-flex-row { flex-direction: row; justify-content: center; } .spr-copy { text-align: left; } }
@@ -675,8 +681,9 @@ function polyPts(n: number, r: number, cx: number, cy: number, rot = 0): [number
 }
 const ptsStr = (pts: [number, number][]) => pts.map(p => p.join(',')).join(' ');
 
-function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; color: string; size?: number }) {
+function SacredGeometry({ geo, color, size = 48, active = false }: { geo: PatchProtocol['geo']; color: string; size?: number; active?: boolean }) {
   const c = color;
+  const gradId = `sg-glow-${geo}-${color.replace('#', '')}`;
   // Stroke widths below are tuned for a 64×64 viewBox rendered at ~64px.
   // At smaller render sizes the SVG scales down and thin strokes vanish below 1px,
   // so we boost stroke width inversely to size (clamped) to keep every glyph legible
@@ -749,9 +756,35 @@ function SacredGeometry({ geo, color, size = 48 }: { geo: PatchProtocol['geo']; 
   }
 
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ filter: `drop-shadow(0 0 6px ${c})`, animation: 'spr-spin-slow 40s linear infinite' }}>
-      {inner}
-    </svg>
+    <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width={size} height={size} viewBox="0 0 64 64"
+        style={{
+          position: 'absolute', inset: 0,
+          filter: `drop-shadow(0 0 ${active ? 12 : 6}px ${c})`,
+          animation: active ? 'spr-geo-spin-live 8s linear infinite' : 'spr-spin-slow 40s linear infinite',
+        }}>
+        <defs>
+          <radialGradient id={gradId} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={c} stopOpacity={active ? 0.35 : 0.14} />
+            <stop offset="100%" stopColor={c} stopOpacity={0} />
+          </radialGradient>
+        </defs>
+        <circle cx={32} cy={32} r={30} fill={`url(#${gradId})`} style={active ? { animation: 'spr-geo-glow-pulse 2.2s ease-in-out infinite' } : undefined} />
+        {inner}
+      </svg>
+      {/* Living state: two counter-rotating orbiting particles — visually distinct from the
+          idle glyph, and a much stronger "this is active" signal than a border color alone. */}
+      {active && (
+        <>
+          <div style={{ position: 'absolute', inset: -size * 0.12, animation: 'spr-geo-orbit 3.2s linear infinite' }}>
+            <div style={{ position: 'absolute', top: 0, left: '50%', width: Math.max(3, size * 0.06), height: Math.max(3, size * 0.06), borderRadius: '50%', background: c, boxShadow: `0 0 6px ${c}`, transform: 'translateX(-50%)' }} />
+          </div>
+          <div style={{ position: 'absolute', inset: -size * 0.12, animation: 'spr-geo-orbit-rev 4.6s linear infinite' }}>
+            <div style={{ position: 'absolute', bottom: 0, left: '50%', width: Math.max(2.5, size * 0.045), height: Math.max(2.5, size * 0.045), borderRadius: '50%', background: c, opacity: 0.8, boxShadow: `0 0 5px ${c}`, transform: 'translateX(-50%)' }} />
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -817,9 +850,9 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                         boxShadow: isActive ? `0 0 24px ${patch.color}22` : 'none' }}>
 
                       {/* Patch header */}
-                      {/* Sacred geometry watermark, large and faint, behind the card */}
-                      <div style={{ position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', width: 160, height: 160, opacity: 0.05, pointerEvents: 'none', zIndex: 0 }}>
-                        <SacredGeometry geo={patch.geo} color={patch.color} size={160} />
+                      {/* Sacred geometry watermark, large and faint, behind the card — comes alive when active */}
+                      <div style={{ position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', width: 160, height: 160, opacity: isActive ? 0.1 : 0.05, pointerEvents: 'none', zIndex: 0 }}>
+                        <SacredGeometry geo={patch.geo} color={patch.color} size={160} active={isActive} />
                       </div>
 
                       {isRecommended && !isActive && (
@@ -828,13 +861,21 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                         </div>
                       )}
 
+                      {isActive && (
+                        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, display: 'flex', alignItems: 'center', gap: 5, fontSize: 7, fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase', color: patch.color, background: `${patch.color}18`, border: `1px solid ${patch.color}45`, padding: '3px 8px', borderRadius: 999 }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: patch.color, animation: 'spr-blink 1.2s ease infinite' }} />
+                          Living transmission
+                        </div>
+                      )}
+
                       <button type="button"
                         onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
                         style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', position: 'relative', zIndex: 1 }}>
                         <div style={{ width: 60, height: 60, borderRadius: 18, flexShrink: 0,
-                          background: `${patch.color}18`, border: `1px solid ${patch.color}33`,
+                          background: `${patch.color}18`, border: `1px solid ${isActive ? patch.color + '70' : patch.color + '33'}`,
+                          boxShadow: isActive ? `0 0 18px ${patch.color}40` : 'none',
                           display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <SacredGeometry geo={patch.geo} color={patch.color} size={46} />
+                          <SacredGeometry geo={patch.geo} color={patch.color} size={46} active={isActive} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -898,14 +939,19 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
 
               {/* Active stack summary */}
               {activePatch && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}
+                <motion.div initial={{ opacity: 0, scale: .92 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .2, type: 'spring', stiffness: 200, damping: 16 }}
                   style={{ marginTop: 20, padding: '18px 22px', borderRadius: 20,
                     background: `${activePatch.color}0a`, border: `1px solid ${activePatch.color}30` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
-                    <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: activePatch.color }}>
-                      Active Transmission Stack
-                    </p>
-                    {expiresAt && <TransmissionCountdown expiresAt={expiresAt} />}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
+                    <SacredGeometry geo={activePatch.geo} color={activePatch.color} size={44} active />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                        <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: activePatch.color }}>
+                          Active Transmission Stack
+                        </p>
+                        {expiresAt && <TransmissionCountdown expiresAt={expiresAt} />}
+                      </div>
+                    </div>
                   </div>
                   <p style={{ margin: '0 0 12px', fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 300, fontStyle: 'italic' }}>
                     Tied to your current 72-hour transmission window — activating a new Nadi Scan or Re-Calibrating clears this.
