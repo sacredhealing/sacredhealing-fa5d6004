@@ -153,7 +153,7 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
         .c-drop-price { font-size: 16px; font-weight: 900; color: #D4AF37; }
         .c-drop-price span { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.35); margin-left: 4px; }
         .c-unlock-btn { background: radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%); color: #1a1300; border: none; padding: 8px 16px; border-radius: 13px; font-weight: 900; font-size: 11.5px; cursor: pointer; box-shadow: 0 6px 16px rgba(212,175,55,.25); }
-        .c-unlock-btn.owned { background: rgba(34,211,238,.12); color: #22D3EE; border: 1px solid rgba(34,211,238,.35); box-shadow: none; }
+        .c-unlock-btn.owned { background: rgba(212,175,55,.14); color: #D4AF37; border: 1px solid rgba(212,175,55,.4); box-shadow: none; }
         .c-unlock-btn:disabled { opacity: .5; cursor: default; }
         .c-drop-youtube { position: relative; z-index: 4; width: 100%; height: 100%; border: none; }
 
@@ -208,7 +208,7 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
             <div className="c-drop-price">
               {unlocked ? (
                 content.price_cents > 0 ? (
-                  <span style={{ color: '#22D3EE' }}>Owned</span>
+                  <span style={{ color: '#D4AF37' }}>Owned</span>
                 ) : (
                   <span style={{ color: '#D4AF37' }}>Atma-Seed</span>
                 )
