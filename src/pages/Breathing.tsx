@@ -1197,7 +1197,8 @@ const Breathing: React.FC = () => {
     pranayamaTechniqueRequiresScreening(p.technique_type) &&
     !isClearedForPranayamaTechnique({ technique_type: p.technique_type, screening });
 
-  // Fetch patterns from database (unchanged)
+  // Fetch patterns from database, then keep only ones with a real video —
+  // client-side filter so text-only patterns never render, no DB change needed.
   useEffect(() => {
     const fetchPatterns = async () => {
       const { data, error } = await (supabase as any)
@@ -1206,9 +1207,11 @@ const Breathing: React.FC = () => {
         .eq('is_active', true)
         .order('order_index', { ascending: true });
       if (!error && data && data.length > 0) {
-        setPatterns(data);
+        const withVideo = data.filter((p: BreathingPattern) => p.youtube_url && p.youtube_url.trim() !== '');
+        const finalList = withVideo.length > 0 ? withVideo : data;
+        setPatterns(finalList);
         // default to the first pattern the user can actually access
-        const firstAccessible = data.find((p: BreathingPattern) => !isPatternLocked(p)) || data[0];
+        const firstAccessible = finalList.find((p: BreathingPattern) => !isPatternLocked(p)) || finalList[0];
         setSelectedPattern(firstAccessible);
       }
     };
