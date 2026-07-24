@@ -689,7 +689,7 @@ export default function Explore() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.8)"/></svg>
               </div>
               <div>
-                <div style={{ fontFamily: "'Cinzel',serif", fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: 3 }}>Sacred Channel</div>
+                <div style={{ fontFamily: "'Cinzel',serif", fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: 3 }}>Spiritual Guidance</div>
                 <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Watch to unlock</div>
               </div>
               <span style={{ marginLeft: 'auto', color: 'rgba(212,175,55,0.3)', fontSize: 13 }}>→</span>
