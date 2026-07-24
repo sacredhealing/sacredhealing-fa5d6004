@@ -879,7 +879,7 @@ function PatchProtocolSelector({ activePatchId, onSelect, biometricProfile, expi
                       )}
 
                       <button type="button"
-                        onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
+                        onClick={() => setExpanded(isExpanded ? null : patch.id)}
                         style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', position: 'relative', zIndex: 1 }}>
                         <div style={{ width: 60, height: 60, borderRadius: 18, flexShrink: 0,
                           background: `${patch.color}18`, border: `1px solid ${isActive ? patch.color + '70' : patch.color + '33'}`,
