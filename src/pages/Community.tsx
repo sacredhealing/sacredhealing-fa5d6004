@@ -34,6 +34,7 @@ import { getTierRank } from "@/lib/tierAccess";
 import CallRecorderBar from "@/components/community/CallRecorderBar";
 import BhagavadGitaSpace from "@/components/community/BhagavadGitaSpace";
 import ContentDropCard from "@/components/community/ContentDropCard";
+import { useUnreadMessages } from "@/contexts/UnreadMessagesContext";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
@@ -979,6 +980,7 @@ const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { isStargateMember } = useStargateAccess();
+  const { groupUnreadByRoom, clearRoomUnread } = useUnreadMessages();
   const [hasSadhanaInvite, setHasSadhanaInvite] = useState(false);
   const navigate = useNavigate();
   const daily = useDailyLive();
@@ -2580,9 +2582,18 @@ const Community = () => {
               /* Channel list */
               <div className="c-channels-view">
                 <div className="c-section-label">OPEN CHANNELS</div>
-                {CHANNELS.filter((c) => c.access === "public").map((ch) => (
-                  <button key={ch.id} className="c-channel-row" onClick={() => { console.log("[Community] Channel clicked:", ch.id); setActiveChannel(ch.id); setMobileTab("chat"); }}>
-                    <div className="c-ch-icon">{ch.icon}</div>
+                {CHANNELS.filter((c) => c.access === "public").map((ch) => {
+                  const roomUnread = groupUnreadByRoom[roomIds[ch.id]] || 0;
+                  return (
+                  <button key={ch.id} className="c-channel-row" onClick={() => { console.log("[Community] Channel clicked:", ch.id); setActiveChannel(ch.id); setMobileTab("chat"); if (roomIds[ch.id]) clearRoomUnread(roomIds[ch.id]); }}>
+                    <div className="c-ch-icon" style={{ position: 'relative' }}>
+                      {ch.icon}
+                      {roomUnread > 0 && (
+                        <div style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)', color: '#1a1300', fontSize: 9, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(212,175,55,.7)' }}>
+                          {roomUnread > 9 ? '9+' : roomUnread}
+                        </div>
+                      )}
+                    </div>
                     <div className="c-ch-info">
                       <div className="c-ch-name">{ch.name}</div>
                       <div className="c-ch-desc">{ch.description}</div>
@@ -2590,7 +2601,8 @@ const Community = () => {
                     </div>
                     <div className="c-ch-arrow">›</div>
                   </button>
-                ))}
+                  );
+                })}
 
                 <div className="c-section-label">SACRED SPACES</div>
                 {CHANNELS.filter((c) => c.access === "tiered").map((ch) => {
@@ -2599,6 +2611,7 @@ const Community = () => {
                   const requiredRank = ch.minTierRank ?? 2;
                   const hasAccess = isAdmin || userRank >= requiredRank;
                   const requiredLabel = requiredRank >= 3 ? "Akasha-Infinity" : requiredRank >= 2 ? "Siddha-Quantum" : "Prana-Flow";
+                  const roomUnread = groupUnreadByRoom[roomIds[ch.id]] || 0;
                   return (
                     <button
                       key={ch.id}
@@ -2608,12 +2621,20 @@ const Community = () => {
                           console.log("[Community] Channel clicked:", ch.id);
                           setActiveChannel(ch.id);
                           setMobileTab("chat");
+                          if (roomIds[ch.id]) clearRoomUnread(roomIds[ch.id]);
                         } else {
                           toast.error(`This space requires ${requiredLabel} or higher.`);
                         }
                       }}
                     >
-                      <div className="c-ch-icon sacred">{ch.icon}</div>
+                      <div className="c-ch-icon sacred" style={{ position: 'relative' }}>
+                        {ch.icon}
+                        {hasAccess && roomUnread > 0 && (
+                          <div style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: 'radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)', color: '#1a1300', fontSize: 9, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 8px rgba(212,175,55,.7)' }}>
+                            {roomUnread > 9 ? '9+' : roomUnread}
+                          </div>
+                        )}
+                      </div>
                       <div className="c-ch-info">
                         <div className="c-ch-name">{ch.name}</div>
                         <div className="c-ch-desc">{ch.description}</div>
