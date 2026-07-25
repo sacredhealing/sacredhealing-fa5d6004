@@ -172,7 +172,7 @@ export const useCommunity = () => {
       if (!conversationMap.has(partnerId)) {
         conversationMap.set(partnerId, []);
       }
-      conversationMap.get(partnerId)!.push(msg);
+      conversationMap.get(partnerId)!.push(msg as PrivateMessage);
     });
 
     // Fetch profiles for conversation partners
