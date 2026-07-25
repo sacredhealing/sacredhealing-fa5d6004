@@ -949,7 +949,9 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
     const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("chat-storage").upload(path, blob, {
       upsert: false,
-      contentType: (blob as File).type || (kind === "voice" ? "audio/webm" : undefined),
+      contentType: kind === "voice"
+        ? ((blob as File).type || "audio/webm").split(";")[0]
+        : (blob as File).type || undefined,
     });
     if (error) throw error;
     // chat-storage is a private bucket — file_url stores the raw path, not a
@@ -2251,7 +2253,9 @@ const Community = () => {
     const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("chat-storage").upload(path, blob, {
       upsert: false,
-      contentType: (blob as File).type || (kind === "voice" ? "audio/webm" : undefined),
+      contentType: kind === "voice"
+        ? ((blob as File).type || "audio/webm").split(";")[0]
+        : (blob as File).type || undefined,
     });
     if (error) throw error;
     // Same fix as uploadDmMedia — private bucket, store the path, sign on demand.
