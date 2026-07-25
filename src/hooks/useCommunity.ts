@@ -397,7 +397,7 @@ export const usePrivateChat = (partnerId: string) => {
       return;
     }
 
-    setMessages(data || []);
+    setMessages((data || []) as PrivateMessage[]);
 
     // Mark messages as read
     await supabase
