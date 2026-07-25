@@ -69,6 +69,14 @@ export const TelegramChatInput = ({
     await startRecording();
   }, [isRecording, startRecording, stopRecording]);
 
+  // Surface permission / device errors instead of silently doing nothing.
+  const lastErrorRef = useRef<string | null>(null);
+  if (recorderError && recorderError !== lastErrorRef.current) {
+    lastErrorRef.current = recorderError;
+    // Deferred to avoid setState-in-render side effects.
+    setTimeout(() => alert(`Microphone error: ${recorderError}`), 0);
+  }
+
   const handleSendVoice = async () => {
     if (!audioBlob || !duration) return;
     
