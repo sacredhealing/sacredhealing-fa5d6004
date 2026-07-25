@@ -521,6 +521,10 @@ const CSS = `
   line-height: 1.55;
   word-break: break-word;
   position: relative;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
 }
 .c-bubble.mine {
   background: linear-gradient(135deg, rgba(212,175,55,.24), rgba(212,175,55,.11));
@@ -934,6 +938,32 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const attachInputRef = useRef<HTMLInputElement | null>(null);
+  const dmLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCopyMessage = async (text: string) => {
+    if (!text || typeof text !== "string") return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied");
+    } catch {
+      toast.error("Couldn't copy — try again");
+    }
+  };
+
+  const dmBubbleLongPressHandlers = (text: string) => ({
+    onTouchStart: () => {
+      dmLongPressTimerRef.current = setTimeout(() => {
+        if ("vibrate" in navigator) navigator.vibrate?.(15);
+        handleCopyMessage(text);
+      }, 450);
+    },
+    onTouchEnd: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
+    onTouchMove: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
+    onMouseDown: () => { dmLongPressTimerRef.current = setTimeout(() => handleCopyMessage(text), 450); },
+    onMouseUp: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
+    onMouseLeave: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  });
 
   const handleSend = async () => {
     const text = messageText.trim();
@@ -1125,7 +1155,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
             return (
               <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
                 <div className="c-msg-body">
-                  <div className={`c-bubble ${isMine ? "mine" : ""}`}>
+                  <div className={`c-bubble ${isMine ? "mine" : ""}`} {...dmBubbleLongPressHandlers(msg.content)}>
                     {typeof msg.content === "string" && msg.content.startsWith("VIDEO_CALL:") ? (
                       <button
                         type="button"
@@ -1237,6 +1267,50 @@ const Community = () => {
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const attachInputRef = useRef<HTMLInputElement | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const handleCopyMessage = async (text: string) => {
+    if (!text || typeof text !== "string") return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied");
+    } catch {
+      toast.error("Couldn't copy — try again");
+    }
+  };
+
+  const bubbleLongPressHandlers = (text: string) => ({
+    onTouchStart: () => {
+      longPressFiredRef.current = false;
+      longPressTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true;
+        if ("vibrate" in navigator) navigator.vibrate?.(15);
+        handleCopyMessage(text);
+      }, 450);
+    },
+    onTouchEnd: () => {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    },
+    onTouchMove: () => {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    },
+    onMouseDown: () => {
+      longPressFiredRef.current = false;
+      longPressTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true;
+        handleCopyMessage(text);
+      }, 450);
+    },
+    onMouseUp: () => {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    },
+    onMouseLeave: () => {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    },
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  });
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStuck, setLoadingStuck] = useState(false);
@@ -3014,7 +3088,7 @@ const Community = () => {
                                 <span className="c-msg-author">{msg.user_name || "Member"}</span>
                               </div>
                             )}
-                            <div className={`c-bubble ${isMine ? "mine" : ""}`}>
+                            <div className={`c-bubble ${isMine ? "mine" : ""}`} {...bubbleLongPressHandlers(msg.content)}>
                               {msg.content}
                               {!isDmChannel(activeChannel) && (isMine || isAdmin) && (
                                 <button className="c-delete-btn" onClick={() => deleteMessage(msg.id)}>✕</button>
