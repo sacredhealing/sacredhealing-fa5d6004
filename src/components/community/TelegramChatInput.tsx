@@ -51,13 +51,22 @@ export const TelegramChatInput = ({
     setIsSending(false);
   };
 
-  const handleVoiceRecord = async () => {
+  const handleVoiceRecord = useCallback(async () => {
     if (isRecording) {
       stopRecording();
-    } else {
-      startRecording();
+      return;
     }
-  };
+    // Feature detection + clear error surface so silent failures stop.
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      alert('Voice recording is not supported in this browser. Try Chrome or Safari, or use HTTPS.');
+      return;
+    }
+    if (typeof window !== 'undefined' && typeof MediaRecorder === 'undefined') {
+      alert('Your browser does not support MediaRecorder. Please update or switch browser.');
+      return;
+    }
+    await startRecording();
+  }, [isRecording, startRecording, stopRecording]);
 
   const handleSendVoice = async () => {
     if (!audioBlob || !duration) return;
