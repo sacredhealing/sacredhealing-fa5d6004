@@ -248,13 +248,12 @@ export const TelegramChatInput = ({
           {/* Voice Record / Send Button - Telegram Style */}
           {!text.trim() ? (
             <Button
+              type="button"
               variant={isRecording ? "destructive" : "ghost"}
               size="icon"
-              onMouseDown={handleVoiceRecord}
-              onMouseUp={isRecording ? handleVoiceRecord : undefined}
-              onTouchStart={handleVoiceRecord}
-              onTouchEnd={isRecording ? handleVoiceRecord : undefined}
+              onClick={handleVoiceRecord}
               disabled={disabled || isSending}
+              aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
               className="h-12 w-12 rounded-full shrink-0 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 backdrop-blur-sm border border-[#D4AF37]/30 transition-all shadow-lg"
             >
               {isRecording ? (
