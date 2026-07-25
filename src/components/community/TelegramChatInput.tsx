@@ -36,6 +36,7 @@ export const TelegramChatInput = ({
     duration, 
     audioBlob, 
     audioUrl, 
+    error: recorderError,
     startRecording, 
     stopRecording, 
     reset 
