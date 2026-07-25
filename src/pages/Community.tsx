@@ -2239,13 +2239,24 @@ const Community = () => {
   };
 
   const handleEndLive = async () => {
-    if (daily.activeSession) {
-      await daily.endSession(daily.activeSession.id);
-      setLiveRoomUrl(null);
-      setLiveRoomName(null);
-      setLiveSessionId(null);
-      await fetchFeedPosts();
+    // daily.activeSession is hook state that can go stale for reasons that
+    // have nothing to do with whether a live session is actually still
+    // running (a re-render, a background poll overwriting it, losing
+    // focus). Gating the entire end-session flow behind it meant that if
+    // it was ever null for ANY reason, this button did absolutely
+    // nothing — no error, no API call, silent no-op — while the session
+    // kept running server-side. liveSessionId is tracked separately and
+    // more directly, so it's the more reliable source of truth here.
+    const sessionId = daily.activeSession?.id || liveSessionId;
+    if (!sessionId) {
+      toast.error("No active session found to end — try refreshing the page.");
+      return;
     }
+    await daily.endSession(sessionId);
+    setLiveRoomUrl(null);
+    setLiveRoomName(null);
+    setLiveSessionId(null);
+    await fetchFeedPosts();
   };
 
   const createFeedPost = async () => {
