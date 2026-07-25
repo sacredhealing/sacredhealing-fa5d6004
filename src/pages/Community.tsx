@@ -857,6 +857,50 @@ type FeedComment = {
 };
 
 // DM chat using useCommunity's usePrivateChat (same as original app)
+// chat-storage is a private bucket, so the stored file_url is just a path,
+// not a working link. This resolves a fresh signed URL right when a message
+// actually renders (not once at send-time — that URL would go stale for
+// anyone scrolling back through history days or weeks later).
+function SignedChatMedia({ path, kind, duration }: { path: string; kind: "image" | "video" | "voice"; duration?: number | null }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setUrl(null);
+    setFailed(false);
+    supabase.storage
+      .from("chat-storage")
+      .createSignedUrl(path, 60 * 60) // 1 hour — plenty for an open chat session
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data?.signedUrl) {
+          console.error("[SignedChatMedia] failed to sign", path, error);
+          setFailed(true);
+          return;
+        }
+        setUrl(data.signedUrl);
+      });
+    return () => { cancelled = true; };
+  }, [path]);
+
+  if (failed) {
+    return <div style={{ padding: "10px 12px", fontSize: 11, color: "rgba(255,180,180,.8)" }}>⚠️ Couldn't load this media</div>;
+  }
+  if (!url) {
+    return <div style={{ padding: "20px", textAlign: "center", fontSize: 11, color: "rgba(255,255,255,.35)" }}>Loading…</div>;
+  }
+  if (kind === "image") return <img src={url} alt="" style={{ display: "block", width: "100%", maxHeight: 320, objectFit: "cover" }} />;
+  if (kind === "video") return <video src={url} controls style={{ display: "block", width: "100%", maxHeight: 320 }} />;
+  return (
+    <div style={{ padding: "10px 12px", background: "rgba(255,255,255,.05)", display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontSize: 15 }}>🎤</span>
+      <audio src={url} controls style={{ height: 32, flex: 1 }} />
+      {duration ? <span style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>{Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, "0")}</span> : null}
+    </div>
+  );
+}
+
 // Hardcoding 'audio/webm' broke recording on devices/WebViews that don't
 // support that exact codec — MediaRecorder throws immediately on
 // construction, which got caught and misreported as a permissions problem.
@@ -908,9 +952,11 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
       contentType: (blob as File).type || (kind === "voice" ? "audio/webm" : undefined),
     });
     if (error) throw error;
-    const { data } = supabase.storage.from("chat-storage").getPublicUrl(path);
+    // chat-storage is a private bucket — file_url stores the raw path, not a
+    // public URL (which wouldn't load anything). SignedChatMedia resolves a
+    // fresh signed URL on demand whenever the message is actually displayed.
     return {
-      file_url: data.publicUrl,
+      file_url: path,
       file_name: fileName || `${kind}-${Date.now()}.${ext}`,
       file_size: (blob as File).size || (blob as Blob).size || 0,
       mime_type: (blob as File).type || (kind === "voice" ? "audio/webm" : ""),
@@ -1049,15 +1095,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                 <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
                   <div className="c-msg-body">
                     <div style={{ maxWidth: 260, borderRadius: 18, overflow: "hidden", border: "1px solid rgba(255,255,255,.1)" }}>
-                      {msg.message_type === "image" && <img src={msg.file_url} alt="" style={{ display: "block", width: "100%", maxHeight: 320, objectFit: "cover" }} />}
-                      {msg.message_type === "video" && <video src={msg.file_url} controls style={{ display: "block", width: "100%", maxHeight: 320 }} />}
-                      {msg.message_type === "voice" && (
-                        <div style={{ padding: "10px 12px", background: "rgba(255,255,255,.05)", display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 15 }}>🎤</span>
-                          <audio src={msg.file_url} controls style={{ height: 32, flex: 1 }} />
-                          {msg.duration ? <span style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>{Math.floor(msg.duration / 60)}:{(msg.duration % 60).toString().padStart(2, "0")}</span> : null}
-                        </div>
-                      )}
+                      <SignedChatMedia path={msg.file_url} kind={msg.message_type} duration={msg.duration} />
                     </div>
                     <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
                       {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
@@ -2216,9 +2254,9 @@ const Community = () => {
       contentType: (blob as File).type || (kind === "voice" ? "audio/webm" : undefined),
     });
     if (error) throw error;
-    const { data } = supabase.storage.from("chat-storage").getPublicUrl(path);
+    // Same fix as uploadDmMedia — private bucket, store the path, sign on demand.
     return {
-      file_url: data.publicUrl,
+      file_url: path,
       file_name: fileName || `${kind}-${Date.now()}.${ext}`,
       file_size: (blob as File).size || (blob as Blob).size || 0,
       mime_type: (blob as File).type || (kind === "voice" ? "audio/webm" : ""),
@@ -2929,15 +2967,7 @@ const Community = () => {
                                 <div className="c-msg-meta"><span className="c-msg-author">{msg.user_name || "Member"}</span></div>
                               )}
                               <div style={{ maxWidth: 260, borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,.1)' }}>
-                                {mtype === 'image' && <img src={fileUrl} alt="" style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'cover' }} />}
-                                {mtype === 'video' && <video src={fileUrl} controls style={{ display: 'block', width: '100%', maxHeight: 320 }} />}
-                                {mtype === 'voice' && (
-                                  <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,.05)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span style={{ fontSize: 15 }}>🎤</span>
-                                    <audio src={fileUrl} controls style={{ height: 32, flex: 1 }} />
-                                    {dur ? <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>{Math.floor(dur / 60)}:{(dur % 60).toString().padStart(2, '0')}</span> : null}
-                                  </div>
-                                )}
+                                <SignedChatMedia path={fileUrl} kind={mtype} duration={dur} />
                               </div>
                               <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
                                 {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
