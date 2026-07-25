@@ -1379,9 +1379,7 @@ const Community = () => {
       const missing = ids.filter((id) => id && !prev[id]);
       if (missing.length > 0) {
         (supabase as any)
-          .from('content_vault')
-          .select('*')
-          .in('id', missing)
+          .rpc('get_content_vault_items', { _ids: missing })
           .then(({ data, error }: any) => {
             if (error) {
               console.error('[Community] content_vault lookup failed:', error);
@@ -1399,11 +1397,12 @@ const Community = () => {
                 return next;
               });
             } else {
-              // Query succeeded but returned zero rows — RLS silently hid it,
-              // or the id genuinely doesn't exist in content_vault.
+              // Function ran fine but found no matching row — this time
+              // that genuinely means deleted/never existed, not an
+              // RLS/grant issue, since the function bypasses that layer.
               setContentLoadErrors((prevErr) => {
                 const next = { ...prevErr };
-                missing.forEach((id) => { next[id] = 'No row returned (RLS-hidden or deleted)'; });
+                missing.forEach((id) => { next[id] = 'This content no longer exists in the vault'; });
                 return next;
               });
             }
