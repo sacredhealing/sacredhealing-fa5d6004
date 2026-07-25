@@ -36,6 +36,7 @@ export const TelegramChatInput = ({
     duration, 
     audioBlob, 
     audioUrl, 
+    error: recorderError,
     startRecording, 
     stopRecording, 
     reset 
@@ -51,13 +52,30 @@ export const TelegramChatInput = ({
     setIsSending(false);
   };
 
-  const handleVoiceRecord = async () => {
+  const handleVoiceRecord = useCallback(async () => {
     if (isRecording) {
       stopRecording();
-    } else {
-      startRecording();
+      return;
     }
-  };
+    // Feature detection + clear error surface so silent failures stop.
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      alert('Voice recording is not supported in this browser. Try Chrome or Safari, or use HTTPS.');
+      return;
+    }
+    if (typeof window !== 'undefined' && typeof MediaRecorder === 'undefined') {
+      alert('Your browser does not support MediaRecorder. Please update or switch browser.');
+      return;
+    }
+    await startRecording();
+  }, [isRecording, startRecording, stopRecording]);
+
+  // Surface permission / device errors instead of silently doing nothing.
+  const lastErrorRef = useRef<string | null>(null);
+  if (recorderError && recorderError !== lastErrorRef.current) {
+    lastErrorRef.current = recorderError;
+    // Deferred to avoid setState-in-render side effects.
+    setTimeout(() => alert(`Microphone error: ${recorderError}`), 0);
+  }
 
   const handleSendVoice = async () => {
     if (!audioBlob || !duration) return;
@@ -239,13 +257,12 @@ export const TelegramChatInput = ({
           {/* Voice Record / Send Button - Telegram Style */}
           {!text.trim() ? (
             <Button
+              type="button"
               variant={isRecording ? "destructive" : "ghost"}
               size="icon"
-              onMouseDown={handleVoiceRecord}
-              onMouseUp={isRecording ? handleVoiceRecord : undefined}
-              onTouchStart={handleVoiceRecord}
-              onTouchEnd={isRecording ? handleVoiceRecord : undefined}
+              onClick={handleVoiceRecord}
               disabled={disabled || isSending}
+              aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
               className="h-12 w-12 rounded-full shrink-0 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 backdrop-blur-sm border border-[#D4AF37]/30 transition-all shadow-lg"
             >
               {isRecording ? (
