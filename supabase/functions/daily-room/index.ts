@@ -448,7 +448,7 @@ Deno.serve(async (req) => {
 
       const { data: sessionRow, error: sessionError } = await supabase
         .from("community_live_sessions")
-        .select("room_name, channel_id, title")
+        .select("room_name, channel_id, title, host_user_id")
         .eq("id", session_id)
         .maybeSingle();
 
@@ -488,6 +488,36 @@ Deno.serve(async (req) => {
                 .eq("post_type", "live")
                 .eq("user_id", user.id)
                 .like("content", `%${sessionRow.title || "Live Session"}%`);
+
+              // Also file it on the Videos page. Reuses the same
+              // metadata.source pattern already built for YouTube embeds —
+              // an external URL, no local storage/signing involved, since
+              // Daily.co hosts the actual recording. isDmChannel's own
+              // convention (channel ids starting with "dm-") distinguishes
+              // a private 1-on-1 session from a Divine Sangha / group live.
+              const isPrivateSession = typeof sessionRow.channel_id === "string" && sessionRow.channel_id.startsWith("dm-");
+              try {
+                await supabase.from("content_vault").insert({
+                  title: sessionRow.title || (isPrivateSession ? "Private Session" : "Live Session"),
+                  description: null,
+                  content_type: "video",
+                  storage_path: "",
+                  thumbnail_url: null,
+                  duration_seconds: null,
+                  price_cents: 0,
+                  currency: "eur",
+                  tier_required: "free",
+                  is_published: true,
+                  owner_id: sessionRow.host_user_id || user.id,
+                  metadata: {
+                    category: isPrivateSession ? "private-session-recording" : "live-recording",
+                    source: "daily_recording",
+                    external_url: recordingUrl,
+                  },
+                });
+              } catch (contentVaultErr) {
+                console.error("[daily-room] content_vault insert failed (non-blocking):", contentVaultErr);
+              }
             }
           }
         } catch (error) {

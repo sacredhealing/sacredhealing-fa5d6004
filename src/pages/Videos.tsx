@@ -24,6 +24,29 @@ export default function Videos() {
     })();
   }, [user, navigate]);
 
+  // Three categories: recordings from Divine Sangha lives, recordings from
+  // private 1-on-1 sessions with admin, and everything manually uploaded
+  // through Content Vault. Anything without a category tag (older uploads,
+  // or a category value we don't recognize) falls into Content Vault by
+  // default, so nothing silently disappears from the page.
+  const liveRecordings = videos.filter((v) => v.metadata?.category === 'live-recording');
+  const privateSessions = videos.filter((v) => v.metadata?.category === 'private-session-recording');
+  const contentVaultUploads = videos.filter((v) => v.metadata?.category !== 'live-recording' && v.metadata?.category !== 'private-session-recording');
+
+  const Section = ({ title, items }: { title: string; items: any[] }) =>
+    items.length === 0 ? null : (
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,.55)', marginBottom: 12 }}>
+          {title} ({items.length})
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {items.map((v) => (
+            <ContentDropCard key={v.id} content={v} />
+          ))}
+        </div>
+      </div>
+    );
+
   return (
     <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '20px 16px 100px' }}>
       <button
@@ -45,11 +68,11 @@ export default function Videos() {
           Nothing here yet.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {videos.map((v) => (
-            <ContentDropCard key={v.id} content={v} />
-          ))}
-        </div>
+        <>
+          <Section title="🔴 Divine Sangha Lives" items={liveRecordings} />
+          <Section title="🤝 Private Sessions" items={privateSessions} />
+          <Section title="📼 Content Vault" items={contentVaultUploads} />
+        </>
       )}
     </div>
   );

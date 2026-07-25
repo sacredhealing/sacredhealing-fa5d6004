@@ -79,7 +79,7 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const priceLabel = content.price_cents > 0 ? `${(content.price_cents / 100).toFixed(2)} ${content.currency.toUpperCase()}` : null;
 
   const handlePlay = async () => {
-    if ((content as any).metadata?.source === 'youtube') { setIsPlaying(true); return; }
+    if ((content as any).metadata?.source === 'youtube' || (content as any).metadata?.source === 'daily_recording') { setIsPlaying(true); return; }
     if (playUrl) { setIsPlaying(true); return; }
     try {
       const { data, error } = await supabase.functions.invoke('get-content-signed-url', {
@@ -129,6 +129,8 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const isImage = content.content_type === 'image';
   const isYoutube = (content as any).metadata?.source === 'youtube';
   const youtubeId = (content as any).metadata?.youtube_id as string | undefined;
+  const isDailyRecording = (content as any).metadata?.source === 'daily_recording';
+  const dailyRecordingUrl = (content as any).metadata?.external_url as string | undefined;
 
   return (
     <>
@@ -189,6 +191,8 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
+          ) : isPlaying && isDailyRecording && dailyRecordingUrl ? (
+            <video src={dailyRecordingUrl} controls autoPlay className="c-drop-player" />
           ) : isPlaying && playUrl ? (
             isVideo ? (
               <video src={playUrl} controls autoPlay className="c-drop-player" />
