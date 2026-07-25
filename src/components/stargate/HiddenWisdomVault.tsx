@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Sparkles, Layers, Radio, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useStargateAccess } from '@/hooks/useStargateAccess';
 import { SanskritVerse } from '@/components/scriptural/SanskritVerse';
+
+const innerTabClass =
+  'rounded-full text-[10px] font-extrabold tracking-[0.1em] uppercase py-2.5 px-4 ' +
+  'data-[state=active]:bg-[#D4AF37] data-[state=active]:text-black text-white/50';
 
 interface HiddenWisdom {
   id: string;
@@ -76,24 +79,24 @@ export const HiddenWisdomVault: React.FC = () => {
   if (accessLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]/70" />
       </div>
     );
   }
 
   if (!isStargateMember) {
     return (
-      <Card className="p-8 text-center">
-        <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">Access to Hidden Wisdom Vault requires Stargate membership.</p>
-      </Card>
+      <div className="card-glass !p-8 text-center">
+        <Sparkles className="h-12 w-12 text-[#D4AF37]/25 mx-auto mb-4" />
+        <p className="text-white/40">Access to Hidden Wisdom Vault requires Stargate membership.</p>
+      </div>
     );
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]/70" />
       </div>
     );
   }
@@ -102,151 +105,148 @@ export const HiddenWisdomVault: React.FC = () => {
     ? wisdom.filter(w => w.angelic_sphere === selectedSphere)
     : wisdom;
 
+  // Fall back to the static 9-sphere map if the angelic_spheres table hasn't
+  // synced yet, so the grid never renders empty.
+  const sphereList = spheres.length > 0
+    ? spheres
+    : Object.entries(ANGELIC_SPHERE_NAMES).map(([num, name]) => ({
+        sphere_number: Number(num),
+        name,
+        description: '',
+        ui_layer: '',
+        frequency_range: { min: 0, max: 0 },
+        color_theme: 'gold',
+      }));
+
   return (
     <div className="space-y-6">
       {/* Angelic Hierarchy Navigation */}
-      <Card className="bg-gradient-to-br from-purple-900/30 via-indigo-900/30 to-cyan-900/30 border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Layers className="h-5 w-5" />
-            The 9 Angelic Spheres
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="card-glass !rounded-[32px] !p-6 relative overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-40"
+          style={{ background: 'radial-gradient(ellipse at 30% 0%, rgba(212,175,55,0.08) 0%, transparent 60%)' }}
+        />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-5">
+            <Layers className="h-4 w-4 text-[#D4AF37]" />
+            <h3 className="sqi-title text-base">The 9 Angelic Spheres</h3>
+          </div>
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
-            {spheres.map((sphere) => (
-              <button
-                key={sphere.sphere_number}
-                onClick={() => setSelectedSphere(selectedSphere === sphere.sphere_number ? null : sphere.sphere_number)}
-                className={`p-3 rounded-lg border transition-all ${
-                  selectedSphere === sphere.sphere_number
-                    ? 'bg-purple-500/30 border-purple-400'
-                    : 'bg-background/40 border-border hover:border-purple-500/50'
-                }`}
-              >
-                <div className="text-xs font-semibold text-center">{sphere.sphere_number}</div>
-                <div className="text-[10px] text-muted-foreground text-center mt-1">
-                  {sphere.name.split(' ')[0]}
-                </div>
-              </button>
-            ))}
+            {sphereList.map((sphere) => {
+              const isActive = selectedSphere === sphere.sphere_number;
+              return (
+                <button
+                  key={sphere.sphere_number}
+                  onClick={() => setSelectedSphere(isActive ? null : sphere.sphere_number)}
+                  className={`p-3 rounded-2xl border transition-all duration-300 ${
+                    isActive
+                      ? 'bg-[#D4AF37] border-[#D4AF37] shadow-[0_8px_24px_rgba(212,175,55,0.3)]'
+                      : 'bg-white/[0.02] border-white/[0.06] hover:border-[#D4AF37]/40'
+                  }`}
+                >
+                  <div className={`text-xs font-black text-center ${isActive ? 'text-black' : 'text-[#D4AF37]'}`}>
+                    {sphere.sphere_number}
+                  </div>
+                  <div className={`text-[9px] text-center mt-1 truncate ${isActive ? 'text-black/70' : 'text-white/40'}`}>
+                    {sphere.name.split(' ')[0]}
+                  </div>
+                </button>
+              );
+            })}
           </div>
           {selectedSphere && (
-            <div className="mt-4 p-4 bg-background/40 rounded-lg">
-              <h4 className="font-semibold mb-1">{ANGELIC_SPHERE_NAMES[selectedSphere]}</h4>
-              <p className="text-sm text-muted-foreground">
-                {spheres.find(s => s.sphere_number === selectedSphere)?.description}
+            <div className="mt-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+              <h4 className="font-bold text-[#D4AF37] mb-1">{ANGELIC_SPHERE_NAMES[selectedSphere]}</h4>
+              <p className="text-sm text-white/50">
+                {spheres.find(s => s.sphere_number === selectedSphere)?.description || 'No description synced yet.'}
               </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Wisdom Content */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Wisdom</TabsTrigger>
-          <TabsTrigger value="acoustic">Acoustic Levitation</TabsTrigger>
-          <TabsTrigger value="pyramid">Pyramid Wisdom</TabsTrigger>
-          <TabsTrigger value="vedic">Vedic Secrets</TabsTrigger>
+        <TabsList className="flex flex-wrap gap-2 bg-transparent p-0 h-auto justify-start">
+          <TabsTrigger value="all" className={innerTabClass}>All Wisdom</TabsTrigger>
+          <TabsTrigger value="acoustic" className={innerTabClass}>Acoustic Levitation</TabsTrigger>
+          <TabsTrigger value="pyramid" className={innerTabClass}>Pyramid Wisdom</TabsTrigger>
+          <TabsTrigger value="vedic" className={innerTabClass}>Vedic Secrets</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-4 mt-4">
+        <TabsContent value="all" className="space-y-4 mt-5">
+          {filteredWisdom.length === 0 && <EmptyWisdomState />}
           {filteredWisdom.map((item) => (
-            <Card key={item.id} className="bg-background/40 border-purple-500/20">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{item.title}</CardTitle>
-                  {item.angelic_sphere && (
-                    <span className="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-300">
-                      Sphere {item.angelic_sphere}: {ANGELIC_SPHERE_NAMES[item.angelic_sphere]}
-                    </span>
-                  )}
-                </div>
-                {item.frequency_hz && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                    <Radio className="h-4 w-4" />
-                    {item.frequency_hz} Hz
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {item.devanagari_script && (
-                  <SanskritVerse
-                    content={item.content}
-                    devanagari={item.devanagari_script}
-                    translation={item.translation || undefined}
-                  />
-                )}
-                {!item.devanagari_script && (
-                  <p className="text-foreground/90 leading-relaxed whitespace-pre-line">
-                    {item.content}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <WisdomCard key={item.id} item={item} />
           ))}
         </TabsContent>
 
-        <TabsContent value="acoustic" className="space-y-4 mt-4">
+        <TabsContent value="acoustic" className="space-y-4 mt-5">
+          {filteredWisdom.filter(w => w.content_type === 'acoustic_levitation').length === 0 && <EmptyWisdomState />}
           {filteredWisdom
             .filter(w => w.content_type === 'acoustic_levitation')
             .map((item) => (
-              <Card key={item.id} className="bg-background/40 border-purple-500/20">
-                <CardHeader>
-                  <CardTitle>{item.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-foreground/90 leading-relaxed whitespace-pre-line">
-                    {item.content}
-                  </p>
-                </CardContent>
-              </Card>
+              <WisdomCard key={item.id} item={item} />
             ))}
         </TabsContent>
 
-        <TabsContent value="pyramid" className="space-y-4 mt-4">
+        <TabsContent value="pyramid" className="space-y-4 mt-5">
+          {filteredWisdom.filter(w => w.content_type === 'pyramid_wisdom').length === 0 && <EmptyWisdomState />}
           {filteredWisdom
             .filter(w => w.content_type === 'pyramid_wisdom')
             .map((item) => (
-              <Card key={item.id} className="bg-background/40 border-purple-500/20">
-                <CardHeader>
-                  <CardTitle>{item.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-foreground/90 leading-relaxed whitespace-pre-line">
-                    {item.content}
-                  </p>
-                </CardContent>
-              </Card>
+              <WisdomCard key={item.id} item={item} />
             ))}
         </TabsContent>
 
-        <TabsContent value="vedic" className="space-y-4 mt-4">
+        <TabsContent value="vedic" className="space-y-4 mt-5">
+          {filteredWisdom.filter(w => w.content_type === 'vedic_secret').length === 0 && <EmptyWisdomState />}
           {filteredWisdom
             .filter(w => w.content_type === 'vedic_secret')
             .map((item) => (
-              <Card key={item.id} className="bg-background/40 border-purple-500/20">
-                <CardHeader>
-                  <CardTitle>{item.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {item.devanagari_script ? (
-                    <SanskritVerse
-                      content={item.content}
-                      devanagari={item.devanagari_script}
-                      translation={item.translation || undefined}
-                    />
-                  ) : (
-                    <p className="text-foreground/90 leading-relaxed whitespace-pre-line">
-                      {item.content}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+              <WisdomCard key={item.id} item={item} />
             ))}
         </TabsContent>
       </Tabs>
     </div>
   );
 };
+
+const EmptyWisdomState: React.FC = () => (
+  <div className="card-glass !p-8 text-center">
+    <BookOpen className="h-10 w-10 text-[#D4AF37]/25 mx-auto mb-3" />
+    <p className="text-white/40 text-sm">No wisdom entries here yet.</p>
+  </div>
+);
+
+const WisdomCard: React.FC<{ item: HiddenWisdom }> = ({ item }) => (
+  <div className="card-glass !rounded-[28px] !p-6">
+    <div className="flex items-start justify-between gap-3 mb-1">
+      <h3 className="text-lg font-bold text-white">{item.title}</h3>
+      {item.angelic_sphere && (
+        <span className="flex-shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[#D4AF37] whitespace-nowrap">
+          Sphere {item.angelic_sphere} · {ANGELIC_SPHERE_NAMES[item.angelic_sphere]}
+        </span>
+      )}
+    </div>
+    {item.frequency_hz && (
+      <div className="flex items-center gap-2 text-sm text-[#22D3EE]/70 mb-4">
+        <Radio className="h-4 w-4" />
+        {item.frequency_hz} Hz
+      </div>
+    )}
+    <div className="space-y-4">
+      {item.devanagari_script ? (
+        <SanskritVerse
+          content={item.content}
+          devanagari={item.devanagari_script}
+          translation={item.translation || undefined}
+        />
+      ) : (
+        <p className="text-white/70 leading-relaxed whitespace-pre-line">
+          {item.content}
+        </p>
+      )}
+    </div>
+  </div>
+);

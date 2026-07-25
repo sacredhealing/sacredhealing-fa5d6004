@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Play, Loader2, Clock, Video } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import VideoPlayerModal from '@/components/courses/VideoPlayerModal';
 import { toast } from 'sonner';
 
@@ -86,28 +83,26 @@ export const RecordingsList: React.FC<RecordingsListProps> = ({
     }
   };
 
-  const emptyBodyCls = largeText ? 'text-base text-muted-foreground' : 'text-sm text-muted-foreground';
-  const titleCls = largeText ? 'font-semibold text-base text-foreground truncate' : 'font-semibold text-sm text-foreground truncate';
-  const metaCls = largeText ? 'flex items-center gap-2 text-sm text-muted-foreground mt-0.5' : 'flex items-center gap-2 text-xs text-muted-foreground mt-0.5';
-  const badgeCls = largeText ? 'ml-1 text-xs py-0 px-1.5' : 'ml-1 text-[10px] py-0 px-1.5';
-  const playBtnSize = largeText ? 'default' : 'sm';
+  const titleCls = largeText ? 'font-bold text-base text-white truncate' : 'font-bold text-sm text-white truncate';
+  const metaCls = largeText ? 'flex items-center gap-2 text-sm text-white/40 mt-1' : 'flex items-center gap-2 text-xs text-white/40 mt-1';
+  const emptyBodyCls = largeText ? 'text-base text-white/40' : 'text-sm text-white/40';
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className={`${largeText ? 'w-6 h-6' : 'w-5 h-5'} animate-spin text-muted-foreground`} />
+      <div className="flex items-center justify-center py-10">
+        <Loader2 className={`${largeText ? 'w-6 h-6' : 'w-5 h-5'} animate-spin text-[#D4AF37]/70`} />
       </div>
     );
   }
 
   if (recordings.length === 0) {
     return (
-      <Card className="p-6 text-center">
-        <Video className={`${largeText ? 'w-12 h-12' : 'w-10 h-10'} text-muted-foreground mx-auto mb-3 opacity-40`} />
+      <div className="card-glass !p-8 text-center">
+        <Video className={`${largeText ? 'w-12 h-12' : 'w-10 h-10'} text-[#D4AF37]/25 mx-auto mb-4`} />
         <p className={emptyBodyCls}>
           {emptyText || 'No recordings yet. They will appear here automatically after each call.'}
         </p>
-      </Card>
+      </div>
     );
   }
 
@@ -121,10 +116,22 @@ export const RecordingsList: React.FC<RecordingsListProps> = ({
           const duration = rec.duration_seconds
             ? `${Math.round(rec.duration_seconds / 60)} min`
             : null;
+          const isReady = rec.status === 'ready';
+          const isOpening = openingId === rec.id;
           return (
-            <Card key={rec.id} className={`${largeText ? 'p-5' : 'p-4'} flex items-center gap-3`}>
-              <div className={`${largeText ? 'w-14 h-14' : 'w-12 h-12'} rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0`}>
-                <Video className={`${largeText ? 'w-6 h-6' : 'w-5 h-5'} text-primary`} />
+            <div
+              key={rec.id}
+              className={`card-glass !rounded-[24px] ${largeText ? '!p-5' : '!p-4'} flex items-center gap-4`}
+            >
+              <div
+                className={`${largeText ? 'w-14 h-14' : 'w-12 h-12'} rounded-2xl flex items-center justify-center flex-shrink-0`}
+                style={{
+                  background: 'rgba(212,175,55,0.08)',
+                  border: '1px solid rgba(212,175,55,0.25)',
+                  boxShadow: '0 0 20px rgba(212,175,55,0.08)',
+                }}
+              >
+                <Video className={`${largeText ? 'w-6 h-6' : 'w-5 h-5'} text-[#D4AF37]`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={titleCls}>{rec.title}</p>
@@ -137,28 +144,33 @@ export const RecordingsList: React.FC<RecordingsListProps> = ({
                       <span>{duration}</span>
                     </>
                   )}
-                  {rec.status !== 'ready' && (
-                    <Badge variant="secondary" className={badgeCls}>
+                  {!isReady && (
+                    <span className="ml-1 text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white/50">
                       {rec.status}
-                    </Badge>
+                    </span>
                   )}
                 </div>
               </div>
-              <Button
-                size={playBtnSize}
-                variant={rec.status === 'ready' ? 'default' : 'secondary'}
-                disabled={rec.status !== 'ready' || openingId === rec.id}
+              <button
+                disabled={!isReady || isOpening}
                 onClick={() => playRecording(rec)}
+                className={`flex items-center gap-1.5 rounded-full font-black uppercase tracking-[0.1em] transition-all duration-300 flex-shrink-0 ${
+                  largeText ? 'text-xs px-5 py-3' : 'text-[11px] px-4 py-2.5'
+                } ${
+                  isReady
+                    ? 'bg-[#D4AF37] text-black shadow-[0_8px_24px_rgba(212,175,55,0.25)] hover:scale-[1.03] hover:shadow-[0_10px_30px_rgba(212,175,55,0.4)] active:scale-95 disabled:opacity-60'
+                    : 'bg-white/[0.04] border border-white/10 text-white/30 cursor-not-allowed'
+                }`}
               >
-                {openingId === rec.id ? (
+                {isOpening ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <Play className="w-4 h-4 mr-1" /> Watch
+                    <Play className="w-3.5 h-3.5" /> Watch
                   </>
                 )}
-              </Button>
-            </Card>
+              </button>
+            </div>
           );
         })}
       </div>
