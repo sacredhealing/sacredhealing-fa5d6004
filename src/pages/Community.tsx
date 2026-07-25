@@ -1000,7 +1000,19 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // If the mic permission prompt never actually appears — common in an
+      // in-app WebView wrapper that doesn't implement permission handling —
+      // getUserMedia doesn't error, it just hangs forever with zero
+      // feedback. That looks exactly like "nothing happens" from the
+      // outside. This timeout turns that silent hang into a specific,
+      // visible error instead of an infinite wait.
+      const micTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("MIC_TIMEOUT")), 6000)
+      );
+      const stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia({ audio: true }),
+        micTimeout,
+      ]);
       const mimeType = pickSupportedAudioMimeType();
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       const actualType = recorder.mimeType || mimeType || "audio/webm";
@@ -1024,7 +1036,9 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
       recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
     } catch (err) {
       console.error("[DMChatView] mic access/recording failed:", err);
-      const msg = err instanceof DOMException && err.name === "NotAllowedError"
+      const msg = err instanceof Error && err.message === "MIC_TIMEOUT"
+        ? "Microphone request timed out — this container/app may not support mic access. Try opening the site directly in Chrome."
+        : err instanceof DOMException && err.name === "NotAllowedError"
         ? "Microphone permission denied — check your browser/app settings."
         : "Couldn't start recording on this device.";
       toast.error(msg);
@@ -2387,7 +2401,13 @@ const Community = () => {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const micTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("MIC_TIMEOUT")), 6000)
+      );
+      const stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia({ audio: true }),
+        micTimeout,
+      ]);
       const mimeType = pickSupportedAudioMimeType();
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       const actualType = recorder.mimeType || mimeType || "audio/webm";
@@ -2413,7 +2433,9 @@ const Community = () => {
       recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
     } catch (err) {
       console.error("[Community] mic access/recording failed:", err);
-      const msg = err instanceof DOMException && err.name === "NotAllowedError"
+      const msg = err instanceof Error && err.message === "MIC_TIMEOUT"
+        ? "Microphone request timed out — this container/app may not support mic access. Try opening the site directly in Chrome."
+        : err instanceof DOMException && err.name === "NotAllowedError"
         ? "Microphone permission denied — check your browser/app settings."
         : "Couldn't start recording on this device.";
       toast.error(msg);
