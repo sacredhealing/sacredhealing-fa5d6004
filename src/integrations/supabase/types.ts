@@ -7090,26 +7090,47 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          duration: number | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
           id: string
           is_read: boolean
+          message_type: string | null
+          mime_type: string | null
           receiver_id: string
           sender_id: string
+          thumbnail_url: string | null
         }
         Insert: {
           content: string
           created_at?: string
+          duration?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
           id?: string
           is_read?: boolean
+          message_type?: string | null
+          mime_type?: string | null
           receiver_id: string
           sender_id: string
+          thumbnail_url?: string | null
         }
         Update: {
           content?: string
           created_at?: string
+          duration?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
           id?: string
           is_read?: boolean
+          message_type?: string | null
+          mime_type?: string | null
           receiver_id?: string
           sender_id?: string
+          thumbnail_url?: string | null
         }
         Relationships: []
       }

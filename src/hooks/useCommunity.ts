@@ -172,7 +172,7 @@ export const useCommunity = () => {
       if (!conversationMap.has(partnerId)) {
         conversationMap.set(partnerId, []);
       }
-      conversationMap.get(partnerId)!.push(msg);
+      conversationMap.get(partnerId)!.push(msg as PrivateMessage);
     });
 
     // Fetch profiles for conversation partners
@@ -397,7 +397,7 @@ export const usePrivateChat = (partnerId: string) => {
       return;
     }
 
-    setMessages(data || []);
+    setMessages((data || []) as PrivateMessage[]);
 
     // Mark messages as read
     await supabase
