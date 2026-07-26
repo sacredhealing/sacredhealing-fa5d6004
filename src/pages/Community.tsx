@@ -1361,6 +1361,7 @@ const Community = () => {
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
   const [contentMap, setContentMap] = useState<Record<string, any>>({});
   const [contentLoadErrors, setContentLoadErrors] = useState<Record<string, string>>({});
+  const contentRequestedRef = useRef<Set<string>>(new Set());
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
 
   const fetchLibrary = useCallback(async () => {
@@ -1390,43 +1391,75 @@ const Community = () => {
     setLibraryLoading(false);
   }, [user]);
 
+  // Drop-card metadata loader. Runs as a plain async effect (never as a
+  // side-effect inside a setState updater — React can discard/replay those,
+  // which is why cards silently stayed in the "failed to load" state).
   const ensureContentLoaded = useCallback(async (ids: string[]) => {
-    setContentMap((prev) => {
-      const missing = ids.filter((id) => id && !prev[id]);
-      if (missing.length > 0) {
-        (supabase as any)
-          .rpc('get_content_vault_items', { _ids: missing })
-          .then(({ data, error }: any) => {
-            if (error) {
-              console.error('[Community] content_vault lookup failed:', error);
-              setContentLoadErrors((prevErr) => {
-                const next = { ...prevErr };
-                missing.forEach((id) => { next[id] = error.message || 'Unknown error'; });
-                return next;
-              });
-              return;
-            }
-            if (data && data.length > 0) {
-              setContentMap((cur) => {
-                const next = { ...cur };
-                data.forEach((row: any) => { next[row.id] = row; });
-                return next;
-              });
-            } else {
-              // Function ran fine but found no matching row — this time
-              // that genuinely means deleted/never existed, not an
-              // RLS/grant issue, since the function bypasses that layer.
-              setContentLoadErrors((prevErr) => {
-                const next = { ...prevErr };
-                missing.forEach((id) => { next[id] = 'This content no longer exists in the vault'; });
-                return next;
-              });
-            }
+    const missing = Array.from(
+      new Set(ids.filter((id) => id && !contentRequestedRef.current.has(id))),
+    );
+    if (missing.length === 0) return;
+    missing.forEach((id) => contentRequestedRef.current.add(id));
+
+    const apply = (rows: any[]) => {
+      if (!rows?.length) return;
+      setContentMap((cur) => {
+        const next = { ...cur };
+        rows.forEach((row: any) => { next[row.id] = row; });
+        return next;
+      });
+      setContentLoadErrors((prevErr) => {
+        const next = { ...prevErr };
+        rows.forEach((row: any) => { delete next[row.id]; });
+        return next;
+      });
+    };
+
+    try {
+      const { data, error } = await (supabase as any).rpc('get_content_vault_items', { _ids: missing });
+      if (!error && data?.length) {
+        apply(data);
+        const found = new Set(data.map((r: any) => r.id));
+        const stillMissing = missing.filter((id) => !found.has(id));
+        if (stillMissing.length === 0) return;
+        // fall through to the direct-table fallback for the remainder
+        const { data: rows2 } = await (supabase as any)
+          .from('content_vault').select('*').in('id', stillMissing);
+        apply(rows2 || []);
+        const found2 = new Set((rows2 || []).map((r: any) => r.id));
+        const gone = stillMissing.filter((id) => !found2.has(id));
+        if (gone.length) {
+          gone.forEach((id) => contentRequestedRef.current.delete(id));
+          setContentLoadErrors((prevErr) => {
+            const next = { ...prevErr };
+            gone.forEach((id) => { next[id] = 'unavailable'; });
+            return next;
           });
+        }
+        return;
       }
-      return prev;
-    });
+      if (error) console.warn('[Community] vault RPC failed, falling back:', error.message);
+      const { data: rows, error: selErr } = await (supabase as any)
+        .from('content_vault').select('*').in('id', missing);
+      if (selErr) throw selErr;
+      apply(rows || []);
+      const found = new Set((rows || []).map((r: any) => r.id));
+      const gone = missing.filter((id) => !found.has(id));
+      if (gone.length) {
+        gone.forEach((id) => contentRequestedRef.current.delete(id));
+        setContentLoadErrors((prevErr) => {
+          const next = { ...prevErr };
+          gone.forEach((id) => { next[id] = 'unavailable'; });
+          return next;
+        });
+      }
+    } catch (e: any) {
+      console.error('[Community] content_vault lookup failed:', e?.message || e);
+      // allow a retry on the next render/poll instead of getting stuck
+      missing.forEach((id) => contentRequestedRef.current.delete(id));
+    }
   }, []);
+
   const [commentsByPostId, setCommentsByPostId] = useState<Record<string, FeedComment[]>>({});
   const [commentDraft, setCommentDraft] = useState("");
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
@@ -2126,7 +2159,9 @@ const Community = () => {
           },
           (payload) => {
             const n = payload.new as any;
+            if (n.message_type === 'content_drop' && n.content_id) void ensureContentLoaded([n.content_id]);
             const nameMap = memberNameMapRef.current;
+
             const msg: Message = {
               ...n,
               user_name: n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member"),
@@ -3068,12 +3103,15 @@ const Community = () => {
                       if ((msg as any).message_type === 'content_drop' && (msg as any).content_id) {
                         const content = contentMap[(msg as any).content_id];
                         if (!content) {
+                          const permanentlyGone = contentLoadErrors[(msg as any).content_id] === 'unavailable';
+                          if (permanentlyGone) return null;
                           return (
-                            <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 16, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.3)', color: 'rgba(255,180,180,.9)', fontSize: 11.5 }}>
-                              ⚠️ Drop card failed to load (content_id: {(msg as any).content_id?.slice(0, 8)}…). {contentLoadErrors[(msg as any).content_id] || "Still loading, or couldn't be found."}
+                            <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '14px 16px', borderRadius: 16, background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.18)', color: 'rgba(255,255,255,.55)', fontSize: 12 }}>
+                              Loading “{msg.content || 'content'}”…
                             </div>
                           );
                         }
+
                         return (
                           <ContentDropCard key={msg.id} content={content} />
                         );

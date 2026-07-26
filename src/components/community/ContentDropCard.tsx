@@ -79,8 +79,10 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const priceLabel = content.price_cents > 0 ? `${(content.price_cents / 100).toFixed(2)} ${content.currency.toUpperCase()}` : null;
 
   const handlePlay = async () => {
-    if ((content as any).metadata?.source === 'youtube' || (content as any).metadata?.source === 'daily_recording') { setIsPlaying(true); return; }
+    const meta = (content as any).metadata || {};
+    if (meta.source === 'youtube' || meta.external_url) { setIsPlaying(true); return; }
     if (playUrl) { setIsPlaying(true); return; }
+
     try {
       const { data, error } = await supabase.functions.invoke('get-content-signed-url', {
         body: { contentId: content.id },
@@ -129,8 +131,10 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const isImage = content.content_type === 'image';
   const isYoutube = (content as any).metadata?.source === 'youtube';
   const youtubeId = (content as any).metadata?.youtube_id as string | undefined;
-  const isDailyRecording = (content as any).metadata?.source === 'daily_recording';
-  const dailyRecordingUrl = (content as any).metadata?.external_url as string | undefined;
+  const externalUrl = (content as any).metadata?.external_url as string | undefined;
+  const isDailyRecording = !!externalUrl;
+  const dailyRecordingUrl = externalUrl;
+
 
   return (
     <>
@@ -193,7 +197,12 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
               allowFullScreen
             />
           ) : isPlaying && isDailyRecording && dailyRecordingUrl ? (
-            <video src={dailyRecordingUrl} controls autoPlay className="c-drop-player" />
+            isVideo ? (
+              <video src={dailyRecordingUrl} controls autoPlay className="c-drop-player" />
+            ) : (
+              <audio src={dailyRecordingUrl} controls autoPlay className="c-drop-audio-player" />
+            )
+
           ) : isPlaying && playUrl ? (
             isVideo ? (
               <video src={playUrl} controls autoPlay className="c-drop-player" />
