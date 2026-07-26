@@ -865,6 +865,43 @@ type FeedComment = {
 // not a working link. This resolves a fresh signed URL right when a message
 // actually renders (not once at send-time — that URL would go stale for
 // anyone scrolling back through history days or weeks later).
+// Was getting permanently stuck on "Loading…" with no recovery path if
+// ensureContentLoaded ever failed to resolve for any reason (never called,
+// silently hung, etc.) — this gives it a real timeout and a manual retry
+// instead of hanging forever with zero feedback.
+function LoadingDropCard({ contentId, label, onRetry }: { contentId: string; label: string; onRetry: (ids: string[], force?: boolean) => void }) {
+  const [stuckLevel, setStuckLevel] = useState(0); // 0 = normal loading, 1 = auto-retried once, 2 = give up, show manual retry
+
+  useEffect(() => {
+    if (stuckLevel >= 2) return;
+    const timer = setTimeout(() => {
+      setStuckLevel((s) => s + 1);
+      onRetry([contentId], true);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [contentId, stuckLevel, onRetry]);
+
+  if (stuckLevel >= 2) {
+    return (
+      <div style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '14px 16px', borderRadius: 16, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.25)', color: 'rgba(255,180,180,.85)', fontSize: 12 }}>
+        ⚠️ Couldn't load "{label}" after retrying.{' '}
+        <button
+          onClick={() => { setStuckLevel(0); onRetry([contentId], true); }}
+          style={{ background: 'none', border: 'none', color: '#F4D35E', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 12 }}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '14px 16px', borderRadius: 16, background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.18)', color: 'rgba(255,255,255,.55)', fontSize: 12 }}>
+      Loading "{label}"…
+    </div>
+  );
+}
+
 function SignedChatMedia({ path, kind, duration }: { path: string; kind: "image" | "video" | "voice"; duration?: number | null }) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -1394,7 +1431,8 @@ const Community = () => {
   // Drop-card metadata loader. Runs as a plain async effect (never as a
   // side-effect inside a setState updater — React can discard/replay those,
   // which is why cards silently stayed in the "failed to load" state).
-  const ensureContentLoaded = useCallback(async (ids: string[]) => {
+  const ensureContentLoaded = useCallback(async (ids: string[], force = false) => {
+    if (force) ids.forEach((id) => contentRequestedRef.current.delete(id));
     const missing = Array.from(
       new Set(ids.filter((id) => id && !contentRequestedRef.current.has(id))),
     );
@@ -3106,9 +3144,12 @@ const Community = () => {
                           const permanentlyGone = contentLoadErrors[(msg as any).content_id] === 'unavailable';
                           if (permanentlyGone) return null;
                           return (
-                            <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '14px 16px', borderRadius: 16, background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.18)', color: 'rgba(255,255,255,.55)', fontSize: 12 }}>
-                              Loading “{msg.content || 'content'}”…
-                            </div>
+                            <LoadingDropCard
+                              key={msg.id}
+                              contentId={(msg as any).content_id}
+                              label={msg.content || 'content'}
+                              onRetry={ensureContentLoaded}
+                            />
                           );
                         }
 
