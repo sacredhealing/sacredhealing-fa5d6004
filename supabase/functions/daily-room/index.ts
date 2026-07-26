@@ -496,6 +496,20 @@ Deno.serve(async (req) => {
               // convention (channel ids starting with "dm-") distinguishes
               // a private 1-on-1 session from a Divine Sangha / group live.
               const isPrivateSession = typeof sessionRow.channel_id === "string" && sessionRow.channel_id.startsWith("dm-");
+              // Privacy: a private session recording must only be visible to
+              // the host and the specific member who was on the call — the
+              // RLS policy checks metadata.partner_user_id, so it has to
+              // actually be looked up and stored here. call_recordings
+              // already captured it at call-creation time.
+              let sessionPartnerId: string | null = null;
+              if (isPrivateSession) {
+                const { data: recRow } = await supabase
+                  .from("call_recordings")
+                  .select("partner_user_id")
+                  .eq("session_id", session_id)
+                  .maybeSingle();
+                sessionPartnerId = recRow?.partner_user_id || null;
+              }
               // Go Live encodes language as a "[LANG:xx] " prefix on the title
               // (no new DB column needed) — parse it back out here so the
               // archived video gets a clean title plus a language tag,
@@ -522,6 +536,7 @@ Deno.serve(async (req) => {
                     source: "daily_recording",
                     external_url: recordingUrl,
                     language: sessionLanguage,
+                    partner_user_id: sessionPartnerId,
                   },
                 });
               } catch (contentVaultErr) {
