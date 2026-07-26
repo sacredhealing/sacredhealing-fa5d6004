@@ -922,7 +922,7 @@ function parseLiveTitle(rawTitle: string | null | undefined): { title: string; l
   return {
     title: title.slice(match[0].length),
     language: lang,
-    flag: lang === "sv" ? "🇸🇪" : lang === "en" ? "🇬🇧" : "",
+    flag: lang === "sv" ? "SV" : lang === "en" ? "EN" : "",
   };
 }
 
@@ -3880,7 +3880,7 @@ const Community = () => {
                     color: goLiveLanguage === 'en' ? "#D4AF37" : "rgba(255,255,255,.6)",
                   }}
                 >
-                  🇬🇧 English
+                  English
                 </button>
                 <button
                   type="button"
@@ -3892,7 +3892,7 @@ const Community = () => {
                     color: goLiveLanguage === 'sv' ? "#D4AF37" : "rgba(255,255,255,.6)",
                   }}
                 >
-                  🇸🇪 Svenska
+                  Svenska
                 </button>
               </div>
             </div>

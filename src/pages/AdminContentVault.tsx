@@ -114,6 +114,7 @@ export default function AdminContentVault() {
   const [items, setItems] = useState<VaultItem[]>([]);
   const [vaultSearch, setVaultSearch] = useState('');
   const [vaultShowCount, setVaultShowCount] = useState(15);
+  const [vaultExpanded, setVaultExpanded] = useState(false);
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -561,7 +562,7 @@ export default function AdminContentVault() {
                   color: uploadLanguage === 'en' ? '#D4AF37' : 'rgba(255,255,255,.6)',
                 }}
               >
-                🇬🇧 English
+                English
               </button>
               <button
                 type="button"
@@ -573,7 +574,7 @@ export default function AdminContentVault() {
                   color: uploadLanguage === 'sv' ? '#D4AF37' : 'rgba(255,255,255,.6)',
                 }}
               >
-                🇸🇪 Svenska
+                Svenska
               </button>
             </div>
           </div>
@@ -675,9 +676,22 @@ export default function AdminContentVault() {
         </div>
       </div>
 
-      <h2 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,.6)', marginBottom: 12 }}>
-        Vault ({items.length})
-      </h2>
+      <button
+        onClick={() => setVaultExpanded((v) => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: vaultExpanded ? 12 : 0,
+        }}
+      >
+        <h2 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,.6)', margin: 0 }}>
+          Vault ({items.length})
+        </h2>
+        <span style={{ color: 'rgba(212,175,55,.5)', fontSize: 11, fontWeight: 700 }}>
+          {vaultExpanded ? '▲ Hide' : '▼ Show'}
+        </span>
+      </button>
+      {vaultExpanded && (
+        <>
       {items.length > 0 && (
         <input
           placeholder="Search by title…"
@@ -752,6 +766,8 @@ export default function AdminContentVault() {
           </>
         );
       })()}
+        </>
+      )}
     </div>
   );
 }
