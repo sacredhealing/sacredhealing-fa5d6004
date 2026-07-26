@@ -180,6 +180,7 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
           ) : null}
           {!unlocked && <div className="c-drop-lock">🔒</div>}
           <div className="c-drop-duration">
+            {(content as any).metadata?.language === 'sv' ? '🇸🇪 ' : (content as any).metadata?.language === 'en' ? '🇬🇧 ' : ''}
             {content.duration_seconds ? `${formatDuration(content.duration_seconds)} · ` : ''}
             {content.content_type.toUpperCase()}
           </div>

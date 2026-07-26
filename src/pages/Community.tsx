@@ -911,6 +911,21 @@ function SignedChatMedia({ path, kind, duration }: { path: string; kind: "image"
 // This tries a list of real candidates and uses whichever the device
 // actually supports, falling back to letting the browser pick if none of
 // our guesses match (still better than a hard string that might not exist).
+// The Go Live dialog encodes language as a "[LANG:xx] " prefix on the title
+// so it survives to session-end without needing a new DB column — this
+// strips it back out anywhere the title is actually shown to a member.
+function parseLiveTitle(rawTitle: string | null | undefined): { title: string; language: string | null; flag: string } {
+  const title = rawTitle || "";
+  const match = title.match(/^\[LANG:(\w+)\]\s*/);
+  if (!match) return { title, language: null, flag: "" };
+  const lang = match[1];
+  return {
+    title: title.slice(match[0].length),
+    language: lang,
+    flag: lang === "sv" ? "🇸🇪" : lang === "en" ? "🇬🇧" : "",
+  };
+}
+
 function pickSupportedAudioMimeType(): string {
   const candidates = [
     "audio/webm;codecs=opus",
@@ -1322,6 +1337,7 @@ const Community = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [totalUserCount, setTotalUserCount] = useState(0);
   const [goLiveTitle, setGoLiveTitle] = useState("");
+  const [goLiveLanguage, setGoLiveLanguage] = useState<'en' | 'sv'>('en');
   const [goLiveStargateCategory, setGoLiveStargateCategory] = useState<'healing-chamber' | 'bhagavad-gita' | 'other'>('healing-chamber');
   const [showGoLiveDialog, setShowGoLiveDialog] = useState(false);
   const [goLiveChannelId, setGoLiveChannelId] = useState<string | null>(null);
@@ -2179,7 +2195,7 @@ const Community = () => {
     } catch (e) {
       console.warn("Could not clean up stale sessions before going live:", e);
     }
-    const meetingTitle = customTitle?.trim() || `Live in ${channelName}`;
+    const meetingTitle = `[LANG:${goLiveLanguage}] ${customTitle?.trim() || `Live in ${channelName}`}`;
     const allowNonAdmin = channelId === "stargate" && isStargateMember && !isAdmin;
     const extras = channelId === "stargate"
       ? { stargate_category: goLiveStargateCategory }
@@ -2947,7 +2963,7 @@ const Community = () => {
                       ⟳ RECONNECT
                     </button>
                   )}
-                  {!isDmChannel(activeChannel) && liveRoomUrl && (isAdmin || daily.activeSession?.host_user_id === user?.id) && (
+                  {!isDmChannel(activeChannel) && liveRoomUrl && (isAdmin || daily.activeSession?.host_user_id === user?.id || !!liveSessionId) && (
                     <button
                       className="c-golive-header-btn c-golive-active"
                       onClick={handleEndLive}
@@ -2967,7 +2983,7 @@ const Community = () => {
                             🔴
                           </span>
                           <span onClick={() => s.room_url && window.open(s.room_url, "_blank")}>
-                            JOIN LIVE: {s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title}
+                            JOIN LIVE: {parseLiveTitle(s.title).flag} {parseLiveTitle(s.title).title.length > 18 ? parseLiveTitle(s.title).title.slice(0, 18) + "…" : parseLiveTitle(s.title).title}
                           </span>
                           <span
                             className="c-live-pill-dismiss"
@@ -3811,6 +3827,37 @@ const Community = () => {
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             />
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: "block", color: "rgba(255,255,255,.55)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
+                Language
+              </label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setGoLiveLanguage('en')}
+                  style={{
+                    flex: 1, padding: "10px", borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: "pointer",
+                    background: goLiveLanguage === 'en' ? "rgba(212,175,55,.18)" : "rgba(255,255,255,.04)",
+                    border: goLiveLanguage === 'en' ? "1px solid rgba(212,175,55,.5)" : "1px solid rgba(255,255,255,.1)",
+                    color: goLiveLanguage === 'en' ? "#D4AF37" : "rgba(255,255,255,.6)",
+                  }}
+                >
+                  🇬🇧 English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGoLiveLanguage('sv')}
+                  style={{
+                    flex: 1, padding: "10px", borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: "pointer",
+                    background: goLiveLanguage === 'sv' ? "rgba(212,175,55,.18)" : "rgba(255,255,255,.04)",
+                    border: goLiveLanguage === 'sv' ? "1px solid rgba(212,175,55,.5)" : "1px solid rgba(255,255,255,.1)",
+                    color: goLiveLanguage === 'sv' ? "#D4AF37" : "rgba(255,255,255,.6)",
+                  }}
+                >
+                  🇸🇪 Svenska
+                </button>
+              </div>
+            </div>
             {goLiveChannelId === "stargate" && (
               <div style={{ marginTop: 12 }}>
                 <label style={{ display: "block", color: "rgba(255,255,255,.55)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>

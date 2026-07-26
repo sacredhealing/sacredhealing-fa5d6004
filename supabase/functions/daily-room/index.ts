@@ -496,9 +496,17 @@ Deno.serve(async (req) => {
               // convention (channel ids starting with "dm-") distinguishes
               // a private 1-on-1 session from a Divine Sangha / group live.
               const isPrivateSession = typeof sessionRow.channel_id === "string" && sessionRow.channel_id.startsWith("dm-");
+              // Go Live encodes language as a "[LANG:xx] " prefix on the title
+              // (no new DB column needed) — parse it back out here so the
+              // archived video gets a clean title plus a language tag,
+              // instead of literally showing "[LANG:sv]" to members.
+              const rawTitle = sessionRow.title || (isPrivateSession ? "Private Session" : "Live Session");
+              const langMatch = rawTitle.match(/^\[LANG:(\w+)\]\s*/);
+              const cleanTitle = langMatch ? rawTitle.slice(langMatch[0].length) : rawTitle;
+              const sessionLanguage = langMatch ? langMatch[1] : null;
               try {
                 await supabase.from("content_vault").insert({
-                  title: sessionRow.title || (isPrivateSession ? "Private Session" : "Live Session"),
+                  title: cleanTitle,
                   description: null,
                   content_type: "video",
                   storage_path: "",
@@ -513,6 +521,7 @@ Deno.serve(async (req) => {
                     category: isPrivateSession ? "private-session-recording" : "live-recording",
                     source: "daily_recording",
                     external_url: recordingUrl,
+                    language: sessionLanguage,
                   },
                 });
               } catch (contentVaultErr) {
