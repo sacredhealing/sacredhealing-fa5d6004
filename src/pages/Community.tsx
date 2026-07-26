@@ -3101,12 +3101,15 @@ const Community = () => {
                       if ((msg as any).message_type === 'content_drop' && (msg as any).content_id) {
                         const content = contentMap[(msg as any).content_id];
                         if (!content) {
+                          const permanentlyGone = contentLoadErrors[(msg as any).content_id] === 'unavailable';
+                          if (permanentlyGone) return null;
                           return (
-                            <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 16, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.3)', color: 'rgba(255,180,180,.9)', fontSize: 11.5 }}>
-                              ⚠️ Drop card failed to load (content_id: {(msg as any).content_id?.slice(0, 8)}…). {contentLoadErrors[(msg as any).content_id] || "Still loading, or couldn't be found."}
+                            <div key={msg.id} style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '14px 16px', borderRadius: 16, background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.18)', color: 'rgba(255,255,255,.55)', fontSize: 12 }}>
+                              Loading “{msg.content || 'content'}”…
                             </div>
                           );
                         }
+
                         return (
                           <ContentDropCard key={msg.id} content={content} />
                         );
