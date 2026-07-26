@@ -131,8 +131,10 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const isImage = content.content_type === 'image';
   const isYoutube = (content as any).metadata?.source === 'youtube';
   const youtubeId = (content as any).metadata?.youtube_id as string | undefined;
-  const isDailyRecording = (content as any).metadata?.source === 'daily_recording';
-  const dailyRecordingUrl = (content as any).metadata?.external_url as string | undefined;
+  const externalUrl = (content as any).metadata?.external_url as string | undefined;
+  const isDailyRecording = !!externalUrl;
+  const dailyRecordingUrl = externalUrl;
+
 
   return (
     <>
