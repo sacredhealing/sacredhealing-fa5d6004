@@ -33,19 +33,27 @@ export default function Videos() {
   const privateSessions = videos.filter((v) => v.metadata?.category === 'private-session-recording');
   const contentVaultUploads = videos.filter((v) => v.metadata?.category !== 'live-recording' && v.metadata?.category !== 'private-session-recording');
 
-  const Section = ({ title, items }: { title: string; items: any[] }) =>
-    items.length === 0 ? null : (
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,.55)', marginBottom: 12 }}>
-          {title} ({items.length})
+  // Always shows the section, even at zero items — an empty section that's
+  // still visible proves the category exists and is wired up correctly,
+  // instead of silently vanishing until the first item lands in it.
+  const Section = ({ title, items, emptyText }: { title: string; items: any[]; emptyText: string }) => (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,.55)', marginBottom: 12 }}>
+        {title} ({items.length})
+      </div>
+      {items.length === 0 ? (
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.35)', padding: '18px 4px', border: '1px dashed rgba(255,255,255,.1)', borderRadius: 14 }}>
+          {emptyText}
         </div>
+      ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {items.map((v) => (
             <ContentDropCard key={v.id} content={v} />
           ))}
         </div>
-      </div>
-    );
+      )}
+    </div>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '20px 16px 100px' }}>
@@ -63,15 +71,11 @@ export default function Videos() {
 
       {isLoading ? (
         <div style={{ color: 'rgba(255,255,255,.4)', fontSize: 13 }}>Loading…</div>
-      ) : videos.length === 0 ? (
-        <div style={{ color: 'rgba(255,255,255,.4)', fontSize: 13, textAlign: 'center', padding: '60px 20px' }}>
-          Nothing here yet.
-        </div>
       ) : (
         <>
-          <Section title="🔴 Divine Sangha Lives" items={liveRecordings} />
-          <Section title="🤝 Private Sessions" items={privateSessions} />
-          <Section title="📼 Content Vault" items={contentVaultUploads} />
+          <Section title="🔴 Divine Sangha Lives" items={liveRecordings} emptyText="Nothing recorded yet — the next live you end in Divine Sangha will show up here." />
+          <Section title="🤝 Private Sessions" items={privateSessions} emptyText="Nothing recorded yet — a private 1-on-1 call will show up here once it ends, visible only to you and the other person." />
+          <Section title="📼 Content Vault" items={contentVaultUploads} emptyText="Nothing uploaded yet." />
         </>
       )}
     </div>
