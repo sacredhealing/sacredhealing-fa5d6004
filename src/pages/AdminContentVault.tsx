@@ -112,6 +112,8 @@ export default function AdminContentVault() {
   const navigate = useNavigate();
 
   const [items, setItems] = useState<VaultItem[]>([]);
+  const [vaultSearch, setVaultSearch] = useState('');
+  const [vaultShowCount, setVaultShowCount] = useState(15);
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -676,13 +678,28 @@ export default function AdminContentVault() {
       <h2 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,.6)', marginBottom: 12 }}>
         Vault ({items.length})
       </h2>
+      {items.length > 0 && (
+        <input
+          placeholder="Search by title…"
+          value={vaultSearch}
+          onChange={(e) => { setVaultSearch(e.target.value); setVaultShowCount(15); }}
+          style={{ ...inputStyle, marginBottom: 12 }}
+        />
+      )}
       {isLoading ? (
         <div style={{ color: 'rgba(255,255,255,.4)', fontSize: 13 }}>Loading…</div>
       ) : items.length === 0 ? (
         <div style={{ color: 'rgba(255,255,255,.4)', fontSize: 13 }}>Nothing uploaded yet.</div>
-      ) : (
+      ) : (() => {
+        const query = vaultSearch.trim().toLowerCase();
+        const filtered = query ? items.filter((it) => it.title?.toLowerCase().includes(query)) : items;
+        const visible = filtered.slice(0, vaultShowCount);
+        return filtered.length === 0 ? (
+          <div style={{ color: 'rgba(255,255,255,.4)', fontSize: 13 }}>No results for "{vaultSearch}".</div>
+        ) : (
+          <>
         <div style={{ display: 'grid', gap: 10 }}>
-          {items.map((it) => (
+          {visible.map((it) => (
             <div key={it.id} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 14, padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
@@ -724,7 +741,17 @@ export default function AdminContentVault() {
             </div>
           ))}
         </div>
-      )}
+        {filtered.length > vaultShowCount && (
+          <button
+            onClick={() => setVaultShowCount((n) => n + 15)}
+            style={{ ...secondaryBtnStyle, width: '100%', marginTop: 12 }}
+          >
+            Show more ({filtered.length - vaultShowCount} remaining)
+          </button>
+        )}
+          </>
+        );
+      })()}
     </div>
   );
 }
