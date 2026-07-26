@@ -81,13 +81,29 @@ export default function Videos() {
   ];
   const activeItems = tabs.find((t) => t.key === activeTab)!;
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!window.confirm(`Delete "${title}"? This can't be undone.`)) return;
-    setDeletingId(id);
+  const handleDelete = async (video: any) => {
+    if (!window.confirm(`Delete "${video.title}"? This can't be undone.`)) return;
+    setDeletingId(video.id);
     try {
-      const { error } = await (supabase as any).from('content_vault').delete().eq('id', id);
+      // Delete the row first — this is the part that actually removes it
+      // from the app everywhere. Then clean up the underlying file too,
+      // if there is one (YouTube embeds and Daily.co recordings have an
+      // empty storage_path since they're external links, nothing to
+      // delete from our own storage for those).
+      const { error } = await (supabase as any).from('content_vault').delete().eq('id', video.id);
       if (error) throw error;
-      setVideos((prev) => prev.filter((v) => v.id !== id));
+
+      if (video.storage_path) {
+        const { error: storageError } = await supabase.storage.from('content-vault').remove([video.storage_path]);
+        if (storageError) {
+          console.error('[Videos] row deleted but storage cleanup failed:', storageError);
+          // Non-fatal — the row is gone either way, which is what matters
+          // most for the user. Log it so it's traceable if storage costs
+          // ever look off, but don't block or alarm over it.
+        }
+      }
+
+      setVideos((prev) => prev.filter((v) => v.id !== video.id));
     } catch (err: any) {
       alert(`Could not delete: ${err.message || 'Unknown error'}`);
     } finally {
@@ -165,7 +181,7 @@ export default function Videos() {
               <ContentDropCard content={v} />
               {isAdmin && (
                 <button
-                  onClick={() => handleDelete(v.id, v.title)}
+                  onClick={() => handleDelete(v)}
                   disabled={deletingId === v.id}
                   title="Delete this video"
                   style={{
