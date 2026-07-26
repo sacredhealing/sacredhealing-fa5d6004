@@ -12,6 +12,13 @@ import PractitionerCertContent from '@/components/PractitionerCertContent';
 
 const GOLD = 'rgba(212,175,55,0.9)';
 
+const LEVELS: { id: string; title: string; range: [number, number] }[] = [
+  { id: 'level-1', title: 'Level 1 — Foundation', range: [1, 3] },
+  { id: 'level-2', title: 'Level 2 — Protection & Alchemy', range: [4, 6] },
+  { id: 'level-3', title: 'Level 3 — Direct Transmission', range: [7, 9] },
+  { id: 'level-4', title: 'Level 4 — Mastery', range: [10, 12] },
+];
+
 export default function PractitionerCertModule() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -34,20 +41,24 @@ export default function PractitionerCertModule() {
   const nextModule = idx >= 0 && idx < sortedCourses.length - 1 ? sortedCourses[idx + 1] : null;
 
   const railGroups = useMemo(() => {
-    const doneCount = sortedCourses.filter((c) => progressByModuleId[c.id]?.completed).length;
-    return [{
-      id: 'akasha-infinity',
-      title: 'The 12-Month Path',
-      meta: `${doneCount} / ${sortedCourses.length} months${doneCount === sortedCourses.length && sortedCourses.length > 0 ? ' complete' : ''}`,
-      done: sortedCourses.length > 0 && doneCount === sortedCourses.length,
-      current: true,
-      items: sortedCourses.map((c) => {
-        const done = Boolean(progressByModuleId[c.id]?.completed);
-        const isCurrentModule = module ? c.id === module.id : false;
-        const state: 'done' | 'current' | 'available' = done ? 'done' : isCurrentModule ? 'current' : 'available';
-        return { id: c.id, number: c.module_number, title: c.title, state, href: `/certification-path/module/${c.id}` };
-      }),
-    }];
+    return LEVELS.map((lvl) => {
+      const items = sortedCourses.filter((c) => c.module_number >= lvl.range[0] && c.module_number <= lvl.range[1]);
+      const doneCount = items.filter((c) => progressByModuleId[c.id]?.completed).length;
+      const containsCurrent = module ? items.some((c) => c.id === module.id) : false;
+      return {
+        id: lvl.id,
+        title: lvl.title,
+        meta: `${doneCount} / ${items.length} months${doneCount === items.length && items.length > 0 ? ' complete' : ''}`,
+        done: items.length > 0 && doneCount === items.length,
+        current: containsCurrent,
+        items: items.map((c) => {
+          const done = Boolean(progressByModuleId[c.id]?.completed);
+          const isCurrentModule = module ? c.id === module.id : false;
+          const state: 'done' | 'current' | 'available' = done ? 'done' : isCurrentModule ? 'current' : 'available';
+          return { id: c.id, number: c.module_number, title: c.title, state, href: `/certification-path/module/${c.id}` };
+        }),
+      };
+    });
   }, [sortedCourses, progressByModuleId, module]);
 
   const allowed = hasFeatureAccess(isAdmin, tier, getCourseTierRequiredRank('akasha-infinity'));

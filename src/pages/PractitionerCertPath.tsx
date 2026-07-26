@@ -10,6 +10,13 @@ import CourseSyllabus from '@/components/education/CourseSyllabus';
 
 const GOLD = 'rgba(212,175,55,0.9)';
 
+const LEVELS: { id: string; title: string; range: [number, number] }[] = [
+  { id: 'level-1', title: 'Level 1 — Foundation', range: [1, 3] },
+  { id: 'level-2', title: 'Level 2 — Protection & Alchemy', range: [4, 6] },
+  { id: 'level-3', title: 'Level 3 — Direct Transmission', range: [7, 9] },
+  { id: 'level-4', title: 'Level 4 — Mastery', range: [10, 12] },
+];
+
 export default function PractitionerCertPath() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -22,19 +29,22 @@ export default function PractitionerCertPath() {
 
   const syllabusGroups = useMemo(() => {
     const sorted = [...courses].sort((a, b) => a.module_number - b.module_number);
-    const completed = sorted.filter((c) => progressByModuleId[c.id]?.completed).length;
-    return [{
-      id: 'akasha-infinity',
-      title: 'The 12-Month Path',
-      meta: `${completed} / ${sorted.length} months${completed === sorted.length && sorted.length > 0 ? ' complete' : ''}`,
-      done: sorted.length > 0 && completed === sorted.length,
-      current: false,
-      lessons: sorted.map((m) => {
-        const done = Boolean(progressByModuleId[m.id]?.completed);
-        const state: 'done' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
-        return { id: m.id, number: m.module_number, title: m.title, state };
-      }),
-    }];
+    return LEVELS.map((lvl) => {
+      const mods = sorted.filter((c) => c.module_number >= lvl.range[0] && c.module_number <= lvl.range[1]);
+      const completed = mods.filter((c) => progressByModuleId[c.id]?.completed).length;
+      return {
+        id: lvl.id,
+        title: lvl.title,
+        meta: `${completed} / ${mods.length} months${completed === mods.length && mods.length > 0 ? ' complete' : ''}`,
+        done: mods.length > 0 && completed === mods.length,
+        current: false,
+        lessons: mods.map((m) => {
+          const done = Boolean(progressByModuleId[m.id]?.completed);
+          const state: 'done' | 'available' | 'locked' = done ? 'done' : allowed ? 'available' : 'locked';
+          return { id: m.id, number: m.module_number, title: m.title, state };
+        }),
+      };
+    });
   }, [courses, progressByModuleId, allowed]);
 
   if (!membershipReady || loadingData) {
@@ -63,12 +73,12 @@ export default function PractitionerCertPath() {
 
         <div style={{
           marginBottom: 24, borderRadius: 20, border: '1px solid rgba(212,175,55,0.3)',
-          background: 'rgba(212,175,55,0.05)', padding: '16px 20px',
+          background: 'rgba(212,175,55,0.05)', padding: '18px 22px',
         }}>
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: GOLD, margin: '0 0 6px' }}>
+          <p style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase', color: GOLD, margin: '0 0 8px' }}>
             Akasha-Infinity Exclusive
           </p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.65 }}>
             This 12-month practitioner certification is included with Akasha-Infinity lifetime membership.
             {!allowed && !user && ' Sign in and enroll to access this reader, or '}
             {!allowed && user && ' '}
@@ -76,7 +86,7 @@ export default function PractitionerCertPath() {
               <button
                 type="button"
                 onClick={() => navigate('/certification')}
-                style={{ color: GOLD, background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}
+                style={{ color: GOLD, background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 15 }}
               >
                 view enrollment details
               </button>
