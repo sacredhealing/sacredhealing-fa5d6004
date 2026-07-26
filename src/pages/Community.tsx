@@ -2159,7 +2159,9 @@ const Community = () => {
           },
           (payload) => {
             const n = payload.new as any;
+            if (n.message_type === 'content_drop' && n.content_id) void ensureContentLoaded([n.content_id]);
             const nameMap = memberNameMapRef.current;
+
             const msg: Message = {
               ...n,
               user_name: n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member"),
