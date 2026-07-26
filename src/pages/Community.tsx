@@ -1391,43 +1391,75 @@ const Community = () => {
     setLibraryLoading(false);
   }, [user]);
 
+  // Drop-card metadata loader. Runs as a plain async effect (never as a
+  // side-effect inside a setState updater — React can discard/replay those,
+  // which is why cards silently stayed in the "failed to load" state).
   const ensureContentLoaded = useCallback(async (ids: string[]) => {
-    setContentMap((prev) => {
-      const missing = ids.filter((id) => id && !prev[id]);
-      if (missing.length > 0) {
-        (supabase as any)
-          .rpc('get_content_vault_items', { _ids: missing })
-          .then(({ data, error }: any) => {
-            if (error) {
-              console.error('[Community] content_vault lookup failed:', error);
-              setContentLoadErrors((prevErr) => {
-                const next = { ...prevErr };
-                missing.forEach((id) => { next[id] = error.message || 'Unknown error'; });
-                return next;
-              });
-              return;
-            }
-            if (data && data.length > 0) {
-              setContentMap((cur) => {
-                const next = { ...cur };
-                data.forEach((row: any) => { next[row.id] = row; });
-                return next;
-              });
-            } else {
-              // Function ran fine but found no matching row — this time
-              // that genuinely means deleted/never existed, not an
-              // RLS/grant issue, since the function bypasses that layer.
-              setContentLoadErrors((prevErr) => {
-                const next = { ...prevErr };
-                missing.forEach((id) => { next[id] = 'This content no longer exists in the vault'; });
-                return next;
-              });
-            }
+    const missing = Array.from(
+      new Set(ids.filter((id) => id && !contentRequestedRef.current.has(id))),
+    );
+    if (missing.length === 0) return;
+    missing.forEach((id) => contentRequestedRef.current.add(id));
+
+    const apply = (rows: any[]) => {
+      if (!rows?.length) return;
+      setContentMap((cur) => {
+        const next = { ...cur };
+        rows.forEach((row: any) => { next[row.id] = row; });
+        return next;
+      });
+      setContentLoadErrors((prevErr) => {
+        const next = { ...prevErr };
+        rows.forEach((row: any) => { delete next[row.id]; });
+        return next;
+      });
+    };
+
+    try {
+      const { data, error } = await (supabase as any).rpc('get_content_vault_items', { _ids: missing });
+      if (!error && data?.length) {
+        apply(data);
+        const found = new Set(data.map((r: any) => r.id));
+        const stillMissing = missing.filter((id) => !found.has(id));
+        if (stillMissing.length === 0) return;
+        // fall through to the direct-table fallback for the remainder
+        const { data: rows2 } = await (supabase as any)
+          .from('content_vault').select('*').in('id', stillMissing);
+        apply(rows2 || []);
+        const found2 = new Set((rows2 || []).map((r: any) => r.id));
+        const gone = stillMissing.filter((id) => !found2.has(id));
+        if (gone.length) {
+          gone.forEach((id) => contentRequestedRef.current.delete(id));
+          setContentLoadErrors((prevErr) => {
+            const next = { ...prevErr };
+            gone.forEach((id) => { next[id] = 'unavailable'; });
+            return next;
           });
+        }
+        return;
       }
-      return prev;
-    });
+      if (error) console.warn('[Community] vault RPC failed, falling back:', error.message);
+      const { data: rows, error: selErr } = await (supabase as any)
+        .from('content_vault').select('*').in('id', missing);
+      if (selErr) throw selErr;
+      apply(rows || []);
+      const found = new Set((rows || []).map((r: any) => r.id));
+      const gone = missing.filter((id) => !found.has(id));
+      if (gone.length) {
+        gone.forEach((id) => contentRequestedRef.current.delete(id));
+        setContentLoadErrors((prevErr) => {
+          const next = { ...prevErr };
+          gone.forEach((id) => { next[id] = 'unavailable'; });
+          return next;
+        });
+      }
+    } catch (e: any) {
+      console.error('[Community] content_vault lookup failed:', e?.message || e);
+      // allow a retry on the next render/poll instead of getting stuck
+      missing.forEach((id) => contentRequestedRef.current.delete(id));
+    }
   }, []);
+
   const [commentsByPostId, setCommentsByPostId] = useState<Record<string, FeedComment[]>>({});
   const [commentDraft, setCommentDraft] = useState("");
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
