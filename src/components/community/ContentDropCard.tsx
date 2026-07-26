@@ -197,7 +197,12 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
               allowFullScreen
             />
           ) : isPlaying && isDailyRecording && dailyRecordingUrl ? (
-            <video src={dailyRecordingUrl} controls autoPlay className="c-drop-player" />
+            isVideo ? (
+              <video src={dailyRecordingUrl} controls autoPlay className="c-drop-player" />
+            ) : (
+              <audio src={dailyRecordingUrl} controls autoPlay className="c-drop-audio-player" />
+            )
+
           ) : isPlaying && playUrl ? (
             isVideo ? (
               <video src={playUrl} controls autoPlay className="c-drop-player" />
