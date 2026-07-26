@@ -1361,6 +1361,7 @@ const Community = () => {
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
   const [contentMap, setContentMap] = useState<Record<string, any>>({});
   const [contentLoadErrors, setContentLoadErrors] = useState<Record<string, string>>({});
+  const contentRequestedRef = useRef<Set<string>>(new Set());
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
 
   const fetchLibrary = useCallback(async () => {
