@@ -430,28 +430,53 @@ export default function AdminContentVault() {
       }
 
       if (publishToChat) {
-        if (isLockedDrop && contentIdForChat) {
-          const { error: msgError } = await (supabase as any).from('chat_messages').insert({
-            room_id: roomId,
-            user_id: user.id,
-            content: title.trim(),
-            message_type: 'content_drop',
-            content_id: contentIdForChat,
-          });
-          if (msgError) throw msgError;
-        } else {
-          // Already purchasable/playable on its own native page (Music/Meditations/
-          // Healing) with that page's own existing flow — chat gets a plain
-          // announcement pointing there, not a second parallel unlock mechanism.
-          const { error: msgError } = await (supabase as any).from('chat_messages').insert({
-            room_id: roomId,
-            user_id: user.id,
-            content: `🎁 New ${config.label.toLowerCase()} added — "${title.trim()}". Find it on ${deepLink === '/music' ? 'the Music page' : deepLink === '/meditations' ? 'the Meditations page' : deepLink === '/healing' ? 'Sonic Treatments on the Healing page' : deepLink === '/mantras' ? 'the Mantras page' : 'Explore Akasha'}.`,
-            message_type: 'text',
-          });
-          if (msgError) throw msgError;
+        // Every category gets a real, playable drop card in the chosen room
+        // (Patreon/OnlyFans style) — not just a text pointer. Non-video
+        // categories still live on their own native page; the chat card is a
+        // mirror row in content_vault so the same lock/unlock/play flow works.
+        if (!isLockedDrop) {
+          const isPrivateBucket = bucket === 'content-vault';
+          const externalUrl =
+            !isPrivateBucket && bucket && mediaPath
+              ? supabase.storage.from(bucket).getPublicUrl(mediaPath).data.publicUrl
+              : null;
+          const { data: mirrored, error: mirrorErr } = await (supabase as any)
+            .from('content_vault')
+            .insert({
+              title: title.trim(),
+              description: description.trim() || null,
+              content_type: 'audio',
+              storage_path: isPrivateBucket ? mediaPath : '',
+              thumbnail_url: thumbnailUrl,
+              duration_seconds: durationSeconds ? parseInt(durationSeconds, 10) : null,
+              price_cents: Math.round(parseFloat(priceEuros || '0') * 100),
+              currency: 'eur',
+              tier_required: tierRequired || 'free',
+              is_published: true,
+              owner_id: user.id,
+              metadata: {
+                category,
+                language: uploadLanguage,
+                deep_link: deepLink,
+                ...(externalUrl ? { source: 'mirror', external_url: externalUrl } : {}),
+              },
+            })
+            .select()
+            .single();
+          if (mirrorErr) throw mirrorErr;
+          contentIdForChat = mirrored.id;
         }
+
+        const { error: msgError } = await (supabase as any).from('chat_messages').insert({
+          room_id: roomId,
+          user_id: user.id,
+          content: title.trim(),
+          message_type: 'content_drop',
+          content_id: contentIdForChat,
+        });
+        if (msgError) throw msgError;
       }
+
 
       toast({ title: publishToChat ? `Uploaded — live on ${deepLink}, posted to chat` : `Uploaded — live on ${deepLink}` });
       resetForm();
