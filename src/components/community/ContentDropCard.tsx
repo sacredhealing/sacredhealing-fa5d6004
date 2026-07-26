@@ -79,8 +79,10 @@ export default function ContentDropCard({ content }: { content: VaultItem }) {
   const priceLabel = content.price_cents > 0 ? `${(content.price_cents / 100).toFixed(2)} ${content.currency.toUpperCase()}` : null;
 
   const handlePlay = async () => {
-    if ((content as any).metadata?.source === 'youtube' || (content as any).metadata?.source === 'daily_recording') { setIsPlaying(true); return; }
+    const meta = (content as any).metadata || {};
+    if (meta.source === 'youtube' || meta.external_url) { setIsPlaying(true); return; }
     if (playUrl) { setIsPlaying(true); return; }
+
     try {
       const { data, error } = await supabase.functions.invoke('get-content-signed-url', {
         body: { contentId: content.id },
