@@ -14006,6 +14006,34 @@ export type Database = {
           title: string
         }[]
       }
+      get_content_vault_items: {
+        Args: { _ids: string[] }
+        Returns: {
+          content_type: string
+          created_at: string
+          currency: string
+          description: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          is_published: boolean
+          metadata: Json
+          mime_type: string | null
+          owner_id: string
+          price_cents: number
+          storage_path: string
+          thumbnail_url: string | null
+          tier_required: string
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "content_vault"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_featured_content: {
         Args: { p_category?: string; p_kind?: string }
         Returns: {
