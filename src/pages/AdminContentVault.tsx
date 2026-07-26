@@ -123,6 +123,7 @@ export default function AdminContentVault() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('meditation');
+  const [uploadLanguage, setUploadLanguage] = useState<'en' | 'sv'>('en');
   const [priceEuros, setPriceEuros] = useState('11');
   const [tierRequired, setTierRequired] = useState('');
   const [durationSeconds, setDurationSeconds] = useState('');
@@ -418,7 +419,7 @@ export default function AdminContentVault() {
             tier_required: tierRequired || 'free',
             is_published: true,
             owner_id: user.id,
-            metadata: useYoutubeEmbed ? { category, source: 'youtube', youtube_id: youtubeId } : { category },
+            metadata: useYoutubeEmbed ? { category, source: 'youtube', youtube_id: youtubeId, language: uploadLanguage } : { category, language: uploadLanguage },
           })
           .select()
           .single();
@@ -517,6 +518,37 @@ export default function AdminContentVault() {
               CATEGORY_CONFIG[category].destination === 'mantras' ? 'the Mantras page' :
               'the new Videos page (Content Vault purchase flow)'
             }
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(212,175,55,.6)', textTransform: 'uppercase' as const, letterSpacing: '.05em', marginBottom: 6 }}>
+              Language
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setUploadLanguage('en')}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: 'pointer',
+                  background: uploadLanguage === 'en' ? 'rgba(212,175,55,.18)' : 'rgba(255,255,255,.04)',
+                  border: uploadLanguage === 'en' ? '1px solid rgba(212,175,55,.5)' : '1px solid rgba(255,255,255,.1)',
+                  color: uploadLanguage === 'en' ? '#D4AF37' : 'rgba(255,255,255,.6)',
+                }}
+              >
+                🇬🇧 English
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadLanguage('sv')}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: 'pointer',
+                  background: uploadLanguage === 'sv' ? 'rgba(212,175,55,.18)' : 'rgba(255,255,255,.04)',
+                  border: uploadLanguage === 'sv' ? '1px solid rgba(212,175,55,.5)' : '1px solid rgba(255,255,255,.1)',
+                  color: uploadLanguage === 'sv' ? '#D4AF37' : 'rgba(255,255,255,.6)',
+                }}
+              >
+                🇸🇪 Svenska
+              </button>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
             <input
