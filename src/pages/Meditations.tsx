@@ -1105,7 +1105,7 @@ const Meditations: React.FC = () => {
                 hasMeditationAccess={hasMeditationLibraryAccess}
                 onPlay={initiatePlay}
                 onLock={handleLock}
-                defaultOpen={i === 0}
+                defaultOpen={false}
               />
             )
           ))}
