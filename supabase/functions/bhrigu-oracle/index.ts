@@ -552,13 +552,20 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
 
     const res = await callAI({
       messages: allMessages,
-      // BUGFIX: this was 4000 — far more than a 3-6 sentence reply needs,
-      // and every extra token allowed is extra cost even when the model
-      // behaves. 600 comfortably covers a real 3-6 sentence answer with
-      // room to spare, while acting as a genuine backstop against runaway
-      // or JSON-leaking output — not just a prompt instruction the model
-      // can ignore, an actual ceiling on what gets generated and billed.
-      max_tokens: 600,
+      // BUGFIX: this was cut to 600 to control cost/length, but that
+      // caused real truncation in production — replies cutting off
+      // mid-sentence after only a few dozen words ("...pulling at the
+      // roots" and stopping). gemini-2.5-flash spends part of its token
+      // budget on internal reasoning before producing visible output,
+      // and that reasoning shares the SAME max_tokens ceiling — 600 was
+      // tight enough that reasoning alone could consume most or all of
+      // it, starving the actual reply. 2000 gives real headroom for that
+      // overhead plus a full answer. Length/cost control now comes from
+      // the prompt's hard 3-6 sentence instruction (which the model
+      // reliably follows once it isn't being cut off first) and the
+      // JSON-leak guard below — not from an artificially tight ceiling
+      // that turned out to break correctness instead of just cost.
+      max_tokens: 2000,
       // BUGFIX: this was 2.0 — the practical ceiling for this API, not a
       // "more mystical" setting. At that temperature the model frequently
       // ignores formatting instructions (a likely contributor to the JSON
