@@ -46,6 +46,20 @@ function highlightHolyTerms(text) {
   );
 }
 
+// Admin-written teaching text sometimes uses **bold** markdown for
+// emphasis, which was rendering as literal asterisks instead of actual
+// bold. This strips that syntax and renders real <strong> spans, then
+// applies holy-term highlighting within each resulting segment.
+function renderTeachingText(text) {
+  if (!text) return text;
+  const boldParts = text.split(/\*\*(.+?)\*\*/g);
+  return boldParts.map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i} style={{ fontWeight: 800 }}>{highlightHolyTerms(part)}</strong>
+      : <span key={i}>{highlightHolyTerms(part)}</span>
+  );
+}
+
 function languageLabel(l) {
   return LANGUAGES.find((x) => x.value === l)?.label || l;
 }
@@ -442,14 +456,14 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
                             <>
                               <div
                                 onClick={() => setExpandedEntry(expanded ? null : entry.id)}
-                                style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,.85)", cursor: "pointer", maxHeight: expanded ? "none" : 60, overflow: "hidden" }}
+                                style={{ marginTop: 10, fontSize: 15.5, lineHeight: 1.8, color: "rgba(255,255,255,.85)", cursor: "pointer", maxHeight: expanded ? "none" : 60, overflow: "hidden", whiteSpace: "pre-wrap" as const }}
                               >
                                 {isTranslating ? (
                                   <span style={{ color: "rgba(255,255,255,.4)" }}>Translating…</span>
                                 ) : translationError ? (
                                   <span style={{ color: "rgba(255,150,150,.8)" }}>Translation failed — try again.</span>
                                 ) : (
-                                  highlightHolyTerms(displayText || entry.content)
+                                  renderTeachingText(displayText || entry.content)
                                 )}
                               </div>
                               {!expanded && (

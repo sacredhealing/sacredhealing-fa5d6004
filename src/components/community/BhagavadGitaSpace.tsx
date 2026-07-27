@@ -55,6 +55,22 @@ function highlightHolyTerms(text: string): React.ReactNode {
   );
 }
 
+// Admin-written verse text sometimes uses **bold** markdown for emphasis,
+// which was rendering as literal asterisks instead of actual bold. Strips
+// the syntax and renders real <strong> spans, then applies holy-term
+// highlighting within each resulting segment — same fix as Siddha Lab.
+function renderTeachingText(text: string): React.ReactNode {
+  if (!text) return text;
+  const boldParts = text.split(/\*\*(.+?)\*\*/g);
+  return boldParts.map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} style={{ fontWeight: 800 }}>{highlightHolyTerms(part)}</strong>
+    ) : (
+      <span key={i}>{highlightHolyTerms(part)}</span>
+    )
+  );
+}
+
 function tierLabel(t) {
   return TIERS.find((x) => x.value === t)?.label || t;
 }
@@ -786,7 +802,7 @@ export default function BhagavadGitaSpace({ isAdmin, onBack }: Props) {
                               : `Auto-translated from ${languageLabel(v.sourceLanguage)}`}
                         </div>
                       )}
-                      <div style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{highlightHolyTerms(v.translation)}</div>
+                      <div style={{ fontSize: 15.5, lineHeight: 1.8, color: "rgba(255,255,255,0.9)", whiteSpace: "pre-wrap" }}>{renderTeachingText(v.translation)}</div>
                       {v.transmitted_by && (
                         <div
                           style={{
