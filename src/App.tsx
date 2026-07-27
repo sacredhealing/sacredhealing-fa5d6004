@@ -47,6 +47,8 @@ const CourseDetail = React.lazy(() => import("./pages/CourseDetail"));
 const Music = React.lazy(() => import("./pages/Music"));
 const Playlists = React.lazy(() => import("./pages/Playlists"));
 const PlaylistDetail = React.lazy(() => import("./pages/PlaylistDetail"));
+const MeditationPlaylists = React.lazy(() => import("./pages/MeditationPlaylists"));
+const MeditationPlaylistDetail = React.lazy(() => import("./pages/MeditationPlaylistDetail"));
 const TrackDetail = React.lazy(() => import("./pages/TrackDetail"));
 const ArtistProfile = React.lazy(() => import("./pages/ArtistProfile"));
 const Mastering = React.lazy(() => import("./pages/Mastering"));
@@ -393,6 +395,8 @@ function AppRoutes() {
                   <Route path="/music" element={<Music />} />
                   <Route path="/playlists" element={<Playlists />} />
                   <Route path="/playlists/:id" element={<PlaylistDetail />} />
+                  <Route path="/meditation-playlists" element={<MeditationPlaylists />} />
+                  <Route path="/meditation-playlists/:id" element={<MeditationPlaylistDetail />} />
                   <Route path="/music/track/:trackId" element={<TrackDetail />} />
                   <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
                   <Route path="/mastering" element={<Mastering />} />
