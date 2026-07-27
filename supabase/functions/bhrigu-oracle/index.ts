@@ -598,7 +598,7 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
     // high enough, actually fixes this rather than just making it rarer.
     if (finishReason === "length") {
       console.warn("[bhrigu-oracle] Reply truncated at max_tokens, retrying with more room");
-      const retryRes = await callAI({ messages: allMessages, max_tokens: 4000, temperature: 0.85 });
+      const retryRes = await callAI({ messages: allMessages, max_tokens: 6000, temperature: 0.85 });
       if (retryRes.ok) {
         const retryData = await retryRes.json();
         const retryChoice = retryData.choices?.[0];
