@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Play, Pause, X, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +21,7 @@ interface PlaylistRow {
 const MeditationPlaylistDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { playUniversalAudio, currentAudio, isPlaying } = useMusicPlayer();
+  const { playUniversalAudio, currentAudio, isPlaying, progress } = useMusicPlayer();
 
   const [name, setName] = useState('');
   const [rows, setRows] = useState<PlaylistRow[]>([]);
@@ -82,6 +82,33 @@ const MeditationPlaylistDetail: React.FC = () => {
     };
     playUniversalAudio(audio);
   };
+
+  // ── Auto-advance: this playlist has no queue support in the shared player,
+  // so we detect natural track completion locally and play the next item ourselves.
+  const playingIndexRef = useRef<number | null>(null);
+  const hasAdvancedRef = useRef(false);
+
+  useEffect(() => {
+    const idx = rows.findIndex((r) => r.med.id === currentAudio?.id);
+    if (idx !== -1) {
+      playingIndexRef.current = idx;
+      hasAdvancedRef.current = false;
+    }
+  }, [currentAudio?.id, rows]);
+
+  useEffect(() => {
+    if (isPlaying) return; // only act once playback has actually stopped
+    if (hasAdvancedRef.current) return;
+    const idx = playingIndexRef.current;
+    if (idx === null) return;
+    if (rows[idx]?.med.id !== currentAudio?.id) return; // stale reference, ignore
+    const completedNaturally = progress >= 98; // distinguishes "finished" from "user paused"
+    if (!completedNaturally) return;
+    const nextIdx = idx + 1;
+    if (nextIdx >= rows.length) return; // reached end of playlist
+    hasAdvancedRef.current = true;
+    playOne(rows[nextIdx].med);
+  }, [isPlaying, progress, currentAudio?.id, rows]);
 
   const removeItem = async (meditationId: string) => {
     if (!id) return;
@@ -144,7 +171,7 @@ const MeditationPlaylistDetail: React.FC = () => {
             </div>
             <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>{name}</div>
             <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.4)' }}>
-              {rows.length} {rows.length === 1 ? 'meditation' : 'meditations'}
+              {rows.length} {rows.length === 1 ? 'meditation' : 'meditations'}{rows.length > 1 ? ' · plays through automatically' : ''}
             </div>
           </div>
 
