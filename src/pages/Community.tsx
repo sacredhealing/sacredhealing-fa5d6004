@@ -35,6 +35,7 @@ import CallRecorderBar from "@/components/community/CallRecorderBar";
 import BhagavadGitaSpace from "@/components/community/BhagavadGitaSpace";
 import SiddhaLabSpace from "@/components/community/SiddhaLabSpace";
 import SiddhaMastersSpace from "@/components/community/SiddhaMastersSpace";
+import KriyaYogaSpace from "@/components/community/KriyaYogaSpace";
 import ContentDropCard from "@/components/community/ContentDropCard";
 import { useUnreadMessages } from "@/contexts/UnreadMessagesContext";
 
@@ -77,6 +78,13 @@ const CHANNELS = [
     name: "Siddha Masters & Saints",
     icon: "☀",
     description: "Wisdom from the lineage — open to all, content unlocks by tier",
+    access: "public",
+  },
+  {
+    id: "kriya-yoga",
+    name: "Kriya Yoga",
+    icon: "🕉",
+    description: "The sacred technique — open to all, content unlocks by tier",
     access: "public",
   },
   {
@@ -999,6 +1007,9 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const attachInputRef = useRef<HTMLInputElement | null>(null);
   const dmLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dmReactions, setDmReactions] = useState<Record<string, { emoji: string; user_id: string }[]>>({});
+  const [dmReactionMenuFor, setDmReactionMenuFor] = useState<string | null>(null);
+  const DM_REACTION_EMOJIS = ["❤️", "🙏", "😊", "🔥", "🙌"];
 
   const handleCopyMessage = async (text: string) => {
     if (!text || typeof text !== "string") return;
@@ -1010,16 +1021,61 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
     }
   };
 
-  const dmBubbleLongPressHandlers = (text: string) => ({
+  const toggleDmReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const existing = (dmReactions[messageId] || []).find((r) => r.user_id === user.id && r.emoji === emoji);
+    setDmReactionMenuFor(null);
+    if (existing) {
+      setDmReactions((prev) => ({
+        ...prev,
+        [messageId]: (prev[messageId] || []).filter((r) => !(r.user_id === user.id && r.emoji === emoji)),
+      }));
+      const { error } = await (supabase as any).from("message_reactions").delete().eq("message_id", messageId).eq("user_id", user.id).eq("emoji", emoji);
+      if (error) console.error("[DMChatView] remove reaction failed:", error);
+    } else {
+      setDmReactions((prev) => ({
+        ...prev,
+        [messageId]: [...(prev[messageId] || []), { emoji, user_id: user.id }],
+      }));
+      const { error } = await (supabase as any).from("message_reactions").insert({ message_id: messageId, user_id: user.id, emoji });
+      if (error) {
+        console.error("[DMChatView] add reaction failed:", error);
+        setDmReactions((prev) => ({
+          ...prev,
+          [messageId]: (prev[messageId] || []).filter((r) => !(r.user_id === user.id && r.emoji === emoji)),
+        }));
+      }
+    }
+  };
+
+  useEffect(() => {
+    const ids = messages.map((m: any) => m.id).filter(Boolean);
+    if (ids.length === 0) return;
+    (supabase as any)
+      .from("message_reactions")
+      .select("message_id, emoji, user_id")
+      .in("message_id", ids)
+      .then(({ data, error }: any) => {
+        if (error) { console.error("[DMChatView] reactions fetch failed:", error); return; }
+        const byMsg: Record<string, { emoji: string; user_id: string }[]> = {};
+        (data || []).forEach((r: any) => {
+          if (!byMsg[r.message_id]) byMsg[r.message_id] = [];
+          byMsg[r.message_id].push({ emoji: r.emoji, user_id: r.user_id });
+        });
+        setDmReactions((prev) => ({ ...prev, ...byMsg }));
+      });
+  }, [messages]);
+
+  const dmBubbleLongPressHandlers = (messageId: string) => ({
     onTouchStart: () => {
       dmLongPressTimerRef.current = setTimeout(() => {
         if ("vibrate" in navigator) navigator.vibrate?.(15);
-        handleCopyMessage(text);
+        setDmReactionMenuFor(messageId);
       }, 450);
     },
     onTouchEnd: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
     onTouchMove: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
-    onMouseDown: () => { dmLongPressTimerRef.current = setTimeout(() => handleCopyMessage(text), 450); },
+    onMouseDown: () => { dmLongPressTimerRef.current = setTimeout(() => setDmReactionMenuFor(messageId), 450); },
     onMouseUp: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
     onMouseLeave: () => { if (dmLongPressTimerRef.current) clearTimeout(dmLongPressTimerRef.current); },
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
@@ -1215,7 +1271,38 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
             return (
               <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
                 <div className="c-msg-body">
-                  <div className={`c-bubble ${isMine ? "mine" : ""}`} {...dmBubbleLongPressHandlers(msg.content)}>
+                  <div style={{ position: "relative" }}>
+                    {dmReactionMenuFor === msg.id && (
+                      <>
+                        <div onClick={() => setDmReactionMenuFor(null)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+                        <div
+                          style={{
+                            position: "absolute", bottom: "100%", left: isMine ? "auto" : 0, right: isMine ? 0 : "auto",
+                            marginBottom: 6, zIndex: 41, display: "flex", alignItems: "center", gap: 4,
+                            background: "rgba(10,10,10,.96)", border: "1px solid rgba(212,175,55,.3)", borderRadius: 999,
+                            padding: "6px 8px", boxShadow: "0 4px 20px rgba(0,0,0,.5)",
+                          }}
+                        >
+                          {DM_REACTION_EMOJIS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() => toggleDmReaction(msg.id, emoji)}
+                              style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", padding: 2, lineHeight: 1 }}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                          <div style={{ width: 1, height: 18, background: "rgba(255,255,255,.15)", margin: "0 2px" }} />
+                          <button
+                            onClick={() => { handleCopyMessage(msg.content); setDmReactionMenuFor(null); }}
+                            style={{ background: "none", border: "none", color: "#D4AF37", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "0 4px" }}
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    <div className={`c-bubble ${isMine ? "mine" : ""}`} {...dmBubbleLongPressHandlers(msg.id)}>
                     {typeof msg.content === "string" && msg.content.startsWith("VIDEO_CALL:") ? (
                       <button
                         type="button"
@@ -1234,7 +1321,34 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                     ) : (
                       msg.content
                     )}
+                    </div>
                   </div>
+                  {dmReactions[msg.id] && dmReactions[msg.id].length > 0 && (
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" as const, marginTop: 3, justifyContent: isMine ? "flex-end" : "flex-start" }}>
+                      {Object.entries(
+                        dmReactions[msg.id].reduce((acc: Record<string, number>, r) => {
+                          acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                          return acc;
+                        }, {})
+                      ).map(([emoji, count]) => {
+                        const mine = dmReactions[msg.id].some((r) => r.emoji === emoji && r.user_id === user?.id);
+                        return (
+                          <button
+                            key={emoji}
+                            onClick={() => toggleDmReaction(msg.id, emoji)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 3, fontSize: 11, padding: "2px 7px", borderRadius: 999, cursor: "pointer",
+                              background: mine ? "rgba(212,175,55,.18)" : "rgba(255,255,255,.05)",
+                              border: mine ? "1px solid rgba(212,175,55,.5)" : "1px solid rgba(255,255,255,.1)",
+                            }}
+                          >
+                            <span>{emoji}</span>
+                            <span style={{ color: mine ? "#D4AF37" : "rgba(255,255,255,.5)", fontWeight: 700 }}>{count}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                   <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
                     {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                     {isMine && <span className="c-msg-sent mine">{isPending ? "○" : "✓✓"}</span>}
@@ -3063,6 +3177,12 @@ const Community = () => {
                 />
               ) : activeChannel === "siddha-masters" ? (
                 <SiddhaMastersSpace
+                  isAdmin={isAdmin}
+                  userTier={members.find((m) => m.id === user?.id)?.subscription_tier}
+                  onBack={() => { setActiveChannel(null); setMobileTab("members"); }}
+                />
+              ) : activeChannel === "kriya-yoga" ? (
+                <KriyaYogaSpace
                   isAdmin={isAdmin}
                   userTier={members.find((m) => m.id === user?.id)?.subscription_tier}
                   onBack={() => { setActiveChannel(null); setMobileTab("members"); }}

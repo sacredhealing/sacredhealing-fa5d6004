@@ -27,6 +27,8 @@ const FEATURE_TOKEN_LIMITS: Record<string, number> = {
   vedic_translation:     500,   // translation output, not prose
   gita_translation:     4000,   // full multi-paragraph teaching passages, not short verses
   siddha_lab_translation: 4000, // same kind of long teaching content — was missing entirely, silently falling back to the 2048 default and truncating longer transmissions mid-sentence
+  siddha_masters_translation: 4000, // same bug as siddha_lab_translation — the sed-rename that created this space renamed the feature key used in the API call but never added a matching entry here
+  kriya_yoga_translation: 4000, // added proactively when building the Kriya Yoga space, so it doesn't repeat the same missing-key bug from day one
   // Medium outputs
   soul_vault:           2200,   // soul vault reading: 3 rich paragraphs + kosha map
   transformation_doc:   1500,   // transformation narrative
