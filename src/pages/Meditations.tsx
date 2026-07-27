@@ -539,8 +539,7 @@ const JyotishMeditationCard: React.FC = () => {
   return (
     <div className="jyotish-line">
       <span className="dot" />
-      <p style={{ fontSize: 12, color: 'rgba(255,255,255,.5)', lineHeight: 1.55, margin: 0 }}>
-        <span className="label">{t('meditations.jyotishGuidanceLabel')}</span>{' '}
+      <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)', lineHeight: 1.5, margin: 0 }}>
         {t('meditations.jyotishGuidanceBody', {
           mahadasha: jyotish.mahadasha,
           meditationType: jyotish.meditationType,
@@ -955,19 +954,13 @@ const Meditations: React.FC = () => {
           <div className="sqi-orb" style={{ width: 200, height: 200, top: -60, right: -60, '--dur': '12s', '--dl': '0s' } as React.CSSProperties & { '--dur': string; '--dl': string }} />
           <div className="sqi-orb" style={{ width: 100, height: 100, top: '60%', left: -30, '--dur': '8s', '--dl': '-3s' } as React.CSSProperties & { '--dur': string; '--dl': string }} />
 
-          {/* ✅ FIX 1: Cinzel shimmer title */}
-          <div className="sqi-micro" style={{ marginBottom: 8 }}>
-            {t('meditations.heroMicro')}
-          </div>
+          {/* Title */}
           <h1 className="sqi-shimmer-title">
             {t('meditations.hallOfStillness')}
           </h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', marginTop: 8, marginBottom: 20, lineHeight: 1.6 }}>
-            {t('meditations.heroSubtitle')}
-          </p>
 
-          {/* ✅ FIX 2: Language toggle — proper glass pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 0 }}>
+          {/* Language toggle — proper glass pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14, marginBottom: 0 }}>
             <Globe size={14} style={{ color: 'rgba(255,255,255,.35)' }} />
             <span className="sqi-micro" style={{ marginBottom: 0 }}>{t('meditations.audioLanguageLabel').toUpperCase()}</span>
             <LanguageToggle language={language} setLanguage={setLanguage} />
