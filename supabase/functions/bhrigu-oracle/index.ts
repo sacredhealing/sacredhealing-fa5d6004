@@ -566,7 +566,7 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
       // control now comes from the prompt's hard 3-6 sentence rule
       // (which the model can actually follow once it isn't cut off
       // before finishing) and the JSON-leak guard below.
-      max_tokens: 3000,
+      max_tokens: 4000,
       // BUGFIX: this was 2.0 — the practical ceiling for this API, not a
       // "more mystical" setting. At that temperature the model frequently
       // ignores formatting instructions (a likely contributor to the JSON
