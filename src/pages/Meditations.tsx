@@ -146,27 +146,32 @@ const SQI_STYLES = `
   }
   .glass-card:hover { border-color: rgba(212,175,55,0.15); }
 
-  /* ── Category card (compact, golden-glowing — matches Music page's breathing aura) ── */
-  @keyframes categoryGlow {
-    0%,100% {
-      border-color: rgba(212,175,55,.3);
-      box-shadow: 0 0 18px rgba(212,175,55,.15), inset 0 0 24px rgba(212,175,55,.04);
-    }
-    50% {
-      border-color: rgba(212,175,55,.6);
-      box-shadow: 0 0 32px rgba(212,175,55,.32), 0 0 56px rgba(212,175,55,.1), inset 0 0 32px rgba(212,175,55,.08);
-    }
+  /* ── Category card (compact, golden-glowing — perf-friendly: only opacity animates) ── */
+  @keyframes categoryGlowPulse {
+    0%,100% { opacity: .45; }
+    50%      { opacity: 1; }
   }
   .category-card {
+    position: relative;
     background: linear-gradient(135deg, rgba(212,175,55,.08), rgba(15,8,0,.4));
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(212,175,55,.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212,175,55,.45);
     border-radius: 16px;
-    animation: categoryGlow 3.4s ease-in-out infinite;
-    transition: box-shadow 0.3s ease;
+    isolation: isolate;
   }
-  .category-card:hover { box-shadow: 0 0 40px rgba(212,175,55,.4), 0 0 70px rgba(212,175,55,.15); }
+  .category-card::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    box-shadow: 0 0 28px rgba(212,175,55,.3), 0 0 50px rgba(212,175,55,.1), inset 0 0 26px rgba(212,175,55,.06);
+    pointer-events: none;
+    animation: categoryGlowPulse 3.4s ease-in-out infinite;
+    will-change: opacity;
+    z-index: -1;
+  }
+  .category-card:hover::after { opacity: 1; }
 
   /* ── Gold glow text ── */
   .gold-glow { color: var(--siddha-gold); text-shadow: 0 0 15px rgba(212,175,55,0.3); }
