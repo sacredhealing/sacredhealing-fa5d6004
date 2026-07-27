@@ -495,7 +495,9 @@ const CSS = `
   color: rgba(212,175,55,.65);
   flex-shrink: 0;
   align-self: flex-end;
+  overflow: hidden;
 }
+.c-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .c-avatar.mine { background:linear-gradient(145deg, rgba(212,175,55,.3), rgba(212,175,55,.12)); color:#fff; }
 .c-avatar.hidden { opacity: 0; pointer-events: none; }
 
@@ -3206,7 +3208,11 @@ const Community = () => {
                         return (
                           <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
                             <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive || isMine ? "hidden" : ""}`}>
-                              {getInitials(msg.user_name || (isMine ? "ME" : undefined))}
+                              {profilesMap[msg.user_id]?.avatar_url ? (
+                                <img src={profilesMap[msg.user_id].avatar_url} alt="" />
+                              ) : (
+                                getInitials(msg.user_name || (isMine ? "ME" : undefined))
+                              )}
                             </div>
                             <div className="c-msg-body">
                               {!consecutive && !isMine && (
@@ -3226,7 +3232,11 @@ const Community = () => {
                       return (
                         <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
                           <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive || isMine ? "hidden" : ""}`}>
-                            {getInitials(msg.user_name || (isMine ? "ME" : undefined))}
+                            {profilesMap[msg.user_id]?.avatar_url ? (
+                              <img src={profilesMap[msg.user_id].avatar_url} alt="" />
+                            ) : (
+                              getInitials(msg.user_name || (isMine ? "ME" : undefined))
+                            )}
                           </div>
                           <div className="c-msg-body">
                             {!consecutive && !isMine && (
