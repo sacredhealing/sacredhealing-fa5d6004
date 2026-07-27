@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { getTierRank } from "@/lib/tierAccess";
 import CallRecorderBar from "@/components/community/CallRecorderBar";
 import BhagavadGitaSpace from "@/components/community/BhagavadGitaSpace";
+import SiddhaLabSpace from "@/components/community/SiddhaLabSpace";
 import ContentDropCard from "@/components/community/ContentDropCard";
 import { useUnreadMessages } from "@/contexts/UnreadMessagesContext";
 
@@ -80,9 +81,9 @@ const CHANNELS = [
   },
   {
     id: "bhakti-algorithm-lab",
-    name: "Bhakti Algorithm Lab",
+    name: "Siddha Lab",
     icon: "⚡",
-    description: "Siddha-Quantum and up",
+    description: "Deep transmissions — Siddha-Quantum and up",
     access: "tiered",
     minTierRank: 2, // Siddha-Quantum and Akasha-Infinity
   },
@@ -2999,6 +3000,12 @@ const Community = () => {
               ) : activeChannel === "bhagavad-gita" ? (
                 <BhagavadGitaSpace
                   isAdmin={isAdmin}
+                  onBack={() => { setActiveChannel(null); setMobileTab("members"); }}
+                />
+              ) : activeChannel === "bhakti-algorithm-lab" ? (
+                <SiddhaLabSpace
+                  isAdmin={isAdmin}
+                  userTier={members.find((m) => m.id === user?.id)?.subscription_tier}
                   onBack={() => { setActiveChannel(null); setMobileTab("members"); }}
                 />
               ) : (
