@@ -146,6 +146,18 @@ const SQI_STYLES = `
   }
   .glass-card:hover { border-color: rgba(212,175,55,0.15); }
 
+  /* ── Category card (compact, golden-glowing — matches playlist tile look) ── */
+  .category-card {
+    background: linear-gradient(135deg, rgba(212,175,55,.07), rgba(15,8,0,.4));
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(212,175,55,.22);
+    border-radius: 16px;
+    box-shadow: 0 0 18px rgba(212,175,55,.06);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .category-card:hover { border-color: rgba(212,175,55,0.4); box-shadow: 0 0 24px rgba(212,175,55,.12); }
+
   /* ── Gold glow text ── */
   .gold-glow { color: var(--siddha-gold); text-shadow: 0 0 15px rgba(212,175,55,0.3); }
 
@@ -215,9 +227,9 @@ const SQI_STYLES = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 24px;
+    padding: 12px 16px;
     cursor: pointer;
-    border-radius: var(--radius-xl);
+    border-radius: 16px;
     transition: background .2s;
   }
   .section-header:hover { background: rgba(255,255,255,.02); }
@@ -661,7 +673,7 @@ const MeditationSectionSQI: React.FC<{
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="glass-card" style={{ marginBottom: 12, overflow: 'visible' }}>
+    <div className="category-card" style={{ marginBottom: 10, overflow: 'visible' }}>
       <div className="section-header" onClick={() => setOpen(o => !o)}>
         <div>
           {/* Gold micro-label above section name */}
