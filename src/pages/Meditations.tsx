@@ -679,14 +679,11 @@ const MeditationSectionSQI: React.FC<{
   onPlay: (med: Meditation, lang: ContentLanguage) => void;
   onLock: () => void; defaultOpen?: boolean;
 }> = ({ title, subtitle, meditations, lang, currentAudio, isPlaying, playerProgress, hasMeditationAccess, onPlay, onLock, defaultOpen = false }) => {
-  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="category-card" style={{ marginBottom: 10, overflow: 'visible' }}>
       <div className="section-header" onClick={() => setOpen(o => !o)}>
         <div>
-          {/* Gold micro-label above section name */}
-          <div className="sqi-micro" style={{ marginBottom: 4 }}>{t('meditations.sectionMicroLabel')}</div>
           <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.9)' }}>
             {title}
           </div>
@@ -1084,15 +1081,12 @@ const Meditations: React.FC = () => {
           </div>
         )}
 
-        {/* ✅ FIX 7: Section list header with gold label */}
-        <div style={{ padding: '0 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div className="sqi-micro" style={{ marginBottom: 4 }}>{t('meditations.sectionMicroLabel')}</div>
-            <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,.9)' }}>
-              {t('meditations.allMeditations')}
-            </div>
+        {/* Section list header with gold label */}
+        <div style={{ padding: '0 20px 12px' }}>
+          <div className="sqi-micro" style={{ marginBottom: 4 }}>{t('meditations.sectionMicroLabel')}</div>
+          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,.9)' }}>
+            {t('meditations.allMeditations')}
           </div>
-          <LanguageToggle language={language} setLanguage={setLanguage} compact />
         </div>
 
         {/* ✅ FIX 8: Sections with full glass card + scalar ring + progress bar */}
