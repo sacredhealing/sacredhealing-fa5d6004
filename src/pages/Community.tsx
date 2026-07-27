@@ -34,6 +34,7 @@ import { getTierRank } from "@/lib/tierAccess";
 import CallRecorderBar from "@/components/community/CallRecorderBar";
 import BhagavadGitaSpace from "@/components/community/BhagavadGitaSpace";
 import SiddhaLabSpace from "@/components/community/SiddhaLabSpace";
+import SiddhaMastersSpace from "@/components/community/SiddhaMastersSpace";
 import ContentDropCard from "@/components/community/ContentDropCard";
 import { useUnreadMessages } from "@/contexts/UnreadMessagesContext";
 
@@ -73,11 +74,10 @@ const CHANNELS = [
   },
   {
     id: "siddha-masters",
-    name: "Siddha Masters",
+    name: "Siddha Masters & Saints",
     icon: "☀",
-    description: "Akasha-Infinity members",
-    access: "tiered",
-    minTierRank: 3, // Akasha-Infinity only
+    description: "Wisdom from the lineage — open to all, content unlocks by tier",
+    access: "public",
   },
   {
     id: "bhakti-algorithm-lab",
@@ -3003,6 +3003,12 @@ const Community = () => {
                 />
               ) : activeChannel === "bhakti-algorithm-lab" ? (
                 <SiddhaLabSpace
+                  isAdmin={isAdmin}
+                  userTier={members.find((m) => m.id === user?.id)?.subscription_tier}
+                  onBack={() => { setActiveChannel(null); setMobileTab("members"); }}
+                />
+              ) : activeChannel === "siddha-masters" ? (
+                <SiddhaMastersSpace
                   isAdmin={isAdmin}
                   userTier={members.find((m) => m.id === user?.id)?.subscription_tier}
                   onBack={() => { setActiveChannel(null); setMobileTab("members"); }}
