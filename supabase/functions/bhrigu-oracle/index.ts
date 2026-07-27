@@ -566,7 +566,7 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
       // control now comes from the prompt's hard 3-6 sentence rule
       // (which the model can actually follow once it isn't cut off
       // before finishing) and the JSON-leak guard below.
-      max_tokens: 3000,
+      max_tokens: 4000,
       // BUGFIX: this was 2.0 — the practical ceiling for this API, not a
       // "more mystical" setting. At that temperature the model frequently
       // ignores formatting instructions (a likely contributor to the JSON
@@ -598,7 +598,7 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
     // high enough, actually fixes this rather than just making it rarer.
     if (finishReason === "length") {
       console.warn("[bhrigu-oracle] Reply truncated at max_tokens, retrying with more room");
-      const retryRes = await callAI({ messages: allMessages, max_tokens: 4000, temperature: 0.85 });
+      const retryRes = await callAI({ messages: allMessages, max_tokens: 6000, temperature: 0.85 });
       if (retryRes.ok) {
         const retryData = await retryRes.json();
         const retryChoice = retryData.choices?.[0];
