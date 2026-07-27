@@ -2144,6 +2144,30 @@ const Community = () => {
           .then(({ error }: any) => {
             if (error) console.error('[Community] chat_members auto-join failed:', error);
           });
+
+        // Real bug this was causing: the unread counter treats any room
+        // with no chat_room_reads row as "everything since 1970 is
+        // unread" — so simply opening a channel for the first time (which
+        // auto-joins you above) could silently dump that channel's ENTIRE
+        // history into your unread count, even for messages posted years
+        // before you ever looked at the app. Only insert if a row doesn't
+        // already exist — never overwrite someone's real read progress.
+        (supabase as any)
+          .from('chat_room_reads')
+          .select('id')
+          .eq('room_id', roomId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+          .then(({ data: existing }: any) => {
+            if (!existing) {
+              (supabase as any)
+                .from('chat_room_reads')
+                .insert({ room_id: roomId, user_id: user.id, last_read_at: new Date().toISOString() })
+                .then(({ error }: any) => {
+                  if (error) console.error('[Community] initial read-marker failed:', error);
+                });
+            }
+          });
       }
 
       // Fetch messages + live sessions in parallel
