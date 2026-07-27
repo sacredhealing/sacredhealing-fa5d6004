@@ -1340,13 +1340,40 @@ const Community = () => {
     }
   };
 
-  const bubbleLongPressHandlers = (text: string) => ({
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const existing = (messageReactions[messageId] || []).find((r) => r.user_id === user.id && r.emoji === emoji);
+    setReactionMenuFor(null);
+    if (existing) {
+      setMessageReactions((prev) => ({
+        ...prev,
+        [messageId]: (prev[messageId] || []).filter((r) => !(r.user_id === user.id && r.emoji === emoji)),
+      }));
+      const { error } = await (supabase as any).from("message_reactions").delete().eq("message_id", messageId).eq("user_id", user.id).eq("emoji", emoji);
+      if (error) console.error("[Community] remove reaction failed:", error);
+    } else {
+      setMessageReactions((prev) => ({
+        ...prev,
+        [messageId]: [...(prev[messageId] || []), { emoji, user_id: user.id }],
+      }));
+      const { error } = await (supabase as any).from("message_reactions").insert({ message_id: messageId, user_id: user.id, emoji });
+      if (error) {
+        console.error("[Community] add reaction failed:", error);
+        setMessageReactions((prev) => ({
+          ...prev,
+          [messageId]: (prev[messageId] || []).filter((r) => !(r.user_id === user.id && r.emoji === emoji)),
+        }));
+      }
+    }
+  };
+
+  const bubbleLongPressHandlers = (messageId: string) => ({
     onTouchStart: () => {
       longPressFiredRef.current = false;
       longPressTimerRef.current = setTimeout(() => {
         longPressFiredRef.current = true;
         if ("vibrate" in navigator) navigator.vibrate?.(15);
-        handleCopyMessage(text);
+        setReactionMenuFor(messageId);
       }, 450);
     },
     onTouchEnd: () => {
@@ -1359,7 +1386,7 @@ const Community = () => {
       longPressFiredRef.current = false;
       longPressTimerRef.current = setTimeout(() => {
         longPressFiredRef.current = true;
-        handleCopyMessage(text);
+        setReactionMenuFor(messageId);
       }, 450);
     },
     onMouseUp: () => {
@@ -1406,6 +1433,9 @@ const Community = () => {
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
   const [contentMap, setContentMap] = useState<Record<string, any>>({});
   const [contentLoadErrors, setContentLoadErrors] = useState<Record<string, string>>({});
+  const [messageReactions, setMessageReactions] = useState<Record<string, { emoji: string; user_id: string }[]>>({});
+  const [reactionMenuFor, setReactionMenuFor] = useState<string | null>(null);
+  const REACTION_EMOJIS = ["❤️", "🙏", "😊", "🔥", "🙌"];
   const contentRequestedRef = useRef<Set<string>>(new Set());
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
 
@@ -1656,6 +1686,22 @@ const Community = () => {
         setMessages(enriched);
         const dropIds = enriched.filter((m: any) => m.message_type === 'content_drop' && m.content_id).map((m: any) => m.content_id);
         if (dropIds.length > 0) ensureContentLoaded(dropIds);
+        const msgIds = enriched.map((m: any) => m.id);
+        if (msgIds.length > 0) {
+          (supabase as any)
+            .from('message_reactions')
+            .select('message_id, emoji, user_id')
+            .in('message_id', msgIds)
+            .then(({ data, error }: any) => {
+              if (error) { console.error('[Community] reactions fetch failed:', error); return; }
+              const byMsg: Record<string, { emoji: string; user_id: string }[]> = {};
+              (data || []).forEach((r: any) => {
+                if (!byMsg[r.message_id]) byMsg[r.message_id] = [];
+                byMsg[r.message_id].push({ emoji: r.emoji, user_id: r.user_id });
+              });
+              setMessageReactions((prev) => ({ ...prev, ...byMsg }));
+            });
+        }
       } finally {
         if (fetchInProgressRef.current === channelId) fetchInProgressRef.current = null;
         setLoading(false);
@@ -3244,12 +3290,73 @@ const Community = () => {
                                 <span className="c-msg-author">{msg.user_name || "Member"}</span>
                               </div>
                             )}
-                            <div className={`c-bubble ${isMine ? "mine" : ""}`} {...bubbleLongPressHandlers(msg.content)}>
-                              {msg.content}
-                              {!isDmChannel(activeChannel) && (isMine || isAdmin) && (
-                                <button className="c-delete-btn" onClick={() => deleteMessage(msg.id)}>✕</button>
+                            <div style={{ position: "relative" }}>
+                              {reactionMenuFor === msg.id && (
+                                <>
+                                  <div
+                                    onClick={() => setReactionMenuFor(null)}
+                                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                                  />
+                                  <div
+                                    style={{
+                                      position: "absolute", bottom: "100%", left: isMine ? "auto" : 0, right: isMine ? 0 : "auto",
+                                      marginBottom: 6, zIndex: 41, display: "flex", alignItems: "center", gap: 4,
+                                      background: "rgba(10,10,10,.96)", border: "1px solid rgba(212,175,55,.3)", borderRadius: 999,
+                                      padding: "6px 8px", boxShadow: "0 4px 20px rgba(0,0,0,.5)",
+                                    }}
+                                  >
+                                    {REACTION_EMOJIS.map((emoji) => (
+                                      <button
+                                        key={emoji}
+                                        onClick={() => toggleReaction(msg.id, emoji)}
+                                        style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", padding: 2, lineHeight: 1 }}
+                                      >
+                                        {emoji}
+                                      </button>
+                                    ))}
+                                    <div style={{ width: 1, height: 18, background: "rgba(255,255,255,.15)", margin: "0 2px" }} />
+                                    <button
+                                      onClick={() => { handleCopyMessage(msg.content); setReactionMenuFor(null); }}
+                                      style={{ background: "none", border: "none", color: "#D4AF37", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "0 4px" }}
+                                    >
+                                      Copy
+                                    </button>
+                                  </div>
+                                </>
                               )}
+                              <div className={`c-bubble ${isMine ? "mine" : ""}`} {...bubbleLongPressHandlers(msg.id)}>
+                                {msg.content}
+                                {!isDmChannel(activeChannel) && (isMine || isAdmin) && (
+                                  <button className="c-delete-btn" onClick={() => deleteMessage(msg.id)}>✕</button>
+                                )}
+                              </div>
                             </div>
+                            {messageReactions[msg.id] && messageReactions[msg.id].length > 0 && (
+                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" as const, marginTop: 3, justifyContent: isMine ? "flex-end" : "flex-start" }}>
+                                {Object.entries(
+                                  messageReactions[msg.id].reduce((acc: Record<string, number>, r) => {
+                                    acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                                    return acc;
+                                  }, {})
+                                ).map(([emoji, count]) => {
+                                  const mine = messageReactions[msg.id].some((r) => r.emoji === emoji && r.user_id === user?.id);
+                                  return (
+                                    <button
+                                      key={emoji}
+                                      onClick={() => toggleReaction(msg.id, emoji)}
+                                      style={{
+                                        display: "flex", alignItems: "center", gap: 3, fontSize: 11, padding: "2px 7px", borderRadius: 999, cursor: "pointer",
+                                        background: mine ? "rgba(212,175,55,.18)" : "rgba(255,255,255,.05)",
+                                        border: mine ? "1px solid rgba(212,175,55,.5)" : "1px solid rgba(255,255,255,.1)",
+                                      }}
+                                    >
+                                      <span>{emoji}</span>
+                                      <span style={{ color: mine ? "#D4AF37" : "rgba(255,255,255,.5)", fontWeight: 700 }}>{count}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
                             <div className={`c-msg-time ${isMine ? "mine" : ""}`}>{formatTime(msg.created_at)}</div>
                             {isMine && !msg.pending && (
                               <div className={`c-msg-sent ${isMine ? "mine" : ""}`}>✓ Sent</div>
