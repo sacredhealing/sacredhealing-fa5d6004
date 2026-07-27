@@ -54,6 +54,61 @@ function tierLabel(t) {
   return TIERS.find((x) => x.value === t)?.label || t;
 }
 
+// Definitions for the exact terms already gold-highlighted throughout the
+// app (see HOLY_TERMS_REGEX above) — the words a reader is most likely to
+// hit in a transmission and not recognize. Grows alongside the highlight
+// list; add a new term to both places when new vocabulary starts showing
+// up in transmissions.
+const LEXICON = [
+  { term: "Agni", def: "Fire — both the literal element and the inner transformative flame that burns away impurity." },
+  { term: "Ahimsa", def: "Non-violence, in thought, word, and deed — the first ethical principle of yoga (the yamas)." },
+  { term: "Ajna", def: "The third-eye chakra, between the eyebrows — seat of intuition and inner sight." },
+  { term: "Anahata", def: "The heart chakra — seat of love, compassion, and connection." },
+  { term: "Anandamaya Kosha", def: "The 'bliss sheath' — the subtlest of the five koshas (energetic bodies), closest to pure being." },
+  { term: "Annamaya Kosha", def: "The 'food sheath' — the physical body, made of and sustained by matter." },
+  { term: "Atma", def: "The individual soul, or true Self — distinct from the ego and the body." },
+  { term: "Avidya", def: "Spiritual ignorance — the root misperception that we are separate from the Divine, said to be the source of all suffering." },
+  { term: "Bhagavan", def: "'The Divine Lord' or 'Blessed One' — a title of deep reverence for God or a fully realized master." },
+  { term: "Bhakti", def: "Devotion — the path of loving surrender and remembrance of the Divine." },
+  { term: "Brahman", def: "The ultimate, formless reality underlying and pervading all existence." },
+  { term: "Chitta Vritti", def: "The fluctuations, or waves, of the mind-stuff — the mental activity that meditation aims to still." },
+  { term: "Dharma", def: "One's righteous duty or true path; also the cosmic order that upholds existence." },
+  { term: "Ida", def: "The left, lunar subtle energy channel, running alongside the spine." },
+  { term: "Jnana", def: "Knowledge — the path of wisdom and discernment toward liberation." },
+  { term: "Karma", def: "The law of cause and effect through action — what is set in motion returns." },
+  { term: "Kriya Yoga", def: "A specific technique of pranayama-based meditation for accelerated spiritual evolution, brought West by Lahiri Mahasaya and Paramahansa Yogananda." },
+  { term: "Kundalini", def: "The dormant spiritual energy said to lie coiled at the base of the spine, awakened through advanced practice." },
+  { term: "Kutastha Chaitanya", def: "The point of consciousness at the ajna center — in Kriya Yoga tradition, the seat of the 'single eye' referenced in scripture." },
+  { term: "Manipura", def: "The solar plexus chakra — seat of willpower and personal power." },
+  { term: "Manomaya Kosha", def: "The 'mental sheath' — one of the five koshas, governing thought and emotion." },
+  { term: "Maya", def: "The cosmic illusion that veils ultimate reality, making the temporary appear permanent." },
+  { term: "Moksha", def: "Liberation — freedom from the cycle of birth and death." },
+  { term: "Muladhara", def: "The root chakra, at the base of the spine — seat of survival and grounding." },
+  { term: "Nadis", def: "Subtle energy channels through which prana flows — traditionally said to number 72,000." },
+  { term: "Om / Aum", def: "The primordial sound, said to be the vibration underlying all of creation." },
+  { term: "Pingala", def: "The right, solar subtle energy channel, running alongside the spine." },
+  { term: "Prakriti", def: "Primordial nature or matter — the active, creative principle, as distinct from pure consciousness." },
+  { term: "Prana", def: "Life-force, or vital energy — that which animates breath and body." },
+  { term: "Pranamaya Kosha", def: "The 'energy sheath' — governs the circulation of prana through the body." },
+  { term: "Pranayama", def: "Yogic breath-control practices used to regulate and expand prana." },
+  { term: "Purusha", def: "Pure consciousness, the witness — as distinct from Prakriti (matter/nature)." },
+  { term: "Rajas", def: "The quality of passion, activity, and restlessness — one of the three gunas." },
+  { term: "Sadhaka", def: "A spiritual practitioner or sincere seeker." },
+  { term: "Sadhana", def: "Spiritual practice or discipline, undertaken consistently over time." },
+  { term: "Sahasrara", def: "The crown chakra, at the top of the head — seat of union with the Divine." },
+  { term: "Samadhi", def: "A state of meditative absorption — union of the meditator with the object of meditation." },
+  { term: "Sattva", def: "The quality of purity, clarity, and balance — one of the three gunas." },
+  { term: "Siddhi / Siddhis", def: "Supernatural powers or perfections said to arise naturally from advanced spiritual practice (e.g. levitation)." },
+  { term: "Sushumna", def: "The central subtle energy channel, running along the spine, through which Kundalini is said to rise." },
+  { term: "Svadhishthana", def: "The sacral chakra — seat of creativity, pleasure, and desire." },
+  { term: "Tamas", def: "The quality of inertia, dullness, and darkness — one of the three gunas." },
+  { term: "Turiya", def: "The 'fourth state' of consciousness, beyond waking, dreaming, and deep sleep — pure awareness itself." },
+  { term: "Vairagya", def: "Dispassion, or non-attachment — freedom from being pulled by desire and aversion." },
+  { term: "Vibhuti", def: "Another word for siddhis (spiritual powers); also refers to sacred ash." },
+  { term: "Vijnanamaya Kosha", def: "The 'wisdom sheath' — governs intellect, discernment, and higher understanding." },
+  { term: "Vishuddha", def: "The throat chakra — seat of expression, communication, and truth." },
+].sort((a, b) => a.term.localeCompare(b.term));
+
 interface Props {
   isAdmin: boolean;
   onBack: () => void;
@@ -71,6 +126,8 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
   const [translatingKeys, setTranslatingKeys] = useState<Set<string>>(new Set());
   const [translationErrors, setTranslationErrors] = useState<Record<string, string>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [showLexicon, setShowLexicon] = useState(false);
+  const [lexiconSearch, setLexiconSearch] = useState("");
 
   const emptyForm = { category: "", title: "", content: "", tier_required: "free", transmitter: TRANSMITTER_QUICK_PICKS[0] };
   const [form, setForm] = useState({ ...emptyForm });
@@ -227,6 +284,41 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 100px" }}>
+        <button
+          onClick={() => setShowLexicon((v) => !v)}
+          style={{
+            width: "100%", padding: "12px", borderRadius: 14, marginBottom: 16,
+            background: showLexicon ? "rgba(255,255,255,.05)" : "rgba(34,211,238,.08)",
+            border: "1px solid rgba(34,211,238,.35)", color: "#22D3EE", fontWeight: 800, fontSize: 13, cursor: "pointer",
+          }}
+        >
+          {showLexicon ? "✕ Close Lexicon" : "📖 Lexicon — Sanskrit & Deep Terms"}
+        </button>
+
+        {showLexicon && (
+          <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(34,211,238,.2)", borderRadius: 16, padding: 16, marginBottom: 20 }}>
+            <input
+              placeholder="Search a word…"
+              value={lexiconSearch}
+              onChange={(e) => setLexiconSearch(e.target.value)}
+              style={{ ...inputStyle, marginBottom: 12 }}
+            />
+            <div style={{ maxHeight: 340, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+              {LEXICON.filter((entry) =>
+                !lexiconSearch.trim() || entry.term.toLowerCase().includes(lexiconSearch.trim().toLowerCase())
+              ).map((entry) => (
+                <div key={entry.term}>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: GOLD }}>{entry.term}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.5, marginTop: 2 }}>{entry.def}</div>
+                </div>
+              ))}
+              {LEXICON.filter((entry) => entry.term.toLowerCase().includes(lexiconSearch.trim().toLowerCase())).length === 0 && (
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)" }}>No match for "{lexiconSearch}".</div>
+              )}
+            </div>
+          </div>
+        )}
+
         {isAdmin && (
           <button
             onClick={() => setShowForm((v) => !v)}
