@@ -83,9 +83,8 @@ const CHANNELS = [
     id: "bhakti-algorithm-lab",
     name: "Siddha Lab",
     icon: "⚡",
-    description: "Deep transmissions — Siddha-Quantum and up",
-    access: "tiered",
-    minTierRank: 2, // Siddha-Quantum and Akasha-Infinity
+    description: "Deep transmissions — open to all, content unlocks by tier",
+    access: "public",
   },
   {
     id: "stargate",
