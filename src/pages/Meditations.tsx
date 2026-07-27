@@ -631,11 +631,6 @@ const MeditationRowSQI: React.FC<{
           {med.duration_minutes != null && med.duration_minutes > 0 && (
             <span>⏱ {med.duration_minutes} {t('meditations.duration')}</span>
           )}
-          {med.shc_reward != null && med.shc_reward > 0 && (
-            <span style={{ color: '#D4AF37' }}>
-              ✦ {t('meditations.shcRewardLine', { amount: med.shc_reward })}
-            </span>
-          )}
           {hasBilingual && <span className="badge-bilingual">{t('meditations.bilingualBadge')}</span>}
         </div>
         {/* Progress bar when playing */}
