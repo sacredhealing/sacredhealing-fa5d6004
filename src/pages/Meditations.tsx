@@ -185,17 +185,22 @@ const SQI_STYLES = `
     box-shadow: 0 0 14px rgba(212,175,55,.45);
   }
 
-  /* ── Jyotish banner (emerald glass) ── */
-  .jyotish-banner {
-    background: linear-gradient(135deg, rgba(16,185,129,.05), rgba(34,211,238,.04));
-    border: 1px solid rgba(16,185,129,.2) !important;
-    border-radius: var(--radius-xl);
-    padding: 18px 22px;
-    margin: 0 20px 20px;
+  /* ── Jyotish line (blended, no card shell) ── */
+  .jyotish-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 20px 16px;
   }
-  .jyotish-banner .micro-label {
-    font-size: 8px; font-weight: 800; letter-spacing: .4em;
-    text-transform: uppercase; color: rgba(16,185,129,.7);
+  .jyotish-line .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(16,185,129,.55);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .jyotish-line .label {
+    font-weight: 700;
+    color: rgba(16,185,129,.8);
   }
 
   /* ── Gold horizontal divider ── */
@@ -510,12 +515,10 @@ const JyotishMeditationCard: React.FC = () => {
   const jyotish = useJyotishProfile();
   if (jyotish.isLoading || !jyotish.mahadasha) return null;
   return (
-    <div className="jyotish-banner">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontSize: 16 }}>⚕</span>
-        <span className="micro-label">{t('meditations.jyotishGuidanceLabel')}</span>
-      </div>
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,1)', lineHeight: 1.6, margin: 0 }}>
+    <div className="jyotish-line">
+      <span className="dot" />
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,.5)', lineHeight: 1.55, margin: 0 }}>
+        <span className="label">{t('meditations.jyotishGuidanceLabel')}</span>{' '}
         {t('meditations.jyotishGuidanceBody', {
           mahadasha: jyotish.mahadasha,
           meditationType: jyotish.meditationType,
