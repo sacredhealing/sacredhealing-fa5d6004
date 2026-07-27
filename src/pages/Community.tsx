@@ -59,6 +59,13 @@ const CHANNELS = [
     minTierRank: 0, // every tier, including free — content within is gated per-verse
   },
   {
+    id: "kriya-yoga",
+    name: "Kriya Yoga",
+    icon: "👁",
+    description: "The sacred technique — open to all, content unlocks by tier",
+    access: "public",
+  },
+  {
     id: "sacred-mantras",
     name: "Sacred Mantras",
     icon: "ॐ",
@@ -78,13 +85,6 @@ const CHANNELS = [
     name: "Siddha Masters & Saints",
     icon: "☀",
     description: "Wisdom from the lineage — open to all, content unlocks by tier",
-    access: "public",
-  },
-  {
-    id: "kriya-yoga",
-    name: "Kriya Yoga",
-    icon: "🕉",
-    description: "The sacred technique — open to all, content unlocks by tier",
     access: "public",
   },
   {

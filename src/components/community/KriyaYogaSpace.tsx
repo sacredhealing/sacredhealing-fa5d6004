@@ -267,7 +267,7 @@ export default function KriyaYogaSpace({ isAdmin, onBack, userTier }: Props) {
     <div className="c-chat-view">
       <div className="c-chat-header">
         <button className="c-back-btn" onClick={onBack}>←</button>
-        <div className="c-chat-icon">☀</div>
+        <div className="c-chat-icon">👁</div>
         <div className="c-chat-title">
           <div className="c-chat-name">Kriya Yoga</div>
           <div className="c-chat-sub">The sacred technique — breath, energy, and the path to liberation</div>
