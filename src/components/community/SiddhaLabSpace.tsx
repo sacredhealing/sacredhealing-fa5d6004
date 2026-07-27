@@ -66,7 +66,7 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null);
-  const [readerLanguage, setReaderLanguage] = useState<Record<string, string>>({});
+  const [readerLanguage, setReaderLanguage] = useState("en");
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [translatingKeys, setTranslatingKeys] = useState<Set<string>>(new Set());
   const [translationErrors, setTranslationErrors] = useState<Record<string, string>>({});
@@ -134,15 +134,19 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
     }
   }, []);
 
-  const setLanguageFor = (entryId: string, lang: string, entry: any) => {
-    setReaderLanguage((prev) => ({ ...prev, [entryId]: lang }));
-    if (lang !== "en") {
-      const key = `${entryId}:${lang}`;
+  // Same pattern as Bhagavad Gita: one global language selector, and
+  // switching it auto-translates every visible entry that doesn't already
+  // have a cached translation, instead of needing a per-entry tap.
+  useEffect(() => {
+    if (readerLanguage === "en") return;
+    entries.forEach((entry: any) => {
+      const key = `${entry.id}:${readerLanguage}`;
       if (!translations[key] && !translatingKeys.has(key)) {
-        translateEntry(entry, lang);
+        translateEntry(entry, readerLanguage);
       }
-    }
-  };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readerLanguage, entries]);
 
   const handleSave = async () => {
     if (!form.category.trim() || !form.title.trim() || !form.content.trim()) {
@@ -197,6 +201,29 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
           <div className="c-chat-name">Siddha Lab</div>
           <div className="c-chat-sub">Deep transmissions, gathered from the Quantum Apothecary and beyond</div>
         </div>
+      </div>
+
+      {/* Reader language filter — same top-menu pattern as Bhagavad Gita */}
+      <div style={{ display: "flex", gap: 6, padding: "12px 16px 0", flexWrap: "wrap" as const }}>
+        {LANGUAGES.map((l) => (
+          <button
+            key={l.value}
+            onClick={() => setReaderLanguage(l.value)}
+            style={{
+              padding: "5px 12px",
+              borderRadius: 10,
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              cursor: "pointer",
+              border: `1px solid ${readerLanguage === l.value ? GOLD : "rgba(255,255,255,0.08)"}`,
+              background: readerLanguage === l.value ? `${GOLD}18` : "transparent",
+              color: readerLanguage === l.value ? GOLD : "rgba(255,255,255,0.4)",
+            }}
+          >
+            {l.label}
+          </button>
+        ))}
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 100px" }}>
@@ -293,7 +320,7 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
                       const entryRank = TIERS.find((t) => t.value === entry.tier_required)?.rank ?? 0;
                       const locked = !isAdmin && userRank < entryRank;
                       const expanded = expandedEntry === entry.id;
-                      const lang = readerLanguage[entry.id] || "en";
+                      const lang = readerLanguage;
                       const key = `${entry.id}:${lang}`;
                       const displayText = lang === "en" ? entry.content : translations[key];
                       const isTranslating = translatingKeys.has(key);
@@ -338,22 +365,6 @@ export default function SiddhaLabSpace({ isAdmin, onBack, userTier }: Props) {
                                   Read more
                                 </button>
                               )}
-                              <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" as const }}>
-                                {LANGUAGES.map((l) => (
-                                  <button
-                                    key={l.value}
-                                    onClick={() => setLanguageFor(entry.id, l.value, entry)}
-                                    style={{
-                                      padding: "5px 10px", borderRadius: 999, fontSize: 10, fontWeight: 700, cursor: "pointer",
-                                      background: lang === l.value ? "rgba(212,175,55,.18)" : "rgba(255,255,255,.04)",
-                                      border: lang === l.value ? "1px solid rgba(212,175,55,.5)" : "1px solid rgba(255,255,255,.1)",
-                                      color: lang === l.value ? GOLD : "rgba(255,255,255,.5)",
-                                    }}
-                                  >
-                                    {l.value.toUpperCase()}
-                                  </button>
-                                ))}
-                              </div>
                             </>
                           )}
                         </div>
