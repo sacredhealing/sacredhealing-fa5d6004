@@ -554,18 +554,19 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
       messages: allMessages,
       // BUGFIX: this was cut to 600 to control cost/length, but that
       // caused real truncation in production — replies cutting off
-      // mid-sentence after only a few dozen words ("...pulling at the
-      // roots" and stopping). gemini-2.5-flash spends part of its token
-      // budget on internal reasoning before producing visible output,
-      // and that reasoning shares the SAME max_tokens ceiling — 600 was
-      // tight enough that reasoning alone could consume most or all of
-      // it, starving the actual reply. 2000 gives real headroom for that
-      // overhead plus a full answer. Length/cost control now comes from
-      // the prompt's hard 3-6 sentence instruction (which the model
-      // reliably follows once it isn't being cut off first) and the
-      // JSON-leak guard below — not from an artificially tight ceiling
-      // that turned out to break correctness instead of just cost.
-      max_tokens: 2000,
+      // mid-sentence after only a few dozen words. Then raised to 2000,
+      // which STILL wasn't enough in at least one production case —
+      // gemini-2.5-flash's internal reasoning shares the same max_tokens
+      // ceiling as the visible reply, and that overhead isn't perfectly
+      // predictable, so no fixed number is guaranteed safe every time.
+      // 3000 as the first attempt, PLUS an actual retry-with-more-room
+      // below if even that truncates (rather than just hoping a bigger
+      // fixed number never gets hit) — that combination is what actually
+      // fixes this, not just a higher ceiling on its own. Length/cost
+      // control now comes from the prompt's hard 3-6 sentence rule
+      // (which the model can actually follow once it isn't cut off
+      // before finishing) and the JSON-leak guard below.
+      max_tokens: 3000,
       // BUGFIX: this was 2.0 — the practical ceiling for this API, not a
       // "more mystical" setting. At that temperature the model frequently
       // ignores formatting instructions (a likely contributor to the JSON
@@ -581,12 +582,39 @@ ABSOLUTE RULE: These dates are astronomically precise. Use ONLY these dasha date
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const aiData = await res.json();
-    const choice = aiData.choices?.[0];
+    let aiData = await res.json();
+    let choice = aiData.choices?.[0];
     let reply = choice?.message?.content ?? "";
-    const finishReason = choice?.finish_reason ?? "unknown";
+    let finishReason = choice?.finish_reason ?? "unknown";
+
+    // BUGFIX: this used to just console.warn and continue, silently
+    // returning the truncated text to the user as if it were the
+    // complete answer — exactly the mid-sentence cutoff bug reported in
+    // production ("...pulling at the" and stopping). gemini-2.5-flash's
+    // internal reasoning shares the same token budget as the visible
+    // reply, so reasoning overhead is not perfectly predictable — no
+    // fixed ceiling is guaranteed safe every time. Retrying once with
+    // substantially more room, instead of just hoping the ceiling was
+    // high enough, actually fixes this rather than just making it rarer.
     if (finishReason === "length") {
-      console.warn("[bhrigu-oracle] Reply truncated by token limit at 8192");
+      console.warn("[bhrigu-oracle] Reply truncated at max_tokens, retrying with more room");
+      const retryRes = await callAI({ messages: allMessages, max_tokens: 4000, temperature: 0.85 });
+      if (retryRes.ok) {
+        const retryData = await retryRes.json();
+        const retryChoice = retryData.choices?.[0];
+        const retryReply = retryChoice?.message?.content ?? "";
+        if (retryReply && retryReply.trim()) {
+          aiData = retryData;
+          choice = retryChoice;
+          reply = retryReply;
+          finishReason = retryChoice?.finish_reason ?? "unknown";
+          if (finishReason === "length") {
+            console.error("[bhrigu-oracle] Reply still truncated even at 4000 tokens after retry");
+          }
+        }
+      } else {
+        console.error("[bhrigu-oracle] Retry after truncation failed:", retryRes.status);
+      }
     }
     if (!reply || !reply.trim()) {
       console.error("[bhrigu-oracle] Empty reply from model", { finishReason, raw: JSON.stringify(aiData).slice(0, 500) });
