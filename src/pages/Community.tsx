@@ -869,22 +869,28 @@ type FeedComment = {
 // ensureContentLoaded ever failed to resolve for any reason (never called,
 // silently hung, etc.) — this gives it a real timeout and a manual retry
 // instead of hanging forever with zero feedback.
-function LoadingDropCard({ contentId, label, onRetry }: { contentId: string; label: string; onRetry: (ids: string[], force?: boolean) => void }) {
+//
+// Real bug fixed: this previously had zero visibility into contentLoadErrors
+// at all, so even when the initial fetch attempt already failed with a
+// specific reason, this component ignored it completely and just showed
+// "Loading…" for a blind 6-second timer regardless — losing the actual
+// error and making a real, already-known failure look like normal loading.
+function LoadingDropCard({ contentId, label, onRetry, knownError }: { contentId: string; label: string; onRetry: (ids: string[], force?: boolean) => void; knownError?: string }) {
   const [stuckLevel, setStuckLevel] = useState(0); // 0 = normal loading, 1 = auto-retried once, 2 = give up, show manual retry
 
   useEffect(() => {
-    if (stuckLevel >= 2) return;
+    if (stuckLevel >= 2 || knownError) return;
     const timer = setTimeout(() => {
       setStuckLevel((s) => s + 1);
       onRetry([contentId], true);
     }, 6000);
     return () => clearTimeout(timer);
-  }, [contentId, stuckLevel, onRetry]);
+  }, [contentId, stuckLevel, onRetry, knownError]);
 
-  if (stuckLevel >= 2) {
+  if (stuckLevel >= 2 || knownError) {
     return (
       <div style={{ alignSelf: 'flex-start', maxWidth: '82%', padding: '14px 16px', borderRadius: 16, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.25)', color: 'rgba(255,180,180,.85)', fontSize: 12 }}>
-        ⚠️ Couldn't load "{label}" after retrying.{' '}
+        ⚠️ Couldn't load "{label}"{knownError ? `: ${knownError}` : " after retrying."}{' '}
         <button
           onClick={() => { setStuckLevel(0); onRetry([contentId], true); }}
           style={{ background: 'none', border: 'none', color: '#F4D35E', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 12 }}
@@ -3177,14 +3183,13 @@ const Community = () => {
                       if ((msg as any).message_type === 'content_drop' && (msg as any).content_id) {
                         const content = contentMap[(msg as any).content_id];
                         if (!content) {
-                          const permanentlyGone = contentLoadErrors[(msg as any).content_id] === 'unavailable';
-                          if (permanentlyGone) return null;
                           return (
                             <LoadingDropCard
                               key={msg.id}
                               contentId={(msg as any).content_id}
                               label={msg.content || 'content'}
                               onRetry={ensureContentLoaded}
+                              knownError={contentLoadErrors[(msg as any).content_id]}
                             />
                           );
                         }
