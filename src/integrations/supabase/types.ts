@@ -8582,6 +8582,42 @@ export type Database = {
         }
         Relationships: []
       }
+      siddha_masters_entries: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          tier_required: string
+          title: string
+          transmitter: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tier_required?: string
+          title: string
+          transmitter?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tier_required?: string
+          title?: string
+          transmitter?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       siddha_medicine_courses: {
         Row: {
           created_at: string
