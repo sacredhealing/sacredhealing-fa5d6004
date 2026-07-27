@@ -26,6 +26,7 @@ const FEATURE_TOKEN_LIMITS: Record<string, number> = {
   soul_scan:             600,   // quick scan summary
   vedic_translation:     500,   // translation output, not prose
   gita_translation:     4000,   // full multi-paragraph teaching passages, not short verses
+  siddha_lab_translation: 4000, // same kind of long teaching content — was missing entirely, silently falling back to the 2048 default and truncating longer transmissions mid-sentence
   // Medium outputs
   soul_vault:           2200,   // soul vault reading: 3 rich paragraphs + kosha map
   transformation_doc:   1500,   // transformation narrative
