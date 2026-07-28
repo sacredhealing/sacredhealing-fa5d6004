@@ -201,6 +201,7 @@ const AdminCircles = React.lazy(() => import("./pages/AdminCircles"));
 const AdminContentRoadmap = React.lazy(() => import("./pages/AdminContentRoadmap"));
 const AdminVedicTranslation = React.lazy(() => import("./pages/AdminVedicTranslation"));
 const AdminScripturalBooks = React.lazy(() => import("./pages/AdminScripturalBooks"));
+const HolyBooks = React.lazy(() => import("./pages/HolyBooks"));
 const AdminScripturalBookView = React.lazy(() => import("./pages/AdminScripturalBookView"));
 const PostSession = React.lazy(() => import("./pages/PostSession"));
 const SovereignSharePreview = React.lazy(() => import("./pages/SovereignSharePreview"));
@@ -437,6 +438,7 @@ function AppRoutes() {
                   <Route path="/sqi-chat" element={<Navigate to="/quantum-apothecary" replace />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/holy-science" element={<HolyScienceCurriculum />} />
+                  <Route path="/holy-books" element={<HolyBooks />} />
                   <Route path="/holy-science/module/:id" element={<HolyScienceModule />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/private-sessions" element={<PrivateSessions />} />
@@ -669,3 +671,4 @@ function App() {
 }
 
 export default App;
+
