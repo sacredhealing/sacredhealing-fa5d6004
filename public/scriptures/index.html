@@ -110,6 +110,9 @@ const PARTS = [
   { file:'part13_job.html', label:'The Trial of Job...' },
   { file:'part14_psalms.html', label:'The Psalms of David — Songs of Zion...' },
   { file:'part15_proverbs_eccl_song.html', label:'Wisdom — Proverbs, Ecclesiastes, Song of Solomon...' },
+  { file:'part16_isaiah.html', label:'Isaiah — Arise Shine For Thy Light Is Come...' },
+  { file:'part17_jeremiah_lam.html', label:'Jeremiah and Lamentations...' },
+  { file:'part18_ezekiel_daniel.html', label:'Ezekiel and Daniel — The Wheel Within a Wheel...' },
   { file:'part3_nile_valley.html', label:'Calling forth Nile Valley wisdom...' },
   { file:'part4_enoch.html', label:'Summoning the Book of Enoch...' },
   { file:'part5_kebra.html', label:'Unveiling the Kebra Nagast...' },
@@ -121,7 +124,7 @@ async function load() {
   for (let i=0; i<PARTS.length; i++) {
     document.getElementById('status').textContent = PARTS[i].label;
     document.getElementById('bar').style.width = ((i/PARTS.length)*85+10)+'%';
-    const res = await fetch('/scriptures/'+PARTS[i].file+'?v=20260728c');
+    const res = await fetch('/scriptures/'+PARTS[i].file+'?v=20260728d');
     let text = await res.text();
     // Strip any stray html/head/body tags from part files
     text = text.replace(/<\/?(!DOCTYPE|html|head|body)[^>]*>/gi,'');
