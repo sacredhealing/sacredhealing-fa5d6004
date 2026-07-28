@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Scripture Contents</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#050505;color:#fff;font-family:'Georgia',serif;-webkit-text-size-adjust:100%;}
+.nav{position:fixed;top:0;left:0;right:0;background:rgba(5,3,1,0.98);border-bottom:1px solid rgba(212,175,55,0.2);padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:100;}
+.back{background:none;border:none;color:rgba(212,175,55,0.8);font-size:22px;cursor:pointer;padding:4px;}
+.nav-title{font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.55);flex:1;}
+.read-btn{background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);color:#D4AF37;padding:8px 16px;border-radius:20px;font-size:11px;cursor:pointer;letter-spacing:0.2em;}
+.spacer{height:52px;}
+.section{margin:0 0 4px;}
+.sec-title{background:rgba(212,175,55,0.08);padding:10px 16px;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.55);}
+.book{display:flex;align-items:center;gap:0;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.book:active{background:rgba(212,175,55,0.06);}
+.bname{font-size:14px;color:rgba(255,255,255,0.8);flex:1;}
+.bsub{font-size:11px;color:rgba(255,255,255,0.35);display:block;margin-top:2px;}
+.bch{font-size:9px;color:rgba(212,175,55,0.4);letter-spacing:0.1em;white-space:nowrap;margin-left:8px;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <button class="back" onclick="history.back()">←</button>
+  <span class="nav-title">Table of Contents</span>
+  <button class="read-btn" onclick="window.location.href='/scriptures/index.html'">Read</button>
+</nav>
+<div class="spacer"></div>
+
+<div class="section">
+  <div class="sec-title">Torah — Five Books of Moses</div>
+  <div class="book" onclick="goRead('gen-ch1')"><div><span class="bname">Genesis</span><span class="bsub">Creation · Noah · Abraham · Joseph</span></div><span class="bch">50 chs</span></div>
+  <div class="book" onclick="goRead('exodus-intro')"><div><span class="bname">Exodus</span><span class="bsub">Burning Bush · Ten Plagues · Red Sea · Ten Commandments</span></div><span class="bch">40 chs</span></div>
+  <div class="book" onclick="goRead('leviticus-intro')"><div><span class="bname">Leviticus</span><span class="bsub">The Law of Holiness · Love Thy Neighbour</span></div><span class="bch">27 chs</span></div>
+  <div class="book" onclick="goRead('leviticus-intro')"><div><span class="bname">Numbers</span><span class="bsub">The Wilderness · The Aaronic Blessing</span></div><span class="bch">36 chs</span></div>
+  <div class="book" onclick="goRead('leviticus-intro')"><div><span class="bname">Deuteronomy</span><span class="bsub">The Shema · Blessings · Death of Moses</span></div><span class="bch">34 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">Historical Books</div>
+  <div class="book" onclick="goRead('joshua-intro')"><div><span class="bname">Joshua</span><span class="bsub">Be Strong and Courageous</span></div><span class="bch">24 chs</span></div>
+  <div class="book" onclick="goRead('joshua-intro')"><div><span class="bname">Judges</span><span class="bsub">Deborah · Gideon · Samson</span></div><span class="bch">21 chs</span></div>
+  <div class="book" onclick="goRead('joshua-intro')"><div><span class="bname">Ruth</span><span class="bsub">Whither Thou Goest I Will Go</span></div><span class="bch">4 chs</span></div>
+  <div class="book" onclick="goRead('samuel-intro')"><div><span class="bname">1 Samuel</span><span class="bsub">The Anointing of David</span></div><span class="bch">31 chs</span></div>
+  <div class="book" onclick="goRead('samuel-intro')"><div><span class="bname">2 Samuel</span><span class="bsub">The Davidic Covenant</span></div><span class="bch">24 chs</span></div>
+  <div class="book" onclick="goRead('samuel-intro')"><div><span class="bname">1 Kings</span><span class="bsub">Solomon's Wisdom · The Temple · Elijah</span></div><span class="bch">22 chs</span></div>
+  <div class="book" onclick="goRead('samuel-intro')"><div><span class="bname">2 Kings</span><span class="bsub">The Exile of Israel</span></div><span class="bch">25 chs</span></div>
+  <div class="book" onclick="goRead('samuel-intro')"><div><span class="bname">1–2 Chronicles</span><span class="bsub">The Lineage of David · Solomon's Temple</span></div><span class="bch">65 chs</span></div>
+  <div class="book" onclick="goRead('ezra-intro')"><div><span class="bname">Ezra</span><span class="bsub">Return from Babylon</span></div><span class="bch">10 chs</span></div>
+  <div class="book" onclick="goRead('ezra-intro')"><div><span class="bname">Nehemiah</span><span class="bsub">Rebuilding Jerusalem · The Joy of Jah</span></div><span class="bch">13 chs</span></div>
+  <div class="book" onclick="goRead('ezra-intro')"><div><span class="bname">Esther</span><span class="bsub">For Such a Time as This</span></div><span class="bch">10 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">Wisdom Books</div>
+  <div class="book" onclick="goRead('job-intro')"><div><span class="bname">Job</span><span class="bsub">Where Wast Thou · My Redeemer Liveth</span></div><span class="bch">42 chs</span></div>
+  <div class="book" onclick="goRead('psalms-intro')"><div><span class="bname">Psalms</span><span class="bsub">Jah Is My Shepherd · By the Rivers of Babylon</span></div><span class="bch">150 ps</span></div>
+  <div class="book" onclick="goRead('proverbs-intro')"><div><span class="bname">Proverbs</span><span class="bsub">Trust in Jah with All Thine Heart</span></div><span class="bch">31 chs</span></div>
+  <div class="book" onclick="goRead('proverbs-intro')"><div><span class="bname">Ecclesiastes</span><span class="bsub">Vanity of Vanities · Fear Jah</span></div><span class="bch">12 chs</span></div>
+  <div class="book" onclick="goRead('proverbs-intro')"><div><span class="bname">Song of Solomon</span><span class="bsub">I Am Black and Beautiful · Love Is Strong as Death</span></div><span class="bch">8 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">Major Prophets</div>
+  <div class="book" onclick="goRead('isaiah-intro')"><div><span class="bname">Isaiah</span><span class="bsub">He Was Wounded · Arise Shine · Mount Up With Wings</span></div><span class="bch">66 chs</span></div>
+  <div class="book" onclick="goRead('jeremiah-intro')"><div><span class="bname">Jeremiah</span><span class="bsub">I Know the Plans · New Covenant on the Heart</span></div><span class="bch">52 chs</span></div>
+  <div class="book" onclick="goRead('jeremiah-intro')"><div><span class="bname">Lamentations</span><span class="bsub">New Every Morning · Great Is Thy Faithfulness</span></div><span class="bch">5 chs</span></div>
+  <div class="book" onclick="goRead('ezekiel-intro')"><div><span class="bname">Ezekiel</span><span class="bsub">Wheel Within a Wheel · Valley of Dry Bones</span></div><span class="bch">48 chs</span></div>
+  <div class="book" onclick="goRead('ezekiel-intro')"><div><span class="bname">Daniel</span><span class="bsub">The Furnace · The Lion's Den · Ancient of Days</span></div><span class="bch">12 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">Minor Prophets — The Twelve</div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Hosea</span><span class="bsub">I Will Love Them Freely</span></div><span class="bch">14 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Joel</span><span class="bsub">I Will Pour Out My Spirit on All Flesh</span></div><span class="bch">3 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Amos</span><span class="bsub">Let Justice Roll Down Like Waters</span></div><span class="bch">9 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Obadiah</span><span class="bsub">The Kingdom Shall Be Jah's</span></div><span class="bch">1 ch</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Jonah</span><span class="bsub">The Great Fish · Nineveh Repents</span></div><span class="bch">4 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Micah</span><span class="bsub">Do Justice · Love Mercy · Walk Humbly</span></div><span class="bch">7 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Nahum</span><span class="bsub">Jah Is Good in the Day of Trouble</span></div><span class="bch">3 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Habakkuk</span><span class="bsub">The Just Shall Live by Faith</span></div><span class="bch">3 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Zephaniah</span><span class="bsub">Jah Thy Jah Is Mighty · He Will Joy Over Thee</span></div><span class="bch">3 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Haggai</span><span class="bsub">The Glory of This Latter House</span></div><span class="bch">2 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Zechariah</span><span class="bsub">Not by Might · Jah Shall Be King Over All</span></div><span class="bch">14 chs</span></div>
+  <div class="book" onclick="goRead('minorprophets-intro')"><div><span class="bname">Malachi</span><span class="bsub">The Sun of Righteousness Shall Arise with Healing</span></div><span class="bch">4 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">New Testament</div>
+  <div class="book" onclick="goRead('matthew-intro')"><div><span class="bname">Matthew</span><span class="bsub">Sermon on the Mount · Beatitudes · Great Commission</span></div><span class="bch">28 chs</span></div>
+  <div class="book" onclick="goRead('mark-intro')"><div><span class="bname">Mark</span><span class="bsub">The Gospel of Immediate Action</span></div><span class="bch">16 chs</span></div>
+  <div class="book" onclick="goRead('mark-intro')"><div><span class="bname">Luke</span><span class="bsub">Magnificat · Good Samaritan · Prodigal Son</span></div><span class="bch">24 chs</span></div>
+  <div class="book" onclick="goRead('john-intro')"><div><span class="bname">John</span><span class="bsub">In the Beginning Was the Word · I Am the Way</span></div><span class="bch">21 chs</span></div>
+  <div class="book" onclick="goRead('acts-intro')"><div><span class="bname">Acts</span><span class="bsub">Pentecost · The Ethiopian Eunuch Baptized</span></div><span class="bch">28 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">Romans</span><span class="bsub">Nothing Shall Separate Us from the Love of Jah</span></div><span class="bch">16 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">1 Corinthians</span><span class="bsub">The Greatest of These Is Love</span></div><span class="bch">16 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">2 Corinthians</span><span class="bsub">My Grace Is Sufficient for Thee</span></div><span class="bch">13 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">Galatians</span><span class="bsub">Fruit of the Spirit · Freedom in Yeshua</span></div><span class="bch">6 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">Ephesians</span><span class="bsub">The Whole Armour of Jah</span></div><span class="bch">6 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">Philippians</span><span class="bsub">I Can Do All Things Through the Anointed</span></div><span class="bch">4 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">Colossians</span><span class="bsub">He Is Before All Things</span></div><span class="bch">4 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">1–2 Thessalonians</span><span class="bsub">Pray Without Ceasing · Rejoice Always</span></div><span class="bch">8 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">1–2 Timothy · Titus</span><span class="bsub">All Scripture Given by Inspiration of Jah</span></div><span class="bch">11 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">Hebrews</span><span class="bsub">Faith Is · Yeshua the Author and Finisher</span></div><span class="bch">13 chs</span></div>
+  <div class="book" onclick="goRead('epistles-intro')"><div><span class="bname">James</span><span class="bsub">Faith Without Works Is Dead</span></div><span class="bch">5 chs</span></div>
+  <div class="book" onclick="goRead('peter-john-intro')"><div><span class="bname">1–2 Peter</span><span class="bsub">Royal Priesthood · Cast All Your Care on Jah</span></div><span class="bch">8 chs</span></div>
+  <div class="book" onclick="goRead('peter-john-intro')"><div><span class="bname">1–2–3 John · Jude</span><span class="bsub">Jah Is Love · Contend for the Faith</span></div><span class="bch">7 chs</span></div>
+  <div class="book" onclick="goRead('peter-john-intro')"><div><span class="bname">Revelation</span><span class="bsub">King of Kings · New Jerusalem · Come Lord Yeshua</span></div><span class="bch">22 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">Ethiopian Exclusives — Found Nowhere Else</div>
+  <div class="book" onclick="goRead('enoch-intro')"><div><span class="bname">1 Enoch</span><span class="bsub">Watchers · Son of Man · Luminaries · Epistle</span></div><span class="bch">108 chs</span></div>
+  <div class="book" onclick="goRead('jubilees-intro')"><div><span class="bname">Book of Jubilees</span><span class="bsub">Heavenly Tablets · Abraham Breaks the Idols</span></div><span class="bch">50 chs</span></div>
+  <div class="book" onclick="goRead('meqabyan-intro')"><div><span class="bname">1–2–3 Meqabyan</span><span class="bsub">Ethiopian Warriors · Resurrection · Fear Jah</span></div><span class="bch">70 chs</span></div>
+  <div class="book" onclick="goRead('shepherd-intro')"><div><span class="bname">Shepherd of Hermas</span><span class="bsub">5 Visions · 12 Commandments · 10 Similitudes</span></div><span class="bch">V.1–5</span></div>
+  <div class="book" onclick="goRead('sinodos-intro')"><div><span class="bname">Sinodos</span><span class="bsub">The Apostolic Canons of the Ethiopian Church</span></div><span class="bch">Canon</span></div>
+  <div class="book" onclick="goRead('sinodos-intro')"><div><span class="bname">Book of the Covenant</span><span class="bsub">The Everlasting Covenant of Jah</span></div><span class="bch">3 chs</span></div>
+  <div class="book" onclick="goRead('sinodos-intro')"><div><span class="bname">1 Clement</span><span class="bsub">Love Does All Things in Harmony</span></div><span class="bch">65 chs</span></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">Sacred Additions</div>
+  <div class="book" onclick="goRead('nile-valley')"><div><span class="bname">Nile Valley Prologue</span><span class="bsub">Hymn to Aten · 42 Declarations of Maat · Poimandres</span></div><span class="bch">Prologue</span></div>
+  <div class="book" onclick="goRead('kebra-intro')"><div><span class="bname">Kebra Nagast</span><span class="bsub">117 Chapters · Queen of Sheba · Menelik · The Ark</span></div><span class="bch">117 chs</span></div>
+  <div class="book" onclick="goRead('thomas-intro')"><div><span class="bname">Gospel of Thomas</span><span class="bsub">114 Secret Sayings of Yeshua</span></div><span class="bch">114</span></div>
+  <div class="book" onclick="goRead('holytwelve-intro')"><div><span class="bname">Gospel of the Holy Twelve</span><span class="bsub">13 Lections · The Compassionate Christ</span></div><span class="bch">13</span></div>
+  <div class="book" onclick="goRead('imperial-intro')"><div><span class="bname">Imperial Covenant</span><span class="bsub">Coronation 1930 · League of Nations 1936</span></div><span class="bch">Speeches</span></div>
+  <div class="book" onclick="goRead('rasta-additions')"><div><span class="bname">Rastafari Sacred Writings</span><span class="bsub">Holy Piby · Ital Law · Holy Days · Black Israelites</span></div><span class="bch">Sacred</span></div>
+  <div class="book" onclick="goRead('selassie-deep')"><div><span class="bname">Haile Selassie I</span><span class="bsub">Sacred Biography · Lineage · Reign · Prophecy · OAU</span></div><span class="bch">Parts I–V</span></div>
+</div>
+
+<div style="height:40px;"></div>
+
+<script>
+function goRead(anchor) {
+  window.location.href = '/scriptures/index.html#' + anchor;
+}
+</script>
+</body>
+</html>
