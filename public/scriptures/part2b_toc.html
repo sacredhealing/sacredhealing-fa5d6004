@@ -1,143 +1,120 @@
 
 <div class="codex-page" style="max-width:780px;margin:0 auto;padding:3rem 1.5rem 4rem;">
 
-  <div style="text-align:center;padding:40px 0 32px;border-bottom:2px solid rgba(139,105,20,0.3);margin-bottom:40px;">
+<style>
+.toc-link { cursor:pointer; text-decoration:none; color:inherit; display:contents; }
+.toc-row { display:flex; align-items:baseline; gap:0; padding:6px 8px; border-bottom:1px dotted rgba(139,105,20,0.2); }
+.toc-row:hover { background:rgba(139,105,20,0.06); }
+.toc-book { font-family:'EB Garamond','Palatino',serif; font-size:15px; color:#1a1208; flex:1; }
+.toc-dots { flex:1; border-bottom:1px dotted rgba(139,105,20,0.35); margin:0 8px; position:relative; top:-4px; min-width:20px; }
+.toc-ch { font-family:'Cinzel',serif; font-size:9px; color:#8B6914; white-space:nowrap; margin-right:10px; }
+.toc-pg { font-family:'Cinzel',serif; font-size:10px; color:#8B1A1A; white-space:nowrap; font-weight:600; min-width:30px; text-align:right; }
+.toc-sec { font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.5em; text-transform:uppercase; color:#8B6914; background:rgba(139,105,20,0.06); padding:8px 8px; margin-top:20px; border-left:3px solid #8B6914; }
+</style>
+
+  <div style="text-align:center;padding:40px 0 32px;border-bottom:2px solid rgba(139,105,20,0.3);margin-bottom:32px;">
     <p style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.6em;text-transform:uppercase;color:#8B6914;margin-bottom:12px;">The Complete Restored Covenant Scriptures</p>
-    <h1 style="font-family:'Cinzel Decorative',serif;font-size:28px;color:#8B1A1A;margin-bottom:8px;">Table of Contents</h1>
-    <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:15px;color:#8B6914;">88 Sacred Books of the Ethiopian Orthodox Canon</p>
+    <h1 style="font-family:'Cinzel Decorative',serif;font-size:26px;color:#8B1A1A;margin-bottom:8px;">Table of Contents</h1>
+    <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:15px;color:#8B6914;">88 Sacred Books · Tap any book to open it</p>
   </div>
 
-  <!-- TORAH -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">The Torah — Five Books of Moses</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Genesis</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">50 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Creation · Noah · Abraham · Joseph</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Exodus</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">40 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Burning Bush · Ten Commandments · Red Sea</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Leviticus</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">27 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Law of Holiness · Love Thy Neighbour</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Numbers</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">36 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Wilderness · The Aaronic Blessing</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Deuteronomy</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">34 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Shema · Blessings · Death of Moses</td></tr>
-    </table>
+  <div class="toc-sec">The Torah — Five Books of Moses</div>
+  <a class="toc-link" onclick="jumpTo('gen-ch1')"><div class="toc-row"><span class="toc-book">Genesis</span><span class="toc-dots"></span><span class="toc-ch">50 chs</span><span class="toc-pg">p.1</span></div></a>
+  <a class="toc-link" onclick="jumpTo('exodus-intro')"><div class="toc-row"><span class="toc-book">Exodus</span><span class="toc-dots"></span><span class="toc-ch">40 chs</span><span class="toc-pg">p.52</span></div></a>
+  <a class="toc-link" onclick="jumpTo('leviticus-intro')"><div class="toc-row"><span class="toc-book">Leviticus</span><span class="toc-dots"></span><span class="toc-ch">27 chs</span><span class="toc-pg">p.92</span></div></a>
+  <a class="toc-link" onclick="jumpTo('leviticus-intro')"><div class="toc-row"><span class="toc-book">Numbers</span><span class="toc-dots"></span><span class="toc-ch">36 chs</span><span class="toc-pg">p.119</span></div></a>
+  <a class="toc-link" onclick="jumpTo('leviticus-intro')"><div class="toc-row"><span class="toc-book">Deuteronomy</span><span class="toc-dots"></span><span class="toc-ch">34 chs</span><span class="toc-pg">p.155</span></div></a>
+
+  <div class="toc-sec">Historical Books</div>
+  <a class="toc-link" onclick="jumpTo('joshua-intro')"><div class="toc-row"><span class="toc-book">Joshua</span><span class="toc-dots"></span><span class="toc-ch">24 chs</span><span class="toc-pg">p.189</span></div></a>
+  <a class="toc-link" onclick="jumpTo('joshua-intro')"><div class="toc-row"><span class="toc-book">Judges</span><span class="toc-dots"></span><span class="toc-ch">21 chs</span><span class="toc-pg">p.213</span></div></a>
+  <a class="toc-link" onclick="jumpTo('joshua-intro')"><div class="toc-row"><span class="toc-book">Ruth</span><span class="toc-dots"></span><span class="toc-ch">4 chs</span><span class="toc-pg">p.234</span></div></a>
+  <a class="toc-link" onclick="jumpTo('samuel-intro')"><div class="toc-row"><span class="toc-book">1 Samuel</span><span class="toc-dots"></span><span class="toc-ch">31 chs</span><span class="toc-pg">p.237</span></div></a>
+  <a class="toc-link" onclick="jumpTo('samuel-intro')"><div class="toc-row"><span class="toc-book">2 Samuel</span><span class="toc-dots"></span><span class="toc-ch">24 chs</span><span class="toc-pg">p.268</span></div></a>
+  <a class="toc-link" onclick="jumpTo('samuel-intro')"><div class="toc-row"><span class="toc-book">1 Kings</span><span class="toc-dots"></span><span class="toc-ch">22 chs</span><span class="toc-pg">p.292</span></div></a>
+  <a class="toc-link" onclick="jumpTo('samuel-intro')"><div class="toc-row"><span class="toc-book">2 Kings</span><span class="toc-dots"></span><span class="toc-ch">25 chs</span><span class="toc-pg">p.314</span></div></a>
+  <a class="toc-link" onclick="jumpTo('samuel-intro')"><div class="toc-row"><span class="toc-book">1–2 Chronicles</span><span class="toc-dots"></span><span class="toc-ch">65 chs</span><span class="toc-pg">p.339</span></div></a>
+  <a class="toc-link" onclick="jumpTo('ezra-intro')"><div class="toc-row"><span class="toc-book">Ezra</span><span class="toc-dots"></span><span class="toc-ch">10 chs</span><span class="toc-pg">p.404</span></div></a>
+  <a class="toc-link" onclick="jumpTo('ezra-intro')"><div class="toc-row"><span class="toc-book">Nehemiah</span><span class="toc-dots"></span><span class="toc-ch">13 chs</span><span class="toc-pg">p.414</span></div></a>
+  <a class="toc-link" onclick="jumpTo('ezra-intro')"><div class="toc-row"><span class="toc-book">Esther</span><span class="toc-dots"></span><span class="toc-ch">10 chs</span><span class="toc-pg">p.427</span></div></a>
+
+  <div class="toc-sec">Wisdom Books</div>
+  <a class="toc-link" onclick="jumpTo('job-intro')"><div class="toc-row"><span class="toc-book">Job</span><span class="toc-dots"></span><span class="toc-ch">42 chs</span><span class="toc-pg">p.437</span></div></a>
+  <a class="toc-link" onclick="jumpTo('psalms-intro')"><div class="toc-row"><span class="toc-book">Psalms</span><span class="toc-dots"></span><span class="toc-ch">150 psalms</span><span class="toc-pg">p.479</span></div></a>
+  <a class="toc-link" onclick="jumpTo('proverbs-intro')"><div class="toc-row"><span class="toc-book">Proverbs</span><span class="toc-dots"></span><span class="toc-ch">31 chs</span><span class="toc-pg">p.554</span></div></a>
+  <a class="toc-link" onclick="jumpTo('proverbs-intro')"><div class="toc-row"><span class="toc-book">Ecclesiastes</span><span class="toc-dots"></span><span class="toc-ch">12 chs</span><span class="toc-pg">p.585</span></div></a>
+  <a class="toc-link" onclick="jumpTo('proverbs-intro')"><div class="toc-row"><span class="toc-book">Song of Solomon</span><span class="toc-dots"></span><span class="toc-ch">8 chs</span><span class="toc-pg">p.597</span></div></a>
+
+  <div class="toc-sec">Major Prophets</div>
+  <a class="toc-link" onclick="jumpTo('isaiah-intro')"><div class="toc-row"><span class="toc-book">Isaiah</span><span class="toc-dots"></span><span class="toc-ch">66 chs</span><span class="toc-pg">p.605</span></div></a>
+  <a class="toc-link" onclick="jumpTo('jeremiah-intro')"><div class="toc-row"><span class="toc-book">Jeremiah</span><span class="toc-dots"></span><span class="toc-ch">52 chs</span><span class="toc-pg">p.671</span></div></a>
+  <a class="toc-link" onclick="jumpTo('jeremiah-intro')"><div class="toc-row"><span class="toc-book">Lamentations</span><span class="toc-dots"></span><span class="toc-ch">5 chs</span><span class="toc-pg">p.723</span></div></a>
+  <a class="toc-link" onclick="jumpTo('ezekiel-intro')"><div class="toc-row"><span class="toc-book">Ezekiel</span><span class="toc-dots"></span><span class="toc-ch">48 chs</span><span class="toc-pg">p.728</span></div></a>
+  <a class="toc-link" onclick="jumpTo('ezekiel-intro')"><div class="toc-row"><span class="toc-book">Daniel</span><span class="toc-dots"></span><span class="toc-ch">12 chs</span><span class="toc-pg">p.776</span></div></a>
+
+  <div class="toc-sec">The Twelve Minor Prophets</div>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Hosea</span><span class="toc-dots"></span><span class="toc-ch">14 chs</span><span class="toc-pg">p.788</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Joel</span><span class="toc-dots"></span><span class="toc-ch">3 chs</span><span class="toc-pg">p.802</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Amos</span><span class="toc-dots"></span><span class="toc-ch">9 chs</span><span class="toc-pg">p.805</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Obadiah</span><span class="toc-dots"></span><span class="toc-ch">1 ch</span><span class="toc-pg">p.814</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Jonah</span><span class="toc-dots"></span><span class="toc-ch">4 chs</span><span class="toc-pg">p.815</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Micah</span><span class="toc-dots"></span><span class="toc-ch">7 chs</span><span class="toc-pg">p.819</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Nahum</span><span class="toc-dots"></span><span class="toc-ch">3 chs</span><span class="toc-pg">p.826</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Habakkuk</span><span class="toc-dots"></span><span class="toc-ch">3 chs</span><span class="toc-pg">p.829</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Zephaniah</span><span class="toc-dots"></span><span class="toc-ch">3 chs</span><span class="toc-pg">p.832</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Haggai</span><span class="toc-dots"></span><span class="toc-ch">2 chs</span><span class="toc-pg">p.835</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Zechariah</span><span class="toc-dots"></span><span class="toc-ch">14 chs</span><span class="toc-pg">p.837</span></div></a>
+  <a class="toc-link" onclick="jumpTo('minorprophets-intro')"><div class="toc-row"><span class="toc-book">Malachi</span><span class="toc-dots"></span><span class="toc-ch">4 chs</span><span class="toc-pg">p.851</span></div></a>
+
+  <div class="toc-sec">The New Covenant — New Testament</div>
+  <a class="toc-link" onclick="jumpTo('matthew-intro')"><div class="toc-row"><span class="toc-book">Matthew</span><span class="toc-dots"></span><span class="toc-ch">28 chs</span><span class="toc-pg">p.855</span></div></a>
+  <a class="toc-link" onclick="jumpTo('mark-intro')"><div class="toc-row"><span class="toc-book">Mark</span><span class="toc-dots"></span><span class="toc-ch">16 chs</span><span class="toc-pg">p.883</span></div></a>
+  <a class="toc-link" onclick="jumpTo('mark-intro')"><div class="toc-row"><span class="toc-book">Luke</span><span class="toc-dots"></span><span class="toc-ch">24 chs</span><span class="toc-pg">p.899</span></div></a>
+  <a class="toc-link" onclick="jumpTo('john-intro')"><div class="toc-row"><span class="toc-book">John</span><span class="toc-dots"></span><span class="toc-ch">21 chs</span><span class="toc-pg">p.923</span></div></a>
+  <a class="toc-link" onclick="jumpTo('acts-intro')"><div class="toc-row"><span class="toc-book">Acts</span><span class="toc-dots"></span><span class="toc-ch">28 chs</span><span class="toc-pg">p.944</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">Romans</span><span class="toc-dots"></span><span class="toc-ch">16 chs</span><span class="toc-pg">p.972</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">1 Corinthians</span><span class="toc-dots"></span><span class="toc-ch">16 chs</span><span class="toc-pg">p.988</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">2 Corinthians</span><span class="toc-dots"></span><span class="toc-ch">13 chs</span><span class="toc-pg">p.1004</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">Galatians</span><span class="toc-dots"></span><span class="toc-ch">6 chs</span><span class="toc-pg">p.1017</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">Ephesians</span><span class="toc-dots"></span><span class="toc-ch">6 chs</span><span class="toc-pg">p.1023</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">Philippians</span><span class="toc-dots"></span><span class="toc-ch">4 chs</span><span class="toc-pg">p.1029</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">Colossians</span><span class="toc-dots"></span><span class="toc-ch">4 chs</span><span class="toc-pg">p.1033</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">1–2 Thessalonians</span><span class="toc-dots"></span><span class="toc-ch">8 chs</span><span class="toc-pg">p.1037</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">1–2 Timothy · Titus</span><span class="toc-dots"></span><span class="toc-ch">11 chs</span><span class="toc-pg">p.1045</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">Hebrews</span><span class="toc-dots"></span><span class="toc-ch">13 chs</span><span class="toc-pg">p.1056</span></div></a>
+  <a class="toc-link" onclick="jumpTo('epistles-intro')"><div class="toc-row"><span class="toc-book">James</span><span class="toc-dots"></span><span class="toc-ch">5 chs</span><span class="toc-pg">p.1069</span></div></a>
+  <a class="toc-link" onclick="jumpTo('peter-john-intro')"><div class="toc-row"><span class="toc-book">1–2 Peter</span><span class="toc-dots"></span><span class="toc-ch">8 chs</span><span class="toc-pg">p.1074</span></div></a>
+  <a class="toc-link" onclick="jumpTo('peter-john-intro')"><div class="toc-row"><span class="toc-book">1–2–3 John · Jude</span><span class="toc-dots"></span><span class="toc-ch">7 chs</span><span class="toc-pg">p.1082</span></div></a>
+  <a class="toc-link" onclick="jumpTo('peter-john-intro')"><div class="toc-row"><span class="toc-book">Revelation</span><span class="toc-dots"></span><span class="toc-ch">22 chs</span><span class="toc-pg">p.1089</span></div></a>
+
+  <div class="toc-sec">Ethiopian Exclusives — Found Nowhere Else on Earth</div>
+  <a class="toc-link" onclick="jumpTo('enoch-intro')"><div class="toc-row"><span class="toc-book">1 Enoch</span><span class="toc-dots"></span><span class="toc-ch">108 chs</span><span class="toc-pg">p.1111</span></div></a>
+  <a class="toc-link" onclick="jumpTo('jubilees-intro')"><div class="toc-row"><span class="toc-book">Book of Jubilees</span><span class="toc-dots"></span><span class="toc-ch">50 chs</span><span class="toc-pg">p.1163</span></div></a>
+  <a class="toc-link" onclick="jumpTo('meqabyan-intro')"><div class="toc-row"><span class="toc-book">1 Meqabyan</span><span class="toc-dots"></span><span class="toc-ch">36 chs</span><span class="toc-pg">p.1200</span></div></a>
+  <a class="toc-link" onclick="jumpTo('meqabyan-intro')"><div class="toc-row"><span class="toc-book">2 Meqabyan</span><span class="toc-dots"></span><span class="toc-ch">24 chs</span><span class="toc-pg">p.1220</span></div></a>
+  <a class="toc-link" onclick="jumpTo('meqabyan-intro')"><div class="toc-row"><span class="toc-book">3 Meqabyan</span><span class="toc-dots"></span><span class="toc-ch">10 chs</span><span class="toc-pg">p.1234</span></div></a>
+  <a class="toc-link" onclick="jumpTo('shepherd-intro')"><div class="toc-row"><span class="toc-book">Shepherd of Hermas</span><span class="toc-dots"></span><span class="toc-ch">5 Visions</span><span class="toc-pg">p.1241</span></div></a>
+  <a class="toc-link" onclick="jumpTo('sinodos-intro')"><div class="toc-row"><span class="toc-book">Sinodos</span><span class="toc-dots"></span><span class="toc-ch">Apostolic</span><span class="toc-pg">p.1255</span></div></a>
+  <a class="toc-link" onclick="jumpTo('sinodos-intro')"><div class="toc-row"><span class="toc-book">Book of the Covenant</span><span class="toc-dots"></span><span class="toc-ch">3 chs</span><span class="toc-pg">p.1264</span></div></a>
+  <a class="toc-link" onclick="jumpTo('sinodos-intro')"><div class="toc-row"><span class="toc-book">1 Clement</span><span class="toc-dots"></span><span class="toc-ch">65 chs</span><span class="toc-pg">p.1268</span></div></a>
+
+  <div class="toc-sec">Sacred Additions</div>
+  <a class="toc-link" onclick="jumpTo('nile-valley')"><div class="toc-row"><span class="toc-book">Nile Valley Prologue</span><span class="toc-dots"></span><span class="toc-ch">Prologue</span><span class="toc-pg">p.1284</span></div></a>
+  <a class="toc-link" onclick="jumpTo('kebra-intro')"><div class="toc-row"><span class="toc-book">Kebra Nagast</span><span class="toc-dots"></span><span class="toc-ch">117 chs</span><span class="toc-pg">p.1298</span></div></a>
+  <a class="toc-link" onclick="jumpTo('thomas-intro')"><div class="toc-row"><span class="toc-book">Gospel of Thomas</span><span class="toc-dots"></span><span class="toc-ch">114 sayings</span><span class="toc-pg">p.1366</span></div></a>
+  <a class="toc-link" onclick="jumpTo('holytwelve-intro')"><div class="toc-row"><span class="toc-book">Gospel of the Holy Twelve</span><span class="toc-dots"></span><span class="toc-ch">13 lections</span><span class="toc-pg">p.1381</span></div></a>
+  <a class="toc-link" onclick="jumpTo('imperial-intro')"><div class="toc-row"><span class="toc-book">Imperial Covenant</span><span class="toc-dots"></span><span class="toc-ch">2 Speeches</span><span class="toc-pg">p.1398</span></div></a>
+  <a class="toc-link" onclick="jumpTo('rasta-additions')"><div class="toc-row"><span class="toc-book">Rastafari Sacred Writings</span><span class="toc-dots"></span><span class="toc-ch">Sacred</span><span class="toc-pg">p.1408</span></div></a>
+  <a class="toc-link" onclick="jumpTo('selassie-deep')"><div class="toc-row"><span class="toc-book">Haile Selassie I — Sacred Biography</span><span class="toc-dots"></span><span class="toc-ch">Parts I–V</span><span class="toc-pg">p.1430</span></div></a>
+
+  <div style="text-align:center;padding:28px 0;border-top:2px solid rgba(139,105,20,0.3);margin-top:16px;">
+    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;">✦ · Tap any book to open it · ✦</p>
   </div>
 
-  <!-- HISTORICAL -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">Historical Books</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Joshua</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">24 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Be Strong and Courageous</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Judges</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">21 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Deborah · Gideon · Samson</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Ruth</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">4 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Whither Thou Goest I Will Go</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1 Samuel</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">31 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Anointing of David</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">2 Samuel</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">24 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Davidic Covenant</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1 Kings</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">22 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Solomon's Wisdom · Temple · Elijah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">2 Kings</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">25 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Exile of Israel</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1–2 Chronicles</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">65 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Lineage of David · Solomon's Temple</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Ezra</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">10 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Return from Babylon</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Nehemiah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">13 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Rebuilding Jerusalem · Joy of Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Esther</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">10 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">For Such a Time as This</td></tr>
-    </table>
-  </div>
-
-  <!-- WISDOM -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">Wisdom Books</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Job</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">42 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Where Wast Thou · My Redeemer Liveth</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Psalms</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">150 psalms</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Jah Is My Shepherd · By the Rivers of Babylon</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Proverbs</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">31 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Trust in Jah with All Thine Heart</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Ecclesiastes</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">12 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Vanity of Vanities · Fear Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Song of Solomon</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">8 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">I Am Black and Beautiful · Love Is Strong as Death</td></tr>
-    </table>
-  </div>
-
-  <!-- MAJOR PROPHETS -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">Major Prophets</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Isaiah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">66 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">He Was Wounded · Arise Shine · Mount Up With Wings</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Jeremiah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">52 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">I Know the Plans · New Covenant on the Heart</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Lamentations</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">5 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">New Every Morning · Great Is Thy Faithfulness</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Ezekiel</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">48 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Wheel Within a Wheel · Valley of Dry Bones</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Daniel</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">12 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Furnace · The Lion's Den · Ancient of Days</td></tr>
-    </table>
-  </div>
-
-  <!-- MINOR PROPHETS -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">The Twelve Minor Prophets</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Hosea</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">14 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">I Will Love Them Freely</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Joel</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">3 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">I Will Pour Out My Spirit on All Flesh</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Amos</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">9 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Let Justice Roll Down Like Waters</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Obadiah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">1 chapter</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Kingdom Shall Be Jah's</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Jonah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">4 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Great Fish · Nineveh Repents</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Micah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">7 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Do Justice · Love Mercy · Walk Humbly</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Nahum</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">3 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Jah Is Good in the Day of Trouble</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Habakkuk</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">3 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Just Shall Live by Faith</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Zephaniah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">3 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Jah Thy Jah Is Mighty · He Will Joy Over Thee</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Haggai</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">2 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Glory of This Latter House</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Zechariah</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">14 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Not by Might · Jah Shall Be King Over All</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Malachi</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">4 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Sun of Righteousness Shall Arise</td></tr>
-    </table>
-  </div>
-
-  <!-- NEW TESTAMENT -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">The New Covenant — New Testament</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Matthew</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">28 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Sermon on the Mount · Beatitudes · Great Commission</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Mark</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">16 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Gospel of Immediate Action</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Luke</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">24 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Magnificat · Good Samaritan · Prodigal Son</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">John</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">21 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">In the Beginning Was the Word · I Am the Way</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Acts</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">28 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Pentecost · The Ethiopian Eunuch Baptized</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Romans</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">16 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Nothing Shall Separate Us from Jah's Love</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1 Corinthians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">16 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Greatest of These Is Love</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">2 Corinthians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">13 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">My Grace Is Sufficient for Thee</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Galatians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">6 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Fruit of the Spirit · Freedom in Yeshua</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Ephesians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">6 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Whole Armour of Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Philippians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">4 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">I Can Do All Things Through the Anointed</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Colossians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">4 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">He Is Before All Things</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1–2 Thessalonians</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">8 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Pray Without Ceasing · Rejoice Always</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1–2 Timothy · Titus</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">11 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">All Scripture Given by Inspiration of Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Hebrews</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">13 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Faith Is · Yeshua the Author and Finisher</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">James</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">5 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Faith Without Works Is Dead</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1–2 Peter</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">8 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Royal Priesthood · Cast All Your Care on Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1–2–3 John · Jude</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">7 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Jah Is Love · Contend for the Faith</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Revelation</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">22 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">King of Kings · New Jerusalem · Come Lord Yeshua</td></tr>
-    </table>
-  </div>
-
-  <!-- ETHIOPIAN EXCLUSIVES -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">Ethiopian Exclusives — Found Nowhere Else on Earth</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1 Enoch</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">108 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Watchers · Son of Man · Luminaries · Epistle</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Book of Jubilees</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">50 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Heavenly Tablets · Abraham Breaks the Idols</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1 Meqabyan</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">36 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Ethiopian Warriors of Jah Against Idolatry</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">2 Meqabyan</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">24 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Resurrection and the Day of Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">3 Meqabyan</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">10 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Fear Jah · Love Mercy · Do Justice</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Shepherd of Hermas</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">5 Visions</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">12 Commandments · 10 Similitudes</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Sinodos</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">Apostolic</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Canons of the Ethiopian Church</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Book of the Covenant</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">3 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Everlasting Covenant of Jah</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">1 Clement</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">65 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Love Does All Things in Harmony</td></tr>
-    </table>
-  </div>
-
-  <!-- SACRED ADDITIONS -->
-  <div style="margin-bottom:32px;">
-    <p style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:#8B6914;border-bottom:1px solid rgba(139,105,20,0.3);padding-bottom:6px;margin-bottom:0;">Sacred Additions</p>
-    <table style="width:100%;border-collapse:collapse;font-family:'EB Garamond',serif;">
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Nile Valley Prologue</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">Prologue</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Hymn to Aten · 42 Declarations of Maat · Poimandres</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Kebra Nagast</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">117 chapters</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Queen of Sheba · Menelik · The Ark in Ethiopia</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Gospel of Thomas</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">114 sayings</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Secret Sayings of Yeshua · Nag Hammadi</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Gospel of the Holy Twelve</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">13 lections</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">The Compassionate Christ</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Imperial Covenant</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">2 Speeches</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Haile Selassie I · 1930 · 1936</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Rastafari Sacred Writings</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">Sacred</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Holy Piby · Ital Law · Holy Days · Black Israelites</td></tr>
-      <tr style="border-bottom:1px dotted rgba(139,105,20,0.2);"><td style="padding:7px 0 7px 8px;font-size:15px;">Haile Selassie I</td><td style="font-size:11px;color:#8B6914;text-align:center;width:80px;">Parts I–V</td><td style="font-size:12px;color:#8B6914;font-style:italic;text-align:right;">Sacred Biography · Lineage · Coronation · OAU</td></tr>
-    </table>
-  </div>
-
-  <div style="text-align:center;padding:32px 0;border-top:2px solid rgba(139,105,20,0.3);">
-    <p style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#8B6914;">✦ · Jah Rastafari · ✦</p>
-  </div>
-
+<script>
+function jumpTo(id){
+  var el = document.getElementById(id);
+  if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+</script>
 </div>
