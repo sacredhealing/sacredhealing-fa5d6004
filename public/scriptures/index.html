@@ -7,32 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{
-  background:#FAF6EC !important;
-  color:#1a1208 !important;
-  font-family:'EB Garamond','Palatino Linotype',Georgia,serif !important;
-  font-size:17px;
-  line-height:1.8;
-  -webkit-font-smoothing:antialiased;
-}
-:root{
-  --parchment:#FAF6EC;
-  --parchment-dark:#F0E8D0;
-  --ink:#1a1208;
-  --ink-light:#3a2a18;
-  --gold:#8B6914;
-  --gold-light:#C9A84C;
-  --gold-bright:#D4AF37;
-  --red-rubric:#8B1A1A;
-}
-.cover-page{
-  min-height:100vh;
-  background:radial-gradient(ellipse at 50% 30%,#2a1a08 0%,#0d0800 60%,#000 100%) !important;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  text-align:center;padding:60px 40px;
-  position:relative;overflow:hidden;
-}
+html,body{background:#FAF6EC!important;color:#1a1208!important;font-family:'EB Garamond','Palatino Linotype',Georgia,serif!important;font-size:17px;line-height:1.8;-webkit-font-smoothing:antialiased;}
+:root{--parchment:#FAF6EC;--parchment-dark:#F0E8D0;--ink:#1a1208;--ink-light:#3a2a18;--gold:#8B6914;--gold-light:#C9A84C;--gold-bright:#D4AF37;--red-rubric:#8B1A1A;}
+.cover-page{min-height:100vh;background:radial-gradient(ellipse at 50% 30%,#2a1a08 0%,#0d0800 60%,#000 100%)!important;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 40px;position:relative;overflow:hidden;}
 .cover-eyebrow{font-family:'Cinzel',serif;font-size:9px;font-weight:600;letter-spacing:.6em;text-transform:uppercase;color:rgba(212,175,55,.5);margin-bottom:24px;position:relative;z-index:1;}
 .cover-title{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,6vw,40px);font-weight:700;line-height:1.15;color:#D4AF37;text-shadow:0 0 60px rgba(212,175,55,.3);margin-bottom:20px;position:relative;z-index:1;}
 .cover-subtitle{font-family:'Cinzel',serif;font-size:clamp(10px,2.5vw,15px);color:rgba(212,175,55,.6);letter-spacing:.25em;text-transform:uppercase;margin-bottom:40px;position:relative;z-index:1;}
@@ -48,15 +25,15 @@ html,body{
 .nav-pdf-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.9);background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:20px;padding:7px 14px;cursor:pointer;}
 .nav-toc-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.5);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:7px 14px;cursor:pointer;}
 .nav-spacer{height:51px;}
-.toc-overlay{display:none;position:fixed;inset:0;background:rgba(5,3,1,.97);z-index:2000;overflow-y:auto;padding:70px 22px 40px;}
+.toc-overlay{display:none;position:fixed;inset:0;background:rgba(5,3,1,.97);z-index:2000;overflow-y:auto;}
 .toc-overlay.open{display:block;}
-.toc-close{position:fixed;top:16px;right:16px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);color:#D4AF37;font-size:18px;border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.toc-title{font-family:'Cinzel Decorative',serif;font-size:18px;color:#D4AF37;text-align:center;margin-bottom:28px;}
 .toc-section{margin-bottom:24px;}
 .toc-section-name{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:rgba(212,175,55,.4);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid rgba(212,175,55,.1);}
-.toc-entry{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;text-decoration:none;}
-.toc-entry-num{font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,.4);min-width:58px;}
+.toc-entry{display:flex;align-items:baseline;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;text-decoration:none;}
+.toc-entry:hover .toc-entry-title{color:#D4AF37;}
+.toc-entry-num{font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,.5);min-width:100px;flex-shrink:0;}
 .toc-entry-title{font-family:'EB Garamond',serif;font-size:14px;color:rgba(255,255,255,.6);flex:1;}
+.toc-entry-pg{font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,.3);white-space:nowrap;margin-left:auto;padding-left:8px;flex-shrink:0;}
 .codex-page{max-width:780px;margin:0 auto;padding:3rem 1.5rem 6rem;}
 .book-divider{text-align:center;padding:56px 20px 36px;background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 50%,var(--parchment) 100%);margin:40px 0;border-top:2px solid rgba(139,105,20,.2);border-bottom:2px solid rgba(139,105,20,.2);}
 .book-vol-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.6em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
@@ -66,9 +43,8 @@ html,body{
 .book-intro{font-family:'EB Garamond',serif;font-style:italic;font-size:.95em;color:var(--ink-light);line-height:1.8;max-width:560px;margin:0 auto;}
 .chapter-block{margin:2.5rem 0 1rem;}
 .chapter-ornament{color:var(--gold-bright);font-size:1.3em;display:block;text-align:center;margin:2rem 0 .5rem;}
-.chapter-title{font-family:'Cinzel',serif;font-style:normal;font-size:.9em;font-weight:600;letter-spacing:.08em;color:var(--red-rubric);text-align:center;display:block;margin-bottom:.4rem;text-transform:uppercase;}
+.chapter-title{font-family:'Cinzel',serif;font-size:.9em;font-weight:600;letter-spacing:.08em;color:var(--red-rubric);text-align:center;display:block;margin-bottom:.4rem;text-transform:uppercase;}
 .chapter-subtitle{font-family:'EB Garamond',serif;font-style:italic;font-size:.88em;color:var(--gold);text-align:center;display:block;margin-bottom:1.2rem;}
-.verse-block{margin-bottom:.2rem;}
 .vnum{font-size:.52em;color:var(--gold);vertical-align:super;font-weight:700;margin-right:.2em;font-style:normal;font-family:'Cinzel',serif;}
 .verse{display:inline;}
 p.para{text-indent:1.5em;margin-bottom:.15rem;}
@@ -88,68 +64,71 @@ p.para:first-of-type{text-indent:0;}
 </style>
 </head>
 <body>
-
 <div id="loading">
   <p class="load-title">Opening the Sacred Codex</p>
   <div class="load-bar-wrap"><div class="load-bar" id="bar"></div></div>
   <p class="load-status" id="status">Invoking the Akasha...</p>
 </div>
-
 <div id="content" style="display:none"></div>
-
 <script>
-const PARTS = [
-  { file:'part2_cover_nav.html', label:'Opening the covenant gates...' },
-  { file:'part2b_frontmatter.html', label:'Opening the sacred foreword...' },
-  { file:'part7_genesis.html', label:'In the beginning — Genesis...' },
-  { file:'part8_exodus.html', label:'The Deliverance — Exodus...' },
-  { file:'part9_lev_num_deut.html', label:'The Law — Leviticus, Numbers, Deuteronomy...' },
-  { file:'part10_joshua_judges_ruth.html', label:'Into the Promised Land — Joshua, Judges, Ruth...' },
-  { file:'part11_samuel_kings.html', label:'The Kingdom — Samuel, Kings, Chronicles...' },
-  { file:'part12_ezra_neh_esther.html', label:'Return from Exile — Ezra, Nehemiah, Esther...' },
-  { file:'part13_job.html', label:'The Trial of Job...' },
-  { file:'part14_psalms.html', label:'The Psalms of David — Songs of Zion...' },
-  { file:'part15_proverbs_eccl_song.html', label:'Wisdom — Proverbs, Ecclesiastes, Song of Solomon...' },
-  { file:'part16_isaiah.html', label:'Isaiah — Arise Shine For Thy Light Is Come...' },
-  { file:'part17_jeremiah_lam.html', label:'Jeremiah and Lamentations...' },
-  { file:'part18_ezekiel_daniel.html', label:'Ezekiel and Daniel — The Wheel Within a Wheel...' },
-  { file:'part19_minor_prophets.html', label:'The Twelve Minor Prophets — Hosea through Malachi...' },
-  { file:'part20_matthew.html', label:'The Gospel of Matthew — The Sermon on the Mount...' },
-  { file:'part21_mark_luke.html', label:'Mark and Luke — The Magnificat · The Prodigal Son...' },
-  { file:'part22_acts.html', label:'Acts — Ethiopia Receives the Gospel...' },
-  { file:'part23_epistles.html', label:'The Epistles of Paul — Romans through James...' },
-  { file:'part24_peter_john_rev.html', label:'Peter · John · Revelation — King of Kings, Lord of Lords...' },
-  { file:'part25_jubilees.html', label:'The Book of Jubilees — The Heavenly Tablets...' },
-  { file:'part26_meqabyan.html', label:'1-2-3 Meqabyan — Ethiopian Warriors of Jah...' },
-  { file:'part27_shepherd_hermas.html', label:'The Shepherd of Hermas — The Twelve Commandments...' },
-  { file:'part28_sinodos_clement.html', label:'Sinodos · Clement · The 88 Books Complete...' },
-  { file:'part29_imperial_coronation.html', label:'Imperial Covenant — Coronation Address 1930...' },
-  { file:'part30_imperial_1936.html', label:'Imperial Covenant — League of Nations 1936...' },
-  { file:'part31_rasta_additions.html', label:'Rastafari Sacred Writings — The Black Israelites · Holy Piby · Ital · Holy Days...' },
-  { file:'part3_nile_valley.html', label:'Calling forth Nile Valley wisdom...' },
-  { file:'part4_enoch.html', label:'Summoning the Book of Enoch...' },
-  { file:'part5_kebra.html', label:'Unveiling the Kebra Nagast...' },
-  { file:'part6_gospels.html', label:'Restoring the Holy Gospels...' }
+const PARTS=[
+  {file:'part2_cover_nav.html',label:'Opening the Sacred Codex...'},
+  {file:'part2b_frontmatter.html',label:'Invocation and Foreword...'},
+  {file:'part7_genesis.html',label:'In the beginning — Genesis...'},
+  {file:'part8_exodus.html',label:'The Deliverance — Exodus...'},
+  {file:'part9_lev_num_deut.html',label:'The Law — Leviticus, Numbers, Deuteronomy...'},
+  {file:'part10_joshua_judges_ruth.html',label:'Into the Promised Land — Joshua, Judges, Ruth...'},
+  {file:'part11_samuel_kings.html',label:'The Kingdom — Samuel, Kings...'},
+  {file:'part12_ezra_neh_esther.html',label:'Return from Exile — Ezra, Nehemiah, Esther...'},
+  {file:'part13_job.html',label:'The Trial of Job...'},
+  {file:'part14_psalms.html',label:'The Psalms of David — Songs of Zion...'},
+  {file:'part15_proverbs_eccl_song.html',label:'Wisdom — Proverbs, Ecclesiastes, Song of Solomon...'},
+  {file:'part16_isaiah.html',label:'Isaiah — Arise Shine For Thy Light Is Come...'},
+  {file:'part17_jeremiah_lam.html',label:'Jeremiah and Lamentations...'},
+  {file:'part18_ezekiel_daniel.html',label:'Ezekiel and Daniel...'},
+  {file:'part19_minor_prophets.html',label:'The Twelve Minor Prophets — Hosea through Malachi...'},
+  {file:'part20_matthew.html',label:'The Gospel of Matthew...'},
+  {file:'part21_mark_luke.html',label:'Mark and Luke...'},
+  {file:'part22_acts.html',label:'Acts — Ethiopia Receives the Gospel...'},
+  {file:'part23_epistles.html',label:'The Epistles of Paul...'},
+  {file:'part24_peter_john_rev.html',label:'Peter, John, Revelation — King of Kings...'},
+  {file:'part25_jubilees.html',label:'The Book of Jubilees...'},
+  {file:'part26_meqabyan.html',label:'1-2-3 Meqabyan — Ethiopian Warriors of Jah...'},
+  {file:'part27_shepherd_hermas.html',label:'The Shepherd of Hermas...'},
+  {file:'part28_sinodos_clement.html',label:'Sinodos and Clement...'},
+  {file:'part3_nile_valley.html',label:'Nile Valley Wisdom — Hymn to Aten, Maat, Poimandres...'},
+  {file:'part4_enoch.html',label:'The Book of Enoch...'},
+  {file:'part5_kebra.html',label:'Kebra Nagast — The Glory of Kings, 117 Chapters...'},
+  {file:'part6_gospels.html',label:'The Restored Gospels — Thomas, Holy Twelve...'},
+  {file:'part29_imperial_coronation.html',label:'Imperial Covenant — Coronation Address 1930...'},
+  {file:'part30_imperial_1936.html',label:'Imperial Covenant — League of Nations 1936...'},
+  {file:'part31_rasta_additions.html',label:'Rastafari Sacred Writings — Holy Piby, Ital, Holy Days...'},
+  {file:'part32_selassie_a.html',label:'Haile Selassie I — The Divine Origin...'},
+  {file:'part32_selassie_b.html',label:'Haile Selassie I — Birth, Early Life, Coronation...'},
+  {file:'part32_selassie_c.html',label:'Haile Selassie I — Exile, Return, Pan-Africa...'}
 ];
-
-async function load() {
-  let html = '';
-  for (let i=0; i<PARTS.length; i++) {
-    document.getElementById('status').textContent = PARTS[i].label;
-    document.getElementById('bar').style.width = ((i/PARTS.length)*85+10)+'%';
-    const res = await fetch('/scriptures/'+PARTS[i].file+'?v=20260728i');
-    let text = await res.text();
-    // Strip any stray html/head/body tags from part files
-    text = text.replace(/<\/?(!DOCTYPE|html|head|body)[^>]*>/gi,'');
-    html += text;
+async function load(){
+  let html='';
+  for(let i=0;i<PARTS.length;i++){
+    document.getElementById('status').textContent=PARTS[i].label;
+    document.getElementById('bar').style.width=((i/PARTS.length)*90+5)+'%';
+    const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260728j');
+    let text=await res.text();
+    text=text.replace(/<\/?((!DOCTYPE|html|head|body)[^>]*)>/gi,'');
+    html+=text;
   }
-  document.getElementById('bar').style.width = '100%';
-  document.getElementById('status').textContent = 'The Word is revealed.';
-  await new Promise(r=>setTimeout(r,500));
+  document.getElementById('bar').style.width='100%';
+  document.getElementById('status').textContent='The Word is revealed. Jah Rastafari.';
+  await new Promise(r=>setTimeout(r,600));
   document.getElementById('loading').style.display='none';
-  const el = document.getElementById('content');
+  const el=document.getElementById('content');
   el.style.display='block';
-  el.innerHTML = html;
+  el.innerHTML=html;
+  el.querySelectorAll('script').forEach(s=>{
+    const ns=document.createElement('script');
+    ns.textContent=s.textContent;
+    document.body.appendChild(ns);
+  });
 }
 load();
 </script>
