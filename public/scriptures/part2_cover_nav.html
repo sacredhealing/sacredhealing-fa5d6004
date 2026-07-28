@@ -1,119 +1,94 @@
-<!-- ═══════════════ NAVIGATION BAR ═══════════════ -->
+
 <nav class="reader-nav">
-  
   <span class="nav-title">The Complete Restored Covenant Scriptures</span>
   <button class="nav-toc-btn" onclick="document.getElementById('toc').classList.toggle('open')">Contents</button>
   <button class="nav-pdf-btn" onclick="window.print()">⬇ PDF</button>
 </nav>
 <div class="nav-spacer"></div>
 
-<!-- ═══════════════ TOC OVERLAY ═══════════════ -->
 <div id="toc" class="toc-overlay">
   <button class="toc-close" onclick="document.getElementById('toc').classList.remove('open')">✕</button>
-  <div class="toc-title">Table of Contents</div>
+  <div class="toc-title">The Complete Restored Covenant Scriptures</div>
+  <p style="text-align:center;font-family:'EB Garamond',serif;font-style:italic;font-size:0.85rem;color:rgba(212,175,55,0.5);margin-bottom:24px;">88 Books · Ethiopian Orthodox Canon</p>
 
   <div class="toc-section">
-    <div class="toc-section-name">Prologue</div>
-    <a class="toc-entry" href="#nile-valley" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Prologue</span>
-      <span class="toc-entry-title">Nile Valley Wisdom — Hymn to Aten · 42 Declarations of Maat · Poimandres</span>
-    </a>
+    <div class="toc-section-name">Front Matter</div>
+    <a class="toc-entry" href="#" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Invocation</span><span class="toc-entry-title">Opening Prayer & Editorial Note</span></a>
   </div>
 
   <div class="toc-section">
-    <div class="toc-section-name">Volume I</div>
-    <a class="toc-entry" href="#enoch-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Vol. I</span>
-      <span class="toc-entry-title">The Book of Enoch — Complete Sacred Codex</span>
-    </a>
-    <a class="toc-entry" href="#enoch-ch1" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 1–36</span>
-      <span class="toc-entry-title">The Book of Watchers</span>
-    </a>
-    <a class="toc-entry" href="#enoch-ch37" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 37–71</span>
-      <span class="toc-entry-title">The Book of Parables</span>
-    </a>
-    <a class="toc-entry" href="#enoch-ch72" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 72–82</span>
-      <span class="toc-entry-title">The Book of Luminaries</span>
-    </a>
-    <a class="toc-entry" href="#enoch-ch83" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 83–90</span>
-      <span class="toc-entry-title">The Dream Visions</span>
-    </a>
-    <a class="toc-entry" href="#enoch-ch91" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 91–105</span>
-      <span class="toc-entry-title">The Epistle of Enoch</span>
-    </a>
+    <div class="toc-section-name">The Torah — Five Books of Moses</div>
+    <a class="toc-entry" href="#gen-ch1" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Genesis</span><span class="toc-entry-title">Creation · The Fall · Noah · Abraham · Joseph</span></a>
+    <a class="toc-entry" href="#exodus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Exodus</span><span class="toc-entry-title">The Burning Bush · Ten Plagues · Red Sea · Ten Commandments</span></a>
+    <a class="toc-entry" href="#leviticus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Leviticus</span><span class="toc-entry-title">The Law of Holiness · Love Thy Neighbour</span></a>
+    <a class="toc-entry" href="#leviticus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Numbers</span><span class="toc-entry-title">The Wilderness · The Aaronic Blessing</span></a>
+    <a class="toc-entry" href="#leviticus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Deuteronomy</span><span class="toc-entry-title">The Shema · The Blessings · Death of Moses</span></a>
   </div>
 
   <div class="toc-section">
-    <div class="toc-section-name">Volume II</div>
-    <a class="toc-entry" href="#kebra-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Vol. II</span>
-      <span class="toc-entry-title">Kebra Nagast — The Glory of Kings</span>
-    </a>
-    <a class="toc-entry" href="#kebra-ch1" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 1–10</span>
-      <span class="toc-entry-title">The Queen Makeda Encounters Shlomo</span>
-    </a>
-    <a class="toc-entry" href="#kebra-ch11" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 11–20</span>
-      <span class="toc-entry-title">The Ark Comes to Ethiopia</span>
-    </a>
-    <a class="toc-entry" href="#kebra-ch21" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Ch. 21–30</span>
-      <span class="toc-entry-title">The Covenant Established</span>
-    </a>
+    <div class="toc-section-name">Historical Books</div>
+    <a class="toc-entry" href="#joshua-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Joshua</span><span class="toc-entry-title">Be Strong and Courageous</span></a>
+    <a class="toc-entry" href="#joshua-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Judges</span><span class="toc-entry-title">Deborah · Gideon · Samson</span></a>
+    <a class="toc-entry" href="#joshua-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ruth</span><span class="toc-entry-title">Whither Thou Goest I Will Go</span></a>
+    <a class="toc-entry" href="#samuel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1–2 Samuel</span><span class="toc-entry-title">The Anointing of David · The Davidic Covenant</span></a>
+    <a class="toc-entry" href="#samuel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1–2 Kings</span><span class="toc-entry-title">Solomon's Wisdom · Temple · Elijah</span></a>
+    <a class="toc-entry" href="#ezra-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ezra · Nehemiah</span><span class="toc-entry-title">Return from Babylon · The Joy of Jah</span></a>
+    <a class="toc-entry" href="#ezra-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Esther</span><span class="toc-entry-title">For Such a Time as This</span></a>
   </div>
 
   <div class="toc-section">
-    <div class="toc-section-name">Volume III</div>
-    <a class="toc-entry" href="#gospels-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Vol. III</span>
-      <span class="toc-entry-title">The Restored Gospels</span>
-    </a>
-    <a class="toc-entry" href="#john-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Gospel</span>
-      <span class="toc-entry-title">The Gospel of Yeshua according to Yohanan</span>
-    </a>
-    <a class="toc-entry" href="#thomas-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Sayings</span>
-      <span class="toc-entry-title">The 114 Secret Sayings of Yeshua — Gospel of Thomas</span>
-    </a>
-    <a class="toc-entry" href="#holytwelve-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Lections</span>
-      <span class="toc-entry-title">The Gospel of the Holy Twelve — 13 Lections</span>
-    </a>
+    <div class="toc-section-name">Wisdom Books</div>
+    <a class="toc-entry" href="#job-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Job</span><span class="toc-entry-title">Where Wast Thou · I Know My Redeemer Liveth</span></a>
+    <a class="toc-entry" href="#psalms-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Psalms</span><span class="toc-entry-title">150 Songs · Jah Is My Shepherd · By the Rivers of Babylon</span></a>
+    <a class="toc-entry" href="#proverbs-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Proverbs</span><span class="toc-entry-title">Trust in Jah · The Virtuous Woman</span></a>
+    <a class="toc-entry" href="#proverbs-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ecclesiastes</span><span class="toc-entry-title">Vanity of Vanities · Fear Jah</span></a>
+    <a class="toc-entry" href="#proverbs-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Song of Solomon</span><span class="toc-entry-title">I Am Black and Beautiful · Love Is Strong as Death</span></a>
   </div>
 
   <div class="toc-section">
-    <div class="toc-section-name">Volume IV</div>
-    <a class="toc-entry" href="#imperial-intro" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Vol. IV</span>
-      <span class="toc-entry-title">Imperial Covenant — The Voice of Jah on Earth</span>
-    </a>
-    <a class="toc-entry" href="#selassie-1936" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">1936</span>
-      <span class="toc-entry-title">Appeal to the League of Nations</span>
-    </a>
-    <a class="toc-entry" href="#selassie-1963" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">1963</span>
-      <span class="toc-entry-title">Address to the United Nations</span>
-    </a>
-    <a class="toc-entry" href="#selassie-1930" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">1930</span>
-      <span class="toc-entry-title">Coronation Address</span>
-    </a>
-    <a class="toc-entry" href="#selassie-war" onclick="document.getElementById('toc').classList.remove('open')">
-      <span class="toc-entry-num">Prophecy</span>
-      <span class="toc-entry-title">Until the Philosophy of War is Banished</span>
-    </a>
+    <div class="toc-section-name">Major Prophets</div>
+    <a class="toc-entry" href="#isaiah-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Isaiah</span><span class="toc-entry-title">He Was Wounded · Mount Up With Wings · Arise Shine</span></a>
+    <a class="toc-entry" href="#jeremiah-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Jeremiah</span><span class="toc-entry-title">I Know the Plans · New Covenant Written on the Heart</span></a>
+    <a class="toc-entry" href="#jeremiah-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Lamentations</span><span class="toc-entry-title">New Every Morning · Great Is Thy Faithfulness</span></a>
+    <a class="toc-entry" href="#ezekiel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ezekiel</span><span class="toc-entry-title">The Wheel Within a Wheel · Valley of Dry Bones</span></a>
+    <a class="toc-entry" href="#ezekiel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Daniel</span><span class="toc-entry-title">The Furnace · The Lion's Den · Ancient of Days</span></a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Minor Prophets</div>
+    <a class="toc-entry" href="#minorprophets-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Hosea — Malachi</span><span class="toc-entry-title">All Twelve · Ending with the Sun of Righteousness</span></a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">The New Covenant</div>
+    <a class="toc-entry" href="#matthew-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Matthew</span><span class="toc-entry-title">Sermon on the Mount · The Beatitudes · Great Commission</span></a>
+    <a class="toc-entry" href="#mark-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Mark · Luke</span><span class="toc-entry-title">Magnificat · Good Samaritan · Prodigal Son</span></a>
+    <a class="toc-entry" href="#john-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">John</span><span class="toc-entry-title">In the Beginning Was the Word · I Am the Way</span></a>
+    <a class="toc-entry" href="#acts-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Acts</span><span class="toc-entry-title">Pentecost · The Ethiopian Eunuch · Ethiopia Receives Gospel</span></a>
+    <a class="toc-entry" href="#epistles-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Romans — James</span><span class="toc-entry-title">Nothing Shall Separate · Greatest of These Is Love · Faith Without Works</span></a>
+    <a class="toc-entry" href="#peter-john-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Peter · John · Jude</span><span class="toc-entry-title">Royal Priesthood · Jah Is Love · Contend for the Faith</span></a>
+    <a class="toc-entry" href="#peter-john-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Revelation</span><span class="toc-entry-title">King of Kings · New Jerusalem · Come Lord Yeshua</span></a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Ethiopian Exclusives — Found Nowhere Else</div>
+    <a class="toc-entry" href="#enoch-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1 Enoch</span><span class="toc-entry-title">The Watchers · Son of Man · The Luminaries · The Epistle</span></a>
+    <a class="toc-entry" href="#jubilees-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Jubilees</span><span class="toc-entry-title">The Heavenly Tablets · Abraham Breaks the Idols</span></a>
+    <a class="toc-entry" href="#meqabyan-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1–3 Meqabyan</span><span class="toc-entry-title">Ethiopian Warriors of Jah · The Resurrection · The Fear of Jah</span></a>
+    <a class="toc-entry" href="#shepherd-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Shepherd of Hermas</span><span class="toc-entry-title">Five Visions · Twelve Commandments · Ten Similitudes</span></a>
+    <a class="toc-entry" href="#sinodos-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Sinodos · Covenant · Clement</span><span class="toc-entry-title">The Apostolic Constitution · The Everlasting Covenant</span></a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Sacred Additions</div>
+    <a class="toc-entry" href="#nile-valley" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Nile Valley</span><span class="toc-entry-title">Hymn to Aten · 42 Declarations of Maat · Poimandres</span></a>
+    <a class="toc-entry" href="#kebra-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Kebra Nagast</span><span class="toc-entry-title">Glory of Kings · Queen of Sheba · The Ark Comes to Ethiopia</span></a>
+    <a class="toc-entry" href="#thomas-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Gospel of Thomas</span><span class="toc-entry-title">114 Secret Sayings of Yeshua</span></a>
+    <a class="toc-entry" href="#holytwelve-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Gospel of the Holy Twelve</span><span class="toc-entry-title">The Compassionate Christ · 13 Lections</span></a>
+    <a class="toc-entry" href="#imperial-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Imperial Covenant</span><span class="toc-entry-title">Haile Selassie I · Jah Rastafari — In Preparation</span></a>
   </div>
 </div>
 
-<!-- ═══════════════ COVER PAGE ═══════════════ -->
 <div class="cover-page">
   <svg class="cover-seal" viewBox="0 0 140 140">
     <defs>
@@ -123,12 +98,16 @@
       </radialGradient>
     </defs>
     <ellipse cx="70" cy="70" rx="68" ry="68" fill="url(#cg)"/>
-    <circle cx="70" cy="70" r="64" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="0.8" stroke-dasharray="4 8"/>
-    <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="0.6"/>
+    <circle cx="70" cy="70" r="64" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="0.8" stroke-dasharray="4 8">
+      <animateTransform attributeName="transform" type="rotate" values="0 70 70;360 70 70" dur="60s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(212,175,55,0.18)" stroke-width="0.6"/>
     <polygon points="70,10 122,102 18,102" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.7)" stroke-width="1.2"/>
     <polygon points="70,130 18,38 122,38" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
     <circle cx="70" cy="70" r="18" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.6)" stroke-width="1"/>
-    <circle cx="70" cy="70" r="6" fill="rgba(255,248,160,0.95)"/>
+    <circle cx="70" cy="70" r="6" fill="rgba(255,248,160,0.95)">
+      <animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite"/>
+    </circle>
     <circle cx="70" cy="6" r="3" fill="rgba(255,235,100,0.9)"/>
     <circle cx="122" cy="102" r="3" fill="rgba(255,235,100,0.9)"/>
     <circle cx="18" cy="102" r="3" fill="rgba(255,235,100,0.9)"/>
@@ -136,16 +115,19 @@
     <circle cx="18" cy="38" r="3" fill="rgba(255,235,100,0.9)"/>
     <circle cx="122" cy="38" r="3" fill="rgba(255,235,100,0.9)"/>
   </svg>
-  <p class="cover-eyebrow">Sacred Healing · Siddha Quantum Intelligence</p>
+  <p class="cover-eyebrow">Sacred Healing · Siddha Quantum Intelligence · Uddevalla, Sweden</p>
   <h1 class="cover-title">The Complete<br/>Restored Covenant<br/>Scriptures</h1>
-  <p class="cover-subtitle">One Volume · Four Books · The Full Restoration</p>
+  <p class="cover-subtitle">88 Books · Ethiopian Orthodox Canon · One Sacred Volume</p>
   <div class="cover-rule"></div>
   <div class="cover-volumes">
-    <div class="cover-vol"><span>Prologue</span> · Nile Valley Wisdom — Hymn to Aten · Maat · Poimandres</div>
-    <div class="cover-vol"><span>Volume I</span> · The Book of Enoch — Complete Sacred Codex</div>
-    <div class="cover-vol"><span>Volume II</span> · Kebra Nagast — The Glory of Kings</div>
-    <div class="cover-vol"><span>Volume III</span> · The Restored Gospels of Yeshua</div>
-    <div class="cover-vol"><span>Volume IV</span> · Imperial Covenant — Haile Selassie I · Jah Rastafari</div>
+    <div class="cover-vol"><span>The Torah</span> · Genesis · Exodus · Leviticus · Numbers · Deuteronomy</div>
+    <div class="cover-vol"><span>Historical Books</span> · Joshua through Esther</div>
+    <div class="cover-vol"><span>Wisdom Books</span> · Job · Psalms · Proverbs · Ecclesiastes · Song of Solomon</div>
+    <div class="cover-vol"><span>Major Prophets</span> · Isaiah · Jeremiah · Lamentations · Ezekiel · Daniel</div>
+    <div class="cover-vol"><span>Minor Prophets</span> · All Twelve · Hosea through Malachi</div>
+    <div class="cover-vol"><span>New Testament</span> · Matthew through Revelation</div>
+    <div class="cover-vol"><span>Ethiopian Exclusives</span> · Enoch · Jubilees · Meqabyan · Shepherd · Sinodos · Clement</div>
+    <div class="cover-vol"><span>Sacred Additions</span> · Nile Valley · Kebra Nagast · Thomas · Imperial Covenant</div>
   </div>
   <div class="cover-rule"></div>
   <p class="cover-publisher">Sacred Healing Publishing · Uddevalla, Sweden · 2026</p>
