@@ -346,6 +346,50 @@ export default function Explore() {
         </div>
       </div>
 
+
+      {/* ══ HOLY BOOKS BANNER ══ */}
+      <div style={{ margin: '13px 16px 0' }}>
+        <div onClick={() => navigate('/holy-books')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 40%, rgba(60,35,0,0.98) 0%, rgba(20,11,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.52)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite' }}>
+          {/* Sacred geometry — Star of David / Merkaba top right */}
+          <div style={{ position: 'absolute', top: -25, right: -25, width: 165, height: 165, pointerEvents: 'none' }}>
+            <svg viewBox="0 0 165 165" width="165" height="165">
+              <defs><radialGradient id="bgHB" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(255,215,70,0.32)"/><stop offset="55%" stopColor="rgba(212,175,55,0.07)"/><stop offset="100%" stopColor="rgba(0,0,0,0)"/></radialGradient></defs>
+              <ellipse cx="82" cy="82" rx="78" ry="78" fill="url(#bgHB)"/>
+              {/* Outer dashed orbit */}
+              <circle cx="82" cy="82" r="72" fill="none" stroke="rgba(212,175,55,0.22)" strokeWidth="0.8" strokeDasharray="4 10"><animateTransform attributeName="transform" type="rotate" values="0 82 82;360 82 82" dur="55s" repeatCount="indefinite"/></circle>
+              {/* Inner orbit */}
+              <circle cx="82" cy="82" r="56" fill="none" stroke="rgba(212,175,55,0.14)" strokeWidth="0.6" strokeDasharray="2 8"><animateTransform attributeName="transform" type="rotate" values="360 82 82;0 82 82" dur="35s" repeatCount="indefinite"/></circle>
+              {/* Star of David — upward triangle */}
+              <polygon points="82,14 136,110 28,110" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.65)" strokeWidth="1.3"><animateTransform attributeName="transform" type="rotate" values="0 82 82;360 82 82" dur="42s" repeatCount="indefinite"/></polygon>
+              {/* Star of David — downward triangle */}
+              <polygon points="82,150 28,54 136,54" fill="rgba(255,200,55,0.04)" stroke="rgba(255,210,60,0.52)" strokeWidth="1.2"><animateTransform attributeName="transform" type="rotate" values="360 82 82;0 82 82" dur="42s" repeatCount="indefinite"/></polygon>
+              {/* Flower of life circles */}
+              <circle cx="82" cy="82" r="30" fill="none" stroke="rgba(212,175,55,0.09)" strokeWidth="0.5"/>
+              <circle cx="112" cy="82" r="30" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.5"/>
+              <circle cx="52" cy="82" r="30" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.5"/>
+              <circle cx="97" cy="56" r="30" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.5"/>
+              <circle cx="67" cy="56" r="30" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.5"/>
+              {/* Pulse rings */}
+              {[0,1,2].map(i => (<circle key={i} cx="82" cy="82" r="10" fill="none" stroke="rgba(212,175,55,0.65)" strokeWidth="1.2"><animate attributeName="r" values="8;72" dur="3.8s" begin={`${i*1.27}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="3.8s" begin={`${i*1.27}s`} repeatCount="indefinite"/></circle>))}
+              {/* Star points */}
+              {[0,60,120,180,240,300].map((angle,i) => { const rad=angle*Math.PI/180; return <circle key={i} cx={82+Math.cos(rad)*72} cy={82+Math.sin(rad)*72} r="3.5" fill="rgba(255,235,100,0.9)"><animate attributeName="opacity" values="0.2;1;0.2" dur={`${1.8+i*0.32}s`} repeatCount="indefinite"/></circle>; })}
+              {/* Centre orb */}
+              <circle cx="82" cy="82" r="16" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.55)" strokeWidth="1.3"><animate attributeName="r" values="14;20;14" dur="3s" repeatCount="indefinite"/></circle>
+              <circle cx="82" cy="82" r="5" fill="rgba(255,248,160,0.97)"><animate attributeName="r" values="4;7;4" dur="1.9s" repeatCount="indefinite"/></circle>
+            </svg>
+          </div>
+          <div style={{ position: 'relative', zIndex: 1, padding: '22px 20px 20px' }}>
+            <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 9 }}>SACRED LIBRARY · COVENANT SCRIPTURES</p>
+            <div style={{ fontFamily: "'Cinzel',serif", fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, fontSize: 'clamp(22px, 6vw, 28px)', marginBottom: 11, maxWidth: '65%', background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'hShimmer 5s linear infinite' }}>HOLY<br/>BOOKS</div>
+            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.7, marginBottom: 14, maxWidth: '72%' }}>The Complete Restored Covenant Scriptures — Enoch · Kebra Nagast · Restored Gospels · Imperial Covenant · 5 sacred volumes</p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 15 }}>
+              {['Read Online','PDF Download','Physical Copy'].map(l => <span key={l} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 20, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.28)', color: 'rgba(212,175,55,0.85)' }}>{l}</span>)}
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); navigate('/holy-books'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, padding: '10px 22px', cursor: 'pointer' }}>ENTER →</button>
+          </div>
+        </div>
+      </div>
+
       {/* ══ ABUNDANCE FIELD BANNER ══ */}
       <div style={{ margin: '13px 16px 0' }}>
         <div onClick={() => navigate('/affiliate/dashboard')} style={{ position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse at 70% 40%, rgba(45,26,0,0.98) 0%, rgba(15,8,0,0.99) 60%, #050505 100%)', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 24, cursor: 'pointer', animation: 'rimG 4s ease-in-out infinite' }}>
@@ -1228,4 +1272,5 @@ export default function Explore() {
     </div>
   );
 }
+
 
