@@ -19,6 +19,9 @@ export default function HolyBooks() {
   const openScripture = () => {
     window.location.href = '/scriptures/index.html';
   };
+  const openTOC = () => {
+    window.location.href = '/scriptures/toc.html';
+  };
 
   if (!isAdmin) {
     return (
@@ -74,6 +77,23 @@ export default function HolyBooks() {
         <p style={{ color:"rgba(255,255,255,0.3)", fontSize:13, fontStyle:"italic", marginBottom:24, lineHeight:1.7 }}>
           88 books · Ethiopian Orthodox Canon · One sacred volume.
         </p>
+
+        <button onClick={openTOC} style={{
+          width:"100%", padding:"16px", borderRadius:18, marginBottom:12,
+          background:"rgba(255,255,255,0.03)",
+          border:"1px solid rgba(212,175,55,0.25)", cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center", gap:14,
+        }}>
+          <span style={{ fontSize:22 }}>📋</span>
+          <div style={{ textAlign:"left" }}>
+            <div style={{ fontFamily:"serif", fontSize:15, color:"rgba(212,175,55,0.8)", marginBottom:4 }}>
+              Table of Contents
+            </div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)" }}>
+              Every book · chapter counts · jump to any section
+            </div>
+          </div>
+        </button>
 
         <button onClick={openScripture} style={{
           width:"100%", padding:"22px", borderRadius:18, marginBottom:24,
