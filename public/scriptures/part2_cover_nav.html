@@ -1,93 +1,181 @@
 
-<nav class="reader-nav"><button class="nav-back" onclick="history.back()" style="background:none;border:none;color:rgba(212,175,55,0.8);cursor:pointer;font-size:20px;padding:4px 8px;">←</button>
+<nav class="reader-nav">
+  <button class="nav-back" onclick="history.back()" style="background:none;border:none;color:rgba(212,175,55,0.8);cursor:pointer;font-size:20px;padding:4px 8px;flex-shrink:0;">←</button>
   <span class="nav-title">The Complete Restored Covenant Scriptures</span>
-  <button class="nav-toc-btn" onclick="document.getElementById('toc').classList.toggle('open')">Contents</button>
+  <button class="nav-toc-btn" onclick="toggleTOC()" id="toc-btn">Contents</button>
   <button class="nav-pdf-btn" onclick="window.print()">⬇ PDF</button>
 </nav>
 <div class="nav-spacer"></div>
 
+<!-- FULL SCREEN TOC -->
 <div id="toc" class="toc-overlay">
-  <button class="toc-close" onclick="document.getElementById('toc').classList.remove('open')">✕</button>
-  <div class="toc-title">The Complete Restored Covenant Scriptures</div>
-  <p style="text-align:center;font-family:'EB Garamond',serif;font-style:italic;font-size:0.85rem;color:rgba(212,175,55,0.5);margin-bottom:24px;">88 Books · Ethiopian Orthodox Canon</p>
-
-  <div class="toc-section">
-    <div class="toc-section-name">Front Matter</div>
-    <a class="toc-entry" href="#" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Invocation</span><span class="toc-entry-title">Opening Prayer & Editorial Note</span></a>
+  <div style="position:sticky;top:0;background:#050505;padding:16px 20px;border-bottom:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;gap:12;z-index:10;">
+    <button onclick="toggleTOC()" style="background:none;border:none;color:rgba(212,175,55,0.7);font-size:20px;cursor:pointer;padding:4px 8px;">←</button>
+    <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.55);flex:1;">Table of Contents</span>
+    <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.2em;color:rgba(212,175,55,0.35);">88 BOOKS</span>
   </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">The Torah — Five Books of Moses</div>
-    <a class="toc-entry" href="#gen-ch1" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Genesis</span><span class="toc-entry-title">Creation · The Fall · Noah · Abraham · Joseph</span></a>
-    <a class="toc-entry" href="#exodus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Exodus</span><span class="toc-entry-title">The Burning Bush · Ten Plagues · Red Sea · Ten Commandments</span></a>
-    <a class="toc-entry" href="#leviticus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Leviticus</span><span class="toc-entry-title">The Law of Holiness · Love Thy Neighbour</span></a>
-    <a class="toc-entry" href="#leviticus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Numbers</span><span class="toc-entry-title">The Wilderness · The Aaronic Blessing</span></a>
-    <a class="toc-entry" href="#leviticus-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Deuteronomy</span><span class="toc-entry-title">The Shema · The Blessings · Death of Moses</span></a>
-  </div>
+  <div style="padding:16px 20px 60px;">
 
-  <div class="toc-section">
-    <div class="toc-section-name">Historical Books</div>
-    <a class="toc-entry" href="#joshua-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Joshua</span><span class="toc-entry-title">Be Strong and Courageous</span></a>
-    <a class="toc-entry" href="#joshua-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Judges</span><span class="toc-entry-title">Deborah · Gideon · Samson</span></a>
-    <a class="toc-entry" href="#joshua-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ruth</span><span class="toc-entry-title">Whither Thou Goest I Will Go</span></a>
-    <a class="toc-entry" href="#samuel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1–2 Samuel</span><span class="toc-entry-title">The Anointing of David · The Davidic Covenant</span></a>
-    <a class="toc-entry" href="#samuel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1–2 Kings</span><span class="toc-entry-title">Solomon's Wisdom · Temple · Elijah</span></a>
-    <a class="toc-entry" href="#ezra-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ezra · Nehemiah</span><span class="toc-entry-title">Return from Babylon · The Joy of Jah</span></a>
-    <a class="toc-entry" href="#ezra-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Esther</span><span class="toc-entry-title">For Such a Time as This</span></a>
-  </div>
+    <!-- FRONT MATTER -->
+    <div class="toc-section">
+      <div class="toc-section-name">Front Matter</div>
+      <a class="toc-entry" onclick="goTo('front-matter')"><span class="toc-entry-num">—</span><span class="toc-entry-title">Invocation · Editorial Note · Structure of the 88 Books</span></a>
+    </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">Wisdom Books</div>
-    <a class="toc-entry" href="#job-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Job</span><span class="toc-entry-title">Where Wast Thou · I Know My Redeemer Liveth</span></a>
-    <a class="toc-entry" href="#psalms-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Psalms</span><span class="toc-entry-title">150 Songs · Jah Is My Shepherd · By the Rivers of Babylon</span></a>
-    <a class="toc-entry" href="#proverbs-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Proverbs</span><span class="toc-entry-title">Trust in Jah · The Virtuous Woman</span></a>
-    <a class="toc-entry" href="#proverbs-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ecclesiastes</span><span class="toc-entry-title">Vanity of Vanities · Fear Jah</span></a>
-    <a class="toc-entry" href="#proverbs-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Song of Solomon</span><span class="toc-entry-title">I Am Black and Beautiful · Love Is Strong as Death</span></a>
-  </div>
+    <!-- TORAH -->
+    <div class="toc-section">
+      <div class="toc-section-name">The Torah — Five Books of Moses</div>
+      <a class="toc-entry" onclick="goTo('gen-ch1')"><span class="toc-entry-num">Genesis</span><span class="toc-entry-title">50 chapters · Creation · Noah · Abraham · Joseph</span><span class="toc-entry-pg">Ch. 1–50</span></a>
+      <a class="toc-entry" onclick="goTo('exodus-intro')"><span class="toc-entry-num">Exodus</span><span class="toc-entry-title">40 chapters · Burning Bush · Ten Plagues · Ten Commandments</span><span class="toc-entry-pg">Ch. 1–40</span></a>
+      <a class="toc-entry" onclick="goTo('leviticus-intro')"><span class="toc-entry-num">Leviticus</span><span class="toc-entry-title">27 chapters · The Law of Holiness · Love Thy Neighbour</span><span class="toc-entry-pg">Ch. 1–27</span></a>
+      <a class="toc-entry" onclick="goTo('leviticus-intro')"><span class="toc-entry-num">Numbers</span><span class="toc-entry-title">36 chapters · The Wilderness · The Aaronic Blessing</span><span class="toc-entry-pg">Ch. 1–36</span></a>
+      <a class="toc-entry" onclick="goTo('leviticus-intro')"><span class="toc-entry-num">Deuteronomy</span><span class="toc-entry-title">34 chapters · The Shema · Blessings · Death of Moses</span><span class="toc-entry-pg">Ch. 1–34</span></a>
+    </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">Major Prophets</div>
-    <a class="toc-entry" href="#isaiah-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Isaiah</span><span class="toc-entry-title">He Was Wounded · Mount Up With Wings · Arise Shine</span></a>
-    <a class="toc-entry" href="#jeremiah-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Jeremiah</span><span class="toc-entry-title">I Know the Plans · New Covenant Written on the Heart</span></a>
-    <a class="toc-entry" href="#jeremiah-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Lamentations</span><span class="toc-entry-title">New Every Morning · Great Is Thy Faithfulness</span></a>
-    <a class="toc-entry" href="#ezekiel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Ezekiel</span><span class="toc-entry-title">The Wheel Within a Wheel · Valley of Dry Bones</span></a>
-    <a class="toc-entry" href="#ezekiel-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Daniel</span><span class="toc-entry-title">The Furnace · The Lion's Den · Ancient of Days</span></a>
-  </div>
+    <!-- HISTORICAL -->
+    <div class="toc-section">
+      <div class="toc-section-name">Historical Books</div>
+      <a class="toc-entry" onclick="goTo('joshua-intro')"><span class="toc-entry-num">Joshua</span><span class="toc-entry-title">24 chapters · Be Strong and Courageous</span><span class="toc-entry-pg">Ch. 1–24</span></a>
+      <a class="toc-entry" onclick="goTo('joshua-intro')"><span class="toc-entry-num">Judges</span><span class="toc-entry-title">21 chapters · Deborah · Gideon · Samson</span><span class="toc-entry-pg">Ch. 1–21</span></a>
+      <a class="toc-entry" onclick="goTo('joshua-intro')"><span class="toc-entry-num">Ruth</span><span class="toc-entry-title">4 chapters · Whither Thou Goest I Will Go</span><span class="toc-entry-pg">Ch. 1–4</span></a>
+      <a class="toc-entry" onclick="goTo('samuel-intro')"><span class="toc-entry-num">1 Samuel</span><span class="toc-entry-title">31 chapters · The Anointing of David</span><span class="toc-entry-pg">Ch. 1–31</span></a>
+      <a class="toc-entry" onclick="goTo('samuel-intro')"><span class="toc-entry-num">2 Samuel</span><span class="toc-entry-title">24 chapters · The Davidic Covenant</span><span class="toc-entry-pg">Ch. 1–24</span></a>
+      <a class="toc-entry" onclick="goTo('samuel-intro')"><span class="toc-entry-num">1 Kings</span><span class="toc-entry-title">22 chapters · Solomon's Wisdom · Temple · Elijah</span><span class="toc-entry-pg">Ch. 1–22</span></a>
+      <a class="toc-entry" onclick="goTo('samuel-intro')"><span class="toc-entry-num">2 Kings</span><span class="toc-entry-title">25 chapters · The Exile of Israel</span><span class="toc-entry-pg">Ch. 1–25</span></a>
+      <a class="toc-entry" onclick="goTo('samuel-intro')"><span class="toc-entry-num">1 Chronicles</span><span class="toc-entry-title">29 chapters · The Lineage of David</span><span class="toc-entry-pg">Ch. 1–29</span></a>
+      <a class="toc-entry" onclick="goTo('samuel-intro')"><span class="toc-entry-num">2 Chronicles</span><span class="toc-entry-title">36 chapters · Solomon's Temple · The Kings</span><span class="toc-entry-pg">Ch. 1–36</span></a>
+      <a class="toc-entry" onclick="goTo('ezra-intro')"><span class="toc-entry-num">Ezra</span><span class="toc-entry-title">10 chapters · Return from Babylon</span><span class="toc-entry-pg">Ch. 1–10</span></a>
+      <a class="toc-entry" onclick="goTo('ezra-intro')"><span class="toc-entry-num">Nehemiah</span><span class="toc-entry-title">13 chapters · Rebuilding Jerusalem · Joy of Jah</span><span class="toc-entry-pg">Ch. 1–13</span></a>
+      <a class="toc-entry" onclick="goTo('ezra-intro')"><span class="toc-entry-num">Esther</span><span class="toc-entry-title">10 chapters · For Such a Time as This</span><span class="toc-entry-pg">Ch. 1–10</span></a>
+      <a class="toc-entry" onclick="goTo('ezra-intro')"><span class="toc-entry-num">Tobit</span><span class="toc-entry-title">14 chapters · The Angel Raphael</span><span class="toc-entry-pg">Ch. 1–14</span></a>
+      <a class="toc-entry" onclick="goTo('ezra-intro')"><span class="toc-entry-num">Judith</span><span class="toc-entry-title">16 chapters · The Widow Who Saved Israel</span><span class="toc-entry-pg">Ch. 1–16</span></a>
+    </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">Minor Prophets</div>
-    <a class="toc-entry" href="#minorprophets-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Hosea — Malachi</span><span class="toc-entry-title">All Twelve · Ending with the Sun of Righteousness</span></a>
-  </div>
+    <!-- WISDOM -->
+    <div class="toc-section">
+      <div class="toc-section-name">Wisdom Books</div>
+      <a class="toc-entry" onclick="goTo('job-intro')"><span class="toc-entry-num">Job</span><span class="toc-entry-title">42 chapters · Where Wast Thou · My Redeemer Liveth</span><span class="toc-entry-pg">Ch. 1–42</span></a>
+      <a class="toc-entry" onclick="goTo('psalms-intro')"><span class="toc-entry-num">Psalms</span><span class="toc-entry-title">150 psalms · Jah Is My Shepherd · By the Rivers of Babylon</span><span class="toc-entry-pg">Ps. 1–150</span></a>
+      <a class="toc-entry" onclick="goTo('proverbs-intro')"><span class="toc-entry-num">Proverbs</span><span class="toc-entry-title">31 chapters · Trust in Jah with All Thine Heart</span><span class="toc-entry-pg">Ch. 1–31</span></a>
+      <a class="toc-entry" onclick="goTo('proverbs-intro')"><span class="toc-entry-num">Ecclesiastes</span><span class="toc-entry-title">12 chapters · Vanity of Vanities · Fear Jah</span><span class="toc-entry-pg">Ch. 1–12</span></a>
+      <a class="toc-entry" onclick="goTo('proverbs-intro')"><span class="toc-entry-num">Song of Solomon</span><span class="toc-entry-title">8 chapters · I Am Black and Beautiful</span><span class="toc-entry-pg">Ch. 1–8</span></a>
+      <a class="toc-entry" onclick="goTo('proverbs-intro')"><span class="toc-entry-num">Wisdom of Solomon</span><span class="toc-entry-title">19 chapters · The Righteous Are in the Hand of Jah</span><span class="toc-entry-pg">Ch. 1–19</span></a>
+      <a class="toc-entry" onclick="goTo('proverbs-intro')"><span class="toc-entry-num">Sirach / Ecclesiasticus</span><span class="toc-entry-title">51 chapters · Honour Thy Father</span><span class="toc-entry-pg">Ch. 1–51</span></a>
+    </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">The New Covenant</div>
-    <a class="toc-entry" href="#matthew-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Matthew</span><span class="toc-entry-title">Sermon on the Mount · The Beatitudes · Great Commission</span></a>
-    <a class="toc-entry" href="#mark-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Mark · Luke</span><span class="toc-entry-title">Magnificat · Good Samaritan · Prodigal Son</span></a>
-    <a class="toc-entry" href="#john-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">John</span><span class="toc-entry-title">In the Beginning Was the Word · I Am the Way</span></a>
-    <a class="toc-entry" href="#acts-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Acts</span><span class="toc-entry-title">Pentecost · The Ethiopian Eunuch · Ethiopia Receives Gospel</span></a>
-    <a class="toc-entry" href="#epistles-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Romans — James</span><span class="toc-entry-title">Nothing Shall Separate · Greatest of These Is Love · Faith Without Works</span></a>
-    <a class="toc-entry" href="#peter-john-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Peter · John · Jude</span><span class="toc-entry-title">Royal Priesthood · Jah Is Love · Contend for the Faith</span></a>
-    <a class="toc-entry" href="#peter-john-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Revelation</span><span class="toc-entry-title">King of Kings · New Jerusalem · Come Lord Yeshua</span></a>
-  </div>
+    <!-- MAJOR PROPHETS -->
+    <div class="toc-section">
+      <div class="toc-section-name">Major Prophets</div>
+      <a class="toc-entry" onclick="goTo('isaiah-intro')"><span class="toc-entry-num">Isaiah</span><span class="toc-entry-title">66 chapters · He Was Wounded · Arise Shine · Mount Up With Wings</span><span class="toc-entry-pg">Ch. 1–66</span></a>
+      <a class="toc-entry" onclick="goTo('jeremiah-intro')"><span class="toc-entry-num">Jeremiah</span><span class="toc-entry-title">52 chapters · I Know the Plans · New Covenant on the Heart</span><span class="toc-entry-pg">Ch. 1–52</span></a>
+      <a class="toc-entry" onclick="goTo('jeremiah-intro')"><span class="toc-entry-num">Lamentations</span><span class="toc-entry-title">5 chapters · New Every Morning · Great Is Thy Faithfulness</span><span class="toc-entry-pg">Ch. 1–5</span></a>
+      <a class="toc-entry" onclick="goTo('ezekiel-intro')"><span class="toc-entry-num">Ezekiel</span><span class="toc-entry-title">48 chapters · Wheel Within a Wheel · Valley of Dry Bones</span><span class="toc-entry-pg">Ch. 1–48</span></a>
+      <a class="toc-entry" onclick="goTo('ezekiel-intro')"><span class="toc-entry-num">Daniel</span><span class="toc-entry-title">12 chapters · The Furnace · The Lion's Den · Ancient of Days</span><span class="toc-entry-pg">Ch. 1–12</span></a>
+    </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">Ethiopian Exclusives — Found Nowhere Else</div>
-    <a class="toc-entry" href="#enoch-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1 Enoch</span><span class="toc-entry-title">The Watchers · Son of Man · The Luminaries · The Epistle</span></a>
-    <a class="toc-entry" href="#jubilees-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Jubilees</span><span class="toc-entry-title">The Heavenly Tablets · Abraham Breaks the Idols</span></a>
-    <a class="toc-entry" href="#meqabyan-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">1–3 Meqabyan</span><span class="toc-entry-title">Ethiopian Warriors of Jah · The Resurrection · The Fear of Jah</span></a>
-    <a class="toc-entry" href="#shepherd-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Shepherd of Hermas</span><span class="toc-entry-title">Five Visions · Twelve Commandments · Ten Similitudes</span></a>
-    <a class="toc-entry" href="#sinodos-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Sinodos · Covenant · Clement</span><span class="toc-entry-title">The Apostolic Constitution · The Everlasting Covenant</span></a>
-  </div>
+    <!-- MINOR PROPHETS -->
+    <div class="toc-section">
+      <div class="toc-section-name">Minor Prophets — The Twelve</div>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Hosea</span><span class="toc-entry-title">14 chapters · I Will Love Them Freely</span><span class="toc-entry-pg">Ch. 1–14</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Joel</span><span class="toc-entry-title">3 chapters · I Will Pour Out My Spirit on All Flesh</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Amos</span><span class="toc-entry-title">9 chapters · Let Justice Roll Down Like Waters</span><span class="toc-entry-pg">Ch. 1–9</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Obadiah</span><span class="toc-entry-title">1 chapter · The Kingdom Shall Be Jah's</span><span class="toc-entry-pg">Ch. 1</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Jonah</span><span class="toc-entry-title">4 chapters · The Great Fish · Nineveh Repents</span><span class="toc-entry-pg">Ch. 1–4</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Micah</span><span class="toc-entry-title">7 chapters · Do Justice · Love Mercy · Walk Humbly</span><span class="toc-entry-pg">Ch. 1–7</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Nahum</span><span class="toc-entry-title">3 chapters · Jah Is Good · A Stronghold in Trouble</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Habakkuk</span><span class="toc-entry-title">3 chapters · The Just Shall Live by Faith</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Zephaniah</span><span class="toc-entry-title">3 chapters · Jah Thy Jah Is Mighty · He Will Joy Over Thee</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Haggai</span><span class="toc-entry-title">2 chapters · The Glory of This Latter House</span><span class="toc-entry-pg">Ch. 1–2</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Zechariah</span><span class="toc-entry-title">14 chapters · Not by Might · Jah Shall Be King Over All</span><span class="toc-entry-pg">Ch. 1–14</span></a>
+      <a class="toc-entry" onclick="goTo('minorprophets-intro')"><span class="toc-entry-num">Malachi</span><span class="toc-entry-title">4 chapters · The Sun of Righteousness · Last Word of the Old Covenant</span><span class="toc-entry-pg">Ch. 1–4</span></a>
+    </div>
 
-  <div class="toc-section">
-    <div class="toc-section-name">Sacred Additions</div>
-    <a class="toc-entry" href="#nile-valley" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Nile Valley</span><span class="toc-entry-title">Hymn to Aten · 42 Declarations of Maat · Poimandres</span></a>
-    <a class="toc-entry" href="#kebra-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Kebra Nagast</span><span class="toc-entry-title">Glory of Kings · Queen of Sheba · The Ark Comes to Ethiopia</span></a>
-    <a class="toc-entry" href="#thomas-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Gospel of Thomas</span><span class="toc-entry-title">114 Secret Sayings of Yeshua</span></a>
-    <a class="toc-entry" href="#holytwelve-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Gospel of the Holy Twelve</span><span class="toc-entry-title">The Compassionate Christ · 13 Lections</span></a>
-    <a class="toc-entry" href="#imperial-intro" onclick="document.getElementById('toc').classList.remove('open')"><span class="toc-entry-num">Imperial Covenant</span><span class="toc-entry-title">Haile Selassie I · Jah Rastafari — In Preparation</span></a>
+    <!-- NEW TESTAMENT -->
+    <div class="toc-section">
+      <div class="toc-section-name">The New Covenant — New Testament</div>
+      <a class="toc-entry" onclick="goTo('matthew-intro')"><span class="toc-entry-num">Matthew</span><span class="toc-entry-title">28 chapters · Sermon on the Mount · Beatitudes · Great Commission</span><span class="toc-entry-pg">Ch. 1–28</span></a>
+      <a class="toc-entry" onclick="goTo('mark-intro')"><span class="toc-entry-num">Mark</span><span class="toc-entry-title">16 chapters · The Gospel of Immediate Action</span><span class="toc-entry-pg">Ch. 1–16</span></a>
+      <a class="toc-entry" onclick="goTo('mark-intro')"><span class="toc-entry-num">Luke</span><span class="toc-entry-title">24 chapters · Magnificat · Good Samaritan · Prodigal Son</span><span class="toc-entry-pg">Ch. 1–24</span></a>
+      <a class="toc-entry" onclick="goTo('john-intro')"><span class="toc-entry-num">John</span><span class="toc-entry-title">21 chapters · In the Beginning Was the Word · I Am the Way</span><span class="toc-entry-pg">Ch. 1–21</span></a>
+      <a class="toc-entry" onclick="goTo('acts-intro')"><span class="toc-entry-num">Acts</span><span class="toc-entry-title">28 chapters · Pentecost · The Ethiopian Eunuch Baptized</span><span class="toc-entry-pg">Ch. 1–28</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Romans</span><span class="toc-entry-title">16 chapters · Nothing Shall Separate Us from the Love of Jah</span><span class="toc-entry-pg">Ch. 1–16</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">1 Corinthians</span><span class="toc-entry-title">16 chapters · The Greatest of These Is Love</span><span class="toc-entry-pg">Ch. 1–16</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">2 Corinthians</span><span class="toc-entry-title">13 chapters · My Grace Is Sufficient</span><span class="toc-entry-pg">Ch. 1–13</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Galatians</span><span class="toc-entry-title">6 chapters · The Fruit of the Spirit · Freedom in Yeshua</span><span class="toc-entry-pg">Ch. 1–6</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Ephesians</span><span class="toc-entry-title">6 chapters · The Whole Armour of Jah</span><span class="toc-entry-pg">Ch. 1–6</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Philippians</span><span class="toc-entry-title">4 chapters · I Can Do All Things Through the Anointed</span><span class="toc-entry-pg">Ch. 1–4</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Colossians</span><span class="toc-entry-title">4 chapters · He Is Before All Things</span><span class="toc-entry-pg">Ch. 1–4</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">1 Thessalonians</span><span class="toc-entry-title">5 chapters · Pray Without Ceasing</span><span class="toc-entry-pg">Ch. 1–5</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">2 Thessalonians</span><span class="toc-entry-title">3 chapters · Stand Fast and Hold</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">1 Timothy</span><span class="toc-entry-title">6 chapters · Fight the Good Fight of Faith</span><span class="toc-entry-pg">Ch. 1–6</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">2 Timothy</span><span class="toc-entry-title">4 chapters · All Scripture Is Given by Inspiration of Jah</span><span class="toc-entry-pg">Ch. 1–4</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Titus</span><span class="toc-entry-title">3 chapters · The Grace of Jah That Bringeth Salvation</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Philemon</span><span class="toc-entry-title">1 chapter · A Brother Beloved</span><span class="toc-entry-pg">Ch. 1</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">Hebrews</span><span class="toc-entry-title">13 chapters · Faith Is · Yeshua the Author and Finisher</span><span class="toc-entry-pg">Ch. 1–13</span></a>
+      <a class="toc-entry" onclick="goTo('epistles-intro')"><span class="toc-entry-num">James</span><span class="toc-entry-title">5 chapters · Faith Without Works Is Dead</span><span class="toc-entry-pg">Ch. 1–5</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">1 Peter</span><span class="toc-entry-title">5 chapters · A Royal Priesthood · Cast Your Care on Him</span><span class="toc-entry-pg">Ch. 1–5</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">2 Peter</span><span class="toc-entry-title">3 chapters · Holy Men Spoke as Moved by the Spirit</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">1 John</span><span class="toc-entry-title">5 chapters · Jah Is Love · Perfect Love Casteth Out Fear</span><span class="toc-entry-pg">Ch. 1–5</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">2 John</span><span class="toc-entry-title">1 chapter · Walk in Truth and Love</span><span class="toc-entry-pg">Ch. 1</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">3 John</span><span class="toc-entry-title">1 chapter · Beloved I Wish Above All Things Thou Mayest Prosper</span><span class="toc-entry-pg">Ch. 1</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">Jude</span><span class="toc-entry-title">1 chapter · Contend for the Faith Once Delivered</span><span class="toc-entry-pg">Ch. 1</span></a>
+      <a class="toc-entry" onclick="goTo('peter-john-intro')"><span class="toc-entry-num">Revelation</span><span class="toc-entry-title">22 chapters · King of Kings · New Jerusalem · Come Lord Yeshua</span><span class="toc-entry-pg">Ch. 1–22</span></a>
+    </div>
+
+    <!-- ETHIOPIAN EXCLUSIVES -->
+    <div class="toc-section">
+      <div class="toc-section-name">Ethiopian Exclusives — Found Nowhere Else</div>
+      <a class="toc-entry" onclick="goTo('enoch-intro')"><span class="toc-entry-num">1 Enoch</span><span class="toc-entry-title">108 chapters · The Watchers · Son of Man · Luminaries</span><span class="toc-entry-pg">Ch. 1–108</span></a>
+      <a class="toc-entry" onclick="goTo('jubilees-intro')"><span class="toc-entry-num">Jubilees</span><span class="toc-entry-title">50 chapters · The Heavenly Tablets · Abraham Breaks the Idols</span><span class="toc-entry-pg">Ch. 1–50</span></a>
+      <a class="toc-entry" onclick="goTo('meqabyan-intro')"><span class="toc-entry-num">1 Meqabyan</span><span class="toc-entry-title">36 chapters · Warriors of Jah Against Idolatry</span><span class="toc-entry-pg">Ch. 1–36</span></a>
+      <a class="toc-entry" onclick="goTo('meqabyan-intro')"><span class="toc-entry-num">2 Meqabyan</span><span class="toc-entry-title">24 chapters · The Resurrection and the Day of Jah</span><span class="toc-entry-pg">Ch. 1–24</span></a>
+      <a class="toc-entry" onclick="goTo('meqabyan-intro')"><span class="toc-entry-num">3 Meqabyan</span><span class="toc-entry-title">10 chapters · Fear Jah · Love Mercy · Do Justice</span><span class="toc-entry-pg">Ch. 1–10</span></a>
+      <a class="toc-entry" onclick="goTo('shepherd-intro')"><span class="toc-entry-num">Shepherd of Hermas</span><span class="toc-entry-title">5 Visions · 12 Commandments · 10 Similitudes</span><span class="toc-entry-pg">V.1–5</span></a>
+      <a class="toc-entry" onclick="goTo('sinodos-intro')"><span class="toc-entry-num">Sinodos</span><span class="toc-entry-title">The Apostolic Canons of the Ethiopian Church</span><span class="toc-entry-pg">Canon 1–</span></a>
+      <a class="toc-entry" onclick="goTo('sinodos-intro')"><span class="toc-entry-num">Book of the Covenant</span><span class="toc-entry-title">The Everlasting Covenant of Jah</span><span class="toc-entry-pg">Ch. 1–3</span></a>
+      <a class="toc-entry" onclick="goTo('sinodos-intro')"><span class="toc-entry-num">1 Clement</span><span class="toc-entry-title">65 chapters · Love Does All Things in Harmony</span><span class="toc-entry-pg">Ch. 1–65</span></a>
+    </div>
+
+    <!-- SACRED ADDITIONS -->
+    <div class="toc-section">
+      <div class="toc-section-name">Sacred Additions</div>
+      <a class="toc-entry" onclick="goTo('nile-valley')"><span class="toc-entry-num">Nile Valley Prologue</span><span class="toc-entry-title">Hymn to Aten · 42 Declarations of Maat · Poimandres</span><span class="toc-entry-pg">Prologue</span></a>
+      <a class="toc-entry" onclick="goTo('kebra-intro')"><span class="toc-entry-num">Kebra Nagast</span><span class="toc-entry-title">117 chapters · Queen Makeda · Menelik · The Ark in Ethiopia</span><span class="toc-entry-pg">Ch. 1–117</span></a>
+      <a class="toc-entry" onclick="goTo('thomas-intro')"><span class="toc-entry-num">Gospel of Thomas</span><span class="toc-entry-title">114 Secret Sayings of Yeshua · Nag Hammadi</span><span class="toc-entry-pg">Saying 1–114</span></a>
+      <a class="toc-entry" onclick="goTo('holytwelve-intro')"><span class="toc-entry-num">Gospel of the Holy Twelve</span><span class="toc-entry-title">13 Lections · The Compassionate Christ</span><span class="toc-entry-pg">Lection 1–13</span></a>
+      <a class="toc-entry" onclick="goTo('imperial-intro')"><span class="toc-entry-num">Imperial Covenant</span><span class="toc-entry-title">4 Speeches of Haile Selassie I · Jah Rastafari</span><span class="toc-entry-pg">1930–1963</span></a>
+    </div>
+
   </div>
 </div>
+
+<script>
+function toggleTOC() {
+  var toc = document.getElementById('toc');
+  toc.classList.toggle('open');
+}
+function goTo(id) {
+  document.getElementById('toc').classList.remove('open');
+  var el = document.getElementById(id);
+  if (el) { setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 100); }
+}
+</script>
+
+<style>
+.toc-entry-pg {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  color: rgba(212,175,55,0.35);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  margin-left: auto;
+  padding-left: 8px;
+  flex-shrink: 0;
+}
+.toc-entry { cursor: pointer; }
+.toc-entry:hover .toc-entry-title { color: #D4AF37; }
+</style>
 
 <div class="cover-page">
   <svg class="cover-seal" viewBox="0 0 140 140">
@@ -121,11 +209,11 @@
   <div class="cover-rule"></div>
   <div class="cover-volumes">
     <div class="cover-vol"><span>The Torah</span> · Genesis · Exodus · Leviticus · Numbers · Deuteronomy</div>
-    <div class="cover-vol"><span>Historical Books</span> · Joshua through Esther</div>
-    <div class="cover-vol"><span>Wisdom Books</span> · Job · Psalms · Proverbs · Ecclesiastes · Song of Solomon</div>
+    <div class="cover-vol"><span>Historical Books</span> · Joshua through Esther · 15 Books</div>
+    <div class="cover-vol"><span>Wisdom Books</span> · Job · Psalms · Proverbs · Ecclesiastes · Song of Solomon · Sirach</div>
     <div class="cover-vol"><span>Major Prophets</span> · Isaiah · Jeremiah · Lamentations · Ezekiel · Daniel</div>
     <div class="cover-vol"><span>Minor Prophets</span> · All Twelve · Hosea through Malachi</div>
-    <div class="cover-vol"><span>New Testament</span> · Matthew through Revelation</div>
+    <div class="cover-vol"><span>New Testament</span> · Matthew through Revelation · 27 Books</div>
     <div class="cover-vol"><span>Ethiopian Exclusives</span> · Enoch · Jubilees · Meqabyan · Shepherd · Sinodos · Clement</div>
     <div class="cover-vol"><span>Sacred Additions</span> · Nile Valley · Kebra Nagast · Thomas · Imperial Covenant</div>
   </div>
