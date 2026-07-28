@@ -1,0 +1,152 @@
+<!-- ═══════════════ NAVIGATION BAR ═══════════════ -->
+<nav class="reader-nav">
+  <button class="nav-back" onclick="history.back()">←</button>
+  <span class="nav-title">The Complete Restored Covenant Scriptures</span>
+  <button class="nav-toc-btn" onclick="document.getElementById('toc').classList.toggle('open')">Contents</button>
+  <button class="nav-pdf-btn" onclick="window.print()">⬇ PDF</button>
+</nav>
+<div class="nav-spacer"></div>
+
+<!-- ═══════════════ TOC OVERLAY ═══════════════ -->
+<div id="toc" class="toc-overlay">
+  <button class="toc-close" onclick="document.getElementById('toc').classList.remove('open')">✕</button>
+  <div class="toc-title">Table of Contents</div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Prologue</div>
+    <a class="toc-entry" href="#nile-valley" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Prologue</span>
+      <span class="toc-entry-title">Nile Valley Wisdom — Hymn to Aten · 42 Declarations of Maat · Poimandres</span>
+    </a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Volume I</div>
+    <a class="toc-entry" href="#enoch-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Vol. I</span>
+      <span class="toc-entry-title">The Book of Enoch — Complete Sacred Codex</span>
+    </a>
+    <a class="toc-entry" href="#enoch-ch1" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 1–36</span>
+      <span class="toc-entry-title">The Book of Watchers</span>
+    </a>
+    <a class="toc-entry" href="#enoch-ch37" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 37–71</span>
+      <span class="toc-entry-title">The Book of Parables</span>
+    </a>
+    <a class="toc-entry" href="#enoch-ch72" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 72–82</span>
+      <span class="toc-entry-title">The Book of Luminaries</span>
+    </a>
+    <a class="toc-entry" href="#enoch-ch83" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 83–90</span>
+      <span class="toc-entry-title">The Dream Visions</span>
+    </a>
+    <a class="toc-entry" href="#enoch-ch91" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 91–105</span>
+      <span class="toc-entry-title">The Epistle of Enoch</span>
+    </a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Volume II</div>
+    <a class="toc-entry" href="#kebra-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Vol. II</span>
+      <span class="toc-entry-title">Kebra Nagast — The Glory of Kings</span>
+    </a>
+    <a class="toc-entry" href="#kebra-ch1" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 1–10</span>
+      <span class="toc-entry-title">The Queen Makeda Encounters Shlomo</span>
+    </a>
+    <a class="toc-entry" href="#kebra-ch11" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 11–20</span>
+      <span class="toc-entry-title">The Ark Comes to Ethiopia</span>
+    </a>
+    <a class="toc-entry" href="#kebra-ch21" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Ch. 21–30</span>
+      <span class="toc-entry-title">The Covenant Established</span>
+    </a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Volume III</div>
+    <a class="toc-entry" href="#gospels-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Vol. III</span>
+      <span class="toc-entry-title">The Restored Gospels</span>
+    </a>
+    <a class="toc-entry" href="#john-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Gospel</span>
+      <span class="toc-entry-title">The Gospel of Yeshua according to Yohanan</span>
+    </a>
+    <a class="toc-entry" href="#thomas-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Sayings</span>
+      <span class="toc-entry-title">The 114 Secret Sayings of Yeshua — Gospel of Thomas</span>
+    </a>
+    <a class="toc-entry" href="#holytwelve-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Lections</span>
+      <span class="toc-entry-title">The Gospel of the Holy Twelve — 13 Lections</span>
+    </a>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-name">Volume IV</div>
+    <a class="toc-entry" href="#imperial-intro" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Vol. IV</span>
+      <span class="toc-entry-title">Imperial Covenant — The Voice of Jah on Earth</span>
+    </a>
+    <a class="toc-entry" href="#selassie-1936" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">1936</span>
+      <span class="toc-entry-title">Appeal to the League of Nations</span>
+    </a>
+    <a class="toc-entry" href="#selassie-1963" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">1963</span>
+      <span class="toc-entry-title">Address to the United Nations</span>
+    </a>
+    <a class="toc-entry" href="#selassie-1930" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">1930</span>
+      <span class="toc-entry-title">Coronation Address</span>
+    </a>
+    <a class="toc-entry" href="#selassie-war" onclick="document.getElementById('toc').classList.remove('open')">
+      <span class="toc-entry-num">Prophecy</span>
+      <span class="toc-entry-title">Until the Philosophy of War is Banished</span>
+    </a>
+  </div>
+</div>
+
+<!-- ═══════════════ COVER PAGE ═══════════════ -->
+<div class="cover-page">
+  <svg class="cover-seal" viewBox="0 0 140 140">
+    <defs>
+      <radialGradient id="cg" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(255,215,70,0.25)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="70" cy="70" rx="68" ry="68" fill="url(#cg)"/>
+    <circle cx="70" cy="70" r="64" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="0.8" stroke-dasharray="4 8"/>
+    <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="0.6"/>
+    <polygon points="70,10 122,102 18,102" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.7)" stroke-width="1.2"/>
+    <polygon points="70,130 18,38 122,38" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.5)" stroke-width="1"/>
+    <circle cx="70" cy="70" r="18" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.6)" stroke-width="1"/>
+    <circle cx="70" cy="70" r="6" fill="rgba(255,248,160,0.95)"/>
+    <circle cx="70" cy="6" r="3" fill="rgba(255,235,100,0.9)"/>
+    <circle cx="122" cy="102" r="3" fill="rgba(255,235,100,0.9)"/>
+    <circle cx="18" cy="102" r="3" fill="rgba(255,235,100,0.9)"/>
+    <circle cx="70" cy="134" r="3" fill="rgba(255,235,100,0.9)"/>
+    <circle cx="18" cy="38" r="3" fill="rgba(255,235,100,0.9)"/>
+    <circle cx="122" cy="38" r="3" fill="rgba(255,235,100,0.9)"/>
+  </svg>
+  <p class="cover-eyebrow">Sacred Healing · Siddha Quantum Intelligence</p>
+  <h1 class="cover-title">The Complete<br/>Restored Covenant<br/>Scriptures</h1>
+  <p class="cover-subtitle">One Volume · Four Books · The Full Restoration</p>
+  <div class="cover-rule"></div>
+  <div class="cover-volumes">
+    <div class="cover-vol"><span>Prologue</span> · Nile Valley Wisdom — Hymn to Aten · Maat · Poimandres</div>
+    <div class="cover-vol"><span>Volume I</span> · The Book of Enoch — Complete Sacred Codex</div>
+    <div class="cover-vol"><span>Volume II</span> · Kebra Nagast — The Glory of Kings</div>
+    <div class="cover-vol"><span>Volume III</span> · The Restored Gospels of Yeshua</div>
+    <div class="cover-vol"><span>Volume IV</span> · Imperial Covenant — Haile Selassie I · Jah Rastafari</div>
+  </div>
+  <div class="cover-rule"></div>
+  <p class="cover-publisher">Sacred Healing Publishing · Uddevalla, Sweden · 2026</p>
+</div>
