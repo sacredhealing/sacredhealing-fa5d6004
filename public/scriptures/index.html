@@ -64,7 +64,7 @@ p.para:first-of-type{text-indent:0;}
 </style>
 </head>
 <body>
-<div id="loading">
+<div style="height:51px;"></div><div id="loading">
   <p class="load-title">Opening the Sacred Codex</p>
   <div class="load-bar-wrap"><div class="load-bar" id="bar"></div></div>
   <p class="load-status" id="status">Invoking the Akasha...</p>
@@ -134,7 +134,7 @@ load();
 </script>
 
 <!-- FIXED NAV BAR -->
-<nav id="main-nav" class="reader-nav" style="display:none;">
+<nav id="main-nav" class="reader-nav" style="display:flex;">
   <button class="nav-back" onclick="history.back()">←</button>
   <span class="nav-title">The Complete Restored Covenant Scriptures</span>
   <button class="nav-toc-btn" onclick="openTOC()">☰ Contents</button>
@@ -278,13 +278,7 @@ function jumpTo(id){
     }
   },200);
 }
-// Show nav after content loads
-window.addEventListener('DOMContentLoaded',function(){
-  setTimeout(function(){
-    var nav=document.getElementById('main-nav');
-    if(nav)nav.style.display='flex';
-  },3000);
-});
+
 </script>
 
 </body>
