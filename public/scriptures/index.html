@@ -4,90 +4,128 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>The Complete Restored Covenant Scriptures</title>
-<style>
-body { margin:0; background:#050505; color:#fff; font-family:sans-serif; }
-#loading {
-  min-height:100vh; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; text-align:center;
-  background:radial-gradient(ellipse at 50% 40%, #1a0e00 0%, #050505 100%);
-}
-.load-title {
-  font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.5em;
-  text-transform:uppercase; color:rgba(212,175,55,0.6); margin-bottom:20px;
-}
-.load-bar-wrap {
-  width:260px; height:3px; background:rgba(255,255,255,0.06);
-  border-radius:2px; overflow:hidden; margin-bottom:16px;
-}
-.load-bar {
-  height:100%; width:0%; background:linear-gradient(90deg,#8B6914,#D4AF37);
-  border-radius:2px; transition:width 0.4s ease;
-}
-.load-status {
-  font-size:10px; letter-spacing:0.3em; text-transform:uppercase;
-  color:rgba(212,175,55,0.35);
-}
-#content { display:none; }
-</style>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  background:#FAF6EC !important;
+  color:#1a1208 !important;
+  font-family:'EB Garamond','Palatino Linotype',Georgia,serif !important;
+  font-size:17px;
+  line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+}
+:root{
+  --parchment:#FAF6EC;
+  --parchment-dark:#F0E8D0;
+  --ink:#1a1208;
+  --ink-light:#3a2a18;
+  --gold:#8B6914;
+  --gold-light:#C9A84C;
+  --gold-bright:#D4AF37;
+  --red-rubric:#8B1A1A;
+}
+.cover-page{
+  min-height:100vh;
+  background:radial-gradient(ellipse at 50% 30%,#2a1a08 0%,#0d0800 60%,#000 100%) !important;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:60px 40px;
+  position:relative;overflow:hidden;
+}
+.cover-eyebrow{font-family:'Cinzel',serif;font-size:9px;font-weight:600;letter-spacing:.6em;text-transform:uppercase;color:rgba(212,175,55,.5);margin-bottom:24px;position:relative;z-index:1;}
+.cover-title{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,6vw,40px);font-weight:700;line-height:1.15;color:#D4AF37;text-shadow:0 0 60px rgba(212,175,55,.3);margin-bottom:20px;position:relative;z-index:1;}
+.cover-subtitle{font-family:'Cinzel',serif;font-size:clamp(10px,2.5vw,15px);color:rgba(212,175,55,.6);letter-spacing:.25em;text-transform:uppercase;margin-bottom:40px;position:relative;z-index:1;}
+.cover-rule{width:200px;height:1px;background:linear-gradient(90deg,transparent,#D4AF37,transparent);margin:0 auto 40px;position:relative;z-index:1;}
+.cover-seal{width:130px;height:130px;margin-bottom:36px;position:relative;z-index:1;}
+.cover-volumes{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;margin-bottom:40px;}
+.cover-vol{font-family:'Cinzel',serif;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.2em;}
+.cover-vol span{color:rgba(212,175,55,.7);}
+.cover-publisher{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:rgba(212,175,55,.3);position:relative;z-index:1;}
+.reader-nav{position:fixed;top:0;left:0;right:0;background:rgba(10,6,2,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,.15);padding:11px 18px;display:flex;align-items:center;gap:14px;z-index:1000;}
+.nav-back{background:none;border:none;color:rgba(212,175,55,.8);cursor:pointer;font-size:20px;padding:4px 8px;}
+.nav-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.55);flex:1;}
+.nav-pdf-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.9);background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:20px;padding:7px 14px;cursor:pointer;}
+.nav-toc-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.5);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:7px 14px;cursor:pointer;}
+.nav-spacer{height:51px;}
+.toc-overlay{display:none;position:fixed;inset:0;background:rgba(5,3,1,.97);z-index:2000;overflow-y:auto;padding:70px 22px 40px;}
+.toc-overlay.open{display:block;}
+.toc-close{position:fixed;top:16px;right:16px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);color:#D4AF37;font-size:18px;border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.toc-title{font-family:'Cinzel Decorative',serif;font-size:18px;color:#D4AF37;text-align:center;margin-bottom:28px;}
+.toc-section{margin-bottom:24px;}
+.toc-section-name{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:rgba(212,175,55,.4);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid rgba(212,175,55,.1);}
+.toc-entry{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;text-decoration:none;}
+.toc-entry-num{font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,.4);min-width:58px;}
+.toc-entry-title{font-family:'EB Garamond',serif;font-size:14px;color:rgba(255,255,255,.6);flex:1;}
+.codex-page{max-width:780px;margin:0 auto;padding:3rem 1.5rem 6rem;}
+.book-divider{text-align:center;padding:56px 20px 36px;background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 50%,var(--parchment) 100%);margin:40px 0;border-top:2px solid rgba(139,105,20,.2);border-bottom:2px solid rgba(139,105,20,.2);}
+.book-vol-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.6em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.book-title-main{font-family:'Cinzel Decorative',serif;font-size:clamp(20px,5vw,34px);font-weight:700;color:var(--red-rubric);line-height:1.2;margin-bottom:10px;}
+.book-title-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:1.1em;color:var(--gold);margin-bottom:18px;}
+.book-ornament{font-size:2em;color:var(--gold-bright);margin:14px 0;display:block;}
+.book-intro{font-family:'EB Garamond',serif;font-style:italic;font-size:.95em;color:var(--ink-light);line-height:1.8;max-width:560px;margin:0 auto;}
+.chapter-block{margin:2.5rem 0 1rem;}
+.chapter-ornament{color:var(--gold-bright);font-size:1.3em;display:block;text-align:center;margin:2rem 0 .5rem;}
+.chapter-title{font-family:'Cinzel',serif;font-style:normal;font-size:.9em;font-weight:600;letter-spacing:.08em;color:var(--red-rubric);text-align:center;display:block;margin-bottom:.4rem;text-transform:uppercase;}
+.chapter-subtitle{font-family:'EB Garamond',serif;font-style:italic;font-size:.88em;color:var(--gold);text-align:center;display:block;margin-bottom:1.2rem;}
+.verse-block{margin-bottom:.2rem;}
+.vnum{font-size:.52em;color:var(--gold);vertical-align:super;font-weight:700;margin-right:.2em;font-style:normal;font-family:'Cinzel',serif;}
+.verse{display:inline;}
+p.para{text-indent:1.5em;margin-bottom:.15rem;}
+p.para:first-of-type{text-indent:0;}
+.section-divider{text-align:center;color:var(--gold);margin:2rem 0;font-size:1.1em;letter-spacing:.3em;}
+.declaration{margin:.55rem 0;padding-left:1.4rem;border-left:2px solid rgba(139,105,20,.25);}
+.decl-num{font-family:'Cinzel',serif;font-size:.75em;color:var(--gold);font-weight:600;display:inline-block;min-width:2em;}
+.rubric{color:var(--red-rubric);font-weight:600;}
+.scripture-columns{column-count:2;column-gap:3.5rem;column-rule:1px solid rgba(139,105,20,.18);}
+@media(max-width:700px){.scripture-columns{column-count:1;}}
+@media print{.reader-nav,.toc-overlay,.nav-spacer{display:none!important;}.cover-page{min-height:100vh;page-break-after:always;}.book-divider{page-break-before:always;}body{font-size:11pt;}}
+#loading{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 40%,#1a0e00 0%,#050505 100%);}
+.load-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(212,175,55,.6);margin-bottom:20px;}
+.load-bar-wrap{width:240px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:14px;}
+.load-bar{height:100%;width:0%;background:linear-gradient(90deg,#8B6914,#D4AF37);border-radius:2px;transition:width .4s ease;}
+.load-status{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.35);}
+</style>
 </head>
 <body>
 
 <div id="loading">
-  <p class="load-title">Loading Sacred Codex</p>
+  <p class="load-title">Opening the Sacred Codex</p>
   <div class="load-bar-wrap"><div class="load-bar" id="bar"></div></div>
-  <p class="load-status" id="status">Preparing the Akasha...</p>
+  <p class="load-status" id="status">Invoking the Akasha...</p>
 </div>
 
-<div id="content"></div>
+<div id="content" style="display:none"></div>
 
 <script>
-const BASE = '/scriptures/';
 const PARTS = [
-  'part1_header.html',
-  'part2_cover_nav.html',
-  'part3_nile_valley.html',
-  'part4_enoch.html',
-  'part5_kebra.html',
-  'part6_gospels.html'
-];
-const LABELS = [
-  'Invoking the sacred vessel...',
-  'Opening the covenant gates...',
-  'Calling forth Nile Valley wisdom...',
-  'Summoning the Book of Enoch...',
-  'Unveiling the Kebra Nagast...',
-  'Restoring the Holy Gospels...'
+  { file:'part2_cover_nav.html', label:'Opening the covenant gates...' },
+  { file:'part3_nile_valley.html', label:'Calling forth Nile Valley wisdom...' },
+  { file:'part4_enoch.html', label:'Summoning the Book of Enoch...' },
+  { file:'part5_kebra.html', label:'Unveiling the Kebra Nagast...' },
+  { file:'part6_gospels.html', label:'Restoring the Holy Gospels...' }
 ];
 
-async function loadAll() {
+async function load() {
   let html = '';
-  for (let i = 0; i < PARTS.length; i++) {
-    document.getElementById('status').textContent = LABELS[i];
-    document.getElementById('bar').style.width = ((i / PARTS.length) * 100) + '%';
-    const res = await fetch(BASE + PARTS[i]);
-    const text = await res.text();
+  for (let i=0; i<PARTS.length; i++) {
+    document.getElementById('status').textContent = PARTS[i].label;
+    document.getElementById('bar').style.width = ((i/PARTS.length)*85+10)+'%';
+    const res = await fetch('/scriptures/'+PARTS[i].file);
+    let text = await res.text();
+    // Strip any stray html/head/body tags from part files
+    text = text.replace(/<\/?(!DOCTYPE|html|head|body)[^>]*>/gi,'');
     html += text;
   }
   document.getElementById('bar').style.width = '100%';
   document.getElementById('status').textContent = 'The Word is revealed.';
-  await new Promise(r => setTimeout(r, 600));
-  document.getElementById('loading').style.display = 'none';
+  await new Promise(r=>setTimeout(r,500));
+  document.getElementById('loading').style.display='none';
   const el = document.getElementById('content');
-  el.style.display = 'block';
+  el.style.display='block';
   el.innerHTML = html;
-  // Re-run any scripts inside loaded HTML
-  el.querySelectorAll('script').forEach(s => {
-    const ns = document.createElement('script');
-    ns.textContent = s.textContent;
-    document.body.appendChild(ns);
-  });
 }
-
-loadAll().catch(err => {
-  document.getElementById('status').textContent = 'Error loading. Please refresh.';
-  console.error(err);
-});
+load();
 </script>
 </body>
 </html>
