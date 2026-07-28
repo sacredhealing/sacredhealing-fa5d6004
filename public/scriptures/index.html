@@ -123,6 +123,8 @@ const PARTS = [
   { file:'part26_meqabyan.html', label:'1-2-3 Meqabyan — Ethiopian Warriors of Jah...' },
   { file:'part27_shepherd_hermas.html', label:'The Shepherd of Hermas — The Twelve Commandments...' },
   { file:'part28_sinodos_clement.html', label:'Sinodos · Clement · The 88 Books Complete...' },
+  { file:'part29_imperial_coronation.html', label:'Imperial Covenant — Coronation Address 1930...' },
+  { file:'part30_imperial_1936.html', label:'Imperial Covenant — League of Nations 1936...' },
   { file:'part3_nile_valley.html', label:'Calling forth Nile Valley wisdom...' },
   { file:'part4_enoch.html', label:'Summoning the Book of Enoch...' },
   { file:'part5_kebra.html', label:'Unveiling the Kebra Nagast...' },
@@ -134,7 +136,7 @@ async function load() {
   for (let i=0; i<PARTS.length; i++) {
     document.getElementById('status').textContent = PARTS[i].label;
     document.getElementById('bar').style.width = ((i/PARTS.length)*85+10)+'%';
-    const res = await fetch('/scriptures/'+PARTS[i].file+'?v=20260728g');
+    const res = await fetch('/scriptures/'+PARTS[i].file+'?v=20260728h');
     let text = await res.text();
     // Strip any stray html/head/body tags from part files
     text = text.replace(/<\/?(!DOCTYPE|html|head|body)[^>]*>/gi,'');
