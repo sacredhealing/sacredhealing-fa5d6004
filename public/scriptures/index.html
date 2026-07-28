@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Complete Restored Covenant Scriptures</title>
+<style>
+body { margin:0; background:#050505; color:#fff; font-family:sans-serif; }
+#loading {
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  background:radial-gradient(ellipse at 50% 40%, #1a0e00 0%, #050505 100%);
+}
+.load-title {
+  font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.5em;
+  text-transform:uppercase; color:rgba(212,175,55,0.6); margin-bottom:20px;
+}
+.load-bar-wrap {
+  width:260px; height:3px; background:rgba(255,255,255,0.06);
+  border-radius:2px; overflow:hidden; margin-bottom:16px;
+}
+.load-bar {
+  height:100%; width:0%; background:linear-gradient(90deg,#8B6914,#D4AF37);
+  border-radius:2px; transition:width 0.4s ease;
+}
+.load-status {
+  font-size:10px; letter-spacing:0.3em; text-transform:uppercase;
+  color:rgba(212,175,55,0.35);
+}
+#content { display:none; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div id="loading">
+  <p class="load-title">Loading Sacred Codex</p>
+  <div class="load-bar-wrap"><div class="load-bar" id="bar"></div></div>
+  <p class="load-status" id="status">Preparing the Akasha...</p>
+</div>
+
+<div id="content"></div>
+
+<script>
+const BASE = '/scriptures/';
+const PARTS = [
+  'part1_header.html',
+  'part2_cover_nav.html',
+  'part3_nile_valley.html',
+  'part4_enoch.html',
+  'part5_kebra.html',
+  'part6_gospels.html'
+];
+const LABELS = [
+  'Invoking the sacred vessel...',
+  'Opening the covenant gates...',
+  'Calling forth Nile Valley wisdom...',
+  'Summoning the Book of Enoch...',
+  'Unveiling the Kebra Nagast...',
+  'Restoring the Holy Gospels...'
+];
+
+async function loadAll() {
+  let html = '';
+  for (let i = 0; i < PARTS.length; i++) {
+    document.getElementById('status').textContent = LABELS[i];
+    document.getElementById('bar').style.width = ((i / PARTS.length) * 100) + '%';
+    const res = await fetch(BASE + PARTS[i]);
+    const text = await res.text();
+    html += text;
+  }
+  document.getElementById('bar').style.width = '100%';
+  document.getElementById('status').textContent = 'The Word is revealed.';
+  await new Promise(r => setTimeout(r, 600));
+  document.getElementById('loading').style.display = 'none';
+  const el = document.getElementById('content');
+  el.style.display = 'block';
+  el.innerHTML = html;
+  // Re-run any scripts inside loaded HTML
+  el.querySelectorAll('script').forEach(s => {
+    const ns = document.createElement('script');
+    ns.textContent = s.textContent;
+    document.body.appendChild(ns);
+  });
+}
+
+loadAll().catch(err => {
+  document.getElementById('status').textContent = 'Error loading. Please refresh.';
+  console.error(err);
+});
+</script>
+</body>
+</html>
