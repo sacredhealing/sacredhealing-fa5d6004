@@ -5052,6 +5052,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kriya_yoga_entries: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          tier_required: string
+          title: string
+          transmitter: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tier_required?: string
+          title: string
+          transmitter?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tier_required?: string
+          title?: string
+          transmitter?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean
@@ -5629,6 +5665,62 @@ export type Database = {
           starts_at?: string
           status?: string
           stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meditation_playlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          meditation_id: string
+          order_index: number
+          playlist_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meditation_id: string
+          order_index?: number
+          playlist_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meditation_id?: string
+          order_index?: number
+          playlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meditation_playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "meditation_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meditation_playlists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
           user_id?: string
         }
