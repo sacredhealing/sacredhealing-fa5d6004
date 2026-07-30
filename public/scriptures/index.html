@@ -75,31 +75,72 @@ const PARTS=[
   {file:'part2_cover_nav.html',label:'Opening the Sacred Codex...'},
   {file:'part2b_frontmatter.html',label:'Invocation and Foreword...'},
   {file:'part2b_toc.html',label:'Table of Contents — All 88 Books...'},
-  {file:'part7_genesis.html',label:'In the beginning — Genesis...'},
-  {file:'part7b_gedle_adam.html',label:'Gedle Adam — The Life of Adam and Eve · The Cave of Treasures · Adam Buried in Golgotha...'},
-  {file:'part8_exodus.html',label:'The Deliverance — Exodus...'},
-  {file:'part9_lev_num_deut.html',label:'The Law — Leviticus, Numbers, Deuteronomy...'},
-  {file:'part10_joshua_judges_ruth.html',label:'Into the Promised Land — Joshua, Judges, Ruth...'},
-  {file:'part11_samuel_kings.html',label:'The Kingdom — Samuel, Kings...'},
-  {file:'part12_ezra_neh_esther.html',label:'Return from Exile — Ezra, Nehemiah, Esther...'},
-  {file:'part12b_esdras.html',label:'1 Esdras · 2 Esdras — The Restoration · The Visions of Ezra · The Ninety-Four Books...'},
-  {file:'part37_tobit_judith.html',label:'Tobit and Judith — The Angel Raphael · The Widow Who Saved Israel...'},
-  {file:'part38_susanna_didascalia.html',label:'Susanna · Bel and the Dragon · The Ethiopic Didascalia — The Apostolic Teaching...'},
-  {file:'part40_chronicles_maccabees.html',label:'Chronicles 1+2 and Maccabees 1+2 — The Temple · The Revolt · The Resurrection...'},
-  {file:'part41_baruch_letter.html',label:'Baruch and Letter of Jeremiah — Wisdom Dwelt Among Men · Idols Are Nothing...'},
-  {file:'part13_job.html',label:'The Trial of Job...'},
-  {file:'part14_psalms.html',label:'The Psalms of David — Songs of Zion...'},
-  {file:'part15_proverbs_eccl_song.html',label:'Wisdom — Proverbs, Ecclesiastes, Song of Solomon...'},
-  {file:'part37_wisdom_sirach.html',label:'Wisdom of Solomon and Sirach — The Righteous Are in the Hand of Jah...'},
-  {file:'part16_isaiah.html',label:'Isaiah — Arise Shine For Thy Light Is Come...'},
-  {file:'part17_jeremiah_lam.html',label:'Jeremiah and Lamentations...'},
-  {file:'part18_ezekiel_daniel.html',label:'Ezekiel and Daniel...'},
-  {file:'part19_minor_prophets.html',label:'The Twelve Minor Prophets — Hosea through Malachi...'},
-  {file:'part20_matthew.html',label:'The Gospel of Matthew...'},
-  {file:'part21_mark_luke.html',label:'Mark and Luke...'},
-  {file:'part22_acts.html',label:'Acts — Ethiopia Receives the Gospel...'},
-  {file:'part23_epistles.html',label:'The Epistles of Paul...'},
-  {file:'part24_peter_john_rev.html',label:'Peter, John, Revelation — King of Kings...'},
+  {file:'full_genesis.html',label:'Genesis — Bereshit · 50 Chapters · In the Beginning...'}
+  {file:'full_exodus.html',label:'Exodus — Shemot · 40 Chapters · Let My People Go...'}
+  {file:'full_leviticus.html',label:'Leviticus — Vayikra · 27 Chapters · Be Ye Holy...'}
+  {file:'full_numbers.html',label:'Numbers — Bamidbar · 36 Chapters · The Wilderness...'}
+  {file:'full_deuteronomy.html',label:'Deuteronomy — Devarim · 34 Chapters · Hear O Israel...'}
+  {file:'full_joshua.html',label:'Joshua · 24 Chapters · The Conquest of Canaan...'}
+  {file:'full_judges.html',label:'Judges · 21 Chapters · Deborah Samson Gideon...'}
+  {file:'full_ruth.html',label:'Ruth · 4 Chapters · Whither Thou Goest I Will Go...'}
+  {file:'full_1samuel.html',label:'1 Samuel · 31 Chapters · David and Goliath...'}
+  {file:'full_2samuel.html',label:'2 Samuel · 24 Chapters · The Reign of David...'}
+  {file:'full_1kings.html',label:'1 Kings · 22 Chapters · Solomon · The Temple · Elijah...'}
+  {file:'full_2kings.html',label:'2 Kings · 25 Chapters · The Fall of Israel...'}
+  {file:'full_1chronicles.html',label:'1 Chronicles · 29 Chapters · The Genealogies of Israel...'}
+  {file:'full_2chronicles.html',label:'2 Chronicles · 36 Chapters · The Kings of Judah...'}
+  {file:'full_ezra.html',label:'Ezra · 10 Chapters · The Return from Babylon...'}
+  {file:'full_nehemiah.html',label:'Nehemiah · 13 Chapters · Rebuild the Wall...'}
+  {file:'full_esther.html',label:'Esther · 10 Chapters · For Such a Time as This...'}
+  {file:'full_job.html',label:'Job · 42 Chapters · Where Wast Thou When I Laid the Foundations...'}
+  {file:'full_psalms.html',label:'Psalms — Tehillim · 150 Chapters · The Songs of David...'}
+  {file:'full_proverbs.html',label:'Proverbs — Mishlei · 31 Chapters · The Fear of Jah...'}
+  {file:'full_ecclesiastes.html',label:'Ecclesiastes — Kohelet · 12 Chapters · Vanity of Vanities...'}
+  {file:'full_songofsolomon.html',label:'Song of Solomon · 8 Chapters · I Am My Beloved...'}
+  {file:'full_isaiah.html',label:'Isaiah · 66 Chapters · Comfort Ye My People...'}
+  {file:'full_jeremiah.html',label:'Jeremiah · 52 Chapters · Before I Formed Thee I Knew Thee...'}
+  {file:'full_lamentations.html',label:'Lamentations · 5 Chapters · Great Is Thy Faithfulness...'}
+  {file:'full_ezekiel.html',label:'Ezekiel · 48 Chapters · The Wheel Within a Wheel...'}
+  {file:'full_daniel.html',label:'Daniel · 12 Chapters · He Reveals Deep and Secret Things...'}
+  {file:'full_hosea.html',label:'Hosea · 14 Chapters · I Will Heal Their Backsliding...'}
+  {file:'full_joel.html',label:'Joel · 3 Chapters · I Will Pour Out My Spirit...'}
+  {file:'full_amos.html',label:'Amos · 9 Chapters · Let Justice Roll Down as Waters...'}
+  {file:'full_obadiah.html',label:'Obadiah · 1 Chapter · The Vision of Obadiah...'}
+  {file:'full_jonah.html',label:'Jonah · 4 Chapters · Out of the Belly of Hell I Cried...'}
+  {file:'full_micah.html',label:'Micah · 7 Chapters · Do Justice Love Mercy Walk Humbly...'}
+  {file:'full_nahum.html',label:'Nahum · 3 Chapters · Jah Is Good a Stronghold...'}
+  {file:'full_habakkuk.html',label:'Habakkuk · 3 Chapters · The Just Shall Live by Faith...'}
+  {file:'full_zephaniah.html',label:'Zephaniah · 3 Chapters · Ethiopia Stretches Her Hands...'}
+  {file:'full_haggai.html',label:'Haggai · 2 Chapters · Consider Your Ways...'}
+  {file:'full_zechariah.html',label:'Zechariah · 14 Chapters · Thy King Cometh Riding Upon a Donkey...'}
+  {file:'full_malachi.html',label:'Malachi · 4 Chapters · The Sun of Righteousness...'}
+  {file:'full_matthew.html',label:'The Gospel of Matthew · 28 Chapters · The Sermon on the Mount...'}
+  {file:'full_mark.html',label:'The Gospel of Mark · 16 Chapters · Peace Be Still...'}
+  {file:'full_luke.html',label:'The Gospel of Luke · 24 Chapters · The Good Samaritan...'}
+  {file:'full_john.html',label:'The Gospel of John · 21 Chapters · In the Beginning Was the Word...'}
+  {file:'full_acts.html',label:'Acts of the Apostles · 28 Chapters · Ye Shall Be My Witnesses...'}
+  {file:'full_romans.html',label:'Romans · 16 Chapters · Nothing Shall Separate Us...'}
+  {file:'full_1corinthians.html',label:'1 Corinthians · 16 Chapters · Love Never Faileth...'}
+  {file:'full_2corinthians.html',label:'2 Corinthians · 13 Chapters · New Creature in Christ...'}
+  {file:'full_galatians.html',label:'Galatians · 6 Chapters · The Fruit of the Spirit...'}
+  {file:'full_ephesians.html',label:'Ephesians · 6 Chapters · The Armour of God...'}
+  {file:'full_philippians.html',label:'Philippians · 4 Chapters · I Can Do All Things...'}
+  {file:'full_colossians.html',label:'Colossians · 4 Chapters · Christ in You the Hope of Glory...'}
+  {file:'full_1thessalonians.html',label:'1 Thessalonians · 5 Chapters · The Dead in Christ Shall Rise...'}
+  {file:'full_2thessalonians.html',label:'2 Thessalonians · 3 Chapters · The Day of the Lord...'}
+  {file:'full_1timothy.html',label:'1 Timothy · 6 Chapters · Fight the Good Fight...'}
+  {file:'full_2timothy.html',label:'2 Timothy · 4 Chapters · All Scripture Is God-Breathed...'}
+  {file:'full_titus.html',label:'Titus · 3 Chapters · Sound Doctrine...'}
+  {file:'full_philemon.html',label:'Philemon · 1 Chapter · A Brother Beloved...'}
+  {file:'full_hebrews.html',label:'Hebrews · 13 Chapters · Faith Is the Substance...'}
+  {file:'full_james.html',label:'James · 5 Chapters · Faith Without Works Is Dead...'}
+  {file:'full_1peter.html',label:'1 Peter · 5 Chapters · A Royal Priesthood...'}
+  {file:'full_2peter.html',label:'2 Peter · 3 Chapters · The Day of the Lord...'}
+  {file:'full_1john.html',label:'1 John · 5 Chapters · God Is Love...'}
+  {file:'full_2john.html',label:'2 John · 1 Chapter · Walk in Truth...'}
+  {file:'full_3john.html',label:'3 John · 1 Chapter · The Beloved Gaius...'}
+  {file:'full_jude.html',label:'Jude · 1 Chapter · Contend for the Faith · Enoch Prophesied...'}
+  {file:'full_revelation.html',label:'The Revelation · 22 Chapters · Alpha and Omega · Even So Come Lord Yeshua...'},
   {file:'part25_jubilees.html',label:'The Book of Jubilees...'},
   {file:'part26_meqabyan.html',label:'1-2-3 Meqabyan — Ethiopian Warriors of Jah...'},
   {file:'part27_shepherd_hermas.html',label:'The Shepherd of Hermas...'},
