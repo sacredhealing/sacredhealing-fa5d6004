@@ -50,28 +50,12 @@ export default function HolyBooks() {
     { icon:"📜", title:"Imperial Covenant", sub:"Coronation 1930 · League of Nations 1936", done:true },
   ];
 
-  if (!isAdmin) {
-    return (
-      <div style={{...S.page, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"40px 24px", textAlign:"center"}}>
-        <button onClick={() => navigate(-1)} style={{position:"absolute", top:20, left:20, ...S.back}}>←</button>
-        <div style={{fontSize:48, marginBottom:20}}>📖</div>
-        <p style={{fontSize:8, letterSpacing:"0.5em", textTransform:"uppercase", color:"rgba(212,175,55,0.4)", marginBottom:12}}>COMING SOON</p>
-        <h1 style={{fontFamily:"serif", fontSize:26, color:"#D4AF37", marginBottom:12}}>Holy Books</h1>
-        <p style={{color:"rgba(255,255,255,0.3)", fontSize:13, lineHeight:1.7, maxWidth:300}}>
-          The Complete Restored Covenant Scriptures — 88 sacred books of the Ethiopian Orthodox Bible.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div style={S.page}>
       <div style={S.topbar}>
         <button style={S.back} onClick={() => navigate(-1)}>←</button>
         <span style={S.h1}>Holy Books</span>
-        <span style={{fontSize:8, letterSpacing:"0.2em", padding:"4px 10px", borderRadius:20,
-          background:"rgba(212,175,55,0.1)", border:"1px solid rgba(212,175,55,0.3)",
-          color:"rgba(212,175,55,0.8)"}}>ADMIN</span>
+
       </div>
 
       <div style={S.body}>
