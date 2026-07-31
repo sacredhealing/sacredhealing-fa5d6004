@@ -45,7 +45,7 @@ html,body{background:#FAF6EC!important;color:#1a1208!important;font-family:'EB G
 .chapter-ornament{color:var(--gold-bright);font-size:1.3em;display:block;text-align:center;margin:2rem 0 .5rem;}
 .chapter-title{font-family:'Cinzel',serif;font-size:.9em;font-weight:600;letter-spacing:.08em;color:var(--red-rubric);text-align:center;display:block;margin-bottom:.4rem;text-transform:uppercase;}
 .chapter-subtitle{font-family:'EB Garamond',serif;font-style:italic;font-size:.88em;color:var(--gold);text-align:center;display:block;margin-bottom:1.2rem;}
-.vnum{font-size:.52em;color:var(--gold);vertical-align:super;font-weight:700;margin-right:.2em;font-style:normal;font-family:'Cinzel',serif;}
+.vnum{font-size:.72em;color:var(--gold);vertical-align:super;font-weight:700;margin-right:.3em;font-style:normal;font-family:'Cinzel',serif;letter-spacing:0;}
 .verse{display:inline;}
 p.para{text-indent:1.5em;margin-bottom:.15rem;}
 p.para:first-of-type{text-indent:0;}
@@ -216,27 +216,25 @@ const PARTS=[
     {file:'part_kebra_contemplation.html',label:'The Cosmic Dimensions of the Kebra Nagast — A Personal Contemplation by Kritagya Das...'}
 ];
 async function load(){
-  let html='';
+  const el=document.getElementById('content');
+  el.style.display='block';
+  const STRIP=/<\/?(?:!DOCTYPE|html|head|body)[^>]*>/gi;
   for(let i=0;i<PARTS.length;i++){
     document.getElementById('status').textContent=PARTS[i].label;
     document.getElementById('bar').style.width=((i/PARTS.length)*90+5)+'%';
-    const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260801a');
-    let text=await res.text();
-    text=text.replace(/<\/?((!DOCTYPE|html|head|body)[^>]*)>/gi,'');
-    html+=text;
+    try{
+      const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260801b');
+      if(!res.ok){console.warn('Skip',PARTS[i].file,res.status);continue;}
+      let text=await res.text();
+      text=text.replace(STRIP,'');
+      const frag=document.createRange().createContextualFragment(text);
+      el.appendChild(frag);
+    }catch(e){console.warn('Error',PARTS[i].file,e);}
   }
   document.getElementById('bar').style.width='100%';
   document.getElementById('status').textContent='The Word is revealed. Jah Rastafari.';
-  await new Promise(r=>setTimeout(r,600));
+  await new Promise(r=>setTimeout(r,400));
   document.getElementById('loading').style.display='none';
-  const el=document.getElementById('content');
-  el.style.display='block';
-  el.innerHTML=html;
-  el.querySelectorAll('script').forEach(s=>{
-    const ns=document.createElement('script');
-    ns.textContent=s.textContent;
-    document.body.appendChild(ns);
-  });
 }
 load();
 </script>
