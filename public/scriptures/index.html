@@ -164,7 +164,8 @@ const PARTS=[
   {file:'full_revelation.html',label:'The Revelation · 22 Chapters · Alpha and Omega · Even So Come Lord Yeshua...'},
   {file:'full_1enoch_complete.html',label:'1 Enoch — Complete · 108 Chapters · 1048 Verses · R.H. Charles Translation · The Watchers · Son of Man...'},
   {file:'full_2enoch_complete.html',label:'2 Enoch — Complete · 68 Chapters · 321 Verses · The Secrets of Enoch · Seven Heavens...'},
-  {file:'part38_enoch_2_3.html',label:'2 Enoch · 3 Enoch — The Secrets of Enoch · Metatron · The Seven Heavens · The Slavonic and Hebrew Enoch...'},
+  {file:'full_3enoch_complete.html',label:'3 Enoch — The Hebrew Book of Enoch · Sacred Addition · Sepher Hekhalot · Rabbi Ishmael · Metatron · The Merkabah...'},
+  {file:'part38_enoch_2_3.html',label:'The Enochic Trilogy — Three Books · One Tradition · The Watchers · The Seven Heavens · The Throne of Glory...'},
   {file:'full_jubilees_complete.html',label:'The Book of Jubilees — Complete · 50 Chapters · 1305 Verses · The Little Genesis...'},
   {file:'full_adam_eve_1.html',label:'The Life of Adam and Eve Part I — Complete · 79 Chapters · 920 Verses · Cave of Treasures...'},
   {file:'full_adam_eve_2.html',label:'The Conflict of Adam and Eve with Satan — Complete · 22 Chapters · 322 Verses...'},
@@ -219,7 +220,7 @@ async function load(){
   for(let i=0;i<PARTS.length;i++){
     document.getElementById('status').textContent=PARTS[i].label;
     document.getElementById('bar').style.width=((i/PARTS.length)*90+5)+'%';
-    const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260731k');
+    const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260801a');
     let text=await res.text();
     text=text.replace(/<\/?((!DOCTYPE|html|head|body)[^>]*)>/gi,'');
     html+=text;
