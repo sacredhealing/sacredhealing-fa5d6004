@@ -56,7 +56,7 @@ p.para:first-of-type{text-indent:0;}
 .scripture-columns{column-count:2;column-gap:3.5rem;column-rule:1px solid rgba(139,105,20,.18);}
 @media(max-width:700px){.scripture-columns{column-count:1;}}
 @media print{.reader-nav,.toc-overlay,.nav-spacer{display:none!important;}.cover-page{min-height:100vh;page-break-after:always;}.book-divider{page-break-before:always;}body{font-size:11pt;}}
-#loading{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 40%,#1a0e00 0%,#050505 100%);}
+#loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 40%,#1a0e00 0%,#050505 100%);}
 .load-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(212,175,55,.6);margin-bottom:20px;}
 .load-bar-wrap{width:240px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:14px;}
 .load-bar{height:100%;width:0%;background:linear-gradient(90deg,#8B6914,#D4AF37);border-radius:2px;transition:width .4s ease;}
@@ -223,7 +223,7 @@ async function load(){
     document.getElementById('status').textContent=PARTS[i].label;
     document.getElementById('bar').style.width=((i/PARTS.length)*90+5)+'%';
     try{
-      const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260801c');
+      const res=await fetch('/scriptures/'+PARTS[i].file+'?v=20260801d');
       if(!res.ok){console.warn('Skip',PARTS[i].file,res.status);continue;}
       let text=await res.text();
       text=text.replace(STRIP,'');
