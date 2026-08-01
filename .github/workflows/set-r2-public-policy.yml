@@ -1,0 +1,40 @@
+name: Set R2 Bucket Public Policy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set public read policy on scriptures folder
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const R2_ACCOUNT_ID = '79dae6f785e6758a441aa69dd3f7b2af';
+            const CF_API_TOKEN = process.env.CF_API_TOKEN;
+            
+            // Set bucket public access via Cloudflare API
+            const res = await fetch(
+              `https://api.cloudflare.com/client/v4/accounts/${R2_ACCOUNT_ID}/r2/buckets/siddhaquantumnexus/policy`,
+              {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Bearer ${CF_API_TOKEN}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  Version: "2012-10-17",
+                  Statement: [{
+                    Effect: "Allow",
+                    Principal: "*",
+                    Action: "s3:GetObject",
+                    Resource: "arn:aws:s3:::siddhaquantumnexus/scriptures/*"
+                  }]
+                })
+              }
+            );
+            const data = await res.json();
+            console.log('Policy result:', JSON.stringify(data));
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
