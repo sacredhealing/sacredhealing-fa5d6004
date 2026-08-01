@@ -1,8 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 export default function HolyBooks() {
   const navigate = useNavigate();
+  const { isAdmin, isLoading } = useAdminRole();
 
   const S = {
     page: { minHeight:"100vh", background:"#050505", paddingBottom:80 } as React.CSSProperties,
@@ -40,6 +42,78 @@ export default function HolyBooks() {
     { icon:"📖", title:"Sacred Lexicon", sub:"Vedic · Rastafari · Ethiopian · Gnostic · Christ Consciousness Terms" },
   ];
 
+  if (isLoading) {
+    return (
+      <div style={{...S.page, display:"flex", alignItems:"center", justifyContent:"center"}}>
+        <div style={{color:"rgba(212,175,55,0.5)", fontFamily:"serif", fontSize:13}}>Opening...</div>
+      </div>
+    );
+  }
+
+  // ── ADMIN: full reader access ──────────────────────────────
+  if (isAdmin) {
+    return (
+      <div style={S.page}>
+        <div style={S.topbar}>
+          <button style={S.back} onClick={() => navigate(-1)}>←</button>
+          <span style={S.h1}>Holy Books</span>
+          <span style={{fontSize:8, letterSpacing:"0.3em", color:"rgba(212,175,55,0.5)",
+            background:"rgba(212,175,55,0.08)", border:"1px solid rgba(212,175,55,0.2)",
+            padding:"4px 10px", borderRadius:20}}>ADMIN</span>
+        </div>
+        <div style={{padding:"20px 18px"}}>
+
+          <button style={{width:"100%", padding:"20px 18px", borderRadius:16, marginBottom:12,
+            background:"linear-gradient(135deg,rgba(139,105,20,0.35),rgba(212,175,55,0.15))",
+            border:"2px solid rgba(212,175,55,0.6)", cursor:"pointer", display:"flex",
+            alignItems:"center", gap:16, textAlign:"left" as const}}
+            onClick={() => window.location.href = '/scriptures/index.html'}>
+            <span style={{fontSize:28}}>📖</span>
+            <div>
+              <div style={{fontFamily:"serif", fontSize:16, color:"#D4AF37", marginBottom:4}}>
+                Open the Full Scripture
+              </div>
+              <div style={{fontSize:11, color:"rgba(255,255,255,0.35)", lineHeight:1.5}}>
+                88 books · All verses · Parchment reader · Admin preview
+              </div>
+            </div>
+          </button>
+
+          <button style={{width:"100%", padding:"18px", borderRadius:16, marginBottom:20,
+            background:"rgba(255,255,255,0.03)", border:"1px solid rgba(212,175,55,0.2)",
+            cursor:"pointer", display:"flex", alignItems:"center", gap:16, textAlign:"left" as const}}
+            onClick={() => window.location.href = '/scriptures/toc.html'}>
+            <span style={{fontSize:24}}>📋</span>
+            <div>
+              <div style={{fontFamily:"serif", fontSize:14, color:"rgba(212,175,55,0.75)", marginBottom:4}}>
+                Table of Contents
+              </div>
+              <div style={{fontSize:11, color:"rgba(255,255,255,0.3)"}}>
+                Jump to any book or chapter
+              </div>
+            </div>
+          </button>
+
+          <div style={{borderBottom:"1px solid rgba(255,255,255,0.06)", margin:"0 0 16px"}}/>
+
+          {VOLUMES.map((v, i) => (
+            <div key={i} style={{display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0",
+              borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+              <span style={{fontSize:16, width:24, flexShrink:0, textAlign:"center" as const,
+                color:"rgba(212,175,55,0.5)", marginTop:1}}>{v.icon}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12, color:"rgba(255,255,255,0.7)", marginBottom:2}}>{v.title}</div>
+                <div style={{fontSize:10, color:"rgba(255,255,255,0.25)", lineHeight:1.5}}>{v.sub}</div>
+              </div>
+              <span style={{fontSize:9, color:"rgba(212,175,55,0.5)"}}>✦</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── ALL OTHER USERS: showcase + buy ───────────────────────
   return (
     <div style={S.page}>
       <div style={S.topbar}>
@@ -49,7 +123,6 @@ export default function HolyBooks() {
 
       <div style={{padding:"32px 20px 20px", textAlign:"center"}}>
 
-        {/* Book cover feel */}
         <div style={{fontSize:52, marginBottom:12}}>📖</div>
         <div style={{fontSize:8, letterSpacing:"0.6em", textTransform:"uppercase",
           color:"rgba(212,175,55,0.4)", marginBottom:16, fontFamily:"serif"}}>
@@ -69,13 +142,11 @@ export default function HolyBooks() {
           Compiled & Restored by Kritagya Das
         </p>
 
-        {/* Gold rule */}
         <div style={{width:100, height:1, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)",
           margin:"0 auto 28px"}} />
 
-        {/* Buy buttons */}
         <button
-          onClick={() => window.open("https://www.amazon.com/dp/", "_blank")}
+          onClick={() => window.open("https://www.amazon.com", "_blank")}
           style={{width:"100%", maxWidth:340, padding:"16px 20px", borderRadius:16, marginBottom:10,
             background:"linear-gradient(135deg,rgba(139,105,20,0.4),rgba(212,175,55,0.2))",
             border:"2px solid rgba(212,175,55,0.6)", color:"#D4AF37",
@@ -84,7 +155,7 @@ export default function HolyBooks() {
         </button>
 
         <button
-          onClick={() => window.open("https://www.amazon.com/dp/", "_blank")}
+          onClick={() => window.open("https://www.amazon.com", "_blank")}
           style={{width:"100%", maxWidth:340, padding:"14px 20px", borderRadius:16, marginBottom:24,
             background:"rgba(255,255,255,0.03)", border:"1px solid rgba(212,175,55,0.25)",
             color:"rgba(212,175,55,0.7)", fontSize:12, fontFamily:"serif", cursor:"pointer",
@@ -92,7 +163,6 @@ export default function HolyBooks() {
           📱 Buy Kindle / Digital Edition
         </button>
 
-        {/* Coming soon in app */}
         <div style={{maxWidth:340, margin:"0 auto 32px", padding:"14px 16px",
           background:"rgba(212,175,55,0.04)", border:"1px solid rgba(212,175,55,0.12)",
           borderRadius:14}}>
@@ -106,7 +176,6 @@ export default function HolyBooks() {
         <div style={{width:100, height:1, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.2),transparent)",
           margin:"0 auto 28px"}} />
 
-        {/* Contents list */}
         <div style={{fontSize:8, letterSpacing:"0.5em", textTransform:"uppercase",
           color:"rgba(212,175,55,0.3)", marginBottom:20}}>What Is Inside</div>
 
@@ -114,7 +183,7 @@ export default function HolyBooks() {
           {VOLUMES.map((v, i) => (
             <div key={i} style={{display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0",
               borderBottom:"1px solid rgba(255,255,255,0.04)", textAlign:"left"}}>
-              <span style={{fontSize:16, width:24, flexShrink:0, textAlign:"center",
+              <span style={{fontSize:16, width:24, flexShrink:0, textAlign:"center" as const,
                 color:"rgba(212,175,55,0.5)", marginTop:1}}>{v.icon}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:12, color:"rgba(255,255,255,0.65)", marginBottom:2}}>{v.title}</div>
@@ -124,7 +193,7 @@ export default function HolyBooks() {
           ))}
         </div>
 
-        <div style={{marginTop:32, padding:"20px 0", textAlign:"center"}}>
+        <div style={{marginTop:32, padding:"20px 0"}}>
           <p style={{fontSize:9, color:"rgba(255,255,255,0.15)", lineHeight:1.8, maxWidth:320, margin:"0 auto"}}>
             The Bible in which Haile Selassie I actually read. 22 more books than the Protestant Bible.
             15 more than the Roman Catholic Bible. The hidden covenant of the ancient world — in English, for the first time complete.
