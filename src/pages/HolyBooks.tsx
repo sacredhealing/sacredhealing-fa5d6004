@@ -105,45 +105,20 @@ export default function HolyBooks() {
   // ── READER MODE ────────────────────────────────────────────
   if (mode === "reader") {
     return (
-      <div style={{minHeight:"100vh", background:"#050505"}}>
+      <div style={{height:"100dvh", display:"flex", flexDirection:"column", background:"#050505"}}>
         <div style={S.topbar}>
-          <button style={S.back} onClick={() => { setMode("menu"); setDone(false); }}>← Back</button>
+          <button style={S.back} onClick={() => setMode("menu")}>← Back</button>
           <span style={S.h1}>The Complete Scripture</span>
         </div>
-
-        {/* Loading overlay */}
-        {!done && (
-          <div style={{position:"fixed", inset:0, top:51, zIndex:50,
-            background:"radial-gradient(ellipse at 50% 40%, #1a0e00 0%, #050505 100%)",
-            display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20}}>
-            <div style={{fontFamily:"serif", fontSize:9, letterSpacing:"0.6em",
-              color:"rgba(212,175,55,0.4)", textTransform:"uppercase", marginBottom:8}}>
-              The Complete Restored Covenant Scriptures
-            </div>
-            <div style={{fontFamily:"serif", fontSize:20, color:"rgba(212,175,55,0.85)", fontWeight:300}}>
-              Opening the Sacred Codex
-            </div>
-            <div style={{fontFamily:"serif", fontSize:10, letterSpacing:"0.4em",
-              color:"rgba(212,175,55,0.35)", textTransform:"uppercase"}}>
-              {loadingText}
-            </div>
-            <div style={{width:260, height:2, background:"rgba(212,175,55,0.08)", borderRadius:2, marginTop:8}}>
-              <div style={{height:"100%", width:`${progress}%`,
-                background:"linear-gradient(90deg,#8B6914,#D4AF37)",
-                borderRadius:2, transition:"width 0.3s ease"}}/>
-            </div>
-            <div style={{fontFamily:"serif", fontSize:8, letterSpacing:"0.3em",
-              color:"rgba(212,175,55,0.2)", textTransform:"uppercase", marginTop:4}}>
-              88 Books · The Living Word of Jah
-            </div>
-          </div>
-        )}
-
-        {/* Scripture content renders here */}
-        <div ref={contentRef} style={{display: done ? "block" : "none"}} />
+        <iframe
+          src="/scriptures/index.html"
+          title="Scripture Reader"
+          style={{flex:1, width:"100%", border:"none", background:"#FAF6EC"}}
+        />
       </div>
     );
   }
+
 
   // ── ADMIN MENU ─────────────────────────────────────────────
   if (isAdmin) {
