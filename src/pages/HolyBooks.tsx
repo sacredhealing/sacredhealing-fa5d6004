@@ -1,10 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useMembership } from "@/hooks/useMembership";
+import { getTierRank } from "@/lib/tierAccess";
 
 export default function HolyBooks() {
   const navigate = useNavigate();
   const { isAdmin } = useAdminRole();
+  const { tier, loading } = useMembership();
+
+  // Admin or any paid tier (rank >= 1) gets access
+  const hasAccess = isAdmin || getTierRank(tier) >= 1;
 
   const S = {
     page: { minHeight:"100vh", background:"#050505", paddingBottom:80 } as React.CSSProperties,
@@ -50,17 +56,113 @@ export default function HolyBooks() {
     { icon:"📜", title:"Imperial Covenant", sub:"Coronation 1930 · League of Nations 1936", done:true },
   ];
 
+  if (loading) {
+    return (
+      <div style={{...S.page, display:"flex", alignItems:"center", justifyContent:"center"}}>
+        <div style={{width:32, height:32, borderRadius:"50%", border:"2px solid rgba(212,175,55,0.2)",
+          borderTopColor:"#D4AF37", animation:"spin 1s linear infinite"}} />
+      </div>
+    );
+  }
+
+  // ── LOCKED SCREEN — no access ──────────────────────────────
+  if (!hasAccess) {
+    return (
+      <div style={S.page}>
+        <div style={S.topbar}>
+          <button style={S.back} onClick={() => navigate(-1)}>←</button>
+          <span style={S.h1}>Holy Books</span>
+        </div>
+
+        <div style={{padding:"40px 24px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center"}}>
+
+          {/* Ornament */}
+          <div style={{fontSize:48, marginBottom:8}}>📖</div>
+          <div style={{fontSize:10, letterSpacing:"0.5em", textTransform:"uppercase",
+            color:"rgba(212,175,55,0.4)", marginBottom:24, fontFamily:"serif"}}>
+            THE COMPLETE RESTORED COVENANT SCRIPTURES
+          </div>
+
+          {/* Title */}
+          <h1 style={{fontFamily:"serif", fontSize:26, color:"#D4AF37", lineHeight:1.3,
+            marginBottom:8, fontWeight:400}}>
+            The Complete Ethiopian Bible
+          </h1>
+          <p style={{fontSize:13, color:"rgba(255,255,255,0.3)", marginBottom:6}}>
+            88 Sacred Books · All Books the West Removed
+          </p>
+          <p style={{fontSize:11, color:"rgba(212,175,55,0.4)", marginBottom:32, letterSpacing:"0.2em"}}>
+            1 Enoch · Jubilees · Kebra Nagast · Meqabyan · Jasher · The Lost Gospels · Rastafari Writings
+          </p>
+
+          {/* Gold rule */}
+          <div style={{width:120, height:1, background:"linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)",
+            marginBottom:32}} />
+
+          {/* What they get */}
+          <div style={{width:"100%", maxWidth:340, marginBottom:32}}>
+            {[
+              "Full parchment scripture reader",
+              "All 88 books in beautiful format",
+              "1 Enoch · 2 Enoch · 3 Enoch complete",
+              "Kebra Nagast · 117 chapters",
+              "Rastafari Sacred Writings",
+              "Haile Selassie I transmissions",
+              "Sacred Lexicon & commentaries",
+              "Print to PDF for physical copy",
+            ].map((f, i) => (
+              <div key={i} style={{display:"flex", alignItems:"center", gap:10, padding:"8px 0",
+                borderBottom:"1px solid rgba(255,255,255,0.04)", textAlign:"left"}}>
+                <span style={{color:"#D4AF37", fontSize:12}}>✦</span>
+                <span style={{fontSize:12, color:"rgba(255,255,255,0.55)"}}>{f}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => navigate("/membership")}
+            style={{width:"100%", maxWidth:340, padding:"18px 24px", borderRadius:20,
+              background:"linear-gradient(135deg,rgba(139,105,20,0.4),rgba(212,175,55,0.2))",
+              border:"2px solid rgba(212,175,55,0.6)", color:"#D4AF37",
+              fontSize:13, fontFamily:"serif", cursor:"pointer", marginBottom:12,
+              letterSpacing:"0.05em"}}>
+            ✦ Unlock the Full Scripture
+          </button>
+
+          <p style={{fontSize:10, color:"rgba(255,255,255,0.2)", lineHeight:1.6, maxWidth:280}}>
+            Available with Prana Flow (€19/mo), Siddha Quantum (€45/mo),
+            or Akasha Infinity (€2997 lifetime)
+          </p>
+
+          <div style={{marginTop:32, width:"100%", maxWidth:340}}>
+            <div style={{fontSize:8, letterSpacing:"0.4em", textTransform:"uppercase",
+              color:"rgba(212,175,55,0.3)", marginBottom:16}}>Contents</div>
+            {VOLUMES.map((v, i) => (
+              <div key={i} style={{...S.bookRow, opacity:0.4}}>
+                <span style={S.bookIcon}>🔒</span>
+                <div style={{flex:1}}>
+                  <div style={S.bookName}>{v.title}</div>
+                  <div style={S.bookSub}>{v.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── UNLOCKED — has access ──────────────────────────────────
   return (
     <div style={S.page}>
       <div style={S.topbar}>
         <button style={S.back} onClick={() => navigate(-1)}>←</button>
         <span style={S.h1}>Holy Books</span>
-
       </div>
 
       <div style={S.body}>
 
-        {/* TOC BUTTON — FIRST AND BIGGEST */}
         <button style={S.bigBtn(true)} onClick={() => window.location.href = '/scriptures/toc.html'}>
           <span style={S.icon}>📋</span>
           <div>
@@ -69,7 +171,6 @@ export default function HolyBooks() {
           </div>
         </button>
 
-        {/* READ BUTTON */}
         <button style={S.bigBtn()} onClick={() => window.location.href = '/scriptures/index.html'}>
           <span style={S.icon}>📖</span>
           <div>
@@ -80,7 +181,6 @@ export default function HolyBooks() {
 
         <div style={S.divider}/>
 
-        {/* BOOK LIST */}
         {VOLUMES.map((v,i) => (
           <div key={i} style={S.bookRow}>
             <span style={S.bookIcon}>{v.icon}</span>
@@ -97,13 +197,13 @@ export default function HolyBooks() {
         <div style={{padding:"16px", background:"rgba(212,175,55,0.04)", border:"1px solid rgba(212,175,55,0.12)", borderRadius:14}}>
           <p style={{fontSize:8, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(212,175,55,0.4)", marginBottom:8}}>PDF · PRINT · AMAZON KDP</p>
           <p style={{fontSize:12, color:"rgba(255,255,255,0.3)", lineHeight:1.6, marginBottom:14}}>
-            PDF included with Akasha-Infinity membership. Physical edition in preparation.
+            Physical edition in preparation. Open & print from the scripture reader.
           </p>
           <button onClick={() => window.location.href = '/scriptures/index.html'}
             style={{width:"100%", padding:"12px", borderRadius:20, background:"rgba(212,175,55,0.08)",
               border:"1px solid rgba(212,175,55,0.3)", color:"rgba(212,175,55,0.8)",
               fontSize:9, letterSpacing:"0.3em", textTransform:"uppercase", cursor:"pointer"}}>
-            ⬇ Open &amp; Print as PDF
+            ⬇ Open & Print as PDF
           </button>
         </div>
 
