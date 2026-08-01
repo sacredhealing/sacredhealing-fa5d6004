@@ -81,37 +81,11 @@ export default function HolyBooks() {
   const navigate = useNavigate();
   const { isAdmin, isLoading } = useAdminRole();
   const [mode, setMode] = useState<"menu"|"reader">("menu");
-  const [loadingText, setLoadingText] = useState("Invoking the Akasha...");
-  const [progress, setProgress] = useState(0);
-  const [done, setDone] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
-  const openReader = async () => {
-    setMode("reader");
-    setDone(false);
-    setProgress(0);
-    
-    // Load files one by one and append to DOM
-    const STRIP = /<\/?(?:!DOCTYPE|html|head|body)[^>]*>/gi;
-    
-    for (let i = 0; i < PARTS.length; i++) {
-      setLoadingText(PARTS[i].label);
-      setProgress(Math.round((i / PARTS.length) * 90 + 5));
-      try {
-        const res = await fetch(GITHUB_RAW + PARTS[i].file);
-        if (!res.ok) continue;
-        const text = (await res.text()).replace(STRIP, "");
-        if (contentRef.current) {
-          const div = document.createElement("div");
-          div.innerHTML = text;
-          contentRef.current.appendChild(div);
-        }
-      } catch(e) { console.warn("Error", PARTS[i].file, e); }
-    }
-    setProgress(100);
-    setLoadingText("The Word is revealed. Jah Rastafari.");
-    setTimeout(() => setDone(true), 600);
-  };
+  // The scripture reader is a self-contained parchment codex with its own
+  // fonts, CSS and loading screen. It must render inside an iframe so the
+  // app's dark theme never leaks into the book design.
+  const openReader = () => setMode("reader");
 
   const S = {
     page: { minHeight:"100vh", background:"#050505" } as React.CSSProperties,
