@@ -67,7 +67,7 @@ export default function HolyBooks() {
             background:"linear-gradient(135deg,rgba(139,105,20,0.35),rgba(212,175,55,0.15))",
             border:"2px solid rgba(212,175,55,0.6)", cursor:"pointer", display:"flex",
             alignItems:"center", gap:16, textAlign:"left" as const}}
-            onClick={() => window.location.href = '/scriptures/index.html'}>
+            onClick={() => window.location.href = 'https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/public/scriptures/index.html'}>
             <span style={{fontSize:28}}>📖</span>
             <div>
               <div style={{fontFamily:"serif", fontSize:16, color:"#D4AF37", marginBottom:4}}>
@@ -82,7 +82,7 @@ export default function HolyBooks() {
           <button style={{width:"100%", padding:"18px", borderRadius:16, marginBottom:20,
             background:"rgba(255,255,255,0.03)", border:"1px solid rgba(212,175,55,0.2)",
             cursor:"pointer", display:"flex", alignItems:"center", gap:16, textAlign:"left" as const}}
-            onClick={() => window.location.href = '/scriptures/toc.html'}>
+            onClick={() => window.location.href = 'https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/public/scriptures/toc.html'}>
             <span style={{fontSize:24}}>📋</span>
             <div>
               <div style={{fontFamily:"serif", fontSize:14, color:"rgba(212,175,55,0.75)", marginBottom:4}}>
