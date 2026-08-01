@@ -220,14 +220,14 @@ async function load(){
   const loading=document.getElementById('loading');
   const bar=document.getElementById('bar');
   const status=document.getElementById('status');
-  const base=window.location.origin+'/scriptures/';
+  const base='https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/public/scriptures/';
   const STRIP=/<\/?(?:!DOCTYPE|html|head|body)[^>]*>/gi;
   let loaded=0;
   for(let i=0;i<PARTS.length;i++){
     status.textContent=PARTS[i].label;
     bar.style.width=((i/PARTS.length)*90+5)+'%';
     try{
-      const res=await fetch(base+PARTS[i].file+'?v=20260801e');
+      const res=await fetch(base+PARTS[i].file);
       if(!res.ok){console.warn('Skip',PARTS[i].file,res.status);continue;}
       const text=(await res.text()).replace(STRIP,'');
       el.appendChild(document.createRange().createContextualFragment(text));
@@ -235,10 +235,7 @@ async function load(){
     }catch(e){console.warn('Error',PARTS[i].file,e.message);}
   }
   bar.style.width='100%';
-  if(loaded===0){
-    status.textContent='Error loading scripture. Please refresh.';
-    return;
-  }
+  if(loaded===0){status.textContent='Error loading. Please refresh.';return;}
   status.textContent='The Word is revealed. Jah Rastafari.';
   await new Promise(r=>setTimeout(r,600));
   loading.style.display='none';
