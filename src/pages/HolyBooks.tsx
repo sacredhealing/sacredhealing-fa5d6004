@@ -105,22 +105,46 @@ export default function HolyBooks() {
             {mode === "reader" ? "Contents" : "Reader"}
           </button>
         </div>
-        {loading && (
-          <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16}}>
-            <div style={{fontFamily:"serif", fontSize:11, letterSpacing:"0.3em", color:"rgba(212,175,55,0.5)"}}>
-              OPENING THE SACRED CODEX
-            </div>
-            <div style={{width:200, height:2, background:"rgba(212,175,55,0.1)", borderRadius:2}}>
-              <div style={{height:"100%", width:"60%", background:"rgba(212,175,55,0.5)", borderRadius:2, animation:"pulse 1.5s ease infinite"}}/>
-            </div>
-          </div>
-        )}
         <iframe
           ref={iframeRef}
-          style={{flex:1, border:"none", display: loading ? "none" : "block"}}
+          style={{flex:1, border:"none"}}
           onLoad={() => setLoading(false)}
           title="Scripture Reader"
         />
+        {loading && (
+          <div style={{position:"absolute", inset:0, top:51, background:"radial-gradient(ellipse at 50% 40%, #1a0e00 0%, #050505 100%)",
+            display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:24}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Cinzel Decorative', serif", fontSize:9, letterSpacing:"0.6em",
+                color:"rgba(212,175,55,0.5)", marginBottom:20, textTransform:"uppercase"}}>
+                The Complete Restored Covenant Scriptures
+              </div>
+              <div style={{fontFamily:"serif", fontSize:22, color:"rgba(212,175,55,0.85)", marginBottom:8, fontWeight:300}}>
+                Opening the Sacred Codex
+              </div>
+              <div style={{fontFamily:"serif", fontSize:11, letterSpacing:"0.4em",
+                color:"rgba(212,175,55,0.35)", marginBottom:32, textTransform:"uppercase"}}>
+                Invoking the Akasha...
+              </div>
+            </div>
+            <div style={{width:260, height:2, background:"rgba(212,175,55,0.08)", borderRadius:2, overflow:"hidden"}}>
+              <div style={{height:"100%", background:"linear-gradient(90deg, #8B6914, #D4AF37, #8B6914)",
+                borderRadius:2, animation:"slideBar 2s ease-in-out infinite",
+                backgroundSize:"200% 100%"}}/>
+            </div>
+            <style>{`
+              @keyframes slideBar {
+                0% { width: 5%; margin-left: 0; }
+                50% { width: 70%; margin-left: 15%; }
+                100% { width: 5%; margin-left: 90%; }
+              }
+            `}</style>
+            <div style={{fontFamily:"serif", fontSize:9, letterSpacing:"0.3em",
+              color:"rgba(212,175,55,0.2)", textTransform:"uppercase", marginTop:8}}>
+              88 Books · All 88 Books · The Living Word
+            </div>
+          </div>
+        )}
       </div>
     );
   }
