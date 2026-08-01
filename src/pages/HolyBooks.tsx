@@ -19,10 +19,10 @@ export default function HolyBooks() {
       let html = await res.text();
       // Fix all internal resource paths to use GitHub raw
       html = html.replace(/\/scriptures\//g, GITHUB_RAW);
-      html = html.replace(/src=\"(?!http)/g, \`src="\${GITHUB_RAW}\`);
+      html = html.replace(/src=\"(?!http)/g, `src="${GITHUB_RAW}`);
       html = html.replace(
         /fetch\('\.\/|fetch\('(?!http)/g,
-        \`fetch('\${GITHUB_RAW}\`
+        `fetch('${GITHUB_RAW}`
       );
       const blob = new Blob([html], { type: "text/html" });
       const blobUrl = URL.createObjectURL(blob);
