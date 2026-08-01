@@ -1,0 +1,98 @@
+name: Upload Scripture Files to R2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload all scripture HTML files to R2
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const crypto = require('crypto');
+
+            const R2_ACCOUNT_ID = '79dae6f785e6758a441aa69dd3f7b2af';
+            const R2_ACCESS_KEY = 'fe3243e15f429886b7f3c5d9e23c8262';
+            const R2_SECRET_KEY = '3e8dab0a93ba4eaa1f1b4c43682e15a961d6d1b269b8e0b40ed64fbd2e025e50';
+            const R2_BUCKET = 'siddhaquantumnexus';
+            const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+
+            // AWS Signature V4
+            function hmac(key, data) {
+              return crypto.createHmac('sha256', key).update(data).digest();
+            }
+            function hash(data) {
+              return crypto.createHash('sha256').update(data).digest('hex');
+            }
+
+            async function uploadToR2(key, body, contentType) {
+              const now = new Date();
+              const date = now.toISOString().replace(/[:\-]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+              const dateShort = date.slice(0, 8);
+              const region = 'auto';
+              const service = 's3';
+              const url = `${R2_ENDPOINT}/${R2_BUCKET}/${key}`;
+              const bodyHash = hash(body);
+              
+              const headers = {
+                'host': `${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+                'content-type': contentType,
+                'content-length': String(body.length),
+                'x-amz-date': date,
+                'x-amz-content-sha256': bodyHash,
+              };
+
+              const signedHeaders = Object.keys(headers).sort().join(';');
+              const canonicalHeaders = Object.keys(headers).sort().map(k => `${k}:${headers[k]}`).join('\n') + '\n';
+              const canonicalRequest = [
+                'PUT', `/${R2_BUCKET}/${key}`, '',
+                canonicalHeaders, signedHeaders, bodyHash
+              ].join('\n');
+
+              const credScope = `${dateShort}/${region}/${service}/aws4_request`;
+              const stringToSign = ['AWS4-HMAC-SHA256', date, credScope, hash(canonicalRequest)].join('\n');
+
+              const sigKey = hmac(hmac(hmac(hmac('AWS4' + R2_SECRET_KEY, dateShort), region), service), 'aws4_request');
+              const sig = hmac(sigKey, stringToSign).toString('hex');
+
+              const auth = `AWS4-HMAC-SHA256 Credential=${R2_ACCESS_KEY}/${credScope}, SignedHeaders=${signedHeaders}, Signature=${sig}`;
+
+              const { default: fetch } = await import('node-fetch');
+              const res = await fetch(url, {
+                method: 'PUT',
+                headers: { ...headers, 'Authorization': auth },
+                body: body,
+              });
+              return res.status;
+            }
+
+            const scriptsDir = 'public/scriptures';
+            const files = fs.readdirSync(scriptsDir).filter(f => f.endsWith('.html'));
+            console.log(`Found ${files.length} HTML files to upload`);
+
+            let ok = 0, fail = 0;
+            for (const file of files) {
+              const filePath = path.join(scriptsDir, file);
+              const body = fs.readFileSync(filePath);
+              const key = `scriptures/${file}`;
+              try {
+                const status = await uploadToR2(key, body, 'text/html; charset=utf-8');
+                if (status === 200 || status === 201 || status === 204) {
+                  ok++;
+                  if (ok % 20 === 0) console.log(`Uploaded ${ok}/${files.length}...`);
+                } else {
+                  fail++;
+                  console.log(`FAIL ${file}: ${status}`);
+                }
+              } catch(e) {
+                fail++;
+                console.log(`ERROR ${file}: ${e.message}`);
+              }
+            }
+            console.log(`DONE: ${ok} uploaded, ${fail} failed`);
