@@ -19,10 +19,10 @@ export default function HolyBooks() {
       let html = await res.text();
       // Fix all internal resource paths to use GitHub raw
       html = html.replace(/\/scriptures\//g, GITHUB_RAW);
-      html = html.replace(/src=\"(?!http)/g, \`src="\${GITHUB_RAW}\`);
+      html = html.replace(/src=\"(?!http)/g, `src="${GITHUB_RAW}`);
       html = html.replace(
         /fetch\('\.\/|fetch\('(?!http)/g,
-        \`fetch('\${GITHUB_RAW}\`
+        `fetch('${GITHUB_RAW}`
       );
       const blob = new Blob([html], { type: "text/html" });
       const blobUrl = URL.createObjectURL(blob);
@@ -99,13 +99,11 @@ export default function HolyBooks() {
         <div style={{...S.topbar, flexShrink:0}}>
           <button style={S.back} onClick={() => setMode("menu")}>← Back</button>
           <span style={S.h1}>{mode === "toc" ? "Contents" : "The Complete Scripture"}</span>
-          {mode === "menu" ? null : (
-            <button onClick={() => mode === "reader" ? openToc() : openReader()}
-              style={{fontSize:11, padding:"6px 12px", borderRadius:20, background:"rgba(212,175,55,0.1)",
-                border:"1px solid rgba(212,175,55,0.3)", color:"rgba(212,175,55,0.8)", cursor:"pointer"}}>
-              {mode === "reader" ? "Contents" : "Reader"}
-            </button>
-          )}
+          <button onClick={() => mode === "reader" ? openToc() : openReader()}
+            style={{fontSize:11, padding:"6px 12px", borderRadius:20, background:"rgba(212,175,55,0.1)",
+              border:"1px solid rgba(212,175,55,0.3)", color:"rgba(212,175,55,0.8)", cursor:"pointer"}}>
+            {mode === "reader" ? "Contents" : "Reader"}
+          </button>
         </div>
         {loading && (
           <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16}}>
