@@ -5,12 +5,12 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 export default function HolyBooks() {
   const navigate = useNavigate();
   const { isAdmin, isLoading } = useAdminRole();
-  const [mode, setMode] = useState<"menu"|"reader">("menu");
+  const [mode, setMode] = useState<"menu"|"reader"|"gh12">("menu");
 
-  // The scripture reader is a self-contained parchment codex with its own
-  // fonts, CSS and loading screen. It must render inside an iframe so the
-  // app's dark theme never leaks into the book design.
+  // Opens the full scripture reader (all 88+ books)
   const openReader = () => setMode("reader");
+  // Opens the reader deep-linked directly to Gospel of the Holy Twelve
+  const openGH12 = () => setMode("gh12");
 
   const S = {
     page: { minHeight:"100vh", background:"#050505" } as React.CSSProperties,
@@ -27,7 +27,7 @@ export default function HolyBooks() {
     </div>
   );
 
-  // ── READER MODE ────────────────────────────────────────────
+  // ── FULL READER MODE ────────────────────────────────────────
   if (mode === "reader") {
     return (
       <div style={{height:"100dvh", display:"flex", flexDirection:"column", background:"#050505"}}>
@@ -44,6 +44,25 @@ export default function HolyBooks() {
     );
   }
 
+  // ── GOSPEL OF THE HOLY TWELVE DEEP-LINK MODE ───────────────
+  if (mode === "gh12") {
+    return (
+      <div style={{height:"100dvh", display:"flex", flexDirection:"column", background:"#050505"}}>
+        <div style={S.topbar}>
+          <button style={S.back} onClick={() => setMode("menu")}>← Back</button>
+          <span style={S.h1}>Gospel of the Holy Twelve</span>
+          <span style={{fontSize:8, letterSpacing:"0.3em", color:"rgba(212,175,55,0.5)",
+            background:"rgba(212,175,55,0.08)", border:"1px solid rgba(212,175,55,0.2)",
+            padding:"4px 10px", borderRadius:20}}>96 LECTIONS</span>
+        </div>
+        <iframe
+          src="/scriptures/index.html#gospel-holy-twelve-intro"
+          title="Gospel of the Holy Twelve"
+          style={{flex:1, width:"100%", border:"none", background:"#FAF6EC"}}
+        />
+      </div>
+    );
+  }
 
   // ── ADMIN MENU ─────────────────────────────────────────────
   if (isAdmin) {
@@ -57,7 +76,9 @@ export default function HolyBooks() {
             padding:"4px 10px", borderRadius:20}}>ADMIN</span>
         </div>
         <div style={{padding:"20px 18px"}}>
-          <button style={{width:"100%", padding:"20px 18px", borderRadius:16, marginBottom:12,
+
+          {/* ── Full Scripture Reader ── */}
+          <button style={{width:"100%", padding:"20px 18px", borderRadius:16, marginBottom:8,
             background:"linear-gradient(135deg,rgba(139,105,20,0.35),rgba(212,175,55,0.15))",
             border:"2px solid rgba(212,175,55,0.6)", cursor:"pointer",
             display:"flex", alignItems:"center", gap:16, textAlign:"left" as const}}
@@ -72,7 +93,30 @@ export default function HolyBooks() {
               </div>
             </div>
           </button>
-          <div style={{borderBottom:"1px solid rgba(255,255,255,0.06)", margin:"12px 0 16px"}}/>
+
+          {/* ── Gospel of the Holy Twelve Featured Card ── */}
+          <button style={{width:"100%", padding:"18px", borderRadius:16, marginBottom:16,
+            background:"linear-gradient(135deg,rgba(20,80,40,0.45),rgba(212,175,55,0.1))",
+            border:"1px solid rgba(120,200,120,0.3)", cursor:"pointer",
+            display:"flex", alignItems:"center", gap:16, textAlign:"left" as const}}
+            onClick={openGH12}>
+            <span style={{fontSize:26}}>🌿</span>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"serif", fontSize:14, color:"#C9D4AF", marginBottom:3}}>
+                Gospel of the Holy Twelve
+              </div>
+              <div style={{fontSize:10, color:"rgba(255,255,255,0.35)", lineHeight:1.5}}>
+                Complete · 96 Lections · 1,500 Verses · Restored Names
+              </div>
+            </div>
+            <span style={{fontSize:9, letterSpacing:"0.2em", color:"rgba(180,220,180,0.5)",
+              background:"rgba(120,200,120,0.08)", border:"1px solid rgba(120,200,120,0.2)",
+              padding:"3px 8px", borderRadius:10, whiteSpace:"nowrap" as const}}>NEW</span>
+          </button>
+
+          <div style={{borderBottom:"1px solid rgba(255,255,255,0.06)", margin:"4px 0 14px"}}/>
+
+          {/* ── Section Index ── */}
           {[
             {icon:"📜", t:"Torah", s:"Genesis · Exodus · Leviticus · Numbers · Deuteronomy"},
             {icon:"⚔️", t:"Historical Books", s:"Joshua through Chronicles · 15 Books"},
@@ -80,6 +124,7 @@ export default function HolyBooks() {
             {icon:"🔥", t:"Major Prophets", s:"Isaiah · Jeremiah · Ezekiel · Daniel"},
             {icon:"🕊️", t:"Minor Prophets", s:"Hosea through Malachi · 12 Books"},
             {icon:"✝️", t:"New Testament", s:"Matthew through Revelation · All 27 Books"},
+            {icon:"🌿", t:"Gospel of the Holy Twelve", s:"96 Lections · Complete · Ouseley 1923"},
             {icon:"👁️", t:"1 · 2 · 3 Enoch", s:"Complete Ethiopian Enochic Canon"},
             {icon:"♛",  t:"Kebra Nagast", s:"117 Chapters · The Ark of the Covenant"},
             {icon:"⚔️", t:"1 · 2 · 3 Meqabyan", s:"The Ethiopian Maccabees"},
