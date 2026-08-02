@@ -239,7 +239,7 @@ async function load(){
     status.textContent=PARTS[i].label;
     bar.style.width=((i/PARTS.length)*90+5)+'%';
     try{
-      const res=await fetch(base+PARTS[i].file+'?v=20260802n');
+      const res=await fetch(base+PARTS[i].file+'?v=20260802p');
       if(!res.ok){console.warn('Skip',PARTS[i].file,res.status);continue;}
       const text=(await res.text()).replace(STRIP,'');
       el.appendChild(document.createRange().createContextualFragment(text));
