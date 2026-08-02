@@ -253,7 +253,6 @@ const PARTS=[
   {file:'full_2meqabyan.html',label:'2 Meqabyan — Complete · 21 Chapters · 421 Verses · Ethiopian Maccabees...'},
   {file:'full_3meqabyan.html',label:'3 Meqabyan — Complete · 10 Chapters · 208 Verses · Prophecy of Christ...'},
   {file:'part6_gospels.html',label:'The Restored Gospels — Matthew, Mark, Luke, John, Thomas...'},
-  {file:'full_gospel_holy_twelve.html',label:'The Gospel of the Holy Twelve — Complete · 96 Lections · 1500 Verses · Ouseley · 1923...'},
   {file:'part29_imperial_coronation.html',label:'Imperial Covenant — Coronation Address 1930...'},
   {file:'part30_imperial_1936.html',label:'Imperial Covenant — League of Nations 1936...'},
   {file:'part31_rasta_additions.html',label:'Rastafari Sacred Writings — Holy Piby, Ital, Holy Days...'},
@@ -305,7 +304,7 @@ async function load(){
     status.textContent=PARTS[i].label;
     bar.style.width=((i/PARTS.length)*90+5)+'%';
     try{
-      const res=await fetch(base+PARTS[i].file+'?v=20260802q');
+      const res=await fetch(base+PARTS[i].file+'?v=20260802r');
       if(!res.ok){console.warn('Skip',PARTS[i].file,res.status);continue;}
       const text=(await res.text()).replace(STRIP,'');
       el.appendChild(document.createRange().createContextualFragment(text));
