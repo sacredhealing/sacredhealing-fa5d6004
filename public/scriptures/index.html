@@ -389,13 +389,24 @@ function jumpTo(id){
     var el=document.getElementById(id);
     if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
     else{
-      // search in content div
       var all=document.getElementById('content')||document.body;
       var found=all.querySelector('#'+id);
       if(found){found.scrollIntoView({behavior:'smooth',block:'start'});}
     }
   },200);
 }
+
+// Deep-link: if URL contains a hash, scroll to it after all content loads
+window.addEventListener('load',function(){
+  var hash=window.location.hash;
+  if(hash && hash.length>1){
+    var id=hash.substring(1);
+    setTimeout(function(){
+      var el=document.getElementById(id)||document.querySelector('[id="'+id+'"]');
+      if(el){el.scrollIntoView({behavior:'auto',block:'start'});}
+    },1200);
+  }
+});
 
 </script>
 
