@@ -905,7 +905,7 @@ async function syncApothecaryUserChatArchive(
   finalMessages: Message[],
 ) {
   const archiveMsgs = mapSqiMessagesToUserChatArchive(finalMessages);
-  const safeTitle = (title || 'SQI Session').slice(0, 200);
+  const safeTitle = (title || t('quantumApothecaryChat.defaultTitle')).slice(0, 200);
   try {
     const { error } = await supabase.from('user_chat_sessions').upsert(
       {
@@ -1254,7 +1254,7 @@ function ScalarHowItWorksCard() {
 
             {/* Flow chain */}
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', borderRadius:14, background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.10)', flexWrap:'wrap' as const, gap:4 }}>
-              {['Voice Scan','→','Bio-signature','→','Vedic Light-Code','→','Field Upload'].map((s,i) => (
+              {[t('quantumApothecaryChat.voiceScan.step1PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step2PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step3PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step4PipeLabel')].map((s,i) => (
                 <span key={i} style={ s === '→'
                   ? { color:'rgba(212,175,55,0.35)', fontSize:10 }
                   : { fontSize:8, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'#D4AF37', whiteSpace:'nowrap' as const }
@@ -1270,9 +1270,9 @@ function ScalarHowItWorksCard() {
             {/* 3 steps */}
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {[
-                { n:'1', title:'Voice Bio-Scan', body:'10 seconds of voice reads your Atma-Frequency Stream and maps it against the full frequency library.' },
-                { n:'2', title:'Resonance ranking', body:'Frequencies sorted by % match to your current biofield — showing what your field asks for first.' },
-                { n:'3', title:'Scalar transmission', body:'Activated frequencies are uploaded into your field 24/7 via scalar entanglement until dissolved.' },
+                { n:'1', title:t('quantumApothecaryChat.voiceScan.step1Title'), body:t('quantumApothecaryChat.voiceScan.step1Body') },
+                { n:'2', title:t('quantumApothecaryChat.voiceScan.step2Title'), body:t('quantumApothecaryChat.voiceScan.step2Body') },
+                { n:'3', title:t('quantumApothecaryChat.voiceScan.step3Title'), body:t('quantumApothecaryChat.voiceScan.step3Body') },
               ].map(s => (
                 <div key={s.n} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
                   <div style={{ width:22, height:22, borderRadius:'50%', flexShrink:0, marginTop:1, background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#D4AF37' }}>{s.n}</div>
@@ -2658,7 +2658,7 @@ function QuantumApothecaryInner() {
 
   const startFreshApothecaryChat = useCallback(() => {
     if (isTyping) return;
-    if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
+    if (!window.confirm(t('quantumApothecaryChat.newChat'))) return;
     try {
       if (sessionStorageKey) localStorage.removeItem(sessionStorageKey);
     } catch { /* ignore */ }
@@ -3324,7 +3324,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       .map((r) => enrichTransmission(normalizeActivationForMixer(r), 'nadi_scan'));
 
     if (newTransmissions.length === 0) {
-      toast.message('All scan matches are already in your field');
+      toast.message(t('quantumApothecaryChat.allMatchesActive'));
       return;
     }
 
@@ -3406,9 +3406,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               </p>
               <div className="mt-6 flex w-full max-w-sm flex-col gap-2">
                 {[
-                  'What frequencies do I need for stress and no sleep?',
-                  'I feel things in my field — what is activating?',
-                  'Activate Samadhi Bliss Transmission',
+                  t('quantumApothecaryChat.suggestStress'),
+                  t('quantumApothecaryChat.suggestField'),
+                  t('quantumApothecaryChat.suggestSamadhi'),
                 ].map((q) => (
                   <button
                     key={q}
@@ -3483,7 +3483,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       <button
                         type="button"
                         onClick={() => handleCopyMsg(msg.text, msgKey)}
-                        aria-label="Copy message"
+                        aria-label={t("quantumApothecaryChat.copyMessage")}
                         className="text-[10px] font-bold uppercase tracking-widest"
                         style={{
                           background: 'transparent',
@@ -3506,7 +3506,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 className="flex items-center gap-1.5 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] px-5 py-4"
                 role="status"
                 aria-live="polite"
-                aria-label="Akasha is composing"
+                aria-label={t("quantumApothecaryChat.composing")}
               >
                 {[0, 1, 2].map((i) => (
                   <span
@@ -3572,7 +3572,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  title="Attach photo"
+                  title={t("quantumApothecaryChat.attachPhoto")}
                   style={{ display:'flex', alignItems:'center', justifyContent:'center', width:38, height:38, borderRadius:'50%', background:'transparent', border:'none', cursor:'pointer', color:'rgba(212,175,55,0.65)', flexShrink:0, transition:'all 0.2s' }}
                 >
                   <Camera size={18} />
@@ -3664,7 +3664,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 <button
                   type="button"
                   onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  aria-label="Scroll to top"
+                  aria-label={t("quantumApothecaryChat.scrollToTop")}
                   style={{
                     width:30, height:30, borderRadius:"50%",
                     background:"rgba(10,8,2,0.92)",
@@ -3965,7 +3965,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                               {isActive ? (
                                 <span
                                   style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}
-                                  aria-label="Already active in field"
+                                  aria-label={t("quantumApothecaryChat.alreadyActive")}
                                 >
                                   <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>
                                   <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>
@@ -4127,7 +4127,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                               {isActive ? (
                                 <span
                                   style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}
-                                  aria-label="Already active in field"
+                                  aria-label={t("quantumApothecaryChat.alreadyActive")}
                                 >
                                   <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>
                                   <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>
@@ -4391,7 +4391,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   {!libraryUnlocked && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[28px] bg-black/25 px-6 text-center">
                       <p className="max-w-sm text-[13px] font-semibold leading-relaxed text-white/88">
-                        Voice Scan Required — SQI cannot assign correct frequencies without reading your Bio-signature.
+                        {t('quantumApothecaryChat.voiceScanRequired')}
                       </p>
                     </div>
                   )}
@@ -4430,10 +4430,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 </button>
               </div>
               {[
-                { t: 'What is this?', d: 'Apothecary 2050 is a Bio-Resonance Frequency Delivery Platform. It bypasses physical ingestion to deliver the "informational signature" of herbs and sacred plants directly into the human biofield via Scalar Wave Entanglement.' },
-                { t: 'The 72,000 Nadi Scan', d: 'We map the Quantum Flow of every single meridian. Dark crimson pulses indicate "Spiritual Friction" (Blockages), while bright white bursts show where your "Siddhis" (Powers) are awakening.' },
-                { t: '24/7 Persistent Transmission', d: 'Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved — even if you close the app or lose internet.' },
-                { t: 'Siddha Wisdom', d: 'We bridge the ancient wisdom of the 18 Siddhars with hyper-advanced neural-mapping. Healing occurs at the speed of thought.' },
+                { t: t('quantumApothecaryChat.faq.whatIsThis.t'), d: t('quantumApothecaryChat.faq.whatIsThis.d') },
+                { t: t('quantumApothecaryChat.faq.nadiScan.t'), d: t('quantumApothecaryChat.faq.nadiScan.d') },
+                { t: t('quantumApothecaryChat.faq.persistentTransmission.t'), d: t('quantumApothecaryChat.faq.persistentTransmission.d') },
+                { t: t('quantumApothecaryChat.faq.siddhaWisdom.t'), d: t('quantumApothecaryChat.faq.siddhaWisdom.d') },
               ].map(s => (
                 <div key={s.t} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
                   <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{s.t}</h3>
@@ -4462,9 +4462,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.3em]">SQI Sessions</p>
+                  <p className="text-xs font-black uppercase tracking-[0.3em]">{t("quantumApothecaryChat.sqiSessions")}</p>
                   <p className="text-[9px] font-bold text-white/30 mt-0.5">
-                    {user ? 'Tap to reopen a past transmission.' : 'Sign in to save sessions.'}
+                    {user ? t('quantumApothecaryChat.tapToReopen') : t('quantumApothecaryChat.signInSave')}
                   </p>
                 </div>
                 <button type="button" onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">
@@ -4472,7 +4472,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">{t("quantumApothecaryChat.loadingSessions")}</div>}
                 {!loadingSessions && sessions.length === 0 && (
                   <div className="text-[10px] text-white/25 leading-relaxed">
                     No prior SQI conversations yet. Your next transmission will be stored here.
@@ -4486,7 +4486,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }
                     }}
                     className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
-                    <p className="text-[11px] font-black truncate">{s.title || 'Untitled SQI Session'}</p>
+                    <p className="text-[11px] font-black truncate">{s.title || t('quantumApothecaryChat.untitledSession')}</p>
                     {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}
                   </button>
                 ))}
@@ -4768,7 +4768,7 @@ function ScrollToTopButton() {
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       className="hidden"
-      aria-label="Scroll to top"
+      aria-label={t("quantumApothecaryChat.scrollToTop")}
     >
       <ChevronUp size={20} />
     </button>
