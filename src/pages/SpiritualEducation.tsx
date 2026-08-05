@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { useSHC } from '@/contexts/SHCContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // YouTube IFrame API types
 declare global {
@@ -44,6 +45,7 @@ const SHC_REWARD = 100;
 const SpiritualEducation: React.FC = () => {
   const { user, session } = useAuth();
   const { addOptimisticBalance } = useSHC();
+  const { t } = useTranslation();
   const [videos, setVideos] = useState<Video[]>([]);
   const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
@@ -274,7 +276,7 @@ const SpiritualEducation: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search videos..."
+            placeholder={t("spiritualEducation.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-4"
@@ -309,7 +311,7 @@ const SpiritualEducation: React.FC = () => {
       ) : filteredVideos.length === 0 ? (
         <div className="text-center py-12">
           <Youtube className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No videos found</p>
+          <p className="text-muted-foreground">{t("spiritualEducation.noVideos")}</p>
         </div>
       ) : (
         <>
@@ -358,7 +360,7 @@ const SpiritualEducation: React.FC = () => {
                 disabled={currentPage === 0}
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                {t("spiritualEducation.previous")}
               </Button>
               <span className="text-sm text-muted-foreground">
                 Page {currentPage + 1} of {totalPages}
@@ -369,7 +371,7 @@ const SpiritualEducation: React.FC = () => {
                 onClick={handleNext}
                 disabled={currentPage >= totalPages - 1}
               >
-                Next
+                {t("spiritualEducation.next")}
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
