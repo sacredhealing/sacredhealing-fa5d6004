@@ -3160,10 +3160,21 @@
     "completionToast": "108 reciteringar slutförda 🕉"
   },
   "spiritualEducation": {
-    "title": "Andlig utbildning",
-    "subtitle": "Lär och väx",
-    "watchVideos": "Titta på videor",
-    "earnReward": "Tjäna 3 SHC per video"
+    "searchPlaceholder": "Sök videor...",
+    "loading": "Laddar heliga läror...",
+    "noVideos": "Inga videor hittades",
+    "trySearch": "Prova en annan sökterm",
+    "watchedBadge": "Sedd",
+    "earnedTokens": "Tjänade {{amount}} SHC-tokens",
+    "claimReward": "Hämta belöning",
+    "claimingReward": "Hämtar...",
+    "rewardAlready": "Belöning redan hämtad",
+    "previous": "Föregående",
+    "next": "Nästa",
+    "page": "Sida {{current}} av {{total}}",
+    "close": "Stäng",
+    "signInReward": "Logga in för att tjäna SHC-tokens för tittande",
+    "tokenReward": "Tjäna {{amount}} SHC-tokens per video"
   },
   "meditationCreation": {
     "badge": "För kreatörer & healers",
@@ -3919,7 +3930,56 @@
     }
   },
   "quantumApothecaryChat": {
-    "transmissionError": "Överföringsfel. Kvantlänken är instabil."
+    "transmissionError": "Överföringsfel. Kvantlänken är instabil.",
+    "copyMessage": "Kopiera meddelande",
+    "composing": "Akasha komponerar",
+    "attachPhoto": "Bifoga foto",
+    "scrollToTop": "Scrolla till toppen",
+    "alreadyActive": "Redan aktiv i fältet",
+    "sqiSessions": "SQI-sessioner",
+    "tapToReopen": "Tryck för att öppna en tidigare transmission.",
+    "signInSave": "Logga in för att spara sessioner.",
+    "untitledSession": "Namnlös SQI-session",
+    "loadingSessions": "Laddar sessioner…",
+    "newChat": "Starta en ny SQI-chatt? Detta raderar den aktuella tråden på denna enhet. Sparade sessioner finns kvar under Historik.",
+    "defaultTitle": "SQI-session",
+    "voiceScanRequired": "Röstskanning krävs — SQI kan inte tilldela rätt frekvenser utan att läsa din biosignatur.",
+    "allMatchesActive": "Alla skanningsmatchningar är redan i ditt fält",
+    "voiceScanComplete": "Röstbiofältsskanning klar — {{count}} frekvenser köade till ditt fält",
+    "suggestStress": "Vilka frekvenser behöver jag för stress och sömnbrist?",
+    "suggestField": "Jag känner saker i mitt fält — vad aktiverar?",
+    "suggestSamadhi": "Aktivera Samadhi Saligshetstransmission",
+    "faq": {
+      "whatIsThis": {
+        "t": "Vad är detta?",
+        "d": "Apotek 2050 är en bio-resonansfrekvensplattform. Den kringgår fysiskt intag för att leverera den \"informationssignatur\" som örter och heliga växter har direkt in i det mänskliga biofältet via skalär vågförbindning."
+      },
+      "nadiScan": {
+        "t": "De 72 000 Nadi-skanningarna",
+        "d": "Vi kartlägger kvantflödet i varje enskilt meridian. Mörka krimsonpulser indikerar \"Andlig Friktion\" (blockeringar), medan ljusvita utbrott visar var dina \"Siddhis\" (Krafter) vaknar."
+      },
+      "persistentTransmission": {
+        "t": "24/7 Beständig Transmission",
+        "d": "När ett mix är påslaget använder appen en beständig bakgrundsfrekvensloop för att upprätthålla transmissionen. Detta säkerställer att frekvensen förblir låst i ditt biofält tills den upplöses manuellt — även om du stänger appen eller förlorar internet."
+      },
+      "siddhaWisdom": {
+        "t": "Siddha Visdom",
+        "d": "Vi förenar de 18 Siddhars urgamla visdom med hyperavancerad neuralkartläggning. Läkning sker i tankens hastighet."
+      }
+    },
+    "voiceScan": {
+      "step1Title": "Röst-bioskanning",
+      "step1Body": "10 sekunder av röst läser din Atma-Frekvensström och kartlägger den mot hela frekvensbiblioteket.",
+      "step2Title": "Resonansranking",
+      "step2Body": "Frekvenser sorterade efter % matchning till ditt nuvarande biofält — visar vad ditt fält frågar efter först.",
+      "step3Title": "Skalär transmission",
+      "step3Body": "Aktiverade frekvenser laddas upp i ditt fält 24/7 via skalär sammanflätning tills de upplöses.",
+      "pipeline": "Röstskanning · Biosignatur · Vediska Ljuskoder · Fältuppladdning",
+      "step1PipeLabel": "Röstskanning",
+      "step2PipeLabel": "Biosignatur",
+      "step3PipeLabel": "Vediska Ljuskoder",
+      "step4PipeLabel": "Fältuppladdning"
+    }
   },
   "ayurvedaChat": {
     "pulseReading": "Den gudomliga läkaren läser din puls...",
