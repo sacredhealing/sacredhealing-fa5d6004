@@ -2711,7 +2711,7 @@ function QuantumApothecaryInner() {
     const persistMessages = async (finalMessages: Message[]) => {
       if (!user) return;
       try {
-        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || t('quantumApothecaryChat.defaultTitle')) ?? 'SQI Session', messages: finalMessages };
+        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || t('quantumApothecaryChat.defaultTitle')) ?? t('quantumApothecaryChat.defaultTitle'), messages: finalMessages };
         if (!currentSessionId) {
           const { data, error } = await supabase.from('sqi_sessions').insert(payload).select('id, title, updated_at').single();
           if (!error && data) {
