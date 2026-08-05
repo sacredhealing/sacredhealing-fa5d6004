@@ -3120,7 +3120,22 @@
     "title": "Spiritual Education",
     "subtitle": "Learn and grow",
     "watchVideos": "Watch Videos",
-    "earnReward": "Earn 3 SHC per video"
+    "earnReward": "Earn 3 SHC per video",
+    "searchPlaceholder": "Search videos...",
+    "loading": "Loading sacred teachings...",
+    "noVideos": "No videos found",
+    "trySearch": "Try a different search term",
+    "watchedBadge": "Watched",
+    "earnedTokens": "Earned {{amount}} SHC tokens",
+    "claimReward": "Claim Reward",
+    "claimingReward": "Claiming...",
+    "rewardAlready": "Reward already claimed",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{current}} of {{total}}",
+    "close": "Close",
+    "signInReward": "Sign in to earn SHC tokens for watching",
+    "tokenReward": "Earn {{amount}} SHC tokens per video"
   },
   "meditationCreation": {
     "badge": "For Creators & Healers",
@@ -3875,7 +3890,56 @@
     }
   },
   "quantumApothecaryChat": {
-    "transmissionError": "Transmission error. The Quantum Link is unstable."
+    "transmissionError": "Transmission error. The Quantum Link is unstable.",
+    "copyMessage": "Copy message",
+    "composing": "Akasha is composing",
+    "attachPhoto": "Attach photo",
+    "scrollToTop": "Scroll to top",
+    "alreadyActive": "Already active in field",
+    "sqiSessions": "SQI Sessions",
+    "tapToReopen": "Tap to reopen a past transmission.",
+    "signInSave": "Sign in to save sessions.",
+    "untitledSession": "Untitled SQI Session",
+    "loadingSessions": "Loading sessions…",
+    "newChat": "Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.",
+    "defaultTitle": "SQI Session",
+    "voiceScanRequired": "Voice Scan Required — SQI cannot assign correct frequencies without reading your Bio-signature.",
+    "allMatchesActive": "All scan matches are already in your field",
+    "voiceScanComplete": "Voice biofield scan complete — {{count}} frequencies queued to your field",
+    "suggestStress": "What frequencies do I need for stress and no sleep?",
+    "suggestField": "I feel things in my field — what is activating?",
+    "suggestSamadhi": "Activate Samadhi Bliss Transmission",
+    "faq": {
+      "whatIsThis": {
+        "t": "What is this?",
+        "d": "Apothecary 2050 is a Bio-Resonance Frequency Delivery Platform. It bypasses physical ingestion to deliver the \"informational signature\" of herbs and sacred plants directly into the human biofield via Scalar Wave Entanglement."
+      },
+      "nadiScan": {
+        "t": "The 72,000 Nadi Scan",
+        "d": "We map the Quantum Flow of every single meridian. Dark crimson pulses indicate \"Spiritual Friction\" (Blockages), while bright white bursts show where your \"Siddhis\" (Powers) are awakening."
+      },
+      "persistentTransmission": {
+        "t": "24/7 Persistent Transmission",
+        "d": "Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved — even if you close the app or lose internet."
+      },
+      "siddhaWisdom": {
+        "t": "Siddha Wisdom",
+        "d": "We bridge the ancient wisdom of the 18 Siddhars with hyper-advanced neural-mapping. Healing occurs at the speed of thought."
+      }
+    },
+    "voiceScan": {
+      "step1Title": "Voice Bio-Scan",
+      "step1Body": "10 seconds of voice reads your Atma-Frequency Stream and maps it against the full frequency library.",
+      "step2Title": "Resonance ranking",
+      "step2Body": "Frequencies sorted by % match to your current biofield — showing what your field asks for first.",
+      "step3Title": "Scalar transmission",
+      "step3Body": "Activated frequencies are uploaded into your field 24/7 via scalar entanglement until dissolved.",
+      "pipeline": "Voice Scan · Bio-signature · Vedic Light-Code · Field Upload",
+      "step1PipeLabel": "Voice Scan",
+      "step2PipeLabel": "Bio-signature",
+      "step3PipeLabel": "Vedic Light-Code",
+      "step4PipeLabel": "Field Upload"
+    }
   },
   "ayurvedaChat": {
     "pulseReading": "The Divine Physician reads your pulse...",
