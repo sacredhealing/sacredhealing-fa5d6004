@@ -2711,7 +2711,7 @@ function QuantumApothecaryInner() {
     const persistMessages = async (finalMessages: Message[]) => {
       if (!user) return;
       try {
-        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || 'SQI Session') ?? 'SQI Session', messages: finalMessages };
+        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || t('quantumApothecaryChat.defaultTitle')) ?? 'SQI Session', messages: finalMessages };
         if (!currentSessionId) {
           const { data, error } = await supabase.from('sqi_sessions').insert(payload).select('id, title, updated_at').single();
           if (!error && data) {
@@ -2721,7 +2721,7 @@ function QuantumApothecaryInner() {
               return [data, ...without];
             });
             const archiveTitle =
-              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
+              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || t('quantumApothecaryChat.defaultTitle');
             void syncApothecaryUserChatArchive(user.id, data.id, archiveTitle, finalMessages);
           }
         } else {
@@ -2741,7 +2741,7 @@ function QuantumApothecaryInner() {
               return [data, ...without];
             });
             const archiveTitle =
-              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
+              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || t('quantumApothecaryChat.defaultTitle');
             void syncApothecaryUserChatArchive(user.id, currentSessionId, archiveTitle, finalMessages);
           }
         }
