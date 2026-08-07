@@ -160,7 +160,8 @@ export const useMembership = () => {
 
 
       const next: MembershipStatus = {
-        subscribed: isAdmin || !!membershipRow || !!grantTier,
+        subscribed: isAdmin || !!membershipRow || !!grantTier || syncedRow,
+
         tier: bestTier,
         subscriptionEnd: expiresAt,
         loading: false,
