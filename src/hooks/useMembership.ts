@@ -113,7 +113,7 @@ export const useMembership = () => {
           .from('user_memberships')
           .select('tier_id, status, expires_at, membership_tiers(slug, name)')
           .eq('user_id', user.id)
-          .eq('status', 'active')
+          .in('status', ['active', 'trialing'])
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
