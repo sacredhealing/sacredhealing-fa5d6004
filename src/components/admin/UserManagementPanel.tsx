@@ -101,7 +101,7 @@ export default function UserManagementPanel() {
       (tiers||[]).forEach((t:any) => { tierSlugMap[t.id] = t.slug; });
 
       const { data: memberships } = await supabase
-        .from("user_memberships").select("user_id,tier_id,status,stripe_subscription_id,expires_at").eq("status","active");
+        .from("user_memberships").select("user_id,tier_id,status,stripe_subscription_id,expires_at").in("status",["active","trialing"]);
 
       const { data: grants } = await supabase
         .from("admin_granted_access").select("user_id,tier,access_id,access_type,is_active,granted_at")
@@ -159,6 +159,7 @@ export default function UserManagementPanel() {
           profile_id: p.id,
           email: emailMap[authId] || null,
           tier: canonicalize(tier),
+          membership_status: memberMap[authId]?.status||null,
           stripe_sub: memberMap[authId]?.stripe_subscription_id||null,
           expires_at: memberMap[authId]?.expires_at||null,
           grantedProducts: productGrants[authId] || [],
@@ -798,8 +799,11 @@ export default function UserManagementPanel() {
                 <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:subColor, marginBottom:6 }}>
                   SUBSCRIPTION STATUS
                 </div>
-                <div style={{ fontSize:16, fontWeight:800, color:"#fff" }}>
+                <div style={{ fontSize:16, fontWeight:800, color:"#fff", display:"flex", alignItems:"center", gap:8 }}>
                   {TIER_LABELS[selectedUser.tier]||"Free"}
+                  {selectedUser.membership_status === "trialing" && (
+                    <span style={{ fontSize:9, fontWeight:800, letterSpacing:"0.15em", textTransform:"uppercase", background:"rgba(34,211,238,0.12)", border:"1px solid rgba(34,211,238,0.35)", color:"#22D3EE", borderRadius:100, padding:"3px 10px" }}>7-DAY TRIAL</span>
+                  )}
                 </div>
                 <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", marginTop:6, lineHeight:1.6 }}>
                   {selectedUser.expires_at ? (
