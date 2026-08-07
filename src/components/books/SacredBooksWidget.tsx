@@ -2,19 +2,26 @@
 // SQI 2050 | Bhrigu Jyotish + Agastya Life Book
 // Dashboard: two glowing icons identical to Akashic + Portrait
 // Tap icon → full-screen book slides in
+// FIXED: reload on every open; admin sees all users' readings; loading state reset
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 const supabase: any = _supabase;
+
+const ADMIN_UUID = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
 
 // ── Types ─────────────────────────────────────────────────────
 interface BhriguReading {
   id: string;
+  user_id?: string;
   reading_type: string;
   question?: string;
   sections: Record<string, string>;
   birth_data?: { dob?: string; tob?: string; pob?: string };
   created_at: string;
+  // admin view extras
+  user_name?: string;
+  user_email?: string;
 }
 
 interface ChatMessage {
@@ -40,10 +47,10 @@ const READING_LABELS: Record<string, string> = {
 };
 
 const BHRIGU_SECTIONS = [
-  { key: 'graha',        label: '☀ Dominant Graha',       color: '#D4AF37' },
-  { key: 'dasha',        label: '⏳ Dasha Transmission',   color: '#22D3EE' },
-  { key: 'shadow',       label: '🌑 Shadow & Blind Spot',  color: 'rgba(255,100,100,0.9)' },
-  { key: 'sadhana',      label: '🔱 Sadhana Prescription', color: '#A78BFA' },
+  { key: 'graha',        label: '☀ Dominant Graha',        color: '#D4AF37' },
+  { key: 'dasha',        label: '⏳ Dasha Transmission',    color: '#22D3EE' },
+  { key: 'shadow',       label: '🌑 Shadow & Blind Spot',   color: 'rgba(255,100,100,0.9)' },
+  { key: 'sadhana',      label: '🔱 Sadhana Prescription',  color: '#A78BFA' },
   { key: 'transmission', label: '✦ Bhrigu\'s Transmission', color: '#D4AF37' },
 ];
 
@@ -70,48 +77,82 @@ export default function SacredBooksWidget() {
   const [open, setOpen] = useState<'bhrigu' | 'ayurveda' | null>(null);
   const [bhriguData, setBhriguData] = useState<BhriguReading[]>([]);
   const [ayurData, setAyurData] = useState<DayGroup[]>([]);
-  const [loadedBhrigu, setLoadedBhrigu] = useState(false);
-  const [loadedAyur, setLoadedAyur] = useState(false);
+  const [loadingBhrigu, setLoadingBhrigu] = useState(false);
+  const [loadingAyur, setLoadingAyur] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Expanded state
   const [openChapter, setOpenChapter] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openQ, setOpenQ] = useState<string | null>(null);
+  // Admin: filter by user
+  const [adminFilter, setAdminFilter] = useState<string>('all');
 
-  // Load Bhrigu
+  // Get current user once
   useEffect(() => {
-    if (open !== 'bhrigu' || loadedBhrigu) return;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoadedBhrigu(true); return; }
-
-      // Migrate localStorage → Supabase once
-      const localRaw = localStorage.getItem(HISTORY_KEY);
-      if (localRaw) {
-        try {
-          const entries = JSON.parse(localRaw) as any[];
-          if (entries.length > 0) {
-            const { count } = await supabase
-              .from('bhrigu_readings')
-              .select('id', { count: 'exact', head: true })
-              .eq('user_id', user.id);
-            if ((count || 0) === 0) {
-              await supabase.from('bhrigu_readings').insert(
-                entries.map((e: any) => ({
-                  user_id: user.id,
-                  reading_type: e.readingType || 'general',
-                  question: e.question || null,
-                  sections: e.sections || {},
-                  birth_data: e.birthData || null,
-                  created_at: e.date || new Date().toISOString(),
-                }))
-              );
-            }
-            localStorage.removeItem(HISTORY_KEY);
-          }
-        } catch (_) {}
+    supabase.auth.getUser().then(({ data }: any) => {
+      if (data?.user) {
+        setCurrentUserId(data.user.id);
+        setIsAdmin(data.user.id === ADMIN_UUID);
       }
+    });
+  }, []);
 
+  // ── Load Bhrigu — called every time bhrigu panel opens ──
+  const loadBhrigu = useCallback(async () => {
+    setLoadingBhrigu(true);
+    setBhriguData([]);
+    setOpenChapter(null);
+    setOpenSection(null);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoadingBhrigu(false); return; }
+
+    // Migrate localStorage → Supabase once
+    const localRaw = localStorage.getItem(HISTORY_KEY);
+    if (localRaw) {
+      try {
+        const entries = JSON.parse(localRaw) as any[];
+        if (entries.length > 0) {
+          const { count } = await supabase
+            .from('bhrigu_readings')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          if ((count || 0) === 0) {
+            await supabase.from('bhrigu_readings').insert(
+              entries.map((e: any) => ({
+                user_id: user.id,
+                reading_type: e.readingType || 'general',
+                question: e.question || null,
+                sections: e.sections || {},
+                birth_data: e.birthData || null,
+                created_at: e.date || new Date().toISOString(),
+              }))
+            );
+          }
+          localStorage.removeItem(HISTORY_KEY);
+        }
+      } catch (_) {}
+    }
+
+    if (user.id === ADMIN_UUID) {
+      // Admin: load all users via join with profiles
+      const { data } = await supabase
+        .from('bhrigu_readings')
+        .select('id, user_id, reading_type, question, sections, birth_data, created_at, profiles(full_name, email)')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (data) {
+        setBhriguData(data.map((r: any) => ({
+          ...r,
+          user_name: r.profiles?.full_name || 'Unknown',
+          user_email: r.profiles?.email || '',
+        })));
+      }
+    } else {
+      // Regular user: own readings only
       const { data } = await supabase
         .from('bhrigu_readings')
         .select('id, reading_type, question, sections, birth_data, created_at')
@@ -119,44 +160,56 @@ export default function SacredBooksWidget() {
         .order('created_at', { ascending: false })
         .limit(50);
       if (data) setBhriguData(data);
-      setLoadedBhrigu(true);
-    })();
-  }, [open]);
+    }
+    setLoadingBhrigu(false);
+  }, []);
 
-  // Load Ayurveda
-  useEffect(() => {
-    if (open !== 'ayurveda' || loadedAyur) return;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoadedAyur(true); return; }
-      const { data } = await supabase
-        .from('apothecary_chat_messages')
-        .select('id, role, content, created_at')
-        .eq('user_id', user.id)
-        .eq('chat_context', 'ayurveda')
-        .order('created_at', { ascending: true })
-        .limit(500);
-      if (data) setAyurData(groupByDay(data));
-      setLoadedAyur(true);
-    })();
-  }, [open]);
+  // ── Load Ayurveda — called every time ayurveda panel opens ──
+  const loadAyur = useCallback(async () => {
+    setLoadingAyur(true);
+    setAyurData([]);
+    setOpenChapter(null);
+    setOpenQ(null);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoadingAyur(false); return; }
+
+    const { data } = await supabase
+      .from('apothecary_chat_messages')
+      .select('id, role, content, created_at')
+      .eq('user_id', user.id)
+      .eq('chat_context', 'ayurveda')
+      .order('created_at', { ascending: true })
+      .limit(500);
+    if (data) setAyurData(groupByDay(data));
+    setLoadingAyur(false);
+  }, []);
 
   function openBook(name: 'bhrigu' | 'ayurveda') {
     setOpen(name);
-    setOpenChapter(null);
-    setOpenSection(null);
-    setOpenQ(null);
+    setAdminFilter('all');
+    if (name === 'bhrigu') loadBhrigu();
+    if (name === 'ayurveda') loadAyur();
   }
 
   function closeBook() {
     setOpen(null);
   }
 
+  // ── Admin: filter logic ────────────────────────────────────
+  const uniqueUsers = isAdmin
+    ? Array.from(new Map(bhriguData.map(r => [r.user_id, { id: r.user_id, name: r.user_name || 'Unknown' }])).values())
+    : [];
+
+  const filteredBhrigu = isAdmin && adminFilter !== 'all'
+    ? bhriguData.filter(r => r.user_id === adminFilter)
+    : bhriguData;
+
   // ── Shared styles ──────────────────────────────────────────
   const overlayStyle: React.CSSProperties = {
     position: 'fixed', inset: 0, background: '#050505',
     zIndex: 9999, overflowY: 'auto',
-    transform: open ? 'translateX(0)' : 'translateX(100%)',
+    transform: 'translateX(100%)',
     transition: 'transform 0.32s cubic-bezier(0.4,0,0.2,1)',
     fontFamily: "'Plus Jakarta Sans', sans-serif",
   };
@@ -189,7 +242,7 @@ export default function SacredBooksWidget() {
 
   return (
     <>
-      {/* ── DASHBOARD ICON BLOCK — identical to Akashic + Portrait ── */}
+      {/* ── DASHBOARD ICON BLOCK ── */}
       <div style={{
         background: 'rgba(255,255,255,0.02)',
         backdropFilter: 'blur(40px)',
@@ -224,15 +277,49 @@ export default function SacredBooksWidget() {
 
       {/* ── BHRIGU FULL-SCREEN BOOK ── */}
       <div style={{ ...overlayStyle, transform: open === 'bhrigu' ? 'translateX(0)' : 'translateX(100%)' }}>
-        {stickyHeader('⟁ Bhrigu Jyotish Book', `${bhriguData.length} Nadi Readings · Sealed in Akasha`)}
+        {stickyHeader(
+          '⟁ Bhrigu Jyotish Book',
+          isAdmin
+            ? `${filteredBhrigu.length} of ${bhriguData.length} Readings · Admin View`
+            : `${bhriguData.length} Nadi ${bhriguData.length === 1 ? 'Reading' : 'Readings'} · Sealed in Akasha`
+        )}
+
+        {/* Admin user filter */}
+        {isAdmin && bhriguData.length > 0 && (
+          <div style={{ padding: '12px 16px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setAdminFilter('all')}
+              style={{
+                padding: '4px 12px', borderRadius: 20, fontSize: 9, fontWeight: 800,
+                letterSpacing: '0.2em', textTransform: 'uppercase', cursor: 'pointer', border: 'none',
+                background: adminFilter === 'all' ? '#D4AF37' : 'rgba(212,175,55,0.1)',
+                color: adminFilter === 'all' ? '#050505' : '#D4AF37',
+              }}>All Users</button>
+            {uniqueUsers.map(u => (
+              <button key={u.id}
+                onClick={() => setAdminFilter(u.id || '')}
+                style={{
+                  padding: '4px 12px', borderRadius: 20, fontSize: 9, fontWeight: 800,
+                  letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', border: 'none',
+                  background: adminFilter === u.id ? '#D4AF37' : 'rgba(212,175,55,0.08)',
+                  color: adminFilter === u.id ? '#050505' : 'rgba(212,175,55,0.7)',
+                }}>{u.name}</button>
+            ))}
+          </div>
+        )}
+
         <div style={{ padding: '20px 16px 100px' }}>
-          {!loadedBhrigu && (
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, textAlign: 'center', paddingTop: 40 }}>Loading transmissions…</p>
+          {loadingBhrigu && (
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, textAlign: 'center', paddingTop: 40 }}>
+              Loading transmissions…
+            </p>
           )}
-          {loadedBhrigu && bhriguData.length === 0 && (
-            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, textAlign: 'center', paddingTop: 40 }}>No Nadi readings yet. Receive your first transmission.</p>
+          {!loadingBhrigu && filteredBhrigu.length === 0 && (
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, textAlign: 'center', paddingTop: 40 }}>
+              {isAdmin ? 'No Nadi readings found.' : 'No Nadi readings yet. Receive your first transmission.'}
+            </p>
           )}
-          {bhriguData.map((r) => {
+          {filteredBhrigu.map((r) => {
             const isOpen = openChapter === r.id;
             return (
               <div key={r.id} style={{
@@ -246,12 +333,18 @@ export default function SacredBooksWidget() {
                   background: 'none', border: 'none', cursor: 'pointer', padding: '16px 16px', textAlign: 'left',
                 }}>
                   <div>
+                    {/* Admin: show user name */}
+                    {isAdmin && r.user_name && (
+                      <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#22D3EE', marginBottom: 5 }}>
+                        👤 {r.user_name}
+                      </div>
+                    )}
                     <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', marginBottom: 3 }}>
                       {READING_LABELS[r.reading_type] || r.reading_type}
                     </div>
                     {r.question && (
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', marginBottom: 5 }}>
-                        "{r.question.length > 55 ? r.question.slice(0, 55) + '…' : r.question}"
+                        &ldquo;{r.question.length > 55 ? r.question.slice(0, 55) + '…' : r.question}&rdquo;
                       </div>
                     )}
                     <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.4)' }}>
@@ -304,10 +397,10 @@ export default function SacredBooksWidget() {
       <div style={{ ...overlayStyle, transform: open === 'ayurveda' ? 'translateX(0)' : 'translateX(100%)' }}>
         {stickyHeader('🔱 Agastya Life Book', `${ayurData.reduce((s, g) => s + g.transmissions.length, 0)} Transmissions · Ayurveda Archive`)}
         <div style={{ padding: '20px 16px 100px' }}>
-          {!loadedAyur && (
+          {loadingAyur && (
             <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, textAlign: 'center', paddingTop: 40 }}>Loading transmissions…</p>
           )}
-          {loadedAyur && ayurData.length === 0 && (
+          {!loadingAyur && ayurData.length === 0 && (
             <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, textAlign: 'center', paddingTop: 40 }}>No Agastya consultations yet.</p>
           )}
           {ayurData.map((group) => {
@@ -349,7 +442,7 @@ export default function SacredBooksWidget() {
                             textAlign: 'left',
                           }}>
                             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', flex: 1, marginRight: 8, lineHeight: 1.5, margin: '0 8px 0 0' }}>
-                              "{tx.question.length > 75 ? tx.question.slice(0, 75) + '…' : tx.question}"
+                              &ldquo;{tx.question.length > 75 ? tx.question.slice(0, 75) + '…' : tx.question}&rdquo;
                             </p>
                             <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 9, flexShrink: 0 }}>{qOpen ? '▲' : '▼'}</span>
                           </button>
