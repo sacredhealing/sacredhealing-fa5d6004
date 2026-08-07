@@ -121,8 +121,8 @@ export const useMembership = () => {
 
       const isAdmin = adminRes.data === true;
       const membershipRow = membershipRes.data as any;
-      const tierSlug = membershipRow?.membership_tiers?.slug ?? 'free';
-      const expiresAt = membershipRow?.expires_at ?? null;
+      let tierSlug = membershipRow?.membership_tiers?.slug ?? 'free';
+      let expiresAt = membershipRow?.expires_at ?? null;
 
       // Also check admin_granted_access as fallback
       const { data: grant } = await supabase
@@ -136,9 +136,28 @@ export const useMembership = () => {
         .maybeSingle();
 
       const grantTier = (grant as any)?.tier || (grant as any)?.access_id || null;
+
+      // Self-heal: if nothing local says this user is paid, reconcile straight
+      // from Stripe (covers missed/mis-routed webhooks, Apple Pay checkouts).
+      let syncedRow = false;
+      if (!isAdmin && tierSlug === 'free' && !grantTier) {
+        try {
+          const { data: sync } = await supabase.functions.invoke('sync-membership');
+          const syncedTier = (sync as any)?.tier;
+          if (syncedTier && getTierRank(syncedTier) > 0) {
+            tierSlug = syncedTier;
+            expiresAt = (sync as any)?.expires_at ?? null;
+            syncedRow = true;
+          }
+        } catch (e) {
+          console.warn('Membership sync failed:', e);
+        }
+      }
+
       const bestTier = isAdmin
         ? 'akasha-infinity'
         : [tierSlug, grantTier || 'free'].sort((a: string, b: string) => getTierRank(b) - getTierRank(a))[0];
+
 
       const next: MembershipStatus = {
         subscribed: isAdmin || !!membershipRow || !!grantTier,
