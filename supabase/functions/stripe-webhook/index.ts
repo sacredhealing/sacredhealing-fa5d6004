@@ -1202,16 +1202,18 @@ serve(async (req) => {
 
         if (tierRow?.id) {
           if (isActive) {
+            // Write real Stripe status so .in('status',['active','trialing']) queries work
+            const membershipStatus = status === 'trialing' ? 'trialing' : 'active';
             await supabaseAdmin.from("user_memberships").upsert({
               user_id: userId,
               tier_id: tierRow.id,
-              status: "active",
+              status: membershipStatus,
               stripe_subscription_id: sub.id,
               stripe_customer_id: customerId,
               expires_at: currentPeriodEnd,
               updated_at: new Date().toISOString(),
             }, { onConflict: "user_id" });
-            logStep("Membership synced active", { userId, tierSlug });
+            logStep("Membership synced", { userId, tierSlug, membershipStatus });
 
             // Welcome email — only on first-ever sync of this subscription
             // (existingMembership was null), so subscription.updated events
