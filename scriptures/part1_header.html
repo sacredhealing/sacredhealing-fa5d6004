@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Complete Restored Covenant Scriptures</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════
+   MASTER SACRED CODEX CSS — THE COMPLETE RESTORED
+   COVENANT SCRIPTURES © SACRED HEALING / SQI 2026
+   ═══════════════════════════════════════════════ */
+:root {
+  --parchment: #FAF6EC;
+  --parchment-dark: #F0E8D0;
+  --ink: #1a1208;
+  --ink-light: #3a2a18;
+  --gold: #8B6914;
+  --gold-light: #C9A84C;
+  --gold-bright: #D4AF37;
+  --red-rubric: #8B1A1A;
+  --red-light: #A03030;
+  --column-gap: 3.5rem;
+  --page-max: 780px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: 'EB Garamond', 'Palatino Linotype', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── COVER PAGE ── */
+.cover-page {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 30%, #2a1a08 0%, #0d0800 60%, #000 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 60px 40px;
+  position: relative; overflow: hidden;
+}
+.cover-page::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Ccircle cx='200' cy='200' r='190' fill='none' stroke='rgba(212,175,55,0.06)' stroke-width='1'/%3E%3Ccircle cx='200' cy='200' r='150' fill='none' stroke='rgba(212,175,55,0.04)' stroke-width='1'/%3E%3Cpolygon points='200,20 370,300 30,300' fill='none' stroke='rgba(212,175,55,0.05)' stroke-width='1'/%3E%3Cpolygon points='200,380 30,100 370,100' fill='none' stroke='rgba(212,175,55,0.04)' stroke-width='1'/%3E%3C/svg%3E") center/600px repeat;
+  opacity: 0.4;
+}
+.cover-seal {
+  width: 140px; height: 140px;
+  margin-bottom: 40px;
+  position: relative; z-index: 1;
+}
+.cover-eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.6em; text-transform: uppercase;
+  color: rgba(212,175,55,0.5);
+  margin-bottom: 24px; position: relative; z-index: 1;
+}
+.cover-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(22px, 6vw, 42px);
+  font-weight: 700; line-height: 1.15;
+  color: #D4AF37;
+  text-shadow: 0 0 60px rgba(212,175,55,0.3);
+  margin-bottom: 20px; position: relative; z-index: 1;
+  letter-spacing: 0.03em;
+}
+.cover-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(11px, 2.5vw, 16px);
+  color: rgba(212,175,55,0.6);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  margin-bottom: 48px; position: relative; z-index: 1;
+}
+.cover-rule {
+  width: 200px; height: 1px;
+  background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+  margin: 0 auto 48px; position: relative; z-index: 1;
+}
+.cover-volumes {
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative; z-index: 1; margin-bottom: 48px;
+}
+.cover-vol {
+  font-family: 'Cinzel', serif; font-size: 11px;
+  color: rgba(255,255,255,0.45); letter-spacing: 0.2em;
+}
+.cover-vol span { color: rgba(212,175,55,0.7); }
+.cover-publisher {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: 0.4em; text-transform: uppercase;
+  color: rgba(212,175,55,0.35); position: relative; z-index: 1;
+}
+
+/* ── NAVIGATION (app mode) ── */
+.reader-nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: rgba(10,6,2,0.96);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212,175,55,0.15);
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 16px;
+  z-index: 1000;
+}
+.nav-back {
+  background: none; border: none;
+  color: rgba(212,175,55,0.7); cursor: pointer;
+  font-size: 20px; padding: 4px 8px;
+  font-family: 'Cinzel', serif;
+}
+.nav-title {
+  font-family: 'Cinzel', serif; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: rgba(212,175,55,0.6);
+  flex: 1;
+}
+.nav-pdf-btn {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(212,175,55,0.9);
+  background: rgba(212,175,55,0.1);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 20px; padding: 8px 16px; cursor: pointer;
+}
+.nav-toc-btn {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 8px 16px; cursor: pointer;
+}
+.nav-spacer { height: 53px; }
+
+/* ── TOC OVERLAY ── */
+.toc-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(5,3,1,0.97);
+  z-index: 2000; overflow-y: auto; padding: 80px 24px 40px;
+}
+.toc-overlay.open { display: block; }
+.toc-close {
+  position: fixed; top: 20px; right: 20px;
+  background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3);
+  color: #D4AF37; font-size: 20px; border-radius: 50%;
+  width: 40px; height: 40px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.toc-title {
+  font-family: 'Cinzel Decorative', serif; font-size: 18px;
+  color: #D4AF37; text-align: center; margin-bottom: 32px;
+}
+.toc-section { margin-bottom: 28px; }
+.toc-section-name {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 0.5em; text-transform: uppercase;
+  color: rgba(212,175,55,0.4); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.1);
+}
+.toc-entry {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; text-decoration: none;
+}
+.toc-entry:hover .toc-entry-title { color: #D4AF37; }
+.toc-entry-num {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  color: rgba(212,175,55,0.4); min-width: 60px;
+}
+.toc-entry-title {
+  font-family: 'EB Garamond', serif; font-size: 14px;
+  color: rgba(255,255,255,0.65); flex: 1;
+  transition: color 0.2s;
+}
+
+/* ── PAGE WRAPPER ── */
+.codex-page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+/* ── BOOK DIVIDER ── */
+.book-divider {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: linear-gradient(180deg, var(--parchment) 0%, var(--parchment-dark) 50%, var(--parchment) 100%);
+  margin: 40px 0;
+  border-top: 2px solid rgba(139,105,20,0.2);
+  border-bottom: 2px solid rgba(139,105,20,0.2);
+}
+.book-vol-label {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 0.6em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 16px;
+}
+.book-title-main {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(20px, 5vw, 34px);
+  font-weight: 700; color: var(--red-rubric);
+  line-height: 1.2; margin-bottom: 10px;
+}
+.book-title-sub {
+  font-family: 'EB Garamond', serif;
+  font-style: italic; font-size: 1.1em;
+  color: var(--gold); margin-bottom: 20px;
+}
+.book-ornament {
+  font-size: 2em; color: var(--gold-bright);
+  margin: 16px 0; display: block;
+}
+.book-intro {
+  font-family: 'EB Garamond', serif;
+  font-style: italic; font-size: 0.95em;
+  color: var(--ink-light); line-height: 1.8;
+  max-width: 560px; margin: 0 auto;
+}
+
+/* ── CHAPTER ── */
+.chapter-block {
+  margin: 2.5rem 0 1rem;
+  page-break-before: auto;
+}
+.chapter-ornament {
+  color: var(--gold-bright); font-size: 1.3em;
+  display: block; text-align: center;
+  margin: 2rem 0 0.5rem;
+}
+.chapter-title {
+  font-family: 'Cinzel', serif;
+  font-style: normal; font-size: 0.95em;
+  font-weight: 600; letter-spacing: 0.08em;
+  color: var(--red-rubric); text-align: center;
+  display: block; margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+.chapter-subtitle {
+  font-family: 'EB Garamond', serif;
+  font-style: italic; font-size: 0.9em;
+  color: var(--gold); text-align: center;
+  display: block; margin-bottom: 1.2rem;
+}
+
+/* ── VERSES ── */
+.verse-block { margin-bottom: 0.2rem; }
+.vnum {
+  font-size: 0.52em; color: var(--gold);
+  vertical-align: super; font-weight: 700;
+  margin-right: 0.2em; font-style: normal;
+  font-family: 'Cinzel', serif;
+}
+.verse { display: inline; }
+p.para {
+  text-indent: 1.5em;
+  margin-bottom: 0.15rem;
+}
+p.para:first-of-type { text-indent: 0; }
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+  text-align: center; color: var(--gold);
+  margin: 2rem 0; font-size: 1.1em;
+  letter-spacing: 0.3em;
+}
+
+/* ── DECLARATION BLOCK (Maat) ── */
+.declaration {
+  margin: 0.6rem 0;
+  padding-left: 1.5rem;
+  border-left: 2px solid rgba(139,105,20,0.25);
+}
+.decl-num {
+  font-family: 'Cinzel', serif; font-size: 0.75em;
+  color: var(--gold); font-weight: 600;
+  display: inline-block; min-width: 2em;
+}
+
+/* ── SPEECH BLOCK (Selassie) ── */
+.speech-para {
+  margin-bottom: 1rem;
+  text-indent: 1.5em;
+}
+.speech-para:first-child { text-indent: 0; }
+
+/* ── RUBRIC ── */
+.rubric { color: var(--red-rubric); font-weight: 600; }
+
+/* ── TWO-COLUMN (desktop) ── */
+.scripture-columns {
+  column-count: 2;
+  column-gap: var(--column-gap);
+  column-rule: 1px solid rgba(139,105,20,0.18);
+}
+@media (max-width: 700px) {
+  .scripture-columns { column-count: 1; }
+}
+
+/* ── PRINT / PDF ── */
+@media print {
+  .reader-nav, .toc-overlay, .nav-spacer { display: none !important; }
+  .cover-page { min-height: 100vh; page-break-after: always; }
+  .book-divider { page-break-before: always; }
+  body { font-size: 11pt; background: white; }
+  .codex-page { max-width: 100%; padding: 0; }
+}
+</style>
+</head>
+<body>

@@ -1,0 +1,1 @@
+import{j as e}from"./vendor-react--OR-uH7S.js";const r=({className:t})=>e.jsx("p",{className:`text-center text-white/20 text-[8px] tracking-widest leading-relaxed ${t??""}`,style:{fontFamily:"Montserrat, sans-serif",fontWeight:400},children:"For spiritual & entertainment purposes only."});export{r as A};

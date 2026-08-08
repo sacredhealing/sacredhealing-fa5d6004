@@ -1,0 +1,1 @@
+import{j as l}from"./vendor-react--OR-uH7S.js";import"./vendor-crypto-DfHPQj82.js";const e=()=>l.jsx("div",{className:"fixed inset-0 w-full h-full bg-[#050505]",children:l.jsx("iframe",{src:"/siddha-oracle-landing.html",title:"Siddha Sound Alchemy Oracle",className:"w-full h-full border-0",sandbox:"allow-scripts allow-same-origin"})});export{e as default};

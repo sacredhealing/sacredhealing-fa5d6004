@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Complete Restored Covenant Scriptures</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{text-decoration:none!important;}
+a,a:hover,a:visited,a:active{text-decoration:none!important;color:inherit;}
+.vnum{text-decoration:none!important;}
+.verse{text-decoration:none!important;}
+.para{text-decoration:none!important;}
+.chapter-title{text-decoration:none!important;}
+.chapter-subtitle{text-decoration:none!important;}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#FAF6EC!important;color:#1a1208!important;font-family:'EB Garamond','Palatino Linotype',Georgia,serif!important;font-size:17px;line-height:1.8;-webkit-font-smoothing:antialiased;}
+:root{--parchment:#FAF6EC;--parchment-dark:#F0E8D0;--ink:#1a1208;--ink-light:#3a2a18;--gold:#8B6914;--gold-light:#C9A84C;--gold-bright:#D4AF37;--red-rubric:#8B1A1A;}
+.cover-page{min-height:100vh;background:radial-gradient(ellipse at 50% 30%,#2a1a08 0%,#0d0800 60%,#000 100%)!important;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 40px;position:relative;overflow:hidden;}
+.cover-eyebrow{font-family:'Cinzel',serif;font-size:9px;font-weight:600;letter-spacing:.6em;text-transform:uppercase;color:rgba(212,175,55,.5);margin-bottom:24px;position:relative;z-index:1;}
+.cover-title{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,6vw,40px);font-weight:700;line-height:1.15;color:#D4AF37;text-shadow:0 0 60px rgba(212,175,55,.3);margin-bottom:20px;position:relative;z-index:1;}
+.cover-subtitle{font-family:'Cinzel',serif;font-size:clamp(10px,2.5vw,15px);color:rgba(212,175,55,.6);letter-spacing:.25em;text-transform:uppercase;margin-bottom:40px;position:relative;z-index:1;}
+.cover-rule{width:200px;height:1px;background:linear-gradient(90deg,transparent,#D4AF37,transparent);margin:0 auto 40px;position:relative;z-index:1;}
+.cover-seal{width:130px;height:130px;margin-bottom:36px;position:relative;z-index:1;}
+.cover-volumes{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;margin-bottom:40px;}
+.cover-vol{font-family:'Cinzel',serif;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.2em;}
+.cover-vol span{color:rgba(212,175,55,.7);}
+.cover-publisher{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:rgba(212,175,55,.3);position:relative;z-index:1;}
+.reader-nav{position:fixed;top:0;left:0;right:0;background:rgba(10,6,2,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,.15);padding:11px 18px;display:flex;align-items:center;gap:14px;z-index:1000;}
+.nav-back{background:none;border:none;color:rgba(212,175,55,.8);cursor:pointer;font-size:20px;padding:4px 8px;}
+.nav-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.55);flex:1;}
+.nav-pdf-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.9);background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);border-radius:20px;padding:7px 14px;cursor:pointer;}
+.nav-toc-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.5);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:7px 14px;cursor:pointer;}
+.nav-spacer{height:51px;}
+.toc-overlay{display:none;position:fixed;inset:0;background:rgba(5,3,1,.97);z-index:2000;overflow-y:auto;}
+.toc-overlay.open{display:block;}
+.toc-section{margin-bottom:24px;}
+.toc-section-name{font-family:'Cinzel',serif;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:rgba(212,175,55,.4);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid rgba(212,175,55,.1);}
+.toc-entry{display:flex;align-items:baseline;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;text-decoration:none;}
+.toc-entry:hover .toc-entry-title{color:#D4AF37;}
+.toc-entry-num{font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,.5);min-width:100px;flex-shrink:0;}
+.toc-entry-title{font-family:'EB Garamond',serif;font-size:14px;color:rgba(255,255,255,.6);flex:1;}
+.toc-entry-pg{font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,.3);white-space:nowrap;margin-left:auto;padding-left:8px;flex-shrink:0;}
+.codex-page{max-width:780px;margin:0 auto;padding:3rem 1.5rem 6rem;}
+.book-divider{text-align:center;padding:56px 20px 36px;background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 50%,var(--parchment) 100%);margin:40px 0;border-top:2px solid rgba(139,105,20,.2);border-bottom:2px solid rgba(139,105,20,.2);}
+.book-vol-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.6em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.book-title-main{font-family:'Cinzel Decorative',serif;font-size:clamp(20px,5vw,34px);font-weight:700;color:var(--red-rubric);line-height:1.2;margin-bottom:10px;}
+.book-title-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:1.1em;color:var(--gold);margin-bottom:18px;}
+.book-ornament{font-size:2em;color:var(--gold-bright);margin:14px 0;display:block;}
+.book-intro{text-align:center;font-family:'EB Garamond',serif;font-style:italic;font-size:.95em;color:var(--ink-light);line-height:1.8;max-width:560px;margin:0 auto;}
+.chapter-block{margin:2.5rem 0 1rem;}
+.chapter-ornament{color:var(--gold-bright);font-size:1.3em;display:block;text-align:center;margin:2rem 0 .5rem;}
+.chapter-title{font-family:'Cinzel',serif;font-size:.9em;font-weight:600;letter-spacing:.08em;color:var(--red-rubric);text-align:center;display:block;margin-bottom:.4rem;text-transform:uppercase;}
+.chapter-subtitle{font-family:'EB Garamond',serif;font-style:italic;font-size:.88em;color:var(--gold);text-align:center;display:block;margin-bottom:1.2rem;}
+.vnum{font-size:.72em;color:var(--gold);vertical-align:super;font-weight:700;margin-right:.3em;font-style:normal;font-family:'Cinzel',serif;letter-spacing:0;}
+.verse{display:inline;}
+p.para{text-indent:1.5em;margin-bottom:.15rem;text-decoration:none!important;}
+p.para:first-of-type{text-indent:0;}
+.section-divider{text-align:center;color:var(--gold);margin:2rem 0;font-size:1.1em;letter-spacing:.3em;}
+.declaration{margin:.55rem 0;padding-left:1.4rem;border-left:2px solid rgba(139,105,20,.25);}
+.decl-num{font-family:'Cinzel',serif;font-size:.75em;color:var(--gold);font-weight:600;display:inline-block;min-width:2em;}
+.rubric{color:var(--red-rubric);font-weight:600;}
+.scripture-columns{column-count:2;column-gap:3.5rem;column-rule:1px solid rgba(139,105,20,.18);}
+@media(max-width:700px){.scripture-columns{column-count:1;}}
+@media print{
+  /* ── KDP Print Specs: 6" × 9", bleed-ready ── */
+  @page{size:6in 9in;margin-top:0.5in;margin-bottom:0.625in;margin-inside:0.75in;margin-outside:0.5in;}
+  @page:left{margin-left:0.5in;margin-right:0.75in;}
+  @page:right{margin-left:0.75in;margin-right:0.5in;}
+  
+  /* Hide app chrome */
+  .reader-nav,.toc-overlay,.nav-spacer,.nav-pdf-btn,.nav-toc-btn,
+  #toc-panel,#loading,.load-bar,.load-title,.load-sub{display:none!important;}
+  
+  /* Page structure */
+  html,body{background:#fff!important;color:#111!important;font-family:'Garamond','EB Garamond',Georgia,serif!important;font-size:11pt!important;line-height:1.55!important;}
+  
+  /* Book sections - each starts new page */
+  .cover-page{min-height:100vh;page-break-after:always;background:#fff!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;}
+  .book-divider{page-break-before:always;page-break-after:avoid;padding:1in 0 0.5in!important;background:#fff!important;color:#111!important;}
+  .book-title-main{font-size:22pt!important;color:#111!important;}
+  .book-title-sub,.book-vol-label{color:#333!important;font-size:10pt!important;}
+  .book-ornament{color:#555!important;font-size:16pt!important;}
+  .book-intro{font-size:10.5pt!important;color:#222!important;}
+  
+  /* Codex pages */
+  .codex-page{page-break-inside:avoid;padding:0!important;margin:0 0 0.2in 0!important;background:#fff!important;}
+  
+  /* Chapter headings */
+  .chapter-block{page-break-after:avoid;padding:0.15in 0 0.1in!important;background:#fff!important;}
+  .chapter-title{font-size:13pt!important;font-weight:bold!important;color:#111!important;font-family:'Garamond','EB Garamond',Georgia,serif!important;letter-spacing:0!important;}
+  .chapter-subtitle{font-size:9.5pt!important;color:#333!important;font-style:italic!important;letter-spacing:0!important;}
+  .chapter-ornament{display:none!important;}
+  
+  /* Scripture text */
+  .scripture-columns{column-count:1!important;padding:0!important;}
+  .para{margin:0 0 4pt!important;text-indent:1em!important;text-decoration:none!important;}
+  .vnum{font-size:7pt!important;color:#555!important;vertical-align:super!important;margin-right:2pt!important;}
+  .verse{font-size:11pt!important;color:#111!important;}
+  .rubric{font-weight:bold!important;color:#111!important;}
+  
+  /* Commentary */
+  .commentary-section{margin:0.1in 0!important;}
+  .commentary-heading{font-size:11pt!important;font-weight:bold!important;color:#111!important;margin:0.1in 0 0.05in!important;}
+  .commentary-ref,.commentary-text{font-size:10pt!important;color:#111!important;margin:0 0 4pt!important;}
+  .commentary-ref strong{font-weight:bold!important;}
+  .epistle-note{font-size:9.5pt!important;font-style:italic!important;color:#333!important;margin-top:0.1in!important;}
+  
+  /* Magic squares */
+  .magic-square{border-collapse:collapse!important;margin:0.1in auto!important;font-size:8pt!important;}
+  .magic-square td{border:1px solid #555!important;padding:2pt 4pt!important;text-align:center!important;color:#111!important;width:20pt!important;}
+  .magic-square-title{font-size:10pt!important;font-weight:bold!important;text-align:center!important;color:#111!important;}
+  .magic-square-caption{font-size:9pt!important;text-align:center!important;color:#333!important;}
+  
+  /* Section dividers */
+  .section-divider{font-size:9pt!important;text-align:center!important;color:#555!important;padding:0.1in 0!important;page-break-before:avoid!important;}
+  
+  /* TOC */
+  .toc-row{display:flex!important;align-items:baseline!important;}
+  .toc-book{font-size:10.5pt!important;color:#111!important;}
+  .toc-pg{font-size:10pt!important;color:#555!important;min-width:40pt!important;text-align:right!important;}
+  .toc-ch{font-size:9pt!important;color:#333!important;min-width:70pt!important;text-align:right!important;}
+  .toc-link{text-decoration:none!important;color:#111!important;}
+  
+  /* Hide non-print elements */
+  .colophon-page .colophon{font-style:italic!important;text-align:center!important;font-size:10pt!important;color:#333!important;}
+  
+  /* Page numbers via CSS counter */
+  @page{counter-increment:page;}
+  .codex-page::after{content:none;}
+}
+#loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 40%,#1a0e00 0%,#050505 100%);}
+.load-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:rgba(212,175,55,.6);margin-bottom:20px;}
+.load-bar-wrap{width:240px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:14px;}
+.load-bar{height:100%;width:0%;background:linear-gradient(90deg,#8B6914,#D4AF37);border-radius:2px;transition:width .4s ease;}
+.load-status{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(212,175,55,.35);}
+
+.restore-note-block{border-top:1px solid rgba(212,175,55,0.15);margin-top:18px;padding-top:14px;}
+.restore-supplemental{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.4);text-align:center;margin-bottom:10px;}
+.supplemental-verse .verse{color:rgba(26,18,8,0.55);font-style:italic;}
+.chapter-title-inline{display:block;font-family:'Cinzel',serif;font-size:12px;font-weight:600;letter-spacing:0.3em;color:var(--gold);text-align:center;margin:10px 0 16px;}
+.book-divider .book-intro,.book-divider p{text-align:center!important;}
+.book-title-main,.book-title-sub,.book-vol-label,.book-ornament{text-align:center!important;display:block;}
+.book-divider,.book-divider *{text-align:center!important;}
+.book-intro{text-align:center!important;display:block!important;}
+/* FINAL OVERRIDE — kill all underlines */
+*,*::before,*::after{text-decoration:none!important;}
+a,a:hover,a:visited,a:active,a:focus{text-decoration:none!important;color:inherit;}
+.vnum,.verse,.para,.chapter-title,.chapter-subtitle,.chapter-block,
+.codex-page,.scripture-columns,.book-divider,.book-intro,
+.commentary-text,.commentary-ref,.section-divider{text-decoration:none!important;}
+</style>
+</head>
+<body>
+<div style="height:51px;"></div><div id="loading">
+  <p class="load-title">Opening the Sacred Codex</p>
+  <div class="load-bar-wrap"><div class="load-bar" id="bar"></div></div>
+  <p class="load-status" id="status">Invoking the Akasha...</p>
+</div>
+<div id="content" style="display:none"></div>
+<script>
+const PARTS=[
+  {file:'part2_cover_nav.html',label:'Opening the Sacred Codex...'},
+  {file:'part_copyright.html',label:'Copyright · © 2026 Kritagya Das · Sacred Covenant Press...'},
+  {file:'part_reading_plan.html',label:'The 90-Day Reading Plan — A Daily Practice Through All 88 Books...'},
+  {file:'part2b_frontmatter.html',label:'Invocation and Foreword...'},
+  {file:'part_authors_note.html',label:'A Note from the Heart — To Every Seeker · All Traditions · From the Compiler...'},
+  {file:'part2b_toc.html',label:'Table of Contents — All 88 Books...'},
+  {file:'full_genesis.html',label:'Genesis — Bereshit · 50 Chapters · In the Beginning...'},
+  {file:'full_exodus.html',label:'Exodus — Shemot · 40 Chapters · Let My People Go...'},
+  {file:'full_leviticus.html',label:'Leviticus — Vayikra · 27 Chapters · Be Ye Holy...'},
+  {file:'full_numbers.html',label:'Numbers — Bamidbar · 36 Chapters · The Wilderness...'},
+  {file:'full_deuteronomy.html',label:'Deuteronomy — Devarim · 34 Chapters · Hear O Israel...'},
+  {file:'full_joshua.html',label:'Joshua · 24 Chapters · The Conquest of Canaan...'},
+  {file:'full_judges.html',label:'Judges · 21 Chapters · Deborah Samson Gideon...'},
+  {file:'full_ruth.html',label:'Ruth · 4 Chapters · Whither Thou Goest I Will Go...'},
+  {file:'full_1samuel.html',label:'1 Samuel · 31 Chapters · David and Goliath...'},
+  {file:'full_2samuel.html',label:'2 Samuel · 24 Chapters · The Reign of David...'},
+  {file:'full_1kings.html',label:'1 Kings · 22 Chapters · Solomon · The Temple · Elijah...'},
+  {file:'full_2kings.html',label:'2 Kings · 25 Chapters · The Fall of Israel...'},
+  {file:'full_1chronicles.html',label:'1 Chronicles · 29 Chapters · The Genealogies of Israel...'},
+  {file:'full_2chronicles.html',label:'2 Chronicles · 36 Chapters · The Kings of Judah...'},
+  {file:'part40_chronicles_maccabees.html',label:'1 Chronicles · 2 Chronicles — The Lineages of Israel · David and the Temple · Solomon · Kings of Judah...'},
+  {file:'full_ezra.html',label:'Ezra · 10 Chapters · The Return from Babylon...'},
+  {file:'full_nehemiah.html',label:'Nehemiah · 13 Chapters · Rebuild the Wall...'},
+  {file:'full_esther.html',label:'Esther · 10 Chapters · For Such a Time as This...'},
+  {file:'full_job.html',label:'Job · 42 Chapters · Where Wast Thou When I Laid the Foundations...'},
+  {file:'full_psalms.html',label:'Psalms — Tehillim · 150 Chapters · The Songs of David...'},
+  {file:'full_proverbs.html',label:'Proverbs — Mishlei · 31 Chapters · The Fear of Jah...'},
+  {file:'full_ecclesiastes.html',label:'Ecclesiastes — Kohelet · 12 Chapters · Vanity of Vanities...'},
+  {file:'full_songofsolomon.html',label:'Song of Solomon · 8 Chapters · I Am My Beloved...'},
+  {file:'full_isaiah.html',label:'Isaiah · 66 Chapters · Comfort Ye My People...'},
+  {file:'full_jeremiah.html',label:'Jeremiah · 52 Chapters · Before I Formed Thee I Knew Thee...'},
+  {file:'full_lamentations.html',label:'Lamentations · 5 Chapters · Great Is Thy Faithfulness...'},
+  {file:'full_ezekiel.html',label:'Ezekiel · 48 Chapters · The Wheel Within a Wheel...'},
+  {file:'full_daniel.html',label:'Daniel · 12 Chapters · He Reveals Deep and Secret Things...'},
+  {file:'full_hosea.html',label:'Hosea · 14 Chapters · I Will Heal Their Backsliding...'},
+  {file:'full_joel.html',label:'Joel · 3 Chapters · I Will Pour Out My Spirit...'},
+  {file:'full_amos.html',label:'Amos · 9 Chapters · Let Justice Roll Down as Waters...'},
+  {file:'full_obadiah.html',label:'Obadiah · 1 Chapter · The Vision of Obadiah...'},
+  {file:'full_jonah.html',label:'Jonah · 4 Chapters · Out of the Belly of Hell I Cried...'},
+  {file:'full_micah.html',label:'Micah · 7 Chapters · Do Justice Love Mercy Walk Humbly...'},
+  {file:'full_nahum.html',label:'Nahum · 3 Chapters · Jah Is Good a Stronghold...'},
+  {file:'full_habakkuk.html',label:'Habakkuk · 3 Chapters · The Just Shall Live by Faith...'},
+  {file:'full_zephaniah.html',label:'Zephaniah · 3 Chapters · Ethiopia Stretches Her Hands...'},
+  {file:'full_haggai.html',label:'Haggai · 2 Chapters · Consider Your Ways...'},
+  {file:'full_zechariah.html',label:'Zechariah · 14 Chapters · Thy King Cometh Riding Upon a Donkey...'},
+  {file:'full_malachi.html',label:'Malachi · 4 Chapters · The Sun of Righteousness...'},
+  {file:'full_1esdras.html',label:'1 Esdras — Complete · 9 Chapters · 448 Verses · The Return from Captivity...'},
+  {file:'full_2esdras.html',label:'2 Esdras — Complete · 16 Chapters · 874 Verses · The Visions of Ezra...'},
+  {file:'full_tobit.html',label:'Tobit — Complete · 14 Chapters · 244 Verses · The Angel Raphael...'},
+  {file:'full_judith.html',label:'Judith — Complete · 16 Chapters · 339 Verses · She Cut Off His Head...'},
+  {file:'part37_tobit_judith.html',label:'Tobit · Judith — The Angel Raphael · The Widow Who Saved Israel · Ethiopian Orthodox Apocrypha...'},
+  {file:'full_esther_additions.html',label:'Additions to Esther — Complete · 117 Verses · The Rest of Esther...'},
+  {file:'full_wisdom.html',label:'Wisdom of Solomon — Complete · 19 Chapters · 436 Verses...'},
+  {file:'full_sirach.html',label:'Sirach Ecclesiasticus — Complete · 51 Chapters · 1392 Verses...'},
+  {file:'part37_wisdom_sirach.html',label:'Wisdom of Solomon · Sirach — The Righteous Are in the Hand of Jah · Honour Thy Father...'},
+  {file:'full_baruch.html',label:'Baruch — Complete · 6 Chapters · 213 Verses...'},
+  {file:'part41_baruch_letter.html',label:'Baruch · The Letter of Jeremiah — Written in Babylon · Wisdom Dwelt Among Men · Idols Are Nothing...'},
+  {file:'full_prayer_azariah.html',label:'Prayer of Azariah · Song of the Three Holy Children — Complete · 68 Verses...'},
+  {file:'full_susanna.html',label:'Susanna — Complete · 64 Verses · I Am Clear from the Blood...'},
+  {file:'part38_susanna_didascalia.html',label:'Susanna · Bel and the Dragon · The Additions to Daniel — Ethiopian Orthodox Canon...'},
+  {file:'full_bel_dragon.html',label:'Bel and the Dragon — Complete · 42 Verses...'},
+  {file:'full_prayer_manasses.html',label:'Prayer of Manasses — Complete · The Penitent King...'},
+  {file:'full_1maccabees.html',label:'1 Maccabees — Complete · 16 Chapters · 924 Verses · Judas Maccabeus...'},
+  {file:'full_2maccabees.html',label:'2 Maccabees — Complete · 15 Chapters · 555 Verses · The Resurrection of the Dead...'},
+  {file:'part39_nag_hammadi.html',label:'The Nag Hammadi Library — Gospel of Truth · Thunder Perfect Mind · Apocryphon of John · Gnostic Revelation...'},
+  {file:'full_matthew.html',label:'The Gospel of Matthew · 28 Chapters · The Sermon on the Mount...'},
+  {file:'full_mark.html',label:'The Gospel of Mark · 16 Chapters · Peace Be Still...'},
+  {file:'full_luke.html',label:'The Gospel of Luke · 24 Chapters · The Good Samaritan...'},
+  {file:'full_john.html',label:'The Gospel of John · 21 Chapters · In the Beginning Was the Word...'},
+  {file:'full_acts.html',label:'Acts of the Apostles · 28 Chapters · Ye Shall Be My Witnesses...'},
+  {file:'full_romans.html',label:'Romans · 16 Chapters · Nothing Shall Separate Us...'},
+  {file:'full_1corinthians.html',label:'1 Corinthians · 16 Chapters · Love Never Faileth...'},
+  {file:'full_2corinthians.html',label:'2 Corinthians · 13 Chapters · New Creature in Christ...'},
+  {file:'full_galatians.html',label:'Galatians · 6 Chapters · The Fruit of the Spirit...'},
+  {file:'full_ephesians.html',label:'Ephesians · 6 Chapters · The Armour of God...'},
+  {file:'full_philippians.html',label:'Philippians · 4 Chapters · I Can Do All Things...'},
+  {file:'full_colossians.html',label:'Colossians · 4 Chapters · Christ in You the Hope of Glory...'},
+  {file:'full_1thessalonians.html',label:'1 Thessalonians · 5 Chapters · The Dead in Christ Shall Rise...'},
+  {file:'full_2thessalonians.html',label:'2 Thessalonians · 3 Chapters · The Day of the Lord...'},
+  {file:'full_1timothy.html',label:'1 Timothy · 6 Chapters · Fight the Good Fight...'},
+  {file:'full_2timothy.html',label:'2 Timothy · 4 Chapters · All Scripture Is God-Breathed...'},
+  {file:'full_titus.html',label:'Titus · 3 Chapters · Sound Doctrine...'},
+  {file:'full_philemon.html',label:'Philemon · 1 Chapter · A Brother Beloved...'},
+  {file:'full_hebrews.html',label:'Hebrews · 13 Chapters · Faith Is the Substance...'},
+  {file:'full_james.html',label:'James · 5 Chapters · Faith Without Works Is Dead...'},
+  {file:'full_1peter.html',label:'1 Peter · 5 Chapters · A Royal Priesthood...'},
+  {file:'full_2peter.html',label:'2 Peter · 3 Chapters · The Day of the Lord...'},
+  {file:'full_1john.html',label:'1 John · 5 Chapters · God Is Love...'},
+  {file:'full_2john.html',label:'2 John · 1 Chapter · Walk in Truth...'},
+  {file:'full_3john.html',label:'3 John · 1 Chapter · The Beloved Gaius...'},
+  {file:'full_jude.html',label:'Jude · 1 Chapter · Contend for the Faith · Enoch Prophesied...'},
+  {file:'full_revelation.html',label:'The Revelation · 22 Chapters · Alpha and Omega · Even So Come Lord Yeshua...'},
+  {file:'full_1enoch_complete.html',label:'1 Enoch — Complete · 108 Chapters · 1048 Verses · R.H. Charles Translation · The Watchers · Son of Man...'},
+  {file:'full_2enoch_complete.html',label:'2 Enoch — Complete · 68 Chapters · 321 Verses · The Secrets of Enoch · Seven Heavens...'},
+  {file:'full_3enoch_complete.html',label:'3 Enoch — The Hebrew Book of Enoch · Sacred Addition · Sepher Hekhalot · Rabbi Ishmael · Metatron · The Merkabah...'},
+  {file:'part38_enoch_2_3.html',label:'The Enochic Trilogy — Three Books · One Tradition · The Watchers · The Seven Heavens · The Throne of Glory...'},
+  {file:'full_jubilees_complete.html',label:'The Book of Jubilees — Complete · 50 Chapters · 1305 Verses · The Little Genesis...'},
+  {file:'full_adam_eve_1.html',label:'The Life of Adam and Eve Part I — Complete · 79 Chapters · 920 Verses · Cave of Treasures...'},
+  {file:'full_adam_eve_2.html',label:'The Conflict of Adam and Eve with Satan — Complete · 22 Chapters · 322 Verses...'},
+  {file:'part7b_gedle_adam.html',label:'Gedle Adam · The Life of Adam and Eve — The Ethiopian Account After the Garden · Orthodox Tradition...'},
+  {file:'full_jasher.html',label:'The Book of Jasher — Complete · 91 Chapters · 3910 Verses · Referenced in Joshua 10:13...'},
+  {file:'full_ascension_isaiah.html',label:'The Ascension of Isaiah — Complete · 11 Chapters · 295 Verses · Ethiopian Orthodox Canon...'},
+  {file:'part27_shepherd_hermas.html',label:'The Shepherd of Hermas...'},
+  {file:'part28_sinodos_clement.html',label:'Sinodos and Clement...'},
+  {file:'part3_nile_valley.html',label:'Nile Valley Wisdom — Hymn to Aten, Maat, Poimandres...'},
+  {file:'full_kebra_nagast_complete.html',label:'The Kebra Nagast — COMPLETE · Budge 1922 Translation · 106 Chapters · 1132 Verses · Glory of Kings...'},
+  {file:'full_1meqabyan.html',label:'1 Meqabyan — Complete · 36 Chapters · 240 Verses · Ethiopian Orthodox Canon · Unique to Ethiopia...'},
+  {file:'full_2meqabyan.html',label:'2 Meqabyan — Complete · 21 Chapters · 421 Verses · Ethiopian Maccabees...'},
+  {file:'full_3meqabyan.html',label:'3 Meqabyan — Complete · 10 Chapters · 208 Verses · Prophecy of Christ...'},
+  {file:'part6_gospels.html',label:'The Restored Gospels — Matthew, Mark, Luke, John, Thomas...'},
+  {file:'part29_imperial_coronation.html',label:'Imperial Covenant — Coronation Address 1930...'},
+  {file:'part30_imperial_1936.html',label:'Imperial Covenant — League of Nations 1936...'},
+  {file:'part31_rasta_additions.html',label:'Rastafari Sacred Writings — Holy Piby, Ital, Holy Days...'},
+  {file:'part_garvey_howell.html',label:'The Prophets of the Restoration — Marcus Garvey · Leonard Howell · The Three Mansions · The Movement They Built...'},
+  {file:'part31b_prophets_of_sound.html',label:'The Prophets of Sound — Bob Marley, Vaughn Benjamin, Word Sound Power, Nada Brahma...'},
+  {file:'part36b_ital_transmission.html',label:'The Ital Living Food Transmission — Prana, Chakras, Christ Consciousness, Zion...'},
+  {file:'part32_selassie_a.html',label:'Haile Selassie I — The Divine Origin...'},
+  {file:'part32_selassie_b.html',label:'Haile Selassie I — Birth, Early Life, Coronation...'},
+  {file:'part32_selassie_c.html',label:'Haile Selassie I — Exile, Return, Pan-Africa...'},
+  {file:'part32_selassie_d.html',label:'Haile Selassie I — His Words on Faith, Bible, Unity and Peace...'},
+  {file:'part32_selassie_e.html',label:'Haile Selassie I — The Rastafari Recognition, Jamaica 1966, Jah Rastafari...'},
+  {file:'part32_selassie_f.html',label:'Haile Selassie I — The Akashic Transmission · Chiranjivi · Spine as Blueprint · Jah Made Manifest...'},
+  {file:'part33_issa_a.html',label:'Yeshua in the East — The Unknown Years...'},
+  {file:'part33_issa_b.html',label:'Issa — The Notovitch Manuscript · Buddhist Years...'},
+  {file:'part33_issa_c.html',label:'Isha Nath — The Nath Tradition · Kashmir · The Complete Master...'},
+  {file:'part34_babaji_christ.html',label:'The Babaji-Christ Transmission — Kriya Initiation · Miracles · Mahasamadhi...'},
+  {file:'part34_babaji_birth.html',label:'The Christ Blueprint — Birth · Jyotish · Early Years · Physical Appearance...'},
+  {file:'part35_mary_magdalene.html',label:'Mary Magdalene · The Sacred Feminine · The Gospel of Mary...'},
+  {file:'part35_pistis_essene.html',label:'Pistis Sophia · The Essene Gospel of Peace...'},
+  {file:'part35_therapeutae_philip.html',label:'The Therapeutae of Egypt · The Gospel of Philip...'},
+  {file:'part35_aquarian_thomas.html',label:'The Aquarian Gospel · Acts of Thomas in India · The Hymn of the Pearl...'},
+  {file:'part39_selassie_1963a.html',label:'Haile Selassie I — The United Nations Address · New York · October 4 1963 · The War Speech...'},
+  {file:'part39_selassie_1963b.html',label:'Haile Selassie I — The UN Address Continued · Until the Philosophy · War Speech Full Text...'},
+  {file:'part39_selassie_1963c.html',label:'Haile Selassie I — The UN Address · The Closing Transmission · Zion Speaks to the Nations...'},
+  {file:'part36_akashic_transmission.html',label:'The Akashic Transmission — Abraham · Moses · David · Yeshua · The Saints...'},
+  {file:'part42_revelation_of_christ.html',label:'The Revelation of Christ — A Siddha-Quantum Blueprint · The Christ-Consciousness Avataric Transmission · The Living Covenant...'},
+  {file:'part37b_prayers.html',label:'The Book of Sacred Prayers — Ethiopian Orthodox, Rastafari, Garvey, Nyahbinghi, Selassie I...'},
+  {file:'part98_connections.html',label:'The Connections — Cross-References · Enoch in the NT · Kebra Nagast in Revelation · Cave of Treasures in Matthew...'},
+  {file:'part_saints_living_fire.html',label:'The Saints of the Living Fire — The African Lineage · The Holy Ones · Moses the Black · Tekle Haymanot · Augustine · Bakhita...'},
+  {file:'part_black_israelites.html',label:'The History of the Black Israelites · The Real 12 Tribes · Beta Israel · Ethiopian Church · Adwa · The Restoration...'},
+  {file:'part_isis_ra_elohim.html',label:'ISIS · RA · ELOHIM — The Hidden Name of Israel · IS the Divine Feminine · RA the Solar Light · EL the God Intelligence...'},
+
+  {file:'part_deeper_mysteries.html',label:'The Deeper Mysteries — Adam Kadmon · The Rib · Thoth · Cosmic Distribution · The Body as the Ark...'},
+  {file:'part_scripture_decoded.html',label:'The Scripture Decoded — Genesis Light · The Burning Bush · Noah and Pralaya · The Resurrection as Suddha Deha · One Language One Jah...'},
+  {file:'part_zion_transmission.html',label:'Zion — A Profound Akashic Timeline Read · Brahman · Rastafari Inner Zion · Kether · Neural Sync · The Return That Was Never a Departure...'},
+    {file:'part_kebra_contemplation.html',label:'The Cosmic Dimensions of the Kebra Nagast — A Personal Contemplation by Kritagya Das...'},
+    {file:'part99_lexicon.html',label:'The Sacred Lexicon — A Translation Guide to Vedic · Rastafari · Ethiopian · Gnostic and Christ Consciousness Terms...'},
+  {file:'part_back_cover.html',label:'About This Book · Back Cover · Amazon Description — The Bible Haile Selassie I Actually Read...'},
+];
+async function load(){
+  const el=document.getElementById('content');
+  const loading=document.getElementById('loading');
+  const bar=document.getElementById('bar');
+  const status=document.getElementById('status');
+  const base='https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/public/scriptures/';
+  const STRIP=/<\/?(?:!DOCTYPE|html|head|body)[^>]*>/gi;
+      const STRIP_STYLE=/<style[^>]*>[\s\S]*?<\/style>/gi;
+  let loaded=0;
+  for(let i=0;i<PARTS.length;i++){
+    status.textContent=PARTS[i].label;
+    bar.style.width=((i/PARTS.length)*90+5)+'%';
+    try{
+      const res=await fetch(base+PARTS[i].file+'?v=20260803c');
+      if(!res.ok){console.warn('Skip',PARTS[i].file,res.status);continue;}
+      const text=(await res.text()).replace(STRIP,'').replace(STRIP_STYLE,'');
+      el.appendChild(document.createRange().createContextualFragment(text));
+      loaded++;
+    }catch(e){console.warn('Error',PARTS[i].file,e.message);}
+  }
+  bar.style.width='100%';
+  if(loaded===0){status.textContent='Error loading. Please refresh.';return;}
+  status.textContent='The Word is revealed. Jah Rastafari.';
+  await new Promise(r=>setTimeout(r,600));
+  loading.style.display='none';
+  el.style.display='block';
+}
+load();
+</script>
+
+<!-- FIXED NAV BAR -->
+<nav id="main-nav" class="reader-nav" style="display:flex;">
+  <button class="nav-back" onclick="history.back()">←</button>
+  <span class="nav-title">The Complete Restored Covenant Scriptures</span>
+  <button class="nav-toc-btn" onclick="window.location.href='/scriptures/toc.html'">☰ Contents</button>
+  <button class="nav-pdf-btn" onclick="showKDPGuide()">⬇ KDP PDF</button>
+</nav>
+
+<!-- FULL SCREEN TOC OVERLAY -->
+<div id="toc-panel" style="display:none;position:fixed;inset:0;background:#050505;z-index:9000;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="position:sticky;top:0;background:#050505;border-bottom:1px solid rgba(212,175,55,0.2);padding:14px 18px;display:flex;align-items:center;gap:12px;">
+    <button onclick="closeTOC()" style="background:none;border:none;color:rgba(212,175,55,0.8);font-size:22px;cursor:pointer;">←</button>
+    <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.6);flex:1;">Table of Contents</span>
+    <span style="font-family:'Cinzel',serif;font-size:8px;color:rgba(212,175,55,0.35);letter-spacing:0.2em;">88 BOOKS</span>
+  </div>
+  <div style="padding:16px 18px 80px;font-family:'EB Garamond',serif;">
+
+    <div style="margin-bottom:6px;padding:8px 0;border-bottom:1px solid rgba(212,175,55,0.08);">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">FRONT MATTER</span>
+      <div onclick="jumpTo('front-matter')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Invocation</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">Editorial Note · The 88 Books</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">THE TORAH</span>
+      <div onclick="jumpTo('gen-ch1')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Genesis</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">50 chapters · Creation · Noah · Abraham · Joseph</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-50</span></div>
+      <div onclick="jumpTo('exodus-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Exodus</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">40 chapters · Burning Bush · Ten Commandments · Red Sea</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-40</span></div>
+      <div onclick="jumpTo('leviticus-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Leviticus</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">27 chapters · The Law of Holiness · Love Thy Neighbour</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-27</span></div>
+      <div onclick="jumpTo('leviticus-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Numbers</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">36 chapters · The Wilderness · The Aaronic Blessing</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-36</span></div>
+      <div onclick="jumpTo('leviticus-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Deuteronomy</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">34 chapters · The Shema · Blessings · Death of Moses</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-34</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">HISTORICAL BOOKS</span>
+      <div onclick="jumpTo('joshua-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Joshua</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">24 chapters · Be Strong and Courageous</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-24</span></div>
+      <div onclick="jumpTo('joshua-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Judges</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">21 chapters · Deborah · Gideon · Samson</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-21</span></div>
+      <div onclick="jumpTo('joshua-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Ruth</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">4 chapters · Whither Thou Goest I Will Go</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-4</span></div>
+      <div onclick="jumpTo('samuel-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2 Samuel</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">55 chapters · Anointing of David · The Davidic Covenant</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-55</span></div>
+      <div onclick="jumpTo('samuel-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2 Kings</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">47 chapters · Solomon's Wisdom · Temple · Elijah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-47</span></div>
+      <div onclick="jumpTo('ezra-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Ezra · Nehemiah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">23 chapters · Return from Babylon · Joy of Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-23</span></div>
+      <div onclick="jumpTo('ezra-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Esther</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">10 chapters · For Such a Time as This</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-10</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">WISDOM BOOKS</span>
+      <div onclick="jumpTo('job-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Job</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">42 chapters · Where Wast Thou · My Redeemer Liveth</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-42</span></div>
+      <div onclick="jumpTo('psalms-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Psalms</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">150 psalms · Jah Is My Shepherd · By the Rivers of Babylon</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ps.1-150</span></div>
+      <div onclick="jumpTo('proverbs-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Proverbs</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">31 chapters · Trust in Jah with All Thine Heart</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-31</span></div>
+      <div onclick="jumpTo('proverbs-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Ecclesiastes</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">12 chapters · Vanity of Vanities · Fear Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-12</span></div>
+      <div onclick="jumpTo('proverbs-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Song of Solomon</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">8 chapters · I Am Black and Beautiful</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-8</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">MAJOR PROPHETS</span>
+      <div onclick="jumpTo('isaiah-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Isaiah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">66 chapters · He Was Wounded · Arise Shine · Mount Up With Wings</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-66</span></div>
+      <div onclick="jumpTo('jeremiah-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Jeremiah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">52 chapters · I Know the Plans · New Covenant on the Heart</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-52</span></div>
+      <div onclick="jumpTo('jeremiah-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Lamentations</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">5 chapters · New Every Morning · Great Is Thy Faithfulness</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-5</span></div>
+      <div onclick="jumpTo('ezekiel-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Ezekiel</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">48 chapters · Wheel Within a Wheel · Valley of Dry Bones</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-48</span></div>
+      <div onclick="jumpTo('ezekiel-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Daniel</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">12 chapters · The Furnace · The Lion's Den · Ancient of Days</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-12</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">MINOR PROPHETS — THE TWELVE</span>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Hosea</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">14 chapters · I Will Love Them Freely</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-14</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Joel</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">3 chapters · I Will Pour Out My Spirit on All Flesh</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-3</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Amos</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">9 chapters · Let Justice Roll Down Like Waters</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-9</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Obadiah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">1 chapter · The Kingdom Shall Be Jah's</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Jonah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">4 chapters · The Great Fish · Nineveh Repents</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-4</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Micah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">7 chapters · Do Justice · Love Mercy · Walk Humbly</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-7</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Nahum</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">3 chapters · Jah Is Good in the Day of Trouble</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-3</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Habakkuk</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">3 chapters · The Just Shall Live by Faith</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-3</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Zephaniah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">3 chapters · Jah Thy Jah Is Mighty · He Will Joy Over Thee</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-3</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Haggai</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">2 chapters · The Glory of This Latter House</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-2</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Zechariah</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">14 chapters · Not by Might · Jah Shall Be King Over All</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-14</span></div>
+      <div onclick="jumpTo('minorprophets-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Malachi</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">4 chapters · The Sun of Righteousness Shall Arise</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-4</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">THE NEW COVENANT</span>
+      <div onclick="jumpTo('matthew-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Matthew</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">28 chapters · Sermon on the Mount · Beatitudes · Great Commission</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-28</span></div>
+      <div onclick="jumpTo('mark-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Mark</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">16 chapters · The Gospel of Immediate Action</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-16</span></div>
+      <div onclick="jumpTo('mark-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Luke</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">24 chapters · Magnificat · Good Samaritan · Prodigal Son</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-24</span></div>
+      <div onclick="jumpTo('john-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">John</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">21 chapters · In the Beginning Was the Word · I Am the Way</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-21</span></div>
+      <div onclick="jumpTo('acts-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Acts</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">28 chapters · Pentecost · The Ethiopian Eunuch Baptized</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-28</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Romans</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">16 chapters · Nothing Shall Separate Us from the Love of Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-16</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1 Corinthians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">16 chapters · The Greatest of These Is Love</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-16</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">2 Corinthians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">13 chapters · My Grace Is Sufficient for Thee</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-13</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Galatians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">6 chapters · Fruit of the Spirit · Freedom in Yeshua</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-6</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Ephesians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">6 chapters · The Whole Armour of Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-6</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Philippians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">4 chapters · I Can Do All Things Through the Anointed</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-4</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Colossians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">4 chapters · He Is Before All Things</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-4</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2 Thessalonians</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">8 chapters · Pray Without Ceasing · Rejoice Always</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-8</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2 Timothy · Titus</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">11 chapters · All Scripture Given by Inspiration of Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-11</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Hebrews</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">13 chapters · Faith Is · Yeshua the Author and Finisher</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-13</span></div>
+      <div onclick="jumpTo('epistles-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">James</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">5 chapters · Faith Without Works Is Dead</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-5</span></div>
+      <div onclick="jumpTo('peter-john-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2 Peter</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">8 chapters · Royal Priesthood · Cast All Your Care on Him</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-8</span></div>
+      <div onclick="jumpTo('peter-john-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2-3 John · Jude</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">7 chapters · Jah Is Love · Contend for the Faith</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-7</span></div>
+      <div onclick="jumpTo('peter-john-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Revelation</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">22 chapters · King of Kings · New Jerusalem · Come Lord Yeshua</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-22</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">ETHIOPIAN EXCLUSIVES</span>
+      <div onclick="jumpTo('enoch-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1 Enoch</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">108 chapters · Watchers · Son of Man · Luminaries · Epistle</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-108</span></div>
+      <div onclick="jumpTo('jubilees-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Jubilees</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">50 chapters · Heavenly Tablets · Abraham Breaks the Idols</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-50</span></div>
+      <div onclick="jumpTo('meqabyan-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1-2-3 Meqabyan</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">70 chapters · Ethiopian Warriors · Resurrection · Fear Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-70</span></div>
+      <div onclick="jumpTo('shepherd-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Shepherd of Hermas</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">5 Visions · 12 Commandments · 10 Similitudes</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">V.1-5</span></div>
+      <div onclick="jumpTo('sinodos-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Sinodos · Covenant</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">The Apostolic Canons · The Everlasting Covenant of Jah</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Canon 1-</span></div>
+      <div onclick="jumpTo('sinodos-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">1 Clement</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">65 chapters · Love Does All Things in Harmony</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-65</span></div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);display:block;margin-bottom:10px;margin-top:16px;">SACRED ADDITIONS</span>
+      <div onclick="jumpTo('nile-valley')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Nile Valley Prologue</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">Hymn to Aten · 42 Declarations of Maat · Poimandres</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Prologue</span></div>
+      <div onclick="jumpTo('kebra-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Kebra Nagast</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">117 chapters · Queen of Sheba · Menelik · The Ark in Ethiopia</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Ch.1-117</span></div>
+      <div onclick="jumpTo('thomas-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Gospel of Thomas</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">114 Secret Sayings of Yeshua · Nag Hammadi Egypt</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">1-114</span></div>
+      <div onclick="jumpTo('gospel-holy-twelve-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Gospel of the Holy Twelve</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">13 Lections · The Compassionate Christ</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Lec.1-13</span></div>
+      <div onclick="jumpTo('gospel-holy-twelve-preface')" style="display:flex;gap:8px;padding:5px 0 5px 20px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);"><span style="font-family:'Cinzel',serif;font-size:8px;color:rgba(212,175,55,0.35);min-width:110px;">↳ Preface</span><span style="font-size:11px;color:rgba(255,255,255,0.4);flex:1;">Origin · Recovery · The Hidden Truth</span></div>
+      <div onclick="jumpTo('imperial-intro')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Imperial Covenant</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">Coronation 1930 · League of Nations 1936</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">1930-1963</span></div>
+      <div onclick="jumpTo('rasta-additions')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Rastafari Writings</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">Black Israelites · Holy Piby · Ital Law · Holy Days</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Sacred</span></div>
+      <div onclick="jumpTo('selassie-deep')" style="display:flex;gap:8px;padding:7px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(212,175,55,0.55);min-width:110px;">Haile Selassie I</span><span style="font-size:13px;color:rgba(255,255,255,0.6);flex:1;">Deep Sacred Biography · Lineage · Reign · Prophecy</span><span style="font-family:'Cinzel',serif;font-size:7px;color:rgba(212,175,55,0.3);white-space:nowrap;">Parts I-V</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function openTOC(){
+  document.getElementById('toc-panel').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeTOC(){
+  document.getElementById('toc-panel').style.display='none';
+  document.body.style.overflow='';
+}
+function jumpTo(id){
+  closeTOC();
+  setTimeout(function(){
+    var el=document.getElementById(id);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
+    else{
+      var all=document.getElementById('content')||document.body;
+      var found=all.querySelector('#'+id);
+      if(found){found.scrollIntoView({behavior:'smooth',block:'start'});}
+    }
+  },200);
+}
+
+// Deep-link: if URL contains a hash, scroll to it after all content loads
+window.addEventListener('load',function(){
+  var hash=window.location.hash;
+  if(hash && hash.length>1){
+    var id=hash.substring(1);
+    setTimeout(function(){
+      var el=document.getElementById(id)||document.querySelector('[id="'+id+'"]');
+      if(el){el.scrollIntoView({behavior:'auto',block:'start'});}
+    },1200);
+  }
+});
+
+</script>
+
+
+<div id="kdp-guide" style="display:none;position:fixed;inset:0;background:rgba(5,5,5,0.97);z-index:9999;overflow-y:auto;padding:32px 20px;">
+  <div style="max-width:500px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.6em;color:rgba(212,175,55,0.5);text-transform:uppercase;margin-bottom:8px;">Sacred Publication</div>
+      <h2 style="font-family:'Cinzel',serif;font-size:20px;color:#D4AF37;margin:0 0 8px;">KDP Print Guide</h2>
+      <p style="font-family:'EB Garamond',serif;font-size:13px;color:rgba(255,255,255,0.5);margin:0;">The Complete Ethiopian Bible · Amazon Publishing</p>
+    </div>
+    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:20px;margin-bottom:16px;">
+      <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.4em;color:rgba(212,175,55,0.6);text-transform:uppercase;margin-bottom:12px;">Step 1 · Print Settings</div>
+      <p style="font-family:'EB Garamond',serif;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;margin:0 0 8px;">Press <strong style="color:#D4AF37;">Ctrl+P</strong> (Windows) or <strong style="color:#D4AF37;">Cmd+P</strong> (Mac) to open Print dialog.</p>
+      <ul style="font-family:'EB Garamond',serif;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;padding-left:18px;margin:0;">
+        <li>Destination: <strong style="color:#D4AF37;">Save as PDF</strong></li>
+        <li>Paper size: <strong style="color:#D4AF37;">Custom — 6 × 9 inches</strong></li>
+        <li>Margins: <strong style="color:#D4AF37;">None</strong> (CSS handles margins)</li>
+        <li>Background graphics: <strong style="color:#D4AF37;">ON</strong></li>
+        <li>Scale: <strong style="color:#D4AF37;">100%</strong></li>
+      </ul>
+    </div>
+    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:20px;margin-bottom:16px;">
+      <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.4em;color:rgba(212,175,55,0.6);text-transform:uppercase;margin-bottom:12px;">Step 2 · KDP Upload</div>
+      <ul style="font-family:'EB Garamond',serif;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;padding-left:18px;margin:0;">
+        <li>Go to <strong style="color:#D4AF37;">kdp.amazon.com</strong></li>
+        <li>Create New Title → Paperback</li>
+        <li>Trim size: <strong style="color:#D4AF37;">6 × 9 inches</strong></li>
+        <li>Interior: <strong style="color:#D4AF37;">Black & White</strong>, cream paper</li>
+        <li>Upload your saved PDF</li>
+      </ul>
+    </div>
+    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:20px;margin-bottom:24px;">
+      <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.4em;color:rgba(212,175,55,0.6);text-transform:uppercase;margin-bottom:12px;">Book Details</div>
+      <div style="font-family:'EB Garamond',serif;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">
+        <div>Title: <strong style="color:#D4AF37;">The Complete Ethiopian Bible in English</strong></div>
+        <div>Subtitle: <strong style="color:#D4AF37;">All 88 Books — Every Verse — The Books the West Removed</strong></div>
+        <div>Author: <strong style="color:#D4AF37;">Compiled and Restored by Kritagya Das & Laila Amrouche</strong></div>
+        <div>Trim: <strong style="color:#D4AF37;">6 × 9 inches</strong></div>
+        <div>Interior: <strong style="color:#D4AF37;">Black & White, Cream</strong></div>
+        <div>Bleed: <strong style="color:#D4AF37;">No Bleed</strong></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="document.getElementById('kdp-guide').style.display='none';window.print();" 
+        style="flex:1;padding:14px;background:linear-gradient(135deg,rgba(139,105,20,0.5),rgba(212,175,55,0.3));border:2px solid rgba(212,175,55,0.6);border-radius:12px;color:#D4AF37;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;cursor:pointer;">
+        PRINT NOW
+      </button>
+      <button onclick="document.getElementById('kdp-guide').style.display='none';" 
+        style="flex:1;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:rgba(255,255,255,0.5);font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;cursor:pointer;">
+        CLOSE
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+function showKDPGuide(){document.getElementById('kdp-guide').style.display='block';}
+</script>
+
+</body>
+</html>
