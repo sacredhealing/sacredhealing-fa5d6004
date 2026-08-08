@@ -1000,34 +1000,45 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ── SUPPORT PILL ── */}
-      <div
-        onClick={() => navigate('/community?tab=support')}
-        style={{
-          margin: '8px 16px 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '13px 18px',
-          background: 'rgba(212,175,55,0.04)',
-          border: '1px solid rgba(212,175,55,0.18)',
-          borderRadius: 999,
-          cursor: 'pointer',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18 }}>🛟</span>
-          <div>
-            <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 11, fontWeight: 700, color: 'rgba(212,175,55,0.85)', letterSpacing: '0.01em' }}>
-              Need help or support?
-            </div>
-            <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
-              Tap to reach us inside the Sangha
-            </div>
+      {/* ── SUPPORT SACRED CIRCLE ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '28px 0 36px', gap: 10 }}>
+        <div
+          onClick={() => navigate('/community?tab=support')}
+          style={{ position: 'relative', width: 80, height: 80, cursor: 'pointer' }}
+        >
+          {/* outer glow ring */}
+          <div style={{ position: 'absolute', inset: -8, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 70%)', animation: 'sqPulseGlow 3s ease-in-out infinite' }} />
+          {/* ring 1 */}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.35)', animation: 'sqSpinSlow 18s linear infinite' }} />
+          {/* ring 2 — counter rotate */}
+          <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.2)', animation: 'sqSpinSlow 12s linear infinite reverse' }} />
+          {/* ring 3 */}
+          <div style={{ position: 'absolute', inset: 12, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.12)' }} />
+          {/* SVG sacred geometry — Flower of Life seed pattern */}
+          <svg viewBox="0 0 80 80" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }}>
+            <g stroke="#D4AF37" strokeWidth="0.6" fill="none">
+              {/* center circle */}
+              <circle cx="40" cy="40" r="10" />
+              {/* 6 petals */}
+              <circle cx="40" cy="30" r="10" />
+              <circle cx="40" cy="50" r="10" />
+              <circle cx="48.66" cy="35" r="10" />
+              <circle cx="31.34" cy="35" r="10" />
+              <circle cx="48.66" cy="45" r="10" />
+              <circle cx="31.34" cy="45" r="10" />
+              {/* outer containment */}
+              <circle cx="40" cy="40" r="20" strokeOpacity="0.3" />
+            </g>
+          </svg>
+          {/* center dot glow */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9), 0 0 24px rgba(212,175,55,0.4)', animation: 'pulse 2s ease-in-out infinite' }} />
           </div>
         </div>
-        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 16, fontWeight: 300 }}>›</span>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)' }}>Support</div>
+          <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>Tap to reach us</div>
+        </div>
       </div>
 
     </div>
