@@ -3676,7 +3676,6 @@ const Community = () => {
                 })}
 
                 </div>
-                </div>
             )
           ) : mobileTab === "feed" ? (
             <div className="c-feed-view">
