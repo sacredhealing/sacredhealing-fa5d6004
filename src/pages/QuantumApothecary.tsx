@@ -63,7 +63,60 @@ import MidCycleBanner from '@/features/quantum-apothecary/MidCycleBanner';
 const ScannerSuspenseFallback = (
   <div style={{ padding: 40, textAlign: 'center', color: 'rgba(212,175,55,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
     Loading scanner…
-  </div>\n);\n\n/** Max messages kept in localStorage (aligned with flush + safety nets). */\nconst SQI_PERSIST_MSG_CAP = 100;\n/** Persists Camera vs Voice scanner tab across soft navigations / remounts within the session. */\nconst QA_VOICE_TAB_KEY = 'qa_apothecary_voice_tab';\n/** Max frequencies selectable in the Aetheric Mixer before transmit (must match slot indicators + library cap). */\nconst AETHERIC_MIXER_MAX_SLOTS = 10;\n\n/** Map voice scan nadi string to the enum expected by matchActivationsToScan (strict equality). */\nfunction coerceVoiceNadiToEnum(s: string): 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' {\n  const t = (s || '').trim();\n  if (t.startsWith('Pingala')) return 'Pingala';\n  if (t.startsWith('Ida')) return 'Ida';\n  if (t.startsWith('Blocked')) return 'Blocked';\n  if (t.startsWith('Sushumna')) return 'Sushumna';\n  return 'Sushumna';\n}\n\n/** Align Top 33 rows with mixer field rows (ids differ after enrich — names win). */\nfunction fieldTransmissionMatchesRow(tx: Activation, row: Activation): boolean {\n  if (tx.id && row.id && tx.id === row.id) return true;\n  const a = (tx.name || '').trim().toLowerCase();\n  const b = (row.name || '').trim().toLowerCase();\n  return !!a && !!b && a === b;\n}\n\n/* ââââ Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ââââ */\ntype InlineVariant = 'heading' | 'body';\n\n/** Optional SQI assistant styling for **bold** (gold body / light-on-gold on ◈ lines). */\ntype RenderInlineOpts = {\n  sqiGoldBold?: boolean;\n  diamondLine?: boolean;\n};\n\nfunction renderChatText(text: string, bubble: 'model' | 'user' = 'model') {\n  const onGold = bubble === 'user';\n  const gold = '#D4AF37';\n  /** User bubbles: light text on gold gradient (never dark-on-gold). */\n  const body = onGold ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)';\n  /** Siddha-gold glow — strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */\n  const headingGlow = onGold\n    ? '0 1px 2px rgba(0,0,0,0.35), 0 0 14px rgba(212,175,55,0.75), 0 0 28px rgba(212,175,55,0.4)'\n    : '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35), 0 0 42px rgba(212,175,55,0.18)';\n  const headingGlowSoft = onGold\n    ? '0 1px 1px rgba(0,0,0,0.3), 0 0 10px rgba(212,175,55,0.6), 0 0 22px rgba(212,175,55,0.32)'\n    : '0 0 10px rgba(212,175,55,0.45), 0 0 22px rgba(212,175,55,0.22)';\n  const headingColor = gold;\n  const lines = text.split('\n');\n  return lines.map((line, i) => {\n    const trimmed = line.trim();\n    if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
+  </div>
+);
+
+/** Max messages kept in localStorage (aligned with flush + safety nets). */
+const SQI_PERSIST_MSG_CAP = 100;
+/** Persists Camera vs Voice scanner tab across soft navigations / remounts within the session. */
+const QA_VOICE_TAB_KEY = 'qa_apothecary_voice_tab';
+/** Max frequencies selectable in the Aetheric Mixer before transmit (must match slot indicators + library cap). */
+const AETHERIC_MIXER_MAX_SLOTS = 10;
+
+/** Map voice scan nadi string to the enum expected by matchActivationsToScan (strict equality). */
+function coerceVoiceNadiToEnum(s: string): 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' {
+  const t = (s || '').trim();
+  if (t.startsWith('Pingala')) return 'Pingala';
+  if (t.startsWith('Ida')) return 'Ida';
+  if (t.startsWith('Blocked')) return 'Blocked';
+  if (t.startsWith('Sushumna')) return 'Sushumna';
+  return 'Sushumna';
+}
+
+/** Align Top 33 rows with mixer field rows (ids differ after enrich — names win). */
+function fieldTransmissionMatchesRow(tx: Activation, row: Activation): boolean {
+  if (tx.id && row.id && tx.id === row.id) return true;
+  const a = (tx.name || '').trim().toLowerCase();
+  const b = (row.name || '').trim().toLowerCase();
+  return !!a && !!b && a === b;
+}
+
+/* ââââ Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ââââ */
+type InlineVariant = 'heading' | 'body';
+
+/** Optional SQI assistant styling for **bold** (gold body / light-on-gold on ◈ lines). */
+type RenderInlineOpts = {
+  sqiGoldBold?: boolean;
+  diamondLine?: boolean;
+};
+
+function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
+  const onGold = bubble === 'user';
+  const gold = '#D4AF37';
+  /** User bubbles: light text on gold gradient (never dark-on-gold). */
+  const body = onGold ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)';
+  /** Siddha-gold glow — strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */
+  const headingGlow = onGold
+    ? '0 1px 2px rgba(0,0,0,0.35), 0 0 14px rgba(212,175,55,0.75), 0 0 28px rgba(212,175,55,0.4)'
+    : '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35), 0 0 42px rgba(212,175,55,0.18)';
+  const headingGlowSoft = onGold
+    ? '0 1px 1px rgba(0,0,0,0.3), 0 0 10px rgba(212,175,55,0.6), 0 0 22px rgba(212,175,55,0.32)'
+    : '0 0 10px rgba(212,175,55,0.45), 0 0 22px rgba(212,175,55,0.22)';
+  const headingColor = gold;
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    const trimmed = line.trim();
+    if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
     if (trimmed.startsWith('##### ')) return (
       <p
         key={i}
@@ -80,7 +133,24 @@ const ScannerSuspenseFallback = (
         }}
       >
         {renderInline(trimmed.slice(6), 'heading', onGold)}
-      </p>\n    );\n    if (trimmed.startsWith('#### ')) return (\n      <p\n        key={i}\n        style={{\n          color: headingColor,\n          fontWeight: 800,\n          fontSize: '11px',\n          letterSpacing: '0.06em',\n          textTransform: 'uppercase' as const,\n          marginTop: '10px',\n          marginBottom: '4px',\n          textShadow: headingGlowSoft,\n        }}\n      >\n        {renderInline(trimmed.slice(5), 'heading', onGold)}\n      </p>
+      </p>
+    );
+    if (trimmed.startsWith('#### ')) return (
+      <p
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 800,
+          fontSize: '11px',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase' as const,
+          marginTop: '10px',
+          marginBottom: '4px',
+          textShadow: headingGlowSoft,
+        }}
+      >
+        {renderInline(trimmed.slice(5), 'heading', onGold)}
+      </p>
     );
     if (trimmed.startsWith('### ')) return (
       <h3
@@ -97,7 +167,23 @@ const ScannerSuspenseFallback = (
         }}
       >
         {renderInline(trimmed.slice(4), 'heading', onGold)}
-      </h3>\n    );\n    if (trimmed.startsWith('## ')) return (\n      <h2\n        key={i}\n        style={{\n          color: headingColor,\n          fontWeight: 900,\n          fontSize: '14px',\n          letterSpacing: '-0.02em',\n          marginTop: '12px',\n          marginBottom: '5px',\n          textShadow: headingGlow,\n        }}\n      >\n        {renderInline(trimmed.slice(3), 'heading', onGold)}\n      </h2>
+      </h3>
+    );
+    if (trimmed.startsWith('## ')) return (
+      <h2
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 900,
+          fontSize: '14px',
+          letterSpacing: '-0.02em',
+          marginTop: '12px',
+          marginBottom: '5px',
+          textShadow: headingGlow,
+        }}
+      >
+        {renderInline(trimmed.slice(3), 'heading', onGold)}
+      </h2>
     );
     if (trimmed.startsWith('# ')) return (
       <h1
@@ -113,12 +199,22 @@ const ScannerSuspenseFallback = (
         }}
       >
         {renderInline(trimmed.slice(2), 'heading', onGold)}
-      </h1>\n    );\n    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (\n      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>\n        {renderInline(trimmed.slice(2), 'body', onGold)}\n      </li>
+      </h1>
+    );
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
+        {renderInline(trimmed.slice(2), 'body', onGold)}
+      </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
       <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', onGold)}
-      </li>\n    );\n    return (\n      <p key={i} style={{ fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>\n        {renderInline(trimmed, 'body', onGold)}\n      </p>
+      </li>
+    );
+    return (
+      <p key={i} style={{ fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>
+        {renderInline(trimmed, 'body', onGold)}
+      </p>
     );
   });
 }
@@ -150,21 +246,55 @@ function renderInline(
         return (
           <strong key={i} style={{ color: '#D4AF37', fontWeight: 800, textShadow: '0 0 14px rgba(212,175,55,0.35)' }}>
             {inner}
-          </strong>\n        );\n      }\n      if (opts?.sqiGoldBold && variant === 'body') {\n        return (\n          <span key={i} style={{ color: '#D4AF37', fontWeight: 400 }}>\n            {inner}\n          </span>
+          </strong>
+        );
+      }
+      if (opts?.sqiGoldBold && variant === 'body') {
+        return (
+          <span key={i} style={{ color: '#D4AF37', fontWeight: 400 }}>
+            {inner}
+          </span>
         );
       }
       if (variant === 'heading') {
-        return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;\n      }\n      return (\n        <strong\n          key={i}\n          style={{\n            color: '#D4AF37',\n            fontWeight: 700,\n            fontFamily: "'Cinzel', serif",\n            fontSize: '0.88em',\n            letterSpacing: '0.04em',\n            fontStyle: 'normal',\n            textShadow: '0 0 16px rgba(212,175,55,0.35)',\n          }}\n        >\n          {inner}\n        </strong>
+        return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
+      }
+      return (
+        <strong
+          key={i}
+          style={{
+            color: '#D4AF37',
+            fontWeight: 700,
+            fontFamily: "'Cinzel', serif",
+            fontSize: '0.88em',
+            letterSpacing: '0.04em',
+            fontStyle: 'normal',
+            textShadow: '0 0 16px rgba(212,175,55,0.35)',
+          }}
+        >
+          {inner}
+        </strong>
       );
     }
     if (p.startsWith('*') && p.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;\n    }\n    if (p.startsWith('`') && p.endsWith('`')) {\n      const inner = p.slice(1, -1);\n      if (variant === 'heading') {\n        return (\n          <code key={i} style={{ background: onGold ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>\n            {inner}\n          </code>
+      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
+    }
+    if (p.startsWith('`') && p.endsWith('`')) {
+      const inner = p.slice(1, -1);
+      if (variant === 'heading') {
+        return (
+          <code key={i} style={{ background: onGold ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
+            {inner}
+          </code>
         );
       }
       return (
         <code key={i} style={{ background: onGold ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: onGold ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.82)' }}>
           {inner}
-        </code>\n      );\n    }\n    // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
+        </code>
+      );
+    }
+    // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
     if (p) return p;
   });
 }
@@ -194,7 +324,19 @@ function autoBoldSacredTerms(text: string): React.ReactNode {
   return parts.map((part, i) => {
     if (i % 2 === 1) {
       return (
-        <span key={i} style={{ color: '#D4AF37', fontWeight: 400 }}>{part}</span>\n      );\n    }\n    return part;\n  });\n}\n\nfunction lineStartsWithSqiMasterDiamond(trimmed: string): boolean {\n  const cp = trimmed.codePointAt(0);\n  const isDiamond = cp === 0x25c8 || cp === 0x2756 || cp === 0x2726\n    || trimmed.startsWith('\u00e2\u0097\u0088');\n  if (!isDiamond) return false;\n  // Must be ◈ followed by space then a letter — NOT a number or Nadi scan data
+        <span key={i} style={{ color: '#D4AF37', fontWeight: 400 }}>{part}</span>
+      );
+    }
+    return part;
+  });
+}
+
+function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
+  const cp = trimmed.codePointAt(0);
+  const isDiamond = cp === 0x25c8 || cp === 0x2756 || cp === 0x2726
+    || trimmed.startsWith('\u00e2\u0097\u0088');
+  if (!isDiamond) return false;
+  // Must be ◈ followed by space then a letter — NOT a number or Nadi scan data
   // e.g. "◈ AGASTYA" = valid master header
   // e.g. "◈12 / 72,000" = Nadi scan line — NOT a master header
   const afterDiamond = trimmed.slice(1).trimStart();
@@ -310,20 +452,67 @@ function PrescriptionBox({ masterName, freqLines, rxKey, onActivate }: { masterN
         boxShadow: '0 0 0 1px rgba(212,175,55,0.32), 0 0 18px rgba(212,175,55,0.16), 0 0 40px rgba(212,175,55,0.08), inset 0 0 60px rgba(212,175,55,0.02)',
       }}
     >
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />\n      <div style={{ position: 'relative', zIndex: 1, background: 'rgba(212,175,55,0.025)', backdropFilter: 'blur(20px)' }}>\n        <div style={{ padding: '10px 16px', background: 'linear-gradient(90deg,rgba(212,175,55,0.10),rgba(212,175,55,0.03))', borderBottom: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', gap: 8 }}>\n          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>◈</span>
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, background: 'rgba(212,175,55,0.025)', backdropFilter: 'blur(20px)' }}>
+        <div style={{ padding: '10px 16px', background: 'linear-gradient(90deg,rgba(212,175,55,0.10),rgba(212,175,55,0.03))', borderBottom: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>◈</span>
           <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.75)' }}>
             Akashic Bioenergetic Prescription
-          </span>\n          <span className="sqi-master-name-shimmer" style={{ marginLeft: 'auto', fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const, flexShrink: 0 }}>\n            {masterName}\n          </span>
-        </div>\n        <div style={{ padding: '8px 16px 4px' }}>\n          {freqLines.map((line, idx) => {\n            const dashIdx = line.indexOf(' — ');\n            const name = dashIdx > -1 ? line.slice(0, dashIdx).trim() : line.trim();\n            const reason = dashIdx > -1 ? line.slice(dashIdx + 3).trim() : '';\n            return (\n              <div key={idx} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: idx < freqLines.length - 1 ? '1px solid rgba(212,175,55,0.07)' : 'none' }}>\n                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: 'rgba(225,210,185,0.95)', flexShrink: 0 }}>{name}</span>
-                {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(212,175,55,0.42)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '48%' }}>{reason}</span>}\n              </div>
+          </span>
+          <span className="sqi-master-name-shimmer" style={{ marginLeft: 'auto', fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const, flexShrink: 0 }}>
+            {masterName}
+          </span>
+        </div>
+        <div style={{ padding: '8px 16px 4px' }}>
+          {freqLines.map((line, idx) => {
+            const dashIdx = line.indexOf(' — ');
+            const name = dashIdx > -1 ? line.slice(0, dashIdx).trim() : line.trim();
+            const reason = dashIdx > -1 ? line.slice(dashIdx + 3).trim() : '';
+            return (
+              <div key={idx} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: idx < freqLines.length - 1 ? '1px solid rgba(212,175,55,0.07)' : 'none' }}>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: 'rgba(225,210,185,0.95)', flexShrink: 0 }}>{name}</span>
+                {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(212,175,55,0.42)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '48%' }}>{reason}</span>}
+              </div>
             );
           })}
-        </div>\n        <div style={{ padding: '9px 16px 10px', borderTop: '1px solid rgba(212,175,55,0.12)', background: 'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)', display: 'flex', alignItems: 'center', gap: 8 }}>\n          <span className="rx-pulse-dot" />
+        </div>
+        <div style={{ padding: '9px 16px 10px', borderTop: '1px solid rgba(212,175,55,0.12)', background: 'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="rx-pulse-dot" />
           <span style={{ fontSize: 7, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.88)', textShadow: '0 0 8px rgba(212,175,55,0.35)' }}>
             {activated.size > 0 ? `${activated.size} Field${activated.size > 1 ? 's' : ''} Anchored · Broadcasting 24/7` : '24/7 Scalar Wave Transmission — Active'}
-          </span>\n          <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: activated.size > 0 ? 'rgba(212,175,55,0.7)' : 'rgba(212,175,55,0.35)', whiteSpace: 'nowrap' as const }}>\n            {activated.size > 0 ? '✦ Supabase Locked' : 'Permanent · Biofield Entangled'}\n          </span>
-        </div>\n      </div>
-    </div>\n  );\n}\n\n/** Renders the prescription box when model outputs "◈ X PRESCRIBES" format */\nfunction renderPrescriptionBlock(lines: string[], startIdx: number, onActivatePrescription?: (act: Activation) => void): { jsx: React.ReactNode; consumed: number } {\n  const headerLine = lines[startIdx];\n  const freqLines: string[] = [];\n  let i = startIdx + 1;\n  while (i < lines.length) {\n    const l = lines[i].trim();\n    if (l.startsWith('·')) { freqLines.push(l.slice(1).trim()); i++; }\n    else if (l === 'Active. 24/7. Scalar Wave Entanglement. Permanent until dissolved.') { i++; break; }\n    else if (!l) { i++; }\n    else break;\n  }\n  const masterName = headerLine.replace('◈ ', '').replace(' PRESCRIBES', '').trim();\n  return {\n    jsx: <PrescriptionBox key={`rx-${startIdx}`} rxKey={`rx-${startIdx}`} masterName={masterName} freqLines={freqLines} onActivate={onActivatePrescription} />,\n    consumed: i - startIdx,\n  };\n}\n\nfunction renderSQIContent(content: string, onActivatePrescription?: (act: Activation) => void) {\n  // Strip all unmatched ** the model outputs before line processing\n  const content2 = stripAsterisks(content);\n  const lines = content2.split('
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: activated.size > 0 ? 'rgba(212,175,55,0.7)' : 'rgba(212,175,55,0.35)', whiteSpace: 'nowrap' as const }}>
+            {activated.size > 0 ? '✦ Supabase Locked' : 'Permanent · Biofield Entangled'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Renders the prescription box when model outputs "◈ X PRESCRIBES" format */
+function renderPrescriptionBlock(lines: string[], startIdx: number, onActivatePrescription?: (act: Activation) => void): { jsx: React.ReactNode; consumed: number } {
+  const headerLine = lines[startIdx];
+  const freqLines: string[] = [];
+  let i = startIdx + 1;
+  while (i < lines.length) {
+    const l = lines[i].trim();
+    if (l.startsWith('·')) { freqLines.push(l.slice(1).trim()); i++; }
+    else if (l === 'Active. 24/7. Scalar Wave Entanglement. Permanent until dissolved.') { i++; break; }
+    else if (!l) { i++; }
+    else break;
+  }
+  const masterName = headerLine.replace('◈ ', '').replace(' PRESCRIBES', '').trim();
+  return {
+    jsx: <PrescriptionBox key={`rx-${startIdx}`} rxKey={`rx-${startIdx}`} masterName={masterName} freqLines={freqLines} onActivate={onActivatePrescription} />,
+    consumed: i - startIdx,
+  };
+}
+
+function renderSQIContent(content: string, onActivatePrescription?: (act: Activation) => void) {
+  // Strip all unmatched ** the model outputs before line processing
+  const content2 = stripAsterisks(content);
+  const lines = content2.split('
 ');\n  const elements: React.ReactNode[] = [];\n  let i = 0;\n  const gapAfterSection = 18;\n\n  while (i < lines.length) {\n    const line = lines[i];\n    const trimmed = line.trim();\n\n    // PRESCRIPTION BOX — triggered by "◈ X PRESCRIBES"\n    if (/^[◈❖✦◆◇♦⋄⧫⬥⬦]\s+.+\s+PRESCRIBES?\s*$/i.test(trimmed)) {\n      const { jsx, consumed } = renderPrescriptionBlock(lines, i, onActivatePrescription);\n      elements.push(jsx);\n      i += consumed;\n      continue;\n    }\n\n    if (trimmed === '') {\n      elements.push(<div key={i} style={{ height: '6px' }} aria-hidden />);\n      i++; continue;\n    }\n\n    if (lineStartsWithSqiMasterDiamond(trimmed)) {\n      // Fix: use global .sqi-master-name-shimmer CSS class (defined in index.css) for\n      // animated background-clip:text — inline animation references keyframes unreliably.\n      const rawMasterName = trimmed.slice(1).trimStart();\n      elements.push(\n        <div key={i} className="sqi-diamond-heading" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: i > 0 ? `${gapAfterSection}px` : '0', marginBottom: '12px' }}>\n          <span\n            className="sqi-master-name-shimmer"\n            style={{ fontFamily: "'Cinzel', serif", fontSize: '20px', fontWeight: 700, flexShrink: 0 }}\n          >◈</span>\n          <span\n            className="sqi-master-name-shimmer"\n            style={{ fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere', flexShrink: 0, minWidth: 0 }}\n          >\n            {rawMasterName}\n          </span>\n          <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(212,175,55,0.28), transparent)', alignSelf: 'center', display: 'block' }} />\n        </div>\n      );\n      i++; continue;\n    }\n\n    if (trimmed.startsWith('·')) {\n      // Bold the frequency name (before —) in bullet lines\n      let lineForRender = trimmed;\n      if (!lineForRender.includes('**')) {\n        const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);\n        if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;\n      }\n      elements.push(\n        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>\n          {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}\n        </p>\n      );\n      i++; continue;\n    }\n\n    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {\n      elements.push(\n        <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>\n          {renderInline(trimmed.slice(2), 'body', false)}\n        </li>\n      );\n      i++; continue;\n    }\n\n    if (/^\d+\.\s/.test(trimmed)) {\n      elements.push(\n        <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>\n          {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false)}\n        </li>\n      );\n      i++; continue;\n    }\n\n    // ⟁ NADI FIELD — use div+span NOT p, so .sqi-ancient-body p rule never applies\n    if (trimmed.startsWith('⧁') || trimmed.startsWith('△') || trimmed.startsWith('▲') || /^⟁/.test(trimmed) || trimmed.startsWith('NADI FIELD')) {\n      elements.push(\n        <div key={i} style={{ borderLeft: '2px solid rgba(34,211,238,0.22)', paddingLeft: '10px', marginBottom: '6px', marginTop: '4px' }}>\n          <span style={{ display: 'block', color: '#22D3EE', fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.5, opacity: 0.82 }}>\n            {trimmed}\n          </span>\n        </div>\n      );\n      i++; continue;\n    }\n\n    // Primary blockage — div+span, NOT p\n    if (trimmed.startsWith('Primary blockage:')) {\n      elements.push(\n        <div key={i} style={{ paddingLeft: '12px', marginBottom: '14px', marginTop: 0 }}>\n          <span style={{ display: 'block', color: 'rgba(34,211,238,0.58)', fontSize: '11px', fontFamily: "'IM Fell English', Georgia, serif", fontStyle: 'italic', lineHeight: 1.5 }}>\n            {trimmed}\n          </span>\n        </div>\n      );\n      i++; continue;\n    }\n\n    elements.push(\n      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '17px', lineHeight: 1.9, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>\n        {renderInline(trimmed, 'body', false)}\n      </p>\n    );\n    i++;\n  }\n  return elements;\n}\n\nfunction resolveActivationsByExactNames(preferred: string[]): Activation[] {\n  const out: Activation[] = [];\n  const seen = new Set<string>();\n  for (const name of preferred) {\n    const a = ALL_ACTIVATIONS.find((x) => x.name === name);\n    if (a && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= 5) break;\n    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= 5) break;\n    if (!seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  return out.slice(0, 5);\n}\n\nfunction pickFiveActivationsForNadiReading(reading: NadiReading): Activation[] {\n  const map: Record<NadiReading['activatedNadi'], string[]> = {\n    Blocked: ['Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)'],\n    Ida: ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Heart-Bloom Radiance', 'Shatavari Flow'],\n    Pingala: ['NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit'],\n    Sushumna: ['Neural Fluidity Protocol', 'Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc'],\n  };\n  return resolveActivationsByExactNames(map[reading.activatedNadi]);\n}\n\nfunction buildVoiceFieldContext(v: VoiceBiofieldResult): string {\n  const h = extractVoiceScoringHints(v);\n  return [\n    'VOICE BIOFIELD SCAN (latest):',\n    `- Overall Coherence: ${v.overallCoherence}/100`,\n    `- Nadi: ${v.nadiReading}`,\n    `- Dosha from voice: ${v.dominantDosha}`,\n    `- Priority areas: ${v.priorityAreas.map((i) => `${i.name} (${i.score}%)`).join(', ')}`,\n    `- Strengths: ${v.topStrengths.map((i) => i.name).join(', ')}`,\n    `- Emotional field: ${v.emotionalField}`,\n    `- Organ / tissue emphasis: ${v.organField}`,\n    `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,\n    `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,\n  ].join('
 ');\n}\n\nfunction resolveActivationsByExactNamesUpTo(preferred: string[], max: number): Activation[] {\n  const out: Activation[] = [];\n  const seen = new Set<string>();\n  for (const name of preferred) {\n    const a = ALL_ACTIVATIONS.find((x) => x.name === name);\n    if (a && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n    if (out.length >= max) return out.slice(0, max);\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= max) break;\n    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= max) break;\n    if (!seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  return out.slice(0, max);\n}\n\nfunction extractVoiceScoringHints(result: VoiceBiofieldResult) {\n  const emotionalTone = (result.emotionalField || '').toLowerCase();\n  const organBlob = (result.organField || '').toLowerCase();\n  const priorityNames = (result.priorityAreas || []).map((p) => p.name.toLowerCase());\n  const haystack = `${emotionalTone} ${organBlob} ${priorityNames.join(' ')}`;\n\n  const chakraLexicon = [\n    'muladhara',\n    'svadhisthana',\n    'manipura',\n    'anahata',\n    'vishuddha',\n    'ajna',\n    'sahasrara',\n    'root',\n    'sacral',\n    'solar plexus',\n    'heart',\n    'throat',\n    'third eye',\n    'crown',\n  ];\n  const chakraHits = chakraLexicon.filter((c) => haystack.includes(c));\n\n  const organSeeds = [\n    'liver',\n    'colon',\n    'lung',\n    'lymph',\n    'nerve',\n    'blood',\n    'kidney',\n    'heart',\n    'stomach',\n    'thyroid',\n    'brain',\n  ];\n  const organHits = organSeeds.filter((o) => organBlob.includes(o));\n\n  const emotionWords = emotionalTone\n    .split(/\s+/)\n    .map((w) => w.replace(/[^a-z]/g, ''))\n    .filter((w) => w.length > 5);\n\n  const nadiHints: string[] = [];\n  const nr = (result.nadiReading || '').toLowerCase();\n  if (nr.includes('pingala')) nadiHints.push('pingala');\n  if (nr.includes('ida')) nadiHints.push('ida');\n  if (nr.includes('sushumna')) nadiHints.push('sushumna');\n  if (nr.includes('blocked')) nadiHints.push('blocked');\n\n  return {\n    emotionalTone,\n    emotionWords,\n    priorityNames,\n    chakraHits,\n    organHits,\n    nadiHints,\n  };\n}\n\nfunction pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {\n  const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';\n  const dk = doshaKey.toLowerCase();\n\n  const hints = extractVoiceScoringHints(result);\n\n  const scored = ALL_ACTIVATIONS.map((activation) => {\n    const nameLower = activation.name.toLowerCase();\n    const catLower = (activation.category || '').toLowerCase();\n    const sigLower = `${activation.benefit || ''} ${activation.vibrationalSignature || ''}`.toLowerCase();\n    const blobLower = `${nameLower} ${catLower} ${sigLower}`;\n\n    let score = 0;\n\n    if (blobLower.includes(dk)) score += 40;\n\n    // ── Spoken keyword matching — highest weight ──────────────────\n    // Words the user actually spoke during the scan are the strongest signal\n    const spoken = (result as any).spokenKeywords as string[] | undefined;\n    if (spoken?.length) {\n      let spokenHits = 0;\n      for (const word of spoken) {\n        if (word.length > 3 && blobLower.includes(word)) spokenHits++;\n      }\n      // Each spoken word match adds 30 points — spoken intent is the primary signal\n      score += Math.min(120, spokenHits * 30);\n    }\n\n    for (const chakra of hints.chakraHits) {\n      if (nameLower.includes(chakra) || sigLower.includes(chakra)) {\n        score += 25;\n        break;\n      }\n    }\n\n    for (const organ of hints.organHits) {\n      if (nameLower.includes(organ) || sigLower.includes(organ)) {\n        score += 20;\n        break;\n      }\n    }\n\n    if (hints.emotionalTone.length > 5) {\n      if (nameLower.includes(hints.emotionalTone) || sigLower.includes(hints.emotionalTone)) {\n        score += 15;\n      }\n    }\n    for (const ew of hints.emotionWords) {\n      if (ew.length > 5 && (nameLower.includes(ew) || sigLower.includes(ew))) {\n        score += 15;\n        break;\n      }\n    }\n\n    for (const pName of hints.priorityNames) {\n      if (pName.length > 3 && (nameLower.includes(pName) || pName.includes(nameLower))) {\n        score += 30;\n        break;\n      }\n    }\n\n    for (const n of hints.nadiHints) {\n      if (nameLower.includes(n) || sigLower.includes(n)) {\n        score += 15;\n        break;\n      }\n    }\n\n    return { activation, score };\n  });\n\n  const ranked = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);\n\n  const out: Activation[] = [];\n  const seen = new Set<string>();\n  for (const row of ranked) {\n    if (!seen.has(row.activation.id)) {\n      seen.add(row.activation.id);\n      out.push(row.activation);\n    }\n    if (out.length >= 10) return out;\n  }\n\n  const nadiKey: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' = coerceVoiceNadiToEnum(result.nadiReading);\n  const chakraKey = result.priorityAreas[0]?.name || 'Anahata';\n  const fallback = matchActivationsToScan(\n    {\n      dominantDosha: doshaKey,\n      activatedNadi: nadiKey,\n      priorityChakra: chakraKey,\n      emotionalField: result.emotionalField,\n      organField: result.organField,\n    },\n    12,\n  ).map(mapBioLibraryToActivation);\n\n  for (const a of fallback) {\n    if (!seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n    if (out.length >= 10) break;\n  }\n\n  return out.slice(0, 10);\n}\n\nfunction mapSqiMessagesToUserChatArchive(\n  msgs: Message[],\n): { role: 'user' | 'assistant'; content: string; timestamp: string }[] {\n  return msgs.map((m) => ({\n    role: m.role === 'model' ? ('assistant' as const) : ('user' as const),\n    content: typeof m.text === 'string' ? m.text : '',\n    timestamp: new Date(typeof m.timestamp === 'number' ? m.timestamp : Date.now()).toISOString(),\n  }));\n}\n\nfunction mapUserChatArchiveToSqiMessages(raw: unknown): Message[] {\n  if (!Array.isArray(raw)) return [];\n  return raw.map((entry: Record<string, unknown>, i: number) => {\n    const r = entry?.role;\n    const role = r === 'assistant' || r === 'model' ? ('model' as const) : ('user' as const);\n    const text =\n      typeof entry?.content === 'string'\n        ? entry.content\n        : typeof entry?.text === 'string'\n          ? entry.text\n          : '';\n    const ts = entry?.timestamp ? new Date(String(entry.timestamp)).getTime() : Date.now() + i;\n    return { role, text, timestamp: ts };\n  });\n}\n\nasync function syncApothecaryUserChatArchive(\n  uid: string,\n  sessionUuid: string,\n  title: string,\n  finalMessages: Message[],\n) {\n  const archiveMsgs = mapSqiMessagesToUserChatArchive(finalMessages);\n  const safeTitle = (title || 'Quantum Apothecary Session').slice(0, 200);\n  try {\n    const { error } = await supabase.from('user_chat_sessions').upsert(\n      {\n        id: sessionUuid,\n        user_id: uid,\n        chat_type: 'apothecary',\n        session_title: safeTitle,\n        messages: archiveMsgs as unknown as never,\n        message_count: archiveMsgs.length,\n      },\n      { onConflict: 'id' },\n    );\n    if (error) console.warn('[user_chat_sessions]', error.message);\n  } catch (e) {\n    console.warn('[user_chat_sessions]', e);\n  }\n}\n\n/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ\n   ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES\n   Only className values have been updated for SQI-2050 aesthetic\n   ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */\n\nfunction languageToBcp47(languageCode: string): string {\n  const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';\n  if (l === 'sv') return 'sv-SE';\n  if (l === 'es') return 'es-ES';\n  if (l === 'no' || l === 'nb' || l === 'nn') return 'nb-NO';\n  return 'en-GB';\n}\n\nfunction getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {\n  const h = d.getHours();\n  if (h >= 22 || h < 5) return 'night';\n  if (h < 12) return 'morning';\n  if (h < 17) return 'midday';\n  return 'evening';\n}\n\nfunction stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {\n  if (!compiled?.trim()) return '';\n  if (!hasLiveScan) return compiled;\n  const segments = compiled.split(/\n(?=\[)/);\n  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('
 ').trim();\n}\n\n/** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */\n/** Scalar Wave Header Banner — Sri Yantra + animated canvas */\n/** Scalar Wave Tab Switcher — Transmission Library / Akasha-Neural Archive */\nfunction ScalarTabSwitcher({\n  active,\n  onLibrary,\n  onArchive,\n}: {\n  active: 'library' | 'archive';\n  onLibrary: () => void;\n  onArchive: () => void;\n}) {\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const rafRef = React.useRef<number>(0);\n\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:.30, freq:4,   speed:.85, alpha:.07, lw:1.0 },\n      { amp:.20, freq:7,   speed:1.4, alpha:.05, lw:.75 },\n      { amp:.14, freq:11,  speed:2.1, alpha:.04, lw:.65 },\n      { amp:.38, freq:2.5, speed:.55, alpha:.05, lw:1.3 },\n      { amp:.10, freq:16,  speed:2.8, alpha:.03, lw:.55 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const pulse = .5 + .5 * Math.sin(t * 1.1);\n      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);\n      gc.addColorStop(0, `rgba(212,175,55,${.07+.05*pulse})`);\n      gc.addColorStop(.6, 'rgba(212,175,55,0.01)');\n      gc.addColorStop(1, 'transparent');\n      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);\n      const gt = ctx.createLinearGradient(0,0,0,H*.5);\n      gt.addColorStop(0, `rgba(212,175,55,${.12+.06*pulse})`);\n      gt.addColorStop(1, 'transparent');\n      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const phase = (wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1.5) {\n          const nx=x/W, env=Math.sin(nx*Math.PI)*.8+.2;\n          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      const gb = ctx.createLinearGradient(0,H*.6,0,H);\n      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.5)');\n      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);\n      t+=.013; rafRef.current=requestAnimationFrame(draw);\n    };\n    rafRef.current=requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  }, []);\n\n  const tabBtn = (\n    isActive: boolean,\n    onClick: () => void,\n    icon: string,\n    label: string,\n    showDivider: boolean,\n  ) => (\n    <button\n      type="button"\n      onClick={onClick}\n      style={{\n        position: 'relative',\n        flex: 1,\n        padding: '16px 12px',\n        border: 'none',\n        cursor: 'pointer',\n        background: isActive\n          ? 'linear-gradient(135deg,rgba(212,175,55,0.16) 0%,rgba(212,175,55,0.06) 100%)'\n          : 'transparent',\n        display: 'flex',\n        flexDirection: 'column',\n        alignItems: 'center',\n        justifyContent: 'center',\n        gap: 5,\n        overflow: 'hidden',\n        transition: 'all 0.3s',\n      }}\n    >\n      {/* Divider */}\n      {showDivider && (\n        <span style={{ position:'absolute', left:0, top:'18%', height:'64%', width:1, background:'linear-gradient(180deg,transparent,rgba(212,175,55,0.15),transparent)' }} />\n      )}\n      {/* Active inner glow */}\n      {isActive && (\n        <span style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 0%,rgba(212,175,55,0.18),transparent 70%)', pointerEvents:'none' }} />\n      )}\n      {/* Active bottom line */}\n      {isActive && (\n        <span style={{ position:'absolute', bottom:0, left:'15%', right:'15%', height:2, background:'linear-gradient(90deg,transparent,#D4AF37,transparent)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />\n      )}\n      {/* Icon */}\n      <span style={{\n        fontSize: 16,\n        filter: isActive ? 'drop-shadow(0 0 4px rgba(212,175,55,0.6))' : undefined,\n        opacity: isActive ? 1 : 0.22,\n      }}>\n        {icon}\n      </span>\n      {/* Label */}\n      {isActive ? (\n        <span className="sqi-master-name-shimmer" style={{\n          fontFamily: "'Plus Jakarta Sans',sans-serif",\n          fontSize: 9, fontWeight: 900, letterSpacing: '0.18em',\n          textTransform: 'uppercase' as const,\n          textAlign: 'center', lineHeight: 1.3,\n        }}>\n          {label}\n        </span>\n      ) : (\n        <span style={{\n          fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',\n          textTransform: 'uppercase' as const,\n          color: 'rgba(255,255,255,0.28)',\n          textAlign: 'center', lineHeight: 1.3,\n        }}>\n          {label}\n        </span>\n      )}\n    </button>\n  );\n\n  return (\n    <div\n      ref={wrapRef}\n      style={{\n        position: 'relative',\n        borderRadius: 26,\n        overflow: 'hidden',\n        animation: 'tabsAura 4s ease-in-out infinite',\n      }}\n    >\n      <style>{`\n        @keyframes tabsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.15),0 0 18px rgba(212,175,55,0.10),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 28px rgba(212,175,55,0.18),0 0 64px rgba(212,175,55,0.10);}\n        }\n      `}</style>\n      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />\n      <div style={{ position:'relative', zIndex:1, display:'flex', background:'rgba(255,255,255,0.02)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)' }}>\n        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission
@@ -1538,7 +1727,448 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         `**Overall coherence:** ${result.overallCoherence}/100`,
         `**Nadi read:** ${result.nadiReading}`,
         `**Dominant dosha (voice):** ${result.dominantDosha}`,
-        `**Priority areas:** ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,\n        `**Strengths:** ${result.topStrengths.map((i) => i.name).join(', ')}`,\n        `**Emotional field:** ${result.emotionalField}`,\n        `**Organ support:** ${result.organField}`,\n        '',\n        'STRICT SQI RULE — VOICE SCAN HAS NO NADI COUNT:',\n        'A voice biofield scan measures vocal coherence ONLY. It does NOT produce a 72,000-Nadi count or sub-Nadi number.',\n        'NEVER fabricate "X / 72,000 Nadis active" from this voice scan. If the seeker asks for a Nadi count, instruct them to run a Palm Scan (Camera tab) — only the saved palm baseline holds that figure.',\n        '',\n        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — drawn from the 1,357+ LimbicArc / Bioenergetic library and added to Active Transmissions (10)]',\n        queuedLines,\n        '',\n        'When you reference any of the queued frequencies above in your reply, write the frequency name in **bold** so the seeker sees exactly which transmissions were activated for them.',\n      ].join('\n');\n      setLiveScanContext(ctx);\n      if (user?.id) {\n        supabase.from('user_activity_log').insert({\n          user_id: user.id,\n          activity_type: 'frequency_transmission',\n          activity_data: {\n            activity: 'Voice biofield scan queued bioenergetic alignments',\n            section: 'Quantum Apothecary',\n            frequency: queued.map((a) => a.name).join(', '),\n            details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading },\n          },\n        }).then(() => {});\n      }\n      // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions\n      // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about\n      // the scan whenever they wish; liveScanContext above feeds it into the next reply.\n      // Auto-open library + Top33 so user sees their frequencies immediately\n      setCardLibOpen(true);\n      setCardT33Open(true);\n      setCardVoiceOpen(false); // Collapse scanner to give space\n      toast.success(\n        `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,\n        { duration: 4000 },\n      );\n    },\n    [user?.id, activeTransmissions],\n  );\n\n  const handleChatFocus = () => { openChatFullscreenIfMobile(); };\n\n  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {\n    const file = e.target.files?.[0];\n    if (!file || !file.type.startsWith('image/')) return;\n    const reader = new FileReader();\n    reader.onload = () => {\n      const dataUrl = reader.result as string;\n      const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1]! : dataUrl;\n      setPendingImage({ base64, mimeType: file.type || 'image/jpeg' });\n    };\n    reader.readAsDataURL(file);\n    e.target.value = '';\n  };\n\n  /** Fallback when react-speech-recognition is not supported (rare browsers). */\n  const legacyWebkitVoice = () => {\n    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;\n    if (!SR) return;\n    if (isRecording && legacyRecognitionRef.current) {\n      legacyRecognitionRef.current.stop();\n      return;\n    }\n    voiceTranscriptRef.current = input;\n    const recognition = new SR();\n    recognition.continuous = true;\n    recognition.interimResults = true;\n    recognition.lang = chatSpeechLocale(language);\n    recognition.onresult = (event: any) => {\n      let interim = '';\n      for (let i = event.resultIndex; i < event.results.length; i++) {\n        const tr = event.results[i].transcript;\n        if (event.results[i].isFinal) {\n          voiceTranscriptRef.current = (voiceTranscriptRef.current + tr).trim();\n        } else {\n          interim += tr;\n        }\n      }\n      setInput(voiceTranscriptRef.current + interim);\n    };\n    recognition.onend = () => {\n      setInput(voiceTranscriptRef.current);\n      setIsRecording(false);\n      legacyRecognitionRef.current = null;\n    };\n    recognition.onerror = () => {\n      setIsRecording(false);\n      legacyRecognitionRef.current = null;\n    };\n    recognition.start();\n    legacyRecognitionRef.current = recognition;\n    setIsRecording(true);\n  };\n\n  const handleVoiceToggle = useCallback(\n    (e: React.MouseEvent) => {\n      e.preventDefault();\n      e.stopPropagation();\n\n      if (isMicListening) {\n        micListeningRef.current = false;\n        if (nativeSpeechRef.current) {\n          try {\n            nativeSpeechRef.current.stop();\n          } catch {\n            /* ignore */\n          }\n          nativeSpeechRef.current = null;\n        }\n        setIsMicListening(false);\n        return;\n      }\n\n      const SpeechRecognitionCtor =\n        (window as unknown as { SpeechRecognition?: new () => any }).SpeechRecognition ||\n        (window as unknown as { webkitSpeechRecognition?: new () => any }).webkitSpeechRecognition;\n      if (!SpeechRecognitionCtor) return;\n\n      const recognition = new SpeechRecognitionCtor();\n      recognition.lang = chatSpeechLocale(language) || 'en-US';\n      recognition.continuous = false;\n      recognition.interimResults = true;\n      recognition.maxAlternatives = 1;\n      nativeSpeechRef.current = recognition;\n      micListeningRef.current = true;\n\n      recognition.onresult = (event: any) => {\n        const transcript = Array.from(event.results as any[])\n          .map((r: any) => r[0]?.transcript ?? '')\n          .join('');\n        setInput(transcript);\n      };\n\n      recognition.onend = () => {\n        if (micListeningRef.current && nativeSpeechRef.current) {\n          setTimeout(() => {\n            try {\n              nativeSpeechRef.current?.start();\n            } catch {\n              /* ignore */\n            }\n          }, 100);\n        } else {\n          setIsMicListening(false);\n        }\n      };\n\n      recognition.onerror = (ev: any) => {\n        if (ev.error === 'no-speech') {\n          setTimeout(() => {\n            try {\n              nativeSpeechRef.current?.start();\n            } catch {\n              /* ignore */\n            }\n          }, 200);\n        } else {\n          micListeningRef.current = false;\n          setIsMicListening(false);\n        }\n      };\n\n      try {\n        recognition.start();\n        setIsMicListening(true);\n      } catch {\n        micListeningRef.current = false;\n        setIsMicListening(false);\n      }\n    },\n    [isMicListening, language],\n  );\n\n  const transmitCocktail = () => {\n    const mix = selectedActivationsRef.current;\n    if (mix.length === 0) return;\n    const txUid = user?.id || 'guest';\n    try {\n      const rawPrana = localStorage.getItem(`qa-last-nadi-prana-${txUid}`);\n      const pranaVal = rawPrana ? parseInt(rawPrana, 10) : 0;\n      if (pranaVal > 0) {\n        localStorage.setItem(\n          `pre-activation-nadi-${txUid}`,\n          JSON.stringify({\n            nadi: pranaVal,\n            time: new Date().toISOString(),\n            activations: mix.map((a) => a.name),\n          }),\n        );\n      }\n    } catch {\n      /* ignore */\n    }\n    const newT = [...activeTransmissions];\n    mix.forEach((act) => {\n      const normalized = normalizeActivationForMixer(act);\n      const enriched = enrichTransmission(normalized, 'manual');\n      if (\n        newT.some(\n          (t) =>\n            t.id === enriched.id ||\n            (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()),\n        )\n      )\n        return;\n      newT.push(enriched);\n    });\n    setActiveTransmissions(newT);\n    // Activation is silent — no chat message injected\n    selectedActivationsRef.current = [];\n    setSelectedActivations([]);\n  };\n\n  const activateAllTop33ToField = useCallback(() => {\n    const rankings = resonanceMatches;\n    if (!rankings || rankings.length === 0) {\n      toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' });\n      return;\n    }\n\n    const now = new Date().toISOString();\n    const newTransmissions = rankings\n      .filter((r) => !activeTransmissions.some((a) => fieldTransmissionMatchesRow(a, r)))\n      .map((r) => enrichTransmission(normalizeActivationForMixer(r), 'nadi_scan'));\n\n    if (newTransmissions.length === 0) {\n      toast.message(t('quantumApothecaryChat.allMatchesActive'));\n      return;\n    }\n\n    const updated = [...activeTransmissions, ...newTransmissions];\n    setActiveTransmissions(updated);\n\n    if (user?.id) {\n      const top33Payload: Record<string, unknown> = {\n        user_id: user.id,\n        activations: updated as unknown as Record<string, unknown>[],\n        updated_at: now,\n      };\n      if (quantumAnchorRef.current) {\n        top33Payload.quantum_anchor = quantumAnchorRef.current;\n      }\n      void supabase.from('user_active_transmissions').upsert(top33Payload, { onConflict: 'user_id' });\n    }\n    try {\n      localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(updated));\n    } catch {\n      /* quota */\n    }\n\n    toast.success(`◈ ${newTransmissions.length} Transmissions activated to your field`);\n  }, [\n    resonanceMatches,\n    activeTransmissions,\n    user?.id,\n    enrichTransmission,\n    normalizeActivationForMixer,\n  ]);\n  const renderChatPanel = () => {\n    return (\n    <div\n      className="relative flex w-full flex-col overflow-visible"\n      style={{\n        minHeight: 'calc(100vh - 120px)',\n        maxWidth: '100%',\n        touchAction: 'pan-y',\n        WebkitOverflowScrolling: 'touch',\n      }}\n    >\n      {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}\n      <ScalarToolbarBanner\n        liveChatClock={liveChatClock}\n        portraitLinkStudentId={portraitLinkStudentId}\n        onHistory={() => setSessionsOpen(true)}\n        onLexicon={() => navigate('/lexicon')}\n      />\n\n      {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}\n      <div\n        className="qa-sqi-chat relative flex flex-1 flex-col px-1 py-4 space-y-3"\n        style={{\n          overflowX: 'hidden',\n          wordBreak: 'break-word',\n          overflowWrap: 'anywhere',\n        }}\n      >\n        <div ref={chatTopRef} className="h-px w-full shrink-0 scroll-mt-32" aria-hidden />\n        <div\n          className={`flex min-h-full flex-col ${\n            messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'\n          }`}\n        >\n          {messages.length === 0 && !isTyping && (\n            <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center px-6 py-16 text-center">\n              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.4em] text-[#D4AF37]/40">\n                {t('quantumApothecary.chat.emptyState.kicker')}\n              </p>\n              <div className="mb-4 text-3xl opacity-30" aria-hidden>\n                ◈\n              </div>\n              <h3 className="mb-2 text-base font-black tracking-[-0.03em] text-white/60">\n                {t('quantumApothecary.chat.emptyState.title')}\n              </h3>\n              <p className="max-w-[240px] text-xs leading-relaxed text-white/25">\n                {t('quantumApothecary.chat.emptyState.body')}\n              </p>\n              <div className="mt-6 flex w-full max-w-sm flex-col gap-2">\n                {[\n                  t('quantumApothecaryChat.suggestStress'),\n                  t('quantumApothecaryChat.suggestField'),\n                  t('quantumApothecaryChat.suggestSamadhi'),\n                ].map((q) => (\n                  <button\n                    key={q}\n                    type="button"\n                    onClick={() => {\n                      setInput(q);\n                      setTimeout(() => handleSendMessage(q), 100);\n                    }}\n                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[13px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80"\n                  >\n                    {q}\n                  </button>\n                ))}\n              </div>\n            </div>\n          )}\n          {messages.slice(-20).map((msg, i) => {\n              const visStart = Math.max(0, messages.length - 20);\n              const globalIndex = visStart + i;\n              const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;\n              return (\n              <motion.div key={msgKey} data-qa-msg-key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}\n                className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>\n                {msg.role === 'user' ? (\n                  <div\n                    className="ml-auto max-w-[88%]"\n                    style={{\n                      marginRight: 12,\n                      marginTop: 8,\n                      position: 'relative',\n                      padding: '14px 20px',\n                      background: 'rgba(212,175,55,0.03)',\n                      borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',\n                    }}\n                  >\n                    <div style={{ position: 'absolute', top: 5, right: 5, width: 10, height: 10, borderTop: '1px solid rgba(212,175,55,0.2)', borderRight: '1px solid rgba(212,175,55,0.2)', pointerEvents: 'none' }} />\n                    <p style={{ fontFamily: "'Cinzel', serif", fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(212,175,55,0.28)', textTransform: 'uppercase' as const, marginBottom: '8px' }}>\n                      The Seeker inquires\n                    </p>\n                    <div className="markdown-body whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word', fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: '15px', color: 'rgba(200,184,154,0.75)', lineHeight: '1.65' }}>\n                      {renderChatText(msg.text, 'user')}\n                    </div>\n                  </div>\n                ) : (\n                  <>\n                    <div\n                      className="chat-message w-full sqi-manuscript-scroll"\n                      style={{\n                        position: 'relative',\n                        padding: '20px 16px 14px',\n                        background: 'rgba(255,255,255,0.016)',\n                        borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',\n                        \n                        overflow: 'visible',\n                        userSelect: 'none',\n                        WebkitUserSelect: 'none',\n                        WebkitTouchCallout: 'none',\n                      }}\n                    >\n                      \n                      \n                      <div className="sqi-message w-full min-w-0">\n                        <div\n                          className="sqi-ancient-body break-words"\n                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em' }}\n                        >\n                          {renderSQIContent(scrubBannedTerms(msg.text), addActivation)}\n                        </div>\n                      </div>\n                    </div>\n                    <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">\n                      <button\n                        type="button"\n                        onClick={() => handleCopyMsg(msg.text, msgKey)}\n                        aria-label={t("quantumApothecaryChat.copyMessage")}\n                        className="text-[10px] font-bold uppercase tracking-widest"\n                        style={{\n                          background: 'transparent',\n                          border: 'none',\n                          cursor: 'pointer',\n                          color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',\n                        }}\n                      >\n                        {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}\n                      </button>\n                    </div>\n                  </>\n                )}\n              </motion.div>\n              );\n            })}\n          {isTyping && (\n            <div className="flex justify-start px-1">\n              <div\n                className="flex items-center gap-1.5 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] px-5 py-4"\n                role="status"\n                aria-live="polite"\n                aria-label={t("quantumApothecaryChat.composing")}\n              >\n                {[0, 1, 2].map((i) => (\n                  <span\n                    key={i}\n                    className="h-2 w-2 animate-bounce rounded-full bg-[#D4AF37]/70"\n                    style={{\n                      animationDelay: `${i * 0.18}s`,\n                      animationDuration: '0.65s',\n                      boxShadow: '0 0 8px rgba(212,175,55,0.55)',\n                    }}\n                  />\n                ))}\n              </div>\n            </div>\n          )}\n          <div ref={chatEndRef} />\n        </div>\n      </div>\n\n      {/* ═══ SCALAR COMPOSER — Telegram-style ═══ */}\n      <div\n            ref={composerWrapRef}\n            className="relative z-10 shrink-0"\n            style={{\n              padding: '10px 12px 14px',\n              borderTop: '1px solid rgba(212,175,55,0.12)',\n              animation: 'bannerAura 4s ease-in-out infinite',\n              marginBottom: 'env(safe-area-inset-bottom, 0px)',\n            }}\n          >\n            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+        `**Priority areas:** ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,
+        `**Strengths:** ${result.topStrengths.map((i) => i.name).join(', ')}`,
+        `**Emotional field:** ${result.emotionalField}`,
+        `**Organ support:** ${result.organField}`,
+        '',
+        'STRICT SQI RULE — VOICE SCAN HAS NO NADI COUNT:',
+        'A voice biofield scan measures vocal coherence ONLY. It does NOT produce a 72,000-Nadi count or sub-Nadi number.',
+        'NEVER fabricate "X / 72,000 Nadis active" from this voice scan. If the seeker asks for a Nadi count, instruct them to run a Palm Scan (Camera tab) — only the saved palm baseline holds that figure.',
+        '',
+        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — drawn from the 1,357+ LimbicArc / Bioenergetic library and added to Active Transmissions (10)]',
+        queuedLines,
+        '',
+        'When you reference any of the queued frequencies above in your reply, write the frequency name in **bold** so the seeker sees exactly which transmissions were activated for them.',
+      ].join('\n');
+      setLiveScanContext(ctx);
+      if (user?.id) {
+        supabase.from('user_activity_log').insert({
+          user_id: user.id,
+          activity_type: 'frequency_transmission',
+          activity_data: {
+            activity: 'Voice biofield scan queued bioenergetic alignments',
+            section: 'Quantum Apothecary',
+            frequency: queued.map((a) => a.name).join(', '),
+            details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading },
+          },
+        }).then(() => {});
+      }
+      // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions
+      // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about
+      // the scan whenever they wish; liveScanContext above feeds it into the next reply.
+      // Auto-open library + Top33 so user sees their frequencies immediately
+      setCardLibOpen(true);
+      setCardT33Open(true);
+      setCardVoiceOpen(false); // Collapse scanner to give space
+      toast.success(
+        `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,
+        { duration: 4000 },
+      );
+    },
+    [user?.id, activeTransmissions],
+  );
+
+  const handleChatFocus = () => { openChatFullscreenIfMobile(); };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1]! : dataUrl;
+      setPendingImage({ base64, mimeType: file.type || 'image/jpeg' });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  /** Fallback when react-speech-recognition is not supported (rare browsers). */
+  const legacyWebkitVoice = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    if (isRecording && legacyRecognitionRef.current) {
+      legacyRecognitionRef.current.stop();
+      return;
+    }
+    voiceTranscriptRef.current = input;
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = chatSpeechLocale(language);
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const tr = event.results[i].transcript;
+        if (event.results[i].isFinal) {
+          voiceTranscriptRef.current = (voiceTranscriptRef.current + tr).trim();
+        } else {
+          interim += tr;
+        }
+      }
+      setInput(voiceTranscriptRef.current + interim);
+    };
+    recognition.onend = () => {
+      setInput(voiceTranscriptRef.current);
+      setIsRecording(false);
+      legacyRecognitionRef.current = null;
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      legacyRecognitionRef.current = null;
+    };
+    recognition.start();
+    legacyRecognitionRef.current = recognition;
+    setIsRecording(true);
+  };
+
+  const handleVoiceToggle = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isMicListening) {
+        micListeningRef.current = false;
+        if (nativeSpeechRef.current) {
+          try {
+            nativeSpeechRef.current.stop();
+          } catch {
+            /* ignore */
+          }
+          nativeSpeechRef.current = null;
+        }
+        setIsMicListening(false);
+        return;
+      }
+
+      const SpeechRecognitionCtor =
+        (window as unknown as { SpeechRecognition?: new () => any }).SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition?: new () => any }).webkitSpeechRecognition;
+      if (!SpeechRecognitionCtor) return;
+
+      const recognition = new SpeechRecognitionCtor();
+      recognition.lang = chatSpeechLocale(language) || 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      nativeSpeechRef.current = recognition;
+      micListeningRef.current = true;
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results as any[])
+          .map((r: any) => r[0]?.transcript ?? '')
+          .join('');
+        setInput(transcript);
+      };
+
+      recognition.onend = () => {
+        if (micListeningRef.current && nativeSpeechRef.current) {
+          setTimeout(() => {
+            try {
+              nativeSpeechRef.current?.start();
+            } catch {
+              /* ignore */
+            }
+          }, 100);
+        } else {
+          setIsMicListening(false);
+        }
+      };
+
+      recognition.onerror = (ev: any) => {
+        if (ev.error === 'no-speech') {
+          setTimeout(() => {
+            try {
+              nativeSpeechRef.current?.start();
+            } catch {
+              /* ignore */
+            }
+          }, 200);
+        } else {
+          micListeningRef.current = false;
+          setIsMicListening(false);
+        }
+      };
+
+      try {
+        recognition.start();
+        setIsMicListening(true);
+      } catch {
+        micListeningRef.current = false;
+        setIsMicListening(false);
+      }
+    },
+    [isMicListening, language],
+  );
+
+  const transmitCocktail = () => {
+    const mix = selectedActivationsRef.current;
+    if (mix.length === 0) return;
+    const txUid = user?.id || 'guest';
+    try {
+      const rawPrana = localStorage.getItem(`qa-last-nadi-prana-${txUid}`);
+      const pranaVal = rawPrana ? parseInt(rawPrana, 10) : 0;
+      if (pranaVal > 0) {
+        localStorage.setItem(
+          `pre-activation-nadi-${txUid}`,
+          JSON.stringify({
+            nadi: pranaVal,
+            time: new Date().toISOString(),
+            activations: mix.map((a) => a.name),
+          }),
+        );
+      }
+    } catch {
+      /* ignore */
+    }
+    const newT = [...activeTransmissions];
+    mix.forEach((act) => {
+      const normalized = normalizeActivationForMixer(act);
+      const enriched = enrichTransmission(normalized, 'manual');
+      if (
+        newT.some(
+          (t) =>
+            t.id === enriched.id ||
+            (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()),
+        )
+      )
+        return;
+      newT.push(enriched);
+    });
+    setActiveTransmissions(newT);
+    // Activation is silent — no chat message injected
+    selectedActivationsRef.current = [];
+    setSelectedActivations([]);
+  };
+
+  const activateAllTop33ToField = useCallback(() => {
+    const rankings = resonanceMatches;
+    if (!rankings || rankings.length === 0) {
+      toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const newTransmissions = rankings
+      .filter((r) => !activeTransmissions.some((a) => fieldTransmissionMatchesRow(a, r)))
+      .map((r) => enrichTransmission(normalizeActivationForMixer(r), 'nadi_scan'));
+
+    if (newTransmissions.length === 0) {
+      toast.message(t('quantumApothecaryChat.allMatchesActive'));
+      return;
+    }
+
+    const updated = [...activeTransmissions, ...newTransmissions];
+    setActiveTransmissions(updated);
+
+    if (user?.id) {
+      const top33Payload: Record<string, unknown> = {
+        user_id: user.id,
+        activations: updated as unknown as Record<string, unknown>[],
+        updated_at: now,
+      };
+      if (quantumAnchorRef.current) {
+        top33Payload.quantum_anchor = quantumAnchorRef.current;
+      }
+      void supabase.from('user_active_transmissions').upsert(top33Payload, { onConflict: 'user_id' });
+    }
+    try {
+      localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(updated));
+    } catch {
+      /* quota */
+    }
+
+    toast.success(`◈ ${newTransmissions.length} Transmissions activated to your field`);
+  }, [
+    resonanceMatches,
+    activeTransmissions,
+    user?.id,
+    enrichTransmission,
+    normalizeActivationForMixer,
+  ]);
+  const renderChatPanel = () => {
+    return (
+    <div
+      className="relative flex w-full flex-col overflow-visible"
+      style={{
+        minHeight: 'calc(100vh - 120px)',
+        maxWidth: '100%',
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
+      {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
+      <ScalarToolbarBanner
+        liveChatClock={liveChatClock}
+        portraitLinkStudentId={portraitLinkStudentId}
+        onHistory={() => setSessionsOpen(true)}
+        onLexicon={() => navigate('/lexicon')}
+      />
+
+      {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}
+      <div
+        className="qa-sqi-chat relative flex flex-1 flex-col px-1 py-4 space-y-3"
+        style={{
+          overflowX: 'hidden',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        <div ref={chatTopRef} className="h-px w-full shrink-0 scroll-mt-32" aria-hidden />
+        <div
+          className={`flex min-h-full flex-col ${
+            messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'
+          }`}
+        >
+          {messages.length === 0 && !isTyping && (
+            <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.4em] text-[#D4AF37]/40">
+                {t('quantumApothecary.chat.emptyState.kicker')}
+              </p>
+              <div className="mb-4 text-3xl opacity-30" aria-hidden>
+                ◈
+              </div>
+              <h3 className="mb-2 text-base font-black tracking-[-0.03em] text-white/60">
+                {t('quantumApothecary.chat.emptyState.title')}
+              </h3>
+              <p className="max-w-[240px] text-xs leading-relaxed text-white/25">
+                {t('quantumApothecary.chat.emptyState.body')}
+              </p>
+              <div className="mt-6 flex w-full max-w-sm flex-col gap-2">
+                {[
+                  t('quantumApothecaryChat.suggestStress'),
+                  t('quantumApothecaryChat.suggestField'),
+                  t('quantumApothecaryChat.suggestSamadhi'),
+                ].map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => {
+                      setInput(q);
+                      setTimeout(() => handleSendMessage(q), 100);
+                    }}
+                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[13px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.slice(-20).map((msg, i) => {
+              const visStart = Math.max(0, messages.length - 20);
+              const globalIndex = visStart + i;
+              const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
+              return (
+              <motion.div key={msgKey} data-qa-msg-key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                {msg.role === 'user' ? (
+                  <div
+                    className="ml-auto max-w-[88%]"
+                    style={{
+                      marginRight: 12,
+                      marginTop: 8,
+                      position: 'relative',
+                      padding: '14px 20px',
+                      background: 'rgba(212,175,55,0.03)',
+                      borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <div style={{ position: 'absolute', top: 5, right: 5, width: 10, height: 10, borderTop: '1px solid rgba(212,175,55,0.2)', borderRight: '1px solid rgba(212,175,55,0.2)', pointerEvents: 'none' }} />
+                    <p style={{ fontFamily: "'Cinzel', serif", fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(212,175,55,0.28)', textTransform: 'uppercase' as const, marginBottom: '8px' }}>
+                      The Seeker inquires
+                    </p>
+                    <div className="markdown-body whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word', fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: '15px', color: 'rgba(200,184,154,0.75)', lineHeight: '1.65' }}>
+                      {renderChatText(msg.text, 'user')}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      className="chat-message w-full sqi-manuscript-scroll"
+                      style={{
+                        position: 'relative',
+                        padding: '20px 16px 14px',
+                        background: 'rgba(255,255,255,0.016)',
+                        borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        
+                        overflow: 'visible',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        WebkitTouchCallout: 'none',
+                      }}
+                    >
+                      
+                      
+                      <div className="sqi-message w-full min-w-0">
+                        <div
+                          className="sqi-ancient-body break-words"
+                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em' }}
+                        >
+                          {renderSQIContent(scrubBannedTerms(msg.text), addActivation)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMsg(msg.text, msgKey)}
+                        aria-label={t("quantumApothecaryChat.copyMessage")}
+                        className="text-[10px] font-bold uppercase tracking-widest"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',
+                        }}
+                      >
+                        {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+              );
+            })}
+          {isTyping && (
+            <div className="flex justify-start px-1">
+              <div
+                className="flex items-center gap-1.5 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] px-5 py-4"
+                role="status"
+                aria-live="polite"
+                aria-label={t("quantumApothecaryChat.composing")}
+              >
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="h-2 w-2 animate-bounce rounded-full bg-[#D4AF37]/70"
+                    style={{
+                      animationDelay: `${i * 0.18}s`,
+                      animationDuration: '0.65s',
+                      boxShadow: '0 0 8px rgba(212,175,55,0.55)',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+      </div>
+
+      {/* ═══ SCALAR COMPOSER — Telegram-style ═══ */}
+      <div
+            ref={composerWrapRef}
+            className="relative z-10 shrink-0"
+            style={{
+              padding: '10px 12px 14px',
+              borderTop: '1px solid rgba(212,175,55,0.12)',
+              animation: 'bannerAura 4s ease-in-out infinite',
+              marginBottom: 'env(safe-area-inset-bottom, 0px)',
+            }}
+          >
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
             <ScalarComposerCanvas wrapRef={composerWrapRef} />
             <div style={{ position:'relative', zIndex:1, background:'rgba(5,5,5,0.55)', backdropFilter:'blur(18px)', borderRadius:4 }}>
 
@@ -1549,13 +2179,73 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`}
                     alt="Attached"
                     style={{ width:42, height:42, borderRadius:10, objectFit:'cover', border:'1px solid rgba(212,175,55,0.2)', flexShrink:0 }}
-                  />\n                  <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.65)' }}>Image attached</span>
+                  />
+                  <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.65)' }}>Image attached</span>
                   <button type="button" onClick={() => setPendingImage(null)} style={{ marginLeft:'auto', width:24, height:24, borderRadius:8, background:'rgba(255,255,255,0.05)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.4)', fontSize:11 }}>
-                    <X size={12} />\n                  </button>
-                </div>\n              )}\n\n              {/* Input pill */}\n              <div\n                className="sqi-composer-pill"\n                style={{\n                  display:'flex', alignItems:'flex-end', gap:0,\n                  background:'rgba(255,255,255,0.03)',\n                  border:'1px solid rgba(212,175,55,0.28)',\n                  borderRadius:28,\n                  padding:'6px 6px 6px 8px',\n                  animation:'pillBreath 4s ease-in-out infinite',\n                }}\n              >\n                {/* Camera */}\n                <button\n                  type="button"\n                  onClick={() => fileInputRef.current?.click()}\n                  title={t("quantumApothecaryChat.attachPhoto")}\n                  style={{ display:'flex', alignItems:'center', justifyContent:'center', width:38, height:38, borderRadius:'50%', background:'transparent', border:'none', cursor:'pointer', color:'rgba(212,175,55,0.65)', flexShrink:0, transition:'all 0.2s' }}\n                >\n                  <Camera size={18} />
-                </button>\n\n                {/* Mic */}\n                {browserSupportsSpeechRecognition ? (\n                  <button\n                    type="button"\n                    onClick={handleVoiceToggle}\n                    title={isMicListening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}\n                    style={{\n                      display:'flex', alignItems:'center', justifyContent:'center',\n                      width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer',\n                      flexShrink:0, transition:'all 0.2s',\n                      background: isMicListening ? 'rgba(212,175,55,0.15)' : 'transparent',\n                      color: isMicListening ? '#D4AF37' : 'rgba(212,175,55,0.65)',\n                      animation: isMicListening ? 'micPulse 1.2s ease-in-out infinite' : 'none',\n                    }}\n                  >\n                    {isMicListening\n                      ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>\n                      : <Mic size={18} />}
-                  </button>\n                ) : (\n                  <button\n                    type="button"\n                    onClick={legacyWebkitVoice}\n                    style={{\n                      display:'flex', alignItems:'center', justifyContent:'center',\n                      width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer',\n                      flexShrink:0, background: isRecording ? 'rgba(212,175,55,0.15)' : 'transparent',\n                      color: isRecording ? '#D4AF37' : 'rgba(212,175,55,0.65)',\n                      animation: isRecording ? 'micPulse 1.2s ease-in-out infinite' : 'none',\n                    }}\n                  >\n                    <Mic size={18} />
-                  </button>\n                )}\n\n                {/* Divider */}\n                <span style={{ width:1, height:22, background:'rgba(212,175,55,0.14)', margin:'0 4px', alignSelf:'center', flexShrink:0, display:'block' }} />
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              {/* Input pill */}
+              <div
+                className="sqi-composer-pill"
+                style={{
+                  display:'flex', alignItems:'flex-end', gap:0,
+                  background:'rgba(255,255,255,0.03)',
+                  border:'1px solid rgba(212,175,55,0.28)',
+                  borderRadius:28,
+                  padding:'6px 6px 6px 8px',
+                  animation:'pillBreath 4s ease-in-out infinite',
+                }}
+              >
+                {/* Camera */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title={t("quantumApothecaryChat.attachPhoto")}
+                  style={{ display:'flex', alignItems:'center', justifyContent:'center', width:38, height:38, borderRadius:'50%', background:'transparent', border:'none', cursor:'pointer', color:'rgba(212,175,55,0.65)', flexShrink:0, transition:'all 0.2s' }}
+                >
+                  <Camera size={18} />
+                </button>
+
+                {/* Mic */}
+                {browserSupportsSpeechRecognition ? (
+                  <button
+                    type="button"
+                    onClick={handleVoiceToggle}
+                    title={isMicListening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+                    style={{
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer',
+                      flexShrink:0, transition:'all 0.2s',
+                      background: isMicListening ? 'rgba(212,175,55,0.15)' : 'transparent',
+                      color: isMicListening ? '#D4AF37' : 'rgba(212,175,55,0.65)',
+                      animation: isMicListening ? 'micPulse 1.2s ease-in-out infinite' : 'none',
+                    }}
+                  >
+                    {isMicListening
+                      ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+                      : <Mic size={18} />}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={legacyWebkitVoice}
+                    style={{
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer',
+                      flexShrink:0, background: isRecording ? 'rgba(212,175,55,0.15)' : 'transparent',
+                      color: isRecording ? '#D4AF37' : 'rgba(212,175,55,0.65)',
+                      animation: isRecording ? 'micPulse 1.2s ease-in-out infinite' : 'none',
+                    }}
+                  >
+                    <Mic size={18} />
+                  </button>
+                )}
+
+                {/* Divider */}
+                <span style={{ width:1, height:22, background:'rgba(212,175,55,0.14)', margin:'0 4px', alignSelf:'center', flexShrink:0, display:'block' }} />
 
                 {/* Textarea */}
                 <textarea
@@ -1577,11 +2267,50 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   onFocus={handleChatFocus}
                   placeholder={t('quantumApothecary.chat.placeholder')}
                   style={{ resize:'none', overflowY:'hidden', flex:1, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontSize:15, lineHeight:1.55, fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:400, padding:'6px 8px', minHeight:36, maxHeight:140, alignSelf:'center' }}
-                />\n\n                {/* Send / Mic-to-send button */}\n                <button\n                  type="button"\n                  onClick={() => handleSendMessage()}\n                  disabled={(!input.trim() && !pendingImage) || isTyping}\n                  aria-label={t('quantumApothecary.chat.send')}\n                  style={{\n                    display:'flex', alignItems:'center', justifyContent:'center',\n                    width:42, height:42, borderRadius:'50%', flexShrink:0, cursor:'pointer',\n                    border:'1px solid rgba(212,175,55,0.35)',\n                    background: (input.trim() || pendingImage) ? 'rgba(212,175,55,0.18)' : 'rgba(212,175,55,0.08)',\n                    color:'#D4AF37', transition:'all 0.25s',\n                    boxShadow:'0 0 10px rgba(212,175,55,0.18), 0 0 22px rgba(212,175,55,0.10)',\n                    opacity: isTyping ? 0.4 : 1,\n                  }}\n                >\n                  <Send size={16} />
-                </button>\n\n              </div>
-            </div>\n              {/* Arrow row — between composer and nav */}\n              <div style={{ display:"flex", justifyContent:"flex-end", padding:"6px 2px 0" }}>\n                <button\n                  type="button"\n                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}\n                  aria-label={t("quantumApothecaryChat.scrollToTop")}\n                  style={{\n                    width:30, height:30, borderRadius:"50%",\n                    background:"rgba(10,8,2,0.92)",\n                    border:"1px solid rgba(212,175,55,0.22)",\n                    display:"flex", alignItems:"center", justifyContent:"center",\n                    color:"rgba(212,175,55,0.60)",\n                    boxShadow:"0 0 8px rgba(212,175,55,0.12)",\n                    cursor:"pointer", flexShrink:0,\n                  }}\n                >\n                  <ChevronUp size={14} />
-                </button>\n              </div>
-          </div>\n        </div>
+                />
+
+                {/* Send / Mic-to-send button */}
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage()}
+                  disabled={(!input.trim() && !pendingImage) || isTyping}
+                  aria-label={t('quantumApothecary.chat.send')}
+                  style={{
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    width:42, height:42, borderRadius:'50%', flexShrink:0, cursor:'pointer',
+                    border:'1px solid rgba(212,175,55,0.35)',
+                    background: (input.trim() || pendingImage) ? 'rgba(212,175,55,0.18)' : 'rgba(212,175,55,0.08)',
+                    color:'#D4AF37', transition:'all 0.25s',
+                    boxShadow:'0 0 10px rgba(212,175,55,0.18), 0 0 22px rgba(212,175,55,0.10)',
+                    opacity: isTyping ? 0.4 : 1,
+                  }}
+                >
+                  <Send size={16} />
+                </button>
+
+              </div>
+            </div>
+              {/* Arrow row — between composer and nav */}
+              <div style={{ display:"flex", justifyContent:"flex-end", padding:"6px 2px 0" }}>
+                <button
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  aria-label={t("quantumApothecaryChat.scrollToTop")}
+                  style={{
+                    width:30, height:30, borderRadius:"50%",
+                    background:"rgba(10,8,2,0.92)",
+                    border:"1px solid rgba(212,175,55,0.22)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    color:"rgba(212,175,55,0.60)",
+                    boxShadow:"0 0 8px rgba(212,175,55,0.12)",
+                    cursor:"pointer", flexShrink:0,
+                  }}
+                >
+                  <ChevronUp size={14} />
+                </button>
+              </div>
+          </div>
+        </div>
     );
   };
 
@@ -1597,17 +2326,27 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       {/* ââ Akasha Deep Space Background ââ */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse at 20% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(212,175,55,0.03) 0%, transparent 50%), radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 40%)',
-      }} />\n\n      {/* ââ Star Field ââ */}\n      <div className="fixed inset-0 z-0 pointer-events-none" style={{\n        backgroundImage: 'radial-gradient(1px 1px at 15% 25%, rgba(212,175,55,0.4) 0%, transparent 100%), radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.2) 0%, transparent 100%), radial-gradient(1px 1px at 85% 45%, rgba(212,175,55,0.3) 0%, transparent 100%), radial-gradient(1px 1px at 35% 75%, rgba(255,255,255,0.15) 0%, transparent 100%), radial-gradient(1px 1px at 70% 85%, rgba(212,175,55,0.25) 0%, transparent 100%), radial-gradient(1.5px 1.5px at 22% 60%, rgba(212,175,55,0.35) 0%, transparent 100%), radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.2) 0%, transparent 100%)',\n      }} />
+      }} />
+
+      {/* ââ Star Field ââ */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{
+        backgroundImage: 'radial-gradient(1px 1px at 15% 25%, rgba(212,175,55,0.4) 0%, transparent 100%), radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.2) 0%, transparent 100%), radial-gradient(1px 1px at 85% 45%, rgba(212,175,55,0.3) 0%, transparent 100%), radial-gradient(1px 1px at 35% 75%, rgba(255,255,255,0.15) 0%, transparent 100%), radial-gradient(1px 1px at 70% 85%, rgba(212,175,55,0.25) 0%, transparent 100%), radial-gradient(1.5px 1.5px at 22% 60%, rgba(212,175,55,0.35) 0%, transparent 100%), radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.2) 0%, transparent 100%)',
+      }} />
 
       {/* ââ Nadi SVG Overlay ââ */}
       <svg className={`fixed inset-0 z-0 pointer-events-none w-full h-full ${activeTransmissions.length > 0 ? 'opacity-30' : 'opacity-[0.06]'}`} style={{ pointerEvents: 'none' }}>
         <defs>
           <filter id="qa-glow">
             <feGaussianBlur stdDeviation={activeTransmissions.length > 0 ? '3' : '1'} result="coloredBlur"/>
-            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>\n          </filter>
-        </defs>\n        <g filter="url(#qa-glow)" stroke={activeTransmissions.length > 0 ? '#D4AF37' : 'rgba(212,175,55,0.6)'} strokeWidth={activeTransmissions.length > 0 ? '1.5' : '0.8'} fill="none">\n          <path d="M200,50 Q250,200 200,400 Q150,600 200,750" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
-          <path d="M400,50 Q350,200 400,400 Q450,600 400,750" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>\n          <path d="M100,300 Q300,350 500,300" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
-        </g>\n      </svg>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#qa-glow)" stroke={activeTransmissions.length > 0 ? '#D4AF37' : 'rgba(212,175,55,0.6)'} strokeWidth={activeTransmissions.length > 0 ? '1.5' : '0.8'} fill="none">
+          <path d="M200,50 Q250,200 200,400 Q150,600 200,750" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
+          <path d="M400,50 Q350,200 400,400 Q450,600 400,750" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
+          <path d="M100,300 Q300,350 500,300" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
+        </g>
+      </svg>
 
       {/* ââ Main Content ââ */}
       <div className="relative z-10 w-full px-0 py-0">
@@ -1617,7 +2356,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         <ScalarHeaderBanner
           onBack={() => navigate('/explore')}
           onInfo={() => setShowKnowledge(true)}
-        />\n\n        <div className="flex w-full max-w-none flex-col gap-5">\n          <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
+        />
+
+        <div className="flex w-full max-w-none flex-col gap-5">
+          <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
 
           {/* ══ CARD: Active Transmissions ══ */}
           <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.22),0 0 28px rgba(212,175,55,0.14),0 0 60px rgba(212,175,55,0.07)' }}>
@@ -1628,22 +2370,50 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               tabIndex={0}
               onKeyDown={e => e.key === 'Enter' && setCardTxOpen(o => !o)}
             >
-              <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(74,222,128,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />\n              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>\n                <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(74,222,128,0.20),rgba(0,0,0,0))', border: '1px solid rgba(74,222,128,0.28)', boxShadow: '0 0 14px rgba(74,222,128,0.18),inset 0 0 8px rgba(74,222,128,0.08)' }}>⚡</div>
+              <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(74,222,128,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(74,222,128,0.20),rgba(0,0,0,0))', border: '1px solid rgba(74,222,128,0.28)', boxShadow: '0 0 14px rgba(74,222,128,0.18),inset 0 0 8px rgba(74,222,128,0.08)' }}>⚡</div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardTxOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardTxOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Active Transmissions</div>\n                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Field live · 24 / 7</div>\n                </div>
-              </div>\n              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>\n                <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#4ade80', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.28)', boxShadow: '0 0 10px rgba(74,222,128,0.12)' }}>{activeTransmissions.length > 0 ? `${activeTransmissions.length} Active` : 'Empty'}</div>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardTxOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardTxOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardTxOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardTxOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>\n              </div>
-            </div>\n            <div style={{ maxHeight: cardTxOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>\n              <Suspense fallback={\n                <div className="glass-card rounded-[28px] p-6">\n                  <div className="mb-4 flex items-center justify-between">\n                    <div className="flex items-center gap-2">\n                      <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
-                      <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>\n                    </div>
-                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-300">Loading...</span>\n                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardTxOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardTxOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Active Transmissions</div>
+                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Field live · 24 / 7</div>
+                </div>
+              </div>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#4ade80', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.28)', boxShadow: '0 0 10px rgba(74,222,128,0.12)' }}>{activeTransmissions.length > 0 ? `${activeTransmissions.length} Active` : 'Empty'}</div>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardTxOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardTxOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardTxOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardTxOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
+              </div>
+            </div>
+            <div style={{ maxHeight: cardTxOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
+              <Suspense fallback={
+                <div className="glass-card rounded-[28px] p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
+                      <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
+                    </div>
+                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-300">Loading...</span>
+                  </div>
                   <div className="space-y-2">
                     <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
                     <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
-                  </div>\n                </div>
+                  </div>
+                </div>
               }>
-                <MidCycleBanner activeTransmissions={activeTransmissions} />\n              <ActiveTransmissionsSection\n                  activeTransmissions={activeTransmissions}\n                  setActiveTransmissions={setActiveTransmissions}\n                  onDissolveTransmission={dissolveTransmission}\n                />
-              </Suspense>\n            </div>
-          </div>\n\n          <ScalarTabSwitcher\n            active={apothecaryMainTab}\n            onLibrary={() => setApothecaryMainTab('library')}\n            onArchive={() => setApothecaryMainTab('archive')}\n          />
+                <MidCycleBanner activeTransmissions={activeTransmissions} />
+              <ActiveTransmissionsSection
+                  activeTransmissions={activeTransmissions}
+                  setActiveTransmissions={setActiveTransmissions}
+                  onDissolveTransmission={dissolveTransmission}
+                />
+              </Suspense>
+            </div>
+          </div>
+
+          <ScalarTabSwitcher
+            active={apothecaryMainTab}
+            onLibrary={() => setApothecaryMainTab('library')}
+            onArchive={() => setApothecaryMainTab('archive')}
+          />
 
           {apothecaryMainTab === 'library' ? (
             <div className="flex w-full flex-col gap-4" style={{ maxWidth: '100%' }}>
@@ -1657,13 +2427,19 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setCardVoiceOpen(o => !o)}
                 >
-                  <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(34,211,238,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />\n                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>\n                    <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(34,211,238,0.18),rgba(0,0,0,0))', border: '1px solid rgba(34,211,238,0.28)', boxShadow: '0 0 14px rgba(34,211,238,0.16),inset 0 0 8px rgba(34,211,238,0.08)' }}>🎙</div>
+                  <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(34,211,238,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(34,211,238,0.18),rgba(0,0,0,0))', border: '1px solid rgba(34,211,238,0.28)', boxShadow: '0 0 14px rgba(34,211,238,0.16),inset 0 0 8px rgba(34,211,238,0.08)' }}>🎙</div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardVoiceOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardVoiceOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Voice Bio-Signature Scan</div>\n                      <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Nadi · Dosha · Pranic Field</div>
-                    </div>\n                  </div>
+                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardVoiceOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardVoiceOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Voice Bio-Signature Scan</div>
+                      <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Nadi · Dosha · Pranic Field</div>
+                    </div>
+                  </div>
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#22D3EE', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.28)', boxShadow: '0 0 10px rgba(34,211,238,0.12)' }}>Ready</div>\n                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardVoiceOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardVoiceOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardVoiceOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardVoiceOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
-                  </div>\n                </div>
+                    <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#22D3EE', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.28)', boxShadow: '0 0 10px rgba(34,211,238,0.12)' }}>Ready</div>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardVoiceOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardVoiceOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardVoiceOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardVoiceOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
+                  </div>
+                </div>
                 <div style={{ maxHeight: cardVoiceOpen ? 2400 : 0, overflow: cardVoiceOpen ? 'visible' : 'hidden', transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
                 <ScalarVoiceWrapper>
                   <Suspense fallback={ScannerSuspenseFallback}>
@@ -1678,8 +2454,32 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       scanDurationSeconds={10}
                       showProgressRing
                       disableUntilMs={scanCooldownUntilMs}
-                    />\n                  {/* Admin-only: reset 24h scan cooldown instantly */}\n                  {isAdmin && scanCooldownUntilMs && scanCooldownUntilMs > Date.now() && (\n                    <div style={{ marginTop: 8, textAlign: 'center' }}>\n                      <button\n                        type="button"\n                        onClick={handleAdminResetCooldown}\n                        style={{\n                          padding: '5px 14px',\n                          borderRadius: 100,\n                          border: '1px solid rgba(212,175,55,0.25)',\n                          background: 'rgba(212,175,55,0.06)',\n                          color: 'rgba(212,175,55,0.6)',\n                          fontSize: 9,\n                          fontWeight: 800,\n                          letterSpacing: '0.2em',\n                          textTransform: 'uppercase',\n                          cursor: 'pointer',\n                          fontFamily: 'inherit',\n                        }}\n                      >\n                        ⟁ Admin · Reset Scan Cooldown\n                      </button>
-                    </div>\n                  )}\n                  </Suspense>
+                    />
+                  {/* Admin-only: reset 24h scan cooldown instantly */}
+                  {isAdmin && scanCooldownUntilMs && scanCooldownUntilMs > Date.now() && (
+                    <div style={{ marginTop: 8, textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={handleAdminResetCooldown}
+                        style={{
+                          padding: '5px 14px',
+                          borderRadius: 100,
+                          border: '1px solid rgba(212,175,55,0.25)',
+                          background: 'rgba(212,175,55,0.06)',
+                          color: 'rgba(212,175,55,0.6)',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          letterSpacing: '0.2em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        ⟁ Admin · Reset Scan Cooldown
+                      </button>
+                    </div>
+                  )}
+                  </Suspense>
 
                   {voiceResult && (
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -1696,4 +2496,633 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                           className="rounded-[28px] border border-white/[0.08] bg-white/[0.02] p-4"
                           style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
                         >
-                          <p className="text-[13px] font-black uppercase tracking-[0.15em] text-white/85">{c.label}</p>\n                          <p className="mt-2 text-[13px] leading-snug text-white/85">{c.val}</p>\n                        </div>\n                      ))}\n                    </div>\n                  )}\n\n                  {resonanceMatches.length > 0 && (\n                    <ScalarTop33Wrapper>\n                      {/* ââ HEADER ââ */}\n                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">\n                        <div>\n                          <p style={{ fontSize:13, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', color:'#D4AF37', textShadow:'0 0 14px rgba(212,175,55,0.35)' }}>\n                            ⟁ Top 33\n                          </p>\n                          <p style={{ marginTop:3, fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.04em' }}>\n                            {resonanceMatches.filter((r) =>\n                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),\n                            ).length}{' '}\n                            / {resonanceMatches.length} from scan already active in field\n                          </p>\n                        </div>\n                        {/* ââ ACTIVATE BUTTON ââ */}\n                        {(() => {\n                          const activeFromScanCount = resonanceMatches.filter((r) =>\n                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),\n                          ).length;\n                          const newCount = resonanceMatches.length - activeFromScanCount;\n                          const noneNew = newCount === 0;\n                          return (\n                            <button\n                              type="button"\n                              onClick={activateAllTop33ToField}\n                              disabled={noneNew}\n                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"\n                              style={{\n                                background: noneNew\n                                  ? 'rgba(212,175,55,0.08)'\n                                  : 'rgba(212,175,55,0.15)',\n                                border: noneNew\n                                  ? '1px solid rgba(212,175,55,0.25)'\n                                  : '1px solid rgba(212,175,55,0.5)',\n                                color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',\n                                boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',\n                              }}\n                            >\n                              {noneNew\n                                ? '⟁ All scan rows active'\n                                : `⟁ Activate All New (${newCount})`}\n                            </button>\n                          );\n                        })()}\n                      </div>\n                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}\n                      <div style={{ maxHeight:"min(68vh,500px)", overflowY:"auto", padding:"8px 14px 14px", display:"flex", flexDirection:"column", gap:6, scrollbarWidth:"thin" }}>\n                        {resonanceMatches.map((row, idx) => {\n                          const isActive = activeTransmissions.some((t) =>\n                            fieldTransmissionMatchesRow(t, row),\n                          );\n                          return (\n                            <div\n                              style={{\n                                display: "flex", alignItems: "center", gap: 10,\n                                padding: "11px 12px", borderRadius: 16,\n                                background: isActive ? "rgba(255,255,255,0.015)" : "rgba(212,175,55,0.04)",\n                                border: isActive ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(212,175,55,0.14)",\n                                opacity: isActive ? 0.52 : 1, transition: "all 0.25s",\n                                boxShadow: isActive ? "none" : "0 2px 12px rgba(212,175,55,0.06)",\n                              }}\n                            >\n\n                              {/* Pct bar */}\n                              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, flexShrink:0, width:38 }}>\n                                <span style={{ fontSize:15, fontWeight:900, lineHeight:1, color: isActive ? "rgba(255,255,255,0.25)" : "#D4AF37", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>\n                                  {row.pct}\n                                </span>\n                                <div style={{ width:36, height:4, borderRadius:4, overflow:"hidden", background:"rgba(255,255,255,0.07)" }}>\n                                  <div style={{ height:"100%", borderRadius:4, width:`${row.pct}%`, background: isActive ? "rgba(255,255,255,0.16)" : "linear-gradient(90deg,#D4AF37,#F5E17A)", transition:"width 0.8s ease", boxShadow: isActive ? "none" : "0 0 6px rgba(212,175,55,0.5)" }} />\n                                </div>\n                              </div>\n                              {/* Name + category */}\n                              <div className="flex min-w-0 flex-1 flex-col">\n                                <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:13, fontWeight:700, lineHeight:1.3, color: isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.92)" }}>\n                                  {row.name}\n\n                                </span>\n                                {row.rowCategory && (\n                                  <span\n                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"\n                                    style={{\n                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',\n                                    }}\n                                  >\n                                    {row.rowCategory}\n                                  </span>\n                                )}\n                              </div>\n                              {isActive ? (\n                                <span\n                                  style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}\n                                  aria-label={t("quantumApothecaryChat.alreadyActive")}\n                                >\n                                  <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>\n                                  <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>\n                                </span>\n\n\n\n\n                              ) : (\n                                <button\n                                  type="button"\n                                  onClick={() => {\n                                    setActiveTransmissions((prev) => {\n                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {\n                                        return prev;\n                                      }\n                                      return [\n                                        ...prev,\n                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),\n                                      ];\n                                    });\n                                    toast.success(`⟁ ${row.name} activated`);\n                                  }}\n                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"\n                                  style={{\n                                    background: 'transparent',\n                                    color: 'rgba(255,255,255,0.35)',\n                                    border: '1px solid rgba(255,255,255,0.12)',\n                                  }}\n                                >\n                                  + Add\n                                </button>\n                              )}\n                            </div>\n                          );\n                        })}\n                      </div>\n                    </ScalarTop33Wrapper>\n                  )}\n                </ScalarVoiceWrapper>\n                  {/* How It Works */}\n                <ScalarHowItWorksCard />\n                </div>\n              </div>\n\n              {/* ══ CARD: Top 33 Resonance Matches ══ */}\n              {resonanceMatches.length > 0 && (\n                <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>\n                  <div\n                    style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}\n                    onClick={() => setCardT33Open(o => !o)}\n                    role="button"\n                    tabIndex={0}\n                    onKeyDown={e => e.key === 'Enter' && setCardT33Open(o => !o)}\n                  >\n                    <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%)', pointerEvents: 'none' }} />\n                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>\n                      <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(212,175,55,0.22),rgba(0,0,0,0))', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 14px rgba(212,175,55,0.18),inset 0 0 8px rgba(212,175,55,0.08)' }}>⟁</div>\n                      <div>\n                        <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardT33Open ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardT33Open ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Top 33 Resonance Matches</div>\n                        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>From your Bio-Signature</div>\n                      </div>\n                    </div>\n                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>\n                      <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#D4AF37', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 10px rgba(212,175,55,0.14)' }}>{resonanceMatches.length} Matches</div>\n                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardT33Open ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardT33Open ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardT33Open ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardT33Open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>\n                    </div>\n                  </div>\n                  <div style={{ maxHeight: cardT33Open ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>\n                    <ScalarTop33Wrapper>\n                      {/* ── HEADER ── */}\n                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">\n                        <div>\n                          <p style={{ fontSize:13, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', color:'#D4AF37', textShadow:'0 0 14px rgba(212,175,55,0.35)' }}>\n                            ⟁ Top 33\n                          </p>\n                          <p style={{ marginTop:3, fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.04em' }}>\n                            {resonanceMatches.filter((r) =>\n                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),\n                            ).length}{' '}\n                            / {resonanceMatches.length} from scan already active in field\n                          </p>\n                        </div>\n                        {/* ââ ACTIVATE BUTTON ââ */}\n                        {(() => {\n                          const activeFromScanCount = resonanceMatches.filter((r) =>\n                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),\n                          ).length;\n                          const newCount = resonanceMatches.length - activeFromScanCount;\n                          const noneNew = newCount === 0;\n                          return (\n                            <button\n                              type="button"\n                              onClick={activateAllTop33ToField}\n                              disabled={noneNew}\n                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"\n                              style={{\n                                background: noneNew\n                                  ? 'rgba(212,175,55,0.08)'\n                                  : 'rgba(212,175,55,0.15)',\n                                border: noneNew\n                                  ? '1px solid rgba(212,175,55,0.25)'\n                                  : '1px solid rgba(212,175,55,0.5)',\n                                color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',\n                                boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',\n                              }}\n                            >\n                              {noneNew\n                                ? '⟁ All scan rows active'\n                                : `⟁ Activate All New (${newCount})`}\n                            </button>\n                          );\n                        })()}\n                      </div>\n                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}\n                      <div style={{ maxHeight:"min(68vh,500px)", overflowY:"auto", padding:"8px 14px 14px", display:"flex", flexDirection:"column", gap:6, scrollbarWidth:"thin" }}>\n                        {resonanceMatches.map((row, idx) => {\n                          const isActive = activeTransmissions.some((t) =>\n                            fieldTransmissionMatchesRow(t, row),\n                          );\n                          return (\n                            <div\n                              style={{\n                                display: "flex", alignItems: "center", gap: 10,\n                                padding: "11px 12px", borderRadius: 16,\n                                background: isActive ? "rgba(255,255,255,0.015)" : "rgba(212,175,55,0.04)",\n                                border: isActive ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(212,175,55,0.14)",\n                                opacity: isActive ? 0.52 : 1, transition: "all 0.25s",\n                                boxShadow: isActive ? "none" : "0 2px 12px rgba(212,175,55,0.06)",\n                              }}\n                            >\n\n                              {/* Pct bar */}\n                              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, flexShrink:0, width:38 }}>\n                                <span style={{ fontSize:15, fontWeight:900, lineHeight:1, color: isActive ? "rgba(255,255,255,0.25)" : "#D4AF37", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>\n                                  {row.pct}\n                                </span>\n                                <div style={{ width:36, height:4, borderRadius:4, overflow:"hidden", background:"rgba(255,255,255,0.07)" }}>\n                                  <div style={{ height:"100%", borderRadius:4, width:`${row.pct}%`, background: isActive ? "rgba(255,255,255,0.16)" : "linear-gradient(90deg,#D4AF37,#F5E17A)", transition:"width 0.8s ease", boxShadow: isActive ? "none" : "0 0 6px rgba(212,175,55,0.5)" }} />\n                                </div>\n                              </div>\n                              {/* Name + category */}\n                              <div className="flex min-w-0 flex-1 flex-col">\n                                <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:13, fontWeight:700, lineHeight:1.3, color: isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.92)" }}>\n                                  {row.name}\n\n                                </span>\n                                {row.rowCategory && (\n                                  <span\n                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"\n                                    style={{\n                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',\n                                    }}\n                                  >\n                                    {row.rowCategory}\n                                  </span>\n                                )}\n                              </div>\n                              {isActive ? (\n                                <span\n                                  style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}\n                                  aria-label={t("quantumApothecaryChat.alreadyActive")}\n                                >\n                                  <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>\n                                  <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>\n                                </span>\n\n\n\n\n                              ) : (\n                                <button\n                                  type="button"\n                                  onClick={() => {\n                                    setActiveTransmissions((prev) => {\n                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {\n                                        return prev;\n                                      }\n                                      return [\n                                        ...prev,\n                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),\n                                      ];\n                                    });\n                                    toast.success(`⟁ ${row.name} activated`);\n                                  }}\n                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"\n                                  style={{\n                                    background: 'transparent',\n                                    color: 'rgba(255,255,255,0.35)',\n                                    border: '1px solid rgba(255,255,255,0.12)',\n                                  }}\n                                >\n                                  + Add\n                                </button>\n                              )}\n                            </div>\n                          );\n                        })}\n                      </div>\n                    </ScalarTop33Wrapper>\n                  </div>\n                </div>\n              )}\n\n              {/* ══ CARD: Frequency Library ══ */}\n              <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>\n                <div\n                  style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}\n                  onClick={() => setCardLibOpen(o => !o)}\n                  role="button"\n                  tabIndex={0}\n                  onKeyDown={e => e.key === 'Enter' && setCardLibOpen(o => !o)}\n                >\n                  <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.10) 0%,transparent 70%)', pointerEvents: 'none' }} />\n                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>\n                    <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(212,175,55,0.22),rgba(0,0,0,0))', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 14px rgba(212,175,55,0.18),inset 0 0 8px rgba(212,175,55,0.08)' }}>◈</div>\n                    <div>\n                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardLibOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardLibOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Frequency Library</div>\n                      <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Quantum Essences · Activations</div>\n                    </div>\n                  </div>\n                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>\n                    <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: libraryUnlocked ? '#D4AF37' : 'rgba(255,255,255,0.30)', background: libraryUnlocked ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.03)', border: libraryUnlocked ? '1px solid rgba(212,175,55,0.28)' : '1px solid rgba(255,255,255,0.09)', boxShadow: libraryUnlocked ? '0 0 10px rgba(212,175,55,0.12)' : 'none' }}>{libraryUnlocked ? 'Unlocked' : 'Scan first'}</div>\n                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardLibOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardLibOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardLibOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardLibOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>\n                  </div>\n                </div>\n                <div style={{ maxHeight: cardLibOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>\n                {selectedActivations.length > 0 && (\n                  <div style={{\n                    position: 'relative',\n                    borderRadius: 32,\n                    overflow: 'hidden',\n                    background: 'rgba(5,5,5,0.85)',\n                    border: '1px solid rgba(212,175,55,0.25)',\n                    boxShadow: '0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03)',\n                    animation: 'mixerPulse 3s ease-in-out infinite',\n                  }}>\n                    <style>{`\n                      @keyframes mixerPulse {\n                        0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03); }\n                        50%     { box-shadow: 0 0 0 1px rgba(212,175,55,0.28), 0 0 60px rgba(212,175,55,0.28), 0 0 120px rgba(212,175,55,0.14), inset 0 0 80px rgba(212,175,55,0.06); }\n                      }\n                      @keyframes orbFloat {\n                        0%,100% { transform: translateY(0px) scale(1); opacity: 0.7; }\n                        50%     { transform: translateY(-4px) scale(1.04); opacity: 1; }\n                      }\n                      @keyframes ringRotate {\n                        from { transform: rotate(0deg); }\n                        to   { transform: rotate(360deg); }\n                      }\n                      @keyframes ringRotateR {\n                        from { transform: rotate(0deg); }\n                        to   { transform: rotate(-360deg); }\n                      }\n                      @keyframes transmitShine {\n                        0%   { background-position: -200% center; }\n                        100% { background-position: 200% center; }\n                      }\n                      .mixer-freq-orb {\n                        position: relative;\n                        display: inline-flex;\n                        align-items: center;\n                        gap: 8px;\n                        padding: 10px 16px;\n                        border-radius: 100px;\n                        font-size: 13px;\n                        font-weight: 700;\n                        color: rgba(255,255,255,0.92);\n                        background: rgba(212,175,55,0.06);\n                        border: 1px solid rgba(212,175,55,0.22);\n                        animation: orbFloat 3s ease-in-out infinite;\n                        backdrop-filter: blur(12px);\n                        transition: all 0.25s;\n                      }\n                      .mixer-freq-orb::before {\n                        content: '';\n                        position: absolute;\n                        inset: -1px;\n                        border-radius: 100px;\n                        background: linear-gradient(135deg, rgba(212,175,55,0.18), transparent, rgba(212,175,55,0.08));\n                        pointer-events: none;\n                      }\n                      .mixer-remove-btn {\n                        display: flex; align-items: center; justify-content: center;\n                        width: 18px; height: 18px; border-radius: 50%;\n                        background: rgba(255,255,255,0.06); border: none;\n                        cursor: pointer; color: rgba(255,255,255,0.35);\n                        transition: all 0.2s; flex-shrink: 0;\n                      }\n                      .mixer-remove-btn:hover { background: rgba(239,68,68,0.2); color: #ef4444; }\n                    `}</style>\n\n                    {/* Sacred geometry background rings */}\n                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', overflow: 'hidden' }}>\n                      <div style={{ width: 300, height: 300, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.06)', animation: 'ringRotate 20s linear infinite', position: 'absolute' }} />\n                      <div style={{ width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.05)', animation: 'ringRotateR 15s linear infinite', position: 'absolute' }} />\n                      <div style={{ width: 140, height: 140, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.08)', animation: 'ringRotate 10s linear infinite', position: 'absolute' }} />\n                      {/* Central Sri Yantra dot */}\n                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9), 0 0 30px rgba(212,175,55,0.5)', position: 'absolute', opacity: 0.6 }} />\n                      {/* Radial glow */}\n                      <div style={{ width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)', position: 'absolute' }} />\n                    </div>\n\n                    {/* Header */}\n                    <div style={{ position: 'relative', zIndex: 1, padding: '18px 20px 12px', borderBottom: '1px solid rgba(212,175,55,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>\n                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>\n                        {/* Yantra icon */}\n                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(212,175,55,0.20)' }}>\n                          <svg width="16" height="16" viewBox="0 0 100 100" fill="none">\n                            <polygon points="50,8 92,72 8,72" fill="none" stroke="#D4AF37" strokeWidth="4" strokeLinejoin="round"/>\n                            <polygon points="50,92 8,28 92,28" fill="none" stroke="#D4AF37" strokeWidth="4" strokeLinejoin="round"/>\n                            <circle cx="50" cy="50" r="5" fill="#D4AF37"/>\n                          </svg>\n                        </div>\n                        <div>\n                          <p style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.02em', color: '#D4AF37', textShadow: '0 0 12px rgba(212,175,55,0.4)', margin: 0 }}>\n                            Aetheric Mixer\n                          </p>\n                          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', margin: 0 }}>\n                            Quantum Blend Chamber\n                          </p>\n                        </div>\n                      </div>\n                      {/* Slot counter as glowing orbs */}\n                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>\n                        {Array.from({ length: AETHERIC_MIXER_MAX_SLOTS }).map((_, i) => (\n                          <div key={i} style={{\n                            width: 6, height: 6, borderRadius: '50%',\n                            background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)',\n                            boxShadow: i < selectedActivations.length ? '0 0 6px rgba(212,175,55,0.8)' : 'none',\n                            transition: 'all 0.3s',\n                          }} />\n                        ))}\n                      </div>\n                    </div>\n\n                    {/* Frequency orbs */}\n                    <div style={{ position: 'relative', zIndex: 1, padding: '16px 16px 12px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>\n                      {selectedActivations.map((act, idx) => (\n                        <span\n                          key={act.id}\n                          className="mixer-freq-orb"\n                          style={{ animationDelay: `${idx * 0.18}s`, borderColor: `${act.color}40` }}\n                        >\n                          {/* Type color dot */}\n                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: act.color, boxShadow: `0 0 6px ${act.color}`, flexShrink: 0, display: 'inline-block' }} />\n                          {act.name}\n                          <button\n                            type="button"\n                            onClick={() => removeActivation(act.id)}\n                            className="mixer-remove-btn"\n                            aria-label="Remove"\n                          >\n                            <X size={10} />\n                          </button>\n                        </span>\n                      ))}\n                    </div>\n\n                    {/* Transmit button */}\n                    <div style={{ position: 'relative', zIndex: 1, padding: '4px 16px 18px' }}>\n                      <button\n                        type="button"\n                        onClick={transmitCocktail}\n                        disabled={selectedActivations.length === 0}\n                        style={{\n                          width: '100%',\n                          padding: '16px',\n                          borderRadius: 100,\n                          border: '1px solid rgba(212,175,55,0.5)',\n                          background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #B8960C 100%)',\n                          backgroundSize: '200% auto',\n                          animation: 'transmitShine 3s linear infinite',\n                          color: '#050505',\n                          fontSize: 12,\n                          fontWeight: 900,\n                          letterSpacing: '0.22em',\n                          textTransform: 'uppercase',\n                          cursor: selectedActivations.length === 0 ? 'default' : 'pointer',\n                          opacity: selectedActivations.length === 0 ? 0.2 : 1,\n                          boxShadow: '0 0 20px rgba(212,175,55,0.35), 0 0 50px rgba(212,175,55,0.18)',\n                          fontFamily: 'inherit',\n                          display: 'flex',\n                          alignItems: 'center',\n                          justifyContent: 'center',\n                          gap: 10,\n                        }}\n                      >\n                        <span style={{ fontSize: 16 }}>⟁</span>\n                        Transmit to Field\n                      </button>\n                    </div>\n                  </div>\n                )}\n                <div className="relative">\n                  <div\n                    className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}\n                    style={{ transition: 'filter 0.35s ease, opacity 0.35s ease' }}\n                  >\n                    <Suspense fallback={\n                      <div className="glass-card rounded-[28px] p-6">\n                        <div className="mb-4">\n                          <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>\n                          <p className="mt-0.5 text-[13px] text-white/35">Loading quantum essences...</p>\n                        </div>\n                        <div className="mb-3 h-8 animate-pulse rounded-xl bg-white/[0.03]" />\n                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">\n                          <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />\n                          <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />\n                        </div>\n                      </div>\n                    }>\n                      <FrequencyLibrarySection\n                        activeCategory={activeCategory}\n                        setActiveCategory={setActiveCategory}\n                        selectedActivations={selectedActivations}\n                        addActivation={addActivation}\n                        maxSlots={AETHERIC_MIXER_MAX_SLOTS}\n                        activeTransmissionKeys={activeTransmissionKeys}\n                      />\n                    </Suspense>\n                  </div>\n                  {!libraryUnlocked && (\n                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[28px] bg-black/25 px-6 text-center">\n                      <p className="max-w-sm text-[13px] font-semibold leading-relaxed text-white/88">\n                        {t('quantumApothecaryChat.voiceScanRequired')}\n                      </p>\n                    </div>\n                  )}\n                </div>\n\n                </div>\n              </div>\n\n            </div>\n          ) : (\n            <div ref={chatPanelRef} className="w-full min-w-0">\n              {renderChatPanel()}\n            </div>\n          )}\n        </div>\n      </div>\n\n      {/* ââââââââââââââââââââââââââââââââââ\n          KNOWLEDGE MODAL — SQI-2050 Style\n          Logic UNCHANGED\n          ââââââââââââââââââââââââââââââââââ */}\n      <AnimatePresence>\n        {showKnowledge && (\n          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}\n            className="fixed inset-0 z-50 flex items-center justify-center p-4"\n            style={{ background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(20px)' }}>\n            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}\n              className="glass-card max-w-lg w-full max-h-[80vh] overflow-y-auto p-7 space-y-5">\n              <div className="flex justify-between items-start">\n                <div>\n                  <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>\n                  \n                </div>\n                <button type="button" onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">\n                  <X size={15} className="text-white/40" />\n                </button>\n              </div>\n              {[\n                { t: t('quantumApothecaryChat.faq.whatIsThis.t'), d: t('quantumApothecaryChat.faq.whatIsThis.d') },\n                { t: t('quantumApothecaryChat.faq.nadiScan.t'), d: t('quantumApothecaryChat.faq.nadiScan.d') },\n                { t: t('quantumApothecaryChat.faq.persistentTransmission.t'), d: t('quantumApothecaryChat.faq.persistentTransmission.d') },\n                { t: t('quantumApothecaryChat.faq.siddhaWisdom.t'), d: t('quantumApothecaryChat.faq.siddhaWisdom.d') },\n              ].map(s => (\n                <div key={s.t} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">\n                  <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{s.t}</h3>\n                  <p className="text-xs text-white/50 leading-relaxed">{s.d}</p>\n                </div>\n              ))}\n              <button type="button" onClick={() => setShowKnowledge(false)} className="sqi-btn-primary w-full py-3.5 text-xs">\n                Return to Aether\n              </button>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n\n      {/* ââââââââââââââââââââââââââââââââââ\n          SESSION HISTORY DRAWER — Logic UNCHANGED\n          ââââââââââââââââââââââââââââââââââ */}\n      <AnimatePresence>\n        {sessionsOpen && (\n          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}\n            className="fixed inset-0 z-40" style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(8px)' }}\n            onClick={() => setSessionsOpen(false)}>\n            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 260, damping: 30 }}\n              className="absolute right-0 top-0 h-full w-72 sm:w-80 flex flex-col border-l border-white/[0.05]"\n              style={{ background: '#050505' }}\n              onClick={e => e.stopPropagation()}>\n              <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">\n                <div>\n                  <p className="text-xs font-black uppercase tracking-[0.3em]">{t("quantumApothecaryChat.sqiSessions")}</p>\n                  <p className="text-[9px] font-bold text-white/30 mt-0.5">\n                    {user ? t('quantumApothecaryChat.tapToReopen') : t('quantumApothecaryChat.signInSave')}\n                  </p>\n                </div>\n                <button type="button" onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">\n                  <X size={14} className="text-white/40" />\n                </button>\n              </div>\n              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">\n                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">{t("quantumApothecaryChat.loadingSessions")}</div>}\n                {!loadingSessions && sessions.length === 0 && (\n                  <div className="text-[10px] text-white/25 leading-relaxed">\n                    No prior SQI conversations yet. Your next transmission will be stored here.\n                  </div>\n                )}\n                {sessions.map(s => (\n                  <button key={s.id}\n                    onClick={async () => {\n                      if (!user) return;\n                      const { data, error } = await supabase.from('sqi_sessions').select('messages').eq('id', s.id).eq('user_id', user.id).single();\n                      if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }\n                    }}\n                    className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>\n                    <p className="text-[11px] font-black truncate">{s.title || t('quantumApothecaryChat.untitledSession')}</p>\n                    {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}\n                  </button>\n                ))}\n              </div>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n\n      {/* ââââââââââââââââââââââââââââââââââ\n          SQI-2050 CSS Light-Codes\n          ââââââââââââââââââââââââââââââââââ */}\n      <style>{`\n        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');\n\n        * { font-family: 'Plus Jakarta Sans', sans-serif; }\n\n        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */\n        .qa-sqi-chat .markdown-body {\n          width: 100%;\n          max-width: 100%;\n          min-width: 0;\n          word-break: normal;\n          overflow-wrap: break-word;\n        }\n        .qa-sqi-chat .markdown-body p,\n        .qa-sqi-chat .markdown-body li,\n        .qa-sqi-chat .markdown-body h1,\n        .qa-sqi-chat .markdown-body h2,\n        .qa-sqi-chat .markdown-body h3 {\n          max-width: 100%;\n        }\n\n        /* Transcript must be selectable/copyable (mobile WebKit + inherited UI guards). */\n        .qa-sqi-chat {\n          -webkit-user-select: text;\n          user-select: text;\n          -webkit-touch-callout: default;\n        }\n\n        .sqi-message strong,\n        .sqi-message b {\n          color: rgba(225,210,185,0.92);\n          font-weight: 700;\n        }\n        .sqi-message .sqi-diamond-heading,\n        .sqi-message .sqi-diamond-heading strong,\n        .sqi-message .sqi-diamond-heading b {\n          color: #D4AF37;\n        }\n        .sqi-message p,\n        .sqi-message li {\n          margin-bottom: 12px;\n          word-break: break-word;\n          overflow-wrap: anywhere;\n          white-space: pre-wrap;\n          max-width: 100%;\n        }\n\n        /* ââ SQI-2050 Glassmorphism Standard ââ */\n        .glass-card {\n          background: rgba(255, 255, 255, 0.02);\n          backdrop-filter: blur(40px);\n          -webkit-backdrop-filter: blur(40px);\n          border: 1px solid rgba(255, 255, 255, 0.05);\n          border-radius: 40px;\n        }\n\n        /* ââ Siddha-Gold Primary Button ââ */\n        .sqi-btn-primary {\n          background: linear-gradient(135deg, #D4AF37 0%, #B8940A 100%);\n          color: #050505;\n          border-radius: 20px;\n          font-weight: 900;\n          font-size: 10px;\n          letter-spacing: 0.25em;\n          text-transform: uppercase;\n          transition: all 0.2s ease;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          gap: 8px;\n          box-shadow: 0 0 20px rgba(212,175,55,0.2);\n        }\n        .sqi-btn-primary:hover:not(:disabled) {\n          box-shadow: 0 0 32px rgba(212,175,55,0.4);\n          transform: translateY(-1px);\n        }\n\n        /* ââ Ghost Button ââ */\n        .sqi-btn-ghost {\n          background: rgba(255,255,255,0.02);\n          border: 1px solid rgba(255,255,255,0.08);\n          color: rgba(255,255,255,0.6);\n          border-radius: 20px;\n          font-weight: 800;\n          font-size: 10px;\n          letter-spacing: 0.25em;\n          text-transform: uppercase;\n          transition: all 0.2s ease;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n        }\n        .sqi-btn-ghost:hover {\n          background: rgba(212,175,55,0.08);\n          border-color: rgba(212,175,55,0.25);\n          color: #D4AF37;\n        }\n\n        /* ââ Nadi Line Animations (unchanged) ââ */\n        .nadi-line {\n          stroke-dasharray: 1000;\n          stroke-dashoffset: 1000;\n          animation: draw 10s linear infinite;\n          filter: drop-shadow(0 0 2px currentColor);\n          opacity: 0.3;\n          transition: all 0.5s ease;\n        }\n        .nadi-line.active {\n          opacity: 1;\n          stroke-width: 1.5;\n          filter: drop-shadow(0 0 8px rgba(212,175,55,0.8));\n        }\n        @keyframes draw { to { stroke-dashoffset: 0; } }\n\n        /* ââ Gold Glow Pulse on scan ââ */\n        @keyframes gold-pulse {\n          0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }\n          50% { box-shadow: 0 0 40px 8px rgba(212,175,55,0.15); }\n        }\n\n        /* ââ Scrollbar ââ */\n        .custom-scrollbar::-webkit-scrollbar { width: 3px; }\n        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }\n        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }\n        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }\n  @keyframes scan-line {\n    0%   { background-position: 0 -100%; }\n    100% { background-position: 0 200%; }\n  }\n  @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }\n  @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }\n  @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }\n  @keyframes qa-spin-slow { to{transform:rotate(360deg)} }\n  @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }\n  .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }\n  .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }\n  .qa-btn-shine { position:relative; overflow:hidden; }\n  .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }\n\n  /* ═══ ANCIENT SCRIPTURE SKIN ═══ */\n\n  .sqi-manuscript-scroll {\n    border-radius: 2px !important;\n    position: relative;\n  }\n\n  .sqi-ancient-body p {\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 17px !important;\n    line-height: 1.9 !important;\n    color: rgba(225,210,185,0.92) !important;\n    margin-bottom: 16px !important;\n    width: 100% !important;\n    padding: 0 14px !important;\n  }\n\n  .sqi-ancient-body p.sqi-nadi-line,\n  .sqi-ancient-body .sqi-nadi-line,\n  p.sqi-nadi-line,\n  .sqi-nadi-line {\n    font-family: 'Plus Jakarta Sans', sans-serif !important;\n    font-size: 11px !important;\n    line-height: 1.5 !important;\n    color: #22D3EE !important;\n    margin: 0 !important;\n    font-style: normal !important;\n    font-weight: 600 !important;\n    opacity: 0.8;\n    letter-spacing: 0.02em !important;\n  }\n\n  @keyframes hShimmer {\n    0% { background-position: 200% center; }\n    100% { background-position: -200% center; }\n  }\n\n  @keyframes pillBreath {\n    0%,100% { box-shadow:0 0 0 1px rgba(212,175,55,0.10),0 0 12px rgba(212,175,55,0.12),0 0 28px rgba(212,175,55,0.07),inset 0 0 14px rgba(212,175,55,0.03); }\n    50%      { box-shadow:0 0 0 1px rgba(212,175,55,0.20),0 0 22px rgba(212,175,55,0.22),0 0 44px rgba(212,175,55,0.12),inset 0 0 22px rgba(212,175,55,0.06); }\n  }\n  @keyframes micPulse {\n    0%,100% { box-shadow:0 0 8px rgba(212,175,55,0.35),0 0 18px rgba(212,175,55,0.18); }\n    50%      { box-shadow:0 0 16px rgba(212,175,55,0.65),0 0 32px rgba(212,175,55,0.32); }\n  }\n  @keyframes bannerAura {\n    0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.18), 0 2px 18px rgba(212,175,55,0.10); }\n    50%      { box-shadow: 0 0 0 1px rgba(212,175,55,0.32), 0 2px 32px rgba(212,175,55,0.20); }\n  }\n  @keyframes yPulse {\n    0%,100% { filter: drop-shadow(0 0 2px rgba(212,175,55,0.7)) drop-shadow(0 0 6px rgba(212,175,55,0.35)); }\n    50%     { filter: drop-shadow(0 0 6px rgba(212,175,55,1))   drop-shadow(0 0 14px rgba(212,175,55,0.65)); }\n  }\n\n  .rx-pulse-dot {\n    display: inline-block;\n    width: 7px; height: 7px;\n    border-radius: 50%;\n    background: #D4AF37;\n    box-shadow: 0 0 6px #D4AF37, 0 0 14px rgba(212,175,55,0.55);\n    animation: rxPulse 1.8s ease-in-out infinite;\n    flex-shrink: 0;\n  }\n  @keyframes rxPulse {\n    0%,100% { opacity:1; transform:scale(1); }\n    50%      { opacity:0.4; transform:scale(0.65); }\n  }\n\n  .sqi-ancient-body .sqi-diamond-heading {\n    /* Layout only — shimmer lives on .sqi-master-name-shimmer spans, NOT this container div.\n       Applying background-clip:text to a flex container breaks child span rendering on iOS/Android. */\n    margin-bottom: 12px !important;\n    display: flex !important;\n    align-items: center !important;\n    overflow: visible !important;\n  }\n  .sqi-master-shimmer {\n    font-family: 'Cinzel', serif !important;\n    font-size: 26px !important;\n    font-weight: 600 !important;\n    letter-spacing: 0.04em !important;\n    line-height: 1.2 !important;\n    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%) !important;\n    background-size: 200% auto !important;\n    -webkit-background-clip: text !important;\n    background-clip: text !important;\n    -webkit-text-fill-color: transparent !important;\n    animation: hShimmer 5s linear infinite !important;\n    margin-bottom: 12px !important;\n    text-shadow: none !important;\n  }\n\n  .sqi-ancient-body strong,\n  .sqi-ancient-body b {\n    color: #D4AF37 !important;\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 1em !important;\n    letter-spacing: 0 !important;\n    font-weight: 400 !important;\n    font-style: normal !important;\n    text-shadow: none !important;\n  }\n\n  .sqi-ancient-body li {\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 18px !important;\n    line-height: 1.85 !important;\n    color: rgba(225,210,185,0.85) !important;\n  }\n      `}</style>\n\n      {/* Scroll-to-top FAB */}\n      <ScrollToTopButton />\n    </div>\n  );\n}\n\nfunction ScrollToTopButton() {\n  const [show, setShow] = useState(false);\n  useEffect(() => {\n    const onScroll = () => setShow(window.scrollY > 600);\n    onScroll();\n    window.addEventListener('scroll', onScroll, { passive: true });\n    return () => window.removeEventListener('scroll', onScroll);\n  }, []);\n  if (!show) return null;\n  return (\n    <button\n      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}\n      className="hidden"\n      aria-label={t("quantumApothecaryChat.scrollToTop")}\n    >\n      <ChevronUp size={20} />\n    </button>\n  );\n}\n\n/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ\n   OUTER WRAPPER — auth shell only\n   Tier access is enforced by QuantumApothecaryGate on the /quantum-apothecary route.\n   Do not gate on membership loading here: periodic membership refetches were setting\n   loading=true and unmounting the whole page (felt like endless reload).\n   ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */\nexport default function QuantumApothecary() {\n  const { user, isLoading: authLoading } = useAuth();\n\n  if (authLoading) {\n    return (\n      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">\n        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>\n      </div>\n    );\n  }\n\n  if (!user) return <Navigate to="/auth" replace />;\n\n  return <QuantumApothecaryInner />;\n}\n
+                          <p className="text-[13px] font-black uppercase tracking-[0.15em] text-white/85">{c.label}</p>
+                          <p className="mt-2 text-[13px] leading-snug text-white/85">{c.val}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {resonanceMatches.length > 0 && (
+                    <ScalarTop33Wrapper>
+                      {/* ââ HEADER ââ */}
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
+                        <div>
+                          <p style={{ fontSize:13, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', color:'#D4AF37', textShadow:'0 0 14px rgba(212,175,55,0.35)' }}>
+                            ⟁ Top 33
+                          </p>
+                          <p style={{ marginTop:3, fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.04em' }}>
+                            {resonanceMatches.filter((r) =>
+                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                            ).length}{' '}
+                            / {resonanceMatches.length} from scan already active in field
+                          </p>
+                        </div>
+                        {/* ââ ACTIVATE BUTTON ââ */}
+                        {(() => {
+                          const activeFromScanCount = resonanceMatches.filter((r) =>
+                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                          ).length;
+                          const newCount = resonanceMatches.length - activeFromScanCount;
+                          const noneNew = newCount === 0;
+                          return (
+                            <button
+                              type="button"
+                              onClick={activateAllTop33ToField}
+                              disabled={noneNew}
+                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              style={{
+                                background: noneNew
+                                  ? 'rgba(212,175,55,0.08)'
+                                  : 'rgba(212,175,55,0.15)',
+                                border: noneNew
+                                  ? '1px solid rgba(212,175,55,0.25)'
+                                  : '1px solid rgba(212,175,55,0.5)',
+                                color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                                boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
+                              }}
+                            >
+                              {noneNew
+                                ? '⟁ All scan rows active'
+                                : `⟁ Activate All New (${newCount})`}
+                            </button>
+                          );
+                        })()}
+                      </div>
+                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
+                      <div style={{ maxHeight:"min(68vh,500px)", overflowY:"auto", padding:"8px 14px 14px", display:"flex", flexDirection:"column", gap:6, scrollbarWidth:"thin" }}>
+                        {resonanceMatches.map((row, idx) => {
+                          const isActive = activeTransmissions.some((t) =>
+                            fieldTransmissionMatchesRow(t, row),
+                          );
+                          return (
+                            <div
+                              style={{
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "11px 12px", borderRadius: 16,
+                                background: isActive ? "rgba(255,255,255,0.015)" : "rgba(212,175,55,0.04)",
+                                border: isActive ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(212,175,55,0.14)",
+                                opacity: isActive ? 0.52 : 1, transition: "all 0.25s",
+                                boxShadow: isActive ? "none" : "0 2px 12px rgba(212,175,55,0.06)",
+                              }}
+                            >
+
+                              {/* Pct bar */}
+                              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, flexShrink:0, width:38 }}>
+                                <span style={{ fontSize:15, fontWeight:900, lineHeight:1, color: isActive ? "rgba(255,255,255,0.25)" : "#D4AF37", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                                  {row.pct}
+                                </span>
+                                <div style={{ width:36, height:4, borderRadius:4, overflow:"hidden", background:"rgba(255,255,255,0.07)" }}>
+                                  <div style={{ height:"100%", borderRadius:4, width:`${row.pct}%`, background: isActive ? "rgba(255,255,255,0.16)" : "linear-gradient(90deg,#D4AF37,#F5E17A)", transition:"width 0.8s ease", boxShadow: isActive ? "none" : "0 0 6px rgba(212,175,55,0.5)" }} />
+                                </div>
+                              </div>
+                              {/* Name + category */}
+                              <div className="flex min-w-0 flex-1 flex-col">
+                                <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:13, fontWeight:700, lineHeight:1.3, color: isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.92)" }}>
+                                  {row.name}
+
+                                </span>
+                                {row.rowCategory && (
+                                  <span
+                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"
+                                    style={{
+                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',
+                                    }}
+                                  >
+                                    {row.rowCategory}
+                                  </span>
+                                )}
+                              </div>
+                              {isActive ? (
+                                <span
+                                  style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}
+                                  aria-label={t("quantumApothecaryChat.alreadyActive")}
+                                >
+                                  <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>
+                                  <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>
+                                </span>
+
+
+
+
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveTransmissions((prev) => {
+                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {
+                                        return prev;
+                                      }
+                                      return [
+                                        ...prev,
+                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),
+                                      ];
+                                    });
+                                    toast.success(`⟁ ${row.name} activated`);
+                                  }}
+                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"
+                                  style={{
+                                    background: 'transparent',
+                                    color: 'rgba(255,255,255,0.35)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                  }}
+                                >
+                                  + Add
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScalarTop33Wrapper>
+                  )}
+                </ScalarVoiceWrapper>
+                  {/* How It Works */}
+                <ScalarHowItWorksCard />
+                </div>
+              </div>
+
+              {/* ══ CARD: Top 33 Resonance Matches ══ */}
+              {resonanceMatches.length > 0 && (
+                <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>
+                  <div
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
+                    onClick={() => setCardT33Open(o => !o)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => e.key === 'Enter' && setCardT33Open(o => !o)}
+                  >
+                    <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%)', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(212,175,55,0.22),rgba(0,0,0,0))', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 14px rgba(212,175,55,0.18),inset 0 0 8px rgba(212,175,55,0.08)' }}>⟁</div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardT33Open ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardT33Open ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Top 33 Resonance Matches</div>
+                        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>From your Bio-Signature</div>
+                      </div>
+                    </div>
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#D4AF37', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 10px rgba(212,175,55,0.14)' }}>{resonanceMatches.length} Matches</div>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardT33Open ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardT33Open ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardT33Open ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardT33Open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
+                    </div>
+                  </div>
+                  <div style={{ maxHeight: cardT33Open ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
+                    <ScalarTop33Wrapper>
+                      {/* ── HEADER ── */}
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
+                        <div>
+                          <p style={{ fontSize:13, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', color:'#D4AF37', textShadow:'0 0 14px rgba(212,175,55,0.35)' }}>
+                            ⟁ Top 33
+                          </p>
+                          <p style={{ marginTop:3, fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.04em' }}>
+                            {resonanceMatches.filter((r) =>
+                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                            ).length}{' '}
+                            / {resonanceMatches.length} from scan already active in field
+                          </p>
+                        </div>
+                        {/* ââ ACTIVATE BUTTON ââ */}
+                        {(() => {
+                          const activeFromScanCount = resonanceMatches.filter((r) =>
+                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                          ).length;
+                          const newCount = resonanceMatches.length - activeFromScanCount;
+                          const noneNew = newCount === 0;
+                          return (
+                            <button
+                              type="button"
+                              onClick={activateAllTop33ToField}
+                              disabled={noneNew}
+                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              style={{
+                                background: noneNew
+                                  ? 'rgba(212,175,55,0.08)'
+                                  : 'rgba(212,175,55,0.15)',
+                                border: noneNew
+                                  ? '1px solid rgba(212,175,55,0.25)'
+                                  : '1px solid rgba(212,175,55,0.5)',
+                                color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                                boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
+                              }}
+                            >
+                              {noneNew
+                                ? '⟁ All scan rows active'
+                                : `⟁ Activate All New (${newCount})`}
+                            </button>
+                          );
+                        })()}
+                      </div>
+                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
+                      <div style={{ maxHeight:"min(68vh,500px)", overflowY:"auto", padding:"8px 14px 14px", display:"flex", flexDirection:"column", gap:6, scrollbarWidth:"thin" }}>
+                        {resonanceMatches.map((row, idx) => {
+                          const isActive = activeTransmissions.some((t) =>
+                            fieldTransmissionMatchesRow(t, row),
+                          );
+                          return (
+                            <div
+                              style={{
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "11px 12px", borderRadius: 16,
+                                background: isActive ? "rgba(255,255,255,0.015)" : "rgba(212,175,55,0.04)",
+                                border: isActive ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(212,175,55,0.14)",
+                                opacity: isActive ? 0.52 : 1, transition: "all 0.25s",
+                                boxShadow: isActive ? "none" : "0 2px 12px rgba(212,175,55,0.06)",
+                              }}
+                            >
+
+                              {/* Pct bar */}
+                              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, flexShrink:0, width:38 }}>
+                                <span style={{ fontSize:15, fontWeight:900, lineHeight:1, color: isActive ? "rgba(255,255,255,0.25)" : "#D4AF37", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                                  {row.pct}
+                                </span>
+                                <div style={{ width:36, height:4, borderRadius:4, overflow:"hidden", background:"rgba(255,255,255,0.07)" }}>
+                                  <div style={{ height:"100%", borderRadius:4, width:`${row.pct}%`, background: isActive ? "rgba(255,255,255,0.16)" : "linear-gradient(90deg,#D4AF37,#F5E17A)", transition:"width 0.8s ease", boxShadow: isActive ? "none" : "0 0 6px rgba(212,175,55,0.5)" }} />
+                                </div>
+                              </div>
+                              {/* Name + category */}
+                              <div className="flex min-w-0 flex-1 flex-col">
+                                <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:13, fontWeight:700, lineHeight:1.3, color: isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.92)" }}>
+                                  {row.name}
+
+                                </span>
+                                {row.rowCategory && (
+                                  <span
+                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"
+                                    style={{
+                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',
+                                    }}
+                                  >
+                                    {row.rowCategory}
+                                  </span>
+                                )}
+                              </div>
+                              {isActive ? (
+                                <span
+                                  style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}
+                                  aria-label={t("quantumApothecaryChat.alreadyActive")}
+                                >
+                                  <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>
+                                  <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>
+                                </span>
+
+
+
+
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveTransmissions((prev) => {
+                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {
+                                        return prev;
+                                      }
+                                      return [
+                                        ...prev,
+                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),
+                                      ];
+                                    });
+                                    toast.success(`⟁ ${row.name} activated`);
+                                  }}
+                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"
+                                  style={{
+                                    background: 'transparent',
+                                    color: 'rgba(255,255,255,0.35)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                  }}
+                                >
+                                  + Add
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScalarTop33Wrapper>
+                  </div>
+                </div>
+              )}
+
+              {/* ══ CARD: Frequency Library ══ */}
+              <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>
+                <div
+                  style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
+                  onClick={() => setCardLibOpen(o => !o)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && setCardLibOpen(o => !o)}
+                >
+                  <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.10) 0%,transparent 70%)', pointerEvents: 'none' }} />
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(212,175,55,0.22),rgba(0,0,0,0))', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 14px rgba(212,175,55,0.18),inset 0 0 8px rgba(212,175,55,0.08)' }}>◈</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardLibOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardLibOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Frequency Library</div>
+                      <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Quantum Essences · Activations</div>
+                    </div>
+                  </div>
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: libraryUnlocked ? '#D4AF37' : 'rgba(255,255,255,0.30)', background: libraryUnlocked ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.03)', border: libraryUnlocked ? '1px solid rgba(212,175,55,0.28)' : '1px solid rgba(255,255,255,0.09)', boxShadow: libraryUnlocked ? '0 0 10px rgba(212,175,55,0.12)' : 'none' }}>{libraryUnlocked ? 'Unlocked' : 'Scan first'}</div>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardLibOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardLibOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardLibOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardLibOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
+                  </div>
+                </div>
+                <div style={{ maxHeight: cardLibOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
+                {selectedActivations.length > 0 && (
+                  <div style={{
+                    position: 'relative',
+                    borderRadius: 32,
+                    overflow: 'hidden',
+                    background: 'rgba(5,5,5,0.85)',
+                    border: '1px solid rgba(212,175,55,0.25)',
+                    boxShadow: '0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03)',
+                    animation: 'mixerPulse 3s ease-in-out infinite',
+                  }}>
+                    <style>{`\n                      @keyframes mixerPulse {\n                        0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03); }\n                        50%     { box-shadow: 0 0 0 1px rgba(212,175,55,0.28), 0 0 60px rgba(212,175,55,0.28), 0 0 120px rgba(212,175,55,0.14), inset 0 0 80px rgba(212,175,55,0.06); }\n                      }\n                      @keyframes orbFloat {\n                        0%,100% { transform: translateY(0px) scale(1); opacity: 0.7; }\n                        50%     { transform: translateY(-4px) scale(1.04); opacity: 1; }\n                      }\n                      @keyframes ringRotate {\n                        from { transform: rotate(0deg); }\n                        to   { transform: rotate(360deg); }\n                      }\n                      @keyframes ringRotateR {\n                        from { transform: rotate(0deg); }\n                        to   { transform: rotate(-360deg); }\n                      }\n                      @keyframes transmitShine {\n                        0%   { background-position: -200% center; }\n                        100% { background-position: 200% center; }\n                      }\n                      .mixer-freq-orb {\n                        position: relative;\n                        display: inline-flex;\n                        align-items: center;\n                        gap: 8px;\n                        padding: 10px 16px;\n                        border-radius: 100px;\n                        font-size: 13px;\n                        font-weight: 700;\n                        color: rgba(255,255,255,0.92);\n                        background: rgba(212,175,55,0.06);\n                        border: 1px solid rgba(212,175,55,0.22);\n                        animation: orbFloat 3s ease-in-out infinite;\n                        backdrop-filter: blur(12px);\n                        transition: all 0.25s;\n                      }\n                      .mixer-freq-orb::before {\n                        content: '';\n                        position: absolute;\n                        inset: -1px;\n                        border-radius: 100px;\n                        background: linear-gradient(135deg, rgba(212,175,55,0.18), transparent, rgba(212,175,55,0.08));\n                        pointer-events: none;\n                      }\n                      .mixer-remove-btn {\n                        display: flex; align-items: center; justify-content: center;\n                        width: 18px; height: 18px; border-radius: 50%;\n                        background: rgba(255,255,255,0.06); border: none;\n                        cursor: pointer; color: rgba(255,255,255,0.35);\n                        transition: all 0.2s; flex-shrink: 0;\n                      }\n                      .mixer-remove-btn:hover { background: rgba(239,68,68,0.2); color: #ef4444; }\n                    `}</style>
+
+                    {/* Sacred geometry background rings */}
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', overflow: 'hidden' }}>
+                      <div style={{ width: 300, height: 300, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.06)', animation: 'ringRotate 20s linear infinite', position: 'absolute' }} />
+                      <div style={{ width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.05)', animation: 'ringRotateR 15s linear infinite', position: 'absolute' }} />
+                      <div style={{ width: 140, height: 140, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.08)', animation: 'ringRotate 10s linear infinite', position: 'absolute' }} />
+                      {/* Central Sri Yantra dot */}
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9), 0 0 30px rgba(212,175,55,0.5)', position: 'absolute', opacity: 0.6 }} />
+                      {/* Radial glow */}
+                      <div style={{ width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)', position: 'absolute' }} />
+                    </div>
+
+                    {/* Header */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '18px 20px 12px', borderBottom: '1px solid rgba(212,175,55,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        {/* Yantra icon */}
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(212,175,55,0.20)' }}>
+                          <svg width="16" height="16" viewBox="0 0 100 100" fill="none">
+                            <polygon points="50,8 92,72 8,72" fill="none" stroke="#D4AF37" strokeWidth="4" strokeLinejoin="round"/>
+                            <polygon points="50,92 8,28 92,28" fill="none" stroke="#D4AF37" strokeWidth="4" strokeLinejoin="round"/>
+                            <circle cx="50" cy="50" r="5" fill="#D4AF37"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.02em', color: '#D4AF37', textShadow: '0 0 12px rgba(212,175,55,0.4)', margin: 0 }}>
+                            Aetheric Mixer
+                          </p>
+                          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', margin: 0 }}>
+                            Quantum Blend Chamber
+                          </p>
+                        </div>
+                      </div>
+                      {/* Slot counter as glowing orbs */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {Array.from({ length: AETHERIC_MIXER_MAX_SLOTS }).map((_, i) => (
+                          <div key={i} style={{
+                            width: 6, height: 6, borderRadius: '50%',
+                            background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)',
+                            boxShadow: i < selectedActivations.length ? '0 0 6px rgba(212,175,55,0.8)' : 'none',
+                            transition: 'all 0.3s',
+                          }} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Frequency orbs */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '16px 16px 12px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {selectedActivations.map((act, idx) => (
+                        <span
+                          key={act.id}
+                          className="mixer-freq-orb"
+                          style={{ animationDelay: `${idx * 0.18}s`, borderColor: `${act.color}40` }}
+                        >
+                          {/* Type color dot */}
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: act.color, boxShadow: `0 0 6px ${act.color}`, flexShrink: 0, display: 'inline-block' }} />
+                          {act.name}
+                          <button
+                            type="button"
+                            onClick={() => removeActivation(act.id)}
+                            className="mixer-remove-btn"
+                            aria-label="Remove"
+                          >
+                            <X size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Transmit button */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '4px 16px 18px' }}>
+                      <button
+                        type="button"
+                        onClick={transmitCocktail}
+                        disabled={selectedActivations.length === 0}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          borderRadius: 100,
+                          border: '1px solid rgba(212,175,55,0.5)',
+                          background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #B8960C 100%)',
+                          backgroundSize: '200% auto',
+                          animation: 'transmitShine 3s linear infinite',
+                          color: '#050505',
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: '0.22em',
+                          textTransform: 'uppercase',
+                          cursor: selectedActivations.length === 0 ? 'default' : 'pointer',
+                          opacity: selectedActivations.length === 0 ? 0.2 : 1,
+                          boxShadow: '0 0 20px rgba(212,175,55,0.35), 0 0 50px rgba(212,175,55,0.18)',
+                          fontFamily: 'inherit',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 10,
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>⟁</span>
+                        Transmit to Field
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="relative">
+                  <div
+                    className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
+                    style={{ transition: 'filter 0.35s ease, opacity 0.35s ease' }}
+                  >
+                    <Suspense fallback={
+                      <div className="glass-card rounded-[28px] p-6">
+                        <div className="mb-4">
+                          <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>
+                          <p className="mt-0.5 text-[13px] text-white/35">Loading quantum essences...</p>
+                        </div>
+                        <div className="mb-3 h-8 animate-pulse rounded-xl bg-white/[0.03]" />
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
+                          <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
+                        </div>
+                      </div>
+                    }>
+                      <FrequencyLibrarySection
+                        activeCategory={activeCategory}
+                        setActiveCategory={setActiveCategory}
+                        selectedActivations={selectedActivations}
+                        addActivation={addActivation}
+                        maxSlots={AETHERIC_MIXER_MAX_SLOTS}
+                        activeTransmissionKeys={activeTransmissionKeys}
+                      />
+                    </Suspense>
+                  </div>
+                  {!libraryUnlocked && (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[28px] bg-black/25 px-6 text-center">
+                      <p className="max-w-sm text-[13px] font-semibold leading-relaxed text-white/88">
+                        {t('quantumApothecaryChat.voiceScanRequired')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div ref={chatPanelRef} className="w-full min-w-0">
+              {renderChatPanel()}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ââââââââââââââââââââââââââââââââââ
+          KNOWLEDGE MODAL — SQI-2050 Style
+          Logic UNCHANGED
+          ââââââââââââââââââââââââââââââââââ */}
+      <AnimatePresence>
+        {showKnowledge && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(20px)' }}>
+            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+              className="glass-card max-w-lg w-full max-h-[80vh] overflow-y-auto p-7 space-y-5">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>
+                  
+                </div>
+                <button type="button" onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
+                  <X size={15} className="text-white/40" />
+                </button>
+              </div>
+              {[
+                { t: t('quantumApothecaryChat.faq.whatIsThis.t'), d: t('quantumApothecaryChat.faq.whatIsThis.d') },
+                { t: t('quantumApothecaryChat.faq.nadiScan.t'), d: t('quantumApothecaryChat.faq.nadiScan.d') },
+                { t: t('quantumApothecaryChat.faq.persistentTransmission.t'), d: t('quantumApothecaryChat.faq.persistentTransmission.d') },
+                { t: t('quantumApothecaryChat.faq.siddhaWisdom.t'), d: t('quantumApothecaryChat.faq.siddhaWisdom.d') },
+              ].map(s => (
+                <div key={s.t} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                  <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{s.t}</h3>
+                  <p className="text-xs text-white/50 leading-relaxed">{s.d}</p>
+                </div>
+              ))}
+              <button type="button" onClick={() => setShowKnowledge(false)} className="sqi-btn-primary w-full py-3.5 text-xs">
+                Return to Aether
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ââââââââââââââââââââââââââââââââââ
+          SESSION HISTORY DRAWER — Logic UNCHANGED
+          ââââââââââââââââââââââââââââââââââ */}
+      <AnimatePresence>
+        {sessionsOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40" style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setSessionsOpen(false)}>
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+              className="absolute right-0 top-0 h-full w-72 sm:w-80 flex flex-col border-l border-white/[0.05]"
+              style={{ background: '#050505' }}
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.3em]">{t("quantumApothecaryChat.sqiSessions")}</p>
+                  <p className="text-[9px] font-bold text-white/30 mt-0.5">
+                    {user ? t('quantumApothecaryChat.tapToReopen') : t('quantumApothecaryChat.signInSave')}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">
+                  <X size={14} className="text-white/40" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">{t("quantumApothecaryChat.loadingSessions")}</div>}
+                {!loadingSessions && sessions.length === 0 && (
+                  <div className="text-[10px] text-white/25 leading-relaxed">
+                    No prior SQI conversations yet. Your next transmission will be stored here.
+                  </div>
+                )}
+                {sessions.map(s => (
+                  <button key={s.id}
+                    onClick={async () => {
+                      if (!user) return;
+                      const { data, error } = await supabase.from('sqi_sessions').select('messages').eq('id', s.id).eq('user_id', user.id).single();
+                      if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }
+                    }}
+                    className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
+                    <p className="text-[11px] font-black truncate">{s.title || t('quantumApothecaryChat.untitledSession')}</p>
+                    {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ââââââââââââââââââââââââââââââââââ
+          SQI-2050 CSS Light-Codes
+          ââââââââââââââââââââââââââââââââââ */}
+      <style>{`\n        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');\n\n        * { font-family: 'Plus Jakarta Sans', sans-serif; }\n\n        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */\n        .qa-sqi-chat .markdown-body {\n          width: 100%;\n          max-width: 100%;\n          min-width: 0;\n          word-break: normal;\n          overflow-wrap: break-word;\n        }\n        .qa-sqi-chat .markdown-body p,\n        .qa-sqi-chat .markdown-body li,\n        .qa-sqi-chat .markdown-body h1,\n        .qa-sqi-chat .markdown-body h2,\n        .qa-sqi-chat .markdown-body h3 {\n          max-width: 100%;\n        }\n\n        /* Transcript must be selectable/copyable (mobile WebKit + inherited UI guards). */\n        .qa-sqi-chat {\n          -webkit-user-select: text;\n          user-select: text;\n          -webkit-touch-callout: default;\n        }\n\n        .sqi-message strong,\n        .sqi-message b {\n          color: rgba(225,210,185,0.92);\n          font-weight: 700;\n        }\n        .sqi-message .sqi-diamond-heading,\n        .sqi-message .sqi-diamond-heading strong,\n        .sqi-message .sqi-diamond-heading b {\n          color: #D4AF37;\n        }\n        .sqi-message p,\n        .sqi-message li {\n          margin-bottom: 12px;\n          word-break: break-word;\n          overflow-wrap: anywhere;\n          white-space: pre-wrap;\n          max-width: 100%;\n        }\n\n        /* ââ SQI-2050 Glassmorphism Standard ââ */\n        .glass-card {\n          background: rgba(255, 255, 255, 0.02);\n          backdrop-filter: blur(40px);\n          -webkit-backdrop-filter: blur(40px);\n          border: 1px solid rgba(255, 255, 255, 0.05);\n          border-radius: 40px;\n        }\n\n        /* ââ Siddha-Gold Primary Button ââ */\n        .sqi-btn-primary {\n          background: linear-gradient(135deg, #D4AF37 0%, #B8940A 100%);\n          color: #050505;\n          border-radius: 20px;\n          font-weight: 900;\n          font-size: 10px;\n          letter-spacing: 0.25em;\n          text-transform: uppercase;\n          transition: all 0.2s ease;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          gap: 8px;\n          box-shadow: 0 0 20px rgba(212,175,55,0.2);\n        }\n        .sqi-btn-primary:hover:not(:disabled) {\n          box-shadow: 0 0 32px rgba(212,175,55,0.4);\n          transform: translateY(-1px);\n        }\n\n        /* ââ Ghost Button ââ */\n        .sqi-btn-ghost {\n          background: rgba(255,255,255,0.02);\n          border: 1px solid rgba(255,255,255,0.08);\n          color: rgba(255,255,255,0.6);\n          border-radius: 20px;\n          font-weight: 800;\n          font-size: 10px;\n          letter-spacing: 0.25em;\n          text-transform: uppercase;\n          transition: all 0.2s ease;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n        }\n        .sqi-btn-ghost:hover {\n          background: rgba(212,175,55,0.08);\n          border-color: rgba(212,175,55,0.25);\n          color: #D4AF37;\n        }\n\n        /* ââ Nadi Line Animations (unchanged) ââ */\n        .nadi-line {\n          stroke-dasharray: 1000;\n          stroke-dashoffset: 1000;\n          animation: draw 10s linear infinite;\n          filter: drop-shadow(0 0 2px currentColor);\n          opacity: 0.3;\n          transition: all 0.5s ease;\n        }\n        .nadi-line.active {\n          opacity: 1;\n          stroke-width: 1.5;\n          filter: drop-shadow(0 0 8px rgba(212,175,55,0.8));\n        }\n        @keyframes draw { to { stroke-dashoffset: 0; } }\n\n        /* ââ Gold Glow Pulse on scan ââ */\n        @keyframes gold-pulse {\n          0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }\n          50% { box-shadow: 0 0 40px 8px rgba(212,175,55,0.15); }\n        }\n\n        /* ââ Scrollbar ââ */\n        .custom-scrollbar::-webkit-scrollbar { width: 3px; }\n        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }\n        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }\n        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }\n  @keyframes scan-line {\n    0%   { background-position: 0 -100%; }\n    100% { background-position: 0 200%; }\n  }\n  @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }\n  @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }\n  @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }\n  @keyframes qa-spin-slow { to{transform:rotate(360deg)} }\n  @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }\n  .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }\n  .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }\n  .qa-btn-shine { position:relative; overflow:hidden; }\n  .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }\n\n  /* ═══ ANCIENT SCRIPTURE SKIN ═══ */\n\n  .sqi-manuscript-scroll {\n    border-radius: 2px !important;\n    position: relative;\n  }\n\n  .sqi-ancient-body p {\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 17px !important;\n    line-height: 1.9 !important;\n    color: rgba(225,210,185,0.92) !important;\n    margin-bottom: 16px !important;\n    width: 100% !important;\n    padding: 0 14px !important;\n  }\n\n  .sqi-ancient-body p.sqi-nadi-line,\n  .sqi-ancient-body .sqi-nadi-line,\n  p.sqi-nadi-line,\n  .sqi-nadi-line {\n    font-family: 'Plus Jakarta Sans', sans-serif !important;\n    font-size: 11px !important;\n    line-height: 1.5 !important;\n    color: #22D3EE !important;\n    margin: 0 !important;\n    font-style: normal !important;\n    font-weight: 600 !important;\n    opacity: 0.8;\n    letter-spacing: 0.02em !important;\n  }\n\n  @keyframes hShimmer {\n    0% { background-position: 200% center; }\n    100% { background-position: -200% center; }\n  }\n\n  @keyframes pillBreath {\n    0%,100% { box-shadow:0 0 0 1px rgba(212,175,55,0.10),0 0 12px rgba(212,175,55,0.12),0 0 28px rgba(212,175,55,0.07),inset 0 0 14px rgba(212,175,55,0.03); }\n    50%      { box-shadow:0 0 0 1px rgba(212,175,55,0.20),0 0 22px rgba(212,175,55,0.22),0 0 44px rgba(212,175,55,0.12),inset 0 0 22px rgba(212,175,55,0.06); }\n  }\n  @keyframes micPulse {\n    0%,100% { box-shadow:0 0 8px rgba(212,175,55,0.35),0 0 18px rgba(212,175,55,0.18); }\n    50%      { box-shadow:0 0 16px rgba(212,175,55,0.65),0 0 32px rgba(212,175,55,0.32); }\n  }\n  @keyframes bannerAura {\n    0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.18), 0 2px 18px rgba(212,175,55,0.10); }\n    50%      { box-shadow: 0 0 0 1px rgba(212,175,55,0.32), 0 2px 32px rgba(212,175,55,0.20); }\n  }\n  @keyframes yPulse {\n    0%,100% { filter: drop-shadow(0 0 2px rgba(212,175,55,0.7)) drop-shadow(0 0 6px rgba(212,175,55,0.35)); }\n    50%     { filter: drop-shadow(0 0 6px rgba(212,175,55,1))   drop-shadow(0 0 14px rgba(212,175,55,0.65)); }\n  }\n\n  .rx-pulse-dot {\n    display: inline-block;\n    width: 7px; height: 7px;\n    border-radius: 50%;\n    background: #D4AF37;\n    box-shadow: 0 0 6px #D4AF37, 0 0 14px rgba(212,175,55,0.55);\n    animation: rxPulse 1.8s ease-in-out infinite;\n    flex-shrink: 0;\n  }\n  @keyframes rxPulse {\n    0%,100% { opacity:1; transform:scale(1); }\n    50%      { opacity:0.4; transform:scale(0.65); }\n  }\n\n  .sqi-ancient-body .sqi-diamond-heading {\n    /* Layout only — shimmer lives on .sqi-master-name-shimmer spans, NOT this container div.\n       Applying background-clip:text to a flex container breaks child span rendering on iOS/Android. */\n    margin-bottom: 12px !important;\n    display: flex !important;\n    align-items: center !important;\n    overflow: visible !important;\n  }\n  .sqi-master-shimmer {\n    font-family: 'Cinzel', serif !important;\n    font-size: 26px !important;\n    font-weight: 600 !important;\n    letter-spacing: 0.04em !important;\n    line-height: 1.2 !important;\n    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%) !important;\n    background-size: 200% auto !important;\n    -webkit-background-clip: text !important;\n    background-clip: text !important;\n    -webkit-text-fill-color: transparent !important;\n    animation: hShimmer 5s linear infinite !important;\n    margin-bottom: 12px !important;\n    text-shadow: none !important;\n  }\n\n  .sqi-ancient-body strong,\n  .sqi-ancient-body b {\n    color: #D4AF37 !important;\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 1em !important;\n    letter-spacing: 0 !important;\n    font-weight: 400 !important;\n    font-style: normal !important;\n    text-shadow: none !important;\n  }\n\n  .sqi-ancient-body li {\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 18px !important;\n    line-height: 1.85 !important;\n    color: rgba(225,210,185,0.85) !important;\n  }\n      `}</style>
+
+      {/* Scroll-to-top FAB */}
+      <ScrollToTopButton />
+    </div>
+  );
+}
+
+function ScrollToTopButton() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 600);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="hidden"
+      aria-label={t("quantumApothecaryChat.scrollToTop")}
+    >
+      <ChevronUp size={20} />
+    </button>
+  );
+}
+
+/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+   OUTER WRAPPER — auth shell only
+   Tier access is enforced by QuantumApothecaryGate on the /quantum-apothecary route.
+   Do not gate on membership loading here: periodic membership refetches were setting
+   loading=true and unmounting the whole page (felt like endless reload).
+   ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
+export default function QuantumApothecary() {
+  const { user, isLoading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+
+  return <QuantumApothecaryInner />;
+}
