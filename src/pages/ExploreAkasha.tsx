@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { getTierRank, hasFeatureAccess, getSalesPageForRank } from '@/lib/tierAccess';
 
 interface Transmission {
