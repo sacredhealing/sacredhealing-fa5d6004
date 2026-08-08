@@ -348,8 +348,7 @@ function scrubBannedTerms(content: string): string {
   // Strip "Accessing Akasha-Neural Archive... Syncing with [name]'s Atma-Frequency Stream..."
   // These appear when Gemini generates them despite the prohibition
   content = content.replace(
-    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^
-]*/gi,
+    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^\n]*/gi,
     ''
   ).replace(/^\s+/, ''); // trim leading whitespace after strip
   const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
