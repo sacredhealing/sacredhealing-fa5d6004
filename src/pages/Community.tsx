@@ -205,8 +205,10 @@ const CSS = `
 .c-channels-view {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  padding: 8px 14px calc(64px + max(14px, env(safe-area-inset-bottom)));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 14px 0;
 }
 .c-channels-view::-webkit-scrollbar{width:2px}
 .c-channels-view::-webkit-scrollbar-thumb{background:rgba(212,175,55,.2)}
@@ -3584,7 +3586,8 @@ const Community = () => {
             )
             ) : (
               /* Channel list */
-              <div className="c-channels-view">
+              <div className="c-channels-view" style={{ display: "flex", flexDirection: "column", paddingBottom: 0 }}>
+                <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 0 8px" }}>
                 <div className="c-section-label">OPEN CHANNELS</div>
                 {CHANNELS.filter((c) => c.access === "public").map((ch) => {
                   const roomUnread = groupUnreadByRoom[roomIds[ch.id]] || 0;
@@ -3675,32 +3678,44 @@ const Community = () => {
                   );
                 })}
 
-                {/* ── SUPPORT CHANNEL — pinned at bottom, open to all ── */}
-                <div className="c-section-label" style={{ marginTop: 12 }}>SUPPORT &amp; HELP</div>
-                <button
-                  className="c-channel-row"
-                  onClick={() => {
-                    setActiveChannel("support");
-                    setMobileTab("chat");
-                    if (roomIds["support"]) clearRoomUnread(roomIds["support"]);
-                  }}
-                  style={{ borderTop: "1px solid rgba(212,175,55,0.10)", paddingTop: 14, marginTop: 4 }}
-                >
-                  <div className="c-ch-icon" style={{ position: "relative", fontSize: 22 }}>🛟
-                    {(groupUnreadByRoom[roomIds["support"]] || 0) > 0 && (
-                      <div style={{ position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: "radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)", color: "#1a1300", fontSize: 9, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 8px rgba(212,175,55,.7)" }}>
-                        {(groupUnreadByRoom[roomIds["support"]] || 0) > 9 ? "9+" : groupUnreadByRoom[roomIds["support"]]}
-                      </div>
-                    )}
-                  </div>
-                  <div className="c-ch-info">
-                    <div className="c-ch-name">Support &amp; Help</div>
-                    <div className="c-ch-desc">Ask for help · report bugs · request features</div>
-                    <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>Open to all members</div>
-                  </div>
-                  <div className="c-ch-arrow">›</div>
-                </button>
-              </div>
+                </div>{/* end inner scroll wrapper */}
+              </div>{/* end scrollable channel list */}
+
+              {/* ── SUPPORT CHANNEL — always visible, pinned footer ── */}
+              <button
+                className="c-channel-row"
+                onClick={() => {
+                  setActiveChannel("support");
+                  setMobileTab("chat");
+                  if (roomIds["support"]) clearRoomUnread(roomIds["support"]);
+                }}
+                style={{
+                  flexShrink: 0,
+                  margin: "0 14px 10px",
+                  borderRadius: 14,
+                  background: "rgba(212,175,55,0.06)",
+                  border: "1px solid rgba(212,175,55,0.22)",
+                  boxShadow: "0 0 18px rgba(212,175,55,0.08)",
+                  borderTop: "1px solid rgba(212,175,55,0.22)",
+                  paddingTop: 14,
+                  marginTop: 6,
+                }}
+              >
+                <div className="c-ch-icon" style={{ position: "relative", fontSize: 22 }}>🛟
+                  {(groupUnreadByRoom[roomIds["support"]] || 0) > 0 && (
+                    <div style={{ position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: "radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)", color: "#1a1300", fontSize: 9, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 8px rgba(212,175,55,.7)" }}>
+                      {(groupUnreadByRoom[roomIds["support"]] || 0) > 9 ? "9+" : groupUnreadByRoom[roomIds["support"]]}
+                    </div>
+                  )}
+                </div>
+                <div className="c-ch-info">
+                  <div className="c-ch-name" style={{ color: "#D4AF37" }}>Support &amp; Help</div>
+                  <div className="c-ch-desc">Ask for help · report bugs · request features</div>
+                  <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>Open to all members</div>
+                </div>
+                <div className="c-ch-arrow" style={{ color: "#D4AF37" }}>›</div>
+              </button>
+            </div>{/* end c-channels-view outer flex */}
             )
           ) : mobileTab === "feed" ? (
             <div className="c-feed-view">
