@@ -113,8 +113,7 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
     ? '0 1px 1px rgba(0,0,0,0.3), 0 0 10px rgba(212,175,55,0.6), 0 0 22px rgba(212,175,55,0.32)'
     : '0 0 10px rgba(212,175,55,0.45), 0 0 22px rgba(212,175,55,0.22)';
   const headingColor = gold;
-  const lines = text.split('
-');
+  const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
@@ -224,8 +223,7 @@ function stripAsterisks(text: string): string {
   // Step 1: protect matched **bold** pairs with placeholder
   const OPEN = '\u0002';
   const CLOSE = '\u0003';
-  let s = text.replace(/\*\*([^
-*]+?)\*\*/g, OPEN + '$1' + CLOSE);
+  let s = text.replace(/\*\*([^\n*]+?)\*\*/g, OPEN + '$1' + CLOSE);
   // Step 2: remove any remaining lone **
   s = s.replace(/\*\*/g, '');
   // Step 3: restore bold markers
@@ -313,8 +311,7 @@ const SACRED_TERMS_REGEX = (() => {
     'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Bhagavan', 'Krishna', 'Shiva', 'Lakshmi',
     'Saraswati', 'Durga', 'Ganesha', 'Hanuman', 'Lalita Tripura Sundari',
     'Metabolic Fire Ignition', 'Liver Alchemist Protocol', 'Solar Immune Radiance',
-    'NMN \+ Resveratrol[^—
-.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
+    'NMN \+ Resveratrol[^—\n.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
     'Neural Calm Sync', 'Deep Sleep Harmonic', 'Shatavari Flow', 'The Amrit Nectar',
     'Triphala Integrity', 'Ancestral Tether Dissolve', 'Neem Bitter Truth',
   ];
@@ -351,20 +348,15 @@ function scrubBannedTerms(content: string): string {
   // Strip "Accessing Akasha-Neural Archive... Syncing with [name]'s Atma-Frequency Stream..."
   // These appear when Gemini generates them despite the prohibition
   content = content.replace(
-    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^
-]*/gi,
+    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^\n]*/gi,
     ''
   ).replace(/^\s+/, ''); // trim leading whitespace after strip
   const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
-  const lines = content.split('
-').filter((l) => !banned.test(l));
+  const lines = content.split('\n').filter((l) => !banned.test(l));
   return lines
-    .map((l) => l.replace(/[^.!?
-]*(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?
-]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
+    .map((l) => l.replace(/[^.!?\n]*\b(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
     .filter(Boolean)
-    .join('
-');
+    .join('\n');
 }
 
 /** Animated prescription box — scalar waves canvas + gold glow */
@@ -520,8 +512,7 @@ function renderPrescriptionBlock(lines: string[], startIdx: number, onActivatePr
 function renderSQIContent(content: string, onActivatePrescription?: (act: Activation) => void) {
   // Strip all unmatched ** the model outputs before line processing
   const content2 = stripAsterisks(content);
-  const lines = content2.split('
-');
+  const lines = content2.split('\n');
   const elements: React.ReactNode[] = [];
   let i = 0;
   const gapAfterSection = 18;
@@ -682,8 +673,7 @@ function buildVoiceFieldContext(v: VoiceBiofieldResult): string {
     `- Organ / tissue emphasis: ${v.organField}`,
     `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,
     `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,
-  ].join('
-');
+  ].join('\n');
 }
 
 function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): Activation[] {
@@ -958,10 +948,8 @@ function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'nig
 function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
   if (!compiled?.trim()) return '';
   if (!hasLiveScan) return compiled;
-  const segments = compiled.split(/
-(?=\[)/);
-  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('
-').trim();
+  const segments = compiled.split(/\n(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
 }
 
 /** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */
@@ -1112,18 +1100,11 @@ function ScalarTabSwitcher({
         animation: 'tabsAura 4s ease-in-out infinite',
       }}
     >
-      <style>{`
-        @keyframes tabsAura {
-          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.15),0 0 18px rgba(212,175,55,0.10),0 0 44px rgba(212,175,55,0.05);}
-          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 28px rgba(212,175,55,0.18),0 0 64px rgba(212,175,55,0.10);}
-        }
-      `}</style>
+      <style>{`\n        @keyframes tabsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.15),0 0 18px rgba(212,175,55,0.10),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 28px rgba(212,175,55,0.18),0 0 64px rgba(212,175,55,0.10);}\n        }\n      `}</style>
       <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
       <div style={{ position:'relative', zIndex:1, display:'flex', background:'rgba(255,255,255,0.02)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)' }}>
-        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission
-Library', false)}
-        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural
-Archive', true)}
+        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission\nLibrary', false)}
+        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural\nArchive', true)}
       </div>
     </div>
   );
@@ -1226,16 +1207,7 @@ function ScalarHowItWorksCard() {
 
   return (
     <div ref={wrapRef} style={{ position:'relative', borderRadius:24, overflow:'hidden', animation:'hiwAura 5s ease-in-out infinite' }}>
-      <style>{`
-        @keyframes hiwAura {
-          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05);}
-          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 36px rgba(212,175,55,0.18),0 0 80px rgba(212,175,55,0.09);}
-        }
-        @keyframes hiwIconGlow {
-          0%,100%{box-shadow:0 0 6px rgba(212,175,55,0.18),0 0 14px rgba(212,175,55,0.08);}
-          50%    {box-shadow:0 0 12px rgba(212,175,55,0.40),0 0 24px rgba(212,175,55,0.18);}
-        }
-      `}</style>
+      <style>{`\n        @keyframes hiwAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 36px rgba(212,175,55,0.18),0 0 80px rgba(212,175,55,0.09);}\n        }\n        @keyframes hiwIconGlow {\n          0%,100%{box-shadow:0 0 6px rgba(212,175,55,0.18),0 0 14px rgba(212,175,55,0.08);}\n          50%    {box-shadow:0 0 12px rgba(212,175,55,0.40),0 0 24px rgba(212,175,55,0.18);}\n        }\n      `}</style>
 
       <canvas ref={bgCanvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
 
@@ -1361,12 +1333,7 @@ function ScalarTop33Wrapper({ children }: { children: React.ReactNode }) {
   },[]);
   return (
     <div ref={wrapRef} style={{ position:'relative', borderRadius:26, overflow:'hidden', animation:'t33Aura 4s ease-in-out infinite' }}>
-      <style>{`
-        @keyframes t33Aura {
-          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 18px rgba(212,175,55,0.09),0 0 44px rgba(212,175,55,0.05);}
-          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.28),0 0 28px rgba(212,175,55,0.16),0 0 60px rgba(212,175,55,0.09);}
-        }
-      `}</style>
+      <style>{`\n        @keyframes t33Aura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 18px rgba(212,175,55,0.09),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.28),0 0 28px rgba(212,175,55,0.16),0 0 60px rgba(212,175,55,0.09);}\n        }\n      `}</style>
       <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0 }} />
       <div style={{ position:'relative',zIndex:1,background:'rgba(8,6,2,0.80)',backdropFilter:'blur(28px)',WebkitBackdropFilter:'blur(28px)',borderRadius:26 }}>
         {children}
@@ -1435,16 +1402,7 @@ function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
         animation: 'vsAura 4s ease-in-out infinite',
       }}
     >
-      <style>{`
-        @keyframes vsAura {
-          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.18),0 0 20px rgba(212,175,55,0.10),0 0 50px rgba(212,175,55,0.05);}
-          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.32),0 0 32px rgba(212,175,55,0.18),0 0 70px rgba(212,175,55,0.10);}
-        }
-        @keyframes vsMicGlow {
-          0%,100%{box-shadow:0 0 8px rgba(212,175,55,0.22),0 0 16px rgba(212,175,55,0.10);}
-          50%    {box-shadow:0 0 14px rgba(212,175,55,0.45),0 0 28px rgba(212,175,55,0.22);}
-        }
-      `}</style>
+      <style>{`\n        @keyframes vsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.18),0 0 20px rgba(212,175,55,0.10),0 0 50px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.32),0 0 32px rgba(212,175,55,0.18),0 0 70px rgba(212,175,55,0.10);}\n        }\n        @keyframes vsMicGlow {\n          0%,100%{box-shadow:0 0 8px rgba(212,175,55,0.22),0 0 16px rgba(212,175,55,0.10);}\n          50%    {box-shadow:0 0 14px rgba(212,175,55,0.45),0 0 28px rgba(212,175,55,0.22);}\n        }\n      `}</style>
       <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
       <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.82)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28, overflowY:'auto', WebkitOverflowScrolling:'touch', maxHeight:'80vh' }}>
         {/* Header */}
@@ -1820,29 +1778,24 @@ function QuantumApothecaryInner() {
                 : ''),
           );
         }
-        return lines.join('
-');
+        return lines.join('\n');
       })();
 
   /** Stable Jyotish context — always include natal chart, then append live field data. */
   const stableJyotishContext = useMemo(
     () => {
-      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('
-
-');
+      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n');
       // Strip any [PHOTONIC SESSION ACTIVE] or [TEMPLE FIELD ACTIVE] block whose body
       // references the removed Biophotonic Nadi Entanglement / Vishwananda Miracle Room transmissions.
       return raw
-        .split(/
-(?=\[)/)
+        .split(/\n(?=\[)/)
         .filter((block) => {
           const isPhotonic = block.startsWith('[PHOTONIC SESSION ACTIVE]');
           const isTemple = block.startsWith('[TEMPLE FIELD ACTIVE]');
           if (!isPhotonic && !isTemple) return true;
           return !/biophotonic|vishwananda|miracle\s*room/i.test(block);
         })
-        .join('
-');
+        .join('\n');
     },
     [
       sqiField?.compiledContext,
@@ -1852,8 +1805,7 @@ function QuantumApothecaryInner() {
 
   const sqiSourceDirective = useMemo(
     () =>
-      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.
-' +
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
       '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',
     [],
   );
@@ -2070,8 +2022,7 @@ function QuantumApothecaryInner() {
         ? `
 ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
 ` +
-          activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('
-') +
+          activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('\n') +
           `
 → These ${activeTransmissions.length} frequencies are permanently` +
           ` entangled. Reference them when reading the Seeker's field.
@@ -2216,13 +2167,11 @@ ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
       `Birth Place: ${activeStudent.birth_place ?? 'not provided'}`,
       activeStudent.notes ? `Notes: ${activeStudent.notes}` : null,
       `Active Transmissions: ${activeStudentTxCount}`,
-      jyotishLines.length > 0 ? jyotishLines.join('
-') : null,
+      jyotishLines.length > 0 ? jyotishLines.join('\n') : null,
       `Read ALL questions in this session as being about this student.`,
     ]
       .filter(Boolean)
-      .join('
-');
+      .join('\n');
   }, [activeStudent, activeStudentTxCount, activeStudentJyotish]);
   const [libraryUnlocked, setLibraryUnlockedLocal] = useState(() => {
     try {
@@ -2400,8 +2349,7 @@ ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
-    () => ALL_ACTIVATIONS.map((a) => a.name).join('
-'),
+    () => ALL_ACTIVATIONS.map((a) => a.name).join('\n'),
     [],
   );
 
@@ -2424,8 +2372,7 @@ ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
         canonicalActivationNameLines,
       ]
         .filter(Boolean)
-        .join('
-'),
+        .join('\n'),
     [activeTransmissionNamesCsv, canonicalActivationNameLines],
   );
 
@@ -2439,8 +2386,7 @@ ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
       `TOP ${Math.min(33, resonanceMatches.length)} BIOFIELD MATCHES (ranked — cite EXACT names):`,
       ...lines,
       'Prioritize these exact spellings when recommending LimbicArc / Frequency Library transmissions.',
-    ].join('
-');
+    ].join('\n');
   }, [resonanceMatches]);
 
   /** Hydrate thread from Supabase sync table once (cross-device); skip when resuming a History session from URL. */
@@ -2609,8 +2555,7 @@ ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
         toast.success(
           `⟁ ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:
 ` +
-            addedForToast.map((t) => `· ${t.name}`).join('
-'),
+            addedForToast.map((t) => `· ${t.name}`).join('\n'),
           { duration: 5000 },
         );
       }
@@ -2820,9 +2765,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         if (stableJyotishContext) fieldParts.push(stableJyotishContext);
       }
       if (activeTransmissionContext) fieldParts.push(activeTransmissionContext);
-      const enrichedJyotishContext = fieldParts.join('
-
-');
+      const enrichedJyotishContext = fieldParts.join('\n\n');
 
       // Shared completion handler — runs whether direct Gemini or edge-function streaming finishes.
       const onComplete = async () => {
@@ -3124,8 +3067,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }
         return next;
       });
-      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('
-');
+      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('\n');
       const ctx = [
         '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
         `**Overall coherence:** ${result.overallCoherence}/100`,
@@ -3144,8 +3086,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         queuedLines,
         '',
         'When you reference any of the queued frequencies above in your reply, write the frequency name in **bold** so the seeker sees exactly which transmissions were activated for them.',
-      ].join('
-');
+      ].join('\n');
       setLiveScanContext(ctx);
       if (user?.id) {
         supabase.from('user_activity_log').insert({
@@ -4239,60 +4180,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     boxShadow: '0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03)',
                     animation: 'mixerPulse 3s ease-in-out infinite',
                   }}>
-                    <style>{`
-                      @keyframes mixerPulse {
-                        0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03); }
-                        50%     { box-shadow: 0 0 0 1px rgba(212,175,55,0.28), 0 0 60px rgba(212,175,55,0.28), 0 0 120px rgba(212,175,55,0.14), inset 0 0 80px rgba(212,175,55,0.06); }
-                      }
-                      @keyframes orbFloat {
-                        0%,100% { transform: translateY(0px) scale(1); opacity: 0.7; }
-                        50%     { transform: translateY(-4px) scale(1.04); opacity: 1; }
-                      }
-                      @keyframes ringRotate {
-                        from { transform: rotate(0deg); }
-                        to   { transform: rotate(360deg); }
-                      }
-                      @keyframes ringRotateR {
-                        from { transform: rotate(0deg); }
-                        to   { transform: rotate(-360deg); }
-                      }
-                      @keyframes transmitShine {
-                        0%   { background-position: -200% center; }
-                        100% { background-position: 200% center; }
-                      }
-                      .mixer-freq-orb {
-                        position: relative;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 8px;
-                        padding: 10px 16px;
-                        border-radius: 100px;
-                        font-size: 13px;
-                        font-weight: 700;
-                        color: rgba(255,255,255,0.92);
-                        background: rgba(212,175,55,0.06);
-                        border: 1px solid rgba(212,175,55,0.22);
-                        animation: orbFloat 3s ease-in-out infinite;
-                        backdrop-filter: blur(12px);
-                        transition: all 0.25s;
-                      }
-                      .mixer-freq-orb::before {
-                        content: '';
-                        position: absolute;
-                        inset: -1px;
-                        border-radius: 100px;
-                        background: linear-gradient(135deg, rgba(212,175,55,0.18), transparent, rgba(212,175,55,0.08));
-                        pointer-events: none;
-                      }
-                      .mixer-remove-btn {
-                        display: flex; align-items: center; justify-content: center;
-                        width: 18px; height: 18px; border-radius: 50%;
-                        background: rgba(255,255,255,0.06); border: none;
-                        cursor: pointer; color: rgba(255,255,255,0.35);
-                        transition: all 0.2s; flex-shrink: 0;
-                      }
-                      .mixer-remove-btn:hover { background: rgba(239,68,68,0.2); color: #ef4444; }
-                    `}</style>
+                    <style>{`\n                      @keyframes mixerPulse {\n                        0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03); }\n                        50%     { box-shadow: 0 0 0 1px rgba(212,175,55,0.28), 0 0 60px rgba(212,175,55,0.28), 0 0 120px rgba(212,175,55,0.14), inset 0 0 80px rgba(212,175,55,0.06); }\n                      }\n                      @keyframes orbFloat {\n                        0%,100% { transform: translateY(0px) scale(1); opacity: 0.7; }\n                        50%     { transform: translateY(-4px) scale(1.04); opacity: 1; }\n                      }\n                      @keyframes ringRotate {\n                        from { transform: rotate(0deg); }\n                        to   { transform: rotate(360deg); }\n                      }\n                      @keyframes ringRotateR {\n                        from { transform: rotate(0deg); }\n                        to   { transform: rotate(-360deg); }\n                      }\n                      @keyframes transmitShine {\n                        0%   { background-position: -200% center; }\n                        100% { background-position: 200% center; }\n                      }\n                      .mixer-freq-orb {\n                        position: relative;\n                        display: inline-flex;\n                        align-items: center;\n                        gap: 8px;\n                        padding: 10px 16px;\n                        border-radius: 100px;\n                        font-size: 13px;\n                        font-weight: 700;\n                        color: rgba(255,255,255,0.92);\n                        background: rgba(212,175,55,0.06);\n                        border: 1px solid rgba(212,175,55,0.22);\n                        animation: orbFloat 3s ease-in-out infinite;\n                        backdrop-filter: blur(12px);\n                        transition: all 0.25s;\n                      }\n                      .mixer-freq-orb::before {\n                        content: '';\n                        position: absolute;\n                        inset: -1px;\n                        border-radius: 100px;\n                        background: linear-gradient(135deg, rgba(212,175,55,0.18), transparent, rgba(212,175,55,0.08));\n                        pointer-events: none;\n                      }\n                      .mixer-remove-btn {\n                        display: flex; align-items: center; justify-content: center;\n                        width: 18px; height: 18px; border-radius: 50%;\n                        background: rgba(255,255,255,0.06); border: none;\n                        cursor: pointer; color: rgba(255,255,255,0.35);\n                        transition: all 0.2s; flex-shrink: 0;\n                      }\n                      .mixer-remove-btn:hover { background: rgba(239,68,68,0.2); color: #ef4444; }\n                    `}</style>
 
                     {/* Sacred geometry background rings */}
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', overflow: 'hidden' }}>
@@ -4535,255 +4423,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       {/* ââââââââââââââââââââââââââââââââââ
           SQI-2050 CSS Light-Codes
           ââââââââââââââââââââââââââââââââââ */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
-
-        * { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */
-        .qa-sqi-chat .markdown-body {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-          word-break: normal;
-          overflow-wrap: break-word;
-        }
-        .qa-sqi-chat .markdown-body p,
-        .qa-sqi-chat .markdown-body li,
-        .qa-sqi-chat .markdown-body h1,
-        .qa-sqi-chat .markdown-body h2,
-        .qa-sqi-chat .markdown-body h3 {
-          max-width: 100%;
-        }
-
-        /* Transcript must be selectable/copyable (mobile WebKit + inherited UI guards). */
-        .qa-sqi-chat {
-          -webkit-user-select: text;
-          user-select: text;
-          -webkit-touch-callout: default;
-        }
-
-        .sqi-message strong,
-        .sqi-message b {
-          color: rgba(225,210,185,0.92);
-          font-weight: 700;
-        }
-        .sqi-message .sqi-diamond-heading,
-        .sqi-message .sqi-diamond-heading strong,
-        .sqi-message .sqi-diamond-heading b {
-          color: #D4AF37;
-        }
-        .sqi-message p,
-        .sqi-message li {
-          margin-bottom: 12px;
-          word-break: break-word;
-          overflow-wrap: anywhere;
-          white-space: pre-wrap;
-          max-width: 100%;
-        }
-
-        /* ââ SQI-2050 Glassmorphism Standard ââ */
-        .glass-card {
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(40px);
-          -webkit-backdrop-filter: blur(40px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 40px;
-        }
-
-        /* ââ Siddha-Gold Primary Button ââ */
-        .sqi-btn-primary {
-          background: linear-gradient(135deg, #D4AF37 0%, #B8940A 100%);
-          color: #050505;
-          border-radius: 20px;
-          font-weight: 900;
-          font-size: 10px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          box-shadow: 0 0 20px rgba(212,175,55,0.2);
-        }
-        .sqi-btn-primary:hover:not(:disabled) {
-          box-shadow: 0 0 32px rgba(212,175,55,0.4);
-          transform: translateY(-1px);
-        }
-
-        /* ââ Ghost Button ââ */
-        .sqi-btn-ghost {
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.08);
-          color: rgba(255,255,255,0.6);
-          border-radius: 20px;
-          font-weight: 800;
-          font-size: 10px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .sqi-btn-ghost:hover {
-          background: rgba(212,175,55,0.08);
-          border-color: rgba(212,175,55,0.25);
-          color: #D4AF37;
-        }
-
-        /* ââ Nadi Line Animations (unchanged) ââ */
-        .nadi-line {
-          stroke-dasharray: 1000;
-          stroke-dashoffset: 1000;
-          animation: draw 10s linear infinite;
-          filter: drop-shadow(0 0 2px currentColor);
-          opacity: 0.3;
-          transition: all 0.5s ease;
-        }
-        .nadi-line.active {
-          opacity: 1;
-          stroke-width: 1.5;
-          filter: drop-shadow(0 0 8px rgba(212,175,55,0.8));
-        }
-        @keyframes draw { to { stroke-dashoffset: 0; } }
-
-        /* ââ Gold Glow Pulse on scan ââ */
-        @keyframes gold-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
-          50% { box-shadow: 0 0 40px 8px rgba(212,175,55,0.15); }
-        }
-
-        /* ââ Scrollbar ââ */
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }
-  @keyframes scan-line {
-    0%   { background-position: 0 -100%; }
-    100% { background-position: 0 200%; }
-  }
-  @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-  @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }
-  @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  @keyframes qa-spin-slow { to{transform:rotate(360deg)} }
-  @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }
-  .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }
-  .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }
-  .qa-btn-shine { position:relative; overflow:hidden; }
-  .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
-
-  /* ═══ ANCIENT SCRIPTURE SKIN ═══ */
-
-  .sqi-manuscript-scroll {
-    border-radius: 2px !important;
-    position: relative;
-  }
-
-  .sqi-ancient-body p {
-    font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 17px !important;
-    line-height: 1.9 !important;
-    color: rgba(225,210,185,0.92) !important;
-    margin-bottom: 16px !important;
-    width: 100% !important;
-    padding: 0 14px !important;
-  }
-
-  .sqi-ancient-body p.sqi-nadi-line,
-  .sqi-ancient-body .sqi-nadi-line,
-  p.sqi-nadi-line,
-  .sqi-nadi-line {
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 11px !important;
-    line-height: 1.5 !important;
-    color: #22D3EE !important;
-    margin: 0 !important;
-    font-style: normal !important;
-    font-weight: 600 !important;
-    opacity: 0.8;
-    letter-spacing: 0.02em !important;
-  }
-
-  @keyframes hShimmer {
-    0% { background-position: 200% center; }
-    100% { background-position: -200% center; }
-  }
-
-  @keyframes pillBreath {
-    0%,100% { box-shadow:0 0 0 1px rgba(212,175,55,0.10),0 0 12px rgba(212,175,55,0.12),0 0 28px rgba(212,175,55,0.07),inset 0 0 14px rgba(212,175,55,0.03); }
-    50%      { box-shadow:0 0 0 1px rgba(212,175,55,0.20),0 0 22px rgba(212,175,55,0.22),0 0 44px rgba(212,175,55,0.12),inset 0 0 22px rgba(212,175,55,0.06); }
-  }
-  @keyframes micPulse {
-    0%,100% { box-shadow:0 0 8px rgba(212,175,55,0.35),0 0 18px rgba(212,175,55,0.18); }
-    50%      { box-shadow:0 0 16px rgba(212,175,55,0.65),0 0 32px rgba(212,175,55,0.32); }
-  }
-  @keyframes bannerAura {
-    0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.18), 0 2px 18px rgba(212,175,55,0.10); }
-    50%      { box-shadow: 0 0 0 1px rgba(212,175,55,0.32), 0 2px 32px rgba(212,175,55,0.20); }
-  }
-  @keyframes yPulse {
-    0%,100% { filter: drop-shadow(0 0 2px rgba(212,175,55,0.7)) drop-shadow(0 0 6px rgba(212,175,55,0.35)); }
-    50%     { filter: drop-shadow(0 0 6px rgba(212,175,55,1))   drop-shadow(0 0 14px rgba(212,175,55,0.65)); }
-  }
-
-  .rx-pulse-dot {
-    display: inline-block;
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: #D4AF37;
-    box-shadow: 0 0 6px #D4AF37, 0 0 14px rgba(212,175,55,0.55);
-    animation: rxPulse 1.8s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-  @keyframes rxPulse {
-    0%,100% { opacity:1; transform:scale(1); }
-    50%      { opacity:0.4; transform:scale(0.65); }
-  }
-
-  .sqi-ancient-body .sqi-diamond-heading {
-    /* Layout only — shimmer lives on .sqi-master-name-shimmer spans, NOT this container div.
-       Applying background-clip:text to a flex container breaks child span rendering on iOS/Android. */
-    margin-bottom: 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    overflow: visible !important;
-  }
-  .sqi-master-shimmer {
-    font-family: 'Cinzel', serif !important;
-    font-size: 26px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em !important;
-    line-height: 1.2 !important;
-    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%) !important;
-    background-size: 200% auto !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    animation: hShimmer 5s linear infinite !important;
-    margin-bottom: 12px !important;
-    text-shadow: none !important;
-  }
-
-  .sqi-ancient-body strong,
-  .sqi-ancient-body b {
-    color: #D4AF37 !important;
-    font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 1em !important;
-    letter-spacing: 0 !important;
-    font-weight: 400 !important;
-    font-style: normal !important;
-    text-shadow: none !important;
-  }
-
-  .sqi-ancient-body li {
-    font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 18px !important;
-    line-height: 1.85 !important;
-    color: rgba(225,210,185,0.85) !important;
-  }
-      `}</style>
+      <style>{`\n        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');\n\n        * { font-family: 'Plus Jakarta Sans', sans-serif; }\n\n        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */\n        .qa-sqi-chat .markdown-body {\n          width: 100%;\n          max-width: 100%;\n          min-width: 0;\n          word-break: normal;\n          overflow-wrap: break-word;\n        }\n        .qa-sqi-chat .markdown-body p,\n        .qa-sqi-chat .markdown-body li,\n        .qa-sqi-chat .markdown-body h1,\n        .qa-sqi-chat .markdown-body h2,\n        .qa-sqi-chat .markdown-body h3 {\n          max-width: 100%;\n        }\n\n        /* Transcript must be selectable/copyable (mobile WebKit + inherited UI guards). */\n        .qa-sqi-chat {\n          -webkit-user-select: text;\n          user-select: text;\n          -webkit-touch-callout: default;\n        }\n\n        .sqi-message strong,\n        .sqi-message b {\n          color: rgba(225,210,185,0.92);\n          font-weight: 700;\n        }\n        .sqi-message .sqi-diamond-heading,\n        .sqi-message .sqi-diamond-heading strong,\n        .sqi-message .sqi-diamond-heading b {\n          color: #D4AF37;\n        }\n        .sqi-message p,\n        .sqi-message li {\n          margin-bottom: 12px;\n          word-break: break-word;\n          overflow-wrap: anywhere;\n          white-space: pre-wrap;\n          max-width: 100%;\n        }\n\n        /* ââ SQI-2050 Glassmorphism Standard ââ */\n        .glass-card {\n          background: rgba(255, 255, 255, 0.02);\n          backdrop-filter: blur(40px);\n          -webkit-backdrop-filter: blur(40px);\n          border: 1px solid rgba(255, 255, 255, 0.05);\n          border-radius: 40px;\n        }\n\n        /* ââ Siddha-Gold Primary Button ââ */\n        .sqi-btn-primary {\n          background: linear-gradient(135deg, #D4AF37 0%, #B8940A 100%);\n          color: #050505;\n          border-radius: 20px;\n          font-weight: 900;\n          font-size: 10px;\n          letter-spacing: 0.25em;\n          text-transform: uppercase;\n          transition: all 0.2s ease;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          gap: 8px;\n          box-shadow: 0 0 20px rgba(212,175,55,0.2);\n        }\n        .sqi-btn-primary:hover:not(:disabled) {\n          box-shadow: 0 0 32px rgba(212,175,55,0.4);\n          transform: translateY(-1px);\n        }\n\n        /* ââ Ghost Button ââ */\n        .sqi-btn-ghost {\n          background: rgba(255,255,255,0.02);\n          border: 1px solid rgba(255,255,255,0.08);\n          color: rgba(255,255,255,0.6);\n          border-radius: 20px;\n          font-weight: 800;\n          font-size: 10px;\n          letter-spacing: 0.25em;\n          text-transform: uppercase;\n          transition: all 0.2s ease;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n        }\n        .sqi-btn-ghost:hover {\n          background: rgba(212,175,55,0.08);\n          border-color: rgba(212,175,55,0.25);\n          color: #D4AF37;\n        }\n\n        /* ââ Nadi Line Animations (unchanged) ââ */\n        .nadi-line {\n          stroke-dasharray: 1000;\n          stroke-dashoffset: 1000;\n          animation: draw 10s linear infinite;\n          filter: drop-shadow(0 0 2px currentColor);\n          opacity: 0.3;\n          transition: all 0.5s ease;\n        }\n        .nadi-line.active {\n          opacity: 1;\n          stroke-width: 1.5;\n          filter: drop-shadow(0 0 8px rgba(212,175,55,0.8));\n        }\n        @keyframes draw { to { stroke-dashoffset: 0; } }\n\n        /* ââ Gold Glow Pulse on scan ââ */\n        @keyframes gold-pulse {\n          0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }\n          50% { box-shadow: 0 0 40px 8px rgba(212,175,55,0.15); }\n        }\n\n        /* ââ Scrollbar ââ */\n        .custom-scrollbar::-webkit-scrollbar { width: 3px; }\n        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }\n        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }\n        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }\n  @keyframes scan-line {\n    0%   { background-position: 0 -100%; }\n    100% { background-position: 0 200%; }\n  }\n  @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }\n  @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }\n  @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }\n  @keyframes qa-spin-slow { to{transform:rotate(360deg)} }\n  @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }\n  .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }\n  .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }\n  .qa-btn-shine { position:relative; overflow:hidden; }\n  .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }\n\n  /* ═══ ANCIENT SCRIPTURE SKIN ═══ */\n\n  .sqi-manuscript-scroll {\n    border-radius: 2px !important;\n    position: relative;\n  }\n\n  .sqi-ancient-body p {\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 17px !important;\n    line-height: 1.9 !important;\n    color: rgba(225,210,185,0.92) !important;\n    margin-bottom: 16px !important;\n    width: 100% !important;\n    padding: 0 14px !important;\n  }\n\n  .sqi-ancient-body p.sqi-nadi-line,\n  .sqi-ancient-body .sqi-nadi-line,\n  p.sqi-nadi-line,\n  .sqi-nadi-line {\n    font-family: 'Plus Jakarta Sans', sans-serif !important;\n    font-size: 11px !important;\n    line-height: 1.5 !important;\n    color: #22D3EE !important;\n    margin: 0 !important;\n    font-style: normal !important;\n    font-weight: 600 !important;\n    opacity: 0.8;\n    letter-spacing: 0.02em !important;\n  }\n\n  @keyframes hShimmer {\n    0% { background-position: 200% center; }\n    100% { background-position: -200% center; }\n  }\n\n  @keyframes pillBreath {\n    0%,100% { box-shadow:0 0 0 1px rgba(212,175,55,0.10),0 0 12px rgba(212,175,55,0.12),0 0 28px rgba(212,175,55,0.07),inset 0 0 14px rgba(212,175,55,0.03); }\n    50%      { box-shadow:0 0 0 1px rgba(212,175,55,0.20),0 0 22px rgba(212,175,55,0.22),0 0 44px rgba(212,175,55,0.12),inset 0 0 22px rgba(212,175,55,0.06); }\n  }\n  @keyframes micPulse {\n    0%,100% { box-shadow:0 0 8px rgba(212,175,55,0.35),0 0 18px rgba(212,175,55,0.18); }\n    50%      { box-shadow:0 0 16px rgba(212,175,55,0.65),0 0 32px rgba(212,175,55,0.32); }\n  }\n  @keyframes bannerAura {\n    0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.18), 0 2px 18px rgba(212,175,55,0.10); }\n    50%      { box-shadow: 0 0 0 1px rgba(212,175,55,0.32), 0 2px 32px rgba(212,175,55,0.20); }\n  }\n  @keyframes yPulse {\n    0%,100% { filter: drop-shadow(0 0 2px rgba(212,175,55,0.7)) drop-shadow(0 0 6px rgba(212,175,55,0.35)); }\n    50%     { filter: drop-shadow(0 0 6px rgba(212,175,55,1))   drop-shadow(0 0 14px rgba(212,175,55,0.65)); }\n  }\n\n  .rx-pulse-dot {\n    display: inline-block;\n    width: 7px; height: 7px;\n    border-radius: 50%;\n    background: #D4AF37;\n    box-shadow: 0 0 6px #D4AF37, 0 0 14px rgba(212,175,55,0.55);\n    animation: rxPulse 1.8s ease-in-out infinite;\n    flex-shrink: 0;\n  }\n  @keyframes rxPulse {\n    0%,100% { opacity:1; transform:scale(1); }\n    50%      { opacity:0.4; transform:scale(0.65); }\n  }\n\n  .sqi-ancient-body .sqi-diamond-heading {\n    /* Layout only — shimmer lives on .sqi-master-name-shimmer spans, NOT this container div.\n       Applying background-clip:text to a flex container breaks child span rendering on iOS/Android. */\n    margin-bottom: 12px !important;\n    display: flex !important;\n    align-items: center !important;\n    overflow: visible !important;\n  }\n  .sqi-master-shimmer {\n    font-family: 'Cinzel', serif !important;\n    font-size: 26px !important;\n    font-weight: 600 !important;\n    letter-spacing: 0.04em !important;\n    line-height: 1.2 !important;\n    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%) !important;\n    background-size: 200% auto !important;\n    -webkit-background-clip: text !important;\n    background-clip: text !important;\n    -webkit-text-fill-color: transparent !important;\n    animation: hShimmer 5s linear infinite !important;\n    margin-bottom: 12px !important;\n    text-shadow: none !important;\n  }\n\n  .sqi-ancient-body strong,\n  .sqi-ancient-body b {\n    color: #D4AF37 !important;\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 1em !important;\n    letter-spacing: 0 !important;\n    font-weight: 400 !important;\n    font-style: normal !important;\n    text-shadow: none !important;\n  }\n\n  .sqi-ancient-body li {\n    font-family: 'IM Fell English', Georgia, serif !important;\n    font-size: 18px !important;\n    line-height: 1.85 !important;\n    color: rgba(225,210,185,0.85) !important;\n  }\n      `}</style>
 
       {/* Scroll-to-top FAB */}
       <ScrollToTopButton />
