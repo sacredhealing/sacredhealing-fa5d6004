@@ -214,6 +214,14 @@ export default function ExploreAkasha() {
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: white(0.28), marginTop: 7 }}>{t('exploreAkasha.subtitle')}</p>
       </div>
 
+      {/* ── SIDDHA DHARMA PATH ── */}
+      <div style={{ padding: '20px 16px 0', animation: 'sqFadeUp 0.4s 0.08s ease both' }}>
+        <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.35)', marginBottom: 10 }}>
+          SIDDHA DHARMA PATH
+        </p>
+        <SpiritualPathCard />
+      </div>
+
       {/* ── LANGUAGE TOGGLE ── */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '20px 16px 4px', animation: 'sqFadeUp 0.4s 0.05s ease both' }}>
         {(['en', 'sv'] as const).map(l => (
