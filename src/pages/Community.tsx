@@ -3679,7 +3679,6 @@ const Community = () => {
                 })}
 
                 </div>{/* end inner scroll wrapper */}
-              </div>{/* end scrollable channel list */}
 
               {/* ── SUPPORT CHANNEL — always visible, pinned footer ── */}
               <button
