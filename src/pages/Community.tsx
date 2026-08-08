@@ -3714,7 +3714,7 @@ const Community = () => {
                 </div>
                 <div className="c-ch-arrow" style={{ color: "#D4AF37" }}>›</div>
               </button>
-            </div>{/* end c-channels-view outer flex */}
+            </div>
             )
           ) : mobileTab === "feed" ? (
             <div className="c-feed-view">
