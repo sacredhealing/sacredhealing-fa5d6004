@@ -3679,7 +3679,6 @@ const Community = () => {
                 })}
 
                 </div>{/* end inner scroll wrapper */}
-              </div>{/* end scrollable channel list */}
 
               {/* ── SUPPORT CHANNEL — always visible, pinned footer ── */}
               <button
@@ -3715,7 +3714,7 @@ const Community = () => {
                 </div>
                 <div className="c-ch-arrow" style={{ color: "#D4AF37" }}>›</div>
               </button>
-            </div>{/* end c-channels-view outer flex */}
+            </div>
             )
           ) : mobileTab === "feed" ? (
             <div className="c-feed-view">
