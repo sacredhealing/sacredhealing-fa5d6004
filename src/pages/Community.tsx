@@ -19,7 +19,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useStargateAccess } from "@/hooks/useStargateAccess";
@@ -1440,6 +1440,14 @@ const Community = () => {
   const [libraryItems, setLibraryItems] = useState<any[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  // Auto-open support channel if navigated from dashboard support pill
+  useEffect(() => {
+    if (searchParams.get("tab") === "support") {
+      setActiveChannel("support");
+      setMobileTab("chat");
+    }
+  }, [searchParams]);
   const [messageText, setMessageText] = useState("");
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
