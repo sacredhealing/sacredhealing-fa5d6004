@@ -1441,13 +1441,8 @@ const Community = () => {
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
-  // Auto-open support channel if navigated from dashboard support pill
-  useEffect(() => {
-    if (searchParams.get("tab") === "support") {
-      setActiveChannel("support");
-      setMobileTab("chat");
-    }
-  }, [searchParams]);
+  // Ref so we know to open support once rooms are loaded
+  const pendingSupportOpen = searchParams.get("tab") === "support";
   const [messageText, setMessageText] = useState("");
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -2061,6 +2056,11 @@ const Community = () => {
         results.forEach((r) => { if (r.roomId) map[r.channelId] = r.roomId; });
       }
       setRoomIds(map);
+      // If user arrived via support pill, open support channel once rooms are ready
+      if (pendingSupportOpen) {
+        setActiveChannel("support");
+        setMobileTab("chat");
+      }
     };
 
     Promise.all([loadMembers(), loadRooms()]);
