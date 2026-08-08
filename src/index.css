@@ -1111,3 +1111,13 @@ html, body, #root {
   animation: hShimmer 4s linear infinite;
   will-change: background-position;
 }
+
+/* ── Sacred Support Circle Animations ── */
+@keyframes sqSpinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes sqPulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.08); }
+}
