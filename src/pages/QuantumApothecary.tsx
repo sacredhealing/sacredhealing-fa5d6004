@@ -405,7 +405,7 @@ function PrescriptionBox({ masterName, freqLines, rxKey, onActivate }: { masterN
     if (!canvas || !box) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    let t = 0;
+    let tick = 0;
     const resize = () => { canvas.width = box.offsetWidth; canvas.height = box.offsetHeight; };
     resize();
     const ro = new ResizeObserver(resize);
@@ -1114,6 +1114,7 @@ function ScalarTabSwitcher({
 /** Scalar Wave wrapper for Voice Bio-Signature Scanner — visual only, no logic change */
 /** Scalar Wave wrapper for How It Works accordion — visual only */
 function ScalarHowItWorksCard() {
+  const { t } = useTranslation();
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const bgCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const stripCanvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -1143,7 +1144,7 @@ function ScalarHowItWorksCard() {
       const W = canvas.width, H = canvas.height;
       if (!W || !H) { rafBgRef.current = requestAnimationFrame(draw); return; }
       ctx.clearRect(0,0,W,H);
-      const p = .5 + .5 * Math.sin(t * .9);
+      const p = .5 + .5 * Math.sin(tick * .9);
       const gc = ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,W*.65);
       gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');
       ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
@@ -1155,12 +1156,12 @@ function ScalarHowItWorksCard() {
         ctx.beginPath();
         for (let x=0;x<=W;x+=1.5) {
           const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;
-          const y=H*.65+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          const y=H*.65+Math.sin(nx*w.freq*Math.PI*2+tick*w.speed+ph)*H*w.amp*env;
           x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
         }
         ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
       });
-      t+=.010; rafBgRef.current=requestAnimationFrame(draw);
+      tick+=.010; rafBgRef.current=requestAnimationFrame(draw);
     };
     rafBgRef.current=requestAnimationFrame(draw);
     return () => { cancelAnimationFrame(rafBgRef.current); ro.disconnect(); };
@@ -4472,3 +4473,4 @@ export default function QuantumApothecary() {
 
   return <QuantumApothecaryInner />;
 }
+
