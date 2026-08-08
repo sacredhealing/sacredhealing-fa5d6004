@@ -44,6 +44,7 @@ const READING_LABELS: Record<string, string> = {
   general: 'Full Nadi Reading', career: 'Dharma & Career',
   relationships: 'Love & Relationships', health: 'Body & Prana',
   spiritual: 'Moksha Path', wealth: 'Wealth & Abundance',
+  chat: 'Bhrigu Dialogue',
 };
 
 const BHRIGU_SECTIONS = [

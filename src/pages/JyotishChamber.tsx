@@ -2944,6 +2944,27 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         } catch { rawReply = rawReply.replace(/^\s*[\"']?json\s*/i,'').replace(/```json|```/g,'').trim(); }
       }
       setChatMessages(prev => [...prev, { role:'oracle', text:rawReply }]);
+
+      // ── Save this exchange to bhrigu_readings so it appears in the Jyotish book ──
+      if (user && rawReply && birthData) {
+        try {
+          await (supabase as any).from('bhrigu_readings').insert({
+            user_id: user.id,
+            reading_type: 'chat',
+            question: q.slice(0, 1000),
+            sections: {
+              transmission: rawReply,
+            },
+            birth_data: {
+              dob: birthData.birth_date || '',
+              tob: birthData.birth_time || '',
+              pob: birthData.birth_place || '',
+            },
+          });
+        } catch (saveErr) {
+          console.error('[JyotishChamber] bhrigu_readings save error (non-fatal):', saveErr);
+        }
+      }
     } catch (err) {
       console.error('Bhrigu oracle error:', err);
       setChatMessages(prev => [...prev, { role:'oracle', text:'The stars require a moment of stillness. Please ask your question again.' }]);
@@ -2979,6 +3000,25 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
       if (sData?.sections) {
         setOracleSections(sData.sections);
         setOracleExpandedSection('graha');
+
+        // ── Save full reading to bhrigu_readings ──
+        if (user && birthData) {
+          try {
+            await (supabase as any).from('bhrigu_readings').insert({
+              user_id: user.id,
+              reading_type: 'general',
+              question: null,
+              sections: sData.sections,
+              birth_data: {
+                dob: birthData.birth_date || '',
+                tob: birthData.birth_time || '',
+                pob: birthData.birth_place || '',
+              },
+            });
+          } catch (saveErr) {
+            console.error('[JyotishChamber] full reading save error (non-fatal):', saveErr);
+          }
+        }
       }
     } catch (err) {
       console.error('Full reading error:', err);
