@@ -126,7 +126,7 @@ const CSS = `
 .c-root {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 64px - 60px - env(safe-area-inset-bottom));
   min-height: 280px;
   background: #050505;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -206,7 +206,7 @@ const CSS = `
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px 14px calc(80px + max(14px, env(safe-area-inset-bottom)));
+  padding: 8px 14px 20px;
 }
 .c-channels-view::-webkit-scrollbar{width:2px}
 .c-channels-view::-webkit-scrollbar-thumb{background:rgba(212,175,55,.2)}
