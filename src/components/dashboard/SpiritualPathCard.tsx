@@ -345,7 +345,14 @@ export const SpiritualPathCard: React.FC = () => {
   }
 
   const recommended = paths[0];
-  if (!recommended) return null;
+  if (!recommended) return renderCard(
+    'inner-peace',
+    'SHANTI · SATTVA PROTOCOL',
+    '21-Day Siddha-Path',
+    'A sacred 21-day journey through mantra, meditation and Vedic wisdom to awaken your highest self.',
+    0, 21, 0,
+    t('spiritualPath.startJourney', 'Begin Journey')
+  );
   const recSlugKey = normalizeSpiritualPathSlugKey(recommended.slug);
   const pathDesc = t(`spiritualPath.paths.${recSlugKey}.description`, recommended.description || '');
   const isInnerPeaceRec = isInnerPeacePathSlug(recommended.slug);
