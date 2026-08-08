@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { getTierRank, hasFeatureAccess, getSalesPageForRank } from '@/lib/tierAccess';
 
 interface Transmission {
@@ -215,10 +214,67 @@ export default function ExploreAkasha() {
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: white(0.28), marginTop: 7 }}>{t('exploreAkasha.subtitle')}</p>
       </div>
 
-            {/* ── SIDDHA DHARMA PATH ── */}
-      <div style={{ margin: '20px 16px 0', animation: 'sqFadeUp 0.4s 0.08s ease both' }}>
-        <SpiritualPathCard />
-      </div>
+      {/* ── SIDDHA DHARMA PATH ── */}
+      <a
+        href="/paths"
+        style={{
+          display: 'block',
+          margin: '20px 16px 0',
+          position: 'relative',
+          borderRadius: 24,
+          padding: '22px 20px 20px',
+          overflow: 'hidden',
+          textDecoration: 'none',
+          color: 'inherit',
+          background: 'linear-gradient(145deg, rgba(28,20,8,0.95) 0%, rgba(18,13,4,0.98) 50%, rgba(22,16,6,0.96) 100%)',
+          border: '1px solid rgba(212,175,55,0.25)',
+          boxShadow: '0 0 35px rgba(212,175,55,0.18), 0 0 80px rgba(212,175,55,0.10), 0 20px 60px rgba(0,0,0,0.8)',
+        }}
+      >
+        {/* Sacred geometry bg */}
+        <svg style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(0deg)', width: 260, height: 260, opacity: 0.04, pointerEvents: 'none' }} viewBox="0 0 200 200" fill="none">
+          <circle cx="100" cy="100" r="90" stroke="#D4AF37" strokeWidth="0.5"/>
+          <circle cx="100" cy="100" r="60" stroke="#D4AF37" strokeWidth="0.4"/>
+          <circle cx="100" cy="100" r="35" stroke="#D4AF37" strokeWidth="0.3"/>
+          <polygon points="100,18 174,145 26,145" stroke="#D4AF37" strokeWidth="0.4" fill="none"/>
+          <polygon points="100,182 26,55 174,55" stroke="#D4AF37" strokeWidth="0.4" fill="none"/>
+        </svg>
+        {/* Cave light */}
+        <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 160, background: 'radial-gradient(ellipse at center top, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.08) 30%, transparent 80%)', pointerEvents: 'none' }} />
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.75)' }}>
+              SHANTI · SATTVA PROTOCOL
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>21 Days</span>
+          </div>
+          <div style={{
+            fontSize: '1.35rem', fontWeight: 900, letterSpacing: '-0.025em', lineHeight: 1.1, marginBottom: 8,
+            background: 'linear-gradient(135deg, #8B6914 0%, #C9A227 20%, #F5E090 45%, #D4AF37 65%, #F5E090 80%, #C9A227 100%)',
+            backgroundSize: '300% 100%',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>
+            21-Day Siddha-Path
+          </div>
+          <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: 18 }}>
+            A sacred 21-day journey through mantra, meditation &amp; Vedic wisdom to awaken your highest self.
+          </div>
+          <div style={{ height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1, marginBottom: 14 }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+            <div style={{
+              padding: '11px 20px', borderRadius: 100,
+              fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: '#F5E090',
+              background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.08))',
+              border: '1px solid rgba(212,175,55,0.35)',
+              boxShadow: '0 0 20px rgba(212,175,55,0.2), inset 0 0 20px rgba(212,175,55,0.06)',
+            }}>
+              ▷ &nbsp;Begin Journey
+            </div>
+          </div>
+        </div>
+      </a>
 
       {/* ── LANGUAGE TOGGLE ── */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '20px 16px 4px', animation: 'sqFadeUp 0.4s 0.05s ease both' }}>
