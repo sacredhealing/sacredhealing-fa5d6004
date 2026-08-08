@@ -852,11 +852,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* ══ ZONE 6: DHARMA PATH (match preview) ══ */}
-          <SectionLabel label={t('dashboard.sectionDharmaPath')} delay="0.32s" />
-          <div style={{ margin: '10px 16px 0', animation: 'sqFadeUp 0.5s 0.32s ease both' }}>
-            <SpiritualPathCard />
-          </div>
+          {/* ══ ZONE 6: DHARMA PATH — moved to Akasha ══ */}
 
           {/* ══ ZONE 7: SOUL FIELD — stats + achievements only (no separate achievements section below) ══ */}
           
