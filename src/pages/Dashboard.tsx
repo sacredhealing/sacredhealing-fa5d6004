@@ -936,7 +936,37 @@ const Dashboard: React.FC = () => {
           <SacredBooksWidget />
         </div>
       )}
-      
+
+      {/* ── SUPPORT PILL ── */}
+      <div
+        onClick={() => navigate('/community?tab=support')}
+        style={{
+          margin: '8px 16px 32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '13px 18px',
+          background: 'rgba(212,175,55,0.04)',
+          border: '1px solid rgba(212,175,55,0.18)',
+          borderRadius: 999,
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🛟</span>
+          <div>
+            <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 11, fontWeight: 700, color: 'rgba(212,175,55,0.85)', letterSpacing: '0.01em' }}>
+              Need help or support?
+            </div>
+            <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
+              Tap to reach us inside the Sangha
+            </div>
+          </div>
+        </div>
+        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 16, fontWeight: 300 }}>›</span>
+      </div>
+
     </div>
   );
 };
