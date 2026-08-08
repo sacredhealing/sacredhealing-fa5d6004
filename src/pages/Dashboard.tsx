@@ -789,6 +789,69 @@ const Dashboard: React.FC = () => {
             <DailyRitualCard isDayClosed={isDayClosed} hasCompletedAllThree={hasCompletedAllThree} />
           </div>
 
+          {/* ══ DIVINE SANGHA NEXUS CARD ══ */}
+          <div
+            onClick={() => navigate('/community')}
+            style={{
+              margin: '18px 16px 0',
+              background: 'linear-gradient(135deg, rgba(212,175,55,0.07) 0%, rgba(212,175,55,0.02) 100%)',
+              border: '1px solid rgba(212,175,55,0.22)',
+              borderRadius: 24,
+              padding: '18px 18px 16px',
+              cursor: 'pointer',
+              position: 'relative',
+              overflow: 'hidden',
+              animation: 'sqFadeUp 0.5s 0.28s ease both',
+            }}
+          >
+            {/* shimmer */}
+            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.04), transparent)', animation: 'shimmer 4s infinite linear', pointerEvents: 'none' }} />
+
+            {/* header row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>
+                  Divine Community
+                </div>
+                <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 17, fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                  Sangha Nexus
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 999, padding: '4px 10px' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', color: 'rgba(212,175,55,0.8)', textTransform: 'uppercase' }}>Live</span>
+                </div>
+              </div>
+            </div>
+
+            {/* channel pills */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+              {[
+                { icon: '🔱', name: 'Divine Sangha' },
+                { icon: '✦', name: 'Healing' },
+                { icon: '⚡', name: 'Siddha Lab' },
+                { icon: '🛟', name: 'Support' },
+              ].map((ch) => (
+                <div key={ch.name} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 999, padding: '4px 10px' }}>
+                  <span style={{ fontSize: 11 }}>{ch.icon}</span>
+                  <span style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>{ch.name}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                Connect · Share · Grow together
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#D4AF37', borderRadius: 999, padding: '7px 14px' }}>
+                <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 9, fontWeight: 800, letterSpacing: '0.25em', color: '#050505', textTransform: 'uppercase' }}>Enter</span>
+                <span style={{ color: '#050505', fontSize: 12, fontWeight: 700 }}>›</span>
+              </div>
+            </div>
+          </div>
+
           {/* ══ ZONE 6: DHARMA PATH (match preview) ══ */}
           <SectionLabel label={t('dashboard.sectionDharmaPath')} delay="0.32s" />
           <div style={{ margin: '10px 16px 0', animation: 'sqFadeUp 0.5s 0.32s ease both' }}>
