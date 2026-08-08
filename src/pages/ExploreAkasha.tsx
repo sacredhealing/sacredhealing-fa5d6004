@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { getTierRank, hasFeatureAccess, getSalesPageForRank } from '@/lib/tierAccess';
 
 interface Transmission {
@@ -214,55 +215,9 @@ export default function ExploreAkasha() {
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: white(0.28), marginTop: 7 }}>{t('exploreAkasha.subtitle')}</p>
       </div>
 
-      {/* ── SIDDHA DHARMA PATH ── */}
-      <div
-        onClick={() => navigate('/paths')}
-        style={{ margin: '20px 16px 0', cursor: 'pointer', animation: 'sqFadeUp 0.4s 0.08s ease both',
-          position: 'relative', borderRadius: 24, overflow: 'hidden',
-          background: 'linear-gradient(145deg, rgba(28,20,8,0.95) 0%, rgba(18,13,4,0.98) 50%, rgba(22,16,6,0.96) 100%)',
-          border: '1px solid rgba(212,175,55,0.28)',
-          boxShadow: '0 0 35px rgba(212,175,55,0.1), 0 0 80px rgba(212,175,55,0.05)',
-          padding: '22px 20px 20px',
-        }}
-      >
-        {/* Sacred geometry background */}
-        <svg style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 260, height: 260, opacity: 0.04, pointerEvents: 'none' }} viewBox="0 0 200 200" fill="none">
-          <circle cx="100" cy="100" r="90" stroke="#D4AF37" strokeWidth="0.5"/>
-          <circle cx="100" cy="100" r="60" stroke="#D4AF37" strokeWidth="0.4"/>
-          <circle cx="100" cy="100" r="35" stroke="#D4AF37" strokeWidth="0.3"/>
-          <polygon points="100,18 174,145 26,145" stroke="#D4AF37" strokeWidth="0.4" fill="none"/>
-          <polygon points="100,182 26,55 174,55" stroke="#D4AF37" strokeWidth="0.4" fill="none"/>
-        </svg>
-        {/* Shimmer */}
-        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(105deg, transparent 0%, rgba(212,175,55,0.04) 50%, transparent 100%)', animation: 'sqFadeUp 8s ease-in-out infinite', pointerEvents: 'none' }} />
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 8 }}>
-            Shanti · Sattva Protocol
-          </div>
-          <div style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.1,
-            background: 'linear-gradient(135deg, #8B6914 0%, #C9A227 20%, #F5E090 45%, #D4AF37 65%, #F5E090 80%, #C9A227 100%)',
-            backgroundSize: '300% 100%', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            marginBottom: 6,
-          }}>
-            21-Day Siddha Path
-          </div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 20, lineHeight: 1.6 }}>
-            A sacred 21-day journey through mantra, meditation &amp; Vedic wisdom
-          </div>
-          <div style={{ height: 1, background: 'linear-gradient(90deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05),transparent)', marginBottom: 16 }} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>Begin your journey</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 100,
-              background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.08))',
-              border: '1px solid rgba(212,175,55,0.35)',
-              fontFamily: "'Montserrat',sans-serif", fontSize: 9, fontWeight: 800, letterSpacing: '0.18em',
-              color: '#F5E090', textTransform: 'uppercase',
-            }}>
-              ▷ &nbsp;Start Path
-            </div>
-          </div>
-        </div>
+            {/* ── SIDDHA DHARMA PATH ── */}
+      <div style={{ margin: '20px 16px 0', animation: 'sqFadeUp 0.4s 0.08s ease both' }}>
+        <SpiritualPathCard />
       </div>
 
       {/* ── LANGUAGE TOGGLE ── */}
