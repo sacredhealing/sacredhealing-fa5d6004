@@ -2303,6 +2303,7 @@ export type Database = {
           created_at: string
           id: string
           is_pinned: boolean | null
+          is_support_resolved: boolean
           message_type: string | null
           room_id: string
           user_id: string
@@ -2313,6 +2314,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_pinned?: boolean | null
+          is_support_resolved?: boolean
           message_type?: string | null
           room_id: string
           user_id: string
@@ -2323,6 +2325,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_pinned?: boolean | null
+          is_support_resolved?: boolean
           message_type?: string | null
           room_id?: string
           user_id?: string

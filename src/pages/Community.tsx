@@ -3710,8 +3710,7 @@ const Community = () => {
                     <div className="c-ch-arrow" style={{ color: "#D4AF37" }}>›</div>
                   </button>
                 </div>
-              </div>{/* end inner scroll */}
-            </div>{/* end c-channels-view */}
+              </div>
             )
           ) : mobileTab === "feed" ? (
             <div className="c-feed-view">
