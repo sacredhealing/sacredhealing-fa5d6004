@@ -3648,7 +3648,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 <button
                   type="button"
                   onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  aria-label={t("quantumApothecaryChat.scrollToTop")}
+                  aria-label="Scroll to top"
                   style={{
                     width:30, height:30, borderRadius:"50%",
                     background:"rgba(10,8,2,0.92)",
