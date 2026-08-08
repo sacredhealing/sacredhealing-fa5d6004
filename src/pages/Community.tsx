@@ -113,7 +113,7 @@ const CHANNELS = [
     name: "Support & Help",
     icon: "🛟",
     description: "Ask for help · report bugs · request features",
-    access: "public",
+    access: "support",
   },
 ];
 
@@ -3675,6 +3675,29 @@ const Community = () => {
                   );
                 })}
 
+                {/* ── SUPPORT & HELP — always last ── */}
+                <div className="c-section-label">SUPPORT</div>
+                {CHANNELS.filter((c) => c.access === "support").map((ch) => {
+                  const roomUnread = groupUnreadByRoom[roomIds[ch.id]] || 0;
+                  return (
+                    <button key={ch.id} className="c-channel-row" onClick={() => { setActiveChannel(ch.id); setMobileTab("chat"); if (roomIds[ch.id]) clearRoomUnread(roomIds[ch.id]); }}>
+                      <div className="c-ch-icon" style={{ position: "relative" }}>
+                        {ch.icon}
+                        {roomUnread > 0 && (
+                          <div style={{ position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: "radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)", color: "#1a1300", fontSize: 9, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 8px rgba(212,175,55,.7)" }}>
+                            {roomUnread > 9 ? "9+" : roomUnread}
+                          </div>
+                        )}
+                      </div>
+                      <div className="c-ch-info">
+                        <div className="c-ch-name">{ch.name}</div>
+                        <div className="c-ch-desc">{ch.description}</div>
+                        <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>Open to all members</div>
+                      </div>
+                      <div className="c-ch-arrow">›</div>
+                    </button>
+                  );
+                })}
                 </div>
             )
           ) : mobileTab === "feed" ? (
