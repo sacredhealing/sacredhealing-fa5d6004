@@ -113,8 +113,7 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
     ? '0 1px 1px rgba(0,0,0,0.3), 0 0 10px rgba(212,175,55,0.6), 0 0 22px rgba(212,175,55,0.32)'
     : '0 0 10px rgba(212,175,55,0.45), 0 0 22px rgba(212,175,55,0.22)';
   const headingColor = gold;
-  const lines = text.split('
-');
+  const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
