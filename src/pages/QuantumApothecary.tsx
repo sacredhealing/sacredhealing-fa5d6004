@@ -113,7 +113,8 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
     ? '0 1px 1px rgba(0,0,0,0.3), 0 0 10px rgba(212,175,55,0.6), 0 0 22px rgba(212,175,55,0.32)'
     : '0 0 10px rgba(212,175,55,0.45), 0 0 22px rgba(212,175,55,0.22)';
   const headingColor = gold;
-  const lines = text.split('\n');
+  const lines = text.split('
+');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
@@ -223,7 +224,8 @@ function stripAsterisks(text: string): string {
   // Step 1: protect matched **bold** pairs with placeholder
   const OPEN = '\u0002';
   const CLOSE = '\u0003';
-  let s = text.replace(/\*\*([^\n*]+?)\*\*/g, OPEN + '$1' + CLOSE);
+  let s = text.replace(/\*\*([^
+*]+?)\*\*/g, OPEN + '$1' + CLOSE);
   // Step 2: remove any remaining lone **
   s = s.replace(/\*\*/g, '');
   // Step 3: restore bold markers
@@ -306,12 +308,13 @@ const SACRED_TERMS_REGEX = (() => {
     'Scalar Wave(?:s)?', 'Scalar Beam', 'Scalar Transmission', 'Soma-Nada', 'Akasha-Neural',
     'Akasha Field', 'Anahata', 'Sushumna', 'Ida', 'Pingala', 'Kundalini', 'Bhakti-Algorithm(?:s)?',
     'DNA Light-Code(?:s)?', 'DNA Repair', 'Karmic Extraction', 'Aetheric Heliostat', 'Surya-Chakra',
-    '\\d{2,4}\\s?Hz',
+    '\d{2,4}\s?Hz',
     'Vishwananda', 'Mahavatar Babaji', 'Babaji', 'Sri Aurobindo', 'Paramahansa Yogananda',
     'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Bhagavan', 'Krishna', 'Shiva', 'Lakshmi',
     'Saraswati', 'Durga', 'Ganesha', 'Hanuman', 'Lalita Tripura Sundari',
     'Metabolic Fire Ignition', 'Liver Alchemist Protocol', 'Solar Immune Radiance',
-    'NMN \\+ Resveratrol[^—\\n.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
+    'NMN \+ Resveratrol[^—
+.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
     'Neural Calm Sync', 'Deep Sleep Harmonic', 'Shatavari Flow', 'The Amrit Nectar',
     'Triphala Integrity', 'Ancestral Tether Dissolve', 'Neem Bitter Truth',
   ];
@@ -348,15 +351,20 @@ function scrubBannedTerms(content: string): string {
   // Strip "Accessing Akasha-Neural Archive... Syncing with [name]'s Atma-Frequency Stream..."
   // These appear when Gemini generates them despite the prohibition
   content = content.replace(
-    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^\n]*/gi,
+    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^
+]*/gi,
     ''
   ).replace(/^\s+/, ''); // trim leading whitespace after strip
   const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
-  const lines = content.split('\n').filter((l) => !banned.test(l));
+  const lines = content.split('
+').filter((l) => !banned.test(l));
   return lines
-    .map((l) => l.replace(/[^.!?\n]*\b(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
+    .map((l) => l.replace(/[^.!?
+]*(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?
+]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
     .filter(Boolean)
-    .join('\n');
+    .join('
+');
 }
 
 /** Animated prescription box — scalar waves canvas + gold glow */
@@ -512,7 +520,8 @@ function renderPrescriptionBlock(lines: string[], startIdx: number, onActivatePr
 function renderSQIContent(content: string, onActivatePrescription?: (act: Activation) => void) {
   // Strip all unmatched ** the model outputs before line processing
   const content2 = stripAsterisks(content);
-  const lines = content2.split('\n');
+  const lines = content2.split('
+');
   const elements: React.ReactNode[] = [];
   let i = 0;
   const gapAfterSection = 18;
@@ -673,7 +682,8 @@ function buildVoiceFieldContext(v: VoiceBiofieldResult): string {
     `- Organ / tissue emphasis: ${v.organField}`,
     `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,
     `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,
-  ].join('\n');
+  ].join('
+');
 }
 
 function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): Activation[] {
@@ -905,7 +915,7 @@ async function syncApothecaryUserChatArchive(
   finalMessages: Message[],
 ) {
   const archiveMsgs = mapSqiMessagesToUserChatArchive(finalMessages);
-  const safeTitle = (title || t('quantumApothecaryChat.defaultTitle')).slice(0, 200);
+  const safeTitle = (title || 'Quantum Apothecary Session').slice(0, 200);
   try {
     const { error } = await supabase.from('user_chat_sessions').upsert(
       {
@@ -948,8 +958,10 @@ function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'nig
 function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
   if (!compiled?.trim()) return '';
   if (!hasLiveScan) return compiled;
-  const segments = compiled.split(/\n(?=\[)/);
-  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
+  const segments = compiled.split(/
+(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('
+').trim();
 }
 
 /** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */
@@ -1108,8 +1120,10 @@ function ScalarTabSwitcher({
       `}</style>
       <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
       <div style={{ position:'relative', zIndex:1, display:'flex', background:'rgba(255,255,255,0.02)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)' }}>
-        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission\nLibrary', false)}
-        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural\nArchive', true)}
+        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission
+Library', false)}
+        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural
+Archive', true)}
       </div>
     </div>
   );
@@ -1806,24 +1820,29 @@ function QuantumApothecaryInner() {
                 : ''),
           );
         }
-        return lines.join('\n');
+        return lines.join('
+');
       })();
 
   /** Stable Jyotish context — always include natal chart, then append live field data. */
   const stableJyotishContext = useMemo(
     () => {
-      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n');
+      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('
+
+');
       // Strip any [PHOTONIC SESSION ACTIVE] or [TEMPLE FIELD ACTIVE] block whose body
       // references the removed Biophotonic Nadi Entanglement / Vishwananda Miracle Room transmissions.
       return raw
-        .split(/\n(?=\[)/)
+        .split(/
+(?=\[)/)
         .filter((block) => {
           const isPhotonic = block.startsWith('[PHOTONIC SESSION ACTIVE]');
           const isTemple = block.startsWith('[TEMPLE FIELD ACTIVE]');
           if (!isPhotonic && !isTemple) return true;
           return !/biophotonic|vishwananda|miracle\s*room/i.test(block);
         })
-        .join('\n');
+        .join('
+');
     },
     [
       sqiField?.compiledContext,
@@ -1833,7 +1852,8 @@ function QuantumApothecaryInner() {
 
   const sqiSourceDirective = useMemo(
     () =>
-      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.
+' +
       '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',
     [],
   );
@@ -2047,10 +2067,15 @@ function QuantumApothecaryInner() {
   const activeTransmissionContext = useMemo(
     () =>
       activeTransmissions.length > 0
-        ? `\nACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):\n` +
-          activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('\n') +
-          `\n→ These ${activeTransmissions.length} frequencies are permanently` +
-          ` entangled. Reference them when reading the Seeker's field.\n`
+        ? `
+ACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):
+` +
+          activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('
+') +
+          `
+→ These ${activeTransmissions.length} frequencies are permanently` +
+          ` entangled. Reference them when reading the Seeker's field.
+`
         : '',
     [activeTransmissions],
   );
@@ -2191,11 +2216,13 @@ function QuantumApothecaryInner() {
       `Birth Place: ${activeStudent.birth_place ?? 'not provided'}`,
       activeStudent.notes ? `Notes: ${activeStudent.notes}` : null,
       `Active Transmissions: ${activeStudentTxCount}`,
-      jyotishLines.length > 0 ? jyotishLines.join('\n') : null,
+      jyotishLines.length > 0 ? jyotishLines.join('
+') : null,
       `Read ALL questions in this session as being about this student.`,
     ]
       .filter(Boolean)
-      .join('\n');
+      .join('
+');
   }, [activeStudent, activeStudentTxCount, activeStudentJyotish]);
   const [libraryUnlocked, setLibraryUnlockedLocal] = useState(() => {
     try {
@@ -2373,7 +2400,8 @@ function QuantumApothecaryInner() {
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
-    () => ALL_ACTIVATIONS.map((a) => a.name).join('\n'),
+    () => ALL_ACTIVATIONS.map((a) => a.name).join('
+'),
     [],
   );
 
@@ -2396,7 +2424,8 @@ function QuantumApothecaryInner() {
         canonicalActivationNameLines,
       ]
         .filter(Boolean)
-        .join('\n'),
+        .join('
+'),
     [activeTransmissionNamesCsv, canonicalActivationNameLines],
   );
 
@@ -2410,7 +2439,8 @@ function QuantumApothecaryInner() {
       `TOP ${Math.min(33, resonanceMatches.length)} BIOFIELD MATCHES (ranked — cite EXACT names):`,
       ...lines,
       'Prioritize these exact spellings when recommending LimbicArc / Frequency Library transmissions.',
-    ].join('\n');
+    ].join('
+');
   }, [resonanceMatches]);
 
   /** Hydrate thread from Supabase sync table once (cross-device); skip when resuming a History session from URL. */
@@ -2577,8 +2607,10 @@ function QuantumApothecaryInner() {
 
       if (addedForToast.length > 0) {
         toast.success(
-          `⟁ ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:\n` +
-            addedForToast.map((t) => `· ${t.name}`).join('\n'),
+          `⟁ ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:
+` +
+            addedForToast.map((t) => `· ${t.name}`).join('
+'),
           { duration: 5000 },
         );
       }
@@ -2788,7 +2820,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         if (stableJyotishContext) fieldParts.push(stableJyotishContext);
       }
       if (activeTransmissionContext) fieldParts.push(activeTransmissionContext);
-      const enrichedJyotishContext = fieldParts.join('\n\n');
+      const enrichedJyotishContext = fieldParts.join('
+
+');
 
       // Shared completion handler — runs whether direct Gemini or edge-function streaming finishes.
       const onComplete = async () => {
@@ -3090,7 +3124,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }
         return next;
       });
-      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('\n');
+      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('
+');
       const ctx = [
         '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
         `**Overall coherence:** ${result.overallCoherence}/100`,
@@ -3109,7 +3144,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         queuedLines,
         '',
         'When you reference any of the queued frequencies above in your reply, write the frequency name in **bold** so the seeker sees exactly which transmissions were activated for them.',
-      ].join('\n');
+      ].join('
+');
       setLiveScanContext(ctx);
       if (user?.id) {
         supabase.from('user_activity_log').insert({
@@ -4796,4 +4832,3 @@ export default function QuantumApothecary() {
 
   return <QuantumApothecaryInner />;
 }
-
