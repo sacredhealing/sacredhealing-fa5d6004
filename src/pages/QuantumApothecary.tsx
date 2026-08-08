@@ -964,6 +964,7 @@ function ScalarTabSwitcher({
   onLibrary: () => void;
   onArchive: () => void;
 }) {
+  const { t } = useTranslation();
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const rafRef = React.useRef<number>(0);
@@ -1285,6 +1286,7 @@ function ScalarHowItWorksCard() {
 
 /** Scalar Wave wrapper for Top 33 Full Library Match — visual only */
 function ScalarTop33Wrapper({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const rafRef = React.useRef<number>(0);
@@ -1345,6 +1347,7 @@ function ScalarTop33Wrapper({ children }: { children: React.ReactNode }) {
 
 
 function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const rafRef = React.useRef<number>(0);
@@ -1431,6 +1434,7 @@ function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
 
 
 function ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: () => void }) {
+  const { t } = useTranslation();
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const rafRef = React.useRef<number>(0);
@@ -1533,6 +1537,7 @@ function ScalarToolbarBanner({
   onHistory: () => void;
   onLexicon: () => void;
 }) {
+  const { t } = useTranslation();
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const rafRef = React.useRef<number>(0);
@@ -1653,6 +1658,7 @@ function ScalarToolbarBanner({
 
 /** Scalar Wave Composer — Telegram-style input with animated canvas */
 function ScalarComposerCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {
+  const { t } = useTranslation();
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const rafRef = React.useRef<number>(0);
   React.useEffect(() => {
