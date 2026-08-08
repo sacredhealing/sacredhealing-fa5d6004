@@ -108,6 +108,13 @@ const CHANNELS = [
     description: "Special invite from admin only",
     access: "invite",
   },
+  {
+    id: "support",
+    name: "Support & Help",
+    icon: "🛟",
+    description: "Ask for help · report bugs · request features",
+    access: "support",
+  },
 ];
 
 // ─────────────────────────────────────────────
@@ -3446,6 +3453,37 @@ const Community = () => {
                               )}
                               <div className={`c-bubble ${isMine ? "mine" : ""}`} {...bubbleLongPressHandlers(msg.id)}>
                                 {msg.content}
+                                {activeChannel === "support" && isAdmin && (
+                                  <button
+                                    onClick={async () => {
+                                      await (supabase as any)
+                                        .from("chat_messages")
+                                        .update({ is_support_resolved: !(msg as any).is_support_resolved })
+                                        .eq("id", msg.id);
+                                      setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, is_support_resolved: !(m as any).is_support_resolved } as any : m));
+                                    }}
+                                    title={(msg as any).is_support_resolved ? "Mark as unsolved" : "Mark as solved"}
+                                    style={{
+                                      position: "absolute", bottom: 6, left: 8,
+                                      background: (msg as any).is_support_resolved ? "rgba(34,197,94,0.18)" : "rgba(212,175,55,0.12)",
+                                      border: (msg as any).is_support_resolved ? "1px solid rgba(34,197,94,0.45)" : "1px solid rgba(212,175,55,0.3)",
+                                      borderRadius: 999, color: (msg as any).is_support_resolved ? "#22c55e" : "#D4AF37",
+                                      fontSize: 9, fontWeight: 800, letterSpacing: "0.08em",
+                                      padding: "2px 7px", cursor: "pointer", textTransform: "uppercase",
+                                    }}
+                                  >
+                                    {(msg as any).is_support_resolved ? "✓ Solved" : "Mark Solved"}
+                                  </button>
+                                )}
+                                {activeChannel === "support" && (msg as any).is_support_resolved && !isAdmin && (
+                                  <span style={{
+                                    position: "absolute", bottom: 6, left: 8,
+                                    background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)",
+                                    borderRadius: 999, color: "#22c55e",
+                                    fontSize: 9, fontWeight: 800, letterSpacing: "0.08em",
+                                    padding: "2px 7px", textTransform: "uppercase",
+                                  }}>✓ Solved</span>
+                                )}
                                 {!isDmChannel(activeChannel) && (isMine || isAdmin) && (
                                   <button className="c-delete-btn" onClick={() => deleteMessage(msg.id)}>✕</button>
                                 )}
@@ -3636,6 +3674,32 @@ const Community = () => {
                     </button>
                   );
                 })}
+
+                {/* ── SUPPORT CHANNEL — pinned at bottom, open to all ── */}
+                <div className="c-section-label" style={{ marginTop: 12 }}>SUPPORT &amp; HELP</div>
+                <button
+                  className="c-channel-row"
+                  onClick={() => {
+                    setActiveChannel("support");
+                    setMobileTab("chat");
+                    if (roomIds["support"]) clearRoomUnread(roomIds["support"]);
+                  }}
+                  style={{ borderTop: "1px solid rgba(212,175,55,0.10)", paddingTop: 14, marginTop: 4 }}
+                >
+                  <div className="c-ch-icon" style={{ position: "relative", fontSize: 22 }}>🛟
+                    {(groupUnreadByRoom[roomIds["support"]] || 0) > 0 && (
+                      <div style={{ position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: "radial-gradient(circle at 30% 30%, #F4D35E, #D4AF37 75%)", color: "#1a1300", fontSize: 9, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 8px rgba(212,175,55,.7)" }}>
+                        {(groupUnreadByRoom[roomIds["support"]] || 0) > 9 ? "9+" : groupUnreadByRoom[roomIds["support"]]}
+                      </div>
+                    )}
+                  </div>
+                  <div className="c-ch-info">
+                    <div className="c-ch-name">Support &amp; Help</div>
+                    <div className="c-ch-desc">Ask for help · report bugs · request features</div>
+                    <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>Open to all members</div>
+                  </div>
+                  <div className="c-ch-arrow">›</div>
+                </button>
               </div>
             )
           ) : mobileTab === "feed" ? (
