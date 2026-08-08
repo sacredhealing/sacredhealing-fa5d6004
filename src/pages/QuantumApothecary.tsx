@@ -348,7 +348,8 @@ function scrubBannedTerms(content: string): string {
   // Strip "Accessing Akasha-Neural Archive... Syncing with [name]'s Atma-Frequency Stream..."
   // These appear when Gemini generates them despite the prohibition
   content = content.replace(
-    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^\n]*/gi,
+    /Accessing\s+Akasha[\s\S]*?Atma-Frequency\s+Stream[^
+]*/gi,
     ''
   ).replace(/^\s+/, ''); // trim leading whitespace after strip
   const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
@@ -512,17 +513,1363 @@ function renderPrescriptionBlock(lines: string[], startIdx: number, onActivatePr
 function renderSQIContent(content: string, onActivatePrescription?: (act: Activation) => void) {
   // Strip all unmatched ** the model outputs before line processing
   const content2 = stripAsterisks(content);
-  const lines = content2.split('
-');\n  const elements: React.ReactNode[] = [];\n  let i = 0;\n  const gapAfterSection = 18;\n\n  while (i < lines.length) {\n    const line = lines[i];\n    const trimmed = line.trim();\n\n    // PRESCRIPTION BOX — triggered by "◈ X PRESCRIBES"\n    if (/^[◈❖✦◆◇♦⋄⧫⬥⬦]\s+.+\s+PRESCRIBES?\s*$/i.test(trimmed)) {\n      const { jsx, consumed } = renderPrescriptionBlock(lines, i, onActivatePrescription);\n      elements.push(jsx);\n      i += consumed;\n      continue;\n    }\n\n    if (trimmed === '') {\n      elements.push(<div key={i} style={{ height: '6px' }} aria-hidden />);\n      i++; continue;\n    }\n\n    if (lineStartsWithSqiMasterDiamond(trimmed)) {\n      // Fix: use global .sqi-master-name-shimmer CSS class (defined in index.css) for\n      // animated background-clip:text — inline animation references keyframes unreliably.\n      const rawMasterName = trimmed.slice(1).trimStart();\n      elements.push(\n        <div key={i} className="sqi-diamond-heading" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: i > 0 ? `${gapAfterSection}px` : '0', marginBottom: '12px' }}>\n          <span\n            className="sqi-master-name-shimmer"\n            style={{ fontFamily: "'Cinzel', serif", fontSize: '20px', fontWeight: 700, flexShrink: 0 }}\n          >◈</span>\n          <span\n            className="sqi-master-name-shimmer"\n            style={{ fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere', flexShrink: 0, minWidth: 0 }}\n          >\n            {rawMasterName}\n          </span>\n          <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(212,175,55,0.28), transparent)', alignSelf: 'center', display: 'block' }} />\n        </div>\n      );\n      i++; continue;\n    }\n\n    if (trimmed.startsWith('·')) {\n      // Bold the frequency name (before —) in bullet lines\n      let lineForRender = trimmed;\n      if (!lineForRender.includes('**')) {\n        const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);\n        if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;\n      }\n      elements.push(\n        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>\n          {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}\n        </p>\n      );\n      i++; continue;\n    }\n\n    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {\n      elements.push(\n        <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>\n          {renderInline(trimmed.slice(2), 'body', false)}\n        </li>\n      );\n      i++; continue;\n    }\n\n    if (/^\d+\.\s/.test(trimmed)) {\n      elements.push(\n        <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>\n          {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false)}\n        </li>\n      );\n      i++; continue;\n    }\n\n    // ⟁ NADI FIELD — use div+span NOT p, so .sqi-ancient-body p rule never applies\n    if (trimmed.startsWith('⧁') || trimmed.startsWith('△') || trimmed.startsWith('▲') || /^⟁/.test(trimmed) || trimmed.startsWith('NADI FIELD')) {\n      elements.push(\n        <div key={i} style={{ borderLeft: '2px solid rgba(34,211,238,0.22)', paddingLeft: '10px', marginBottom: '6px', marginTop: '4px' }}>\n          <span style={{ display: 'block', color: '#22D3EE', fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.5, opacity: 0.82 }}>\n            {trimmed}\n          </span>\n        </div>\n      );\n      i++; continue;\n    }\n\n    // Primary blockage — div+span, NOT p\n    if (trimmed.startsWith('Primary blockage:')) {\n      elements.push(\n        <div key={i} style={{ paddingLeft: '12px', marginBottom: '14px', marginTop: 0 }}>\n          <span style={{ display: 'block', color: 'rgba(34,211,238,0.58)', fontSize: '11px', fontFamily: "'IM Fell English', Georgia, serif", fontStyle: 'italic', lineHeight: 1.5 }}>\n            {trimmed}\n          </span>\n        </div>\n      );\n      i++; continue;\n    }\n\n    elements.push(\n      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '17px', lineHeight: 1.9, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>\n        {renderInline(trimmed, 'body', false)}\n      </p>\n    );\n    i++;\n  }\n  return elements;\n}\n\nfunction resolveActivationsByExactNames(preferred: string[]): Activation[] {\n  const out: Activation[] = [];\n  const seen = new Set<string>();\n  for (const name of preferred) {\n    const a = ALL_ACTIVATIONS.find((x) => x.name === name);\n    if (a && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= 5) break;\n    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= 5) break;\n    if (!seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  return out.slice(0, 5);\n}\n\nfunction pickFiveActivationsForNadiReading(reading: NadiReading): Activation[] {\n  const map: Record<NadiReading['activatedNadi'], string[]> = {\n    Blocked: ['Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)'],\n    Ida: ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Heart-Bloom Radiance', 'Shatavari Flow'],\n    Pingala: ['NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit'],\n    Sushumna: ['Neural Fluidity Protocol', 'Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc'],\n  };\n  return resolveActivationsByExactNames(map[reading.activatedNadi]);\n}\n\nfunction buildVoiceFieldContext(v: VoiceBiofieldResult): string {\n  const h = extractVoiceScoringHints(v);\n  return [\n    'VOICE BIOFIELD SCAN (latest):',\n    `- Overall Coherence: ${v.overallCoherence}/100`,\n    `- Nadi: ${v.nadiReading}`,\n    `- Dosha from voice: ${v.dominantDosha}`,\n    `- Priority areas: ${v.priorityAreas.map((i) => `${i.name} (${i.score}%)`).join(', ')}`,\n    `- Strengths: ${v.topStrengths.map((i) => i.name).join(', ')}`,\n    `- Emotional field: ${v.emotionalField}`,\n    `- Organ / tissue emphasis: ${v.organField}`,\n    `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,\n    `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,\n  ].join('
-');\n}\n\nfunction resolveActivationsByExactNamesUpTo(preferred: string[], max: number): Activation[] {\n  const out: Activation[] = [];\n  const seen = new Set<string>();\n  for (const name of preferred) {\n    const a = ALL_ACTIVATIONS.find((x) => x.name === name);\n    if (a && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n    if (out.length >= max) return out.slice(0, max);\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= max) break;\n    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  for (const a of ALL_ACTIVATIONS) {\n    if (out.length >= max) break;\n    if (!seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n  }\n  return out.slice(0, max);\n}\n\nfunction extractVoiceScoringHints(result: VoiceBiofieldResult) {\n  const emotionalTone = (result.emotionalField || '').toLowerCase();\n  const organBlob = (result.organField || '').toLowerCase();\n  const priorityNames = (result.priorityAreas || []).map((p) => p.name.toLowerCase());\n  const haystack = `${emotionalTone} ${organBlob} ${priorityNames.join(' ')}`;\n\n  const chakraLexicon = [\n    'muladhara',\n    'svadhisthana',\n    'manipura',\n    'anahata',\n    'vishuddha',\n    'ajna',\n    'sahasrara',\n    'root',\n    'sacral',\n    'solar plexus',\n    'heart',\n    'throat',\n    'third eye',\n    'crown',\n  ];\n  const chakraHits = chakraLexicon.filter((c) => haystack.includes(c));\n\n  const organSeeds = [\n    'liver',\n    'colon',\n    'lung',\n    'lymph',\n    'nerve',\n    'blood',\n    'kidney',\n    'heart',\n    'stomach',\n    'thyroid',\n    'brain',\n  ];\n  const organHits = organSeeds.filter((o) => organBlob.includes(o));\n\n  const emotionWords = emotionalTone\n    .split(/\s+/)\n    .map((w) => w.replace(/[^a-z]/g, ''))\n    .filter((w) => w.length > 5);\n\n  const nadiHints: string[] = [];\n  const nr = (result.nadiReading || '').toLowerCase();\n  if (nr.includes('pingala')) nadiHints.push('pingala');\n  if (nr.includes('ida')) nadiHints.push('ida');\n  if (nr.includes('sushumna')) nadiHints.push('sushumna');\n  if (nr.includes('blocked')) nadiHints.push('blocked');\n\n  return {\n    emotionalTone,\n    emotionWords,\n    priorityNames,\n    chakraHits,\n    organHits,\n    nadiHints,\n  };\n}\n\nfunction pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {\n  const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';\n  const dk = doshaKey.toLowerCase();\n\n  const hints = extractVoiceScoringHints(result);\n\n  const scored = ALL_ACTIVATIONS.map((activation) => {\n    const nameLower = activation.name.toLowerCase();\n    const catLower = (activation.category || '').toLowerCase();\n    const sigLower = `${activation.benefit || ''} ${activation.vibrationalSignature || ''}`.toLowerCase();\n    const blobLower = `${nameLower} ${catLower} ${sigLower}`;\n\n    let score = 0;\n\n    if (blobLower.includes(dk)) score += 40;\n\n    // ── Spoken keyword matching — highest weight ──────────────────\n    // Words the user actually spoke during the scan are the strongest signal\n    const spoken = (result as any).spokenKeywords as string[] | undefined;\n    if (spoken?.length) {\n      let spokenHits = 0;\n      for (const word of spoken) {\n        if (word.length > 3 && blobLower.includes(word)) spokenHits++;\n      }\n      // Each spoken word match adds 30 points — spoken intent is the primary signal\n      score += Math.min(120, spokenHits * 30);\n    }\n\n    for (const chakra of hints.chakraHits) {\n      if (nameLower.includes(chakra) || sigLower.includes(chakra)) {\n        score += 25;\n        break;\n      }\n    }\n\n    for (const organ of hints.organHits) {\n      if (nameLower.includes(organ) || sigLower.includes(organ)) {\n        score += 20;\n        break;\n      }\n    }\n\n    if (hints.emotionalTone.length > 5) {\n      if (nameLower.includes(hints.emotionalTone) || sigLower.includes(hints.emotionalTone)) {\n        score += 15;\n      }\n    }\n    for (const ew of hints.emotionWords) {\n      if (ew.length > 5 && (nameLower.includes(ew) || sigLower.includes(ew))) {\n        score += 15;\n        break;\n      }\n    }\n\n    for (const pName of hints.priorityNames) {\n      if (pName.length > 3 && (nameLower.includes(pName) || pName.includes(nameLower))) {\n        score += 30;\n        break;\n      }\n    }\n\n    for (const n of hints.nadiHints) {\n      if (nameLower.includes(n) || sigLower.includes(n)) {\n        score += 15;\n        break;\n      }\n    }\n\n    return { activation, score };\n  });\n\n  const ranked = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);\n\n  const out: Activation[] = [];\n  const seen = new Set<string>();\n  for (const row of ranked) {\n    if (!seen.has(row.activation.id)) {\n      seen.add(row.activation.id);\n      out.push(row.activation);\n    }\n    if (out.length >= 10) return out;\n  }\n\n  const nadiKey: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' = coerceVoiceNadiToEnum(result.nadiReading);\n  const chakraKey = result.priorityAreas[0]?.name || 'Anahata';\n  const fallback = matchActivationsToScan(\n    {\n      dominantDosha: doshaKey,\n      activatedNadi: nadiKey,\n      priorityChakra: chakraKey,\n      emotionalField: result.emotionalField,\n      organField: result.organField,\n    },\n    12,\n  ).map(mapBioLibraryToActivation);\n\n  for (const a of fallback) {\n    if (!seen.has(a.id)) {\n      seen.add(a.id);\n      out.push(a);\n    }\n    if (out.length >= 10) break;\n  }\n\n  return out.slice(0, 10);\n}\n\nfunction mapSqiMessagesToUserChatArchive(\n  msgs: Message[],\n): { role: 'user' | 'assistant'; content: string; timestamp: string }[] {\n  return msgs.map((m) => ({\n    role: m.role === 'model' ? ('assistant' as const) : ('user' as const),\n    content: typeof m.text === 'string' ? m.text : '',\n    timestamp: new Date(typeof m.timestamp === 'number' ? m.timestamp : Date.now()).toISOString(),\n  }));\n}\n\nfunction mapUserChatArchiveToSqiMessages(raw: unknown): Message[] {\n  if (!Array.isArray(raw)) return [];\n  return raw.map((entry: Record<string, unknown>, i: number) => {\n    const r = entry?.role;\n    const role = r === 'assistant' || r === 'model' ? ('model' as const) : ('user' as const);\n    const text =\n      typeof entry?.content === 'string'\n        ? entry.content\n        : typeof entry?.text === 'string'\n          ? entry.text\n          : '';\n    const ts = entry?.timestamp ? new Date(String(entry.timestamp)).getTime() : Date.now() + i;\n    return { role, text, timestamp: ts };\n  });\n}\n\nasync function syncApothecaryUserChatArchive(\n  uid: string,\n  sessionUuid: string,\n  title: string,\n  finalMessages: Message[],\n) {\n  const archiveMsgs = mapSqiMessagesToUserChatArchive(finalMessages);\n  const safeTitle = (title || 'Quantum Apothecary Session').slice(0, 200);\n  try {\n    const { error } = await supabase.from('user_chat_sessions').upsert(\n      {\n        id: sessionUuid,\n        user_id: uid,\n        chat_type: 'apothecary',\n        session_title: safeTitle,\n        messages: archiveMsgs as unknown as never,\n        message_count: archiveMsgs.length,\n      },\n      { onConflict: 'id' },\n    );\n    if (error) console.warn('[user_chat_sessions]', error.message);\n  } catch (e) {\n    console.warn('[user_chat_sessions]', e);\n  }\n}\n\n/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ\n   ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES\n   Only className values have been updated for SQI-2050 aesthetic\n   ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */\n\nfunction languageToBcp47(languageCode: string): string {\n  const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';\n  if (l === 'sv') return 'sv-SE';\n  if (l === 'es') return 'es-ES';\n  if (l === 'no' || l === 'nb' || l === 'nn') return 'nb-NO';\n  return 'en-GB';\n}\n\nfunction getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {\n  const h = d.getHours();\n  if (h >= 22 || h < 5) return 'night';\n  if (h < 12) return 'morning';\n  if (h < 17) return 'midday';\n  return 'evening';\n}\n\nfunction stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {\n  if (!compiled?.trim()) return '';\n  if (!hasLiveScan) return compiled;\n  const segments = compiled.split(/\n(?=\[)/);\n  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('
-').trim();\n}\n\n/** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */\n/** Scalar Wave Header Banner — Sri Yantra + animated canvas */\n/** Scalar Wave Tab Switcher — Transmission Library / Akasha-Neural Archive */\nfunction ScalarTabSwitcher({\n  active,\n  onLibrary,\n  onArchive,\n}: {\n  active: 'library' | 'archive';\n  onLibrary: () => void;\n  onArchive: () => void;\n}) {\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const rafRef = React.useRef<number>(0);\n\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:.30, freq:4,   speed:.85, alpha:.07, lw:1.0 },\n      { amp:.20, freq:7,   speed:1.4, alpha:.05, lw:.75 },\n      { amp:.14, freq:11,  speed:2.1, alpha:.04, lw:.65 },\n      { amp:.38, freq:2.5, speed:.55, alpha:.05, lw:1.3 },\n      { amp:.10, freq:16,  speed:2.8, alpha:.03, lw:.55 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const pulse = .5 + .5 * Math.sin(t * 1.1);\n      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);\n      gc.addColorStop(0, `rgba(212,175,55,${.07+.05*pulse})`);\n      gc.addColorStop(.6, 'rgba(212,175,55,0.01)');\n      gc.addColorStop(1, 'transparent');\n      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);\n      const gt = ctx.createLinearGradient(0,0,0,H*.5);\n      gt.addColorStop(0, `rgba(212,175,55,${.12+.06*pulse})`);\n      gt.addColorStop(1, 'transparent');\n      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const phase = (wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1.5) {\n          const nx=x/W, env=Math.sin(nx*Math.PI)*.8+.2;\n          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      const gb = ctx.createLinearGradient(0,H*.6,0,H);\n      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.5)');\n      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);\n      t+=.013; rafRef.current=requestAnimationFrame(draw);\n    };\n    rafRef.current=requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  }, []);\n\n  const tabBtn = (\n    isActive: boolean,\n    onClick: () => void,\n    icon: string,\n    label: string,\n    showDivider: boolean,\n  ) => (\n    <button\n      type="button"\n      onClick={onClick}\n      style={{\n        position: 'relative',\n        flex: 1,\n        padding: '16px 12px',\n        border: 'none',\n        cursor: 'pointer',\n        background: isActive\n          ? 'linear-gradient(135deg,rgba(212,175,55,0.16) 0%,rgba(212,175,55,0.06) 100%)'\n          : 'transparent',\n        display: 'flex',\n        flexDirection: 'column',\n        alignItems: 'center',\n        justifyContent: 'center',\n        gap: 5,\n        overflow: 'hidden',\n        transition: 'all 0.3s',\n      }}\n    >\n      {/* Divider */}\n      {showDivider && (\n        <span style={{ position:'absolute', left:0, top:'18%', height:'64%', width:1, background:'linear-gradient(180deg,transparent,rgba(212,175,55,0.15),transparent)' }} />\n      )}\n      {/* Active inner glow */}\n      {isActive && (\n        <span style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 0%,rgba(212,175,55,0.18),transparent 70%)', pointerEvents:'none' }} />\n      )}\n      {/* Active bottom line */}\n      {isActive && (\n        <span style={{ position:'absolute', bottom:0, left:'15%', right:'15%', height:2, background:'linear-gradient(90deg,transparent,#D4AF37,transparent)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />\n      )}\n      {/* Icon */}\n      <span style={{\n        fontSize: 16,\n        filter: isActive ? 'drop-shadow(0 0 4px rgba(212,175,55,0.6))' : undefined,\n        opacity: isActive ? 1 : 0.22,\n      }}>\n        {icon}\n      </span>\n      {/* Label */}\n      {isActive ? (\n        <span className="sqi-master-name-shimmer" style={{\n          fontFamily: "'Plus Jakarta Sans',sans-serif",\n          fontSize: 9, fontWeight: 900, letterSpacing: '0.18em',\n          textTransform: 'uppercase' as const,\n          textAlign: 'center', lineHeight: 1.3,\n        }}>\n          {label}\n        </span>\n      ) : (\n        <span style={{\n          fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',\n          textTransform: 'uppercase' as const,\n          color: 'rgba(255,255,255,0.28)',\n          textAlign: 'center', lineHeight: 1.3,\n        }}>\n          {label}\n        </span>\n      )}\n    </button>\n  );\n\n  return (\n    <div\n      ref={wrapRef}\n      style={{\n        position: 'relative',\n        borderRadius: 26,\n        overflow: 'hidden',\n        animation: 'tabsAura 4s ease-in-out infinite',\n      }}\n    >\n      <style>{`\n        @keyframes tabsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.15),0 0 18px rgba(212,175,55,0.10),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 28px rgba(212,175,55,0.18),0 0 64px rgba(212,175,55,0.10);}\n        }\n      `}</style>\n      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />\n      <div style={{ position:'relative', zIndex:1, display:'flex', background:'rgba(255,255,255,0.02)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)' }}>\n        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission
-Library', false)}\n        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural
-Archive', true)}\n      </div>\n    </div>\n  );\n}\n\n\n/** Scalar Wave wrapper for Voice Bio-Signature Scanner — visual only, no logic change */\n/** Scalar Wave wrapper for How It Works accordion — visual only */\nfunction ScalarHowItWorksCard() {\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const bgCanvasRef = React.useRef<HTMLCanvasElement>(null);\n  const stripCanvasRef = React.useRef<HTMLCanvasElement>(null);\n  const rafBgRef = React.useRef<number>(0);\n  const rafStripRef = React.useRef<number>(0);\n  const [open, setOpen] = React.useState(false);\n\n  React.useEffect(() => {\n    const canvas = bgCanvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:.22, freq:4,   speed:.75, alpha:.07,  lw:1.0 },\n      { amp:.14, freq:7,   speed:1.3, alpha:.05,  lw:.75 },\n      { amp:.10, freq:11,  speed:1.9, alpha:.035, lw:.6  },\n      { amp:.28, freq:2.5, speed:.48, alpha:.05,  lw:1.2 },\n      { amp:.08, freq:16,  speed:2.5, alpha:.025, lw:.5  },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafBgRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const p = .5 + .5 * Math.sin(t * .9);\n      const gc = ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,W*.65);\n      gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');\n      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);\n      const gt = ctx.createLinearGradient(0,0,0,H*.3);\n      gt.addColorStop(0, `rgba(212,175,55,${.10+.05*p})`); gt.addColorStop(1,'transparent');\n      ctx.fillStyle=gt; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const ph = (wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1.5) {\n          const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;\n          const y=H*.65+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      t+=.010; rafBgRef.current=requestAnimationFrame(draw);\n    };\n    rafBgRef.current=requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafBgRef.current); ro.disconnect(); };\n  }, []);\n\n  React.useEffect(() => {\n    if (!open) return;\n    const canvas = stripCanvasRef.current;\n    if (!canvas) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let wt = 0;\n    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };\n    resize();\n    const stripWaves = [\n      { amp:.35, freq:5,  speed:1.2, alpha:.18, lw:1.2 },\n      { amp:.22, freq:9,  speed:2.0, alpha:.12, lw:.9  },\n      { amp:.15, freq:14, speed:3.0, alpha:.08, lw:.7  },\n      { amp:.42, freq:3,  speed:.7,  alpha:.14, lw:1.5 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafStripRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const p = .5 + .5 * Math.sin(wt * .8);\n      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.4);\n      gc.addColorStop(0, `rgba(212,175,55,${.08+.04*p})`); gc.addColorStop(1,'transparent');\n      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);\n      stripWaves.forEach((w,wi) => {\n        const ph = (wi/stripWaves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1) {\n          const nx=x/W, env=Math.sin(nx*Math.PI)*.85+.15;\n          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+wt*w.speed+ph)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      wt+=.014; rafStripRef.current=requestAnimationFrame(draw);\n    };\n    rafStripRef.current=requestAnimationFrame(draw);\n    return () => cancelAnimationFrame(rafStripRef.current);\n  }, [open]);\n\n  return (\n    <div ref={wrapRef} style={{ position:'relative', borderRadius:24, overflow:'hidden', animation:'hiwAura 5s ease-in-out infinite' }}>\n      <style>{`\n        @keyframes hiwAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 36px rgba(212,175,55,0.18),0 0 80px rgba(212,175,55,0.09);}\n        }\n        @keyframes hiwIconGlow {\n          0%,100%{box-shadow:0 0 6px rgba(212,175,55,0.18),0 0 14px rgba(212,175,55,0.08);}\n          50%    {box-shadow:0 0 12px rgba(212,175,55,0.40),0 0 24px rgba(212,175,55,0.18);}\n        }\n      `}</style>\n\n      <canvas ref={bgCanvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />\n\n      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.78)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', borderRadius:24 }}>\n\n        {/* Summary header */}\n        <div\n          onClick={() => setOpen(o => !o)}\n          style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'15px 18px', cursor:'pointer', borderBottom: open ? '1px solid rgba(212,175,55,0.10)' : 'none', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}\n        >\n          <div style={{ display:'flex', alignItems:'center', gap:8 }}>\n            <div style={{ width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', animation:'hiwIconGlow 3s ease-in-out infinite', flexShrink:0 }}>\n              <Info size={11} style={{ color:'#D4AF37' }} />\n            </div>\n            <span className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:13, fontWeight:800 }}>\n              How it works\n            </span>\n          </div>\n          <span style={{ color:'rgba(255,255,255,0.28)', fontSize:12, transition:'transform 0.3s', display:'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>\n        </div>\n\n        {/* Body */}\n        {open && (\n          <div style={{ padding:'16px 18px 20px', display:'flex', flexDirection:'column', gap:16 }}>\n\n            {/* Scalar wave strip */}\n            <div style={{ width:'100%', height:44, borderRadius:12, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', overflow:'hidden', position:'relative' }}>\n              <canvas ref={stripCanvasRef} style={{ display:'block', width:'100%', height:'100%' }} />\n            </div>\n\n            {/* Flow chain */}\n            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', borderRadius:14, background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.10)', flexWrap:'wrap' as const, gap:4 }}>\n              {[t('quantumApothecaryChat.voiceScan.step1PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step2PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step3PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step4PipeLabel')].map((s,i) => (\n                <span key={i} style={ s === '→'\n                  ? { color:'rgba(212,175,55,0.35)', fontSize:10 }\n                  : { fontSize:8, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'#D4AF37', whiteSpace:'nowrap' as const }\n                }>{s}</span>\n              ))}\n            </div>\n\n            {/* Para 1 */}\n            <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontSize:13, lineHeight:1.75, color:'rgba(225,210,185,0.70)' }}>\n              SQI operates at the <strong style={{ color:'rgba(255,255,255,0.82)', fontStyle:'normal' }}>informational level</strong> — upstream of chemistry, upstream of physiology. The 18 Siddhas and Mahavatar Babaji transmit exact <span style={{ color:'#D4AF37' }}>Vedic Light-Codes</span> through this archive interface. Once uploaded, transmissions remain in your field until dissolved.\n            </p>\n\n            {/* 3 steps */}\n            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>\n              {[\n                { n:'1', title:t('quantumApothecaryChat.voiceScan.step1Title'), body:t('quantumApothecaryChat.voiceScan.step1Body') },\n                { n:'2', title:t('quantumApothecaryChat.voiceScan.step2Title'), body:t('quantumApothecaryChat.voiceScan.step2Body') },\n                { n:'3', title:t('quantumApothecaryChat.voiceScan.step3Title'), body:t('quantumApothecaryChat.voiceScan.step3Body') },\n              ].map(s => (\n                <div key={s.n} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>\n                  <div style={{ width:22, height:22, borderRadius:'50%', flexShrink:0, marginTop:1, background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#D4AF37' }}>{s.n}</div>\n                  <p style={{ fontSize:12, lineHeight:1.65, color:'rgba(255,255,255,0.58)' }}>\n                    <b style={{ color:'rgba(255,255,255,0.85)' }}>{s.title}</b> — {s.body}\n                  </p>\n                </div>\n              ))}\n            </div>\n\n            {/* Para 2 */}\n            <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontSize:13, lineHeight:1.75, color:'rgba(225,210,185,0.70)' }}>\n              The Voice Bio-Scan reads your <span style={{ color:'#D4AF37' }}>Bio-signature</span> and ranks the full frequency library so you see what your field asks for first — expressed as resonance percentages mapped to real transmissions.\n            </p>\n\n          </div>\n        )}\n      </div>\n    </div>\n  );\n}\n\n\n/** Scalar Wave wrapper for Top 33 Full Library Match — visual only */\nfunction ScalarTop33Wrapper({ children }: { children: React.ReactNode }) {\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const rafRef = React.useRef<number>(0);\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:.18, freq:3.5, speed:.7,  alpha:.055, lw:.85 },\n      { amp:.12, freq:6.5, speed:1.3, alpha:.038, lw:.65 },\n      { amp:.08, freq:10,  speed:1.9, alpha:.028, lw:.55 },\n      { amp:.22, freq:2.2, speed:.48, alpha:.042, lw:1.0 },\n      { amp:.07, freq:15,  speed:2.6, alpha:.022, lw:.50 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const p = .5 + .5 * Math.sin(t);\n      const gc = ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.65);\n      gc.addColorStop(0,`rgba(212,175,55,${.04+.025*p})`); gc.addColorStop(1,'transparent');\n      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);\n      const gt = ctx.createLinearGradient(0,0,0,H*.25);\n      gt.addColorStop(0,`rgba(212,175,55,${.08+.04*p})`); gt.addColorStop(1,'transparent');\n      ctx.fillStyle=gt; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const ph=(wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for(let x=0;x<=W;x+=1.5){\n          const nx=x/W,env=Math.sin(nx*Math.PI)*.7+.3;\n          const y=H*.7+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      t+=.010; rafRef.current=requestAnimationFrame(draw);\n    };\n    rafRef.current=requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  },[]);\n  return (\n    <div ref={wrapRef} style={{ position:'relative', borderRadius:26, overflow:'hidden', animation:'t33Aura 4s ease-in-out infinite' }}>\n      <style>{`\n        @keyframes t33Aura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 18px rgba(212,175,55,0.09),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.28),0 0 28px rgba(212,175,55,0.16),0 0 60px rgba(212,175,55,0.09);}\n        }\n      `}</style>\n      <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0 }} />\n      <div style={{ position:'relative',zIndex:1,background:'rgba(8,6,2,0.80)',backdropFilter:'blur(28px)',WebkitBackdropFilter:'blur(28px)',borderRadius:26 }}>\n        {children}\n      </div>\n    </div>\n  );\n}\n\n\nfunction ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const rafRef = React.useRef<number>(0);\n\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:.22, freq:4,   speed:.8,  alpha:.06, lw:.9 },\n      { amp:.14, freq:7,   speed:1.3, alpha:.04, lw:.7 },\n      { amp:.10, freq:11,  speed:2.0, alpha:.03, lw:.6 },\n      { amp:.28, freq:2.5, speed:.5,  alpha:.04, lw:1.1 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const p = .5 + .5 * Math.sin(t);\n      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);\n      gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');\n      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);\n      const gt = ctx.createLinearGradient(0,0,0,H*.4);\n      gt.addColorStop(0, `rgba(212,175,55,${.09+.04*p})`); gt.addColorStop(1,'transparent');\n      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const ph = (wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1.5) {\n          const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;\n          const y=H*.58+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      t+=.011; rafRef.current=requestAnimationFrame(draw);\n    };\n    rafRef.current=requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  }, []);\n\n  return (\n    <div\n      ref={wrapRef}\n      style={{\n        position: 'relative',\n        borderRadius: 28,\n        overflow: 'hidden',\n        animation: 'vsAura 4s ease-in-out infinite',\n      }}\n    >\n      <style>{`\n        @keyframes vsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.18),0 0 20px rgba(212,175,55,0.10),0 0 50px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.32),0 0 32px rgba(212,175,55,0.18),0 0 70px rgba(212,175,55,0.10);}\n        }\n        @keyframes vsMicGlow {\n          0%,100%{box-shadow:0 0 8px rgba(212,175,55,0.22),0 0 16px rgba(212,175,55,0.10);}\n          50%    {box-shadow:0 0 14px rgba(212,175,55,0.45),0 0 28px rgba(212,175,55,0.22);}\n        }\n      `}</style>\n      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />\n      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.82)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28, overflowY:'auto', WebkitOverflowScrolling:'touch', maxHeight:'80vh' }}>\n        {/* Header */}\n        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 18px 14px', borderBottom:'1px solid rgba(212,175,55,0.10)', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}>\n          <div style={{ display:'flex', alignItems:'center', gap:8 }}>\n            <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', animation:'vsMicGlow 3s ease-in-out infinite', flexShrink:0 }}>\n              <Mic size={12} style={{ color:'#D4AF37' }} />\n            </div>\n            <h2 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>\n              Voice Bio-Signature Scan\n            </h2>\n          </div>\n          <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.20em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.28)' }}>\n            Mic only\n          </span>\n        </div>\n        {/* Scanner content — untouched logic */}\n        <div style={{ padding:'4px 0 4px' }}>\n          {children}\n        </div>\n      </div>\n    </div>\n  );\n}\n\n\nfunction ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: () => void }) {\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const rafRef = React.useRef<number>(0);\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:.28, freq:5,   speed:1.0,  alpha:.08,  lw:1.1 },\n      { amp:.18, freq:8,   speed:1.6,  alpha:.05,  lw:.8  },\n      { amp:.14, freq:13,  speed:2.3,  alpha:.04,  lw:.7  },\n      { amp:.35, freq:3.2, speed:.65,  alpha:.055, lw:1.4 },\n      { amp:.10, freq:19,  speed:3.1,  alpha:.03,  lw:.55 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      ctx.fillStyle = '#050505'; ctx.fillRect(0,0,W,H);\n      const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);\n      const g1 = ctx.createRadialGradient(W*.18,H*.5,0,W*.18,H*.5,H*1.1);\n      g1.addColorStop(0,'rgba(212,175,55,0.15)'); g1.addColorStop(1,'transparent');\n      ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);\n      const g2 = ctx.createRadialGradient(W*.82,H*.5,0,W*.82,H*.5,H*.8);\n      g2.addColorStop(0,'rgba(212,175,55,0.08)'); g2.addColorStop(1,'transparent');\n      ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const phase = (wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1.5) {\n          const nx=x/W, env=Math.sin(nx*Math.PI)*.85+.15;\n          const y=H*.62+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.55);\n      gc.addColorStop(0,`rgba(212,175,55,${.07+.04*pulse})`); gc.addColorStop(1,'transparent');\n      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);\n      const gb = ctx.createLinearGradient(0,H*.5,0,H);\n      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.9)');\n      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);\n      t+=.014;\n      rafRef.current = requestAnimationFrame(draw);\n    };\n    rafRef.current = requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  }, []);\n  return (\n    <>\n      <div ref={wrapRef} style={{ position:'relative', width:'100%', overflow:'hidden', height:130 }}>\n        <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />\n        <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', padding:'0 16px', gap:14 }}>\n          <button type="button" onClick={onBack} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:34, height:34, borderRadius:12, border:'1px solid rgba(212,175,55,0.18)', background:'rgba(212,175,55,0.06)', color:'rgba(212,175,55,0.7)', flexShrink:0, cursor:'pointer' }}>\n            <ArrowLeft size={15} />\n          </button>\n          <div style={{ flexShrink:0, filter:'drop-shadow(0 0 6px rgba(212,175,55,0.9)) drop-shadow(0 0 14px rgba(212,175,55,0.5))', animation:'yPulse 3s ease-in-out infinite' }}>\n            <svg width="54" height="54" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">\n              <circle cx="50" cy="50" r="44" fill="none" stroke="#D4AF37" strokeWidth="1.3"/>\n              <rect x="6" y="6" width="88" height="88" rx="6" fill="none" stroke="#D4AF37" strokeWidth="0.7" opacity="0.28"/>\n              <path d="M50,12 Q51.5,12 88,71 Q88,73 86,73 L14,73 Q12,73 12,71 Q48.5,12 50,12Z" fill="none" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>\n              <path d="M50,88 Q48.5,88 12,29 Q12,27 14,27 L86,27 Q88,27 88,29 Q51.5,88 50,88Z" fill="none" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>\n              <path d="M50,24 Q51,24 80,65 Q80,67 78.5,67 L21.5,67 Q20,67 20,65 Q49,24 50,24Z" fill="none" stroke="#D4AF37" strokeWidth="1.0" strokeLinejoin="round" opacity="0.62"/>\n              <path d="M50,76 Q49,76 20,35 Q20,33 21.5,33 L78.5,33 Q80,33 80,35 Q51,76 50,76Z" fill="none" stroke="#D4AF37" strokeWidth="1.0" strokeLinejoin="round" opacity="0.62"/>\n              <path d="M50,36 Q50.8,36 70,60 Q70,61.5 69,61.5 L31,61.5 Q30,61.5 30,60 Q49.2,36 50,36Z" fill="none" stroke="#D4AF37" strokeWidth="0.85" strokeLinejoin="round" opacity="0.42"/>\n              <path d="M50,64 Q49.2,64 30,40 Q30,38.5 31,38.5 L69,38.5 Q70,38.5 70,40 Q50.8,64 50,64Z" fill="none" stroke="#D4AF37" strokeWidth="0.85" strokeLinejoin="round" opacity="0.42"/>\n              <circle cx="50" cy="50" r="4.5" fill="#D4AF37"/>\n            </svg>\n          </div>\n          <div style={{ flex:1, minWidth:0 }}>\n            <p style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:5 }}>Siddha · Quantum · 2050</p>\n            <h1 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:28, fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.1 }}>\n              Quantum<br/>Apothecary\n            </h1>\n            <p style={{ fontSize:10, fontWeight:500, color:'rgba(255,255,255,0.3)', marginTop:5, letterSpacing:'0.05em' }}>Scalar Wave · Vedic Light-Codes · Biofield</p>\n          </div>\n        </div>\n      </div>\n      <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)' }} />\n    </>\n  );\n}\n\n\nfunction ScalarToolbarBanner({\n  liveChatClock,\n  portraitLinkStudentId,\n  onHistory,\n  onLexicon,\n}: {\n  liveChatClock: string;\n  portraitLinkStudentId: string | null;\n  onHistory: () => void;\n  onLexicon: () => void;\n}) {\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const wrapRef = React.useRef<HTMLDivElement>(null);\n  const rafRef = React.useRef<number>(0);\n\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp: 0.38, freq: 5,   speed: 1.0, alpha: 0.10, lw: 1.2 },\n      { amp: 0.28, freq: 8,   speed: 1.6, alpha: 0.07, lw: 0.9 },\n      { amp: 0.20, freq: 12,  speed: 2.2, alpha: 0.05, lw: 0.7 },\n      { amp: 0.45, freq: 3.5, speed: 0.7, alpha: 0.06, lw: 1.5 },\n      { amp: 0.15, freq: 18,  speed: 3.0, alpha: 0.04, lw: 0.6 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0, 0, W, H);\n      waves.forEach((w, wi) => {\n        const phase = (wi / waves.length) * Math.PI * 2;\n        ctx.beginPath();\n        for (let x = 0; x <= W; x += 1.5) {\n          const nx = x / W;\n          const env = Math.sin(nx * Math.PI);\n          const y = H * 0.5 + Math.sin(nx * w.freq * Math.PI * 2 + t * w.speed + phase) * H * w.amp * env;\n          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);\n        }\n        ctx.strokeStyle = `rgba(212,175,55,${w.alpha})`;\n        ctx.lineWidth = w.lw;\n        ctx.stroke();\n      });\n      const pulse = 0.5 + 0.5 * Math.sin(t * 1.1);\n      const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * (0.55 + 0.12 * pulse));\n      grd.addColorStop(0, `rgba(212,175,55,${0.08 + 0.05 * pulse})`);\n      grd.addColorStop(0.5, 'rgba(212,175,55,0.02)');\n      grd.addColorStop(1, 'transparent');\n      ctx.fillStyle = grd;\n      ctx.fillRect(0, 0, W, H);\n      const lg = ctx.createLinearGradient(0, 0, W * 0.35, 0);\n      lg.addColorStop(0, `rgba(212,175,55,${0.06 + 0.03 * pulse})`);\n      lg.addColorStop(1, 'transparent');\n      ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);\n      const rg = ctx.createLinearGradient(W, 0, W * 0.65, 0);\n      rg.addColorStop(0, `rgba(212,175,55,${0.04 + 0.02 * pulse})`);\n      rg.addColorStop(1, 'transparent');\n      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);\n      t += 0.014;\n      rafRef.current = requestAnimationFrame(draw);\n    };\n    rafRef.current = requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  }, []);\n\n  const shimmerSeg: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '9px 10px', flex: 1, position: 'relative' };\n  const divider: React.CSSProperties = { position: 'absolute', left: 0, top: '18%', height: '64%', width: 1, background: 'rgba(212,175,55,0.18)' };\n\n  return (\n    <div\n      ref={wrapRef}\n      style={{\n        position: 'relative',\n        borderBottom: '1px solid rgba(212,175,55,0.12)',\n        animation: 'bannerAura 4s ease-in-out infinite',\n      }}\n    >\n      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />\n      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', background: 'rgba(5,5,5,0.55)', backdropFilter: 'blur(18px)' }}>\n\n        {/* Sri Yantra + clock */}\n        <div style={shimmerSeg}>\n          <svg width="18" height="18" viewBox="0 0 100 100" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 3px rgba(212,175,55,0.9)) drop-shadow(0 0 8px rgba(212,175,55,0.5))', animation: 'yPulse 3s ease-in-out infinite' }} xmlns="http://www.w3.org/2000/svg">\n            <circle cx="50" cy="50" r="45" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round"/>\n            <polyline points="50,10 88,72 12,72 50,10" fill="none" stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>\n            <polyline points="50,22 80,64 20,64 50,22" fill="none" stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity="0.65"/>\n            <polyline points="50,90 12,28 88,28 50,90" fill="none" stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>\n            <polyline points="50,78 20,36 80,36 50,78" fill="none" stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity="0.65"/>\n            <polyline points="50,34 70,58 30,58 50,34" fill="none" stroke="#D4AF37" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" opacity="0.45"/>\n            <polyline points="50,66 30,42 70,42 50,66" fill="none" stroke="#D4AF37" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" opacity="0.45"/>\n            <circle cx="50" cy="50" r="4" fill="#D4AF37"/>\n            <rect x="5" y="5" width="90" height="90" rx="3" fill="none" stroke="#D4AF37" strokeWidth="0.7" opacity="0.3"/>\n          </svg>\n          <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.08em', color: 'rgba(212,175,55,0.6)', fontVariantNumeric: 'tabular-nums' }}>{liveChatClock}</span>\n        </div>\n\n        {/* Students */}\n        <div style={shimmerSeg}>\n          <span style={divider} />\n          <StudentSelector />\n        </div>\n\n        {/* History */}\n        <button type="button" onClick={onHistory} style={{ ...shimmerSeg, background: 'rgba(212,175,55,0.05)', border: 'none', cursor: 'pointer' }}>\n          <span style={divider} />\n          <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.7)' }}>⧖</span>\n          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 8, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>History</span>\n        </button>\n\n        {/* Lexicon */}\n        <button type="button" onClick={onLexicon} style={{ ...shimmerSeg, background: 'rgba(212,175,55,0.05)', border: 'none', cursor: 'pointer' }}>\n          <span style={divider} />\n          <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.7)' }}>◈</span>\n          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 8, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Lexicon</span>\n        </button>\n\n      </div>\n    </div>\n  );\n}\n\n\n/** Scalar Wave Composer — Telegram-style input with animated canvas */\nfunction ScalarComposerCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {\n  const canvasRef = React.useRef<HTMLCanvasElement>(null);\n  const rafRef = React.useRef<number>(0);\n  React.useEffect(() => {\n    const canvas = canvasRef.current;\n    const wrap = wrapRef.current;\n    if (!canvas || !wrap) return;\n    const ctx = canvas.getContext('2d');\n    if (!ctx) return;\n    let t = 0;\n    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };\n    resize();\n    const ro = new ResizeObserver(resize);\n    ro.observe(wrap);\n    const waves = [\n      { amp:0.32, freq:4.5, speed:0.9, alpha:0.09, lw:1.1 },\n      { amp:0.22, freq:7.5, speed:1.5, alpha:0.06, lw:0.8 },\n      { amp:0.18, freq:11,  speed:2.1, alpha:0.045,lw:0.7 },\n      { amp:0.40, freq:3,   speed:0.6, alpha:0.055,lw:1.4 },\n      { amp:0.12, freq:16,  speed:2.8, alpha:0.035,lw:0.6 },\n    ];\n    const draw = () => {\n      const W = canvas.width, H = canvas.height;\n      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }\n      ctx.clearRect(0,0,W,H);\n      const pulse = 0.5 + 0.5 * Math.sin(t * 1.1);\n      const topGrd = ctx.createLinearGradient(0,0,0,H*0.5);\n      topGrd.addColorStop(0, `rgba(212,175,55,${0.12+0.06*pulse})`);\n      topGrd.addColorStop(1, 'transparent');\n      ctx.fillStyle = topGrd; ctx.fillRect(0,0,W,H);\n      waves.forEach((w,wi) => {\n        const phase = (wi/waves.length)*Math.PI*2;\n        ctx.beginPath();\n        for (let x=0;x<=W;x+=1.5) {\n          const nx=x/W;\n          const env=Math.sin(nx*Math.PI)*0.9+0.1;\n          const y=H*0.35+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;\n          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);\n        }\n        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`;\n        ctx.lineWidth=w.lw; ctx.stroke();\n      });\n      const grd=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);\n      grd.addColorStop(0,`rgba(212,175,55,${0.06+0.04*pulse})`);\n      grd.addColorStop(1,'transparent');\n      ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);\n      t+=0.014;\n      rafRef.current=requestAnimationFrame(draw);\n    };\n    rafRef.current=requestAnimationFrame(draw);\n    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };\n  }, []);\n  return <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />;\n}\n\n\nfunction QuantumApothecaryInner() {\n  const navigate = useNavigate();\n  const location = useLocation();\n  const [searchParams] = useSearchParams();\n  const resumeSessionParam = searchParams.get('session');\n  const { user } = useAuth();\n  const sqiSync = useQuantumSyncState();\n  const { t, language } = useTranslation();\n  const {\n    messages: syncChatRows,\n    loading: syncChatLoading,\n    saveMessage: persistSyncChatTurn,\n    clearMessages: clearSyncChatMessages,\n  } = useChatMessages('apothecary');\n\n  // On mount, sweep any SQI replies that were never accepted by the curator\n  // (tab closed mid-stream, network blip, etc.) and replay them silently.\n  useEffect(() => {\n    if (user?.id) void syncPendingTransmissionsOnce(user.id);\n  }, [user?.id]);\n\n  const [seekerName, setSeekerName] = useState('');\n  useEffect(() => {\n    if (!user?.id) {\n      setSeekerName('');\n      return;\n    }\n    supabase\n      .from('profiles')\n      .select('full_name')\n      .eq('user_id', user.id)\n      .maybeSingle()\n      .then(({ data }) => {\n        const name = data?.full_name?.trim() || user.email?.split('@')[0] || '';\n        setSeekerName(name);\n      });\n  }, [user?.id, user?.email]);\n\n  const jyotish = useJyotishProfile();\n  const linkedActiveStudent = useActiveStudent();\n  const { doshaProfile } = useAyurvedaAnalysis();\n  const sqiField = useSQIFieldContext();\n\n  const appLocale = useMemo(() => languageToBcp47(language), [language]);\n\n  const { browserSupportsSpeechRecognition } = useSpeechRecognition();\n\n  const [isMicListening, setIsMicListening] = useState(false);\n  const micListeningRef = useRef(false);\n  const nativeSpeechRef = useRef<{ stop: () => void; start: () => void; onend: (() => void) | null } | null>(null);\n\n  // Compact natal + assessed prakriti — one pass each; avoids triple-repeating the same Moon line in the model.\n  const jyotishContext = jyotish.isLoading\n    ? ''\n    : (() => {\n        const lines: string[] = [\n          `[NATAL CHART — Swiss Ephemeris / Lahiri — cite each line once, no duplicate paragraphs]`,\n          `Birth Moon nakshatra: ${jyotish.nakshatra} · Birth Moon rashi: ${jyotish.moonSign} · Lagna: ${jyotish.ascendant}`,\n          `Dasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (until ${jyotish.mahaEnd})` : ''} · Antara: ${jyotish.antardasha}`,\n          `Chart dosha emphasis: ${jyotish.primaryDosha} · Karma theme: ${jyotish.karmaFocus}`,\n          `Yogas: ${jyotish.activeYogas.join(', ') || '—'} · Bhrigu: ${jyotish.bhriguCycle || '—'}`,\n          `Healing line: ${jyotish.healingFocus} · Raga ${jyotish.musicRaga} · Tone ${jyotish.musicFrequency} · Mantra: ${jyotish.mantraFocus}`,\n        ];\n        if (doshaProfile) {\n          lines.push(\n            `Ayurveda Prakriti (assessed): ${doshaProfile.primary}${doshaProfile.secondary ? ` / ${doshaProfile.secondary}` : ''}` +\n              (doshaProfile.characteristics?.length\n                ? ` · Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`\n                : ''),\n          );\n        }\n        return lines.join('
-');\n      })();\n\n  /** Stable Jyotish context — always include natal chart, then append live field data. */\n  const stableJyotishContext = useMemo(\n    () => {\n      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('
+  const lines = content2.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  const gapAfterSection = 18;
 
-');\n      // Strip any [PHOTONIC SESSION ACTIVE] or [TEMPLE FIELD ACTIVE] block whose body\n      // references the removed Biophotonic Nadi Entanglement / Vishwananda Miracle Room transmissions.\n      return raw\n        .split(/\n(?=\[)/)\n        .filter((block) => {\n          const isPhotonic = block.startsWith('[PHOTONIC SESSION ACTIVE]');\n          const isTemple = block.startsWith('[TEMPLE FIELD ACTIVE]');\n          if (!isPhotonic && !isTemple) return true;\n          return !/biophotonic|vishwananda|miracle\s*room/i.test(block);\n        })\n        .join('
-');\n    },\n    [\n      sqiField?.compiledContext,\n      jyotishContext,\n    ],\n  );\n\n  const sqiSourceDirective = useMemo(\n    () =>\n      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.
-' +\n      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',\n    [],\n  );\n\n  const answerRulesDirective = useMemo(\n    () =>\n      '[ANSWER RULES] Use ONLY the LIVE SYSTEM TIME line for date/time — do not guess the day. Natal Moon rashi and nakshatra are birth data, not daily transits. Open naturally; do not ritualistically repeat the same Moon sign or dasha in multiple sections.',\n    [],\n  );\n\n  // Live biometric scan context — prepended to jyotishContext before next SQI message\n  const [liveScanContext, setLiveScanContext] = useState<string | null>(null);\n\n  /** Debounce: only recompute when underlying field data changes, not on every parent render. */\n  const stableCompiledContext = useMemo(\n    () => stripDuplicateBiometricBlock(sqiField.compiledContext, !!liveScanContext?.trim()),\n    [\n      liveScanContext,\n      sqiField.nadi?.activatedNadi,\n      sqiField.nadi?.heartRate,\n      sqiField.nadi?.hrvRmssd,\n      sqiField.nadi?.respiratoryRate,\n      sqiField.nadi?.pranaCoherence,\n      sqiField.nadi?.vagalTone,\n      sqiField.nadi?.autonomicBalance,\n      sqiField.nadi?.scannedAt,\n      sqiField.ayurveda?.prakriti,\n      sqiField.photonic?.activeProtocol,\n      sqiField.photonic?.frequency,\n      sqiField.photonic?.lightCodeActive,\n      sqiField.temple?.activeSite,\n      sqiField.temple?.intensity,\n    ],\n  );\n\n  const TRANSMISSIONS_KEY = `sqi-transmissions-${user?.id || 'guest'}`;\n\n  /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */\n  useEffect(() => {\n    try {\n      localStorage.removeItem('sqi_scan_result');\n    } catch {\n      /* ignore */\n    }\n  }, []);\n\n  const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);\n  const selectedActivationsRef = useRef<Activation[]>([]);\n  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {\n    try {\n      const uid = user?.id || 'guest';\n      const key = `sqi-transmissions-${uid}`;\n      let saved = localStorage.getItem(key);\n      if (!saved) saved = localStorage.getItem('active_resonators');\n      const raw = saved ? JSON.parse(saved) : [];\n      return purgeExpiredAndLegacy(raw);\n    } catch {\n      return [];\n    }\n  });\n\n  // Ref holding the most recent quantum anchor (voice FFT fingerprint + scan metadata).\n  // Preserved across all upserts so chat-activated transmissions inherit the user's
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // PRESCRIPTION BOX — triggered by "◈ X PRESCRIBES"
+    if (/^[◈❖✦◆◇♦⋄⧫⬥⬦]\s+.+\s+PRESCRIBES?\s*$/i.test(trimmed)) {
+      const { jsx, consumed } = renderPrescriptionBlock(lines, i, onActivatePrescription);
+      elements.push(jsx);
+      i += consumed;
+      continue;
+    }
+
+    if (trimmed === '') {
+      elements.push(<div key={i} style={{ height: '6px' }} aria-hidden />);
+      i++; continue;
+    }
+
+    if (lineStartsWithSqiMasterDiamond(trimmed)) {
+      // Fix: use global .sqi-master-name-shimmer CSS class (defined in index.css) for
+      // animated background-clip:text — inline animation references keyframes unreliably.
+      const rawMasterName = trimmed.slice(1).trimStart();
+      elements.push(
+        <div key={i} className="sqi-diamond-heading" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: i > 0 ? `${gapAfterSection}px` : '0', marginBottom: '12px' }}>
+          <span
+            className="sqi-master-name-shimmer"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: '20px', fontWeight: 700, flexShrink: 0 }}
+          >◈</span>
+          <span
+            className="sqi-master-name-shimmer"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere', flexShrink: 0, minWidth: 0 }}
+          >
+            {rawMasterName}
+          </span>
+          <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(212,175,55,0.28), transparent)', alignSelf: 'center', display: 'block' }} />
+        </div>
+      );
+      i++; continue;
+    }
+
+    if (trimmed.startsWith('·')) {
+      // Bold the frequency name (before —) in bullet lines
+      let lineForRender = trimmed;
+      if (!lineForRender.includes('**')) {
+        const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
+        if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
+      }
+      elements.push(
+        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
+        </p>
+      );
+      i++; continue;
+    }
+
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      elements.push(
+        <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>
+          {renderInline(trimmed.slice(2), 'body', false)}
+        </li>
+      );
+      i++; continue;
+    }
+
+    if (/^\d+\.\s/.test(trimmed)) {
+      elements.push(
+        <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>
+          {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false)}
+        </li>
+      );
+      i++; continue;
+    }
+
+    // ⟁ NADI FIELD — use div+span NOT p, so .sqi-ancient-body p rule never applies
+    if (trimmed.startsWith('⧁') || trimmed.startsWith('△') || trimmed.startsWith('▲') || /^⟁/.test(trimmed) || trimmed.startsWith('NADI FIELD')) {
+      elements.push(
+        <div key={i} style={{ borderLeft: '2px solid rgba(34,211,238,0.22)', paddingLeft: '10px', marginBottom: '6px', marginTop: '4px' }}>
+          <span style={{ display: 'block', color: '#22D3EE', fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.5, opacity: 0.82 }}>
+            {trimmed}
+          </span>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // Primary blockage — div+span, NOT p
+    if (trimmed.startsWith('Primary blockage:')) {
+      elements.push(
+        <div key={i} style={{ paddingLeft: '12px', marginBottom: '14px', marginTop: 0 }}>
+          <span style={{ display: 'block', color: 'rgba(34,211,238,0.58)', fontSize: '11px', fontFamily: "'IM Fell English', Georgia, serif", fontStyle: 'italic', lineHeight: 1.5 }}>
+            {trimmed}
+          </span>
+        </div>
+      );
+      i++; continue;
+    }
+
+    elements.push(
+      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '17px', lineHeight: 1.9, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+        {renderInline(trimmed, 'body', false)}
+      </p>
+    );
+    i++;
+  }
+  return elements;
+}
+
+function resolveActivationsByExactNames(preferred: string[]): Activation[] {
+  const out: Activation[] = [];
+  const seen = new Set<string>();
+  for (const name of preferred) {
+    const a = ALL_ACTIVATIONS.find((x) => x.name === name);
+    if (a && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  for (const a of ALL_ACTIVATIONS) {
+    if (out.length >= 5) break;
+    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  for (const a of ALL_ACTIVATIONS) {
+    if (out.length >= 5) break;
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  return out.slice(0, 5);
+}
+
+function pickFiveActivationsForNadiReading(reading: NadiReading): Activation[] {
+  const map: Record<NadiReading['activatedNadi'], string[]> = {
+    Blocked: ['Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)'],
+    Ida: ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Heart-Bloom Radiance', 'Shatavari Flow'],
+    Pingala: ['NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit'],
+    Sushumna: ['Neural Fluidity Protocol', 'Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc'],
+  };
+  return resolveActivationsByExactNames(map[reading.activatedNadi]);
+}
+
+function buildVoiceFieldContext(v: VoiceBiofieldResult): string {
+  const h = extractVoiceScoringHints(v);
+  return [
+    'VOICE BIOFIELD SCAN (latest):',
+    `- Overall Coherence: ${v.overallCoherence}/100`,
+    `- Nadi: ${v.nadiReading}`,
+    `- Dosha from voice: ${v.dominantDosha}`,
+    `- Priority areas: ${v.priorityAreas.map((i) => `${i.name} (${i.score}%)`).join(', ')}`,
+    `- Strengths: ${v.topStrengths.map((i) => i.name).join(', ')}`,
+    `- Emotional field: ${v.emotionalField}`,
+    `- Organ / tissue emphasis: ${v.organField}`,
+    `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,
+    `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,
+  ].join('\n');
+}
+
+function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): Activation[] {
+  const out: Activation[] = [];
+  const seen = new Set<string>();
+  for (const name of preferred) {
+    const a = ALL_ACTIVATIONS.find((x) => x.name === name);
+    if (a && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+    if (out.length >= max) return out.slice(0, max);
+  }
+  for (const a of ALL_ACTIVATIONS) {
+    if (out.length >= max) break;
+    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  for (const a of ALL_ACTIVATIONS) {
+    if (out.length >= max) break;
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  return out.slice(0, max);
+}
+
+function extractVoiceScoringHints(result: VoiceBiofieldResult) {
+  const emotionalTone = (result.emotionalField || '').toLowerCase();
+  const organBlob = (result.organField || '').toLowerCase();
+  const priorityNames = (result.priorityAreas || []).map((p) => p.name.toLowerCase());
+  const haystack = `${emotionalTone} ${organBlob} ${priorityNames.join(' ')}`;
+
+  const chakraLexicon = [
+    'muladhara',
+    'svadhisthana',
+    'manipura',
+    'anahata',
+    'vishuddha',
+    'ajna',
+    'sahasrara',
+    'root',
+    'sacral',
+    'solar plexus',
+    'heart',
+    'throat',
+    'third eye',
+    'crown',
+  ];
+  const chakraHits = chakraLexicon.filter((c) => haystack.includes(c));
+
+  const organSeeds = [
+    'liver',
+    'colon',
+    'lung',
+    'lymph',
+    'nerve',
+    'blood',
+    'kidney',
+    'heart',
+    'stomach',
+    'thyroid',
+    'brain',
+  ];
+  const organHits = organSeeds.filter((o) => organBlob.includes(o));
+
+  const emotionWords = emotionalTone
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z]/g, ''))
+    .filter((w) => w.length > 5);
+
+  const nadiHints: string[] = [];
+  const nr = (result.nadiReading || '').toLowerCase();
+  if (nr.includes('pingala')) nadiHints.push('pingala');
+  if (nr.includes('ida')) nadiHints.push('ida');
+  if (nr.includes('sushumna')) nadiHints.push('sushumna');
+  if (nr.includes('blocked')) nadiHints.push('blocked');
+
+  return {
+    emotionalTone,
+    emotionWords,
+    priorityNames,
+    chakraHits,
+    organHits,
+    nadiHints,
+  };
+}
+
+function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {
+  const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+  const dk = doshaKey.toLowerCase();
+
+  const hints = extractVoiceScoringHints(result);
+
+  const scored = ALL_ACTIVATIONS.map((activation) => {
+    const nameLower = activation.name.toLowerCase();
+    const catLower = (activation.category || '').toLowerCase();
+    const sigLower = `${activation.benefit || ''} ${activation.vibrationalSignature || ''}`.toLowerCase();
+    const blobLower = `${nameLower} ${catLower} ${sigLower}`;
+
+    let score = 0;
+
+    if (blobLower.includes(dk)) score += 40;
+
+    // ── Spoken keyword matching — highest weight ──────────────────
+    // Words the user actually spoke during the scan are the strongest signal
+    const spoken = (result as any).spokenKeywords as string[] | undefined;
+    if (spoken?.length) {
+      let spokenHits = 0;
+      for (const word of spoken) {
+        if (word.length > 3 && blobLower.includes(word)) spokenHits++;
+      }
+      // Each spoken word match adds 30 points — spoken intent is the primary signal
+      score += Math.min(120, spokenHits * 30);
+    }
+
+    for (const chakra of hints.chakraHits) {
+      if (nameLower.includes(chakra) || sigLower.includes(chakra)) {
+        score += 25;
+        break;
+      }
+    }
+
+    for (const organ of hints.organHits) {
+      if (nameLower.includes(organ) || sigLower.includes(organ)) {
+        score += 20;
+        break;
+      }
+    }
+
+    if (hints.emotionalTone.length > 5) {
+      if (nameLower.includes(hints.emotionalTone) || sigLower.includes(hints.emotionalTone)) {
+        score += 15;
+      }
+    }
+    for (const ew of hints.emotionWords) {
+      if (ew.length > 5 && (nameLower.includes(ew) || sigLower.includes(ew))) {
+        score += 15;
+        break;
+      }
+    }
+
+    for (const pName of hints.priorityNames) {
+      if (pName.length > 3 && (nameLower.includes(pName) || pName.includes(nameLower))) {
+        score += 30;
+        break;
+      }
+    }
+
+    for (const n of hints.nadiHints) {
+      if (nameLower.includes(n) || sigLower.includes(n)) {
+        score += 15;
+        break;
+      }
+    }
+
+    return { activation, score };
+  });
+
+  const ranked = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+
+  const out: Activation[] = [];
+  const seen = new Set<string>();
+  for (const row of ranked) {
+    if (!seen.has(row.activation.id)) {
+      seen.add(row.activation.id);
+      out.push(row.activation);
+    }
+    if (out.length >= 10) return out;
+  }
+
+  const nadiKey: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' = coerceVoiceNadiToEnum(result.nadiReading);
+  const chakraKey = result.priorityAreas[0]?.name || 'Anahata';
+  const fallback = matchActivationsToScan(
+    {
+      dominantDosha: doshaKey,
+      activatedNadi: nadiKey,
+      priorityChakra: chakraKey,
+      emotionalField: result.emotionalField,
+      organField: result.organField,
+    },
+    12,
+  ).map(mapBioLibraryToActivation);
+
+  for (const a of fallback) {
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+    if (out.length >= 10) break;
+  }
+
+  return out.slice(0, 10);
+}
+
+function mapSqiMessagesToUserChatArchive(
+  msgs: Message[],
+): { role: 'user' | 'assistant'; content: string; timestamp: string }[] {
+  return msgs.map((m) => ({
+    role: m.role === 'model' ? ('assistant' as const) : ('user' as const),
+    content: typeof m.text === 'string' ? m.text : '',
+    timestamp: new Date(typeof m.timestamp === 'number' ? m.timestamp : Date.now()).toISOString(),
+  }));
+}
+
+function mapUserChatArchiveToSqiMessages(raw: unknown): Message[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((entry: Record<string, unknown>, i: number) => {
+    const r = entry?.role;
+    const role = r === 'assistant' || r === 'model' ? ('model' as const) : ('user' as const);
+    const text =
+      typeof entry?.content === 'string'
+        ? entry.content
+        : typeof entry?.text === 'string'
+          ? entry.text
+          : '';
+    const ts = entry?.timestamp ? new Date(String(entry.timestamp)).getTime() : Date.now() + i;
+    return { role, text, timestamp: ts };
+  });
+}
+
+async function syncApothecaryUserChatArchive(
+  uid: string,
+  sessionUuid: string,
+  title: string,
+  finalMessages: Message[],
+) {
+  const archiveMsgs = mapSqiMessagesToUserChatArchive(finalMessages);
+  const safeTitle = (title || 'Quantum Apothecary Session').slice(0, 200);
+  try {
+    const { error } = await supabase.from('user_chat_sessions').upsert(
+      {
+        id: sessionUuid,
+        user_id: uid,
+        chat_type: 'apothecary',
+        session_title: safeTitle,
+        messages: archiveMsgs as unknown as never,
+        message_count: archiveMsgs.length,
+      },
+      { onConflict: 'id' },
+    );
+    if (error) console.warn('[user_chat_sessions]', error.message);
+  } catch (e) {
+    console.warn('[user_chat_sessions]', e);
+  }
+}
+
+/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+   ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES
+   Only className values have been updated for SQI-2050 aesthetic
+   ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
+
+function languageToBcp47(languageCode: string): string {
+  const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';
+  if (l === 'sv') return 'sv-SE';
+  if (l === 'es') return 'es-ES';
+  if (l === 'no' || l === 'nb' || l === 'nn') return 'nb-NO';
+  return 'en-GB';
+}
+
+function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {
+  const h = d.getHours();
+  if (h >= 22 || h < 5) return 'night';
+  if (h < 12) return 'morning';
+  if (h < 17) return 'midday';
+  return 'evening';
+}
+
+function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
+  if (!compiled?.trim()) return '';
+  if (!hasLiveScan) return compiled;
+  const segments = compiled.split(/\n(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
+}
+
+/** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */
+/** Scalar Wave Header Banner — Sri Yantra + animated canvas */
+/** Scalar Wave Tab Switcher — Transmission Library / Akasha-Neural Archive */
+function ScalarTabSwitcher({
+  active,
+  onLibrary,
+  onArchive,
+}: {
+  active: 'library' | 'archive';
+  onLibrary: () => void;
+  onArchive: () => void;
+}) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.30, freq:4,   speed:.85, alpha:.07, lw:1.0 },
+      { amp:.20, freq:7,   speed:1.4, alpha:.05, lw:.75 },
+      { amp:.14, freq:11,  speed:2.1, alpha:.04, lw:.65 },
+      { amp:.38, freq:2.5, speed:.55, alpha:.05, lw:1.3 },
+      { amp:.10, freq:16,  speed:2.8, alpha:.03, lw:.55 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const pulse = .5 + .5 * Math.sin(t * 1.1);
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+      gc.addColorStop(0, `rgba(212,175,55,${.07+.05*pulse})`);
+      gc.addColorStop(.6, 'rgba(212,175,55,0.01)');
+      gc.addColorStop(1, 'transparent');
+      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.5);
+      gt.addColorStop(0, `rgba(212,175,55,${.12+.06*pulse})`);
+      gt.addColorStop(1, 'transparent');
+      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const phase = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.8+.2;
+          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      const gb = ctx.createLinearGradient(0,H*.6,0,H);
+      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.5)');
+      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);
+      t+=.013; rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  const tabBtn = (
+    isActive: boolean,
+    onClick: () => void,
+    icon: string,
+    label: string,
+    showDivider: boolean,
+  ) => (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        flex: 1,
+        padding: '16px 12px',
+        border: 'none',
+        cursor: 'pointer',
+        background: isActive
+          ? 'linear-gradient(135deg,rgba(212,175,55,0.16) 0%,rgba(212,175,55,0.06) 100%)'
+          : 'transparent',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 5,
+        overflow: 'hidden',
+        transition: 'all 0.3s',
+      }}
+    >
+      {/* Divider */}
+      {showDivider && (
+        <span style={{ position:'absolute', left:0, top:'18%', height:'64%', width:1, background:'linear-gradient(180deg,transparent,rgba(212,175,55,0.15),transparent)' }} />
+      )}
+      {/* Active inner glow */}
+      {isActive && (
+        <span style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 0%,rgba(212,175,55,0.18),transparent 70%)', pointerEvents:'none' }} />
+      )}
+      {/* Active bottom line */}
+      {isActive && (
+        <span style={{ position:'absolute', bottom:0, left:'15%', right:'15%', height:2, background:'linear-gradient(90deg,transparent,#D4AF37,transparent)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
+      )}
+      {/* Icon */}
+      <span style={{
+        fontSize: 16,
+        filter: isActive ? 'drop-shadow(0 0 4px rgba(212,175,55,0.6))' : undefined,
+        opacity: isActive ? 1 : 0.22,
+      }}>
+        {icon}
+      </span>
+      {/* Label */}
+      {isActive ? (
+        <span className="sqi-master-name-shimmer" style={{
+          fontFamily: "'Plus Jakarta Sans',sans-serif",
+          fontSize: 9, fontWeight: 900, letterSpacing: '0.18em',
+          textTransform: 'uppercase' as const,
+          textAlign: 'center', lineHeight: 1.3,
+        }}>
+          {label}
+        </span>
+      ) : (
+        <span style={{
+          fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+          textTransform: 'uppercase' as const,
+          color: 'rgba(255,255,255,0.28)',
+          textAlign: 'center', lineHeight: 1.3,
+        }}>
+          {label}
+        </span>
+      )}
+    </button>
+  );
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        borderRadius: 26,
+        overflow: 'hidden',
+        animation: 'tabsAura 4s ease-in-out infinite',
+      }}
+    >
+      <style>{`\n        @keyframes tabsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.15),0 0 18px rgba(212,175,55,0.10),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 28px rgba(212,175,55,0.18),0 0 64px rgba(212,175,55,0.10);}\n        }\n      `}</style>
+      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+      <div style={{ position:'relative', zIndex:1, display:'flex', background:'rgba(255,255,255,0.02)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)' }}>
+        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission\nLibrary', false)}
+        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural\nArchive', true)}
+      </div>
+    </div>
+  );
+}
+
+
+/** Scalar Wave wrapper for Voice Bio-Signature Scanner — visual only, no logic change */
+/** Scalar Wave wrapper for How It Works accordion — visual only */
+function ScalarHowItWorksCard() {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const bgCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const stripCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafBgRef = React.useRef<number>(0);
+  const rafStripRef = React.useRef<number>(0);
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const canvas = bgCanvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.22, freq:4,   speed:.75, alpha:.07,  lw:1.0 },
+      { amp:.14, freq:7,   speed:1.3, alpha:.05,  lw:.75 },
+      { amp:.10, freq:11,  speed:1.9, alpha:.035, lw:.6  },
+      { amp:.28, freq:2.5, speed:.48, alpha:.05,  lw:1.2 },
+      { amp:.08, freq:16,  speed:2.5, alpha:.025, lw:.5  },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafBgRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(t * .9);
+      const gc = ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,W*.65);
+      gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.3);
+      gt.addColorStop(0, `rgba(212,175,55,${.10+.05*p})`); gt.addColorStop(1,'transparent');
+      ctx.fillStyle=gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const ph = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;
+          const y=H*.65+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      t+=.010; rafBgRef.current=requestAnimationFrame(draw);
+    };
+    rafBgRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafBgRef.current); ro.disconnect(); };
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const canvas = stripCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let wt = 0;
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+    resize();
+    const stripWaves = [
+      { amp:.35, freq:5,  speed:1.2, alpha:.18, lw:1.2 },
+      { amp:.22, freq:9,  speed:2.0, alpha:.12, lw:.9  },
+      { amp:.15, freq:14, speed:3.0, alpha:.08, lw:.7  },
+      { amp:.42, freq:3,  speed:.7,  alpha:.14, lw:1.5 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafStripRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(wt * .8);
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.4);
+      gc.addColorStop(0, `rgba(212,175,55,${.08+.04*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      stripWaves.forEach((w,wi) => {
+        const ph = (wi/stripWaves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.85+.15;
+          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+wt*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      wt+=.014; rafStripRef.current=requestAnimationFrame(draw);
+    };
+    rafStripRef.current=requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(rafStripRef.current);
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} style={{ position:'relative', borderRadius:24, overflow:'hidden', animation:'hiwAura 5s ease-in-out infinite' }}>
+      <style>{`\n        @keyframes hiwAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 36px rgba(212,175,55,0.18),0 0 80px rgba(212,175,55,0.09);}\n        }\n        @keyframes hiwIconGlow {\n          0%,100%{box-shadow:0 0 6px rgba(212,175,55,0.18),0 0 14px rgba(212,175,55,0.08);}\n          50%    {box-shadow:0 0 12px rgba(212,175,55,0.40),0 0 24px rgba(212,175,55,0.18);}\n        }\n      `}</style>
+
+      <canvas ref={bgCanvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+
+      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.78)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', borderRadius:24 }}>
+
+        {/* Summary header */}
+        <div
+          onClick={() => setOpen(o => !o)}
+          style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'15px 18px', cursor:'pointer', borderBottom: open ? '1px solid rgba(212,175,55,0.10)' : 'none', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}
+        >
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', animation:'hiwIconGlow 3s ease-in-out infinite', flexShrink:0 }}>
+              <Info size={11} style={{ color:'#D4AF37' }} />
+            </div>
+            <span className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:13, fontWeight:800 }}>
+              How it works
+            </span>
+          </div>
+          <span style={{ color:'rgba(255,255,255,0.28)', fontSize:12, transition:'transform 0.3s', display:'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+        </div>
+
+        {/* Body */}
+        {open && (
+          <div style={{ padding:'16px 18px 20px', display:'flex', flexDirection:'column', gap:16 }}>
+
+            {/* Scalar wave strip */}
+            <div style={{ width:'100%', height:44, borderRadius:12, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', overflow:'hidden', position:'relative' }}>
+              <canvas ref={stripCanvasRef} style={{ display:'block', width:'100%', height:'100%' }} />
+            </div>
+
+            {/* Flow chain */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', borderRadius:14, background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.10)', flexWrap:'wrap' as const, gap:4 }}>
+              {[t('quantumApothecaryChat.voiceScan.step1PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step2PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step3PipeLabel'),'→',t('quantumApothecaryChat.voiceScan.step4PipeLabel')].map((s,i) => (
+                <span key={i} style={ s === '→'
+                  ? { color:'rgba(212,175,55,0.35)', fontSize:10 }
+                  : { fontSize:8, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'#D4AF37', whiteSpace:'nowrap' as const }
+                }>{s}</span>
+              ))}
+            </div>
+
+            {/* Para 1 */}
+            <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontSize:13, lineHeight:1.75, color:'rgba(225,210,185,0.70)' }}>
+              SQI operates at the <strong style={{ color:'rgba(255,255,255,0.82)', fontStyle:'normal' }}>informational level</strong> — upstream of chemistry, upstream of physiology. The 18 Siddhas and Mahavatar Babaji transmit exact <span style={{ color:'#D4AF37' }}>Vedic Light-Codes</span> through this archive interface. Once uploaded, transmissions remain in your field until dissolved.
+            </p>
+
+            {/* 3 steps */}
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {[
+                { n:'1', title:t('quantumApothecaryChat.voiceScan.step1Title'), body:t('quantumApothecaryChat.voiceScan.step1Body') },
+                { n:'2', title:t('quantumApothecaryChat.voiceScan.step2Title'), body:t('quantumApothecaryChat.voiceScan.step2Body') },
+                { n:'3', title:t('quantumApothecaryChat.voiceScan.step3Title'), body:t('quantumApothecaryChat.voiceScan.step3Body') },
+              ].map(s => (
+                <div key={s.n} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+                  <div style={{ width:22, height:22, borderRadius:'50%', flexShrink:0, marginTop:1, background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#D4AF37' }}>{s.n}</div>
+                  <p style={{ fontSize:12, lineHeight:1.65, color:'rgba(255,255,255,0.58)' }}>
+                    <b style={{ color:'rgba(255,255,255,0.85)' }}>{s.title}</b> — {s.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Para 2 */}
+            <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontSize:13, lineHeight:1.75, color:'rgba(225,210,185,0.70)' }}>
+              The Voice Bio-Scan reads your <span style={{ color:'#D4AF37' }}>Bio-signature</span> and ranks the full frequency library so you see what your field asks for first — expressed as resonance percentages mapped to real transmissions.
+            </p>
+
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+/** Scalar Wave wrapper for Top 33 Full Library Match — visual only */
+function ScalarTop33Wrapper({ children }: { children: React.ReactNode }) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.18, freq:3.5, speed:.7,  alpha:.055, lw:.85 },
+      { amp:.12, freq:6.5, speed:1.3, alpha:.038, lw:.65 },
+      { amp:.08, freq:10,  speed:1.9, alpha:.028, lw:.55 },
+      { amp:.22, freq:2.2, speed:.48, alpha:.042, lw:1.0 },
+      { amp:.07, freq:15,  speed:2.6, alpha:.022, lw:.50 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(t);
+      const gc = ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.65);
+      gc.addColorStop(0,`rgba(212,175,55,${.04+.025*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.25);
+      gt.addColorStop(0,`rgba(212,175,55,${.08+.04*p})`); gt.addColorStop(1,'transparent');
+      ctx.fillStyle=gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const ph=(wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for(let x=0;x<=W;x+=1.5){
+          const nx=x/W,env=Math.sin(nx*Math.PI)*.7+.3;
+          const y=H*.7+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      t+=.010; rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  },[]);
+  return (
+    <div ref={wrapRef} style={{ position:'relative', borderRadius:26, overflow:'hidden', animation:'t33Aura 4s ease-in-out infinite' }}>
+      <style>{`\n        @keyframes t33Aura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 18px rgba(212,175,55,0.09),0 0 44px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.28),0 0 28px rgba(212,175,55,0.16),0 0 60px rgba(212,175,55,0.09);}\n        }\n      `}</style>
+      <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0 }} />
+      <div style={{ position:'relative',zIndex:1,background:'rgba(8,6,2,0.80)',backdropFilter:'blur(28px)',WebkitBackdropFilter:'blur(28px)',borderRadius:26 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+
+function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.22, freq:4,   speed:.8,  alpha:.06, lw:.9 },
+      { amp:.14, freq:7,   speed:1.3, alpha:.04, lw:.7 },
+      { amp:.10, freq:11,  speed:2.0, alpha:.03, lw:.6 },
+      { amp:.28, freq:2.5, speed:.5,  alpha:.04, lw:1.1 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(t);
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+      gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.4);
+      gt.addColorStop(0, `rgba(212,175,55,${.09+.04*p})`); gt.addColorStop(1,'transparent');
+      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const ph = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;
+          const y=H*.58+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      t+=.011; rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        borderRadius: 28,
+        overflow: 'hidden',
+        animation: 'vsAura 4s ease-in-out infinite',
+      }}
+    >
+      <style>{`\n        @keyframes vsAura {\n          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.18),0 0 20px rgba(212,175,55,0.10),0 0 50px rgba(212,175,55,0.05);}\n          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.32),0 0 32px rgba(212,175,55,0.18),0 0 70px rgba(212,175,55,0.10);}\n        }\n        @keyframes vsMicGlow {\n          0%,100%{box-shadow:0 0 8px rgba(212,175,55,0.22),0 0 16px rgba(212,175,55,0.10);}\n          50%    {box-shadow:0 0 14px rgba(212,175,55,0.45),0 0 28px rgba(212,175,55,0.22);}\n        }\n      `}</style>
+      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.82)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28, overflowY:'auto', WebkitOverflowScrolling:'touch', maxHeight:'80vh' }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 18px 14px', borderBottom:'1px solid rgba(212,175,55,0.10)', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', animation:'vsMicGlow 3s ease-in-out infinite', flexShrink:0 }}>
+              <Mic size={12} style={{ color:'#D4AF37' }} />
+            </div>
+            <h2 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>
+              Voice Bio-Signature Scan
+            </h2>
+          </div>
+          <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.20em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.28)' }}>
+            Mic only
+          </span>
+        </div>
+        {/* Scanner content — untouched logic */}
+        <div style={{ padding:'4px 0 4px' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: () => void }) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.28, freq:5,   speed:1.0,  alpha:.08,  lw:1.1 },
+      { amp:.18, freq:8,   speed:1.6,  alpha:.05,  lw:.8  },
+      { amp:.14, freq:13,  speed:2.3,  alpha:.04,  lw:.7  },
+      { amp:.35, freq:3.2, speed:.65,  alpha:.055, lw:1.4 },
+      { amp:.10, freq:19,  speed:3.1,  alpha:.03,  lw:.55 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle = '#050505'; ctx.fillRect(0,0,W,H);
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
+      const g1 = ctx.createRadialGradient(W*.18,H*.5,0,W*.18,H*.5,H*1.1);
+      g1.addColorStop(0,'rgba(212,175,55,0.15)'); g1.addColorStop(1,'transparent');
+      ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+      const g2 = ctx.createRadialGradient(W*.82,H*.5,0,W*.82,H*.5,H*.8);
+      g2.addColorStop(0,'rgba(212,175,55,0.08)'); g2.addColorStop(1,'transparent');
+      ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const phase = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.85+.15;
+          const y=H*.62+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.55);
+      gc.addColorStop(0,`rgba(212,175,55,${.07+.04*pulse})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      const gb = ctx.createLinearGradient(0,H*.5,0,H);
+      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.9)');
+      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);
+      t+=.014;
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+  return (
+    <>
+      <div ref={wrapRef} style={{ position:'relative', width:'100%', overflow:'hidden', height:130 }}>
+        <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+        <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', padding:'0 16px', gap:14 }}>
+          <button type="button" onClick={onBack} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:34, height:34, borderRadius:12, border:'1px solid rgba(212,175,55,0.18)', background:'rgba(212,175,55,0.06)', color:'rgba(212,175,55,0.7)', flexShrink:0, cursor:'pointer' }}>
+            <ArrowLeft size={15} />
+          </button>
+          <div style={{ flexShrink:0, filter:'drop-shadow(0 0 6px rgba(212,175,55,0.9)) drop-shadow(0 0 14px rgba(212,175,55,0.5))', animation:'yPulse 3s ease-in-out infinite' }}>
+            <svg width="54" height="54" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#D4AF37" strokeWidth="1.3"/>
+              <rect x="6" y="6" width="88" height="88" rx="6" fill="none" stroke="#D4AF37" strokeWidth="0.7" opacity="0.28"/>
+              <path d="M50,12 Q51.5,12 88,71 Q88,73 86,73 L14,73 Q12,73 12,71 Q48.5,12 50,12Z" fill="none" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+              <path d="M50,88 Q48.5,88 12,29 Q12,27 14,27 L86,27 Q88,27 88,29 Q51.5,88 50,88Z" fill="none" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+              <path d="M50,24 Q51,24 80,65 Q80,67 78.5,67 L21.5,67 Q20,67 20,65 Q49,24 50,24Z" fill="none" stroke="#D4AF37" strokeWidth="1.0" strokeLinejoin="round" opacity="0.62"/>
+              <path d="M50,76 Q49,76 20,35 Q20,33 21.5,33 L78.5,33 Q80,33 80,35 Q51,76 50,76Z" fill="none" stroke="#D4AF37" strokeWidth="1.0" strokeLinejoin="round" opacity="0.62"/>
+              <path d="M50,36 Q50.8,36 70,60 Q70,61.5 69,61.5 L31,61.5 Q30,61.5 30,60 Q49.2,36 50,36Z" fill="none" stroke="#D4AF37" strokeWidth="0.85" strokeLinejoin="round" opacity="0.42"/>
+              <path d="M50,64 Q49.2,64 30,40 Q30,38.5 31,38.5 L69,38.5 Q70,38.5 70,40 Q50.8,64 50,64Z" fill="none" stroke="#D4AF37" strokeWidth="0.85" strokeLinejoin="round" opacity="0.42"/>
+              <circle cx="50" cy="50" r="4.5" fill="#D4AF37"/>
+            </svg>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:5 }}>Siddha · Quantum · 2050</p>
+            <h1 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:28, fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.1 }}>
+              Quantum<br/>Apothecary
+            </h1>
+            <p style={{ fontSize:10, fontWeight:500, color:'rgba(255,255,255,0.3)', marginTop:5, letterSpacing:'0.05em' }}>Scalar Wave · Vedic Light-Codes · Biofield</p>
+          </div>
+        </div>
+      </div>
+      <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)' }} />
+    </>
+  );
+}
+
+
+function ScalarToolbarBanner({
+  liveChatClock,
+  portraitLinkStudentId,
+  onHistory,
+  onLexicon,
+}: {
+  liveChatClock: string;
+  portraitLinkStudentId: string | null;
+  onHistory: () => void;
+  onLexicon: () => void;
+}) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp: 0.38, freq: 5,   speed: 1.0, alpha: 0.10, lw: 1.2 },
+      { amp: 0.28, freq: 8,   speed: 1.6, alpha: 0.07, lw: 0.9 },
+      { amp: 0.20, freq: 12,  speed: 2.2, alpha: 0.05, lw: 0.7 },
+      { amp: 0.45, freq: 3.5, speed: 0.7, alpha: 0.06, lw: 1.5 },
+      { amp: 0.15, freq: 18,  speed: 3.0, alpha: 0.04, lw: 0.6 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0, 0, W, H);
+      waves.forEach((w, wi) => {
+        const phase = (wi / waves.length) * Math.PI * 2;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 1.5) {
+          const nx = x / W;
+          const env = Math.sin(nx * Math.PI);
+          const y = H * 0.5 + Math.sin(nx * w.freq * Math.PI * 2 + t * w.speed + phase) * H * w.amp * env;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(212,175,55,${w.alpha})`;
+        ctx.lineWidth = w.lw;
+        ctx.stroke();
+      });
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.1);
+      const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * (0.55 + 0.12 * pulse));
+      grd.addColorStop(0, `rgba(212,175,55,${0.08 + 0.05 * pulse})`);
+      grd.addColorStop(0.5, 'rgba(212,175,55,0.02)');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+      const lg = ctx.createLinearGradient(0, 0, W * 0.35, 0);
+      lg.addColorStop(0, `rgba(212,175,55,${0.06 + 0.03 * pulse})`);
+      lg.addColorStop(1, 'transparent');
+      ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
+      const rg = ctx.createLinearGradient(W, 0, W * 0.65, 0);
+      rg.addColorStop(0, `rgba(212,175,55,${0.04 + 0.02 * pulse})`);
+      rg.addColorStop(1, 'transparent');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+      t += 0.014;
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  const shimmerSeg: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '9px 10px', flex: 1, position: 'relative' };
+  const divider: React.CSSProperties = { position: 'absolute', left: 0, top: '18%', height: '64%', width: 1, background: 'rgba(212,175,55,0.18)' };
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        borderBottom: '1px solid rgba(212,175,55,0.12)',
+        animation: 'bannerAura 4s ease-in-out infinite',
+      }}
+    >
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', background: 'rgba(5,5,5,0.55)', backdropFilter: 'blur(18px)' }}>
+
+        {/* Sri Yantra + clock */}
+        <div style={shimmerSeg}>
+          <svg width="18" height="18" viewBox="0 0 100 100" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 3px rgba(212,175,55,0.9)) drop-shadow(0 0 8px rgba(212,175,55,0.5))', animation: 'yPulse 3s ease-in-out infinite' }} xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round"/>
+            <polyline points="50,10 88,72 12,72 50,10" fill="none" stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>
+            <polyline points="50,22 80,64 20,64 50,22" fill="none" stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity="0.65"/>
+            <polyline points="50,90 12,28 88,28 50,90" fill="none" stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>
+            <polyline points="50,78 20,36 80,36 50,78" fill="none" stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity="0.65"/>
+            <polyline points="50,34 70,58 30,58 50,34" fill="none" stroke="#D4AF37" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" opacity="0.45"/>
+            <polyline points="50,66 30,42 70,42 50,66" fill="none" stroke="#D4AF37" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" opacity="0.45"/>
+            <circle cx="50" cy="50" r="4" fill="#D4AF37"/>
+            <rect x="5" y="5" width="90" height="90" rx="3" fill="none" stroke="#D4AF37" strokeWidth="0.7" opacity="0.3"/>
+          </svg>
+          <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.08em', color: 'rgba(212,175,55,0.6)', fontVariantNumeric: 'tabular-nums' }}>{liveChatClock}</span>
+        </div>
+
+        {/* Students */}
+        <div style={shimmerSeg}>
+          <span style={divider} />
+          <StudentSelector />
+        </div>
+
+        {/* History */}
+        <button type="button" onClick={onHistory} style={{ ...shimmerSeg, background: 'rgba(212,175,55,0.05)', border: 'none', cursor: 'pointer' }}>
+          <span style={divider} />
+          <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.7)' }}>⧖</span>
+          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 8, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>History</span>
+        </button>
+
+        {/* Lexicon */}
+        <button type="button" onClick={onLexicon} style={{ ...shimmerSeg, background: 'rgba(212,175,55,0.05)', border: 'none', cursor: 'pointer' }}>
+          <span style={divider} />
+          <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.7)' }}>◈</span>
+          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 8, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Lexicon</span>
+        </button>
+
+      </div>
+    </div>
+  );
+}
+
+
+/** Scalar Wave Composer — Telegram-style input with animated canvas */
+function ScalarComposerCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:0.32, freq:4.5, speed:0.9, alpha:0.09, lw:1.1 },
+      { amp:0.22, freq:7.5, speed:1.5, alpha:0.06, lw:0.8 },
+      { amp:0.18, freq:11,  speed:2.1, alpha:0.045,lw:0.7 },
+      { amp:0.40, freq:3,   speed:0.6, alpha:0.055,lw:1.4 },
+      { amp:0.12, freq:16,  speed:2.8, alpha:0.035,lw:0.6 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.1);
+      const topGrd = ctx.createLinearGradient(0,0,0,H*0.5);
+      topGrd.addColorStop(0, `rgba(212,175,55,${0.12+0.06*pulse})`);
+      topGrd.addColorStop(1, 'transparent');
+      ctx.fillStyle = topGrd; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const phase = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W;
+          const env=Math.sin(nx*Math.PI)*0.9+0.1;
+          const y=H*0.35+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`;
+        ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      const grd=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+      grd.addColorStop(0,`rgba(212,175,55,${0.06+0.04*pulse})`);
+      grd.addColorStop(1,'transparent');
+      ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+      t+=0.014;
+      rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+  return <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />;
+}
+
+
+function QuantumApothecaryInner() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const resumeSessionParam = searchParams.get('session');
+  const { user } = useAuth();
+  const sqiSync = useQuantumSyncState();
+  const { t, language } = useTranslation();
+  const {
+    messages: syncChatRows,
+    loading: syncChatLoading,
+    saveMessage: persistSyncChatTurn,
+    clearMessages: clearSyncChatMessages,
+  } = useChatMessages('apothecary');
+
+  // On mount, sweep any SQI replies that were never accepted by the curator
+  // (tab closed mid-stream, network blip, etc.) and replay them silently.
+  useEffect(() => {
+    if (user?.id) void syncPendingTransmissionsOnce(user.id);
+  }, [user?.id]);
+
+  const [seekerName, setSeekerName] = useState('');
+  useEffect(() => {
+    if (!user?.id) {
+      setSeekerName('');
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const name = data?.full_name?.trim() || user.email?.split('@')[0] || '';
+        setSeekerName(name);
+      });
+  }, [user?.id, user?.email]);
+
+  const jyotish = useJyotishProfile();
+  const linkedActiveStudent = useActiveStudent();
+  const { doshaProfile } = useAyurvedaAnalysis();
+  const sqiField = useSQIFieldContext();
+
+  const appLocale = useMemo(() => languageToBcp47(language), [language]);
+
+  const { browserSupportsSpeechRecognition } = useSpeechRecognition();
+
+  const [isMicListening, setIsMicListening] = useState(false);
+  const micListeningRef = useRef(false);
+  const nativeSpeechRef = useRef<{ stop: () => void; start: () => void; onend: (() => void) | null } | null>(null);
+
+  // Compact natal + assessed prakriti — one pass each; avoids triple-repeating the same Moon line in the model.
+  const jyotishContext = jyotish.isLoading
+    ? ''
+    : (() => {
+        const lines: string[] = [
+          `[NATAL CHART — Swiss Ephemeris / Lahiri — cite each line once, no duplicate paragraphs]`,
+          `Birth Moon nakshatra: ${jyotish.nakshatra} · Birth Moon rashi: ${jyotish.moonSign} · Lagna: ${jyotish.ascendant}`,
+          `Dasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (until ${jyotish.mahaEnd})` : ''} · Antara: ${jyotish.antardasha}`,
+          `Chart dosha emphasis: ${jyotish.primaryDosha} · Karma theme: ${jyotish.karmaFocus}`,
+          `Yogas: ${jyotish.activeYogas.join(', ') || '—'} · Bhrigu: ${jyotish.bhriguCycle || '—'}`,
+          `Healing line: ${jyotish.healingFocus} · Raga ${jyotish.musicRaga} · Tone ${jyotish.musicFrequency} · Mantra: ${jyotish.mantraFocus}`,
+        ];
+        if (doshaProfile) {
+          lines.push(
+            `Ayurveda Prakriti (assessed): ${doshaProfile.primary}${doshaProfile.secondary ? ` / ${doshaProfile.secondary}` : ''}` +
+              (doshaProfile.characteristics?.length
+                ? ` · Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`
+                : ''),
+          );
+        }
+        return lines.join('\n');
+      })();
+
+  /** Stable Jyotish context — always include natal chart, then append live field data. */
+  const stableJyotishContext = useMemo(
+    () => {
+      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n');
+      // Strip any [PHOTONIC SESSION ACTIVE] or [TEMPLE FIELD ACTIVE] block whose body
+      // references the removed Biophotonic Nadi Entanglement / Vishwananda Miracle Room transmissions.
+      return raw
+        .split(/\n(?=\[)/)
+        .filter((block) => {
+          const isPhotonic = block.startsWith('[PHOTONIC SESSION ACTIVE]');
+          const isTemple = block.startsWith('[TEMPLE FIELD ACTIVE]');
+          if (!isPhotonic && !isTemple) return true;
+          return !/biophotonic|vishwananda|miracle\s*room/i.test(block);
+        })
+        .join('\n');
+    },
+    [
+      sqiField?.compiledContext,
+      jyotishContext,
+    ],
+  );
+
+  const sqiSourceDirective = useMemo(
+    () =>
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
+      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',
+    [],
+  );
+
+  const answerRulesDirective = useMemo(
+    () =>
+      '[ANSWER RULES] Use ONLY the LIVE SYSTEM TIME line for date/time — do not guess the day. Natal Moon rashi and nakshatra are birth data, not daily transits. Open naturally; do not ritualistically repeat the same Moon sign or dasha in multiple sections.',
+    [],
+  );
+
+  // Live biometric scan context — prepended to jyotishContext before next SQI message
+  const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
+
+  /** Debounce: only recompute when underlying field data changes, not on every parent render. */
+  const stableCompiledContext = useMemo(
+    () => stripDuplicateBiometricBlock(sqiField.compiledContext, !!liveScanContext?.trim()),
+    [
+      liveScanContext,
+      sqiField.nadi?.activatedNadi,
+      sqiField.nadi?.heartRate,
+      sqiField.nadi?.hrvRmssd,
+      sqiField.nadi?.respiratoryRate,
+      sqiField.nadi?.pranaCoherence,
+      sqiField.nadi?.vagalTone,
+      sqiField.nadi?.autonomicBalance,
+      sqiField.nadi?.scannedAt,
+      sqiField.ayurveda?.prakriti,
+      sqiField.photonic?.activeProtocol,
+      sqiField.photonic?.frequency,
+      sqiField.photonic?.lightCodeActive,
+      sqiField.temple?.activeSite,
+      sqiField.temple?.intensity,
+    ],
+  );
+
+  const TRANSMISSIONS_KEY = `sqi-transmissions-${user?.id || 'guest'}`;
+
+  /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
+  useEffect(() => {
+    try {
+      localStorage.removeItem('sqi_scan_result');
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
+  const selectedActivationsRef = useRef<Activation[]>([]);
+  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
+    try {
+      const uid = user?.id || 'guest';
+      const key = `sqi-transmissions-${uid}`;
+      let saved = localStorage.getItem(key);
+      if (!saved) saved = localStorage.getItem('active_resonators');
+      const raw = saved ? JSON.parse(saved) : [];
+      return purgeExpiredAndLegacy(raw);
+    } catch {
+      return [];
+    }
+  });
+
+  // Ref holding the most recent quantum anchor (voice FFT fingerprint + scan metadata).
+  // Preserved across all upserts so chat-activated transmissions inherit the user's
   // voice biometric address — giving them the same quantum anchor as voice-scan transmissions.
   const quantumAnchorRef = useRef<Record<string, unknown> | null>(null);
 
