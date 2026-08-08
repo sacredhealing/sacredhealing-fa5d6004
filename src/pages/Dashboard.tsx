@@ -790,65 +790,26 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* ══ DIVINE SANGHA NEXUS CARD ══ */}
-          <div
-            onClick={() => navigate('/community')}
-            style={{
-              margin: '18px 16px 0',
-              background: 'linear-gradient(135deg, rgba(212,175,55,0.07) 0%, rgba(212,175,55,0.02) 100%)',
-              border: '1px solid rgba(212,175,55,0.22)',
-              borderRadius: 24,
-              padding: '18px 18px 16px',
-              cursor: 'pointer',
-              position: 'relative',
-              overflow: 'hidden',
-              animation: 'sqFadeUp 0.5s 0.28s ease both',
-            }}
-          >
-            {/* shimmer */}
-            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.04), transparent)', animation: 'shimmer 4s infinite linear', pointerEvents: 'none' }} />
-
-            {/* header row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div>
-                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>
-                  Divine Community
-                </div>
-                <div style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 17, fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-                  Sangha Nexus
-                </div>
+          <div style={{ margin: '18px 16px 0' }}>
+            <div onClick={() => navigate('/community')} style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, rgba(20,8,40,0.96) 0%, rgba(10,4,22,0.98) 100%)', border: '1px solid rgba(160,80,240,0.45)', borderRadius: 20, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <svg width="48" height="48" viewBox="0 0 48 48">
+                  <polygon points="24,2 45,13 45,35 24,46 3,35 3,13" fill="rgba(160,80,240,0.08)" stroke="rgba(160,80,240,0.5)" strokeWidth="1.1"/>
+                  <polygon points="24,8 41,18 41,30 24,40 7,30 7,18" fill="none" stroke="rgba(160,80,240,0.28)" strokeWidth="0.7"><animateTransform attributeName="transform" type="rotate" values="0 24 24;360 24 24" dur="18s" repeatCount="indefinite"/></polygon>
+                  <line x1="24" y1="3" x2="24" y2="45" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
+                  <line x1="3" y1="16" x2="45" y2="32" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
+                  <line x1="45" y1="16" x2="3" y2="32" stroke="rgba(160,80,240,0.18)" strokeWidth="0.6"/>
+                  <circle cx="24" cy="24" r="6" fill="none" stroke="rgba(190,140,255,0.5)" strokeWidth="0.9"><animate attributeName="r" values="6;21;6" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/></circle>
+                  <circle cx="24" cy="24" r="3.5" fill="rgba(190,140,255,0.9)"><animate attributeName="r" values="3;5;3" dur="2.2s" repeatCount="indefinite"/></circle>
+                </svg>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 999, padding: '4px 10px' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', color: 'rgba(212,175,55,0.8)', textTransform: 'uppercase' }}>Live</span>
-                </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(190,140,255,0.92)', marginBottom: 3 }}>DIVINE SANGHA NEXUS</div>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>Community · Group channels · Live transmissions</div>
               </div>
-            </div>
-
-            {/* channel pills */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-              {[
-                { icon: '🔱', name: 'Divine Sangha' },
-                { icon: '✦', name: 'Healing' },
-                { icon: '⚡', name: 'Siddha Lab' },
-                { icon: '🛟', name: 'Support' },
-              ].map((ch) => (
-                <div key={ch.name} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 999, padding: '4px 10px' }}>
-                  <span style={{ fontSize: 11 }}>{ch.icon}</span>
-                  <span style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>{ch.name}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
-                Connect · Share · Grow together
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#D4AF37', borderRadius: 999, padding: '7px 14px' }}>
-                <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 9, fontWeight: 800, letterSpacing: '0.25em', color: '#050505', textTransform: 'uppercase' }}>Enter</span>
-                <span style={{ color: '#050505', fontSize: 12, fontWeight: 700 }}>›</span>
-              </div>
+              <div style={{ flexShrink: 0, fontSize: 18, color: 'rgba(160,80,240,0.6)' }}>›</div>
+              {/* sheen */}
+              <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(190,140,255,0.05),transparent)', animation: 'shimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
             </div>
           </div>
 
@@ -1010,20 +971,26 @@ const Dashboard: React.FC = () => {
           <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.2)', animation: 'sqSpinSlow 12s linear infinite reverse' }} />
           {/* ring 3 */}
           <div style={{ position: 'absolute', inset: 12, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.12)' }} />
-          {/* SVG sacred geometry — Flower of Life seed pattern */}
-          <svg viewBox="0 0 80 80" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }}>
-            <g stroke="#D4AF37" strokeWidth="0.6" fill="none">
-              {/* center circle */}
-              <circle cx="40" cy="40" r="10" />
-              {/* 6 petals */}
-              <circle cx="40" cy="30" r="10" />
-              <circle cx="40" cy="50" r="10" />
-              <circle cx="48.66" cy="35" r="10" />
-              <circle cx="31.34" cy="35" r="10" />
-              <circle cx="48.66" cy="45" r="10" />
-              <circle cx="31.34" cy="45" r="10" />
-              {/* outer containment */}
-              <circle cx="40" cy="40" r="20" strokeOpacity="0.3" />
+          {/* SVG sacred geometry — Sri Yantra inspired mandala */}
+          <svg viewBox="0 0 80 80" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+            <g stroke="#D4AF37" fill="none">
+              {/* outer circle */}
+              <circle cx="40" cy="40" r="36" strokeWidth="0.4" strokeOpacity="0.3"/>
+              {/* middle circle */}
+              <circle cx="40" cy="40" r="26" strokeWidth="0.4" strokeOpacity="0.4"/>
+              {/* inner circle */}
+              <circle cx="40" cy="40" r="16" strokeWidth="0.4" strokeOpacity="0.5"/>
+              {/* upward triangle */}
+              <polygon points="40,10 66,58 14,58" strokeWidth="0.7" strokeOpacity="0.7"/>
+              {/* downward triangle */}
+              <polygon points="40,70 14,22 66,22" strokeWidth="0.7" strokeOpacity="0.7"/>
+              {/* 8 petals lotus */}
+              {[0,45,90,135,180,225,270,315].map((deg, i) => {
+                const r = Math.PI * deg / 180;
+                const x = 40 + 22 * Math.cos(r);
+                const y = 40 + 22 * Math.sin(r);
+                return <circle key={i} cx={x} cy={y} r="7" strokeWidth="0.4" strokeOpacity="0.25"/>;
+              })}
             </g>
           </svg>
           {/* center dot glow */}
