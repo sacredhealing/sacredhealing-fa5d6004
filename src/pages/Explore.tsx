@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"; // SQI-force-deploy-holybooks
-import { useNavigate } from "react-router-dom";
+import {
+import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard'; useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
@@ -932,6 +933,14 @@ export default function Explore() {
 
       {/* ══ CONNECT ══ */}
       <SL label={t('converge.secConnect')} delay="0.5s"/>
+
+      {/* ── SIDDHA DHARMA PATH ── */}
+      <div style={{ padding: '0 16px 0', animation: 'fadeUp 0.4s 0.30s ease both' }}>
+        <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.35)', marginBottom: 10, paddingLeft: 2 }}>
+          SIDDHA DHARMA PATH
+        </div>
+        <SpiritualPathCard />
+      </div>
 
       {/* ── STARGATE HERO CARD ── */}
       <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.52s ease both' }}>
